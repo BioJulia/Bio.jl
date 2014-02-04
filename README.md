@@ -1,4 +1,4 @@
-BioJulia.jl
+Bio.jl
 ========
 
 Bioinformatics and Computational Biology infrastructure for [Julia](http://julialang.org)
