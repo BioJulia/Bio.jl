@@ -1,5 +1,6 @@
 Bio.jl
 ========
+[![Build Status](https://travis-ci.org/BioJulia/Bio.jl.png)](https://travis-ci.org/BioJulia/Bio.jl)
 
 Bioinformatics and Computational Biology infrastructure for [Julia](http://julialang.org)
 
