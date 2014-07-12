@@ -3,10 +3,11 @@ module Seq
 
 using Base.Intrinsics
 using IntervalTrees
-import Base: convert, getindex, show, length, start, next, done
 
-export NucleotideSequence, DNANucleotide, RNANucleotide,
-       DNASequence, RNASequence, @dna_str, @rna_str
+import Base: convert, getindex, show, length, start, next, done, copy
+
+export Nucleotide, DNANucleotide, RNANucleotide,
+       NucleotideSequence, DNASequence, RNASequence, @dna_str, @rna_str
 
 
 # Nucleotides
@@ -50,19 +51,19 @@ end
 
 # TODO: Should we use ape-style bit masks for these?
 const DNA_A = convert(DNANucleotide, 0b000)
-const DNA_T = convert(DNANucleotide, 0b001)
-const DNA_C = convert(DNANucleotide, 0b010)
-const DNA_G = convert(DNANucleotide, 0b011)
+const DNA_C = convert(DNANucleotide, 0b001)
+const DNA_G = convert(DNANucleotide, 0b010)
+const DNA_T = convert(DNANucleotide, 0b011)
 const DNA_N = convert(DNANucleotide, 0b100)
 
 const RNA_A = convert(RNANucleotide, 0b000)
-const RNA_U = convert(RNANucleotide, 0b001)
-const RNA_C = convert(RNANucleotide, 0b010)
-const RNA_G = convert(RNANucleotide, 0b011)
+const RNA_C = convert(RNANucleotide, 0b001)
+const RNA_G = convert(RNANucleotide, 0b010)
+const RNA_U = convert(RNANucleotide, 0b011)
 const RNA_N = convert(RNANucleotide, 0b100)
 
 
-const dna_to_char = ['A', 'T', 'C', 'G', 'N']
+const dna_to_char = ['A', 'C', 'G', 'T', 'N']
 
 function convert(::Type{Char}, nt::DNANucleotide)
     return dna_to_char[convert(Uint8, nt) + 1]
@@ -86,7 +87,7 @@ function convert(::Type{DNANucleotide}, nt::Char)
 end
 
 
-const rna_to_char = ['A', 'U', 'C', 'G', 'N']
+const rna_to_char = ['A', 'C', 'G', 'U', 'N']
 
 function convert(::Type{Char}, nt::RNANucleotide)
     return rna_to_char[convert(Uint8, nt) + 1]
@@ -123,6 +124,12 @@ end
 # Nucleotide Sequences
 # --------------------
 
+# How many Uint64s are needed to represent a sequence of length n
+function seq_data_len(n::Integer)
+    d, r = divrem(n, 32)
+    return d + (r > 0 ? 1 : 0)
+end
+
 type NucleotideSequence{T <: Nucleotide}
     # 2-bit encoded sequence
     data::Vector{Uint64}
@@ -132,6 +139,12 @@ type NucleotideSequence{T <: Nucleotide}
 
     # interval within data defining the (sub)sequence
     part::UnitRange{Int}
+
+    # Construct from raw components
+    function NucleotideSequence(data::Vector{Uint64}, ns::IntervalTree{Int, Bool},
+                                part::UnitRange)
+        return new(data, ns, part)
+    end
 
     # Construct a subsequence of another nucleotide sequence
     function NucleotideSequence(other::NucleotideSequence, part::UnitRange)
@@ -149,7 +162,7 @@ type NucleotideSequence{T <: Nucleotide}
 
     # Construct a sequence from a string
     function NucleotideSequence(seq::String)
-        data = zeros(Uint64, div(length(seq), 32) + 1)
+        data = zeros(Uint64, seq_data_len(length(seq)))
         ns = IntervalTree{Int, Bool}()
 
         nstart = 0
@@ -158,6 +171,8 @@ type NucleotideSequence{T <: Nucleotide}
                 if nt != 'N' && nt != 'n'
                     ns[(nstart, i-1)] = true
                     nstart = 0
+                else
+                    continue
                 end
             elseif nt == 'N' || nt == 'n'
                 nstart = i
@@ -183,6 +198,33 @@ end
 typealias DNASequence NucleotideSequence{DNANucleotide}
 typealias RNASequence NucleotideSequence{RNANucleotide}
 
+
+function copy{T}(seq::NucleotideSequence{T})
+    data = zeros(Uint64, seq_data_len(length(seq)))
+    d0, r0 = divrem(seq.part.start - 1, 32)
+
+    h = 64 - 2*r0
+    k = 2*r0
+
+    j = d0
+    for i in 1:length(data)
+        data[i] |= seq.data[j] >>> k
+
+        j += 1
+        if j > length(seq.data)
+            break
+        end
+
+        data[i] |= seq.data[j] << h
+    end
+
+    ns = IntervalTree{Int, Bool}()
+    for (a, b) in intersect(seq.ns, (seq.part.start, seq.part.stop))
+        ns[(a,b)] = true
+    end
+
+    return NucleotideSequence{T}(data, ns, 1:length(seq))
+end
 
 # Iterating throug nucleotide sequences
 function start(seq::NucleotideSequence)
@@ -248,7 +290,7 @@ function getindex{T}(seq::NucleotideSequence{T}, i::Integer)
         return convert(T, 0b0100) # bit representation for N
     else
         d, r = divrem(i - 1, 32)
-        return convert(T, convert(Uint8, (seq.data[d + 1] >> (2*r)) & 0b11))
+        return convert(T, convert(Uint8, (seq.data[d + 1] >>> (2*r)) & 0b11))
     end
 end
 
@@ -269,8 +311,21 @@ end
 
 
 function convert(::Type{String}, seq::NucleotideSequence)
-    # TODO
+    return convert(String, [convert(Char, x) for x in seq])
 end
+
+
+# Transformations
+# ---------------
+
+# If seq is a sub-sequence do we want to take the complement of the full
+# sequence?
+function complement{T}(seq::NucleotideSequence{T})
+    data = Array(Uint64, length(seq.data))
+
+
+end
+
 
 
 end
