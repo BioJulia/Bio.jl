@@ -48,6 +48,7 @@ function convert{T <: Integer}(::Type{T}, nt::RNANucleotide)
 end
 
 
+# TODO: Should we use ape-style bit masks for these?
 const DNA_A = convert(DNANucleotide, 0b000)
 const DNA_T = convert(DNANucleotide, 0b001)
 const DNA_C = convert(DNANucleotide, 0b010)
@@ -126,16 +127,27 @@ type NucleotideSequence{T <: Nucleotide}
     # 2-bit encoded sequence
     data::Vector{Uint64}
 
-    # length of the sequence
-    len::Int
-
     # 'N' intervals
     ns::IntervalTree{Int, Bool}
 
-    function NucleotideSequence{T}()
-        return new(zeros(Uint64, 0), len)
+    # interval within data defining the (sub)sequence
+    part::UnitRange{Int}
+
+    # Construct a subsequence of another nucleotide sequence
+    function NucleotideSequence(other::NucleotideSequence, part::UnitRange)
+        start = other.part.start + part.start - 1
+        stop = start + length(part) - 1
+        @assert start >= other.part.start
+        @assert stop <= other.part.stop
+        return new(other.data, other.ns, part)
     end
 
+    # Construct an empty sequence
+    function NucleotideSequence()
+        return new(zeros(Uint64, 0), IntervalTree{Int, Bool}(), 1:0)
+    end
+
+    # Construct a sequence from a string
     function NucleotideSequence(seq::String)
         data = zeros(Uint64, div(length(seq), 32) + 1)
         ns = IntervalTree{Int, Bool}()
@@ -160,7 +172,7 @@ type NucleotideSequence{T <: Nucleotide}
             ns[(nstart, length(seq))] = true
         end
 
-        return new(data, length(seq), ns)
+        return new(data, ns, 1:length(seq))
     end
 
     # TODO: A constructor that looks for Ts or Us to determine wether
@@ -207,7 +219,7 @@ end
 
 
 function length(seq::NucleotideSequence)
-    return seq.len
+    return length(seq.part)
 end
 
 
@@ -228,11 +240,21 @@ end
 
 
 function getindex{T}(seq::NucleotideSequence{T}, i::Integer)
-    if i > seq.len || i < 1
+    if i > length(seq) || i < 1
         error(BoundsError())
     end
-    d, r = divrem(i - 1, 32)
-    return convert(T, convert(Uint8, (seq.data[d + 1] >> (2*r)) & 0b11))
+    i += seq.part.start - 1
+    if hasintersection(seq.ns, i)
+        return convert(T, 0b0100) # bit representation for N
+    else
+        d, r = divrem(i - 1, 32)
+        return convert(T, convert(Uint8, (seq.data[d + 1] >> (2*r)) & 0b11))
+    end
+end
+
+
+function getindex{T}(seq::NucleotideSequence{T}, r::UnitRange)
+    return NucleotideSequence{T}(seq, r)
 end
 
 
