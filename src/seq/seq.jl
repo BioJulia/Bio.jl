@@ -63,6 +63,16 @@ const RNA_U = convert(RNANucleotide, 0b011)
 const RNA_N = convert(RNANucleotide, 0b100)
 
 
+function nnucleotide(::Type{DNANucleotide})
+    return DNA_N
+end
+
+
+function nnucleotide(::Type{RNANucleotide})
+    return RNA_N
+end
+
+
 const dna_to_char = ['A', 'C', 'G', 'T', 'N']
 
 function convert(::Type{Char}, nt::DNANucleotide)
@@ -130,6 +140,22 @@ function seq_data_len(n::Integer)
     return d + (r > 0 ? 1 : 0)
 end
 
+# A representation of DNA and RNA sequences.
+#
+# NucleotideSequence uses 2-bit encoding to efficiently store and operate on
+# sequences. Despite the encoding, N's are still allowed in the sequence and
+# represented by an N “mask” stored in an IntervalTree. This has the following
+# tradeoff: if Ns are relatively rare or occur in large blocks (as in most
+# genome sequences), this is an extremely space efficient representation.
+# Performance degrades in long sequences with many interspersed Ns, but we hope
+# to an acceptable degree.
+#
+# NucleotideSequence is effectively immutable. Though it's possible to do so, we
+# do not export functions that modify sequences in place. Immutability allows
+# for efficient subsequence operations. Every NucleotideSequence has a `part`
+# field that specifies a range within the underlying data. When subsequences are
+# made, rather than coping the data, a new `part` is specified.
+#
 type NucleotideSequence{T <: Nucleotide}
     # 2-bit encoded sequence
     data::Vector{Uint64}
@@ -166,10 +192,11 @@ type NucleotideSequence{T <: Nucleotide}
         ns = IntervalTree{Int, Bool}()
 
         nstart = 0
+        ns = Interval{Int}[]
         for (i, nt) in enumerate(seq)
             if nstart != 0
                 if nt != 'N' && nt != 'n'
-                    ns[(nstart, i-1)] = true
+                    push!(ns, Interval{Int}(nstart, i-1))
                     nstart = 0
                 else
                     continue
@@ -184,21 +211,25 @@ type NucleotideSequence{T <: Nucleotide}
         end
 
         if nstart != 0
-            ns[(nstart, length(seq))] = true
+            push!(ns, Interval{Int}(nstart, length(seq)))
         end
 
-        return new(data, ns, 1:length(seq))
+        return new(data, IntervalTree{Int, Bool}(ns, fill(true, length(ns))),
+                   1:length(seq))
     end
-
-    # TODO: A constructor that looks for Ts or Us to determine wether
-    # the sequence is DNA or RNA.
 end
 
 
 typealias DNASequence NucleotideSequence{DNANucleotide}
 typealias RNASequence NucleotideSequence{RNANucleotide}
 
-
+# Copy a sequence.
+#
+# Unlike constructing subsequences with seq[a:b], this function actually copies
+# the underlying data. Since sequences are immutable, you should basically
+# never have to do this. It's useful only for low-level algorithms like
+# `reverse` which actually do make a copy and modify the copy in
+# place.
 function copy{T}(seq::NucleotideSequence{T})
     data = zeros(Uint64, seq_data_len(length(seq)))
     d0, r0 = divrem(seq.part.start - 1, 32)
@@ -226,25 +257,47 @@ function copy{T}(seq::NucleotideSequence{T})
     return NucleotideSequence{T}(data, ns, 1:length(seq))
 end
 
+
 # Iterating throug nucleotide sequences
 function start(seq::NucleotideSequence)
-    return 1
+    i = seq.part.start
+    ns_state = start(from(seq.ns, i))
+    nblock = (1, 0)
+    if !done(seq.ns, ns_state)
+        (nblock, _), ns_state = next(seq.ns, ns_state)
+    end
+
+    return i, nblock, ns_state
 end
 
 
-function next(seq::DNASequence, i)
-    value = hasintersection(seq.ns, i) ? DNA_N : seq[i];
-    return value, i + 1
+function next{T}(seq::NucleotideSequence{T}, state)
+    i, nblock, ns_state = state
+
+    if i < nblock[1] || nblock[2] - nblock[1] < 0
+        value = getnuc(T, seq.data, i)
+    elseif nblock[1] <= i <= nblock[2]
+        value = nnucleotide(T)
+    else
+        if !done(seq.ns, ns_state)
+            (nblock, _), ns_state = next(seq.ns, ns_state)
+        else
+            nblock = (1, 0)
+        end
+
+        if i < nblock[1] || nblock[2] - nblock[1] < 0
+            value = getnuc(T, seq.data, i)
+        else
+            value = nnucleotide(T)
+        end
+    end
+
+    return value, (i + 1, nblock, ns_state)
 end
 
 
-function next(seq::RNASequence, i)
-    value = hasintersection(seq.ns, i) ? RNA_N : seq[i];
-    return value, i + 1
-end
-
-
-function done(seq::NucleotideSequence, i)
+function done(seq::NucleotideSequence, state)
+    i, nblock, ns_state = state
     return i > length(seq)
 end
 
@@ -281,6 +334,13 @@ function show{T}(io::IO, seq::NucleotideSequence{T})
 end
 
 
+# get nucleotide at position i, ignoring the N mask
+function getnuc(T::Type, data::Vector{Uint64}, i::Integer)
+    d, r = divrem(i - 1, 32)
+    return convert(T, convert(Uint8, (data[d + 1] >>> (2*r)) & 0b11))
+end
+
+
 function getindex{T}(seq::NucleotideSequence{T}, i::Integer)
     if i > length(seq) || i < 1
         error(BoundsError())
@@ -289,8 +349,7 @@ function getindex{T}(seq::NucleotideSequence{T}, i::Integer)
     if hasintersection(seq.ns, i)
         return convert(T, 0b0100) # bit representation for N
     else
-        d, r = divrem(i - 1, 32)
-        return convert(T, convert(Uint8, (seq.data[d + 1] >>> (2*r)) & 0b11))
+        return getnuc(T, seq.data, i)
     end
 end
 

@@ -22,8 +22,13 @@ function random_rna(n::Integer)
     return convert(String, [nts[i] for i in rand(1:5, n)])
 end
 
+function random_interval(minstart, maxstop)
+    start = rand(minstart:maxstop)
+    return start:rand(start:maxstop)
+end
 
-facts("String Construction") do
+
+facts("Construction") do
     # Non-nucleotide characters should throw
     @fact_throws DNASequence("ACCNNCATTTTTTAGATXATAG")
     @fact_throws RNASequence("ACCNNCATTTTTTAGATXATAG")
@@ -37,12 +42,44 @@ facts("String Construction") do
         @fact all([check_string_construction(DNANucleotide, random_dna(len)) for _ in 1:reps]) => true
         @fact all([check_string_construction(RNANucleotide, random_rna(len)) for _ in 1:reps]) => true
     end
+
+    context("Subsequence Construction") do
+        for len in [1, 10, 32, 1000, 10000, 100000]
+            seq = random_dna(len)
+            dnaseq = DNASequence(seq)
+
+            results = Bool[]
+            for _ in 1:reps
+                part = random_interval(1, length(seq))
+                push!(results, seq[part] == convert(String, dnaseq[part]))
+            end
+            @fact all(results) => true
+        end
+
+        for len in [1, 10, 32, 1000, 10000, 100000]
+            seq = random_rna(len)
+            rnaseq = RNASequence(seq)
+
+            results = Bool[]
+            for _ in 1:reps
+                part = random_interval(1, length(seq))
+
+                push!(results, seq[part] == convert(String, rnaseq[part]))
+            end
+            @fact all(results) => true
+        end
+    end
 end
 
 
-facts("Subsequence Construction") do
+
+facts("Iteration") do
 
 end
+
+
+
+
 
 
 end # TestSeq
