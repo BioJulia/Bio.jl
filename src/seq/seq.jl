@@ -40,14 +40,10 @@ function convert(::Type{Uint8}, nt::RNANucleotide)
 end
 
 
-function convert{T <: Integer}(::Type{T}, nt::DNANucleotide)
-    return convert(T, convert(Uint8, nt))
+function convert{T <: Unsigned, S <: Nucleotide}(::Type{T}, nt::S)
+    return box(T, Base.zext_int(T, unbox(S, nt)))
 end
 
-
-function convert{T <: Integer}(::Type{T}, nt::RNANucleotide)
-    return convert(T, convert(Uint8, nt))
-end
 
 
 # TODO: Should we use ape-style bit masks for these?
@@ -56,12 +52,14 @@ const DNA_C = convert(DNANucleotide, 0b001)
 const DNA_G = convert(DNANucleotide, 0b010)
 const DNA_T = convert(DNANucleotide, 0b011)
 const DNA_N = convert(DNANucleotide, 0b100)
+const DNA_INVALID = convert(DNANucleotide, 0b1000)
 
 const RNA_A = convert(RNANucleotide, 0b000)
 const RNA_C = convert(RNANucleotide, 0b001)
 const RNA_G = convert(RNANucleotide, 0b010)
 const RNA_U = convert(RNANucleotide, 0b011)
 const RNA_N = convert(RNANucleotide, 0b100)
+const RNA_INVALID = convert(DNANucleotide, 0b1000)
 
 
 function nnucleotide(::Type{DNANucleotide})
@@ -80,21 +78,25 @@ function convert(::Type{Char}, nt::DNANucleotide)
     return dna_to_char[convert(Uint8, nt) + 1]
 end
 
-# TODO: it may be faster to look things up in an array
-function convert(::Type{DNANucleotide}, nt::Char)
-    if nt == 'A' || nt == 'a'
-        return DNA_A
-    elseif nt == 'C' || nt == 'c'
-        return DNA_C
-    elseif nt == 'T' || nt == 't'
-        return DNA_T
-    elseif nt == 'G' || nt == 'g'
-        return DNA_G
-    elseif nt == 'N' || nt == 'n'
-        return DNA_N
-    else
-        error("$(nt) is not a valid DNA nucleotide")
+# lookup table for characters in 'A':'n'
+const char_to_dna =
+    [DNA_A,       DNA_INVALID, DNA_C,       DNA_INVALID, DNA_INVALID, DNA_INVALID,
+     DNA_G,       DNA_INVALID, DNA_INVALID, DNA_INVALID, DNA_INVALID, DNA_INVALID,
+     DNA_INVALID, DNA_N,       DNA_INVALID, DNA_INVALID, DNA_INVALID, DNA_INVALID,
+     DNA_INVALID, DNA_T,       DNA_INVALID, DNA_INVALID, DNA_INVALID, DNA_INVALID,
+     DNA_INVALID, DNA_INVALID, DNA_INVALID, DNA_INVALID, DNA_INVALID, DNA_INVALID,
+     DNA_INVALID, DNA_INVALID, DNA_A,       DNA_INVALID, DNA_C,       DNA_INVALID,
+     DNA_INVALID, DNA_INVALID, DNA_G,       DNA_INVALID, DNA_INVALID, DNA_INVALID,
+     DNA_INVALID, DNA_INVALID, DNA_INVALID, DNA_N]
+
+
+function convert(::Type{DNANucleotide}, c::Char)
+    @inbounds nt = 'A' <= c <= 'n' ? char_to_dna[c - 'A' + 1] : DNA_INVALID
+    if nt == DNA_INVALID
+        error("$(c) is not a valid DNA nucleotide")
     end
+
+    return nt
 end
 
 
@@ -194,12 +196,20 @@ immutable NucleotideSequence{T <: Nucleotide}
         ns = BitArray(length(seq))
         fill!(ns, false)
 
-        for (i, nt) in enumerate(seq)
-            if nt == 'N' || nt == 'n'
-                ns[i] = true
-            else
-                d, r = divrem(i - 1, 32)
-                data[d + 1] |= convert(Uint64, convert(T, nt)) << (2*r)
+        j = start(seq)
+        idx = 1
+        @inbounds for i in 1:length(data)
+            shift = 0
+            while shift < 64 && !done(seq, j)
+                c, j = next(seq, j)
+                nt = convert(T, c)
+                if c == DNA_N
+                    ns[idx] = true
+                else
+                    data[i] |= convert(Uint64, nt) << shift
+                end
+                idx += 1
+                shift += 2
             end
         end
 
