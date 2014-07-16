@@ -79,16 +79,15 @@ function convert(::Type{Char}, nt::DNANucleotide)
 end
 
 # lookup table for characters in 'A':'n'
-const char_to_dna =
-    [DNA_A,       DNA_INVALID, DNA_C,       DNA_INVALID, DNA_INVALID, DNA_INVALID,
+const char_to_dna = [
+     DNA_A,       DNA_INVALID, DNA_C,       DNA_INVALID, DNA_INVALID, DNA_INVALID,
      DNA_G,       DNA_INVALID, DNA_INVALID, DNA_INVALID, DNA_INVALID, DNA_INVALID,
      DNA_INVALID, DNA_N,       DNA_INVALID, DNA_INVALID, DNA_INVALID, DNA_INVALID,
      DNA_INVALID, DNA_T,       DNA_INVALID, DNA_INVALID, DNA_INVALID, DNA_INVALID,
      DNA_INVALID, DNA_INVALID, DNA_INVALID, DNA_INVALID, DNA_INVALID, DNA_INVALID,
      DNA_INVALID, DNA_INVALID, DNA_A,       DNA_INVALID, DNA_C,       DNA_INVALID,
      DNA_INVALID, DNA_INVALID, DNA_G,       DNA_INVALID, DNA_INVALID, DNA_INVALID,
-     DNA_INVALID, DNA_INVALID, DNA_INVALID, DNA_N]
-
+     DNA_INVALID, DNA_INVALID, DNA_INVALID, DNA_N ]
 
 function convert(::Type{DNANucleotide}, c::Char)
     @inbounds nt = 'A' <= c <= 'n' ? char_to_dna[c - 'A' + 1] : DNA_INVALID
@@ -106,21 +105,25 @@ function convert(::Type{Char}, nt::RNANucleotide)
     return rna_to_char[convert(Uint8, nt) + 1]
 end
 
+# lookup table for characters in 'A':'u'
+const char_to_rna = [
+    RNA_A,       RNA_INVALID, RNA_C,       RNA_INVALID, RNA_INVALID, RNA_INVALID,
+    RNA_G,       RNA_INVALID, RNA_INVALID, RNA_INVALID, RNA_INVALID, RNA_INVALID,
+    RNA_INVALID, RNA_N,       RNA_INVALID, RNA_INVALID, RNA_INVALID, RNA_INVALID,
+    RNA_INVALID, RNA_INVALID, RNA_U,       RNA_INVALID, RNA_INVALID, RNA_INVALID,
+    RNA_INVALID, RNA_INVALID, RNA_INVALID, RNA_INVALID, RNA_INVALID, RNA_INVALID,
+    RNA_INVALID, RNA_INVALID, RNA_A,       RNA_INVALID, RNA_C,       RNA_INVALID,
+    RNA_INVALID, RNA_INVALID, RNA_G,       RNA_INVALID, RNA_INVALID, RNA_INVALID,
+    RNA_INVALID, RNA_INVALID, RNA_INVALID, RNA_N,       RNA_INVALID, RNA_INVALID,
+    RNA_INVALID, RNA_INVALID, RNA_INVALID, RNA_INVALID, RNA_U ]
 
-function convert(::Type{RNANucleotide}, nt::Char)
-    if nt == 'A' || nt == 'a'
-        return RNA_A
-    elseif nt == 'C' || nt == 'c'
-        return RNA_C
-    elseif nt == 'U' || nt == 'U'
-        return RNA_U
-    elseif nt == 'G' || nt == 'g'
-        return RNA_G
-    elseif nt == 'N' || nt == 'n'
-        return RNA_N
-    else
-        error("$(nt) is not a valid RNA nucleotide")
+function convert(::Type{RNANucleotide}, c::Char)
+    @inbounds nt = 'A' <= c <= 'u' ? char_to_rna[c - 'A' + 1] : RNA_INVALID
+    if nt == RNA_INVALID
+        error("$(c) is not a valid DNA nucleotide")
     end
+
+    return nt
 end
 
 
@@ -203,7 +206,7 @@ immutable NucleotideSequence{T <: Nucleotide}
             while shift < 64 && !done(seq, j)
                 c, j = next(seq, j)
                 nt = convert(T, c)
-                if c == DNA_N
+                if nt == nnucleotide(T)
                     ns[idx] = true
                 else
                     data[i] |= convert(Uint64, nt) << shift
