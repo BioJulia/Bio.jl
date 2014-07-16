@@ -33,14 +33,21 @@ facts("Construction") do
     @fact_throws DNASequence("ACCNNCATTTTTTAGATXATAG")
     @fact_throws RNASequence("ACCNNCATTTTTTAGATXATAG")
 
-    # Empty
-    @fact check_string_construction(DNANucleotide, "") => true
-    @fact check_string_construction(RNANucleotide, "") => true
-
     reps = 10
-    for len in [1, 10, 32, 1000, 10000, 100000]
+    for len in [0, 1, 10, 32, 1000, 10000, 100000]
         @fact all([check_string_construction(DNANucleotide, random_dna(len)) for _ in 1:reps]) => true
         @fact all([check_string_construction(RNANucleotide, random_rna(len)) for _ in 1:reps]) => true
+    end
+
+    context("Copy") do
+        function check_copy(T, seq)
+            return convert(String, copy(NucleotideSequence{T}(seq))) == seq
+        end
+
+        for len in [1, 10, 32, 1000, 10000, 100000]
+            @fact all([check_copy(DNANucleotide, random_dna(len)) for _ in 1:reps]) => true
+            @fact all([check_copy(RNANucleotide, random_rna(len)) for _ in 1:reps]) => true
+        end
     end
 
     context("Subsequence Construction") do
@@ -72,13 +79,97 @@ facts("Construction") do
 end
 
 
+facts("Transforms") do
+    context("Reversal") do
+        function check_reversal(T, seq)
+            return reverse(seq) == convert(String, reverse(T(seq)))
+        end
 
-facts("Iteration") do
+        reps = 10
+        for len in [1, 10, 32, 1000, 10000, 100000]
+            @fact all([check_reversal(DNASequence, random_dna(len)) for _ in 1:reps]) => true
+            @fact all([check_reversal(RNASequence, random_rna(len)) for _ in 1:reps]) => true
+        end
+    end
 
+    function dna_complement(seq::String)
+        seqc = Array(Char, length(seq))
+        for (i, c) in enumerate(seq)
+            if c == 'A'
+                seqc[i] = 'T'
+            elseif c == 'C'
+                seqc[i] = 'G'
+            elseif c == 'G'
+                seqc[i] = 'C'
+            elseif c == 'T'
+                seqc[i] = 'A'
+            else
+                seqc[i] = 'N'
+            end
+        end
+
+        return convert(String, seqc)
+    end
+
+    function rna_complement(seq::String)
+        seqc = Array(Char, length(seq))
+        for (i, c) in enumerate(seq)
+            if c == 'A'
+                seqc[i] = 'U'
+            elseif c == 'C'
+                seqc[i] = 'G'
+            elseif c == 'G'
+                seqc[i] = 'C'
+            elseif c == 'U'
+                seqc[i] = 'A'
+            else
+                seqc[i] = 'N'
+            end
+        end
+
+        return convert(String, seqc)
+    end
+
+    context("Complement") do
+        function check_dna_complement(seq)
+            return dna_complement(seq) == convert(String, complement(DNASequence(seq)))
+        end
+
+        function check_rna_complement(seq)
+            return rna_complement(seq) == convert(String, complement(RNASequence(seq)))
+        end
+
+        reps = 10
+        for len in [1, 10, 32, 1000, 10000, 100000]
+            @fact all([check_dna_complement(random_dna(len)) for _ in 1:reps]) => true
+            @fact all([check_rna_complement(random_rna(len)) for _ in 1:reps]) => true
+        end
+    end
+
+    context("Reverse Complement") do
+        function check_dna_revcomp(seq)
+            return reverse(dna_complement(seq)) ==
+                convert(String, reverse_complement(DNASequence(seq)))
+        end
+
+        function check_rna_revcomp(seq)
+            return reverse(rna_complement(seq)) ==
+                convert(String, reverse_complement(RNASequence(seq)))
+        end
+
+        reps = 10
+        for len in [1, 10, 32, 1000, 10000, 100000]
+            @fact all([check_dna_revcomp(random_dna(len)) for _ in 1:reps]) => true
+            @fact all([check_rna_revcomp(random_rna(len)) for _ in 1:reps]) => true
+        end
+    end
 end
 
 
 
+facts("Iteration") do
+
+end
 
 
 

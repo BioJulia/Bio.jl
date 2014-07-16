@@ -4,10 +4,11 @@ module Seq
 using Base.Intrinsics
 using IntervalTrees
 
-import Base: convert, getindex, show, length, start, next, done, copy
+import Base: convert, getindex, show, length, start, next, done, copy, reverse
 
 export Nucleotide, DNANucleotide, RNANucleotide,
-       NucleotideSequence, DNASequence, RNASequence, @dna_str, @rna_str
+       NucleotideSequence, DNASequence, RNASequence, @dna_str, @rna_str,
+       complement, reverse_complement
 
 
 # Nucleotides
@@ -156,18 +157,18 @@ end
 # field that specifies a range within the underlying data. When subsequences are
 # made, rather than coping the data, a new `part` is specified.
 #
-type NucleotideSequence{T <: Nucleotide}
+immutable NucleotideSequence{T <: Nucleotide}
     # 2-bit encoded sequence
     data::Vector{Uint64}
 
-    # 'N' intervals
-    ns::IntervalTree{Int, Bool}
+    # 'N' mask
+    ns::BitVector
 
     # interval within data defining the (sub)sequence
     part::UnitRange{Int}
 
     # Construct from raw components
-    function NucleotideSequence(data::Vector{Uint64}, ns::IntervalTree{Int, Bool},
+    function NucleotideSequence(data::Vector{Uint64}, ns::BitVector,
                                 part::UnitRange)
         return new(data, ns, part)
     end
@@ -183,39 +184,26 @@ type NucleotideSequence{T <: Nucleotide}
 
     # Construct an empty sequence
     function NucleotideSequence()
-        return new(zeros(Uint64, 0), IntervalTree{Int, Bool}(), 1:0)
+        return new(zeros(Uint64, 0), BitVector(0), 1:0)
     end
 
     # Construct a sequence from a string
     function NucleotideSequence(seq::String)
-        data = zeros(Uint64, seq_data_len(length(seq)))
-        ns = IntervalTree{Int, Bool}()
+        len = seq_data_len(length(seq))
+        data = zeros(Uint64, len)
+        ns = BitArray(length(seq))
+        fill!(ns, false)
 
-        nstart = 0
-        ns = Interval{Int}[]
         for (i, nt) in enumerate(seq)
-            if nstart != 0
-                if nt != 'N' && nt != 'n'
-                    push!(ns, Interval{Int}(nstart, i-1))
-                    nstart = 0
-                else
-                    continue
-                end
-            elseif nt == 'N' || nt == 'n'
-                nstart = i
-                continue
+            if nt == 'N' || nt == 'n'
+                ns[i] = true
+            else
+                d, r = divrem(i - 1, 32)
+                data[d + 1] |= convert(Uint64, convert(T, nt)) << (2*r)
             end
-
-            d, r = divrem(i - 1, 32)
-            data[d + 1] |= convert(Uint64, convert(T, nt)) << (2*r)
         end
 
-        if nstart != 0
-            push!(ns, Interval{Int}(nstart, length(seq)))
-        end
-
-        return new(data, IntervalTree{Int, Bool}(ns, fill(true, length(ns))),
-                   1:length(seq))
+        return new(data, ns, 1:length(seq))
     end
 end
 
@@ -237,7 +225,7 @@ function copy{T}(seq::NucleotideSequence{T})
     h = 64 - 2*r0
     k = 2*r0
 
-    j = d0
+    j = d0 + 1
     for i in 1:length(data)
         data[i] |= seq.data[j] >>> k
 
@@ -249,56 +237,30 @@ function copy{T}(seq::NucleotideSequence{T})
         data[i] |= seq.data[j] << h
     end
 
-    ns = IntervalTree{Int, Bool}()
-    for (a, b) in intersect(seq.ns, (seq.part.start, seq.part.stop))
-        ns[(a,b)] = true
-    end
-
-    return NucleotideSequence{T}(data, ns, 1:length(seq))
+    return NucleotideSequence{T}(data, seq.ns[seq.part.start:seq.part.stop],
+                                 1:length(seq))
 end
 
 
 # Iterating throug nucleotide sequences
 function start(seq::NucleotideSequence)
-    i = seq.part.start
-    ns_state = start(from(seq.ns, i))
-    nblock = (1, 0)
-    if !done(seq.ns, ns_state)
-        (nblock, _), ns_state = next(seq.ns, ns_state)
-    end
-
-    return i, nblock, ns_state
+    i = seq.part.start - 1
+    return i
 end
 
 
-function next{T}(seq::NucleotideSequence{T}, state)
-    i, nblock, ns_state = state
-
-    if i < nblock[1] || nblock[2] - nblock[1] < 0
-        value = getnuc(T, seq.data, i)
-    elseif nblock[1] <= i <= nblock[2]
-        value = nnucleotide(T)
+function next{T}(seq::NucleotideSequence{T}, i)
+    nvalue, _ = next(seq.ns, i)
+    if nvalue
+        return (nnucleotide(T), i + 1)
     else
-        if !done(seq.ns, ns_state)
-            (nblock, _), ns_state = next(seq.ns, ns_state)
-        else
-            nblock = (1, 0)
-        end
-
-        if i < nblock[1] || nblock[2] - nblock[1] < 0
-            value = getnuc(T, seq.data, i)
-        else
-            value = nnucleotide(T)
-        end
+        return (getnuc(T, seq.data, i + 1), i + 1)
     end
-
-    return value, (i + 1, nblock, ns_state)
 end
 
 
-function done(seq::NucleotideSequence, state)
-    i, nblock, ns_state = state
-    return i > length(seq)
+function done(seq::NucleotideSequence, i)
+    return i >= length(seq)
 end
 
 
@@ -346,8 +308,8 @@ function getindex{T}(seq::NucleotideSequence{T}, i::Integer)
         error(BoundsError())
     end
     i += seq.part.start - 1
-    if hasintersection(seq.ns, i)
-        return convert(T, 0b0100) # bit representation for N
+    if seq.ns[i]
+        return nnucleotide(T)
     else
         return getnuc(T, seq.data, i)
     end
@@ -377,14 +339,61 @@ end
 # Transformations
 # ---------------
 
-# If seq is a sub-sequence do we want to take the complement of the full
-# sequence?
-function complement{T}(seq::NucleotideSequence{T})
-    data = Array(Uint64, length(seq.data))
 
-
+# In-place complement for low level work.
+function _complement!(seq::NucleotideSequence)
+    for i in 1:length(seq.data)
+        seq.data[i] = ~seq.data[i]
+    end
 end
 
+
+function complement(seq::NucleotideSequence)
+    seq = copy(seq)
+    _complement!(seq)
+    return seq
+end
+
+
+# Nucleotide reverse. Reverse a kmer stored in a Uint64.
+function nucrev(x::Uint64)
+     x = (x & 0x3333333333333333) <<  2 | (x & 0xCCCCCCCCCCCCCCCC) >>>  2
+     x = (x & 0x0F0F0F0F0F0F0F0F) <<  4 | (x & 0xF0F0F0F0F0F0F0F0) >>>  4
+     x = (x & 0x00FF00FF00FF00FF) <<  8 | (x & 0xFF00FF00FF00FF00) >>>  8
+     x = (x & 0x0000FFFF0000FFFF) << 16 | (x & 0xFFFF0000FFFF0000) >>> 16
+     x = (x & 0x00000000FFFFFFFF) << 32 | (x & 0xFFFFFFFF00000000) >>> 32
+     return x
+end
+
+
+function reverse{T}(seq::NucleotideSequence{T})
+    k = (2 * length(seq)) % 64
+    h = 64 - k
+    if k == 0
+        k = 64
+        h = 0
+    end
+
+    data = zeros(Uint64, length(seq.data))
+    j = length(data)
+    for i in 1:length(data)
+        x = nucrev(seq.data[i])
+        data[j] |= x >>> h
+        if (j -= 1) == 0
+            break
+        end
+        data[j] |= x << k;
+    end
+
+    return NucleotideSequence{T}(data, reverse(seq.ns), seq.part)
+end
+
+
+function reverse_complement(seq::NucleotideSequence)
+    seq = reverse(seq)
+    _complement!(seq)
+    return seq
+end
 
 
 end
