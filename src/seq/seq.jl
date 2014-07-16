@@ -2,13 +2,12 @@
 module Seq
 
 using Base.Intrinsics
-using IntervalTrees
 
 import Base: convert, getindex, show, length, start, next, done, copy, reverse
 
 export Nucleotide, DNANucleotide, RNANucleotide,
        NucleotideSequence, DNASequence, RNASequence, @dna_str, @rna_str,
-       complement, reverse_complement
+       complement, reverse_complement, mismatches, ns
 
 
 # Nucleotides
@@ -162,7 +161,7 @@ end
 # field that specifies a range within the underlying data. When subsequences are
 # made, rather than coping the data, a new `part` is specified.
 #
-immutable NucleotideSequence{T <: Nucleotide}
+type NucleotideSequence{T <: Nucleotide}
     # 2-bit encoded sequence
     data::Vector{Uint64}
 
@@ -224,14 +223,20 @@ end
 typealias DNASequence NucleotideSequence{DNANucleotide}
 typealias RNASequence NucleotideSequence{RNANucleotide}
 
-# Copy a sequence.
+# If a sequence's starting position within its data != 1, this function
+# will copy a subset of the data to align with sequences range and make start == 1.
 #
-# Unlike constructing subsequences with seq[a:b], this function actually copies
-# the underlying data. Since sequences are immutable, you should basically
-# never have to do this. It's useful only for low-level algorithms like
-# `reverse` which actually do make a copy and modify the copy in
-# place.
-function copy{T}(seq::NucleotideSequence{T})
+# The user should never need to call this, as it has no outward effect on the
+# sequence, but it makes functions like mismatch easier and faster if can assume
+# a sequence is aligned with its data.
+#
+# If reorphan = true, copy the data regardless of the start position.
+#
+function orphan!{T}(seq::NucleotideSequence{T}, reorphan=false)
+    if !reorphan && seq.part.start == 1
+        return
+    end
+
     data = zeros(Uint64, seq_data_len(length(seq)))
     d0, r0 = divrem(seq.part.start - 1, 32)
 
@@ -239,7 +244,7 @@ function copy{T}(seq::NucleotideSequence{T})
     k = 2*r0
 
     j = d0 + 1
-    for i in 1:length(data)
+    @inbounds for i in 1:length(data)
         data[i] |= seq.data[j] >>> k
 
         j += 1
@@ -250,8 +255,21 @@ function copy{T}(seq::NucleotideSequence{T})
         data[i] |= seq.data[j] << h
     end
 
-    return NucleotideSequence{T}(data, seq.ns[seq.part.start:seq.part.stop],
-                                 1:length(seq))
+    seq.data = data
+    seq.ns = seq.ns[seq.part.start:seq.part.stop]
+    seq.part = 1:length(seq.part)
+    return seq
+end
+
+# Copy a sequence.
+#
+# Unlike constructing subsequences with seq[a:b], this function actually copies
+# the underlying data. Since sequences are immutable, you should basically
+# never have to do this. It's useful only for low-level algorithms like
+# `reverse` which actually do make a copy and modify the copy in
+# place.
+function copy{T}(seq::NucleotideSequence{T})
+    return orphan!(NucleotideSequence{T}(seq.data, seq.ns, seq.part), true)
 end
 
 
@@ -275,6 +293,59 @@ end
 function done(seq::NucleotideSequence, i)
     return i >= length(seq)
 end
+
+
+# Iterate through positions of Ns efficiently
+immutable SequenceNIterator
+    ns::BitVector
+    part::UnitRange{Int}
+end
+
+
+function ns(seq::NucleotideSequence)
+    return SequenceNIterator(seq.ns, seq.part)
+end
+
+
+function nextn(it::SequenceNIterator, i)
+    d, r = divrem(i - 1, 64)
+    while d < length(it.ns.chunks) && it.ns.chunks[d + 1] >>> r == 0 && d * 64 < it.part.stop
+        d += 1
+        r = 0
+    end
+
+    if d * 64 + r + 1 > it.part.stop
+        return d * 64 + r + 1
+    end
+
+    if d + 1 <= length(it.ns.chunks)
+        x = it.ns.chunks[d + 1] >>> r
+        while x & 0x1 == 0
+            x >>>= 1
+            r += 1
+        end
+    end
+
+    return d * 64 + r + 1
+end
+
+
+function start(it::SequenceNIterator)
+    return nextn(it, it.part.start)
+end
+
+
+function next(it::SequenceNIterator, i)
+    d, r = divrem(i - 1, 64)
+    next_i = nextn(it, i + 1)
+    return i + it.part.start - 1, next_i
+end
+
+
+function done(it::SequenceNIterator, i)
+    return i > it.part.stop
+end
+
 
 
 # String decorator syntax to enable building sequence literals like:
@@ -313,6 +384,12 @@ end
 function getnuc(T::Type, data::Vector{Uint64}, i::Integer)
     d, r = divrem(i - 1, 32)
     return convert(T, convert(Uint8, (data[d + 1] >>> (2*r)) & 0b11))
+end
+
+
+function zeronuc!(T::Type, data::Vector{Uint64}, i::Integer)
+    d, r = divrem(i - 1, 32)
+    data[d + 1] &= ~(convert(Uint64, nt) << (2*r))
 end
 
 
@@ -355,9 +432,10 @@ end
 
 # In-place complement for low level work.
 function _complement!(seq::NucleotideSequence)
-    for i in 1:length(seq.data)
+    @inbounds for i in 1:length(seq.data)
         seq.data[i] = ~seq.data[i]
     end
+    # TODO: zero nucleotides with n
 end
 
 
@@ -380,6 +458,8 @@ end
 
 
 function reverse{T}(seq::NucleotideSequence{T})
+    orphan!(seq)
+
     k = (2 * length(seq)) % 64
     h = 64 - k
     if k == 0
@@ -389,7 +469,7 @@ function reverse{T}(seq::NucleotideSequence{T})
 
     data = zeros(Uint64, length(seq.data))
     j = length(data)
-    for i in 1:length(data)
+    @inbounds for i in 1:length(data)
         x = nucrev(seq.data[i])
         data[j] |= x >>> h
         if (j -= 1) == 0
@@ -406,6 +486,119 @@ function reverse_complement(seq::NucleotideSequence)
     seq = reverse(seq)
     _complement!(seq)
     return seq
+end
+
+
+# Algorithms
+# ----------
+
+
+# compute the mismatch count between two kmers stored in x, y
+function nucmismatches(x::Uint64, y::Uint64)
+    xyxor = x $ y
+    return count_ones((xyxor & 0x5555555555555555) | ((xyxor & 0xAAAAAAAAAAAAAAAA) >>> 1))
+end
+
+
+# return a mask of the first k bits
+function makemask(k::Integer)
+    return 0xffffffffffffffff >> (64 - k)
+end
+
+
+function mismatches{T}(a::NucleotideSequence{T}, b::NucleotideSequence{T},
+                       nmatches::Bool=false)
+    # we need to assume that a is aligned with its data
+    if a.part.start != 1
+        if b.part.start == 1
+            return mismatches(b, a)
+        else
+            if length(a) < b
+                orphan!(a)
+            else
+                orphan!(b)
+                return mismatches(b, a)
+            end
+        end
+    end
+
+    d0, r0 = divrem(b.part.start - 1, 64)
+    h = 64 - r0
+    k = r0
+
+    hmask = makemask(h)
+    kmask = makemask(k)
+    count = 0
+    j = d0 + 1
+    for i in 1:length(a.data)
+        count += nucmismatches(a.data[i] & hmask, b.data[j] >>> k)
+        j += 1
+        if j > length(b.data)
+            break
+        end
+        count += nucmismatches(a.data[i] & kmask, b.data[j] << h)
+    end
+
+    nsa = ns(a)
+    nsb = ns(b)
+    nsa_state = start(nsa)
+    nsb_state = start(nsb)
+    a_done = done(nsa, nsa_state)
+    b_done = done(nsb, nsb_state)
+    i, nsa_state = a_done ? (0, nsa_state) : next(nsa, nsa_state)
+    j, nsb_state = b_done ? (0, nsb_state) : next(nsb, nsb_state)
+
+    while true
+        a_hasnext = !done(nsa, nsa_state)
+        b_hasnext = !done(nsb, nsb_state)
+
+        if !a_done && (b_done || i < j)
+            nucsmatch = getnuc(T, a.data, i + a.part.start - 1) ==
+                        getnuc(T, b.data, i + b.part.start - 1)
+            if nucsmatch
+                if !nmatches
+                    count += 1
+                end
+            else
+                if nmatches
+                    count -= 1
+                end
+            end
+
+            if a_hasnext; i, nsa_state = next(nsa, nsa_state)
+            else; a_done = true; end
+        elseif !b_done && (a_done || j < i)
+            nucsmatch = getnuc(T, a.data, j + a.part.start - 1) ==
+                        getnuc(T, b.data, j + b.part.start - 1)
+            if nucsmatch
+                if !nmatches
+                    count += 1
+                end
+            else
+                if nmatches
+                    count -= 1
+                end
+            end
+
+            if b_hasnext; j, nsb_state = next(nsb, nsb_state)
+            else; b_done = true; end
+        elseif !a_done && !b_done
+            nucsmatch = getnuc(T, a.data, i + a.part.start - 1) ==
+                        getnuc(T, b.data, i + b.part.start - 1)
+            if !nucsmatch
+                count -= 1
+            end
+
+            if a_hasnext; i, nsa_state = next(nsa, nsa_state)
+            else; a_done = true; end
+            if b_hasnext; j, nsb_state = next(nsb, nsb_state)
+            else; b_done = true; end
+        else
+            break
+        end
+    end
+
+    return count
 end
 
 

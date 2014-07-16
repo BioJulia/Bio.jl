@@ -166,9 +166,52 @@ facts("Transforms") do
 end
 
 
+facts("Compare") do
+    context("Mismatches") do
+        function check_mismatches(T, a, b)
+            count = 0
+            for (ca, cb) in zip(a, b)
+                if ca != cb
+                    count += 1
+                end
+            end
+            if mismatches(T(a), T(b)) != count
+                println(STDERR, a, "\n", b, "\n", mismatches(T(a), T(b)), "\n", count)
+            end
+
+            return mismatches(T(a), T(b)) == count
+        end
+
+        reps = 10
+        for len in [1, 10, 32, 1000, 10000, 100000]
+            @fact all([check_mismatches(DNASequence, random_dna(len), random_dna(len))
+                       for _ in 1:reps]) => true
+            @fact all([check_mismatches(RNASequence, random_rna(len), random_rna(len))
+                       for _ in 1:reps]) => true
+        end
+    end
+end
+
 
 facts("Iteration") do
+    context("Ns") do
+        function check_ns(T, seq)
+            expected = Int[]
+            for i in 1:length(seq)
+                if seq[i] == 'N'
+                    push!(expected, i)
+                end
+            end
 
+            collect(ns(T(seq))) == expected
+        end
+
+        reps = 10
+        for len in [1, 10, 32, 1000, 10000, 100000]
+            @fact all([check_ns(DNASequence, random_dna(len)) for _ in 1:reps]) => true
+            @fact all([check_ns(RNASequence, random_rna(len)) for _ in 1:reps]) => true
+        end
+    end
 end
 
 
