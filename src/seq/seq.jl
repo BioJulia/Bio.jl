@@ -3,11 +3,12 @@ module Seq
 
 using Base.Intrinsics
 
-import Base: convert, getindex, show, length, start, next, done, copy, reverse
+import Base: convert, getindex, show, length, start, next, done, copy, reverse,
+             show, endof
 
 export Nucleotide, DNANucleotide, RNANucleotide,
        NucleotideSequence, DNASequence, RNASequence, @dna_str, @rna_str,
-       complement, reverse_complement, mismatches, ns
+       complement, reverse_complement, mismatches, ns, eachsubseq, eachkmer
 
 
 # Nucleotides
@@ -291,11 +292,13 @@ end
 
 
 function done(seq::NucleotideSequence, i)
-    return i >= length(seq)
+    return i >= seq.part.stop
 end
 
 
 # Iterate through positions of Ns efficiently
+# TODO: This is code that should ultimately be put in the bitarray code Base.
+
 immutable SequenceNIterator
     ns::BitVector
     part::UnitRange{Int}
@@ -364,7 +367,15 @@ function length(seq::NucleotideSequence)
 end
 
 
+function endof(seq::NucleotideSequence)
+    return length(seq)
+end
+
+
 function show{T}(io::IO, seq::NucleotideSequence{T})
+
+    # don't show more than this many characters to avoid
+    const maxcount = 60
     if T == DNANucleotide
         write(io, "dna\"")
     elseif T == RNANucleotide
@@ -372,11 +383,23 @@ function show{T}(io::IO, seq::NucleotideSequence{T})
     end
 
     len = length(seq)
-    for nt in seq
-        write(io, convert(Char, nt))
+    if len > maxcount
+        for nt in seq[1:div(maxcount, 2) - 1]
+            write(io, convert(Char, nt))
+        end
+        write("…")
+        for nt in seq[(end - (div(maxcount, 2) - 1)):end]
+            write(io, convert(Char, nt))
+        end
+    else
+        for nt in seq
+            write(io, convert(Char, nt))
+        end
     end
 
-    write(io, "\"")
+    write(io, "\"  # ", string(len), "nt ",
+          T == DNANucleotide ? "DNA" : "RNA", " sequence")
+
 end
 
 
@@ -424,6 +447,30 @@ end
 function convert(::Type{String}, seq::NucleotideSequence)
     return convert(String, [convert(Char, x) for x in seq])
 end
+
+
+# TODO: do we actually need this
+# Convert a sequence to an integer if possible.
+#
+# This is slightly odd, but ends up being quite useful for indexing into arrays,
+# or counting k-mers.
+#
+#function convert{T <: Unsigned}(::Type{T}, seq::NucleotideSequence)
+    #if length(seq) > 4 * sizeof(T)
+        #error("nucleotide sequence is too long to be converted to integer type $(T)")
+    #end
+
+    #if hasn(seq)
+        #error("cannot convert a sequence with Ns to integer type $(T)")
+    #end
+
+    #x = zero(T)
+    #for nt in seq
+        #x = (x << 2) | convert(Uint8, nt)
+    #end
+    #return x
+#end
+
 
 
 # Transformations
@@ -602,4 +649,216 @@ function mismatches{T}(a::NucleotideSequence{T}, b::NucleotideSequence{T},
 end
 
 
+# Call a function on every evenly spaces subsequence of a given length.
+#
+# This avoids a little overhead by not reallocating subsequences but rather
+# modifying one in place and passing it to the function repeatedly.
+#
+# Args:
+#   f: a function of the form f(subseq::NucleotideSequence)
+#   seq: a sequence
+#   len: length of the subsequences
+#   step: step between the start position of each subsequenc
+#
+function eachsubseq{T}(f::Base.Callable, seq::NucleotideSequence{T}, len::Integer,
+                       step::Integer=1)
+    subseq = NucleotideSequence{T}(seq)
+    for i in 1:step:(length(seq) - len + 1)
+        start = seq.part.start + i - 1
+        subseq.part = start:(start + len - 1)
+        f(subseq)
+    end
 end
+
+
+# Call a function on every k-mer.
+#
+#
+function eachkmer{T}(f::Base.Callable, seq::NucleotideSequence{T}, k::Integer)
+    if k > 32
+        error("k must be ≤ 32 in eachkmer")
+    end
+    x = uint64(0)
+    mask = makemask(2 * k)
+    skip = k - 1
+    len = length(seq)
+    shift = 2 * (k - 1)
+    d, r = divrem(seq.part.start - 1, 64)
+
+    # manually iterate through N positions
+    ns_it = ns(seq)
+    ns_it_state = start(ns_it)
+    if done(ns_it, ns_it_state)
+        next_n_pos = length(seq) + 1
+    else
+        next_n_pos, ns_it_state = next(ns_it, ns_it_state)
+    end
+
+    i = 1
+    while i <= len
+        # skip over any kmer containing an N
+        if i == next_n_pos
+            if done(ns_it, ns_it_state)
+                next_n_pos = length(seq) + 1
+            else
+                next_n_pos, ns_it_state = next(ns_it, ns_it_state)
+            end
+            skip = k
+        end
+
+        x = (x >>> 2) | (((seq.data[d + 1] >>> r) & 0b11) << shift)
+
+        r += 2
+        if r >= 64
+            r = 0
+            d += 1
+        end
+
+        if skip == 0
+            f(i, x & mask)
+            skip = 1
+        else
+            skip -= 1
+        end
+        i += 1
+    end
+end
+
+
+
+# Nucleotide Composition
+# ----------------------
+
+
+# Count A, C, T/U, G respectively in a kmer stored in a Uint64
+function count_a(x::Uint64)
+    xinv = ~x
+    return count_ones(((xinv >>> 1) & xinv) & 0x5555555555555555)
+end
+
+function count_c(x::Uint64)
+    return count_ones((((~x) >>> 1) & x) & 0x5555555555555555)
+end
+
+function count_g(x::Uint64)
+    return count_ones(((x >>> 1) & (~x)) & 0x5555555555555555)
+end
+
+function count_t(x::Uint64)
+    return count_ones((x & (x >>> 1)) & 0x5555555555555555)
+end
+
+
+type NucleotideCounts{T <: Nucleotide}
+    a::Uint
+    c::Uint
+    g::Uint
+    t::Uint
+    n::Uint
+
+    function NucleotideCounts()
+        new(0, 0, 0, 0, 0)
+    end
+end
+
+
+typealias DNANucleotideCounts NucleotideCounts{DNANucleotide}
+typealias RNANucleotideCounts NucleotideCounts{RNANucleotide}
+
+
+function getindex{T}(counts::NucleotideCounts{T}, nt::T)
+    return getfield(counts, int(convert(Uint, nt) + 1))
+end
+
+
+function setindex!{T}(counts::NucleotideCounts{T}, d::Integer, nt::T)
+    return setfield!(counts, int(convert(Uint, nt) + 1), counts[nt] + 1)
+end
+
+
+# pad strings so they are right justified when printed
+function format_counts(xs)
+    strings = String[string(x) for x in xs]
+    len = maximum(map(length, strings))
+    if i in 1:length(strings)
+        strings[i] = string(repeat(" ", len - length(strings[i])), strings[i])
+    end
+    return strings
+end
+
+
+function show(io::IO, counts::DNANucleotideCounts)
+    count_strings = format_counts(
+        [counts[DNA_A], counts[DNA_C], counts[DNA_G], counts[DNA_T], counts[DNA_n]])
+
+    write(io,
+        """
+        DNANucleotideCounts:
+          A => $(count_strings[1])
+          C => $(count_strings[2])
+          G => $(count_strings[3])
+          T => $(count_strings[4])
+          N => $(count_strings[5])
+        """)
+end
+
+
+function show(io::IO, counts::RNANucleotideCounts)
+    count_strings = format_counts(
+        [counts[RNA_A], counts[RNA_C], counts[RNA_G], counts[RNA_U], counts[RNA_n]])
+
+    write(io,
+        """
+        RNANucleotideCounts:
+          A => $(count_strings[1])
+          C => $(count_strings[2])
+          G => $(count_strings[3])
+          U => $(count_strings[4])
+          N => $(count_strings[5])
+        """)
+end
+
+
+function nucleotide_count{T}(seq::NucleotideSequence{T})
+    d, r = divrem(2 * (seq.part.start - 1), 64)
+    i = 1
+
+    counts = NucleotideCounts{T}()
+
+    # count leading unaligned bases
+    for i in 1:r
+        counts[getnuc(T, seq.data, seq.part.start + i - 1)] += 1
+        i += 1
+    end
+    if r > 0
+        d += 1
+    end
+
+    # count aligned bases
+    while i + 32 <= length(seq)
+        counts[DNA_A] += count_a(seq.data[d + 1])
+        counts[DNA_C] += count_c(seq.data[d + 1])
+        counts[DNA_G] += count_g(seq.data[d + 1])
+        counts[DNA_T] += count_t(seq.data[d + 1])
+        d += 1
+        i += 32
+    end
+
+    # count trailing unaligned bases
+    while i <= length(seq)
+        counts[getnuc(T, seq.data, seq.part.start + i - 1)] += 1
+        i += 1
+    end
+
+    # process Ns
+    for i in ns(seq)
+        counts[getnuc(T, seq.data, seq.part.start + i - 1)] -= 1
+        counts[nnucleotide(T)] += 1
+    end
+
+    return counts
+end
+
+
+end # module Seq
+
