@@ -33,6 +33,12 @@ function convert{T <: Unsigned, S <: Nucleotide}(::Type{T}, nt::S)
 end
 
 
+function convert{T <: Unsigned, S <: Nucleotide}(::Type{S}, nt::T)
+    return convert(S, convert(Uint8, nt))
+end
+
+
+
 # Nucleotide encoding definition
 const DNA_A = convert(DNANucleotide, 0b000)
 const DNA_C = convert(DNANucleotide, 0b001)
@@ -71,7 +77,7 @@ end
 
 # Conversion from Char
 
-# lookup table for characters in 'A':'n'
+# lookup table for characters in 'A':'t'
 const char_to_dna = [
      DNA_A,       DNA_INVALID, DNA_C,       DNA_INVALID, DNA_INVALID, DNA_INVALID,
      DNA_G,       DNA_INVALID, DNA_INVALID, DNA_INVALID, DNA_INVALID, DNA_INVALID,
@@ -80,10 +86,12 @@ const char_to_dna = [
      DNA_INVALID, DNA_INVALID, DNA_INVALID, DNA_INVALID, DNA_INVALID, DNA_INVALID,
      DNA_INVALID, DNA_INVALID, DNA_A,       DNA_INVALID, DNA_C,       DNA_INVALID,
      DNA_INVALID, DNA_INVALID, DNA_G,       DNA_INVALID, DNA_INVALID, DNA_INVALID,
-     DNA_INVALID, DNA_INVALID, DNA_INVALID, DNA_N ]
+     DNA_INVALID, DNA_INVALID, DNA_INVALID, DNA_N,       DNA_INVALID, DNA_INVALID,
+     DNA_INVALID, DNA_INVALID, DNA_INVALID, DNA_T ]
+
 
 function convert(::Type{DNANucleotide}, c::Char)
-    @inbounds nt = 'A' <= c <= 'n' ? char_to_dna[c - 'A' + 1] : DNA_INVALID
+    @inbounds nt = 'A' <= c <= 't' ? char_to_dna[c - 'A' + 1] : DNA_INVALID
     if nt == DNA_INVALID
         error("$(c) is not a valid DNA nucleotide")
     end
@@ -212,7 +220,7 @@ end
 
 
 function convert(::Type{RNASequence}, seq::String)
-    return DNASequence(seq)
+    return RNASequence(seq)
 end
 
 
@@ -245,7 +253,8 @@ end
 # Pretting printing of sequences.
 function show{T}(io::IO, seq::NucleotideSequence{T})
 
-    # don't show more than this many characters to avoid
+    # don't show more than this many characters to avoid filling the screen
+    # with junk
     const maxcount = 60
     if T == DNANucleotide
         write(io, "dna\"")
@@ -387,7 +396,7 @@ immutable SequenceNIterator
 end
 
 
-function nposition(seq::NucleotideSequence)
+function npositions(seq::NucleotideSequence)
     return SequenceNIterator(seq.ns, seq.part)
 end
 
@@ -571,8 +580,8 @@ function mismatches{T}(a::NucleotideSequence{T}, b::NucleotideSequence{T},
     # mask into account. If 'N's are present in the sequence, that mismatch
     # count may be too high or too low, so we walk through all N positions in
     # both sequences in unision, correcting the count where needed.
-    nsa = ns(a)
-    nsb = ns(b)
+    nsa = npositions(a)
+    nsb = npositions(b)
     nsa_state = start(nsa)
     nsb_state = start(nsb)
     a_done = done(nsa, nsa_state)
@@ -669,6 +678,10 @@ type NucleotideCounts{T <: Nucleotide}
         new(0, 0, 0, 0, 0)
     end
 end
+
+
+typealias DNANucleotideCounts NucleotideCounts{DNANucleotide}
+typealias RNANucleotideCounts NucleotideCounts{RNANucleotide}
 
 
 function getindex{T}(counts::NucleotideCounts{T}, nt::T)

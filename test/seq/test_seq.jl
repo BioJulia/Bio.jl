@@ -4,23 +4,37 @@ using FactCheck
 using Bio
 using Bio.Seq
 
-# Check that sequences in strings survive the round trip:
-#   String → NucleotideSequence → String
-function check_string_construction(T::Type, seq::String)
-    return convert(String, NucleotideSequence{T}(seq)) == uppercase(seq)
-end
-
-
 # Return a random DNA/RNA sequence of the given length
-function random_dna(n::Integer)
-    nts = ['A', 'C', 'G', 'T', 'N']
-    return convert(String, [nts[i] for i in rand(1:5, n)])
+function random_seq(n::Integer, nts, probs)
+    cumprobs = cumsum(probs)
+    x = Array(Char, n)
+    for i in 1:n
+        x[i] = nts[searchsorted(cumprobs, rand()).start]
+    end
+    convert(String, x)
 end
 
-function random_rna(n::Integer)
-    nts = ['A', 'C', 'G', 'U', 'N']
-    return convert(String, [nts[i] for i in rand(1:5, n)])
+
+function random_dna(n, probs=[0.24, 0.24, 0.24, 0.24, 0.04])
+    return random_seq(n, ['A', 'C', 'G', 'T', 'N'], probs)
 end
+
+
+function random_rna(n, probs=[0.24, 0.24, 0.24, 0.24, 0.04])
+    return random_seq(n, ['A', 'C', 'G', 'U', 'N'], probs)
+end
+
+
+function random_dna_kmer(len)
+    return random_dna(len, [0.25, 0.25, 0.25, 0.25])
+end
+
+
+function random_rna_kmer(len)
+    return random_rna(len, [0.25, 0.25, 0.25, 0.25])
+end
+
+
 
 function random_interval(minstart, maxstop)
     start = rand(minstart:maxstop)
@@ -33,10 +47,18 @@ facts("Construction") do
     @fact_throws DNASequence("ACCNNCATTTTTTAGATXATAG")
     @fact_throws RNASequence("ACCNNCATTTTTTAGATXATAG")
 
+    # Check that sequences in strings survive round trip conversion:
+    #   String → NucleotideSequence → String
+    function check_string_construction(T::Type, seq::String)
+        return convert(String, NucleotideSequence{T}(seq)) == uppercase(seq)
+    end
+
     reps = 10
     for len in [0, 1, 10, 32, 1000, 10000, 100000]
         @fact all([check_string_construction(DNANucleotide, random_dna(len)) for _ in 1:reps]) => true
         @fact all([check_string_construction(RNANucleotide, random_rna(len)) for _ in 1:reps]) => true
+        @fact all([check_string_construction(DNANucleotide, lowercase(random_dna(len))) for _ in 1:reps]) => true
+        @fact all([check_string_construction(RNANucleotide, lowercase(random_rna(len))) for _ in 1:reps]) => true
     end
 
     context("Copy") do
@@ -76,19 +98,52 @@ facts("Construction") do
             @fact all(results) => true
         end
     end
+
+    context("Kmer Construction") do
+        # Check that kmers in strings survive round trip conversion:
+        #   String → Kmer → String
+        function check_string_construction(T::Type, seq::String)
+            return convert(String, convert(Kmer{T}, seq)) == uppercase(seq)
+        end
+
+        # Check that kmers in strings survive round trip conversion:
+        #   String → NucleotideSequence → Kmer → NucleotideSequence → String
+        function check_roundabout_construction(T::Type, seq::String)
+            return convert(String,
+                convert(NucleotideSequence{T},
+                    convert(Kmer,
+                        convert(NucleotideSequence{T}, seq)))) == uppercase(seq)
+        end
+
+        for len in [0, 1, 16, 32]
+            check_string_construction(DNANucleotide, random_dna_kmer(len))
+            check_string_construction(RNANucleotide, random_rna_kmer(len))
+            check_roundabout_construction(DNANucleotide, random_dna_kmer(len))
+            check_roundabout_construction(RNANucleotide, random_rna_kmer(len))
+        end
+
+        # N is not allowed in Kmers
+        @fact_throws dnakmer("ACGTNACGT")
+        @fact_throws rnakmer("ACGUNACGU")
+    end
 end
 
 
 facts("Transforms") do
     context("Reversal") do
         function check_reversal(T, seq)
-            return reverse(seq) == convert(String, reverse(T(seq)))
+            return reverse(seq) == convert(String, reverse(convert(T, seq)))
         end
 
         reps = 10
-        for len in [1, 10, 32, 1000, 10000, 100000]
+        for len in [0, 1, 10, 32, 1000, 10000, 100000]
             @fact all([check_reversal(DNASequence, random_dna(len)) for _ in 1:reps]) => true
             @fact all([check_reversal(RNASequence, random_rna(len)) for _ in 1:reps]) => true
+        end
+
+        for len in [0, 1, 16, 32]
+            @fact all([check_reversal(DNAKmer, random_dna_kmer(len)) for _ in 1:reps]) => true
+            @fact all([check_reversal(RNAKmer, random_rna_kmer(len)) for _ in 1:reps]) => true
         end
     end
 
@@ -131,36 +186,48 @@ facts("Transforms") do
     end
 
     context("Complement") do
-        function check_dna_complement(seq)
-            return dna_complement(seq) == convert(String, complement(DNASequence(seq)))
+        function check_dna_complement(T, seq)
+            return dna_complement(seq) ==
+                convert(String, complement(convert(T, seq)))
         end
 
-        function check_rna_complement(seq)
-            return rna_complement(seq) == convert(String, complement(RNASequence(seq)))
+        function check_rna_complement(T, seq)
+            return rna_complement(seq) ==
+                convert(String, complement(convert(T, seq)))
         end
 
         reps = 10
         for len in [1, 10, 32, 1000, 10000, 100000]
-            @fact all([check_dna_complement(random_dna(len)) for _ in 1:reps]) => true
-            @fact all([check_rna_complement(random_rna(len)) for _ in 1:reps]) => true
+            @fact all([check_dna_complement(DNASequence, random_dna(len)) for _ in 1:reps]) => true
+            @fact all([check_rna_complement(RNASequence, random_rna(len)) for _ in 1:reps]) => true
+        end
+
+        for len in [0, 1, 16, 32]
+            @fact all([check_dna_complement(DNAKmer, random_dna_kmer(len)) for _ in 1:reps]) => true
+            @fact all([check_rna_complement(RNAKmer, random_rna_kmer(len)) for _ in 1:reps]) => true
         end
     end
 
     context("Reverse Complement") do
-        function check_dna_revcomp(seq)
+        function check_dna_revcomp(T, seq)
             return reverse(dna_complement(seq)) ==
-                convert(String, reverse_complement(DNASequence(seq)))
+                convert(String, reverse_complement(convert(T, seq)))
         end
 
-        function check_rna_revcomp(seq)
+        function check_rna_revcomp(T, seq)
             return reverse(rna_complement(seq)) ==
-                convert(String, reverse_complement(RNASequence(seq)))
+                convert(String, reverse_complement(convert(T, seq)))
         end
 
         reps = 10
         for len in [1, 10, 32, 1000, 10000, 100000]
-            @fact all([check_dna_revcomp(random_dna(len)) for _ in 1:reps]) => true
-            @fact all([check_rna_revcomp(random_rna(len)) for _ in 1:reps]) => true
+            @fact all([check_dna_revcomp(DNASequence, random_dna(len)) for _ in 1:reps]) => true
+            @fact all([check_rna_revcomp(RNASequence, random_rna(len)) for _ in 1:reps]) => true
+        end
+
+        for len in [0, 1, 16, 32]
+            @fact all([check_dna_revcomp(DNAKmer, random_dna_kmer(len)) for _ in 1:reps]) => true
+            @fact all([check_rna_revcomp(RNAKmer, random_rna_kmer(len)) for _ in 1:reps]) => true
         end
     end
 end
@@ -175,11 +242,7 @@ facts("Compare") do
                     count += 1
                 end
             end
-            if mismatches(T(a), T(b)) != count
-                println(STDERR, a, "\n", b, "\n", mismatches(T(a), T(b)), "\n", count)
-            end
-
-            return mismatches(T(a), T(b)) == count
+            return mismatches(convert(T, a), convert(T, b)) == count
         end
 
         reps = 10
@@ -189,12 +252,19 @@ facts("Compare") do
             @fact all([check_mismatches(RNASequence, random_rna(len), random_rna(len))
                        for _ in 1:reps]) => true
         end
+
+        for len in [0, 1, 16, 32]
+            @fact all([check_mismatches(DNAKmer, random_dna_kmer(len), random_dna_kmer(len))
+                      for _ in 1:reps]) => true
+            @fact all([check_mismatches(RNAKmer, random_rna_kmer(len), random_rna_kmer(len))
+                      for _ in 1:reps]) => true
+        end
     end
 end
 
 
 facts("Iteration") do
-    context("Ns") do
+    context("NPositions") do
         function check_ns(T, seq)
             expected = Int[]
             for i in 1:length(seq)
@@ -203,7 +273,7 @@ facts("Iteration") do
                 end
             end
 
-            collect(ns(T(seq))) == expected
+            collect(npositions(T(seq))) == expected
         end
 
         reps = 10
@@ -212,8 +282,39 @@ facts("Iteration") do
             @fact all([check_ns(RNASequence, random_rna(len)) for _ in 1:reps]) => true
         end
     end
-end
 
+    context("EachKmer") do
+        function string_eachkmer(seq::String, k)
+            kmers = String[]
+            for i in 1:(length(seq) - k + 1)
+                subseq = seq[i:i + k - 1]
+                if !in('N', subseq)
+                    push!(kmers, subseq)
+                end
+            end
+            return kmers
+        end
+
+        function check_eachkmer(T, seq::String, k)
+            xs = [convert(String, x) for x in collect(eachkmer(NucleotideSequence{T}(seq), k))]
+            ys = string_eachkmer(seq, k)
+            return xs == ys
+        end
+
+        reps = 10
+        len = 10000
+        for k in [1, 16, 32]
+            @fact all([check_eachkmer(DNANucleotide, random_dna(len), k) for _ in 1:reps]) => true
+            @fact all([check_eachkmer(RNANucleotide, random_rna(len), k) for _ in 1:reps]) => true
+        end
+
+        @fact isempty(collect(eachkmer(dna"", 1))) => true
+        @fact isempty(collect(eachkmer(dna"NNNNNNNNNN", 1))) => true
+        @fact isempty(collect(eachkmer(dna"ACGT", 0))) => true
+        @fact_throws eachkmer(dna"ACGT", -1)
+        @fact_throws eachkmer(dna"ACGT", 33)
+    end
+end
 
 
 end # TestSeq

@@ -11,7 +11,7 @@ export Nucleotide, DNANucleotide, RNANucleotide,
        RNA_A, RNA_C, RNA_G, RNA_T, RNA_N,
        NucleotideSequence, DNASequence, RNASequence, @dna_str, @rna_str,
        complement, reverse_complement, mismatches, npositions, eachsubseq,
-       eachkmer, nucleotide_count
+       eachkmer, nucleotide_count, Kmer, DNAKmer, RNAKmer, dnakmer, rnakmer
 
 
 include("nucleotide.jl")
