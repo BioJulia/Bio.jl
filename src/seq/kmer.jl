@@ -227,6 +227,7 @@ end
 immutable EachKmerIterator{T, K}
     seq::NucleotideSequence{T}
     nit::SequenceNIterator
+    step::Int
 end
 
 
@@ -238,19 +239,23 @@ immutable EachKmerIteratorState{T, K}
 end
 
 
-function eachkmer{T}(seq::NucleotideSequence{T}, k::Integer)
+function eachkmer{T}(seq::NucleotideSequence{T}, k::Integer, step::Integer=1)
     if k < 0
         error("K must be ≥ 0 in eachkmer")
     elseif k > 32
         error("K must be ≤ 32 in eachkmer")
     end
 
-    return EachKmerIterator{T, k}(seq, npositions(seq))
+    if step < 1
+        error("step must be ≥ 1")
+    end
+
+    return EachKmerIterator{T, k}(seq, npositions(seq), step)
 end
 
 
 function nextkmer{T, K}(it::EachKmerIterator{T, K},
-                        state::EachKmerIteratorState{T, K}, skip)
+                        state::EachKmerIteratorState{T, K}, skip::Int)
     i = state.i + 1
     x = state.x
     next_n_pos = state.next_n_pos
@@ -259,13 +264,20 @@ function nextkmer{T, K}(it::EachKmerIterator{T, K},
     shift = 2 * (K - 1)
     d, r = divrem(2 * (it.seq.part.start + i - 2), 64)
     while i <= length(it.seq)
-        if i == next_n_pos
+        while next_n_pos < i
             if done(it.nit, nit_state)
                 next_n_pos = length(it.seq) + 1
+                break
             else
                 next_n_pos, nit_state = next(it.nit, nit_state)
             end
-            skip = K
+        end
+
+        if i - K + 1 <= next_n_pos <= i
+            off = it.step * iceil((K - skip) / it.step)
+            if skip < K
+                skip += off
+            end
         end
 
         x = (x >>> 2) | (((it.seq.data[d + 1] >>> r) & 0b11) << shift)
@@ -302,11 +314,8 @@ end
 
 function next{T, K}(it::EachKmerIterator{T, K},
                     state::EachKmerIteratorState{T, K})
-    #if state.i % 10000 == 0
-        #println(STDERR, "next: ", state.i)
-    #end
     value = convert(Kmer{T, K}, state.x)
-    state = nextkmer(it, state, 0)
+    state = nextkmer(it, state, it.step - 1)
     return value, state
 end
 

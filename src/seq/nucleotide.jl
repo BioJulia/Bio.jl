@@ -1,7 +1,5 @@
 
-# Single nucleotides are represented 
-
-
+# Single nucleotides are represented in bytes using just the two low-order bits
 abstract Nucleotide
 bitstype 8 DNANucleotide <: Nucleotide
 bitstype 8 RNANucleotide <: Nucleotide
@@ -114,7 +112,7 @@ const char_to_rna = [
 function convert(::Type{RNANucleotide}, c::Char)
     @inbounds nt = 'A' <= c <= 'u' ? char_to_rna[c - 'A' + 1] : RNA_INVALID
     if nt == RNA_INVALID
-        error("$(c) is not a valid DNA nucleotide")
+        error("$(c) is not a valid RNA nucleotide")
     end
 
     return nt
@@ -163,8 +161,9 @@ type NucleotideSequence{T <: Nucleotide}
     function NucleotideSequence(other::NucleotideSequence, part::UnitRange)
         start = other.part.start + part.start - 1
         stop = start + length(part) - 1
-        @assert start >= other.part.start
-        @assert stop <= other.part.stop
+        if start < other.part.start || stop > other.part.stop
+            error("Invalid subsequence range")
+        end
         return new(other.data, other.ns, part)
     end
 
@@ -366,8 +365,7 @@ end
 # Iterating throug nucleotide sequences
 # TODO: This can be made a lot faster.
 function start(seq::NucleotideSequence)
-    i = seq.part.start - 1
-    return i
+    return seq.part.start - 1
 end
 
 

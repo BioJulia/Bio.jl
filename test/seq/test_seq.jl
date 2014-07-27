@@ -35,6 +35,14 @@ function random_rna_kmer(len)
 end
 
 
+function random_aa(len)
+    return random_seq(len,
+        ['A', 'R', 'N', 'D', 'C', 'Q', 'E', 'G', 'H', 'I',
+         'L', 'K', 'M', 'F', 'P', 'S', 'T', 'W', 'Y', 'V', 'X' ],
+        #push!(fill(0.049, 20), 0.02))
+        push!(fill(0.05, 20), 0.00))
+end
+
 
 function random_interval(minstart, maxstop)
     start = rand(minstart:maxstop)
@@ -42,7 +50,7 @@ function random_interval(minstart, maxstop)
 end
 
 
-facts("Construction") do
+facts("NucleotideSequence Construction") do
     # Non-nucleotide characters should throw
     @fact_throws DNASequence("ACCNNCATTTTTTAGATXATAG")
     @fact_throws RNASequence("ACCNNCATTTTTTAGATXATAG")
@@ -125,6 +133,48 @@ facts("Construction") do
         # N is not allowed in Kmers
         @fact_throws dnakmer("ACGTNACGT")
         @fact_throws rnakmer("ACGUNACGU")
+    end
+end
+
+
+facts("AminoAcidSequence Construction") do
+    # Non-aa characters should throw
+    @fact_throws AminoAcidSequence("ATGHLMYZZACAGNM")
+
+    # Check that sequences in strings survive round trip conversion:
+    #   String → AminoAcidSequence → String
+    function check_string_construction(seq::String)
+        return convert(String, AminoAcidSequence(seq)) == uppercase(seq)
+    end
+
+    reps = 10
+    for len in [0, 1, 10, 32, 1000, 10000, 100000]
+        @fact all([check_string_construction(random_aa(len)) for _ in 1:reps]) => true
+        @fact all([check_string_construction(lowercase(random_aa(len))) for _ in 1:reps]) => true
+    end
+
+    context("Copy") do
+        function check_copy(seq)
+            return convert(String, copy(AminoAcidSequence(seq))) == uppercase(seq)
+        end
+
+        for len in [1, 10, 32, 1000, 10000, 100000]
+            @fact all([check_copy(random_aa(len)) for _ in 1:reps]) => true
+        end
+    end
+
+    context("Subsequence Construction") do
+        for len in [1, 10, 32, 1000, 10000, 100000]
+            seq = random_aa(len)
+            aaseq = AminoAcidSequence(seq)
+
+            results = Bool[]
+            for _ in 1:reps
+                part = random_interval(1, length(seq))
+                push!(results, seq[part] == convert(String, aaseq[part]))
+            end
+            @fact all(results) => true
+        end
     end
 end
 
@@ -230,6 +280,8 @@ facts("Transforms") do
             @fact all([check_rna_revcomp(RNAKmer, random_rna_kmer(len)) for _ in 1:reps]) => true
         end
     end
+
+    # TODO: translate
 end
 
 
@@ -284,9 +336,10 @@ facts("Iteration") do
     end
 
     context("EachKmer") do
-        function string_eachkmer(seq::String, k)
+        function string_eachkmer(seq::String, k, step=1)
             kmers = String[]
-            for i in 1:(length(seq) - k + 1)
+            i = 1
+            for i in 1:step:length(seq) - k + 1
                 subseq = seq[i:i + k - 1]
                 if !in('N', subseq)
                     push!(kmers, subseq)
@@ -295,17 +348,23 @@ facts("Iteration") do
             return kmers
         end
 
-        function check_eachkmer(T, seq::String, k)
-            xs = [convert(String, x) for x in collect(eachkmer(NucleotideSequence{T}(seq), k))]
-            ys = string_eachkmer(seq, k)
+        function check_eachkmer(T, seq::String, k, step=1)
+            xs = [convert(String, x) for x in collect(eachkmer(NucleotideSequence{T}(seq), k, step))]
+            ys = string_eachkmer(seq, k, step)
             return xs == ys
         end
 
         reps = 10
         len = 10000
-        for k in [1, 16, 32]
+        for k in [1, 3, 16, 32]
             @fact all([check_eachkmer(DNANucleotide, random_dna(len), k) for _ in 1:reps]) => true
             @fact all([check_eachkmer(RNANucleotide, random_rna(len), k) for _ in 1:reps]) => true
+        end
+
+        len = 10000
+        for k in [1, 3, 16, 32]
+            @fact all([check_eachkmer(DNANucleotide, random_dna(len), k, 3) for _ in 1:reps]) => true
+            @fact all([check_eachkmer(RNANucleotide, random_rna(len), k, 3) for _ in 1:reps]) => true
         end
 
         @fact isempty(collect(eachkmer(dna"", 1))) => true
