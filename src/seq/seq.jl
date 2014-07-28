@@ -8,7 +8,7 @@ import Base: convert, getindex, show, length, start, next, done, copy, reverse,
 
 export Nucleotide, DNANucleotide, RNANucleotide,
        DNA_A, DNA_C, DNA_G, DNA_T, DNA_N,
-       RNA_A, RNA_C, RNA_G, RNA_T, RNA_N,
+       RNA_A, RNA_C, RNA_G, RNA_U, RNA_N,
        NucleotideSequence, DNASequence, RNASequence, @dna_str, @rna_str,
        complement, reverse_complement, mismatches, npositions, hasn, eachsubseq,
        eachkmer, nucleotide_count, Kmer, DNAKmer, RNAKmer, dnakmer, rnakmer,

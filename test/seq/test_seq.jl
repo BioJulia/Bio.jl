@@ -384,6 +384,64 @@ facts("Compare") do
                       for _ in 1:reps]) => true
         end
     end
+
+    context("Counting") do
+        function string_nucleotide_count(::Type{DNANucleotide}, seq::String)
+            counts = [
+                DNA_A => 0,
+                DNA_C => 0,
+                DNA_G => 0,
+                DNA_T => 0,
+                DNA_N => 0 ]
+            for c in seq
+                counts[convert(DNANucleotide, c)] += 1
+            end
+
+            return counts
+        end
+
+        function string_nucleotide_count(::Type{RNANucleotide}, seq::String)
+            counts = [
+                RNA_A => 0,
+                RNA_C => 0,
+                RNA_G => 0,
+                RNA_U => 0,
+                RNA_N => 0 ]
+            for c in seq
+                counts[convert(RNANucleotide, c)] += 1
+            end
+
+            return counts
+        end
+
+        function check_nucleotide_count(::Type{DNANucleotide}, seq::String)
+            string_counts = string_nucleotide_count(DNANucleotide, seq)
+            seq_counts = nucleotide_count(DNASequence(seq))
+            return string_counts[DNA_A] == seq_counts[DNA_A] &&
+                   string_counts[DNA_C] == seq_counts[DNA_C] &&
+                   string_counts[DNA_G] == seq_counts[DNA_G] &&
+                   string_counts[DNA_T] == seq_counts[DNA_T] &&
+                   string_counts[DNA_N] == seq_counts[DNA_N]
+        end
+
+        function check_nucleotide_count(::Type{RNANucleotide}, seq::String)
+            string_counts = string_nucleotide_count(RNANucleotide, seq)
+            seq_counts = nucleotide_count(RNASequence(seq))
+            return string_counts[RNA_A] == seq_counts[RNA_A] &&
+                   string_counts[RNA_C] == seq_counts[RNA_C] &&
+                   string_counts[RNA_G] == seq_counts[RNA_G] &&
+                   string_counts[RNA_U] == seq_counts[RNA_U] &&
+                   string_counts[RNA_N] == seq_counts[RNA_N]
+        end
+
+        reps = 10
+        for len in [1, 10, 32, 1000, 10000, 100000]
+            @fact all([check_nucleotide_count(DNANucleotide, random_dna(len))
+                       for _ in 1:reps]) => true
+            @fact all([check_nucleotide_count(RNANucleotide, random_rna(len))
+                       for _ in 1:reps]) => true
+        end
+    end
 end
 
 
@@ -446,6 +504,7 @@ facts("Iteration") do
         @fact_throws eachkmer(dna"ACGT", 33)
     end
 end
+
 
 
 end # TestSeq

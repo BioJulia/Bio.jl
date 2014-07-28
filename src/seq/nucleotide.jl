@@ -228,6 +228,17 @@ function convert(::Type{String}, seq::NucleotideSequence)
 end
 
 
+# Convert between RNA and DNA
+function convert(::Type{RNASequence}, seq::DNASequence)
+    return RNASequence(seq.data, seq.ns, seq.part)
+end
+
+
+function convert(::Type{DNASequence}, seq::RNASequence)
+    return DNASequence(seq.data, seq.ns, seq.part)
+end
+
+
 # String decorator syntax to enable building sequence literals like:
 #     dna"ACGTACGT" and rna"ACGUACGU"
 macro dna_str(seq, flags...)
@@ -254,7 +265,7 @@ function show{T}(io::IO, seq::NucleotideSequence{T})
 
     # don't show more than this many characters to avoid filling the screen
     # with junk
-    const maxcount = 60
+    const maxcount = 50
     if T == DNANucleotide
         write(io, "dna\"")
     elseif T == RNANucleotide
@@ -266,7 +277,7 @@ function show{T}(io::IO, seq::NucleotideSequence{T})
         for nt in seq[1:div(maxcount, 2) - 1]
             write(io, convert(Char, nt))
         end
-        write("…")
+        write(io, "…")
         for nt in seq[(end - (div(maxcount, 2) - 1)):end]
             write(io, convert(Char, nt))
         end
@@ -693,8 +704,8 @@ function getindex{T}(counts::NucleotideCounts{T}, nt::T)
 end
 
 
-function setindex!{T}(counts::NucleotideCounts{T}, d::Integer, nt::T)
-    return setfield!(counts, int(convert(Uint, nt) + 1), counts[nt] + 1)
+function setindex!{T}(counts::NucleotideCounts{T}, c::Integer, nt::T)
+    return setfield!(counts, int(convert(Uint, nt) + 1), c)
 end
 
 
@@ -702,7 +713,7 @@ end
 function format_counts(xs)
     strings = String[string(x) for x in xs]
     len = maximum(map(length, strings))
-    if i in 1:length(strings)
+    for i in 1:length(strings)
         strings[i] = string(repeat(" ", len - length(strings[i])), strings[i])
     end
     return strings
@@ -712,7 +723,7 @@ end
 # Pretty printing of NucleotideCounts
 function show(io::IO, counts::DNANucleotideCounts)
     count_strings = format_counts(
-        [counts[DNA_A], counts[DNA_C], counts[DNA_G], counts[DNA_T], counts[DNA_n]])
+        [counts[DNA_A], counts[DNA_C], counts[DNA_G], counts[DNA_T], counts[DNA_N]])
 
     write(io,
         """
@@ -728,7 +739,7 @@ end
 
 function show(io::IO, counts::RNANucleotideCounts)
     count_strings = format_counts(
-        [counts[RNA_A], counts[RNA_C], counts[RNA_G], counts[RNA_U], counts[RNA_n]])
+        [counts[RNA_A], counts[RNA_C], counts[RNA_G], counts[RNA_U], counts[RNA_N]])
 
     write(io,
         """
@@ -759,11 +770,11 @@ function nucleotide_count{T}(seq::NucleotideSequence{T})
     end
 
     # count aligned bases
-    while i + 32 <= length(seq)
-        counts[DNA_A] += count_a(seq.data[d + 1])
-        counts[DNA_C] += count_c(seq.data[d + 1])
-        counts[DNA_G] += count_g(seq.data[d + 1])
-        counts[DNA_T] += count_t(seq.data[d + 1])
+    while i + 31 <= length(seq)
+        counts.a += count_a(seq.data[d + 1])
+        counts.c += count_c(seq.data[d + 1])
+        counts.g += count_g(seq.data[d + 1])
+        counts.t += count_t(seq.data[d + 1])
         d += 1
         i += 32
     end
@@ -775,7 +786,7 @@ function nucleotide_count{T}(seq::NucleotideSequence{T})
     end
 
     # process Ns
-    for i in ns(seq)
+    for i in npositions(seq)
         counts[getnuc(T, seq.data, seq.part.start + i - 1)] -= 1
         counts[nnucleotide(T)] += 1
     end

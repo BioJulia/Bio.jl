@@ -161,14 +161,14 @@ end
 
 
 function show(io::IO, seq::AminoAcidSequence)
-    const maxcount = 60
+    const maxcount = 50
     write(io, "aa\"")
     len = length(seq)
     if len > maxcount
         for aa in seq[1:div(maxcount, 2) - 1]
             write(io, convert(Char, aa))
         end
-        write("…")
+        write(io, "…")
         for aa in seq[(end - (div(maxcount, 2) - 1)):end]
             write(io, convert(Char, aa))
         end
@@ -223,7 +223,7 @@ end
 
 
 function done(seq::AminoAcidSequence, i)
-    return i > length(seq)
+    return i > seq.part.stop
 end
 
 
