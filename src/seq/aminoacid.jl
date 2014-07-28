@@ -227,13 +227,64 @@ function done(seq::AminoAcidSequence, i)
 end
 
 
+# A genetic code is a table mapping RNA 3-mers (i.e. RNAKmer{3}) to AminoAcids.
+immutable GeneticCode <: Associative{RNAKmer{3}, AminoAcid}
+    tbl::Vector{AminoAcid}
+end
+
+function start(code::GeneticCode)
+    return uint64(0)
+end
+
+
+function next(code::GeneticCode, x::Uint64)
+    return ((convert(RNAKmer{3}, x), code[x]), (x + 1))
+end
+
+
+function done(code::GeneticCode, x::Uint64)
+    return x > uint64(0b111111)
+end
+
+
+# All of these taken from:
+# http://www.ncbi.nlm.nih.gov/Taxonomy/taxonomyhome.html/index.cgi?chapter=tgencodes#SG1
+const standard_genetic_code = GeneticCode([
+    AA_K, AA_Q, AA_E, AA_INVALID, AA_T, AA_P, AA_A, AA_S, AA_R, AA_R, AA_G,
+    AA_INVALID, AA_I, AA_L, AA_V, AA_L, AA_N, AA_H, AA_D, AA_Y, AA_T, AA_P,
+    AA_A, AA_S, AA_S, AA_R, AA_G, AA_C, AA_I, AA_L, AA_V, AA_F, AA_K, AA_Q,
+    AA_E, AA_INVALID, AA_T, AA_P, AA_A, AA_S, AA_R, AA_R, AA_G, AA_W, AA_M,
+    AA_L, AA_V, AA_L, AA_N, AA_H, AA_D, AA_Y, AA_T, AA_P, AA_A, AA_S, AA_S,
+    AA_R, AA_G, AA_C, AA_I, AA_L, AA_V, AA_F ])
+
+# TODO: more codes
+
+function getindex(code::GeneticCode, idx::RNAKmer{3})
+    return code.tbl[convert(Uint64, idx) + 1]
+end
+
+
 # Convert an RNASequence to an AminoAcidSequence
-function translate(seq::RNASequence)
-    if length(seq) % 3 != 0
+function translate(seq::RNASequence, code::GeneticCode=standard_genetic_code)
+    d, r = divrem(length(seq), 3)
+    if r != 0
         error("RNASequence length is not divisible by three. Cannot translate.")
     end
 
-    # TODO: I need a better eachkmer
+    if hasn(seq)
+        error("Cannot translate an RNASequence with Ns")
+    end
+
+    aaseq = Array(AminoAcid, d)
+    for (i, codon) in enumerate(eachkmer(seq, 3, 3))
+        aa = code[codon]
+        if aa == AA_INVALID
+            error("Cannot translate stop codons.")
+        end
+        aaseq[i] = code[codon]
+    end
+
+    return AminoAcidSequence(aaseq, 1:d)
 end
 
 

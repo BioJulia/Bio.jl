@@ -399,7 +399,7 @@ function npositions(seq::NucleotideSequence)
 end
 
 
-# Find the next N in the sequence starting at position i. 
+# Find the next N in the sequence starting at position i.
 #
 # Return any position past the end of the sequence if there are no more Ns.
 #
@@ -440,6 +440,12 @@ end
 
 function done(it::SequenceNIterator, i)
     return i > it.part.stop
+end
+
+
+function hasn(seq::NucleotideSequence)
+    it = npositions(seq)
+    return !done(it, start(it))
 end
 
 
