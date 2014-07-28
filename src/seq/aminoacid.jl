@@ -232,6 +232,22 @@ immutable GeneticCode <: Associative{RNAKmer{3}, AminoAcid}
     tbl::Vector{AminoAcid}
 end
 
+
+function getindex(code::GeneticCode, idx::RNAKmer{3})
+    return code.tbl[convert(Uint64, idx) + 1]
+end
+
+
+function setindex!(code::GeneticCode, aa::AminoAcid, idx::RNAKmer{3})
+    return code.tbl[convert(Uint64, idx) + 1] = aa
+end
+
+
+function copy(code::GeneticCode)
+    return GeneticCode(copy(code.tbl))
+end
+
+
 function start(code::GeneticCode)
     return uint64(0)
 end
@@ -247,8 +263,10 @@ function done(code::GeneticCode, x::Uint64)
 end
 
 
-# All of these taken from:
+# Genetic codes. All of these taken from:
 # http://www.ncbi.nlm.nih.gov/Taxonomy/taxonomyhome.html/index.cgi?chapter=tgencodes#SG1
+
+# Standard Code
 const standard_genetic_code = GeneticCode([
     AA_K, AA_Q, AA_E, AA_INVALID, AA_T, AA_P, AA_A, AA_S, AA_R, AA_R, AA_G,
     AA_INVALID, AA_I, AA_L, AA_V, AA_L, AA_N, AA_H, AA_D, AA_Y, AA_T, AA_P,
@@ -257,12 +275,108 @@ const standard_genetic_code = GeneticCode([
     AA_L, AA_V, AA_L, AA_N, AA_H, AA_D, AA_Y, AA_T, AA_P, AA_A, AA_S, AA_S,
     AA_R, AA_G, AA_C, AA_I, AA_L, AA_V, AA_F ])
 
-# TODO: more codes
+const vertebrate_mitochondrial_genetic_code = copy(standard_genetic_code)
+vertebrate_mitochondrial_genetic_code[rnakmer("AGA")] = AA_INVALID
+vertebrate_mitochondrial_genetic_code[rnakmer("AGG")] = AA_INVALID
+vertebrate_mitochondrial_genetic_code[rnakmer("AUA")] = AA_M
+vertebrate_mitochondrial_genetic_code[rnakmer("UGA")] = AA_W
 
-function getindex(code::GeneticCode, idx::RNAKmer{3})
-    return code.tbl[convert(Uint64, idx) + 1]
-end
+const yeast_mitochondrial_genetic_code = copy(standard_genetic_code)
+yeast_mitochondrial_genetic_code[rnakmer("AUA")] = AA_M
+yeast_mitochondrial_genetic_code[rnakmer("CUU")] = AA_T
+yeast_mitochondrial_genetic_code[rnakmer("CUC")] = AA_T
+yeast_mitochondrial_genetic_code[rnakmer("CUA")] = AA_T
+yeast_mitochondrial_genetic_code[rnakmer("CUG")] = AA_T
+yeast_mitochondrial_genetic_code[rnakmer("UGA")] = AA_W
+yeast_mitochondrial_genetic_code[rnakmer("CGA")] = AA_INVALID
+yeast_mitochondrial_genetic_code[rnakmer("CGC")] = AA_INVALID
 
+const mold_mitochondrial_genetic_code = copy(standard_genetic_code)
+mold_mitochondrial_genetic_code[rnakmer("UGA")] = AA_W
+
+const invertebrate_mitochondrial_genetic_code = copy(standard_genetic_code)
+invertebrate_mitochondrial_genetic_code[rnakmer("AGA")] = AA_S
+invertebrate_mitochondrial_genetic_code[rnakmer("AGG")] = AA_S
+invertebrate_mitochondrial_genetic_code[rnakmer("AUA")] = AA_M
+invertebrate_mitochondrial_genetic_code[rnakmer("AGA")] = AA_W
+
+const ciliate_nuclear_genetic_code = copy(standard_genetic_code)
+ciliate_nuclear_genetic_code[rnakmer("UAA")] = AA_Q
+ciliate_nuclear_genetic_code[rnakmer("UAG")] = AA_Q
+
+const echinoderm_mitochondrial_genetic_code = copy(standard_genetic_code)
+echinoderm_mitochondrial_genetic_code[rnakmer("AAA")] = AA_N
+echinoderm_mitochondrial_genetic_code[rnakmer("AGA")] = AA_S
+echinoderm_mitochondrial_genetic_code[rnakmer("AGG")] = AA_S
+echinoderm_mitochondrial_genetic_code[rnakmer("UGA")] = AA_W
+
+const euplotid_nuclear_genetic_code = copy(standard_genetic_code)
+euplotid_nuclear_genetic_code[rnakmer("UGA")] = AA_C
+
+const bacterial_plastid_genetic_code = copy(standard_genetic_code)
+
+const alternative_yeast_nuclear_genetic_code = copy(standard_genetic_code)
+alternative_yeast_nuclear_genetic_code[rnakmer("CUG")] = AA_S
+
+const ascidian_mitochondrial_genetic_code = copy(standard_genetic_code)
+ascidian_mitochondrial_genetic_code[rnakmer("AGA")] = AA_G
+ascidian_mitochondrial_genetic_code[rnakmer("AGG")] = AA_G
+ascidian_mitochondrial_genetic_code[rnakmer("AUA")] = AA_M
+ascidian_mitochondrial_genetic_code[rnakmer("UGA")] = AA_W
+
+const alternative_flatworm_mitochondrial_genetic_code = copy(standard_genetic_code)
+alternative_flatworm_mitochondrial_genetic_code[rnakmer("AAA")] = AA_N
+alternative_flatworm_mitochondrial_genetic_code[rnakmer("AGA")] = AA_S
+alternative_flatworm_mitochondrial_genetic_code[rnakmer("AGG")] = AA_S
+alternative_flatworm_mitochondrial_genetic_code[rnakmer("UAA")] = AA_Y
+alternative_flatworm_mitochondrial_genetic_code[rnakmer("UGA")] = AA_W
+
+const chlorophycean_mitochondrial_genetic_code = copy(standard_genetic_code)
+chlorophycean_mitochondrial_genetic_code[rnakmer("UAG")] = AA_L
+
+const trematode_mitochondrial_genetic_code = copy(standard_genetic_code)
+trematode_mitochondrial_genetic_code[rnakmer("UGA")] = AA_W
+trematode_mitochondrial_genetic_code[rnakmer("AUA")] = AA_M
+trematode_mitochondrial_genetic_code[rnakmer("AGA")] = AA_S
+trematode_mitochondrial_genetic_code[rnakmer("AGG")] = AA_S
+trematode_mitochondrial_genetic_code[rnakmer("AAA")] = AA_N
+
+const scenedesmus_obliquus_mitochondrial_genetic_code = copy(standard_genetic_code)
+scenedesmus_obliquus_mitochondrial_genetic_code[rnakmer("UCA")] = AA_INVALID
+scenedesmus_obliquus_mitochondrial_genetic_code[rnakmer("UAG")] = AA_L
+
+const thraustochytrium_mitochondrial_genetic_code = copy(standard_genetic_code)
+thraustochytrium_mitochondrial_genetic_code[rnakmer("UUA")] = AA_INVALID
+
+const pterobrachia_mitochondrial_genetic_code = copy(standard_genetic_code)
+pterobrachia_mitochondrial_genetic_code[rnakmer("AGA")] = AA_S
+pterobrachia_mitochondrial_genetic_code[rnakmer("AGG")] = AA_K
+pterobrachia_mitochondrial_genetic_code[rnakmer("UGA")] = AA_W
+
+const candidate_division_sr1_genetic_code = copy(standard_genetic_code)
+candidate_division_sr1_genetic_code[rnakmer("UGA")] = AA_INVALID
+
+# Genetic codes indexed as in NCBI's trans_table
+const ncbi_trans_table = GeneticCode[
+    standard_genetic_code,
+    vertebrate_mitochondrial_genetic_code,
+    yeast_mitochondrial_genetic_code,
+    mold_mitochondrial_genetic_code,
+    invertebrate_mitochondrial_genetic_code,
+    ciliate_nuclear_genetic_code,
+    echinoderm_mitochondrial_genetic_code,
+    euplotid_nuclear_genetic_code,
+    bacterial_plastid_genetic_code,
+    alternative_yeast_nuclear_genetic_code,
+    ascidian_mitochondrial_genetic_code,
+    alternative_flatworm_mitochondrial_genetic_code,
+    chlorophycean_mitochondrial_genetic_code,
+    trematode_mitochondrial_genetic_code,
+    scenedesmus_obliquus_mitochondrial_genetic_code,
+    thraustochytrium_mitochondrial_genetic_code,
+    pterobrachia_mitochondrial_genetic_code,
+    candidate_division_sr1_genetic_code
+]
 
 # Convert an RNASequence to an AminoAcidSequence
 function translate(seq::RNASequence, code::GeneticCode=standard_genetic_code)
