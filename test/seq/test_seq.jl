@@ -11,7 +11,17 @@ function random_seq(n::Integer, nts, probs)
     for i in 1:n
         x[i] = nts[searchsorted(cumprobs, rand()).start]
     end
-    convert(String, x)
+    return convert(String, x)
+end
+
+
+function random_array(n::Integer, elements, probs)
+    cumprobs = cumsum(probs)
+    x = Array(eltype(elements), n)
+    for i in 1:n
+        x[i] = elements[searchsorted(cumprobs, rand()).start]
+    end
+    return x
 end
 
 
@@ -67,6 +77,18 @@ end
 
 function random_rna_kmer(len)
     return random_rna(len, [0.25, 0.25, 0.25, 0.25])
+end
+
+
+function random_dna_kmer_nucleotides(len)
+    return random_array(len, [DNA_A, DNA_C, DNA_G, DNA_T],
+                        [0.25, 0.25, 0.25, 0.25])
+end
+
+
+function random_rna_kmer_nucleotides(len)
+    return random_array(len, [RNA_A, RNA_C, RNA_G, RNA_U],
+                        [0.25, 0.25, 0.25, 0.25])
 end
 
 
@@ -157,16 +179,38 @@ facts("NucleotideSequence Construction") do
                         convert(NucleotideSequence{T}, seq)))) == uppercase(seq)
         end
 
+        # Check that kmers can be constructed from an array of nucleotides
+        function check_nucarray_kmer{T <: Nucleotide}(seq::Vector{T})
+            return convert(String, [convert(Char, c) for c in seq]) ==
+                   convert(String, kmer(seq...))
+        end
+
+        reps = 100
         for len in [0, 1, 16, 32]
-            check_string_construction(DNANucleotide, random_dna_kmer(len))
-            check_string_construction(RNANucleotide, random_rna_kmer(len))
-            check_roundabout_construction(DNANucleotide, random_dna_kmer(len))
-            check_roundabout_construction(RNANucleotide, random_rna_kmer(len))
+            @fact all([check_string_construction(DNANucleotide, random_dna_kmer(len))
+                       for _ in 1:reps]) => true
+            @fact all([check_string_construction(RNANucleotide, random_rna_kmer(len))
+                       for _ in 1:reps]) => true
+            @fact all([check_roundabout_construction(DNANucleotide, random_dna_kmer(len))
+                       for _ in 1:reps]) => true
+            @fact all([check_roundabout_construction(RNANucleotide, random_rna_kmer(len))
+                       for _ in 1:reps]) => true
+
+            if len > 0
+                @fact all([check_nucarray_kmer(random_dna_kmer_nucleotides(len))
+                           for _ in 1:reps]) => true
+                @fact all([check_nucarray_kmer(random_rna_kmer_nucleotides(len))
+                           for _ in 1:reps]) => true
+            end
         end
 
         # N is not allowed in Kmers
         @fact_throws dnakmer("ACGTNACGT")
         @fact_throws rnakmer("ACGUNACGU")
+
+        @fact_throws kmer() # can't construct 0-mer using `kmer()`
+        @fact_throws kmer(RNA_A, RNA_C, RNA_G, RNA_N, RNA_U) # no Ns in kmers
+        @fact_throws kmer(RNA_A, DNA_A) # no mixing of RNA and DNA
     end
 end
 
@@ -514,11 +558,5 @@ facts("Iteration") do
         @fact_throws eachkmer(dna"ACGT", 33)
     end
 end
-
-
-facts("Kmer Construction") do
-    # TODO: dnakmer, rnakmer, kmer
-end
-
 
 end # TestSeq
