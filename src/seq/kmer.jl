@@ -118,6 +118,27 @@ function rnakmer(seq::String)
 end
 
 
+# Constructors taking a sequence of nucleotides
+function kmer{T <: Nucleotide}(nts::T...)
+    K = length(nts)
+    if K > 32
+        error(string("Cannot construct a K-mer longer than 32nt."))
+    end
+
+    x = uint64(0)
+    shift = 0
+    for (i, nt) in enumerate(nts)
+        if nt == nnucleotide(T)
+            error("A Kmer may not contain an N in its sequence")
+        end
+        x |= convert(Uint64, nt) << shift
+
+        shift += 2
+    end
+    return convert(Kmer{T, K}, x)
+end
+
+
 function dnakmer(seq::DNASequence)
     if length(seq) > 32
         error(string("Cannot construct a K-mer longer than 32nt."))
@@ -315,8 +336,8 @@ end
 function next{T, K}(it::EachKmerIterator{T, K},
                     state::EachKmerIteratorState{T, K})
     value = convert(Kmer{T, K}, state.x)
-    state = nextkmer(it, state, it.step - 1)
-    return value, state
+    next_state = nextkmer(it, state, it.step - 1)
+    return (state.i - K + 1, value), next_state
 end
 
 

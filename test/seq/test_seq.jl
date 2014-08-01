@@ -40,7 +40,11 @@ const codons = [
         "UAC", "UAU", "UCA", "UCC",
         "UCG", "UCU", "UGC", "UGG",
         "UGU", "UUA", "UUC", "UUG",
-        "UUU" ]
+        "UUU",
+        # translatable ambiguities in the standard code
+        "CUN", "CCN", "CGN", "ACN",
+        "GUN", "GCN", "GGN", "UCN"
+        ]
 
 
 function random_translatable_rna(n)
@@ -330,6 +334,11 @@ facts("Transforms") do
             "UCA" => 'S', "UCC" => 'S', "UCG" => 'S', "UCU" => 'S',
             "UGA" => '*', "UGC" => 'C', "UGG" => 'W', "UGU" => 'C',
             "UUA" => 'L', "UUC" => 'F', "UUG" => 'L', "UUU" => 'F',
+
+            # translatable ambiguities in the standard code
+            "CUN" => 'L', "CCN" => 'P', "CGN" => 'R', "ACN" => 'T',
+            "GUN" => 'V', "GCN" => 'A', "GGN" => 'G', "UCN" => 'S'
+
         ]
 
         function string_translate(seq::String)
@@ -346,13 +355,14 @@ facts("Transforms") do
         end
 
         reps = 10
-        for len in [1, 10, 32, 1000, 10000, 100000]
+        #for len in [1, 10, 32, 1000, 10000, 100000]
+        for len in [1, 10, 32]
             @fact all([check_translate(random_translatable_rna(len)) for _ in 1:reps]) => true
         end
 
         @fact_throws translate(dna"ACGTACGTA") # can't translate DNA
         @fact_throws translate(rna"ACGUACGU") # can't translate non-multiples of three
-        @fact_throws translate(rna"ACGUACGUN") # can't translate N
+        @fact_throws translate(rna"ACGUACGNU") # can't translate N
     end
 end
 
@@ -479,7 +489,7 @@ facts("Iteration") do
         end
 
         function check_eachkmer(T, seq::String, k, step=1)
-            xs = [convert(String, x) for x in collect(eachkmer(NucleotideSequence{T}(seq), k, step))]
+            xs = [convert(String, x) for (i, x) in collect(eachkmer(NucleotideSequence{T}(seq), k, step))]
             ys = string_eachkmer(seq, k, step)
             return xs == ys
         end
@@ -505,6 +515,10 @@ facts("Iteration") do
     end
 end
 
+
+facts("Kmer Construction") do
+    # TODO: dnakmer, rnakmer, kmer
+end
 
 
 end # TestSeq

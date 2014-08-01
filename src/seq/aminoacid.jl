@@ -182,7 +182,7 @@ function show(io::IO, seq::AminoAcidSequence)
 end
 
 
-function getindex(seq::NucleotideSequence, i::Integer)
+function getindex(seq::AminoAcidSequence, i::Integer)
     if i > length(seq) || i < 1
         error(BoundsError())
     end
@@ -197,7 +197,7 @@ function getindex(seq::AminoAcidSequence, r::UnitRange)
 end
 
 
-# Replace a NucleotideSequence's data with a copy, copying only what's needed.
+# Replace a AminoSequence's data with a copy, copying only what's needed.
 function orphan!(seq::AminoAcidSequence, reorphan=true)
     seq.data = seq.data[seq.part]
     seq.part = 1:length(seq.part)
@@ -378,29 +378,59 @@ const ncbi_trans_table = GeneticCode[
     candidate_division_sr1_genetic_code
 ]
 
+
+# Try to translate a condon (u, v, RNA_N). Return the corresponding amino acid,
+# if it can be unambiguously translated, and AA_INVALID if it cannot be.
+function translate_ambiguous_codon(code::GeneticCode, u::RNANucleotide,
+                                   v::RNANucleotide)
+    aa_a = code[kmer(u, v, RNA_A)]
+    aa_c = code[kmer(u, v, RNA_C)]
+    aa_g = code[kmer(u, v, RNA_G)]
+    aa_u = code[kmer(u, v, RNA_U)]
+
+    if aa_a == aa_c == aa_g == aa_u
+        return aa_a
+    else
+        error("Codon $(u)$(v)N cannot be unambiguously translated.")
+    end
+end
+
+
 # Convert an RNASequence to an AminoAcidSequence
 function translate(seq::RNASequence, code::GeneticCode=standard_genetic_code)
-    d, r = divrem(length(seq), 3)
+    aaseqlen, r = divrem(length(seq), 3)
     if r != 0
         error("RNASequence length is not divisible by three. Cannot translate.")
     end
 
-    if hasn(seq)
-        error("Cannot translate an RNASequence with Ns")
+    # try to translate codons whose third nucleotide is N
+    aaseq = Array(AminoAcid, aaseqlen)
+    for i in npositions(seq)
+        d, r = divrem(i - 1, 3)
+
+        if r != 2
+            if r == 0
+                codon = "N$(seq[i+1])$(seq[i+2])"
+            else
+                codon == "$(seq[i-1])N$(seq[i+1])"
+            end
+            error("Codon $(codon) cannot be unambiguously translated.")
+        end
+
+        aa = translate_ambiguous_codon(code, seq[i-2], seq[i-1])
+        aaseq[d + 1] = aa
     end
 
-    aaseq = Array(AminoAcid, d)
-    for (i, codon) in enumerate(eachkmer(seq, 3, 3))
+    for (i, codon) in eachkmer(seq, 3, 3)
         aa = code[codon]
         if aa == AA_INVALID
             error("Cannot translate stop codons.")
         end
-        aaseq[i] = code[codon]
+        j = div(i - 1, 3) + 1
+        aaseq[j] = code[codon]
     end
 
-    return AminoAcidSequence(aaseq, 1:d)
+    return AminoAcidSequence(aaseq, 1:aaseqlen)
 end
-
-
 
 
