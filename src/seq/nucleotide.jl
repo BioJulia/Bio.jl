@@ -120,12 +120,20 @@ end
 
 
 function show(io::IO, nt::DNANucleotide)
-    write(io, convert(Char, nt))
+    if aa == DNA_INVALID
+        write(io, "(Invalid DNA Nucleotide)")
+    else
+        write(io, convert(Char, nt))
+    end
 end
 
 
 function show(io::IO, nt::RNANucleotide)
-    write(io, convert(Char, nt))
+    if aa == RNA_INVALID
+        write(io, "(Invalid RNA Nucleotide)")
+    else
+        write(io, convert(Char, nt))
+    end
 end
 
 
@@ -266,11 +274,6 @@ function show{T}(io::IO, seq::NucleotideSequence{T})
     # don't show more than this many characters to avoid filling the screen
     # with junk
     const maxcount = 50
-    if T == DNANucleotide
-        write(io, "dna\"")
-    elseif T == RNANucleotide
-        write(io, "rna\"")
-    end
 
     len = length(seq)
     if len > maxcount
@@ -287,8 +290,8 @@ function show{T}(io::IO, seq::NucleotideSequence{T})
         end
     end
 
-    write(io, "\"  # ", string(len), "nt ",
-          T == DNANucleotide ? "DNA" : "RNA", " sequence")
+    write(io, "  (", string(len), "nt ",
+          T == DNANucleotide ? "DNA" : "RNA", " sequence)")
 
 end
 

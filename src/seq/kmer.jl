@@ -12,6 +12,8 @@ bitstype 64 Kmer{T <: Nucleotide, K}
 typealias DNAKmer{K} Kmer{DNANucleotide, K}
 typealias RNAKmer{K} Kmer{RNANucleotide, K}
 
+typealias Codon RNAKmer{3}
+
 
 # Conversion to/from Uint64
 function convert{K}(::Type{DNAKmer{K}}, x::Uint64)
@@ -171,19 +173,19 @@ function getindex{T, K}(x::Kmer{T, K}, i::Integer)
 end
 
 
-function show{T, K}(io::IO, x::Kmer{T, K})
-    if T == DNANucleotide
-        write(io, "dnakmer(\"")
-    elseif T == RNANucleotide
-        write(io, "rnakmer(\"")
-    end
-
+function show{K}(io::IO, x::DNAKmer{K})
     for i in 1:K
         write(io, convert(Char, x[i]))
     end
+    print(io, "  (DNA $(K)-mer)")
+end
 
-    k = int(K)
-    write(io, "\")  # ", T == DNANucleotide ? "DNA" : "RNA", " ", string(K), "-mer")
+
+function show{K}(io::IO, x::RNAKmer{K})
+    for i in 1:K
+        write(io, convert(Char, x[i]))
+    end
+    print(io, "  (RNA $(K)-mer)")
 end
 
 

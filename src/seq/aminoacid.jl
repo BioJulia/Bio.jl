@@ -86,7 +86,11 @@ end
 
 
 function show(io::IO, aa::AminoAcid)
-    write(io, convert(Char, aa))
+    if aa == AA_INVALID
+        write(io, "(Invalid Amino Acid)")
+    else
+        write(io, convert(Char, aa))
+    end
 end
 
 
@@ -162,7 +166,6 @@ end
 
 function show(io::IO, seq::AminoAcidSequence)
     const maxcount = 50
-    write(io, "aa\"")
     len = length(seq)
     if len > maxcount
         for aa in seq[1:div(maxcount, 2) - 1]
@@ -178,7 +181,7 @@ function show(io::IO, seq::AminoAcidSequence)
         end
     end
 
-    write(io, "\"  # ", string(len), "aa sequence")
+    write(io, "  (", string(len), "aa sequence)")
 end
 
 
@@ -248,13 +251,19 @@ function copy(code::GeneticCode)
 end
 
 
+function length(code::GeneticCode)
+    return 64
+end
+
+
 function start(code::GeneticCode)
     return uint64(0)
 end
 
 
 function next(code::GeneticCode, x::Uint64)
-    return ((convert(RNAKmer{3}, x), code[x]), (x + 1))
+    c = convert(Codon, x)
+    return ((c, code[c]), (x + 1))
 end
 
 
