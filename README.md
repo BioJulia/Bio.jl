@@ -1,6 +1,7 @@
 Bio.jl
 ========
-[![Build Status](https://travis-ci.org/BioJulia/Bio.jl.png)](https://travis-ci.org/BioJulia/Bio.jl)
+[![Build Status](https://travis-ci.org/BioJulia/Bio.jl.svg?branch=master)](https://travis-ci.org/BioJulia/Bio.jl)
+[![Coverage Status](https://img.shields.io/coveralls/BioJulia/Bio.jl.svg)](https://coveralls.io/r/BioJulia/Bio.jl)
 [![Gitter](https://badges.gitter.im/BioJulia.png)](https://gitter.im/BioJulia/Bio.jl)
 
 Bioinformatics and Computational Biology infrastructure for [Julia](http://julialang.org)

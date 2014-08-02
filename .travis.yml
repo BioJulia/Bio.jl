@@ -15,4 +15,6 @@ before_install:
 script:
   - julia -e 'Pkg.init(); run(`ln -s $(pwd()) $(Pkg.dir("Bio"))`); Pkg.pin("Bio"); Pkg.resolve()'
   - julia -e 'using Bio; @assert isdefined(:Bio); @assert typeof(Bio) === Module'
-  - julia test/runtests.jl
+  - if [ $JULIAVERSION = "julianightlies" ]; then julia --code-coverage test/runtests.jl; fi
+  - if [ $JULIAVERSION = "juliarelease" ]; then julia test/runtests.jl; fi
+  - if [ $JULIAVERSION = "julianightlies" ]; then julia -e 'Pkg.add("Coverage"); using Coverage; Coveralls.submit(Coveralls.process_folder())'; fi
