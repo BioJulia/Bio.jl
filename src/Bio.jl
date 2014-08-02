@@ -1,5 +1,6 @@
 module Bio
 
-# package code goes here
+include("seq/seq.jl")
+
 
 end # module
