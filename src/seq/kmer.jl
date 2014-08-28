@@ -348,6 +348,26 @@ function done{T, K}(it::EachKmerIterator{T, K},
     return state.i > length(it.seq)
 end
 
+
+function =={T, K}(a::NucleotideSequence{T}, b::Kmer{T, K})
+    if length(a) != K
+        return false
+    end
+
+    for (u, v) in zip(a, b)
+        if u != v
+            return false
+        end
+    end
+
+    return true
+end
+
+
+function =={T, K}(a::Kmer{T, K}, b::NucleotideSequence{T})
+    return b == a
+end
+
 # TODO: count_nucleotides
 
 

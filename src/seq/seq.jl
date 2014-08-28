@@ -4,7 +4,7 @@ module Seq
 using Base.Intrinsics
 
 import Base: convert, getindex, show, length, start, next, done, copy, reverse,
-             show, endof
+             show, endof, ==
 
 export Nucleotide, DNANucleotide, RNANucleotide,
        DNA_A, DNA_C, DNA_G, DNA_T, DNA_N,

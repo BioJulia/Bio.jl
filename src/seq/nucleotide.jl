@@ -817,4 +817,23 @@ function nucleotide_count{T}(seq::NucleotideSequence{T})
 end
 
 
+function =={T}(a::NucleotideSequence{T}, b::NucleotideSequence{T})
+    if a.data === b.data && a.ns === b.ns && a.part == b.part
+        return true
+    end
+
+    if length(a) != length(b)
+        return false
+    end
+
+    for (u, v) in zip(a, b)
+        if u != v
+            return false
+        end
+    end
+
+    return true
+end
+
+
 

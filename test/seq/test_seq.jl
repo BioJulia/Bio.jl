@@ -412,6 +412,34 @@ end
 
 
 facts("Compare") do
+    context("Equality") do
+        reps = 10
+        function check_seq_equality(len)
+            a = random_dna(len)
+            return a == copy(a)
+        end
+
+        for len in [1, 10, 32, 1000]
+            @fact all([check_seq_equality(len) for _ in 1:reps]) => true
+        end
+
+        function check_seq_kmer_equality(len)
+            a = dnakmer(random_dna_kmer(len))
+            b = convert(DNASequence, a)
+            return a == b && b == a
+        end
+
+        for len in [1, 10, 32]
+            @fact all([check_seq_kmer_equality(len) for _ in 1:reps]) => true
+        end
+
+        # test a few cases for true negatives
+        @fact dna"ACGT" == dna"ACGTA" => false
+        @fact dna"ACGT" == rna"ACGU" => false
+        @fact dna"NNNN" == rna"NNNN" => false
+        @fact dnakmer("ACGT") == rnakmer("ACGU") => false
+    end
+
     context("Mismatches") do
         function check_mismatches(T, a, b)
             count = 0
