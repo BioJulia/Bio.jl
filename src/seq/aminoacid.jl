@@ -1,27 +1,10 @@
-
 bitstype 8 AminoAcid
 
-
 # Conversion between integers and amino acids
-function convert(::Type{AminoAcid}, aa::Uint8)
-    return box(AminoAcid, unbox(Uint8, aa))
-end
-
-
-function convert(::Type{Uint8}, aa::AminoAcid)
-    return box(Uint8, unbox(AminoAcid, aa))
-end
-
-
-function convert{T <: Unsigned}(::Type{T}, aa::AminoAcid)
-    return box(T, Base.zext_int(T, unbox(AminoAcid, aa)))
-end
-
-
-function convert{T <: Unsigned}(::Type{AminoAcid}, aa::T)
-    return convert(AminoAcid, convert(Uint8, aa))
-end
-
+convert(::Type{AminoAcid}, aa::Uint8) = box(AminoAcid, unbox(Uint8, aa))
+convert(::Type{Uint8}, aa::AminoAcid) = box(Uint8, unbox(AminoAcid, aa))
+convert{T<:Unsigned}(::Type{T}, aa::AminoAcid) = box(T, Base.zext_int(T, unbox(AminoAcid, aa)))
+convert{T<:Unsigned}(::Type{AminoAcid}, aa::T) = convert(AminoAcid, convert(Uint8, aa))
 
 # Amino acid encoding definition
 const AA_A = convert(AminoAcid, 0x00)
@@ -45,19 +28,22 @@ const AA_W = convert(AminoAcid, 0x11)
 const AA_Y = convert(AminoAcid, 0x12)
 const AA_V = convert(AminoAcid, 0x13)
 const AA_X = convert(AminoAcid, 0x14)
+const AA_INVALID = convert(AminoAcid, 0x15) # Used during conversion from strings
 
-
-# Use during conversion from strings
-const AA_INVALID = convert(AminoAcid, 0x15)
-
+# Conversion to char
 const aa_to_char = [
     'A', 'R', 'N', 'D', 'C', 'Q', 'E', 'G', 'H', 'I',
     'L', 'K', 'M', 'F', 'P', 'S', 'T', 'W', 'Y', 'V', 'X' ]
 
-function convert(::Type{Char}, aa::AminoAcid)
-    return aa_to_char[convert(Uint8, aa) + 1]
-end
+convert(::Type{Char}, aa::AminoAcid) = aa_to_char[convert(Uint8, aa) + 1]
 
+function show(io::IO, aa::AminoAcid)
+    if aa == AA_INVALID
+        write(io, "(Invalid Amino Acid)")
+    else
+        write(io, convert(Char, aa))
+    end
+end
 
 # Conversion from Char
 
@@ -80,17 +66,7 @@ function convert(::Type{AminoAcid}, c::Char)
     if aa == AA_INVALID
         error("$(c) is not a valid amino acid")
     end
-
     return aa
-end
-
-
-function show(io::IO, aa::AminoAcid)
-    if aa == AA_INVALID
-        write(io, "(Invalid Amino Acid)")
-    else
-        write(io, convert(Char, aa))
-    end
 end
 
 
@@ -104,65 +80,56 @@ end
 #
 type AminoAcidSequence
     data::Vector{AminoAcid}
-
-    # interval within `data` defining the (sub)sequence
-    part::UnitRange{Int}
-
-    # Construct from raw components
-    function AminoAcidSequence(data::Vector{AminoAcid}, part::UnitRange)
-        return new(data, part)
-    end
-
-    # Construct a subsequence of another aa sequence
-    function AminoAcidSequence(other::AminoAcidSequence, part::UnitRange)
-        start = other.part.start + part.start - 1
-        stop = start + length(part) - 1
-        if start < other.part.start || stop > other.part.stop
-            error("Invalid subsequence range")
-        end
-        return new(other.data, part)
-    end
-
-    # Construct of a subsequence from another amino acid sequence
-    function AminoAcidSequence(seq::String)
-        len = length(seq)
-        data = Array(AminoAcid, len)
-        for (i, c) in enumerate(seq)
-            data[i] = convert(AminoAcid, c)
-        end
-
-        return new(data, 1:len)
-    end
+    part::UnitRange{Int} # Interval within `data` defining the (sub)sequence
 end
 
+# Construct a subsequence of another aa sequence
+function AminoAcidSequence(other::AminoAcidSequence, part::UnitRange)
+    start = other.part.start + part.start - 1
+    stop = start + length(part) - 1
+    if start < other.part.start || stop > other.part.stop
+        error("Invalid subsequence range")
+    end
+    return new(other.data, part)
+end
+
+# Construct of a subsequence from another amino acid sequence
+function AminoAcidSequence(seq::String)
+    len = length(seq)
+    data = Array(AminoAcid, len)
+    for (i, c) in enumerate(seq)
+        data[i] = convert(AminoAcid, c)
+    end
+    return new(data, 1:len)
+end
+
+length(seq::AminoAcidSequence) = length(seq.part)
+endof(seq::AminoAcidSequence)  = length(seq)
+
+function getindex(seq::AminoAcidSequence, i::Integer)
+    if i > length(seq) || i < 1
+        error(BoundsError())
+    end
+    i += seq.part.start - 1
+    return seq.data[i]
+end
+getindex(seq::AminoAcidSequence, r::UnitRange) = AminoAcidSequence(seq, r)
+
+
+# Iterating through amino acids
+start(seq::AminoAcidSequence)   = seq.part.start
+next(seq::AminoAcidSequence, i) = (seq.data[i], i + 1)
+done(seq::AminoAcidSequence, i) = i > seq.part.stop
 
 # Convert from/to String
-function convert(::Type{AminoAcidSequence}, seq::String)
-    return AminoAcidSequence(seq)
-end
-
-
-function convert(::Type{String}, seq::AminoAcidSequence)
-    return convert(String, [convert(Char, x) for x in seq])
-end
-
+convert(::Type{AminoAcidSequence}, seq::String) = AminoAcidSequence(seq)
+convert(::Type{String}, seq::AminoAcidSequence) = convert(String, [convert(Char, x) for x in seq])
 
 # String decorator syntax to enable building sequence literals like:
 #     aa"ACDEFMN"
 macro aa_str(seq, flags...)
     return AminoAcidSequence(seq)
 end
-
-
-function length(seq::AminoAcidSequence)
-    return length(seq.part)
-end
-
-
-function endof(seq::AminoAcidSequence)
-    return length(seq)
-end
-
 
 function show(io::IO, seq::AminoAcidSequence)
     const maxcount = 50
@@ -184,22 +151,6 @@ function show(io::IO, seq::AminoAcidSequence)
     write(io, "  (", string(len), "aa sequence)")
 end
 
-
-function getindex(seq::AminoAcidSequence, i::Integer)
-    if i > length(seq) || i < 1
-        error(BoundsError())
-    end
-    i += seq.part.start - 1
-    return seq.data[i]
-end
-
-
-# Construct a subsequence
-function getindex(seq::AminoAcidSequence, r::UnitRange)
-    return AminoAcidSequence(seq, r)
-end
-
-
 # Replace a AminoSequence's data with a copy, copying only what's needed.
 function orphan!(seq::AminoAcidSequence, reorphan=true)
     seq.data = seq.data[seq.part]
@@ -207,27 +158,7 @@ function orphan!(seq::AminoAcidSequence, reorphan=true)
     return seq
 end
 
-
-function copy(seq::AminoAcidSequence)
-    return orphan!(AminoAcidSequence(seq.data, seq.part))
-end
-
-
-# Iterating through amino acids
-function start(seq::AminoAcidSequence)
-    return seq.part.start
-end
-
-
-function next(seq::AminoAcidSequence, i)
-    aa = seq.data[i]
-    return (aa, i + 1)
-end
-
-
-function done(seq::AminoAcidSequence, i)
-    return i > seq.part.stop
-end
+copy(seq::AminoAcidSequence) = orphan!(AminoAcidSequence(seq.data, seq.part))
 
 
 # A genetic code is a table mapping RNA 3-mers (i.e. RNAKmer{3}) to AminoAcids.
@@ -235,41 +166,21 @@ immutable GeneticCode <: Associative{RNAKmer{3}, AminoAcid}
     tbl::Vector{AminoAcid}
 end
 
+copy(code::GeneticCode)   = GeneticCode(copy(code.tbl))
+length(code::GeneticCode) = 64
 
-function getindex(code::GeneticCode, idx::RNAKmer{3})
-    return code.tbl[convert(Uint64, idx) + 1]
-end
+getindex(code::GeneticCode, idx::RNAKmer{3})                 = code.tbl[convert(Uint64, idx) + 1]
+setindex!(code::GeneticCode, aa::AminoAcid, idx::RNAKmer{3}) = code.tbl[convert(Uint64, idx) + 1] = aa
 
-
-function setindex!(code::GeneticCode, aa::AminoAcid, idx::RNAKmer{3})
-    return code.tbl[convert(Uint64, idx) + 1] = aa
-end
-
-
-function copy(code::GeneticCode)
-    return GeneticCode(copy(code.tbl))
-end
-
-
-function length(code::GeneticCode)
-    return 64
-end
-
-
-function start(code::GeneticCode)
-    return uint64(0)
-end
-
+# Iterating through Genetic Code
+start(code::GeneticCode) = uint64(0)
 
 function next(code::GeneticCode, x::Uint64)
     c = convert(Codon, x)
     return ((c, code[c]), (x + 1))
 end
 
-
-function done(code::GeneticCode, x::Uint64)
-    return x > uint64(0b111111)
-end
+done(code::GeneticCode, x::Uint64) = x > uint64(0b111111)
 
 
 # Genetic codes. All of these taken from:
@@ -388,7 +299,7 @@ const ncbi_trans_table = GeneticCode[
 ]
 
 
-# Try to translate a condon (u, v, RNA_N). Return the corresponding amino acid,
+# Try to translate a codon (u, v, RNA_N). Return the corresponding amino acid,
 # if it can be unambiguously translated, and AA_INVALID if it cannot be.
 function translate_ambiguous_codon(code::GeneticCode, u::RNANucleotide,
                                    v::RNANucleotide)
@@ -421,7 +332,7 @@ function translate(seq::RNASequence, code::GeneticCode=standard_genetic_code)
             if r == 0
                 codon = "N$(seq[i+1])$(seq[i+2])"
             else
-                codon == "$(seq[i-1])N$(seq[i+1])"
+                codon = "$(seq[i-1])N$(seq[i+1])"
             end
             error("Codon $(codon) cannot be unambiguously translated.")
         end
