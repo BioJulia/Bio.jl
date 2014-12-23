@@ -10,40 +10,23 @@ end
 # Basic Functions
 # ---------------
 
-function getindex(code::GeneticCode, idx::RNAKmer{3})
-    return code.tbl[convert(Uint64, idx) + 1]
-end
+getindex(code::GeneticCode, idx::RNAKmer{3}) = code.tbl[convert(Uint64, idx) + 1]
+setindex!(code::GeneticCode, aa::AminoAcid, idx::RNAKmer{3}) = (code.tbl[convert(Uint64, idx) + 1] = aa)
+copy(code::GeneticCode) = GeneticCode(copy(code.tbl))
+length(code::GeneticCode) = 64
 
-function setindex!(code::GeneticCode, aa::AminoAcid, idx::RNAKmer{3})
-    return code.tbl[convert(Uint64, idx) + 1] = aa
-end
-
-function copy(code::GeneticCode)
-    return GeneticCode(copy(code.tbl))
-end
-
-
-function length(code::GeneticCode)
-    return 64
-end
 
 # Iterating through genetic code
 # ------------------------------
-function start(code::GeneticCode)
-    return uint64(0)
 
-end
-
+start(code::GeneticCode) = uint64(0)
 
 function next(code::GeneticCode, x::Uint64)
     c = convert(Codon, x)
     return ((c, code[c]), (x + 1))
 end
 
-
-function done(code::GeneticCode, x::Uint64)
-    return x > uint64(0b111111)
-end
+done(code::GeneticCode, x::Uint64) = (x > uint64(0b111111))
 
 
 # Default genetic codes
@@ -183,7 +166,7 @@ const ncbi_trans_table = GeneticCode[
 # Translation
 # -----------
 
-# Try to translate a condon (u, v, RNA_N). Return the corresponding amino acid,
+# Try to translate a codon (u, v, RNA_N). Return the corresponding amino acid,
 # if it can be unambiguously translated, and AA_INVALID if it cannot be.
 function translate_ambiguous_codon(code::GeneticCode, u::RNANucleotide,
                                    v::RNANucleotide)
@@ -216,7 +199,7 @@ function translate(seq::RNASequence, code::GeneticCode=standard_genetic_code)
             if r == 0
                 codon = "N$(seq[i+1])$(seq[i+2])"
             else
-                codon == "$(seq[i-1])N$(seq[i+1])"
+                codon = "$(seq[i-1])N$(seq[i+1])"
             end
             error("Codon $(codon) cannot be unambiguously translated.")
         end
