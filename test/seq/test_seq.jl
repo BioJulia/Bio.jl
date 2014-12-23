@@ -215,14 +215,14 @@ facts("NucleotideSequence Construction") do
 end
 
 
-facts("AminoAcidSequence Construction") do
+facts("AminoacidSequence Construction") do
     # Non-aa characters should throw
-    @fact_throws AminoAcidSequence("ATGHLMYZZACAGNM")
+    @fact_throws AminoacidSequence("ATGHLMYZZACAGNM")
 
     # Check that sequences in strings survive round trip conversion:
-    #   String → AminoAcidSequence → String
+    #   String → AminoacidSequence → String
     function check_string_construction(seq::String)
-        return convert(String, AminoAcidSequence(seq)) == uppercase(seq)
+        return convert(String, AminoacidSequence(seq)) == uppercase(seq)
     end
 
     reps = 10
@@ -233,7 +233,7 @@ facts("AminoAcidSequence Construction") do
 
     context("Copy") do
         function check_copy(seq)
-            return convert(String, copy(AminoAcidSequence(seq))) == uppercase(seq)
+            return convert(String, copy(AminoacidSequence(seq))) == uppercase(seq)
         end
 
         for len in [1, 10, 32, 1000, 10000, 100000]
@@ -244,7 +244,7 @@ facts("AminoAcidSequence Construction") do
     context("Subsequence Construction") do
         for len in [1, 10, 32, 1000, 10000, 100000]
             seq = random_aa(len)
-            aaseq = AminoAcidSequence(seq)
+            aaseq = AminoacidSequence(seq)
 
             results = Bool[]
             for _ in 1:reps
@@ -498,7 +498,7 @@ facts("Compare") do
 
         function check_nucleotide_count(::Type{DNANucleotide}, seq::String)
             string_counts = string_nucleotide_count(DNANucleotide, seq)
-            seq_counts = nucleotide_count(DNASequence(seq))
+            seq_counts = NucleotideCounts(DNASequence(seq))
             return string_counts[DNA_A] == seq_counts[DNA_A] &&
                    string_counts[DNA_C] == seq_counts[DNA_C] &&
                    string_counts[DNA_G] == seq_counts[DNA_G] &&
@@ -508,7 +508,7 @@ facts("Compare") do
 
         function check_nucleotide_count(::Type{RNANucleotide}, seq::String)
             string_counts = string_nucleotide_count(RNANucleotide, seq)
-            seq_counts = nucleotide_count(RNASequence(seq))
+            seq_counts = NucleotideCounts(RNASequence(seq))
             return string_counts[RNA_A] == seq_counts[RNA_A] &&
                    string_counts[RNA_C] == seq_counts[RNA_C] &&
                    string_counts[RNA_G] == seq_counts[RNA_G] &&
