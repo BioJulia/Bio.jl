@@ -59,7 +59,7 @@ const char_to_aa = [
 
 function convert(::Type{AminoAcid}, c::Char)
     @inbounds aa = 'A' <= c <= 'y' ? char_to_aa[c - 'A' + 1] : AA_INVALID
-    @assert aa != AA_INVALID error("$(c) is not a valid aminoacid")
+    @assert aa != AA_INVALID error("$(c) is not a valid amino acid")
     return aa
 end
 

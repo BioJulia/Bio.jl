@@ -183,7 +183,7 @@ function translate_ambiguous_codon(code::GeneticCode, u::RNANucleotide,
 end
 
 
-# Convert an RNASequence to an AminoacidSequence
+# Convert an RNASequence to an AminoAcidSequence
 function translate(seq::RNASequence, code::GeneticCode=standard_genetic_code)
     aaseqlen, r = divrem(length(seq), 3)
     if r != 0
@@ -217,5 +217,5 @@ function translate(seq::RNASequence, code::GeneticCode=standard_genetic_code)
         aaseq[j] = code[codon]
     end
 
-    return AminoacidSequence(aaseq, 1:aaseqlen)
+    return AminoAcidSequence(aaseq, 1:aaseqlen)
 end

@@ -215,14 +215,14 @@ facts("NucleotideSequence Construction") do
 end
 
 
-facts("AminoacidSequence Construction") do
+facts("AminoAcidSequence Construction") do
     # Non-aa characters should throw
-    @fact_throws AminoacidSequence("ATGHLMYZZACAGNM")
+    @fact_throws AminoAcidSequence("ATGHLMYZZACAGNM")
 
     # Check that sequences in strings survive round trip conversion:
-    #   String → AminoacidSequence → String
+    #   String → AminoAcidSequence → String
     function check_string_construction(seq::String)
-        return convert(String, AminoacidSequence(seq)) == uppercase(seq)
+        return convert(String, AminoAcidSequence(seq)) == uppercase(seq)
     end
 
     reps = 10
@@ -233,7 +233,7 @@ facts("AminoacidSequence Construction") do
 
     context("Copy") do
         function check_copy(seq)
-            return convert(String, copy(AminoacidSequence(seq))) == uppercase(seq)
+            return convert(String, copy(AminoAcidSequence(seq))) == uppercase(seq)
         end
 
         for len in [1, 10, 32, 1000, 10000, 100000]
@@ -244,7 +244,7 @@ facts("AminoacidSequence Construction") do
     context("Subsequence Construction") do
         for len in [1, 10, 32, 1000, 10000, 100000]
             seq = random_aa(len)
-            aaseq = AminoacidSequence(seq)
+            aaseq = AminoAcidSequence(seq)
 
             results = Bool[]
             for _ in 1:reps
@@ -275,45 +275,45 @@ facts("Transforms") do
         end
     end
 
-    function dna_complement(seq::String)
-        seqc = Array(Char, length(seq))
-        for (i, c) in enumerate(seq)
-            if c == 'A'
-                seqc[i] = 'T'
-            elseif c == 'C'
-                seqc[i] = 'G'
-            elseif c == 'G'
-                seqc[i] = 'C'
-            elseif c == 'T'
-                seqc[i] = 'A'
-            else
-                seqc[i] = 'N'
-            end
-        end
-
-        return convert(String, seqc)
-    end
-
-    function rna_complement(seq::String)
-        seqc = Array(Char, length(seq))
-        for (i, c) in enumerate(seq)
-            if c == 'A'
-                seqc[i] = 'U'
-            elseif c == 'C'
-                seqc[i] = 'G'
-            elseif c == 'G'
-                seqc[i] = 'C'
-            elseif c == 'U'
-                seqc[i] = 'A'
-            else
-                seqc[i] = 'N'
-            end
-        end
-
-        return convert(String, seqc)
-    end
-
     context("Complement") do
+        function dna_complement(seq::String)
+            seqc = Array(Char, length(seq))
+            for (i, c) in enumerate(seq)
+                if c     ==   'A'
+                    seqc[i] = 'T'
+                elseif c ==   'C'
+                    seqc[i] = 'G'
+                elseif c ==   'G'
+                    seqc[i] = 'C'
+                elseif c ==   'T'
+                    seqc[i] = 'A'
+                else
+                    seqc[i] = 'N'
+                end
+            end
+
+            return convert(String, seqc)
+        end
+
+        function rna_complement(seq::String)
+            seqc = Array(Char, length(seq))
+            for (i, c) in enumerate(seq)
+                if c == 'A'
+                    seqc[i] = 'U'
+                elseif c == 'C'
+                    seqc[i] = 'G'
+                elseif c == 'G'
+                    seqc[i] = 'C'
+                elseif c == 'U'
+                    seqc[i] = 'A'
+                else
+                    seqc[i] = 'N'
+                end
+            end
+
+            return convert(String, seqc)
+        end
+
         function check_dna_complement(T, seq)
             return dna_complement(seq) ==
                 convert(String, complement(convert(T, seq)))
@@ -405,7 +405,7 @@ facts("Transforms") do
         end
 
         @fact_throws translate(dna"ACGTACGTA") # can't translate DNA
-        @fact_throws translate(rna"ACGUACGU") # can't translate non-multiples of three
+        @fact_throws translate(rna"ACGUACGU")  # can't translate non-multiples of three
         @fact_throws translate(rna"ACGUACGNU") # can't translate N
     end
 end
