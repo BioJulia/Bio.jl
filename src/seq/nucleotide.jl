@@ -120,7 +120,7 @@ end
 
 
 function show(io::IO, nt::DNANucleotide)
-    if aa == DNA_INVALID
+    if nt == DNA_INVALID
         write(io, "(Invalid DNA Nucleotide)")
     else
         write(io, convert(Char, nt))
@@ -129,7 +129,7 @@ end
 
 
 function show(io::IO, nt::RNANucleotide)
-    if aa == RNA_INVALID
+    if nt == RNA_INVALID
         write(io, "(Invalid RNA Nucleotide)")
     else
         write(io, convert(Char, nt))
