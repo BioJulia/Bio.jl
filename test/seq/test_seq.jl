@@ -275,44 +275,45 @@ facts("Transforms") do
         end
     end
 
+    function dna_complement(seq::String)
+        seqc = Array(Char, length(seq))
+        for (i, c) in enumerate(seq)
+            if c     ==   'A'
+                seqc[i] = 'T'
+            elseif c ==   'C'
+                seqc[i] = 'G'
+            elseif c ==   'G'
+                seqc[i] = 'C'
+            elseif c ==   'T'
+                seqc[i] = 'A'
+            else
+                seqc[i] = 'N'
+            end
+        end
+
+        return convert(String, seqc)
+    end
+
+    function rna_complement(seq::String)
+        seqc = Array(Char, length(seq))
+        for (i, c) in enumerate(seq)
+            if c == 'A'
+                seqc[i] = 'U'
+            elseif c == 'C'
+                seqc[i] = 'G'
+            elseif c == 'G'
+                seqc[i] = 'C'
+            elseif c == 'U'
+                seqc[i] = 'A'
+            else
+                seqc[i] = 'N'
+            end
+        end
+
+        return convert(String, seqc)
+    end
+
     context("Complement") do
-        function dna_complement(seq::String)
-            seqc = Array(Char, length(seq))
-            for (i, c) in enumerate(seq)
-                if c     ==   'A'
-                    seqc[i] = 'T'
-                elseif c ==   'C'
-                    seqc[i] = 'G'
-                elseif c ==   'G'
-                    seqc[i] = 'C'
-                elseif c ==   'T'
-                    seqc[i] = 'A'
-                else
-                    seqc[i] = 'N'
-                end
-            end
-
-            return convert(String, seqc)
-        end
-
-        function rna_complement(seq::String)
-            seqc = Array(Char, length(seq))
-            for (i, c) in enumerate(seq)
-                if c == 'A'
-                    seqc[i] = 'U'
-                elseif c == 'C'
-                    seqc[i] = 'G'
-                elseif c == 'G'
-                    seqc[i] = 'C'
-                elseif c == 'U'
-                    seqc[i] = 'A'
-                else
-                    seqc[i] = 'N'
-                end
-            end
-
-            return convert(String, seqc)
-        end
 
         function check_dna_complement(T, seq)
             return dna_complement(seq) ==
@@ -516,11 +517,38 @@ facts("Compare") do
                    string_counts[RNA_N] == seq_counts[RNA_N]
         end
 
+        function check_kmer_nucleotide_count(::Type{DNANucleotide}, seq::String)
+            string_counts = string_nucleotide_count(DNANucleotide, seq)
+            kmer_counts = NucleotideCounts(dnakmer(seq))
+            return string_counts[DNA_A] == kmer_counts[DNA_A] &&
+                   string_counts[DNA_C] == kmer_counts[DNA_C] &&
+                   string_counts[DNA_G] == kmer_counts[DNA_G] &&
+                   string_counts[DNA_T] == kmer_counts[DNA_T] &&
+                   string_counts[DNA_N] == kmer_counts[DNA_N]
+        end
+
+        function check_kmer_nucleotide_count(::Type{RNANucleotide}, seq::String)
+            string_counts = string_nucleotide_count(RNANucleotide, seq)
+            kmer_counts = NucleotideCounts(rnakmer(seq))
+            return string_counts[RNA_A] == kmer_counts[RNA_A] &&
+                   string_counts[RNA_C] == kmer_counts[RNA_C] &&
+                   string_counts[RNA_G] == kmer_counts[RNA_G] &&
+                   string_counts[RNA_U] == kmer_counts[RNA_U] &&
+                   string_counts[RNA_N] == kmer_counts[RNA_N]
+        end
+
         reps = 10
         for len in [1, 10, 32, 1000, 10000, 100000]
             @fact all([check_nucleotide_count(DNANucleotide, random_dna(len))
                        for _ in 1:reps]) => true
             @fact all([check_nucleotide_count(RNANucleotide, random_rna(len))
+                       for _ in 1:reps]) => true
+        end
+
+        for len in [1, 10, 32]
+            @fact all([check_kmer_nucleotide_count(DNANucleotide, random_dna_kmer(len))
+                       for _ in 1:reps]) => true
+            @fact all([check_kmer_nucleotide_count(RNANucleotide, random_rna_kmer(len))
                        for _ in 1:reps]) => true
         end
     end

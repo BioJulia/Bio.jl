@@ -31,7 +31,7 @@ function count_a(x::Uint64)
 end
 count_c(x::Uint64) = count_ones((((~x) >>> 1) & x) & 0x5555555555555555)
 count_g(x::Uint64) = count_ones(((x >>> 1) & (~x)) & 0x5555555555555555)
-count_t(x::Uint64) = count_ones((x & (x >>> 1)) & 0x5555555555555555)
+count_t(x::Uint64) = count_ones((x    & (x >>> 1)) & 0x5555555555555555)
 
 function NucleotideCounts{T}(seq::NucleotideSequence{T})
     dn, rn = divrem(seq.part.start - 1, 64)
@@ -93,8 +93,15 @@ function NucleotideCounts{T}(seq::NucleotideSequence{T})
 end
 
 # Construct from K-mers
-NucleotideCounts{T}(seq::Kmer{T}) = NucleotideCounts(convert(NucleotideSequence, seq))
-
+function NucleotideCounts{T,K}(seq::Kmer{T, K})
+    x         = convert(Uint64, seq)
+    counts    = NucleotideCounts{T}()
+    counts.a += count_a(x) - 32 + K # Take leading zeros into account
+    counts.c += count_c(x)
+    counts.g += count_g(x)
+    counts.t += count_t(x)
+    return counts
+end
 
 # Basic Functions
 # ---------------
