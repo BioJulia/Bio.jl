@@ -278,13 +278,13 @@ facts("Transforms") do
     function dna_complement(seq::String)
         seqc = Array(Char, length(seq))
         for (i, c) in enumerate(seq)
-            if c == 'A'
+            if c     ==   'A'
                 seqc[i] = 'T'
-            elseif c == 'C'
+            elseif c ==   'C'
                 seqc[i] = 'G'
-            elseif c == 'G'
+            elseif c ==   'G'
                 seqc[i] = 'C'
-            elseif c == 'T'
+            elseif c ==   'T'
                 seqc[i] = 'A'
             else
                 seqc[i] = 'N'
@@ -314,6 +314,7 @@ facts("Transforms") do
     end
 
     context("Complement") do
+
         function check_dna_complement(T, seq)
             return dna_complement(seq) ==
                 convert(String, complement(convert(T, seq)))
@@ -405,7 +406,7 @@ facts("Transforms") do
         end
 
         @fact_throws translate(dna"ACGTACGTA") # can't translate DNA
-        @fact_throws translate(rna"ACGUACGU") # can't translate non-multiples of three
+        @fact_throws translate(rna"ACGUACGU")  # can't translate non-multiples of three
         @fact_throws translate(rna"ACGUACGNU") # can't translate N
     end
 end
@@ -498,7 +499,7 @@ facts("Compare") do
 
         function check_nucleotide_count(::Type{DNANucleotide}, seq::String)
             string_counts = string_nucleotide_count(DNANucleotide, seq)
-            seq_counts = nucleotide_count(DNASequence(seq))
+            seq_counts = NucleotideCounts(DNASequence(seq))
             return string_counts[DNA_A] == seq_counts[DNA_A] &&
                    string_counts[DNA_C] == seq_counts[DNA_C] &&
                    string_counts[DNA_G] == seq_counts[DNA_G] &&
@@ -508,7 +509,7 @@ facts("Compare") do
 
         function check_nucleotide_count(::Type{RNANucleotide}, seq::String)
             string_counts = string_nucleotide_count(RNANucleotide, seq)
-            seq_counts = nucleotide_count(RNASequence(seq))
+            seq_counts = NucleotideCounts(RNASequence(seq))
             return string_counts[RNA_A] == seq_counts[RNA_A] &&
                    string_counts[RNA_C] == seq_counts[RNA_C] &&
                    string_counts[RNA_G] == seq_counts[RNA_G] &&
@@ -516,11 +517,38 @@ facts("Compare") do
                    string_counts[RNA_N] == seq_counts[RNA_N]
         end
 
+        function check_kmer_nucleotide_count(::Type{DNANucleotide}, seq::String)
+            string_counts = string_nucleotide_count(DNANucleotide, seq)
+            kmer_counts = NucleotideCounts(dnakmer(seq))
+            return string_counts[DNA_A] == kmer_counts[DNA_A] &&
+                   string_counts[DNA_C] == kmer_counts[DNA_C] &&
+                   string_counts[DNA_G] == kmer_counts[DNA_G] &&
+                   string_counts[DNA_T] == kmer_counts[DNA_T] &&
+                   string_counts[DNA_N] == kmer_counts[DNA_N]
+        end
+
+        function check_kmer_nucleotide_count(::Type{RNANucleotide}, seq::String)
+            string_counts = string_nucleotide_count(RNANucleotide, seq)
+            kmer_counts = NucleotideCounts(rnakmer(seq))
+            return string_counts[RNA_A] == kmer_counts[RNA_A] &&
+                   string_counts[RNA_C] == kmer_counts[RNA_C] &&
+                   string_counts[RNA_G] == kmer_counts[RNA_G] &&
+                   string_counts[RNA_U] == kmer_counts[RNA_U] &&
+                   string_counts[RNA_N] == kmer_counts[RNA_N]
+        end
+
         reps = 10
         for len in [1, 10, 32, 1000, 10000, 100000]
             @fact all([check_nucleotide_count(DNANucleotide, random_dna(len))
                        for _ in 1:reps]) => true
             @fact all([check_nucleotide_count(RNANucleotide, random_rna(len))
+                       for _ in 1:reps]) => true
+        end
+
+        for len in [1, 10, 32]
+            @fact all([check_kmer_nucleotide_count(DNANucleotide, random_dna_kmer(len))
+                       for _ in 1:reps]) => true
+            @fact all([check_kmer_nucleotide_count(RNANucleotide, random_rna_kmer(len))
                        for _ in 1:reps]) => true
         end
     end

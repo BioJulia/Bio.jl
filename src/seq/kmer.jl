@@ -1,3 +1,6 @@
+# K-mer
+# =====
+
 
 # A Kmer is a sequence <= 32nt, without any 'N's, packed in a single 64 bit value.
 #
@@ -5,86 +8,69 @@
 # representation, Kmer is useful for applications like assembly, k-mer counting,
 # k-mer based quantification in RNA-Seq, etc that rely on manipulating many
 # short sequences as efficiently (space and time) as possible.
-#
 
-bitstype 64 Kmer{T <: Nucleotide, K}
+bitstype 64 Kmer{T<:Nucleotide, K}
 
 typealias DNAKmer{K} Kmer{DNANucleotide, K}
 typealias RNAKmer{K} Kmer{RNANucleotide, K}
-
 typealias Codon RNAKmer{3}
 
 
+# Conversion
+# ----------
+
 # Conversion to/from Uint64
-function convert{K}(::Type{DNAKmer{K}}, x::Uint64)
-    return box(DNAKmer{K}, unbox(Uint64, x))
-end
 
-function convert{K}(::Type{RNAKmer{K}}, x::Uint64)
-    return box(RNAKmer{K}, unbox(Uint64, x))
-end
+convert{K}(::Type{DNAKmer{K}}, x::Uint64) = box(DNAKmer{K}, unbox(Uint64, x))
+convert{K}(::Type{RNAKmer{K}}, x::Uint64) = box(RNAKmer{K}, unbox(Uint64, x))
+convert(::Type{Uint64}, x::DNAKmer)       = box(Uint64, unbox(DNAKmer, x))
+convert(::Type{Uint64}, x::RNAKmer)       = box(Uint64, unbox(RNAKmer, x))
 
-function convert(::Type{Uint64}, x::DNAKmer)
-    return box(Uint64, unbox(DNAKmer, x))
-end
 
-function convert(::Type{Uint64}, x::RNAKmer)
-    return box(Uint64, unbox(RNAKmer, x))
-end
-
+# Convert to/from String
 
 function convert{T}(::Type{Kmer{T}}, seq::String)
     k = length(seq)
-    if k > 32
-        error(string("Cannot construct a K-mer longer than 32nt."))
-    end
+    @assert k <= 32 error("Cannot construct a K-mer longer than 32nt.")
     return convert(Kmer{T, k}, seq)
 end
 
-
 function convert{T, K}(::Type{Kmer{T, K}}, seq::String)
-    if length(seq) != K
-        error(string("Cannot construct a $(K)-mer from a string of length $(length(seq))"))
-    end
+    @assert length(seq) == K error("Cannot construct a $(K)-mer from a string of length $(length(seq))")
 
-    x = uint64(0)
+    x     = uint64(0)
     shift = 0
     for (i, c) in enumerate(seq)
         nt = convert(T, c)
-        if nt == nnucleotide(T)
-            error("A Kmer may not contain an N in its sequence")
-        end
+        @assert nt != nnucleotide(T) error("A K-mer may not contain an N in its sequence")
+
         x |= convert(Uint64, nt) << shift
         shift += 2
     end
+
     return convert(Kmer{T, K}, x)
 end
 
+convert{T, K}(::Type{String}, seq::Kmer{T, K}) = convert(String, [convert(Char, x) for x in seq])
 
-function convert{T}(::Type{Kmer}, seq::NucleotideSequence{T})
-    return convert(Kmer{T}, seq)
-end
 
+# Convert to/from NucleotideSequence
+convert{T}(::Type{Kmer}, seq::NucleotideSequence{T}) = convert(Kmer{T}, seq)
 
 function convert{T}(::Type{Kmer{T}}, seq::NucleotideSequence{T})
     k = length(seq)
-    if k > 32
-        error(string("Cannot construct a K-mer longer than 32nt."))
-    end
+    @assert k <= 32 error("Cannot construct a K-mer longer than 32nt.")
     return convert(Kmer{T, k}, seq)
 end
 
-
 function convert{T, K}(::Type{Kmer{T, K}}, seq::NucleotideSequence{T})
-    if length(seq) != K
-        error(string("Cannot construct a $(K)-mer from a string of length $(length(seq))"))
-    end
+    @assert length(seq) == K error("Cannot construct a $(K)-mer from a NucleotideSequence of length $(length(seq))")
 
-    x = uint64(0)
+    x     = uint64(0)
     shift = 0
     for (i, nt) in enumerate(seq)
         if nt == nnucleotide(T)
-            error("A Kmer may not contain an N in its sequence")
+            error("A K-mer may not contain an N in its sequence")
         end
         x |= convert(Uint64, nt) << shift
         shift += 2
@@ -92,11 +78,7 @@ function convert{T, K}(::Type{Kmer{T, K}}, seq::NucleotideSequence{T})
     return convert(Kmer{T, K}, x)
 end
 
-
-function convert{T, K}(::Type{NucleotideSequence}, x::Kmer{T, K})
-    return convert(NucleotideSequence{T}, x)
-end
-
+convert{T, K}(::Type{NucleotideSequence}, x::Kmer{T, K}) =  convert(NucleotideSequence{T}, x)
 
 function convert{T, K}(::Type{NucleotideSequence{T}}, x::Kmer{T, K})
     ns = BitVector(K)
@@ -105,20 +87,17 @@ function convert{T, K}(::Type{NucleotideSequence{T}}, x::Kmer{T, K})
 end
 
 
-function convert{T, K}(::Type{String}, seq::Kmer{T, K})
-    return convert(String, [convert(Char, x) for x in seq])
-end
+# Constructors
+# ------------
 
-
-function dnakmer(seq::String)
-    return convert(DNAKmer, seq)
-end
-
+# From strings
+dnakmer(seq::String) = convert(DNAKmer, seq)
+rnakmer(seq::String) = convert(RNAKmer, seq)
 
 function rnakmer(seq::String)
-    return convert(RNAKmer, seq)
+    @assert length(seq) <= 32 error("Cannot construct a K-mer longer than 32nt.")
+    return convert(RNAKmer{length(seq)}, seq)
 end
-
 
 # Constructors taking a sequence of nucleotides
 function kmer{T <: Nucleotide}(nts::T...)
@@ -134,119 +113,114 @@ function kmer{T <: Nucleotide}(nts::T...)
             error("A Kmer may not contain an N in its sequence")
         end
         x |= convert(Uint64, nt) << shift
-
         shift += 2
     end
     return convert(Kmer{T, K}, x)
 end
 
-
 function dnakmer(seq::DNASequence)
-    if length(seq) > 32
-        error(string("Cannot construct a K-mer longer than 32nt."))
-    end
+    @assert length(seq) <= 32 error("Cannot construct a K-mer longer than 32nt.")
     return convert(DNAKmer{length(seq)}, seq)
 end
 
 
 function dnakmer(seq::RNASequence)
-    if length(seq) > 32
-        error(string("Cannot construct a K-mer longer than 32nt."))
-    end
+    @assert length(seq) <= 32 error("Cannot construct a K-mer longer than 32nt.")
     return convert(RNAKmer{length(seq)}, seq)
 end
 
 
-function rnakmer(seq::String)
-    if length(seq) > 32
-        error(string("Cannot construct a K-mer longer than 32nt."))
+# Basic Functions
+# ---------------
+
+function =={T, K}(a::NucleotideSequence{T}, b::Kmer{T, K})
+    if length(a) != K
+        return false
     end
-    return convert(RNAKmer{length(seq)}, seq)
+
+    for (u, v) in zip(a, b)
+        if u != v
+            return false
+        end
+    end
+
+    return true
 end
 
+
+function =={T, K}(a::Kmer{T, K}, b::NucleotideSequence{T})
+    return b == a
+end
 
 function getindex{T, K}(x::Kmer{T, K}, i::Integer)
     if i < 1 || i > K
         error(BoundsError())
     end
-    convert(T, (convert(Uint64, x) >>> (2*(i-1))) & 0b11)
+    return convert(T, (convert(Uint64, x) >>> (2*(i-1))) & 0b11)
 end
 
 
 function show{K}(io::IO, x::DNAKmer{K})
+    write(io, "DNA $(K)-mer:\n ")
     for i in 1:K
         write(io, convert(Char, x[i]))
     end
-    print(io, "  (DNA $(K)-mer)")
 end
 
 
 function show{K}(io::IO, x::RNAKmer{K})
+    write(io, "RNA $(K)-mer:\n ")
     for i in 1:K
         write(io, convert(Char, x[i]))
     end
-    print(io, "  (RNA $(K)-mer)")
 end
 
 
-function isless{T, K}(x::Kmer{T, K}, y::Kmer{T, K})
-    return convert(Uint64, x) < convert(Uint64, y)
-end
+isless{T, K}(x::Kmer{T, K}, y::Kmer{T, K}) = convert(Uint64, x) < convert(Uint64, y)
 
+length{T, K}(x::Kmer{T, K}) = K
 
-function length{T, K}(x::Kmer{T, K})
-    return K
-end
-
-
-# Iterate over nucleotides
-function start(x::Kmer)
-    return 1
-end
-
+# Iterating over nucleotides
+start(x::Kmer) = 1
 
 function next{T, K}(x::Kmer{T, K}, i::Int)
     nt = convert(T, (convert(Uint64, x) >>> (2*(i-1))) & 0b11)
     return (nt, i + 1)
 end
 
-
-function done{T, K}(x::Kmer{T, K}, i::Int)
-    return i > K
-end
+done{T, K}(x::Kmer{T, K}, i::Int) = i > K
 
 
-function reverse{T, K}(x::Kmer{T, K})
-    return convert(Kmer{T, K}, nucrev(convert(Uint64, x)) >>> (2 * (32 - K)))
-end
+# Other functions
+# ---------------
 
+reverse{T, K}(x::Kmer{T, K}) = convert(Kmer{T, K}, nucrev(convert(Uint64, x)) >>> (2 * (32 - K)))
 
 function complement{T, K}(x::Kmer{T, K})
     return convert(Kmer{T, K},
         (~convert(Uint64, x)) & (0xffffffffffffffff >>> (2 * (32 - K))))
 end
 
+reverse_complement{T, K}(x::Kmer{T, K}) = complement(reverse(x))
 
-function reverse_complement{T, K}(x::Kmer{T, K})
-    return complement(reverse(x))
-end
-
-
-function mismatches{T, K}(x::Kmer{T, K}, y::Kmer{T, K})
-    return nucmismatches(convert(Uint64, x), convert(Uint64, y))
-end
+mismatches{T, K}(x::Kmer{T, K}, y::Kmer{T, K}) = nucmismatches(convert(Uint64, x), convert(Uint64, y))
 
 
-# A canonical kmer is the numerical lesser of a k-mer and its reverse complement.
-# This is useful in hashing/counting kmers in data that is not strand specific,
-# and thus observing kmer is equivalent to observing its reverse complement.
+# A canonical k-mer is the numerical lesser of a k-mer and its reverse complement.
+# This is useful in hashing/counting k-mers in data that is not strand specific,
+# and thus observing k-mer is equivalent to observing its reverse complement.
 function canonical{T, K}(x::Kmer{T, K})
     y = reverse_complement(x)
     return x < y ? x : y
 end
 
 
-# Iterate through every kmer in a nucleotide sequence
+
+
+# EachKmerIterator and EachKmerIteratorState
+# ==========================================
+
+# Iterate through every k-mer in a nucleotide sequence
 immutable EachKmerIterator{T, K}
     seq::NucleotideSequence{T}
     nit::SequenceNIterator
@@ -264,9 +238,9 @@ end
 
 function eachkmer{T}(seq::NucleotideSequence{T}, k::Integer, step::Integer=1)
     if k < 0
-        error("K must be ≥ 0 in eachkmer")
+        error("K must be ≥ 0 in EachKmer")
     elseif k > 32
-        error("K must be ≤ 32 in eachkmer")
+        error("K must be ≤ 32 in EachKmer")
     end
 
     if step < 1
@@ -348,26 +322,4 @@ function done{T, K}(it::EachKmerIterator{T, K},
     return state.i > length(it.seq)
 end
 
-
-function =={T, K}(a::NucleotideSequence{T}, b::Kmer{T, K})
-    if length(a) != K
-        return false
-    end
-
-    for (u, v) in zip(a, b)
-        if u != v
-            return false
-        end
-    end
-
-    return true
-end
-
-
-function =={T, K}(a::Kmer{T, K}, b::NucleotideSequence{T})
-    return b == a
-end
-
 # TODO: count_nucleotides
-
-
