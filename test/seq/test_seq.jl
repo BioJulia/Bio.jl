@@ -1,5 +1,6 @@
 module TestSeq
 
+using Compat
 using FactCheck
 using Bio
 using Bio.Seq
@@ -362,7 +363,7 @@ facts("Transforms") do
 
     context("Translate") do
         # crummy string translation to test against
-        standard_genetic_code_dict = [
+        standard_genetic_code_dict = @compat Dict{String, Char}(
             "AAA" => 'K', "AAC" => 'N', "AAG" => 'K', "AAU" => 'N',
             "ACA" => 'T', "ACC" => 'T', "ACG" => 'T', "ACU" => 'T',
             "AGA" => 'R', "AGC" => 'S', "AGG" => 'R', "AGU" => 'S',
@@ -384,7 +385,7 @@ facts("Transforms") do
             "CUN" => 'L', "CCN" => 'P', "CGN" => 'R', "ACN" => 'T',
             "GUN" => 'V', "GCN" => 'A', "GGN" => 'G', "UCN" => 'S'
 
-        ]
+        )
 
         function string_translate(seq::String)
             @assert length(seq) % 3 == 0
@@ -470,12 +471,12 @@ facts("Compare") do
 
     context("Counting") do
         function string_nucleotide_count(::Type{DNANucleotide}, seq::String)
-            counts = [
+            counts = @compat Dict{DNANucleotide, Int}(
                 DNA_A => 0,
                 DNA_C => 0,
                 DNA_G => 0,
                 DNA_T => 0,
-                DNA_N => 0 ]
+                DNA_N => 0 )
             for c in seq
                 counts[convert(DNANucleotide, c)] += 1
             end
@@ -484,12 +485,12 @@ facts("Compare") do
         end
 
         function string_nucleotide_count(::Type{RNANucleotide}, seq::String)
-            counts = [
+            counts = @compat Dict{RNANucleotide, Int}(
                 RNA_A => 0,
                 RNA_C => 0,
                 RNA_G => 0,
                 RNA_U => 0,
-                RNA_N => 0 ]
+                RNA_N => 0 )
             for c in seq
                 counts[convert(RNANucleotide, c)] += 1
             end

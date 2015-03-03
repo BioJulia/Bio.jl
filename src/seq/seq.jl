@@ -1,6 +1,7 @@
 
 module Seq
 
+using Compat
 using Base.Intrinsics
 
 import Base: convert, getindex, show, length, start, next, done, copy, reverse,

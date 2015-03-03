@@ -271,7 +271,7 @@ function nextkmer{T, K}(it::EachKmerIterator{T, K},
         end
 
         if i - K + 1 <= next_n_pos <= i
-            off = it.step * iceil((K - skip) / it.step)
+            off = it.step * @compat ceil(Int, (K - skip) / it.step)
             if skip < K
                 skip += off
             end
