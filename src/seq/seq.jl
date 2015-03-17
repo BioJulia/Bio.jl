@@ -1,4 +1,3 @@
-
 module Seq
 
 using Base.Intrinsics
@@ -18,12 +17,9 @@ export Nucleotide, DNANucleotide, RNANucleotide,
 
 
 include("nucleotide.jl")
-include("nucleotidesequence.jl")
-include("kmer.jl")
-include("nucleotidecounts.jl")
 include("aminoacid.jl")
-include("aminoacidsequence.jl")
 include("geneticcode.jl")
+
 
 # TODO: pattern (pseudo-sequences with ambiguity codes, etc)
 
