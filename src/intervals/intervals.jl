@@ -5,7 +5,7 @@ using Base.Intrinsics
 using IntervalTrees
 using DataStructures
 
-export Strand, Interval, IntervalSet, STRAND_NA, STRAND_POS, STRAND_NEG, STRAND_BOTH
+export Strand, Interval, IntervalCollection, STRAND_NA, STRAND_POS, STRAND_NEG, STRAND_BOTH
 
 bitstype 8 Strand
 
@@ -61,7 +61,7 @@ function Base.show(io::IO, i::Interval)
 end
 
 
-# In IntervalSet, all the data associated with an interval is stored in a linked
+# In IntervalCollection, all the data associated with an interval is stored in a linked
 # list.
 abstract IntervalMetadataList{T}
 immutable IntervalMetadataNil{T} <: IntervalMetadataList{T} end
@@ -104,23 +104,23 @@ end
 #
 # Strand information is stored in the metadata.
 #
-typealias IntervalSetTree{T} IntervalTree{Int64, IntervalMetadataNode{T}}
+typealias IntervalCollectionTree{T} IntervalTree{Int64, IntervalMetadataNode{T}}
 
-type IntervalSet{T}
+type IntervalCollection{T}
     # Sequence name mapped to IntervalTree, which in turn maps intervals to
     # a list of metadata.
-    trees::Dict{String, IntervalSetTree{T}}
+    trees::Dict{String, IntervalCollectionTree{T}}
 
     # Keep track of the number of stored intervals
     length::Int
 
-    function IntervalSet()
-        return new(Dict{String, IntervalSetTree{T}}(), 0)
+    function IntervalCollection()
+        return new(Dict{String, IntervalCollectionTree{T}}(), 0)
     end
 end
 
 
-function Base.push!{T}(is::IntervalSet{T}, i::Interval{T})
+function Base.push!{T}(is::IntervalCollection{T}, i::Interval{T})
     if !haskey(is.trees, i.seqname)
         tree = IntervalTree{Int64, IntervalMetadataNode{T}}()
         is.trees[i.seqname] = tree
@@ -139,9 +139,9 @@ function Base.push!{T}(is::IntervalSet{T}, i::Interval{T})
 end
 
 
-function Base.show(io::IO, is::IntervalSet)
+function Base.show(io::IO, is::IntervalCollection)
     const max_entries = 8
-    println(io, "IntervalSet with $(length(is)) intervals:")
+    println(io, "IntervalCollection with $(length(is)) intervals:")
     for (k, i) in enumerate(is)
         if k > 8
             break
@@ -152,53 +152,53 @@ function Base.show(io::IO, is::IntervalSet)
 end
 
 
-function Base.length(is::IntervalSet)
+function Base.length(is::IntervalCollection)
     return is.length
 end
 
 
-# Iteration over entries in IntervalSet. Unfortunately, this is fairly
+# Iteration over entries in IntervalCollection. Unfortunately, this is fairly
 # complicated since there are several levels we have to iterate over:
 # each metadata in each entry in each IntervalTree.
 
-typealias IntervalSetTreeIteratorState{T} IntervalTrees.IntervalBTreeIteratorState{Int64, IntervalMetadataNode{T}, 64}
+typealias IntervalCollectionTreeIteratorState{T} IntervalTrees.IntervalBTreeIteratorState{Int64, IntervalMetadataNode{T}, 64}
 
-immutable IntervalSetIteratorState{T}
+immutable IntervalCollectionIteratorState{T}
     trees_state::Int
     seqname::String
-    tree::IntervalSetTree{T}
-    tree_state::IntervalSetTreeIteratorState{T}
+    tree::IntervalCollectionTree{T}
+    tree_state::IntervalCollectionTreeIteratorState{T}
     interval::((Int64, Int64), IntervalMetadataList{T})
 
-    function IntervalSetIteratorState(trees_state::Int)
+    function IntervalCollectionIteratorState(trees_state::Int)
         return new(trees_state)
     end
 
-    function IntervalSetIteratorState(trees_state::Int,
+    function IntervalCollectionIteratorState(trees_state::Int,
                                       seqname::String,
-                                      tree::IntervalSetTree{T},
-                                      tree_state::IntervalSetTreeIteratorState{T},
+                                      tree::IntervalCollectionTree{T},
+                                      tree_state::IntervalCollectionTreeIteratorState{T},
                                       interval::((Int64, Int64), IntervalMetadataList{T}))
         return new(trees_state, seqname, tree, tree_state, interval)
     end
 end
 
 
-function Base.start{T}(is::IntervalSet{T})
+function Base.start{T}(is::IntervalCollection{T})
     trees_state = start(is.trees)
     if done(is.trees, trees_state)
-        return IntervalSetIteratorState{T}()
+        return IntervalCollectionIteratorState{T}()
     end
 
     (seqname, tree), trees_state = next(is.trees, trees_state)
     tree_state = start(tree)
     interval, tree_state = next(tree, tree_state)
-    return IntervalSetIteratorState{T}(trees_state, seqname, tree,
+    return IntervalCollectionIteratorState{T}(trees_state, seqname, tree,
                                        tree_state, interval)
 end
 
 
-function Base.next{T}(is::IntervalSet{T}, state::IntervalSetIteratorState{T})
+function Base.next{T}(is::IntervalCollection{T}, state::IntervalCollectionIteratorState{T})
     first, last = state.interval[1]
     interval_metadata = state.interval[2]
     i = Interval{T}(state.seqname, first, last, interval_metadata.strand,
@@ -221,14 +221,14 @@ function Base.next{T}(is::IntervalSet{T}, state::IntervalSetIteratorState{T})
     end
     @label end_of_iterator
 
-    newstate = IntervalSetIteratorState{T}(trees_state, seqname, tree,
+    newstate = IntervalCollectionIteratorState{T}(trees_state, seqname, tree,
                                            tree_state, ((first, last),
                                            interval_metadata))
     return i, newstate
 end
 
 
-function Base.done{T}(is::IntervalSet{T}, state::IntervalSetIteratorState{T})
+function Base.done{T}(is::IntervalCollection{T}, state::IntervalCollectionIteratorState{T})
     return isa(state.interval[2], IntervalMetadataNil{T})
 end
 

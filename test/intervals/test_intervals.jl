@@ -23,10 +23,10 @@ function random_intervals(seqnames, maxpos::Int, n::Int)
     return intervals
 end
 
-facts("IntervalSet Insertion") do
+facts("IntervalCollection Insertion") do
     n = 100000
     intervals = random_intervals(["one", "two", "three"], 1000000, n)
-    is = IntervalSet{Int}()
+    is = IntervalCollection{Int}()
     for interval in intervals
         push!(is, interval)
     end
