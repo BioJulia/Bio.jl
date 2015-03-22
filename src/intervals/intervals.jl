@@ -150,7 +150,9 @@ function Base.show(io::IO, is::IntervalCollection)
             end
             println(io, "  ", i)
         end
-        print(io, "  ⋮")
+        if n_entries > max_entries
+            print(io, "  ⋮")
+        end
     end
 end
 
