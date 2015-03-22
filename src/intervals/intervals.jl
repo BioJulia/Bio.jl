@@ -141,14 +141,17 @@ end
 
 function Base.show(io::IO, is::IntervalCollection)
     const max_entries = 8
-    println(io, "IntervalCollection with $(length(is)) intervals:")
-    for (k, i) in enumerate(is)
-        if k > 8
-            break
+    n_entries = length(is)
+    println(io, "IntervalCollection with $(n_entries) intervals:")
+    if n_entries > 0
+        for (k, i) in enumerate(is)
+            if k > 8
+                break
+            end
+            println(io, "  ", i)
         end
-        println(io, "  ", i)
+        print(io, "  ⋮")
     end
-    print(io, "  ⋮")
 end
 
 
