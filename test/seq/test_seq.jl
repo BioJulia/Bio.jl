@@ -112,6 +112,12 @@ facts("NucleotideSequence Construction") do
     @fact_throws DNASequence("ACCNNCATTTTTTAGATXATAG")
     @fact_throws RNASequence("ACCNNCATTTTTTAGATXATAG")
 
+    # Check construction of empty nucleotide sequences
+    #  using RNASequence and DNASequence functions
+    @fact RNASequence() == NucleotideSequence(RNANucleotide) => true
+    @fact DNASequence() == NucleotideSequence(DNANucleotide) => true
+
+
     # Check that sequences in strings survive round trip conversion:
     #   String → NucleotideSequence → String
     function check_string_construction(T::Type, seq::String)
@@ -126,6 +132,14 @@ facts("NucleotideSequence Construction") do
         @fact all([check_string_construction(RNANucleotide, lowercase(random_rna(len))) for _ in 1:reps]) => true
     end
 
+    context("Length") do
+        for len in [0, 1, 10, 32, 1000, 10000, 100000]
+            @fact length(DNASequence(random_dna(len))) == len => true
+            @fact length(DNASequence(random_dna(len))) == len => true
+        end
+    end
+
+
     context("Copy") do
         function check_copy(T, seq)
             return convert(String, copy(NucleotideSequence{T}(seq))) == seq
@@ -136,6 +150,23 @@ facts("NucleotideSequence Construction") do
             @fact all([check_copy(RNANucleotide, random_rna(len)) for _ in 1:reps]) => true
         end
     end
+
+    context("Access") do
+        # Iteration through DNA Sequence
+        dna_seq = dna"ACTG"
+        dna_vector = [DNA_A, DNA_C, DNA_T, DNA_G]
+        @fact all([nucleotide == dna_vector[i] for (i, nucleotide) in enumerate(dna_seq)]) =>  true
+
+        # Iteration through DNA Sequence
+        rna_seq = rna"ACUG"
+        rna_vector = [RNA_A, RNA_C, RNA_U, RNA_G]
+        @fact all([nucleotide == rna_vector[i] for (i, nucleotide) in enumerate(rna_seq)]) =>  true
+
+        # Access index out of bounds
+        @fact_throws dna_seq[5]
+        @fact_throws rna_seq[5]
+    end
+
 
     context("Subsequence Construction") do
         for len in [1, 10, 32, 1000, 10000, 100000]
@@ -162,6 +193,18 @@ facts("NucleotideSequence Construction") do
             end
             @fact all(results) => true
         end
+
+        # Subsequence from range
+        @fact RNASequence(rna"AUCGAUCG", 5:8) == RNASequence("AUCG") => true
+        @fact DNASequence(dna"ATCGATCG", 5:8) == DNASequence("ATCG") => true
+
+        # Invalid ranges
+        @fact_throws RNASequence(rna"AUCGAUCG", 5:10)
+        @fact_throws DNASequence(dna"ATCGATCG", 5:10)
+
+        # Empty ranges
+        @fact RNASequence(rna"AUCGAUCG", 5:4) == RNASequence() => true
+        @fact DNASequence(dna"ATCGATCG", 5:4) == DNASequence() => true
     end
 
     context("Kmer Construction") do
@@ -231,6 +274,8 @@ facts("AminoAcidSequence Construction") do
         @fact all([check_string_construction(random_aa(len)) for _ in 1:reps]) => true
         @fact all([check_string_construction(lowercase(random_aa(len))) for _ in 1:reps]) => true
     end
+
+    # Check creation of empty
 
     context("Copy") do
         function check_copy(seq)
