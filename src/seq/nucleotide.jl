@@ -738,7 +738,7 @@ function dnakmer(seq::DNASequence)
 end
 
 
-function dnakmer(seq::RNASequence)
+function rnakmer(seq::RNASequence)
     @assert length(seq) <= 32 error("Cannot construct a K-mer longer than 32nt.")
     return convert(RNAKmer{length(seq)}, seq)
 end
