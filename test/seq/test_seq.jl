@@ -107,102 +107,107 @@ function random_interval(minstart, maxstop)
 end
 
 facts("Nucleotides") do
-
     context("Conversions") do
-        context("DNA conversions from Uint8") do
-            @fact convert(DNANucleotide, uint8(0)) => DNA_A
-            @fact convert(DNANucleotide, uint8(1)) => DNA_C
-            @fact convert(DNANucleotide, uint8(2)) => DNA_G
-            @fact convert(DNANucleotide, uint8(3)) => DNA_T
-            @fact convert(DNANucleotide, uint8(4)) => DNA_N
+        context("Uint8") do
+            context("DNA conversions from Uint8") do
+                @fact convert(DNANucleotide, uint8(0)) => DNA_A
+                @fact convert(DNANucleotide, uint8(1)) => DNA_C
+                @fact convert(DNANucleotide, uint8(2)) => DNA_G
+                @fact convert(DNANucleotide, uint8(3)) => DNA_T
+                @fact convert(DNANucleotide, uint8(4)) => DNA_N
+            end
+
+            context("RNA conversions from Uint8") do
+                @fact convert(RNANucleotide, uint8(0)) => RNA_A
+                @fact convert(RNANucleotide, uint8(1)) => RNA_C
+                @fact convert(RNANucleotide, uint8(2)) => RNA_G
+                @fact convert(RNANucleotide, uint8(3)) => RNA_U
+                @fact convert(RNANucleotide, uint8(4)) => RNA_N
+            end
+
+            context("DNA conversions to Uint8") do
+                @fact convert(Uint8, DNA_A) => uint8(0)
+                @fact convert(Uint8, DNA_C) => uint8(1)
+                @fact convert(Uint8, DNA_G) => uint8(2)
+                @fact convert(Uint8, DNA_T) => uint8(3)
+                @fact convert(Uint8, DNA_N) => uint8(4)
+            end
+
+            context("RNA conversions to Uint8") do
+                @fact convert(Uint8, RNA_A) => uint8(0)
+                @fact convert(Uint8, RNA_C) => uint8(1)
+                @fact convert(Uint8, RNA_G) => uint8(2)
+                @fact convert(Uint8, RNA_U) => uint8(3)
+                @fact convert(Uint8, RNA_N) => uint8(4)
+            end
         end
 
-        context("RNA conversions from Uint8") do
-            @fact convert(RNANucleotide, uint8(0)) => RNA_A
-            @fact convert(RNANucleotide, uint8(1)) => RNA_C
-            @fact convert(RNANucleotide, uint8(2)) => RNA_G
-            @fact convert(RNANucleotide, uint8(3)) => RNA_U
-            @fact convert(RNANucleotide, uint8(4)) => RNA_N
+        context("Uint64") do
+            context("DNA conversions from Uint64") do
+                @fact convert(DNANucleotide, uint64(0)) => DNA_A
+                @fact convert(DNANucleotide, uint64(1)) => DNA_C
+                @fact convert(DNANucleotide, uint64(2)) => DNA_G
+                @fact convert(DNANucleotide, uint64(3)) => DNA_T
+                @fact convert(DNANucleotide, uint64(4)) => DNA_N
+            end
+
+            context("RNA conversions from Uint64") do
+                @fact convert(RNANucleotide, uint64(0)) => RNA_A
+                @fact convert(RNANucleotide, uint64(1)) => RNA_C
+                @fact convert(RNANucleotide, uint64(2)) => RNA_G
+                @fact convert(RNANucleotide, uint64(3)) => RNA_U
+                @fact convert(RNANucleotide, uint64(4)) => RNA_N
+            end
+
+            context("DNA conversions to Uint64") do
+                @fact convert(Uint64, DNA_A) => uint64(0)
+                @fact convert(Uint64, DNA_C) => uint64(1)
+                @fact convert(Uint64, DNA_G) => uint64(2)
+                @fact convert(Uint64, DNA_T) => uint64(3)
+                @fact convert(Uint64, DNA_N) => uint64(4)
+            end
+
+            context("RNA conversions to Uint64") do
+                @fact convert(Uint64, RNA_A) => uint64(0)
+                @fact convert(Uint64, RNA_C) => uint64(1)
+                @fact convert(Uint64, RNA_G) => uint64(2)
+                @fact convert(Uint64, RNA_U) => uint64(3)
+                @fact convert(Uint64, RNA_N) => uint64(4)
+            end
         end
 
-        context("DNA conversions to Uint8") do
-            @fact convert(Uint8, DNA_A) => uint8(0)
-            @fact convert(Uint8, DNA_C) => uint8(1)
-            @fact convert(Uint8, DNA_G) => uint8(2)
-            @fact convert(Uint8, DNA_T) => uint8(3)
-            @fact convert(Uint8, DNA_N) => uint8(4)
-        end
+        context("Char") do
+            context("DNA conversions from Char") do
+                @fact convert(DNANucleotide, 'A') => DNA_A
+                @fact convert(DNANucleotide, 'C') => DNA_C
+                @fact convert(DNANucleotide, 'G') => DNA_G
+                @fact convert(DNANucleotide, 'T') => DNA_T
+                @fact convert(DNANucleotide, 'N') => DNA_N
+            end
 
-        context("RNA conversions to Uint8") do
-            @fact convert(Uint8, RNA_A) => uint8(0)
-            @fact convert(Uint8, RNA_C) => uint8(1)
-            @fact convert(Uint8, RNA_G) => uint8(2)
-            @fact convert(Uint8, RNA_U) => uint8(3)
-            @fact convert(Uint8, RNA_N) => uint8(4)
-        end
+            context("RNA conversions from Char") do
+                @fact convert(RNANucleotide, 'A') => RNA_A
+                @fact convert(RNANucleotide, 'C') => RNA_C
+                @fact convert(RNANucleotide, 'G') => RNA_G
+                @fact convert(RNANucleotide, 'U') => RNA_U
+                @fact convert(RNANucleotide, 'N') => RNA_N
+            end
 
-        context("DNA conversions from Uint64") do
-            @fact convert(DNANucleotide, uint64(0)) => DNA_A
-            @fact convert(DNANucleotide, uint64(1)) => DNA_C
-            @fact convert(DNANucleotide, uint64(2)) => DNA_G
-            @fact convert(DNANucleotide, uint64(3)) => DNA_T
-            @fact convert(DNANucleotide, uint64(4)) => DNA_N
-        end
+            context("DNA conversions to Char") do
+                @fact convert(Char, DNA_A) => 'A'
+                @fact convert(Char, DNA_C) => 'C'
+                @fact convert(Char, DNA_G) => 'G'
+                @fact convert(Char, DNA_T) => 'T'
+                @fact convert(Char, DNA_N) => 'N'
+            end
 
-        context("RNA conversions from Uint64") do
-            @fact convert(RNANucleotide, uint64(0)) => RNA_A
-            @fact convert(RNANucleotide, uint64(1)) => RNA_C
-            @fact convert(RNANucleotide, uint64(2)) => RNA_G
-            @fact convert(RNANucleotide, uint64(3)) => RNA_U
-            @fact convert(RNANucleotide, uint64(4)) => RNA_N
-        end
-
-        context("DNA conversions to Uint64") do
-            @fact convert(Uint64, DNA_A) => uint64(0)
-            @fact convert(Uint64, DNA_C) => uint64(1)
-            @fact convert(Uint64, DNA_G) => uint64(2)
-            @fact convert(Uint64, DNA_T) => uint64(3)
-            @fact convert(Uint64, DNA_N) => uint64(4)
-        end
-
-        context("RNA conversions to Uint64") do
-            @fact convert(Uint64, RNA_A) => uint64(0)
-            @fact convert(Uint64, RNA_C) => uint64(1)
-            @fact convert(Uint64, RNA_G) => uint64(2)
-            @fact convert(Uint64, RNA_U) => uint64(3)
-            @fact convert(Uint64, RNA_N) => uint64(4)
-        end
-
-        context("DNA conversions from Char") do
-            @fact convert(DNANucleotide, 'A') => DNA_A
-            @fact convert(DNANucleotide, 'C') => DNA_C
-            @fact convert(DNANucleotide, 'G') => DNA_G
-            @fact convert(DNANucleotide, 'T') => DNA_T
-            @fact convert(DNANucleotide, 'N') => DNA_N
-        end
-
-        context("RNA conversions from Char") do
-            @fact convert(RNANucleotide, 'A') => RNA_A
-            @fact convert(RNANucleotide, 'C') => RNA_C
-            @fact convert(RNANucleotide, 'G') => RNA_G
-            @fact convert(RNANucleotide, 'U') => RNA_U
-            @fact convert(RNANucleotide, 'N') => RNA_N
-        end
-
-        context("DNA conversions to Char") do
-            @fact convert(Char, DNA_A) => 'A'
-            @fact convert(Char, DNA_C) => 'C'
-            @fact convert(Char, DNA_G) => 'G'
-            @fact convert(Char, DNA_T) => 'T'
-            @fact convert(Char, DNA_N) => 'N'
-        end
-
-        context("DNA conversions to Char") do
-            @fact convert(Char, RNA_A) => 'A'
-            @fact convert(Char, RNA_C) => 'C'
-            @fact convert(Char, RNA_G) => 'G'
-            @fact convert(Char, RNA_U) => 'U'
-            @fact convert(Char, RNA_N) => 'N'
+            context("DNA conversions to Char") do
+                @fact convert(Char, RNA_A) => 'A'
+                @fact convert(Char, RNA_C) => 'C'
+                @fact convert(Char, RNA_G) => 'G'
+                @fact convert(Char, RNA_U) => 'U'
+                @fact convert(Char, RNA_N) => 'N'
+            end
         end
     end
 
@@ -269,36 +274,49 @@ facts("Nucleotides") do
                 convert(String, reverse_complement(convert(T, seq)))
         end
 
-        context("Nucleotide Sequences") do
-            reps = 10
-            context("Construction") do
-                # Non-nucleotide characters should throw
-                @fact_throws DNASequence("ACCNNCATTTTTTAGATXATAG")
-                @fact_throws RNASequence("ACCNNCATTTTTTAGATXATAG")
-
-                # Check construction of empty nucleotide sequences
-                #  using RNASequence and DNASequence functions
-                @fact RNASequence() => NucleotideSequence(RNANucleotide)
-                @fact DNASequence() => NucleotideSequence(DNANucleotide)
-
-
-                # Check that sequences in strings survive round trip conversion:
-                #   String → NucleotideSequence → String
-                function check_string_construction(T::Type, seq::String)
-                    return convert(String, NucleotideSequence{T}(seq)) == uppercase(seq)
-                end
-
-                for len in [0, 1, 10, 32, 1000, 10000, 100000]
-                    @fact all([check_string_construction(DNANucleotide, random_dna(len)) for _ in 1:reps]) => true
-                    @fact all([check_string_construction(RNANucleotide, random_rna(len)) for _ in 1:reps]) => true
-                    @fact all([check_string_construction(DNANucleotide, lowercase(random_dna(len))) for _ in 1:reps]) => true
-                    @fact all([check_string_construction(RNANucleotide, lowercase(random_rna(len))) for _ in 1:reps]) => true
+        function check_mismatches(T, a, b)
+            count = 0
+            for (ca, cb) in zip(a, b)
+                if ca != cb
+                    count += 1
                 end
             end
+            return mismatches(convert(T, a), convert(T, b)) == count
+        end
 
-            context("Conversion between RNA and DNA") do
-                @fact convert(RNASequence, DNASequence("ACGTN")) => rna"ACGUN"
-                @fact convert(DNASequence, RNASequence("ACGUN")) => dna"ACGTN"
+        context("Nucleotide Sequences") do
+            reps = 10
+            context("Construction and Conversions") do
+                context("Constructing empty sequences") do
+                    # Check construction of empty nucleotide sequences
+                    #  using RNASequence and DNASequence functions
+                    @fact RNASequence() => NucleotideSequence(RNANucleotide)
+                    @fact DNASequence() => NucleotideSequence(DNANucleotide)
+                end
+
+                context("Conversion from/to Strings") do
+                    # Check that sequences in strings survive round trip conversion:
+                    #   String → NucleotideSequence → String
+                    function check_string_construction(T::Type, seq::String)
+                        return convert(String, NucleotideSequence{T}(seq)) == uppercase(seq)
+                    end
+
+                    for len in [0, 1, 10, 32, 1000, 10000, 100000]
+                        @fact all([check_string_construction(DNANucleotide, random_dna(len)) for _ in 1:reps]) => true
+                        @fact all([check_string_construction(RNANucleotide, random_rna(len)) for _ in 1:reps]) => true
+                        @fact all([check_string_construction(DNANucleotide, lowercase(random_dna(len))) for _ in 1:reps]) => true
+                        @fact all([check_string_construction(RNANucleotide, lowercase(random_rna(len))) for _ in 1:reps]) => true
+                    end
+
+                    # Non-nucleotide characters should throw
+                    @fact_throws DNASequence("ACCNNCATTTTTTAGATXATAG")
+                    @fact_throws RNASequence("ACCNNCATTTTTTAGATXATAG")
+                end
+
+                context("Conversion between RNA and DNA") do
+                    @fact convert(RNASequence, DNASequence("ACGTN")) => rna"ACGUN"
+                    @fact convert(DNASequence, RNASequence("ACGUN")) => dna"ACGTN"
+                end
             end
 
             context("Equality") do
@@ -478,6 +496,34 @@ facts("Nucleotides") do
                     end
                 end
             end
+
+            context("Mismatches") do
+                for len in [1, 10, 32, 1000, 10000, 100000]
+                    @fact all([check_mismatches(DNASequence, random_dna(len), random_dna(len))
+                               for _ in 1:reps]) => true
+                    @fact all([check_mismatches(RNASequence, random_rna(len), random_rna(len))
+                               for _ in 1:reps]) => true
+                end
+            end
+        end
+
+        context("SequenceNIterator") do
+            function check_ns(T, seq)
+                expected = Int[]
+                for i in 1:length(seq)
+                    if seq[i] == 'N'
+                        push!(expected, i)
+                    end
+                end
+
+                collect(npositions(T(seq))) == expected
+            end
+
+            reps = 10
+            for len in [1, 10, 32, 1000, 10000, 100000]
+                @fact all([check_ns(DNASequence, random_dna(len)) for _ in 1:reps]) => true
+                @fact all([check_ns(RNASequence, random_rna(len)) for _ in 1:reps]) => true
+            end
         end
 
         context("Kmer") do
@@ -575,9 +621,8 @@ facts("Nucleotides") do
                 @fact rnakmer("AC")  == rnakmer("AG")  => false
             end
 
+            reps = 10
             context("Transformations") do
-                reps = 10
-
                 context("Reversal") do
                     for len in [0, 1, 16, 32]
                         @fact all([check_reversal(DNAKmer, random_dna_kmer(len)) for _ in 1:reps]) => true
@@ -599,55 +644,189 @@ facts("Nucleotides") do
                     end
                 end
             end
-        end
-    end
-end
 
-facts("AminoAcid Sequence") do
-    reps = 10
-    context("Construction") do
-        # Non-aa characters should throw
-        @fact_throws AminoAcidSequence("ATGHLMYZZACAGNM")
-
-        # Check that sequences in strings survive round trip conversion:
-        #   String → AminoAcidSequence → String
-        function check_string_construction(seq::String)
-            return convert(String, AminoAcidSequence(seq)) == uppercase(seq)
-        end
-
-        for len in [0, 1, 10, 32, 1000, 10000, 100000]
-            @fact all([check_string_construction(random_aa(len)) for _ in 1:reps]) => true
-            @fact all([check_string_construction(lowercase(random_aa(len))) for _ in 1:reps]) => true
-        end
-
-        # Check creation of empty
-    end
-
-    context("Copy") do
-        function check_copy(seq)
-            return convert(String, copy(AminoAcidSequence(seq))) == uppercase(seq)
-        end
-
-        for len in [1, 10, 32, 1000, 10000, 100000]
-            @fact all([check_copy(random_aa(len)) for _ in 1:reps]) => true
-        end
-    end
-
-    context("Subsequence Construction") do
-        for len in [1, 10, 32, 1000, 10000, 100000]
-            seq = random_aa(len)
-            aaseq = AminoAcidSequence(seq)
-
-            results = Bool[]
-            for _ in 1:reps
-                part = random_interval(1, length(seq))
-                push!(results, seq[part] == convert(String, aaseq[part]))
+            context("Mismatches") do
+                for len in [0, 1, 16, 32]
+                    @fact all([check_mismatches(DNAKmer, random_dna_kmer(len), random_dna_kmer(len))
+                              for _ in 1:reps]) => true
+                    @fact all([check_mismatches(RNAKmer, random_rna_kmer(len), random_rna_kmer(len))
+                              for _ in 1:reps]) => true
+                end
             end
-            @fact all(results) => true
+        end
+
+        context("EachKmer") do
+            function string_eachkmer(seq::String, k, step=1)
+                kmers = String[]
+                i = 1
+                for i in 1:step:length(seq) - k + 1
+                    subseq = seq[i:i + k - 1]
+                    if !in('N', subseq)
+                        push!(kmers, subseq)
+                    end
+                end
+                return kmers
+            end
+
+            function check_eachkmer(T, seq::String, k, step=1)
+                xs = [convert(String, x) for (i, x) in collect(eachkmer(NucleotideSequence{T}(seq), k, step))]
+                ys = string_eachkmer(seq, k, step)
+                return xs == ys
+            end
+
+            reps = 10
+            len = 10000
+
+            for k in [1, 3, 16, 32]
+                @fact all([check_eachkmer(DNANucleotide, random_dna(len), k) for _ in 1:reps]) => true
+                @fact all([check_eachkmer(RNANucleotide, random_rna(len), k) for _ in 1:reps]) => true
+            end
+
+            for k in [1, 3, 16, 32]
+                @fact all([check_eachkmer(DNANucleotide, random_dna(len), k, 3) for _ in 1:reps]) => true
+                @fact all([check_eachkmer(RNANucleotide, random_rna(len), k, 3) for _ in 1:reps]) => true
+            end
+
+            @fact isempty(collect(eachkmer(dna"", 1))) => true
+            @fact isempty(collect(eachkmer(dna"NNNNNNNNNN", 1))) => true
+            @fact isempty(collect(eachkmer(dna"ACGT", 0))) => true
+            @fact_throws eachkmer(dna"ACGT", -1)
+            @fact_throws eachkmer(dna"ACGT", 33)
+        end
+
+        context("Counting") do
+            function string_nucleotide_count(::Type{DNANucleotide}, seq::String)
+                counts = @compat Dict{DNANucleotide, Int}(
+                    DNA_A => 0,
+                    DNA_C => 0,
+                    DNA_G => 0,
+                    DNA_T => 0,
+                    DNA_N => 0 )
+                for c in seq
+                    counts[convert(DNANucleotide, c)] += 1
+                end
+
+                return counts
+            end
+
+            function string_nucleotide_count(::Type{RNANucleotide}, seq::String)
+                counts = @compat Dict{RNANucleotide, Int}(
+                    RNA_A => 0,
+                    RNA_C => 0,
+                    RNA_G => 0,
+                    RNA_U => 0,
+                    RNA_N => 0 )
+                for c in seq
+                    counts[convert(RNANucleotide, c)] += 1
+                end
+
+                return counts
+            end
+
+            function check_nucleotide_count(::Type{DNANucleotide}, seq::String)
+                string_counts = string_nucleotide_count(DNANucleotide, seq)
+                seq_counts = NucleotideCounts(DNASequence(seq))
+                return string_counts[DNA_A] == seq_counts[DNA_A] &&
+                       string_counts[DNA_C] == seq_counts[DNA_C] &&
+                       string_counts[DNA_G] == seq_counts[DNA_G] &&
+                       string_counts[DNA_T] == seq_counts[DNA_T] &&
+                       string_counts[DNA_N] == seq_counts[DNA_N]
+            end
+
+            function check_nucleotide_count(::Type{RNANucleotide}, seq::String)
+                string_counts = string_nucleotide_count(RNANucleotide, seq)
+                seq_counts = NucleotideCounts(RNASequence(seq))
+                return string_counts[RNA_A] == seq_counts[RNA_A] &&
+                       string_counts[RNA_C] == seq_counts[RNA_C] &&
+                       string_counts[RNA_G] == seq_counts[RNA_G] &&
+                       string_counts[RNA_U] == seq_counts[RNA_U] &&
+                       string_counts[RNA_N] == seq_counts[RNA_N]
+            end
+
+            function check_kmer_nucleotide_count(::Type{DNANucleotide}, seq::String)
+                string_counts = string_nucleotide_count(DNANucleotide, seq)
+                kmer_counts = NucleotideCounts(dnakmer(seq))
+                return string_counts[DNA_A] == kmer_counts[DNA_A] &&
+                       string_counts[DNA_C] == kmer_counts[DNA_C] &&
+                       string_counts[DNA_G] == kmer_counts[DNA_G] &&
+                       string_counts[DNA_T] == kmer_counts[DNA_T] &&
+                       string_counts[DNA_N] == kmer_counts[DNA_N]
+            end
+
+            function check_kmer_nucleotide_count(::Type{RNANucleotide}, seq::String)
+                string_counts = string_nucleotide_count(RNANucleotide, seq)
+                kmer_counts = NucleotideCounts(rnakmer(seq))
+                return string_counts[RNA_A] == kmer_counts[RNA_A] &&
+                       string_counts[RNA_C] == kmer_counts[RNA_C] &&
+                       string_counts[RNA_G] == kmer_counts[RNA_G] &&
+                       string_counts[RNA_U] == kmer_counts[RNA_U] &&
+                       string_counts[RNA_N] == kmer_counts[RNA_N]
+            end
+
+            reps = 10
+            for len in [1, 10, 32, 1000, 10000, 100000]
+                @fact all([check_nucleotide_count(DNANucleotide, random_dna(len))
+                           for _ in 1:reps]) => true
+                @fact all([check_nucleotide_count(RNANucleotide, random_rna(len))
+                           for _ in 1:reps]) => true
+            end
+
+            for len in [1, 10, 32]
+                @fact all([check_kmer_nucleotide_count(DNANucleotide, random_dna_kmer(len))
+                           for _ in 1:reps]) => true
+                @fact all([check_kmer_nucleotide_count(RNANucleotide, random_rna_kmer(len))
+                           for _ in 1:reps]) => true
+            end
         end
     end
 end
 
+facts("Aminoacids") do
+    context("AminoAcid Sequences") do
+        reps = 10
+        context("Construction") do
+            # Non-aa characters should throw
+            @fact_throws AminoAcidSequence("ATGHLMYZZACAGNM")
+
+            # Check that sequences in strings survive round trip conversion:
+            #   String → AminoAcidSequence → String
+            function check_string_construction(seq::String)
+                return convert(String, AminoAcidSequence(seq)) == uppercase(seq)
+            end
+
+            for len in [0, 1, 10, 32, 1000, 10000, 100000]
+                @fact all([check_string_construction(random_aa(len)) for _ in 1:reps]) => true
+                @fact all([check_string_construction(lowercase(random_aa(len))) for _ in 1:reps]) => true
+            end
+
+            # Check creation of empty
+        end
+
+        context("Copy") do
+            function check_copy(seq)
+                return convert(String, copy(AminoAcidSequence(seq))) == uppercase(seq)
+            end
+
+            for len in [1, 10, 32, 1000, 10000, 100000]
+                @fact all([check_copy(random_aa(len)) for _ in 1:reps]) => true
+            end
+        end
+
+        context("Subsequence Construction") do
+            for len in [1, 10, 32, 1000, 10000, 100000]
+                seq = random_aa(len)
+                aaseq = AminoAcidSequence(seq)
+
+                results = Bool[]
+                for _ in 1:reps
+                    part = random_interval(1, length(seq))
+                    push!(results, seq[part] == convert(String, aaseq[part]))
+                end
+                @fact all(results) => true
+            end
+        end
+    end
+end
 
 facts("Translation") do
     # crummy string translation to test against
@@ -697,182 +876,6 @@ facts("Translation") do
     @fact_throws translate(dna"ACGTACGTA") # can't translate DNA
     @fact_throws translate(rna"ACGUACGU")  # can't translate non-multiples of three
     @fact_throws translate(rna"ACGUACGNU") # can't translate N
-end
-
-
-facts("Compare") do
-    context("Mismatches") do
-        function check_mismatches(T, a, b)
-            count = 0
-            for (ca, cb) in zip(a, b)
-                if ca != cb
-                    count += 1
-                end
-            end
-            return mismatches(convert(T, a), convert(T, b)) == count
-        end
-
-        reps = 10
-        for len in [1, 10, 32, 1000, 10000, 100000]
-            @fact all([check_mismatches(DNASequence, random_dna(len), random_dna(len))
-                       for _ in 1:reps]) => true
-            @fact all([check_mismatches(RNASequence, random_rna(len), random_rna(len))
-                       for _ in 1:reps]) => true
-        end
-
-        for len in [0, 1, 16, 32]
-            @fact all([check_mismatches(DNAKmer, random_dna_kmer(len), random_dna_kmer(len))
-                      for _ in 1:reps]) => true
-            @fact all([check_mismatches(RNAKmer, random_rna_kmer(len), random_rna_kmer(len))
-                      for _ in 1:reps]) => true
-        end
-    end
-
-    context("Counting") do
-        function string_nucleotide_count(::Type{DNANucleotide}, seq::String)
-            counts = @compat Dict{DNANucleotide, Int}(
-                DNA_A => 0,
-                DNA_C => 0,
-                DNA_G => 0,
-                DNA_T => 0,
-                DNA_N => 0 )
-            for c in seq
-                counts[convert(DNANucleotide, c)] += 1
-            end
-
-            return counts
-        end
-
-        function string_nucleotide_count(::Type{RNANucleotide}, seq::String)
-            counts = @compat Dict{RNANucleotide, Int}(
-                RNA_A => 0,
-                RNA_C => 0,
-                RNA_G => 0,
-                RNA_U => 0,
-                RNA_N => 0 )
-            for c in seq
-                counts[convert(RNANucleotide, c)] += 1
-            end
-
-            return counts
-        end
-
-        function check_nucleotide_count(::Type{DNANucleotide}, seq::String)
-            string_counts = string_nucleotide_count(DNANucleotide, seq)
-            seq_counts = NucleotideCounts(DNASequence(seq))
-            return string_counts[DNA_A] == seq_counts[DNA_A] &&
-                   string_counts[DNA_C] == seq_counts[DNA_C] &&
-                   string_counts[DNA_G] == seq_counts[DNA_G] &&
-                   string_counts[DNA_T] == seq_counts[DNA_T] &&
-                   string_counts[DNA_N] == seq_counts[DNA_N]
-        end
-
-        function check_nucleotide_count(::Type{RNANucleotide}, seq::String)
-            string_counts = string_nucleotide_count(RNANucleotide, seq)
-            seq_counts = NucleotideCounts(RNASequence(seq))
-            return string_counts[RNA_A] == seq_counts[RNA_A] &&
-                   string_counts[RNA_C] == seq_counts[RNA_C] &&
-                   string_counts[RNA_G] == seq_counts[RNA_G] &&
-                   string_counts[RNA_U] == seq_counts[RNA_U] &&
-                   string_counts[RNA_N] == seq_counts[RNA_N]
-        end
-
-        function check_kmer_nucleotide_count(::Type{DNANucleotide}, seq::String)
-            string_counts = string_nucleotide_count(DNANucleotide, seq)
-            kmer_counts = NucleotideCounts(dnakmer(seq))
-            return string_counts[DNA_A] == kmer_counts[DNA_A] &&
-                   string_counts[DNA_C] == kmer_counts[DNA_C] &&
-                   string_counts[DNA_G] == kmer_counts[DNA_G] &&
-                   string_counts[DNA_T] == kmer_counts[DNA_T] &&
-                   string_counts[DNA_N] == kmer_counts[DNA_N]
-        end
-
-        function check_kmer_nucleotide_count(::Type{RNANucleotide}, seq::String)
-            string_counts = string_nucleotide_count(RNANucleotide, seq)
-            kmer_counts = NucleotideCounts(rnakmer(seq))
-            return string_counts[RNA_A] == kmer_counts[RNA_A] &&
-                   string_counts[RNA_C] == kmer_counts[RNA_C] &&
-                   string_counts[RNA_G] == kmer_counts[RNA_G] &&
-                   string_counts[RNA_U] == kmer_counts[RNA_U] &&
-                   string_counts[RNA_N] == kmer_counts[RNA_N]
-        end
-
-        reps = 10
-        for len in [1, 10, 32, 1000, 10000, 100000]
-            @fact all([check_nucleotide_count(DNANucleotide, random_dna(len))
-                       for _ in 1:reps]) => true
-            @fact all([check_nucleotide_count(RNANucleotide, random_rna(len))
-                       for _ in 1:reps]) => true
-        end
-
-        for len in [1, 10, 32]
-            @fact all([check_kmer_nucleotide_count(DNANucleotide, random_dna_kmer(len))
-                       for _ in 1:reps]) => true
-            @fact all([check_kmer_nucleotide_count(RNANucleotide, random_rna_kmer(len))
-                       for _ in 1:reps]) => true
-        end
-    end
-end
-
-
-facts("Iteration") do
-    context("NPositions") do
-        function check_ns(T, seq)
-            expected = Int[]
-            for i in 1:length(seq)
-                if seq[i] == 'N'
-                    push!(expected, i)
-                end
-            end
-
-            collect(npositions(T(seq))) == expected
-        end
-
-        reps = 10
-        for len in [1, 10, 32, 1000, 10000, 100000]
-            @fact all([check_ns(DNASequence, random_dna(len)) for _ in 1:reps]) => true
-            @fact all([check_ns(RNASequence, random_rna(len)) for _ in 1:reps]) => true
-        end
-    end
-
-    context("EachKmer") do
-        function string_eachkmer(seq::String, k, step=1)
-            kmers = String[]
-            i = 1
-            for i in 1:step:length(seq) - k + 1
-                subseq = seq[i:i + k - 1]
-                if !in('N', subseq)
-                    push!(kmers, subseq)
-                end
-            end
-            return kmers
-        end
-
-        function check_eachkmer(T, seq::String, k, step=1)
-            xs = [convert(String, x) for (i, x) in collect(eachkmer(NucleotideSequence{T}(seq), k, step))]
-            ys = string_eachkmer(seq, k, step)
-            return xs == ys
-        end
-
-        reps = 10
-        len = 10000
-        for k in [1, 3, 16, 32]
-            @fact all([check_eachkmer(DNANucleotide, random_dna(len), k) for _ in 1:reps]) => true
-            @fact all([check_eachkmer(RNANucleotide, random_rna(len), k) for _ in 1:reps]) => true
-        end
-
-        len = 10000
-        for k in [1, 3, 16, 32]
-            @fact all([check_eachkmer(DNANucleotide, random_dna(len), k, 3) for _ in 1:reps]) => true
-            @fact all([check_eachkmer(RNANucleotide, random_rna(len), k, 3) for _ in 1:reps]) => true
-        end
-
-        @fact isempty(collect(eachkmer(dna"", 1))) => true
-        @fact isempty(collect(eachkmer(dna"NNNNNNNNNN", 1))) => true
-        @fact isempty(collect(eachkmer(dna"ACGT", 0))) => true
-        @fact_throws eachkmer(dna"ACGT", -1)
-        @fact_throws eachkmer(dna"ACGT", 33)
-    end
 end
 
 end # TestSeq
