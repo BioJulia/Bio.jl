@@ -636,22 +636,15 @@ typealias Codon RNAKmer{3}
 # ----------
 
 # Conversion to/from Uint64
-
 convert{K}(::Type{DNAKmer{K}}, x::Uint64) = box(DNAKmer{K}, unbox(Uint64, x))
 convert{K}(::Type{RNAKmer{K}}, x::Uint64) = box(RNAKmer{K}, unbox(Uint64, x))
 convert(::Type{Uint64}, x::DNAKmer)       = box(Uint64, unbox(DNAKmer, x))
 convert(::Type{Uint64}, x::RNAKmer)       = box(Uint64, unbox(RNAKmer, x))
 
 
-# Convert to/from String
-
-function convert{T}(::Type{Kmer{T}}, seq::String)
-    k = length(seq)
-    @assert k <= 32 error("Cannot construct a K-mer longer than 32nt.")
-    return convert(Kmer{T, k}, seq)
-end
-
+# Convert from String
 function convert{T, K}(::Type{Kmer{T, K}}, seq::String)
+    @assert length(seq) <= 32 error("Cannot construct a K-mer longer than 32nt.")
     @assert length(seq) == K error("Cannot construct a $(K)-mer from a string of length $(length(seq))")
 
     x     = uint64(0)
@@ -667,19 +660,15 @@ function convert{T, K}(::Type{Kmer{T, K}}, seq::String)
     return convert(Kmer{T, K}, x)
 end
 
+convert{T}(::Type{Kmer{T}}, seq::String) = convert(Kmer{T, length(seq)}, seq)
+
+# Convert to String
 convert{T, K}(::Type{String}, seq::Kmer{T, K}) = convert(String, [convert(Char, x) for x in seq])
 
 
-# Convert to/from NucleotideSequence
-convert{T}(::Type{Kmer}, seq::NucleotideSequence{T}) = convert(Kmer{T}, seq)
-
-function convert{T}(::Type{Kmer{T}}, seq::NucleotideSequence{T})
-    k = length(seq)
-    @assert k <= 32 error("Cannot construct a K-mer longer than 32nt.")
-    return convert(Kmer{T, k}, seq)
-end
-
+# Convert from NucleotideSequence
 function convert{T, K}(::Type{Kmer{T, K}}, seq::NucleotideSequence{T})
+    @assert length(seq) <= 32 error("Cannot construct a K-mer longer than 32nt.")
     @assert length(seq) == K error("Cannot construct a $(K)-mer from a NucleotideSequence of length $(length(seq))")
 
     x     = uint64(0)
@@ -694,13 +683,19 @@ function convert{T, K}(::Type{Kmer{T, K}}, seq::NucleotideSequence{T})
     return convert(Kmer{T, K}, x)
 end
 
-convert{T, K}(::Type{NucleotideSequence}, x::Kmer{T, K}) =  convert(NucleotideSequence{T}, x)
+convert{T}(::Type{Kmer}, seq::NucleotideSequence{T})    = convert(Kmer{T, length(seq)}, seq)
+convert{T}(::Type{Kmer{T}}, seq::NucleotideSequence{T}) = convert(Kmer{T, length(seq)}, seq)
 
+# Convert to NucleotideSequence
 function convert{T, K}(::Type{NucleotideSequence{T}}, x::Kmer{T, K})
     ns = BitVector(K)
     fill!(ns, false)
     return NucleotideSequence{T}([convert(Uint64, x)], ns, 1:K)
 end
+
+convert{T, K}(::Type{NucleotideSequence}, x::Kmer{T, K}) = convert(NucleotideSequence{T}, x)
+
+
 
 
 # Constructors
@@ -709,11 +704,6 @@ end
 # From strings
 dnakmer(seq::String) = convert(DNAKmer, seq)
 rnakmer(seq::String) = convert(RNAKmer, seq)
-
-function rnakmer(seq::String)
-    @assert length(seq) <= 32 error("Cannot construct a K-mer longer than 32nt.")
-    return convert(RNAKmer{length(seq)}, seq)
-end
 
 # Constructors taking a sequence of nucleotides
 function kmer{T <: Nucleotide}(nts::T...)
