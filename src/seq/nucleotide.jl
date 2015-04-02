@@ -724,11 +724,21 @@ function kmer{T <: Nucleotide}(nts::T...)
     return convert(Kmer{T, K}, x)
 end
 
-function dnakmer(seq::DNASequence)
+function kmer(seq::DNASequence)
     @assert length(seq) <= 32 error("Cannot construct a K-mer longer than 32nt.")
     return convert(DNAKmer{length(seq)}, seq)
 end
 
+function kmer(seq::RNASequence)
+    @assert length(seq) <= 32 error("Cannot construct a K-mer longer than 32nt.")
+    return convert(RNAKmer{length(seq)}, seq)
+end
+
+# call kmer with @inline macro would reduce the performance significantly?
+function dnakmer(seq::DNASequence)
+    @assert length(seq) <= 32 error("Cannot construct a K-mer longer than 32nt.")
+    return convert(DNAKmer{length(seq)}, seq)
+end
 
 function rnakmer(seq::RNASequence)
     @assert length(seq) <= 32 error("Cannot construct a K-mer longer than 32nt.")

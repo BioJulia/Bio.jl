@@ -530,50 +530,73 @@ facts("Nucleotides") do
             reps = 100
             context("Construction and Conversions") do
                 # Check that kmers in strings survive round trip conversion:
+                #   Uint64 → Kmer → Uint64
+                function check_uint64_convertion(T::Type, n::Uint64, len::Int)
+                    return convert(Uint64, convert(Kmer{T, len}, n)) === n
+                end
+
+                # Check that kmers in strings survive round trip conversion:
                 #   String → Kmer → String
                 function check_string_construction(T::Type, seq::String)
                     return convert(String, convert(Kmer{T}, seq)) == uppercase(seq)
                 end
 
-                # Check that kmers in strings survive round trip conversion:
-                #   String → NucleotideSequence → Kmer → NucleotideSequence → String
-                function check_roundabout_construction(T::Type, seq::String)
-                    return convert(String,
-                        convert(NucleotideSequence{T},
-                            convert(Kmer,
-                                convert(NucleotideSequence{T}, seq)))) == uppercase(seq)
+                # Check that dnakmers can be constructed from a DNASequence
+                #   DNASequence → Kmer → DNASequence
+                function check_dnasequence_construction(seq::DNASequence)
+                    return convert(DNASequence, convert(DNAKmer, seq)) == seq
+                end
+
+                # Check that rnakmers can be constructed from a RNASequence
+                #   RNASequence → Kmer → RNASequence
+                function check_rnasequence_construction(seq::RNASequence)
+                    return convert(RNASequence, convert(RNAKmer, seq)) == seq
+                end
+
+                # Check that kmers can be constructed from a NucleotideSequence
+                #   NucleotideSequence → Kmer → NucleotideSequence
+                function check_nucsequence_construction(seq::NucleotideSequence)
+                    return convert(NucleotideSequence, convert(Kmer, seq)) == seq
                 end
 
                 # Check that kmers can be constructed from an array of nucleotides
+                #   Vector{Nucleotide} → Kmer → Vector{Nucleotide}
                 function check_nucarray_kmer{T <: Nucleotide}(seq::Vector{T})
                     return convert(String, [convert(Char, c) for c in seq]) ==
                            convert(String, kmer(seq...))
                 end
 
                 # Check that kmers in strings survive round trip conversion:
-                #   Uint64 → Kmer → Uint64
-                function check_uint64_convertion(T::Type, n::Uint64, len::Int)
-                    return convert(Uint64, convert(Kmer{T, len}, n)) === n
+                #   String → NucleotideSequence → Kmer → NucleotideSequence → String
+                function check_roundabout_construction(T::Type, seq::String)
+                    return convert(String,
+                               convert(NucleotideSequence{T},
+                                   convert(Kmer,
+                                       convert(NucleotideSequence{T}, seq)))) == uppercase(seq)
                 end
 
-                for len in [0, 1, 16, 32]
-                    # String construction
-                    @fact all([check_string_construction(DNANucleotide, random_dna_kmer(len))
-                               for _ in 1:reps]) => true
-                    @fact all([check_string_construction(RNANucleotide, random_rna_kmer(len))
-                               for _ in 1:reps]) => true
 
+
+                for len in [0, 1, 16, 32]
                     # Uint64 conversions
                     @fact all([check_uint64_convertion(DNANucleotide, rand(Uint64), len)
                               for _ in 1:reps]) => true
                     @fact all([check_uint64_convertion(RNANucleotide, rand(Uint64), len)
                               for _ in 1:reps]) => true
 
-                    # Roundabout conversions
-                    @fact all([check_roundabout_construction(DNANucleotide, random_dna_kmer(len))
+                    # String construction
+                    @fact all([check_string_construction(DNANucleotide, random_dna_kmer(len))
                                for _ in 1:reps]) => true
-                    @fact all([check_roundabout_construction(RNANucleotide, random_rna_kmer(len))
+                    @fact all([check_string_construction(RNANucleotide, random_rna_kmer(len))
                                for _ in 1:reps]) => true
+
+                    # DNA/RNASequence Constructions
+                    @fact all([check_dnasequence_construction(DNASequence(random_dna_kmer(len))) for _ in 1:reps]) => true
+                    @fact all([check_rnasequence_construction(RNASequence(random_rna_kmer(len))) for _ in 1:reps]) => true
+
+                    # NucleotideSequence Construction
+                    @fact all([check_nucsequence_construction(DNASequence(random_dna_kmer(len))) for _ in 1:reps]) => true
+                    @fact all([check_nucsequence_construction(RNASequence(random_rna_kmer(len))) for _ in 1:reps]) => true
 
                     # Construction from nucleotide arrays
                     if len > 0
@@ -582,16 +605,40 @@ facts("Nucleotides") do
                         @fact all([check_nucarray_kmer(random_rna_kmer_nucleotides(len))
                                    for _ in 1:reps]) => true
                     end
+
+                    # Roundabout conversions
+                    @fact all([check_roundabout_construction(DNANucleotide, random_dna_kmer(len))
+                               for _ in 1:reps]) => true
+                    @fact all([check_roundabout_construction(RNANucleotide, random_rna_kmer(len))
+                               for _ in 1:reps]) => true
                 end
 
                 @fact_throws kmer() # can't construct 0-mer using `kmer()`
                 @fact_throws kmer(RNA_A, RNA_C, RNA_G, RNA_N, RNA_U) # no Ns in kmers
-                @fact_throws kmer(DNA_A, DNA_C, DNA_G, DNA_N, DNA_U) # no Ns in kmers
+                @fact_throws kmer(DNA_A, DNA_C, DNA_G, DNA_N, DNA_T) # no Ns in kmers
                 @fact_throws kmer(rna"ACGNU")# no Ns in kmers
                 @fact_throws kmer(dna"ACGNT") # no Ns in kmers
                 @fact_throws kmer(RNA_A, DNA_A) # no mixing of RNA and DNA
-                @fact_throws kmer(random_rna(33)) # no Kmer larger than 32nt
-                @fact_throws kmer(random_dna(33)) # no Kmer larger than 32nt
+                @fact_throws kmer(random_rna(33)) # no kmer larger than 32nt
+                @fact_throws kmer(random_dna(33)) # no kmer larger than 32nt
+                @fact_throws kmer(RNA_A, RNA_C, RNA_G, RNA_U, # no kmer larger than 32nt
+                                  RNA_A, RNA_C, RNA_G, RNA_U,
+                                  RNA_A, RNA_C, RNA_G, RNA_U,
+                                  RNA_A, RNA_C, RNA_G, RNA_U,
+                                  RNA_A, RNA_C, RNA_G, RNA_U,
+                                  RNA_A, RNA_C, RNA_G, RNA_U,
+                                  RNA_A, RNA_C, RNA_G, RNA_U,
+                                  RNA_A, RNA_C, RNA_G, RNA_U,
+                                  RNA_A, RNA_C, RNA_G, RNA_U)
+                @fact_throws kmer(DNA_A, DNA_C, DNA_G, DNA_T, # no kmer larger than 32nt
+                                  DNA_A, DNA_C, DNA_G, DNA_T,
+                                  DNA_A, DNA_C, DNA_G, DNA_T,
+                                  DNA_A, DNA_C, DNA_G, DNA_T,
+                                  DNA_A, DNA_C, DNA_G, DNA_T,
+                                  DNA_A, DNA_C, DNA_G, DNA_T,
+                                  DNA_A, DNA_C, DNA_G, DNA_T,
+                                  DNA_A, DNA_C, DNA_G, DNA_T,
+                                  DNA_A, DNA_C, DNA_G, DNA_T)
 
                 context("From strings") do
                     @fact dnakmer("ACTG") => convert(Kmer, DNASequence("ACTG"))
