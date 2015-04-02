@@ -140,6 +140,38 @@ facts("Nucleotides") do
             @fact convert(Uint8, RNA_N) => uint8(4)
         end
 
+        context("DNA conversions from Uint64") do
+            @fact convert(DNANucleotide, uint64(0)) => DNA_A
+            @fact convert(DNANucleotide, uint64(1)) => DNA_C
+            @fact convert(DNANucleotide, uint64(2)) => DNA_G
+            @fact convert(DNANucleotide, uint64(3)) => DNA_T
+            @fact convert(DNANucleotide, uint64(4)) => DNA_N
+        end
+
+        context("RNA conversions from Uint64") do
+            @fact convert(RNANucleotide, uint64(0)) => RNA_A
+            @fact convert(RNANucleotide, uint64(1)) => RNA_C
+            @fact convert(RNANucleotide, uint64(2)) => RNA_G
+            @fact convert(RNANucleotide, uint64(3)) => RNA_U
+            @fact convert(RNANucleotide, uint64(4)) => RNA_N
+        end
+
+        context("DNA conversions to Uint64") do
+            @fact convert(Uint64, DNA_A) => uint64(0)
+            @fact convert(Uint64, DNA_C) => uint64(1)
+            @fact convert(Uint64, DNA_G) => uint64(2)
+            @fact convert(Uint64, DNA_T) => uint64(3)
+            @fact convert(Uint64, DNA_N) => uint64(4)
+        end
+
+        context("RNA conversions to Uint64") do
+            @fact convert(Uint64, RNA_A) => uint64(0)
+            @fact convert(Uint64, RNA_C) => uint64(1)
+            @fact convert(Uint64, RNA_G) => uint64(2)
+            @fact convert(Uint64, RNA_U) => uint64(3)
+            @fact convert(Uint64, RNA_N) => uint64(4)
+        end
+
         context("DNA conversions from Char") do
             @fact convert(DNANucleotide, 'A') => DNA_A
             @fact convert(DNANucleotide, 'C') => DNA_C
@@ -206,11 +238,15 @@ facts("Nucleotides") do
         end
 
         context("Equality") do
+            a = b = dna"ACTGN"
+            @fact ==(a, b) => true
             @fact ==(dna"ACTGN", dna"ACTGN") => true
             @fact ==(dna"ACTGN", dna"ACTGA") => false
             @fact ==(dna"ACTGN", dna"ACTG") => false
             @fact ==(dna"ACTG", dna"ACTGN") => false
 
+            c = d = rna"ACUGN"
+            @fact ==(c, d) => true
             @fact ==(rna"ACUGN", rna"ACUGN") => true
             @fact ==(rna"ACUGN", rna"ACUGA") => false
             @fact ==(rna"ACUGN", rna"ACUG") => false
@@ -239,15 +275,46 @@ facts("Nucleotides") do
         end
 
         context("Access and Iterations") do
-            # Iteration through DNA Sequence
-            dna_seq = dna"ACTG"
-            dna_vector = [DNA_A, DNA_C, DNA_T, DNA_G]
-            @fact all([nucleotide == dna_vector[i] for (i, nucleotide) in enumerate(dna_seq)]) =>  true
+            context("Iteration through DNA Sequence") do
+                @fact start(dna"ACNTG") => 0
+                @fact start(dna"") => 0
 
-            # Iteration through DNA Sequence
-            rna_seq = rna"ACUG"
-            rna_vector = [RNA_A, RNA_C, RNA_U, RNA_G]
-            @fact all([nucleotide == rna_vector[i] for (i, nucleotide) in enumerate(rna_seq)]) =>  true
+                @fact next(dna"ACTGN", 1) => (DNA_C, 2)
+                @fact next(dna"ACTGN", 4) => (DNA_N, 5)
+                @fact_throws next(dna"ACTGN", 5)
+                @fact_throws next(dna"ACTGN", -1)
+
+                @fact done(dna"", 1) => true
+                @fact done(dna"ACTGN", 1) => false
+                @fact done(dna"ACTGN", 4) => false
+                @fact done(dna"ACTGN", 5) => true
+                @fact done(dna"ACTGN", -1) => false
+
+                dna_seq = dna"ACTG"
+                dna_vector = [DNA_A, DNA_C, DNA_T, DNA_G]
+                @fact all([nucleotide == dna_vector[i] for (i, nucleotide) in enumerate(dna_seq)]) =>  true
+            end
+
+            context("Iteration through RNA Sequence") do
+                @fact start(rna"ACNUG") => 0
+                @fact start(rna"") => 0
+
+                @fact next(rna"ACUGN", 1) => (RNA_C, 2)
+                @fact next(rna"ACUGN", 4) => (RNA_N, 5)
+                @fact_throws next(rna"ACUGN", 5)
+                @fact_throws next(rna"ACUGN", -1)
+
+                @fact done(rna"", 1) => true
+                @fact done(rna"ACUGN", 1) => false
+                @fact done(rna"ACUGN", 4) => false
+                @fact done(rna"ACUGN", 5) => true
+                @fact done(rna"ACUGN", -1) => false
+
+                # Iteration through RNA Sequence
+                rna_seq = rna"ACUG"
+                rna_vector = [RNA_A, RNA_C, RNA_U, RNA_G]
+                @fact all([nucleotide == rna_vector[i] for (i, nucleotide) in enumerate(rna_seq)]) =>  true
+            end
 
             # Access index out of bounds
             @fact_throws dna_seq[-1]
@@ -330,17 +397,33 @@ facts("Nucleotides") do
                            convert(String, kmer(seq...))
                 end
 
+                # Check that kmers in strings survive round trip conversion:
+                #   Uint64 → Kmer → Uint64
+                function check_uint64_convertion(T::Type, n::Uint64, len::Int)
+                    return convert(Uint64, convert(Kmer{T, len}, n)) === n
+                end
+
                 reps = 100
                 for len in [0, 1, 16, 32]
+                    # String construction
                     @fact all([check_string_construction(DNANucleotide, random_dna_kmer(len))
                                for _ in 1:reps]) => true
                     @fact all([check_string_construction(RNANucleotide, random_rna_kmer(len))
                                for _ in 1:reps]) => true
+
+                    # Uint64 conversions
+                    @fact all([check_uint64_convertion(DNANucleotide, rand(Uint64), len)
+                              for _ in 1:reps]) => true
+                    @fact all([check_uint64_convertion(RNANucleotide, rand(Uint64), len)
+                              for _ in 1:reps]) => true
+
+                    # Roundabout conversions
                     @fact all([check_roundabout_construction(DNANucleotide, random_dna_kmer(len))
                                for _ in 1:reps]) => true
                     @fact all([check_roundabout_construction(RNANucleotide, random_rna_kmer(len))
                                for _ in 1:reps]) => true
 
+                    # Construction from nucleotide arrays
                     if len > 0
                         @fact all([check_nucarray_kmer(random_dna_kmer_nucleotides(len))
                                    for _ in 1:reps]) => true
@@ -352,6 +435,8 @@ facts("Nucleotides") do
                 @fact_throws kmer() # can't construct 0-mer using `kmer()`
                 @fact_throws kmer(RNA_A, RNA_C, RNA_G, RNA_N, RNA_U) # no Ns in kmers
                 @fact_throws kmer(DNA_A, DNA_C, DNA_G, DNA_N, DNA_U) # no Ns in kmers
+                @fact_throws kmer(rna"ACGNU")# no Ns in kmers
+                @fact_throws kmer(rna"ACGNU") # no Ns in kmers
                 @fact_throws kmer(RNA_A, DNA_A) # no mixing of RNA and DNA
                 @fact_throws kmer(random_rna(33)) # no Kmer larger than 32nt
                 @fact_throws kmer(random_dna(33)) # no Kmer larger than 32nt

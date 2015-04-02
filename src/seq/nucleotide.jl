@@ -333,6 +333,9 @@ copy{T}(seq::NucleotideSequence{T}) = orphan!(NucleotideSequence{T}(seq.data, se
 start(seq::NucleotideSequence) = seq.part.start - 1
 
 function next{T}(seq::NucleotideSequence{T}, i)
+    # Check bounds
+    (seq.part.start - 1 <= i < seq.part.stop) || throw(BoundsError())
+
     nvalue, _ = next(seq.ns, i)
     if nvalue
         return (nnucleotide(T), i + 1)
@@ -342,7 +345,6 @@ function next{T}(seq::NucleotideSequence{T}, i)
 end
 
 done(seq::NucleotideSequence, i) = i >= seq.part.stop
-
 
 # String Decorator
 # ----------------
