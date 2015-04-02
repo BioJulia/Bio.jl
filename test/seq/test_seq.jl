@@ -107,6 +107,7 @@ function random_interval(minstart, maxstop)
 end
 
 facts("Nucleotides") do
+
     context("Conversions") do
         context("DNA conversions from Uint8") do
             @fact convert(DNANucleotide, uint8(0)) => DNA_A
@@ -205,176 +206,282 @@ facts("Nucleotides") do
         end
     end
 
-    facts("Nucleotide Sequences") do
-        reps = 10
-        context("Construction") do
-            # Non-nucleotide characters should throw
-            @fact_throws DNASequence("ACCNNCATTTTTTAGATXATAG")
-            @fact_throws RNASequence("ACCNNCATTTTTTAGATXATAG")
-
-            # Check construction of empty nucleotide sequences
-            #  using RNASequence and DNASequence functions
-            @fact RNASequence() => NucleotideSequence(RNANucleotide)
-            @fact DNASequence() => NucleotideSequence(DNANucleotide)
-
-
-            # Check that sequences in strings survive round trip conversion:
-            #   String → NucleotideSequence → String
-            function check_string_construction(T::Type, seq::String)
-                return convert(String, NucleotideSequence{T}(seq)) == uppercase(seq)
+    context("Sequences") do
+        function dna_complement(seq::String)
+            seqc = Array(Char, length(seq))
+            for (i, c) in enumerate(seq)
+                if c     ==   'A'
+                    seqc[i] = 'T'
+                elseif c ==   'C'
+                    seqc[i] = 'G'
+                elseif c ==   'G'
+                    seqc[i] = 'C'
+                elseif c ==   'T'
+                    seqc[i] = 'A'
+                else
+                    seqc[i] = 'N'
+                end
             end
 
-            for len in [0, 1, 10, 32, 1000, 10000, 100000]
-                @fact all([check_string_construction(DNANucleotide, random_dna(len)) for _ in 1:reps]) => true
-                @fact all([check_string_construction(RNANucleotide, random_rna(len)) for _ in 1:reps]) => true
-                @fact all([check_string_construction(DNANucleotide, lowercase(random_dna(len))) for _ in 1:reps]) => true
-                @fact all([check_string_construction(RNANucleotide, lowercase(random_rna(len))) for _ in 1:reps]) => true
-            end
+            return convert(String, seqc)
         end
 
-        context("Conversion between RNA and DNA") do
-            @fact convert(RNASequence, DNASequence("ACGTN")) => rna"ACGUN"
-            @fact convert(DNASequence, RNASequence("ACGUN")) => dna"ACGTN"
-        end
-
-        context("Equality") do
-            a = b = dna"ACTGN"
-            @fact ==(a, b) => true
-            @fact ==(dna"ACTGN", dna"ACTGN") => true
-            @fact ==(dna"ACTGN", dna"ACTGA") => false
-            @fact ==(dna"ACTGN", dna"ACTG") => false
-            @fact ==(dna"ACTG", dna"ACTGN") => false
-
-            c = d = rna"ACUGN"
-            @fact ==(c, d) => true
-            @fact ==(rna"ACUGN", rna"ACUGN") => true
-            @fact ==(rna"ACUGN", rna"ACUGA") => false
-            @fact ==(rna"ACUGN", rna"ACUG") => false
-            @fact ==(rna"ACUG", rna"ACUGN") => false
-        end
-
-        context("Length") do
-            for len in [0, 1, 10, 32, 1000, 10000, 100000]
-                @fact length(DNASequence(random_dna(len))) => len
-                @fact endof(DNASequence(random_dna(len))) => len
-                @fact length(DNASequence(random_dna(len))) => len
-                @fact endof(DNASequence(random_dna(len))) => len
-            end
-        end
-
-
-        context("Copy") do
-            function check_copy(T, seq)
-                return convert(String, copy(NucleotideSequence{T}(seq))) == seq
+        function rna_complement(seq::String)
+            seqc = Array(Char, length(seq))
+            for (i, c) in enumerate(seq)
+                if c == 'A'
+                    seqc[i] = 'U'
+                elseif c == 'C'
+                    seqc[i] = 'G'
+                elseif c == 'G'
+                    seqc[i] = 'C'
+                elseif c == 'U'
+                    seqc[i] = 'A'
+                else
+                    seqc[i] = 'N'
+                end
             end
 
-            for len in [1, 10, 32, 1000, 10000, 100000]
-                @fact all([check_copy(DNANucleotide, random_dna(len)) for _ in 1:reps]) => true
-                @fact all([check_copy(RNANucleotide, random_rna(len)) for _ in 1:reps]) => true
-            end
+            return convert(String, seqc)
         end
 
-        context("Access and Iterations") do
-            context("Iteration through DNA Sequence") do
-                @fact start(dna"ACNTG") => 0
-                @fact start(dna"") => 0
+        function check_reversal(T, seq)
+            return reverse(seq) == convert(String, reverse(convert(T, seq)))
+        end
 
-                @fact next(dna"ACTGN", 1) => (DNA_C, 2)
-                @fact next(dna"ACTGN", 4) => (DNA_N, 5)
-                @fact_throws next(dna"ACTGN", 5)
-                @fact_throws next(dna"ACTGN", -1)
+        function check_dna_complement(T, seq)
+            return dna_complement(seq) ==
+                convert(String, complement(convert(T, seq)))
+        end
 
-                @fact done(dna"", 1) => true
-                @fact done(dna"ACTGN", 1) => false
-                @fact done(dna"ACTGN", 4) => false
-                @fact done(dna"ACTGN", 5) => true
-                @fact done(dna"ACTGN", -1) => false
+        function check_rna_complement(T, seq)
+            return rna_complement(seq) ==
+                convert(String, complement(convert(T, seq)))
+        end
 
+        function check_dna_revcomp(T, seq)
+            return reverse(dna_complement(seq)) ==
+                convert(String, reverse_complement(convert(T, seq)))
+        end
+
+        function check_rna_revcomp(T, seq)
+            return reverse(rna_complement(seq)) ==
+                convert(String, reverse_complement(convert(T, seq)))
+        end
+
+        context("Nucleotide Sequences") do
+            reps = 10
+            context("Construction") do
+                # Non-nucleotide characters should throw
+                @fact_throws DNASequence("ACCNNCATTTTTTAGATXATAG")
+                @fact_throws RNASequence("ACCNNCATTTTTTAGATXATAG")
+
+                # Check construction of empty nucleotide sequences
+                #  using RNASequence and DNASequence functions
+                @fact RNASequence() => NucleotideSequence(RNANucleotide)
+                @fact DNASequence() => NucleotideSequence(DNANucleotide)
+
+
+                # Check that sequences in strings survive round trip conversion:
+                #   String → NucleotideSequence → String
+                function check_string_construction(T::Type, seq::String)
+                    return convert(String, NucleotideSequence{T}(seq)) == uppercase(seq)
+                end
+
+                for len in [0, 1, 10, 32, 1000, 10000, 100000]
+                    @fact all([check_string_construction(DNANucleotide, random_dna(len)) for _ in 1:reps]) => true
+                    @fact all([check_string_construction(RNANucleotide, random_rna(len)) for _ in 1:reps]) => true
+                    @fact all([check_string_construction(DNANucleotide, lowercase(random_dna(len))) for _ in 1:reps]) => true
+                    @fact all([check_string_construction(RNANucleotide, lowercase(random_rna(len))) for _ in 1:reps]) => true
+                end
+            end
+
+            context("Conversion between RNA and DNA") do
+                @fact convert(RNASequence, DNASequence("ACGTN")) => rna"ACGUN"
+                @fact convert(DNASequence, RNASequence("ACGUN")) => dna"ACGTN"
+            end
+
+            context("Equality") do
+                reps = 10
+                function check_seq_equality(len)
+                    a = random_dna(len)
+                    return a == copy(a)
+                end
+
+                for len in [1, 10, 32, 1000]
+                    @fact all([check_seq_equality(len) for _ in 1:reps]) => true
+                end
+
+                a = b = dna"ACTGN"
+                @fact ==(a, b) => true
+                @fact ==(dna"ACTGN", dna"ACTGN") => true
+                @fact ==(dna"ACTGN", dna"ACTGA") => false
+                @fact ==(dna"ACTGN", dna"ACTG") => false
+                @fact ==(dna"ACTG", dna"ACTGN") => false
+
+                c = d = rna"ACUGN"
+                @fact ==(c, d) => true
+                @fact ==(rna"ACUGN", rna"ACUGN") => true
+                @fact ==(rna"ACUGN", rna"ACUGA") => false
+                @fact ==(rna"ACUGN", rna"ACUG") => false
+                @fact ==(rna"ACUG", rna"ACUGN") => false
+            end
+
+            context("Length") do
+                for len in [0, 1, 10, 32, 1000, 10000, 100000]
+                    @fact length(DNASequence(random_dna(len))) => len
+                    @fact endof(DNASequence(random_dna(len))) => len
+                    @fact length(DNASequence(random_dna(len))) => len
+                    @fact endof(DNASequence(random_dna(len))) => len
+                end
+            end
+
+            context("Copy") do
+                function check_copy(T, seq)
+                    return convert(String, copy(NucleotideSequence{T}(seq))) == seq
+                end
+
+                for len in [1, 10, 32, 1000, 10000, 100000]
+                    @fact all([check_copy(DNANucleotide, random_dna(len)) for _ in 1:reps]) => true
+                    @fact all([check_copy(RNANucleotide, random_rna(len)) for _ in 1:reps]) => true
+                end
+            end
+
+            context("Access and Iterations") do
                 dna_seq = dna"ACTG"
-                dna_vector = [DNA_A, DNA_C, DNA_T, DNA_G]
-                @fact all([nucleotide == dna_vector[i] for (i, nucleotide) in enumerate(dna_seq)]) =>  true
-            end
-
-            context("Iteration through RNA Sequence") do
-                @fact start(rna"ACNUG") => 0
-                @fact start(rna"") => 0
-
-                @fact next(rna"ACUGN", 1) => (RNA_C, 2)
-                @fact next(rna"ACUGN", 4) => (RNA_N, 5)
-                @fact_throws next(rna"ACUGN", 5)
-                @fact_throws next(rna"ACUGN", -1)
-
-                @fact done(rna"", 1) => true
-                @fact done(rna"ACUGN", 1) => false
-                @fact done(rna"ACUGN", 4) => false
-                @fact done(rna"ACUGN", 5) => true
-                @fact done(rna"ACUGN", -1) => false
-
-                # Iteration through RNA Sequence
                 rna_seq = rna"ACUG"
-                rna_vector = [RNA_A, RNA_C, RNA_U, RNA_G]
-                @fact all([nucleotide == rna_vector[i] for (i, nucleotide) in enumerate(rna_seq)]) =>  true
-            end
 
-            # Access index out of bounds
-            @fact_throws dna_seq[-1]
-            @fact_throws dna_seq[0]
-            @fact_throws dna_seq[5]
-            @fact_throws rna_seq[-1]
-            @fact_throws rna_seq[0]
-            @fact_throws rna_seq[5]
+                context("Iteration through DNA Sequence") do
+                    @fact start(dna"ACNTG") => 0
+                    @fact start(dna"")      => 0
 
-            context("Indexing with Ranges") do
-                @fact getindex(dna"ACTGNACTGN", 1:5) => dna"ACTGN"
-                @fact getindex(rna"ACUGNACUGN", 1:5) => rna"ACUGN"
-                @fact getindex(dna"ACTGNACTGN", 5:1) => dna""
-                @fact getindex(rna"ACUGNACUGN", 5:1) => rna""
-            end
-        end
+                    @fact next(dna"ACTGN", 1) => (DNA_C, 2)
+                    @fact next(dna"ACTGN", 4) => (DNA_N, 5)
+                    @fact_throws next(dna"ACTGN", 5)
+                    @fact_throws next(dna"ACTGN", -1)
+
+                    @fact done(dna"", 1)       => true
+                    @fact done(dna"ACTGN", 1)  => false
+                    @fact done(dna"ACTGN", 4)  => false
+                    @fact done(dna"ACTGN", 5)  => true
+                    @fact done(dna"ACTGN", -1) => false
 
 
-        context("Subsequence Construction") do
-            for len in [1, 10, 32, 1000, 10000, 100000]
-                seq = random_dna(len)
-                dnaseq = DNASequence(seq)
-
-                results = Bool[]
-                for _ in 1:reps
-                    part = random_interval(1, length(seq))
-                    push!(results, seq[part] == convert(String, dnaseq[part]))
+                    dna_vector = [DNA_A, DNA_C, DNA_T, DNA_G]
+                    @fact all([nucleotide == dna_vector[i] for (i, nucleotide) in enumerate(dna_seq)]) =>  true
                 end
-                @fact all(results) => true
-            end
 
-            for len in [1, 10, 32, 1000, 10000, 100000]
-                seq = random_rna(len)
-                rnaseq = RNASequence(seq)
+                context("Iteration through RNA Sequence") do
+                    @fact start(rna"ACNUG") => 0
+                    @fact start(rna"")      => 0
 
-                results = Bool[]
-                for _ in 1:reps
-                    part = random_interval(1, length(seq))
+                    @fact next(rna"ACUGN", 1) => (RNA_C, 2)
+                    @fact next(rna"ACUGN", 4) => (RNA_N, 5)
+                    @fact_throws next(rna"ACUGN", 5)
+                    @fact_throws next(rna"ACUGN", -1)
 
-                    push!(results, seq[part] == convert(String, rnaseq[part]))
+                    @fact done(rna"", 1)       => true
+                    @fact done(rna"ACUGN", 1)  => false
+                    @fact done(rna"ACUGN", 4)  => false
+                    @fact done(rna"ACUGN", 5)  => true
+                    @fact done(rna"ACUGN", -1) => false
+
+                    # Iteration through RNA Sequence
+
+                    rna_vector = [RNA_A, RNA_C, RNA_U, RNA_G]
+                    @fact all([nucleotide == rna_vector[i] for (i, nucleotide) in enumerate(rna_seq)]) =>  true
                 end
-                @fact all(results) => true
+
+                # Access indexes out of bounds
+                @fact_throws dna_seq[-1]
+                @fact_throws dna_seq[0]
+                @fact_throws dna_seq[5]
+                @fact_throws getindex(dna_seq,-1)
+                @fact_throws getindex(dna_seq, 0)
+                @fact_throws getindex(dna_seq, 5)
+
+                @fact_throws rna_seq[-1]
+                @fact_throws rna_seq[0]
+                @fact_throws rna_seq[5]
+                @fact_throws getindex(rna_seq, -1)
+                @fact_throws getindex(rna_seq, 0)
+                @fact_throws getindex(rna_seq, 5)
+
+                context("Indexing with Ranges") do
+                    @fact getindex(dna"ACTGNACTGN", 1:5) => dna"ACTGN"
+                    @fact getindex(rna"ACUGNACUGN", 1:5) => rna"ACUGN"
+                    @fact getindex(dna"ACTGNACTGN", 5:1) => dna""
+                    @fact getindex(rna"ACUGNACUGN", 5:1) => rna""
+                end
             end
 
-            context("Subsequence Construction from Ranges") do
-                # Subsequence from range
-                @fact RNASequence(rna"AUCGAUCG", 5:8) == RNASequence("AUCG") => true
-                @fact DNASequence(dna"ATCGATCG", 5:8) == DNASequence("ATCG") => true
+            context("Subsequence Construction") do
+                for len in [1, 10, 32, 1000, 10000, 100000]
+                    seq = random_dna(len)
+                    dnaseq = DNASequence(seq)
 
-                # Invalid ranges
-                @fact_throws RNASequence(rna"AUCGAUCG", 5:10)
-                @fact_throws DNASequence(dna"ATCGATCG", 5:10)
+                    results = Bool[]
+                    for _ in 1:reps
+                        part = random_interval(1, length(seq))
+                        push!(results, seq[part] == convert(String, dnaseq[part]))
+                    end
+                    @fact all(results) => true
+                end
 
-                # Empty ranges
-                @fact RNASequence(rna"AUCGAUCG", 5:4) == RNASequence() => true
-                @fact DNASequence(dna"ATCGATCG", 5:4) == DNASequence() => true
+                for len in [1, 10, 32, 1000, 10000, 100000]
+                    seq = random_rna(len)
+                    rnaseq = RNASequence(seq)
+
+                    results = Bool[]
+                    for _ in 1:reps
+                        part = random_interval(1, length(seq))
+
+                        push!(results, seq[part] == convert(String, rnaseq[part]))
+                    end
+                    @fact all(results) => true
+                end
+
+                context("Subsequence Construction from Ranges") do
+                    # Subsequence from range
+                    @fact RNASequence(rna"AUCGAUCG", 5:8) == RNASequence("AUCG") => true
+                    @fact DNASequence(dna"ATCGATCG", 5:8) == DNASequence("ATCG") => true
+
+                    # Invalid ranges
+                    @fact_throws RNASequence(rna"AUCGAUCG", 5:10)
+                    @fact_throws DNASequence(dna"ATCGATCG", 5:10)
+
+                    # Empty ranges
+                    @fact RNASequence(rna"AUCGAUCG", 5:4) == RNASequence() => true
+                    @fact DNASequence(dna"ATCGATCG", 5:4) == DNASequence() => true
+                end
+            end
+
+            context("Transformations") do
+                context("Reversal") do
+                    for len in [0, 1, 10, 32, 1000, 10000, 100000]
+                        @fact all([check_reversal(DNASequence, random_dna(len)) for _ in 1:reps]) => true
+                        @fact all([check_reversal(RNASequence, random_rna(len)) for _ in 1:reps]) => true
+                    end
+                end
+
+                context("Complement") do
+                    for len in [1, 10, 32, 1000, 10000, 100000]
+                        @fact all([check_dna_complement(DNASequence, random_dna(len)) for _ in 1:reps]) => true
+                        @fact all([check_rna_complement(RNASequence, random_rna(len)) for _ in 1:reps]) => true
+                    end
+                end
+
+                context("Reverse Complement") do
+                    for len in [1, 10, 32, 1000, 10000, 100000]
+                        @fact all([check_dna_revcomp(DNASequence, random_dna(len)) for _ in 1:reps]) => true
+                        @fact all([check_rna_revcomp(RNASequence, random_rna(len)) for _ in 1:reps]) => true
+                    end
+                end
             end
         end
 
         context("Kmer") do
+            reps = 100
             context("Construction and Conversions") do
                 # Check that kmers in strings survive round trip conversion:
                 #   String → Kmer → String
@@ -403,7 +510,6 @@ facts("Nucleotides") do
                     return convert(Uint64, convert(Kmer{T, len}, n)) === n
                 end
 
-                reps = 100
                 for len in [0, 1, 16, 32]
                     # String construction
                     @fact all([check_string_construction(DNANucleotide, random_dna_kmer(len))
@@ -436,7 +542,7 @@ facts("Nucleotides") do
                 @fact_throws kmer(RNA_A, RNA_C, RNA_G, RNA_N, RNA_U) # no Ns in kmers
                 @fact_throws kmer(DNA_A, DNA_C, DNA_G, DNA_N, DNA_U) # no Ns in kmers
                 @fact_throws kmer(rna"ACGNU")# no Ns in kmers
-                @fact_throws kmer(rna"ACGNU") # no Ns in kmers
+                @fact_throws kmer(dna"ACGNT") # no Ns in kmers
                 @fact_throws kmer(RNA_A, DNA_A) # no mixing of RNA and DNA
                 @fact_throws kmer(random_rna(33)) # no Kmer larger than 32nt
                 @fact_throws kmer(random_dna(33)) # no Kmer larger than 32nt
@@ -448,6 +554,49 @@ facts("Nucleotides") do
                     # N is not allowed in Kmers
                     @fact_throws dnakmer("ACGTNACGT")
                     @fact_throws rnakmer("ACGUNACGU")
+                end
+            end
+
+            context("Equality") do
+                function check_seq_kmer_equality(len)
+                    a = dnakmer(random_dna_kmer(len))
+                    b = convert(DNASequence, a)
+                    return a == b && b == a
+                end
+
+                for len in [1, 10, 32]
+                    @fact all([check_seq_kmer_equality(len) for _ in 1:reps]) => true
+                end
+
+                # True negatives
+                @fact dnakmer("ACG") == rnakmer("ACG") => false
+                @fact dnakmer("T")   == rnakmer("U")   => false
+                @fact dnakmer("AC")  == dnakmer("AG")  => false
+                @fact rnakmer("AC")  == rnakmer("AG")  => false
+            end
+
+            context("Transformations") do
+                reps = 10
+
+                context("Reversal") do
+                    for len in [0, 1, 16, 32]
+                        @fact all([check_reversal(DNAKmer, random_dna_kmer(len)) for _ in 1:reps]) => true
+                        @fact all([check_reversal(RNAKmer, random_rna_kmer(len)) for _ in 1:reps]) => true
+                    end
+                end
+
+                context("Complement") do
+                    for len in [0, 1, 16, 32]
+                        @fact all([check_dna_complement(DNAKmer, random_dna_kmer(len)) for _ in 1:reps]) => true
+                        @fact all([check_rna_complement(RNAKmer, random_rna_kmer(len)) for _ in 1:reps]) => true
+                    end
+                end
+
+                context("Reverse Complement") do
+                    for len in [0, 1, 16, 32]
+                        @fact all([check_dna_revcomp(DNAKmer, random_dna_kmer(len)) for _ in 1:reps]) => true
+                        @fact all([check_rna_revcomp(RNAKmer, random_rna_kmer(len)) for _ in 1:reps]) => true
+                    end
                 end
             end
         end
@@ -500,190 +649,58 @@ facts("AminoAcid Sequence") do
 end
 
 
-facts("Transforms") do
-    context("Reversal") do
-        function check_reversal(T, seq)
-            return reverse(seq) == convert(String, reverse(convert(T, seq)))
-        end
+facts("Translation") do
+    # crummy string translation to test against
+    standard_genetic_code_dict = @compat Dict{String, Char}(
+        "AAA" => 'K', "AAC" => 'N', "AAG" => 'K', "AAU" => 'N',
+        "ACA" => 'T', "ACC" => 'T', "ACG" => 'T', "ACU" => 'T',
+        "AGA" => 'R', "AGC" => 'S', "AGG" => 'R', "AGU" => 'S',
+        "AUA" => 'I', "AUC" => 'I', "AUG" => 'M', "AUU" => 'I',
+        "CAA" => 'Q', "CAC" => 'H', "CAG" => 'Q', "CAU" => 'H',
+        "CCA" => 'P', "CCC" => 'P', "CCG" => 'P', "CCU" => 'P',
+        "CGA" => 'R', "CGC" => 'R', "CGG" => 'R', "CGU" => 'R',
+        "CUA" => 'L', "CUC" => 'L', "CUG" => 'L', "CUU" => 'L',
+        "GAA" => 'E', "GAC" => 'D', "GAG" => 'E', "GAU" => 'D',
+        "GCA" => 'A', "GCC" => 'A', "GCG" => 'A', "GCU" => 'A',
+        "GGA" => 'G', "GGC" => 'G', "GGG" => 'G', "GGU" => 'G',
+        "GUA" => 'V', "GUC" => 'V', "GUG" => 'V', "GUU" => 'V',
+        "UAA" => '*', "UAC" => 'Y', "UAG" => '*', "UAU" => 'Y',
+        "UCA" => 'S', "UCC" => 'S', "UCG" => 'S', "UCU" => 'S',
+        "UGA" => '*', "UGC" => 'C', "UGG" => 'W', "UGU" => 'C',
+        "UUA" => 'L', "UUC" => 'F', "UUG" => 'L', "UUU" => 'F',
 
-        reps = 10
-        for len in [0, 1, 10, 32, 1000, 10000, 100000]
-            @fact all([check_reversal(DNASequence, random_dna(len)) for _ in 1:reps]) => true
-            @fact all([check_reversal(RNASequence, random_rna(len)) for _ in 1:reps]) => true
-        end
+        # translatable ambiguities in the standard code
+        "CUN" => 'L', "CCN" => 'P', "CGN" => 'R', "ACN" => 'T',
+        "GUN" => 'V', "GCN" => 'A', "GGN" => 'G', "UCN" => 'S'
 
-        for len in [0, 1, 16, 32]
-            @fact all([check_reversal(DNAKmer, random_dna_kmer(len)) for _ in 1:reps]) => true
-            @fact all([check_reversal(RNAKmer, random_rna_kmer(len)) for _ in 1:reps]) => true
+    )
+
+    function string_translate(seq::String)
+        @assert length(seq) % 3 == 0
+        aaseq = Array(Char, div(length(seq), 3))
+        for i in 1:3:length(seq) - 3 + 1
+            aaseq[div(i, 3) + 1] = standard_genetic_code_dict[seq[i:i+2]]
         end
+        return convert(String, aaseq)
     end
 
-    function dna_complement(seq::String)
-        seqc = Array(Char, length(seq))
-        for (i, c) in enumerate(seq)
-            if c     ==   'A'
-                seqc[i] = 'T'
-            elseif c ==   'C'
-                seqc[i] = 'G'
-            elseif c ==   'G'
-                seqc[i] = 'C'
-            elseif c ==   'T'
-                seqc[i] = 'A'
-            else
-                seqc[i] = 'N'
-            end
-        end
-
-        return convert(String, seqc)
+    function check_translate(seq::String)
+        return string_translate(seq) == convert(String, translate(RNASequence(seq)))
     end
 
-    function rna_complement(seq::String)
-        seqc = Array(Char, length(seq))
-        for (i, c) in enumerate(seq)
-            if c == 'A'
-                seqc[i] = 'U'
-            elseif c == 'C'
-                seqc[i] = 'G'
-            elseif c == 'G'
-                seqc[i] = 'C'
-            elseif c == 'U'
-                seqc[i] = 'A'
-            else
-                seqc[i] = 'N'
-            end
-        end
-
-        return convert(String, seqc)
+    reps = 10
+    #for len in [1, 10, 32, 1000, 10000, 100000]
+    for len in [1, 10, 32]
+        @fact all([check_translate(random_translatable_rna(len)) for _ in 1:reps]) => true
     end
 
-    context("Complement") do
-
-        function check_dna_complement(T, seq)
-            return dna_complement(seq) ==
-                convert(String, complement(convert(T, seq)))
-        end
-
-        function check_rna_complement(T, seq)
-            return rna_complement(seq) ==
-                convert(String, complement(convert(T, seq)))
-        end
-
-        reps = 10
-        for len in [1, 10, 32, 1000, 10000, 100000]
-            @fact all([check_dna_complement(DNASequence, random_dna(len)) for _ in 1:reps]) => true
-            @fact all([check_rna_complement(RNASequence, random_rna(len)) for _ in 1:reps]) => true
-        end
-
-        for len in [0, 1, 16, 32]
-            @fact all([check_dna_complement(DNAKmer, random_dna_kmer(len)) for _ in 1:reps]) => true
-            @fact all([check_rna_complement(RNAKmer, random_rna_kmer(len)) for _ in 1:reps]) => true
-        end
-    end
-
-    context("Reverse Complement") do
-        function check_dna_revcomp(T, seq)
-            return reverse(dna_complement(seq)) ==
-                convert(String, reverse_complement(convert(T, seq)))
-        end
-
-        function check_rna_revcomp(T, seq)
-            return reverse(rna_complement(seq)) ==
-                convert(String, reverse_complement(convert(T, seq)))
-        end
-
-        reps = 10
-        for len in [1, 10, 32, 1000, 10000, 100000]
-            @fact all([check_dna_revcomp(DNASequence, random_dna(len)) for _ in 1:reps]) => true
-            @fact all([check_rna_revcomp(RNASequence, random_rna(len)) for _ in 1:reps]) => true
-        end
-
-        for len in [0, 1, 16, 32]
-            @fact all([check_dna_revcomp(DNAKmer, random_dna_kmer(len)) for _ in 1:reps]) => true
-            @fact all([check_rna_revcomp(RNAKmer, random_rna_kmer(len)) for _ in 1:reps]) => true
-        end
-    end
-
-    context("Translate") do
-        # crummy string translation to test against
-        standard_genetic_code_dict = @compat Dict{String, Char}(
-            "AAA" => 'K', "AAC" => 'N', "AAG" => 'K', "AAU" => 'N',
-            "ACA" => 'T', "ACC" => 'T', "ACG" => 'T', "ACU" => 'T',
-            "AGA" => 'R', "AGC" => 'S', "AGG" => 'R', "AGU" => 'S',
-            "AUA" => 'I', "AUC" => 'I', "AUG" => 'M', "AUU" => 'I',
-            "CAA" => 'Q', "CAC" => 'H', "CAG" => 'Q', "CAU" => 'H',
-            "CCA" => 'P', "CCC" => 'P', "CCG" => 'P', "CCU" => 'P',
-            "CGA" => 'R', "CGC" => 'R', "CGG" => 'R', "CGU" => 'R',
-            "CUA" => 'L', "CUC" => 'L', "CUG" => 'L', "CUU" => 'L',
-            "GAA" => 'E', "GAC" => 'D', "GAG" => 'E', "GAU" => 'D',
-            "GCA" => 'A', "GCC" => 'A', "GCG" => 'A', "GCU" => 'A',
-            "GGA" => 'G', "GGC" => 'G', "GGG" => 'G', "GGU" => 'G',
-            "GUA" => 'V', "GUC" => 'V', "GUG" => 'V', "GUU" => 'V',
-            "UAA" => '*', "UAC" => 'Y', "UAG" => '*', "UAU" => 'Y',
-            "UCA" => 'S', "UCC" => 'S', "UCG" => 'S', "UCU" => 'S',
-            "UGA" => '*', "UGC" => 'C', "UGG" => 'W', "UGU" => 'C',
-            "UUA" => 'L', "UUC" => 'F', "UUG" => 'L', "UUU" => 'F',
-
-            # translatable ambiguities in the standard code
-            "CUN" => 'L', "CCN" => 'P', "CGN" => 'R', "ACN" => 'T',
-            "GUN" => 'V', "GCN" => 'A', "GGN" => 'G', "UCN" => 'S'
-
-        )
-
-        function string_translate(seq::String)
-            @assert length(seq) % 3 == 0
-            aaseq = Array(Char, div(length(seq), 3))
-            for i in 1:3:length(seq) - 3 + 1
-                aaseq[div(i, 3) + 1] = standard_genetic_code_dict[seq[i:i+2]]
-            end
-            return convert(String, aaseq)
-        end
-
-        function check_translate(seq::String)
-            return string_translate(seq) == convert(String, translate(RNASequence(seq)))
-        end
-
-        reps = 10
-        #for len in [1, 10, 32, 1000, 10000, 100000]
-        for len in [1, 10, 32]
-            @fact all([check_translate(random_translatable_rna(len)) for _ in 1:reps]) => true
-        end
-
-        @fact_throws translate(dna"ACGTACGTA") # can't translate DNA
-        @fact_throws translate(rna"ACGUACGU")  # can't translate non-multiples of three
-        @fact_throws translate(rna"ACGUACGNU") # can't translate N
-    end
+    @fact_throws translate(dna"ACGTACGTA") # can't translate DNA
+    @fact_throws translate(rna"ACGUACGU")  # can't translate non-multiples of three
+    @fact_throws translate(rna"ACGUACGNU") # can't translate N
 end
 
 
 facts("Compare") do
-    context("Equality") do
-        reps = 10
-        function check_seq_equality(len)
-            a = random_dna(len)
-            return a == copy(a)
-        end
-
-        for len in [1, 10, 32, 1000]
-            @fact all([check_seq_equality(len) for _ in 1:reps]) => true
-        end
-
-        function check_seq_kmer_equality(len)
-            a = dnakmer(random_dna_kmer(len))
-            b = convert(DNASequence, a)
-            return a == b && b == a
-        end
-
-        for len in [1, 10, 32]
-            @fact all([check_seq_kmer_equality(len) for _ in 1:reps]) => true
-        end
-
-        # test a few cases for true negatives
-        @fact dna"ACGT" == dna"ACGTA" => false
-        @fact dna"ACGT" == rna"ACGU" => false
-        @fact dna"NNNN" == rna"NNNN" => false
-        @fact dnakmer("ACGT") == rnakmer("ACGU") => false
-    end
-
     context("Mismatches") do
         function check_mismatches(T, a, b)
             count = 0
