@@ -674,6 +674,16 @@ facts("Nucleotides") do
                     @fact dnakmer("T")   == rnakmer("U")   => false
                     @fact dnakmer("AC")  == dnakmer("AG")  => false
                     @fact rnakmer("AC")  == rnakmer("AG")  => false
+
+                    @fact dnakmer("ACG") == rna"ACG" => false
+                    @fact dnakmer("T")   == rna"U"   => false
+                    @fact dnakmer("AC")  == dna"AG"  => false
+                    @fact rnakmer("AC")  == rna"AG"  => false
+
+                    @fact rna"ACG" == dnakmer("ACG") => false
+                    @fact rna"U"   == dnakmer("T")   => false
+                    @fact dna"AG"  == dnakmer("AC")  => false
+                    @fact rna"AG"  == rnakmer("AC")  => false
                 end
 
                 context("Inequality") do
@@ -701,6 +711,11 @@ facts("Nucleotides") do
                 rna_kmer = rnakmer("ACUG")
 
                 context("Access DNA Kmer") do
+                    @fact dna_kmer[1] => DNA_A
+                    @fact dna_kmer[2] => DNA_C
+                    @fact dna_kmer[3] => DNA_T
+                    @fact dna_kmer[4] => DNA_G
+
                     # Access indexes out of bounds
                     @fact_throws dna_kmer[-1]
                     @fact_throws dna_kmer[0]
@@ -729,6 +744,11 @@ facts("Nucleotides") do
                 end
 
                 context("Access RNA Kmer") do
+                    @fact rna_kmer[1] => RNA_A
+                    @fact rna_kmer[2] => RNA_C
+                    @fact rna_kmer[3] => RNA_U
+                    @fact rna_kmer[4] => RNA_G
+
                     # Access indexes out of bounds
                     @fact_throws rna_kmer[-1]
                     @fact_throws rna_kmer[0]
