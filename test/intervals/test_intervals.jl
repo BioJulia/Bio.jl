@@ -23,15 +23,80 @@ function random_intervals(seqnames, maxpos::Int, n::Int)
     return intervals
 end
 
-facts("IntervalCollection Insertion") do
+
+function simple_intersection(intervals_a, intervals_b)
+    sort!(intervals_a)
+    sort!(intervals_b)
+
+    intersections = Any[]
+
+    i = 1
+    j = 1
+    while i <= length(intervals_a) && j <= length(intervals_b)
+        ai = intervals_a[i]
+        bj = intervals_b[j]
+
+        if Intervals.alphanum_isless(ai.seqname, bj.seqname) ||
+           (ai.seqname == bj.seqname && ai.last < bj.first)
+            i += 1
+        elseif Intervals.alphanum_isless(bj.seqname, ai.seqname) ||
+               (ai.seqname == bj.seqname && bj.last < ai.first)
+            j += 1
+        else
+            k = j
+            while k <= length(intervals_b) && isoverlapping(ai, intervals_b[k])
+                push!(intersections, (ai, intervals_b[k]))
+                k += 1
+            end
+            i += 1
+        end
+    end
+
+    return intersections
+end
+
+
+facts("IntervalCollection Insertion/Iteration") do
     n = 100000
     intervals = random_intervals(["one", "two", "three"], 1000000, n)
-    is = IntervalCollection{Int}()
+    ic = IntervalCollection{Int}()
+
+    @fact isempty(ic) => true
+    @fact collect(Interval{Int}, ic) == Interval{Int}[] => true
+
     for interval in intervals
-        push!(is, interval)
+        push!(ic, interval)
     end
-    @fact sort(collect(is)) == sort(intervals) => true
+    @fact collect(ic) == sort(intervals) => true
 end
+
+
+facts("IntervalCollection Intersection") do
+    n = 1000
+    intervals_a = random_intervals(["one", "two", "three"], 1000000, n)
+    intervals_b = random_intervals(["one", "two", "three"], 1000000, n)
+
+    ic_a = IntervalCollection{Int}()
+    ic_b = IntervalCollection{Int}()
+    @fact collect(intersect(ic_a, ic_b)) == Any[] => true
+
+    for interval in intervals_a
+        push!(ic_a, interval)
+    end
+
+    @fact collect(intersect(ic_a, ic_b)) == Any[] => true
+    @fact collect(intersect(ic_b, ic_a)) == Any[] => true
+
+    for interval in intervals_b
+        push!(ic_b, interval)
+    end
+
+    xs = collect(intersect(ic_a, ic_b))
+    ys = simple_intersection(intervals_a, intervals_b)
+    @fact sort(collect(intersect(ic_a, ic_b))) ==
+          sort(simple_intersection(intervals_a, intervals_b)) => true
+end
+
 
 end
 

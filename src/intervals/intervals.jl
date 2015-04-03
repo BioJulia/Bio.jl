@@ -7,7 +7,9 @@ using DataStructures
 using Docile
 using IntervalTrees
 
-export Strand, Interval, IntervalCollection, STRAND_NA, STRAND_POS, STRAND_NEG, STRAND_BOTH
+export Strand, Interval, IntervalCollection,
+       STRAND_NA, STRAND_POS, STRAND_NEG, STRAND_BOTH,
+       isoverlapping
 
 bitstype 8 Strand
 
@@ -34,6 +36,14 @@ function Base.show(io::IO, strand::Strand)
 end
 
 
+function Base.isless(a::Strand, b::Strand)
+    return convert(Uint8, a) < convert(Uint8, b)
+end
+
+
+@doc """
+A genomic interval specifies interval with some associated metadata.
+""" ->
 immutable Interval{T}
     seqname::String
     first::Int64
@@ -45,7 +55,7 @@ end
 
 function Base.isless{T}(a::Interval{T}, b::Interval{T})
     if a.seqname != b.seqname
-        return a.seqname < b.seqname
+        return alphanum_isless(a.seqname, b.seqname)
     elseif a.first != b.first
         return a.first < b.first
     elseif a.last != b.last
@@ -55,6 +65,20 @@ function Base.isless{T}(a::Interval{T}, b::Interval{T})
     else
         return a.metadata < b.metadata
     end
+end
+
+
+function =={T}(a::Interval{T}, b::Interval{T})
+    return a.seqname  == b.seqname &&
+           a.first    == b.first &&
+           a.last     == b.last &&
+           a.strand   == b.strand &&
+           a.metadata == b.metadata
+end
+
+
+function isoverlapping{S, T}(a::Interval{S}, b::Interval{T})
+    return a.seqname == b.seqname && a.first <= b.last && b.first <= a.last
 end
 
 
@@ -251,25 +275,25 @@ typealias IntervalCollectionTreeIteratorState{T} IntervalTrees.IntervalBTreeIter
 
 immutable IntervalCollectionIteratorState{T}
     trees_state::DataStructures.SDIterationState{String, IntervalCollectionTree{T}, Base.Order.Lt}
+    interval::((Int64, Int64), IntervalMetadataList{T})
     seqname::String
     tree::IntervalCollectionTree{T}
     tree_state::IntervalCollectionTreeIteratorState{T}
-    interval::((Int64, Int64), IntervalMetadataList{T})
 
     function IntervalCollectionIteratorState(
                   trees_state::DataStructures.SDIterationState{
                         String, IntervalCollectionTree{T}, Base.Order.Lt})
-        return new(trees_state)
+        return new(trees_state, ((-1, -1), IntervalMetadataNil{T}()))
     end
 
     function IntervalCollectionIteratorState(
                   trees_state::DataStructures.SDIterationState{
                         String, IntervalCollectionTree{T}, Base.Order.Lt},
+                  interval::((Int64, Int64), IntervalMetadataList{T}),
                   seqname::String,
                   tree::IntervalCollectionTree{T},
-                  tree_state::IntervalCollectionTreeIteratorState{T},
-                  interval::((Int64, Int64), IntervalMetadataList{T}))
-        return new(trees_state, seqname, tree, tree_state, interval)
+                  tree_state::IntervalCollectionTreeIteratorState{T})
+        return new(trees_state, interval, seqname, tree, tree_state)
     end
 end
 
@@ -283,14 +307,15 @@ function Base.start{T}(ic::IntervalCollection{T})
     (seqname, tree), trees_state = next(ic.trees, trees_state)
     tree_state = start(tree)
     interval, tree_state = next(tree, tree_state)
-    return IntervalCollectionIteratorState{T}(trees_state, seqname, tree,
-                                       tree_state, interval)
+    return IntervalCollectionIteratorState{T}(trees_state, interval, seqname,
+                                              tree, tree_state)
 end
 
 
 function Base.next{T}(ic::IntervalCollection{T}, state::IntervalCollectionIteratorState{T})
     first, last = state.interval[1]
     interval_metadata = state.interval[2]
+
     i = Interval{T}(state.seqname, first, last, interval_metadata.strand,
                     interval_metadata.metadata)
 
@@ -311,15 +336,16 @@ function Base.next{T}(ic::IntervalCollection{T}, state::IntervalCollectionIterat
     end
     @label end_of_iterator
 
-    newstate = IntervalCollectionIteratorState{T}(trees_state, seqname, tree,
-                                           tree_state, ((first, last),
-                                           interval_metadata))
+    newstate = IntervalCollectionIteratorState{T}(trees_state,
+                                                  ((first, last), interval_metadata),
+                                                  seqname, tree, tree_state)
+
     return i, newstate
 end
 
 
 function Base.done{T}(ic::IntervalCollection{T}, state::IntervalCollectionIteratorState{T})
-    return done(ic.trees, state.trees_state) || isa(state.interval[2], IntervalMetadataNil{T})
+    return done(ic.trees, state.trees_state) && isa(state.interval[2], IntervalMetadataNil{T})
 end
 
 
@@ -383,6 +409,7 @@ function Base.start{S, T}(it::IntersectIterator{S, T})
 
     tree_intersect_it = intersect(tree_a, tree_b)
     tree_intersect_it_state = start(tree_intersect_it)
+
     while done(tree_intersect_it, tree_intersect_it_state)
         seqname_idx += 1
         if seqname_idx > length(it.seqnames)
@@ -394,6 +421,10 @@ function Base.start{S, T}(it::IntersectIterator{S, T})
 
         tree_intersect_it = intersect(tree_a, tree_b)
         tree_intersect_it_state = start(tree_intersect_it)
+    end
+
+    if done(tree_intersect_it, tree_intersect_it_state)
+        return IntersectIteratorState{S, T}(seqname_idx)
     end
 
     intersect_value, tree_intersect_it_state =
@@ -415,9 +446,6 @@ function Base.start{S, T}(it::IntersectIterator{S, T})
 end
 
 
-# TODO: we need an iterator over metadata lists
-
-
 function Base.next{S, T}(it::IntersectIterator{S, T},
                          state::IntersectIteratorState{S, T})
     (metadata_a, metadata_b), metadata_product_state =
@@ -435,6 +463,7 @@ function Base.next{S, T}(it::IntersectIterator{S, T},
     tree_intersect_it_state = state.tree_intersect_it_state
     first_a, last_a = state.first_a, state.last_a
     first_b, last_b = state.first_b, state.last_b
+
     while done(metadata_product, metadata_product_state)
         if !done(tree_intersect_it, tree_intersect_it_state)
             intersect_value, tree_intersect_it_state =
@@ -451,6 +480,7 @@ function Base.next{S, T}(it::IntersectIterator{S, T},
             if seqname_idx > length(it.seqnames)
                 break
             end
+            seqname = it.seqnames[seqname_idx]
             tree_a = it.a.trees[seqname]
             tree_b = it.b.trees[seqname]
 
