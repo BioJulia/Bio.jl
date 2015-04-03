@@ -369,6 +369,16 @@ facts("Nucleotides") do
                 dna_seq = dna"ACTG"
                 rna_seq = rna"ACUG"
 
+                context("Access DNA Sequence") do
+                    # Access indexes out of bounds
+                    @fact_throws dna_seq[-1]
+                    @fact_throws dna_seq[0]
+                    @fact_throws dna_seq[5]
+                    @fact_throws getindex(dna_seq,-1)
+                    @fact_throws getindex(dna_seq, 0)
+                    @fact_throws getindex(dna_seq, 5)
+                end
+
                 context("Iteration through DNA Sequence") do
                     @fact start(dna"ACNTG") => 0
                     @fact start(dna"")      => 0
@@ -387,6 +397,16 @@ facts("Nucleotides") do
 
                     dna_vector = [DNA_A, DNA_C, DNA_T, DNA_G]
                     @fact all([nucleotide == dna_vector[i] for (i, nucleotide) in enumerate(dna_seq)]) =>  true
+                end
+
+                context("Access RNA Sequence") do
+                    # Access indexes out of bounds
+                    @fact_throws rna_seq[-1]
+                    @fact_throws rna_seq[0]
+                    @fact_throws rna_seq[5]
+                    @fact_throws getindex(rna_seq, -1)
+                    @fact_throws getindex(rna_seq, 0)
+                    @fact_throws getindex(rna_seq, 5)
                 end
 
                 context("Iteration through RNA Sequence") do
@@ -409,21 +429,6 @@ facts("Nucleotides") do
                     rna_vector = [RNA_A, RNA_C, RNA_U, RNA_G]
                     @fact all([nucleotide == rna_vector[i] for (i, nucleotide) in enumerate(rna_seq)]) =>  true
                 end
-
-                # Access indexes out of bounds
-                @fact_throws dna_seq[-1]
-                @fact_throws dna_seq[0]
-                @fact_throws dna_seq[5]
-                @fact_throws getindex(dna_seq,-1)
-                @fact_throws getindex(dna_seq, 0)
-                @fact_throws getindex(dna_seq, 5)
-
-                @fact_throws rna_seq[-1]
-                @fact_throws rna_seq[0]
-                @fact_throws rna_seq[5]
-                @fact_throws getindex(rna_seq, -1)
-                @fact_throws getindex(rna_seq, 0)
-                @fact_throws getindex(rna_seq, 5)
 
                 context("Indexing with Ranges") do
                     @fact getindex(dna"ACTGNACTGN", 1:5) => dna"ACTGN"
@@ -617,7 +622,9 @@ facts("Nucleotides") do
                 @fact_throws kmer(RNA_A, RNA_C, RNA_G, RNA_N, RNA_U) # no Ns in kmers
                 @fact_throws kmer(DNA_A, DNA_C, DNA_G, DNA_N, DNA_T) # no Ns in kmers
                 @fact_throws kmer(rna"ACGNU")# no Ns in kmers
+                @fact_throws rnmakmer(rna"ACGNU")# no Ns in kmers
                 @fact_throws kmer(dna"ACGNT") # no Ns in kmers
+                @fact_throws dnmakmer(dna"ACGNT") # no Ns in kmers
                 @fact_throws kmer(RNA_A, DNA_A) # no mixing of RNA and DNA
                 @fact_throws kmer(random_rna(33)) # no kmer larger than 32nt
                 @fact_throws kmer(random_dna(33)) # no kmer larger than 32nt
@@ -650,22 +657,103 @@ facts("Nucleotides") do
                 end
             end
 
-            context("Equality") do
-                function check_seq_kmer_equality(len)
-                    a = dnakmer(random_dna_kmer(len))
-                    b = convert(DNASequence, a)
-                    return a == b && b == a
+            context("Comparisons") do
+                context("Equality") do
+                    function check_seq_kmer_equality(len)
+                        a = dnakmer(random_dna_kmer(len))
+                        b = convert(DNASequence, a)
+                        return a == b && b == a
+                    end
+
+                    for len in [1, 10, 32]
+                        @fact all([check_seq_kmer_equality(len) for _ in 1:reps]) => true
+                    end
+
+                    # True negatives
+                    @fact dnakmer("ACG") == rnakmer("ACG") => false
+                    @fact dnakmer("T")   == rnakmer("U")   => false
+                    @fact dnakmer("AC")  == dnakmer("AG")  => false
+                    @fact rnakmer("AC")  == rnakmer("AG")  => false
                 end
 
-                for len in [1, 10, 32]
-                    @fact all([check_seq_kmer_equality(len) for _ in 1:reps]) => true
+                context("Inequality") do
+                    for len in [1, 10, 32]
+                        @fact isless(convert(DNAKmer{1}, uint64(0)), convert(DNAKmer{1}, uint64(1))) => true
+                        @fact isless(convert(DNAKmer{1}, uint64(0)), convert(DNAKmer{1}, uint64(0))) => false
+                        @fact isless(convert(DNAKmer{1}, uint64(1)), convert(DNAKmer{1}, uint64(0))) => false
+
+                        @fact isless(convert(RNAKmer{1}, uint64(0)), convert(RNAKmer{1}, uint64(1))) => true
+                        @fact isless(convert(RNAKmer{1}, uint64(0)), convert(RNAKmer{1}, uint64(0))) => false
+                        @fact isless(convert(RNAKmer{1}, uint64(1)), convert(RNAKmer{1}, uint64(0))) => false
+                    end
+                end
+            end
+
+            context("Length") do
+                for len in [0, 1, 16, 32]
+                    @fact length(dnakmer(random_dna_kmer(len))) => len
+                    @fact length(rnakmer(random_rna_kmer(len))) => len
+                end
+            end
+
+            context("Access and Iterations") do
+                dna_kmer = dnakmer("ACTG")
+                rna_kmer = rnakmer("ACUG")
+
+                context("Access DNA Kmer") do
+                    # Access indexes out of bounds
+                    @fact_throws dna_kmer[-1]
+                    @fact_throws dna_kmer[0]
+                    @fact_throws dna_kmer[5]
+                    @fact_throws getindex(dna_kmer,-1)
+                    @fact_throws getindex(dna_kmer, 0)
+                    @fact_throws getindex(dna_kmer, 5)
                 end
 
-                # True negatives
-                @fact dnakmer("ACG") == rnakmer("ACG") => false
-                @fact dnakmer("T")   == rnakmer("U")   => false
-                @fact dnakmer("AC")  == dnakmer("AG")  => false
-                @fact rnakmer("AC")  == rnakmer("AG")  => false
+                context("Iteration through DNA Kmer") do
+                    @fact start(dnakmer("ACTG"))  => 1
+                    @fact start(dnakmer(""))      => 1
+
+                    @fact next(dnakmer("ACTG"), 1) => (DNA_A, 2)
+                    @fact next(dnakmer("ACTG"), 4) => (DNA_G, 5)
+
+                    @fact done(dnakmer(""), 1)      => true
+                    @fact done(dnakmer("ACTG"), 1)  => false
+                    @fact done(dnakmer("ACTG"), 4)  => false
+                    @fact done(dnakmer("ACTG"), 5)  => true
+                    @fact done(dnakmer("ACTG"), -1) => false
+
+
+                    dna_kmer_vector = [DNA_A, DNA_C, DNA_T, DNA_G]
+                    @fact all([nucleotide == dna_kmer_vector[i] for (i, nucleotide) in enumerate(dna_kmer)]) =>  true
+                end
+
+                context("Access RNA Kmer") do
+                    # Access indexes out of bounds
+                    @fact_throws rna_kmer[-1]
+                    @fact_throws rna_kmer[0]
+                    @fact_throws rna_kmer[5]
+                    @fact_throws getindex(rna_kmer, -1)
+                    @fact_throws getindex(rna_kmer, 0)
+                    @fact_throws getindex(rna_kmer, 5)
+                end
+
+                context("Iteration through RNA Kmer") do
+                    @fact start(rnakmer("ACUG"))  => 1
+                    @fact start(rnakmer(""))      => 1
+
+                    @fact next(rnakmer("ACUG"), 1) => (RNA_A, 2)
+                    @fact next(rnakmer("ACUG"), 4) => (RNA_G, 5)
+
+                    @fact done(rnakmer(""), 1)      => true
+                    @fact done(rnakmer("ACUG"), 1)  => false
+                    @fact done(rnakmer("ACUG"), 4)  => false
+                    @fact done(rnakmer("ACUG"), 5)  => true
+                    @fact done(rnakmer("ACUG"), -1) => false
+
+                    rna_kmer_vector = [RNA_A, RNA_C, RNA_U, RNA_G]
+                    @fact all([nucleotide == rna_kmer_vector[i] for (i, nucleotide) in enumerate(rna_kmer)]) =>  true
+                end
             end
 
             reps = 10
