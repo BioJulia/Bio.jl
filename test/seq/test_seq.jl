@@ -529,6 +529,32 @@ facts("Nucleotides") do
                 @fact all([check_ns(DNASequence, random_dna(len)) for _ in 1:reps]) => true
                 @fact all([check_ns(RNASequence, random_rna(len)) for _ in 1:reps]) => true
             end
+
+            dna_seq   = dna"ANANANA"
+            dna_niter = npositions(dna_seq)
+            @fact start(dna_niter) => 2
+            @fact next(dna_niter, 2) => (2,4)
+            @fact done(dna_niter, 6) => false
+            @fact done(dna_niter, 8) => true
+
+
+            ns = [2,4,6]
+            for (i, n) in enumerate(dna_niter)
+                @fact n => ns[i]
+            end
+
+            rna_seq   = rna"ANANANA"
+            rna_niter = npositions(rna_seq)
+            @fact start(rna_niter) => 2
+            @fact next(rna_niter, 2) => (2,4)
+            @fact done(rna_niter, 6) => false
+            @fact done(rna_niter, 8) => true
+
+            ns = [2,4,6]
+            for (i, n) in enumerate(rna_niter)
+                @fact n => ns[i]
+            end
+
         end
 
         context("Kmer") do

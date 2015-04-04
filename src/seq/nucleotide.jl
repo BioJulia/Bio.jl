@@ -481,6 +481,8 @@ function hasn(seq::NucleotideSequence)
     return !done(it, start(it))
 end
 
+# TODO: Implement length for SequenceNIterators to use comprehensions
+
 
 # Mismatch counting
 # -----------------
