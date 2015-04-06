@@ -41,15 +41,26 @@ function Base.isless(a::Strand, b::Strand)
 end
 
 
+# Note, just to be clear: this shadows IntervalTrees.Interval
 @doc """
 A genomic interval specifies interval with some associated metadata.
 """ ->
-immutable Interval{T}
+immutable Interval{T} <: IntervalTrees.AbstractInterval{Int64}
     seqname::String
     first::Int64
     last::Int64
     strand::Strand
     metadata::T
+end
+
+
+function IntervalTrees.first(i::Interval)
+    return i.first
+end
+
+
+function IntervalTrees.last(i::Interval)
+    return i.last
 end
 
 
@@ -87,32 +98,6 @@ function Base.show(io::IO, i::Interval)
 end
 
 
-# In IntervalCollection, all the data associated with an interval is stored in a linked
-# list.
-abstract IntervalMetadataList{T}
-immutable IntervalMetadataNil{T} <: IntervalMetadataList{T} end
-
-
-immutable IntervalMetadataNode{T} <: IntervalMetadataList{T}
-    strand::Strand
-    metadata::T
-    next::IntervalMetadataList{T}
-end
-
-
-function Base.start(node::IntervalMetadataList)
-    node
-end
-
-function Base.next{T}(::IntervalMetadataList{T}, state::IntervalMetadataList{T})
-    return state, state.next
-end
-
-function Base.done{T}(::IntervalMetadataList{T}, state::IntervalMetadataList{T})
-    return isa(state, IntervalMetadataNil{T})
-end
-
-
 # An IntervalCollection is an efficiently stored and indexed set of annotated
 # genomic intervals. It looks something like this.
 #
@@ -143,49 +128,64 @@ end
 #
 # Strand information is stored in the metadata.
 #
-typealias IntervalCollectionTree{T} IntervalTree{Int64, IntervalMetadataNode{T}}
+typealias IntervalCollectionTree{T} IntervalTree{Int64, Interval{T}}
 
 type IntervalCollection{T}
     # Sequence name mapped to IntervalTree, which in turn maps intervals to
     # a list of metadata.
-    trees::SortedDict{String, IntervalCollectionTree{T}, Base.Order.Lt}
+    trees::Dict{String, IntervalCollectionTree{T}}
 
     # Keep track of the number of stored intervals
     length::Int
 
+    # A vector of values(trees) sorted on sequence name.
+    # This is used to iterate intervals as efficiently as possible, but is only
+    # updated as needed, indicated by the ordered_trees_outdated flag.
+    ordered_trees::Vector{IntervalCollectionTree{T}}
+    ordered_trees_outdated::Bool
+
+
     function IntervalCollection()
-        return new(
-            SortedDict(Dict{String, IntervalCollectionTree{T}}(),
-                       Base.Order.Lt(alphanum_isless)), 0)
+        return new(Dict{String, IntervalCollectionTree{T}}(), 0,
+                   IntervalCollectionTree{T}[], false)
+    end
+
+    # TODO: bulk insertion
+    #function IntervalCollection(intervals::Vector{T})
+    #end
+end
+
+
+function update_ordered_trees!{T}(ic::IntervalCollection{T})
+    if ic.ordered_trees_outdated
+        ic.ordered_trees = collect(IntervalCollectionTree{T}, values(ic.trees))
+        p = sortperm(collect(String, keys(ic.trees)), lt=alphanum_isless)
+        ic.ordered_trees = ic.ordered_trees[p]
+        ic.ordered_trees_outdated = false
     end
 end
 
 
-function Base.push!{T}(is::IntervalCollection{T}, i::Interval{T})
-    if !haskey(is.trees, i.seqname)
-        tree = IntervalTree{Int64, IntervalMetadataNode{T}}()
-        is.trees[i.seqname] = tree
+function Base.push!{T}(ic::IntervalCollection{T}, i::Interval{T})
+    if !haskey(ic.trees, i.seqname)
+        tree = IntervalCollectionTree{T}()
+        ic.trees[i.seqname] = tree
+        ic.ordered_trees_outdated = true
     else
-        tree = is.trees[i.seqname]
+        tree = ic.trees[i.seqname]
     end
 
-    if !haskey(tree, (i.first, i.last))
-        node = IntervalMetadataNode{T}(i.strand, i.metadata, IntervalMetadataNil{T}())
-    else
-        node = IntervalMetadataNode{T}(i.strand, i.metadata, tree[(i.first, i.last)])
-    end
-
-    is.length += 1
-    tree[(i.first, i.last)] = node
+    push!(tree, i)
+    ic.length += 1
 end
 
 
-function Base.show(io::IO, is::IntervalCollection)
+function Base.show(io::IO, ic::IntervalCollection)
     const max_entries = 8
-    n_entries = length(is)
+    n_entries = length(ic)
     println(io, "IntervalCollection with $(n_entries) intervals:")
     if n_entries > 0
-        for (k, i) in enumerate(is)
+        for (k, i) in enumerate(ic)
             if k > 8
                 break
             end
@@ -198,8 +198,8 @@ function Base.show(io::IO, is::IntervalCollection)
 end
 
 
-function Base.length(is::IntervalCollection)
-    return is.length
+function Base.length(ic::IntervalCollection)
+    return ic.length
 end
 
 
@@ -266,93 +266,83 @@ function alphanum_isless(a::String, b::String)
     return j <= length(b)
 end
 
+typealias IntervalCollectionTreeIteratorState{T} IntervalTrees.IntervalBTreeIteratorState{Int64, Interval{T}, 64}
 
-# Iteration over entries in IntervalCollection. Unfortunately, this is fairly
-# complicated since there are several levels we have to iterate over:
-# each metadata in each entry in each IntervalTree.
-
-typealias IntervalCollectionTreeIteratorState{T} IntervalTrees.IntervalBTreeIteratorState{Int64, IntervalMetadataNode{T}, 64}
 
 immutable IntervalCollectionIteratorState{T}
-    trees_state::DataStructures.SDIterationState{String, IntervalCollectionTree{T}, Base.Order.Lt}
-    interval::((Int64, Int64), IntervalMetadataList{T})
-    seqname::String
-    tree::IntervalCollectionTree{T}
+    i::Int # index into ordered_trees
     tree_state::IntervalCollectionTreeIteratorState{T}
 
-    function IntervalCollectionIteratorState(
-                  trees_state::DataStructures.SDIterationState{
-                        String, IntervalCollectionTree{T}, Base.Order.Lt})
-        return new(trees_state, ((-1, -1), IntervalMetadataNil{T}()))
+    function IntervalCollectionIteratorState(i::Int)
+        return new(i)
     end
 
-    function IntervalCollectionIteratorState(
-                  trees_state::DataStructures.SDIterationState{
-                        String, IntervalCollectionTree{T}, Base.Order.Lt},
-                  interval::((Int64, Int64), IntervalMetadataList{T}),
-                  seqname::String,
-                  tree::IntervalCollectionTree{T},
-                  tree_state::IntervalCollectionTreeIteratorState{T})
-        return new(trees_state, interval, seqname, tree, tree_state)
+    function IntervalCollectionIteratorState(i::Int, tree_state)
+        return new(i, tree_state)
     end
 end
 
 
 function Base.start{T}(ic::IntervalCollection{T})
-    trees_state = start(ic.trees)
-    if done(ic.trees, trees_state)
-        return IntervalCollectionIteratorState{T}(trees_state)
-    end
-
-    (seqname, tree), trees_state = next(ic.trees, trees_state)
-    tree_state = start(tree)
-    interval, tree_state = next(tree, tree_state)
-    return IntervalCollectionIteratorState{T}(trees_state, interval, seqname,
-                                              tree, tree_state)
-end
-
-
-function Base.next{T}(ic::IntervalCollection{T}, state::IntervalCollectionIteratorState{T})
-    first, last = state.interval[1]
-    interval_metadata = state.interval[2]
-
-    i = Interval{T}(state.seqname, first, last, interval_metadata.strand,
-                    interval_metadata.metadata)
-
-    trees_state = state.trees_state
-    seqname     = state.seqname
-    tree        = state.tree
-    tree_state  = state.tree_state
-    interval_metadata = interval_metadata.next
-    if isa(interval_metadata, IntervalMetadataNil{T})
-        if done(tree, tree_state)
-            if done(ic.trees, trees_state)
-                @goto end_of_iterator
-            end
-            (seqname, tree), trees_state = next(ic.trees, trees_state)
-            tree_state = start(tree)
+    update_ordered_trees!(ic)
+    i = 1
+    while i <= length(ic.ordered_trees)
+        tree_state = start(ic.ordered_trees[i])
+        if !done(ic.ordered_trees[i], tree_state)
+            return IntervalCollectionIteratorState{T}(i, tree_state)
         end
-        ((first, last), interval_metadata), tree_state = next(tree, tree_state)
+        i += 1
     end
-    @label end_of_iterator
 
-    newstate = IntervalCollectionIteratorState{T}(trees_state,
-                                                  ((first, last), interval_metadata),
-                                                  seqname, tree, tree_state)
-
-    return i, newstate
+    return IntervalCollectionIteratorState{T}(i)
 end
 
 
-function Base.done{T}(ic::IntervalCollection{T}, state::IntervalCollectionIteratorState{T})
-    return done(ic.trees, state.trees_state) && isa(state.interval[2], IntervalMetadataNil{T})
+function Base.next{T}(ic::IntervalCollection{T},
+                      state::IntervalCollectionIteratorState{T})
+    i = state.i
+    value, tree_state = next(ic.ordered_trees[i], state.tree_state)
+
+    if done(ic.ordered_trees[i], tree_state)
+        i += 1
+        while i <= length(ic.ordered_trees)
+            tree_state = start(ic.ordered_trees[i])
+            if !done(ic.ordered_trees[i], tree_state)
+                break
+            end
+            i += 1
+        end
+    end
+
+    return value, IntervalCollectionIteratorState{T}(i, tree_state)
+end
+
+
+function Base.done{T}(ic::IntervalCollection{T},
+                      state::IntervalCollectionIteratorState{T})
+    return state.i > length(ic.ordered_trees)
 end
 
 
 immutable IntersectIterator{S, T}
-    seqnames::Vector{String}
-    a::IntervalCollection{S}
-    b::IntervalCollection{T}
+    a_trees::Vector{IntervalCollectionTree{S}}
+    b_trees::Vector{IntervalCollectionTree{T}}
+end
+
+
+immutable IntersectIteratorState{S, T}
+    i::Int # index into a_trees/b_trees.
+    intersect_iterator
+    intersect_iterator_state
+
+    function IntersectIteratorState(i::Int)
+        return new(i)
+    end
+
+    function IntersectIteratorState(i::Int, intersect_iterator,
+                                    intersect_iterator_state)
+        return new(i, intersect_iterator, intersect_iterator_state)
+    end
 end
 
 
@@ -363,147 +353,55 @@ function Base.intersect{S, T}(a::IntervalCollection{S}, b::IntervalCollection{T}
     seqnames = collect(String, intersect(Set(keys(a.trees)), Set(keys(b.trees))))
     sort!(seqnames, lt=alphanum_isless)
 
-    return IntersectIterator{S, T}(seqnames, a, b)
-end
+    a_trees = IntervalCollectionTree{S}[a.trees[seqname] for seqname in seqnames]
+    b_trees = IntervalCollectionTree{T}[b.trees[seqname] for seqname in seqnames]
 
-
-immutable IntersectIteratorState{S, T}
-    seqname_idx::Int
-    tree_intersect_it
-    tree_intersect_it_state
-    metadata_product
-    metadata_product_state
-    first_a::Int
-    last_a::Int
-    first_b::Int
-    last_b::Int
-
-    function IntersectIteratorState(seqname_idx::Int)
-        return new(seqname_idx)
-    end
-
-    function IntersectIteratorState(seqname_idx::Int,
-                                    tree_intersect_it,
-                                    tree_intersect_it_state,
-                                    metadata_product,
-                                    metadata_product_state,
-                                    first_a, last_a,
-                                    first_b, last_b)
-        return new(seqname_idx,
-                   tree_intersect_it, tree_intersect_it_state,
-                   metadata_product, metadata_product_state,
-                   first_a, last_a, first_b, last_b)
-    end
+    return IntersectIterator{S, T}(a_trees, b_trees)
 end
 
 
 function Base.start{S, T}(it::IntersectIterator{S, T})
-    seqname_idx = 1
-    if seqname_idx > length(it.seqnames)
-        return IntersectIteratorState{S, T}(seqname_idx)
-    end
-
-    seqname = it.seqnames[seqname_idx]
-    tree_a = it.a.trees[seqname]
-    tree_b = it.b.trees[seqname]
-
-    tree_intersect_it = intersect(tree_a, tree_b)
-    tree_intersect_it_state = start(tree_intersect_it)
-
-    while done(tree_intersect_it, tree_intersect_it_state)
-        seqname_idx += 1
-        if seqname_idx > length(it.seqnames)
-            break
+    i = 1
+    while i <= length(it.a_trees)
+        intersect_iterator = intersect(it.a_trees[i], it.b_trees[i])
+        intersect_iterator_state = start(intersect_iterator)
+        if !done(intersect_iterator, intersect_iterator_state)
+            return IntersectIteratorState{S, T}(i, intersect_iterator,
+                                                intersect_iterator_state)
         end
-        seqname = it.seqnames[seqname_idx]
-        tree_a = it.a.trees[seqname]
-        tree_b = it.b.trees[seqname]
-
-        tree_intersect_it = intersect(tree_a, tree_b)
-        tree_intersect_it_state = start(tree_intersect_it)
+        i += 1
     end
 
-    if done(tree_intersect_it, tree_intersect_it_state)
-        return IntersectIteratorState{S, T}(seqname_idx)
-    end
-
-    intersect_value, tree_intersect_it_state =
-        next(tree_intersect_it, tree_intersect_it_state)
-    # TODO: Returning these complex tuples is probably a terrible idea
-    (((first_a, last_a), metadata_list_a),
-     ((first_b, last_b), metadata_list_b)) = intersect_value
-
-    metadata_product = Iterators.product(metadata_list_a, metadata_list_b)
-    metadata_product_state = start(metadata_product)
-
-    return IntersectIteratorState{S, T}(seqname_idx,
-                                        tree_intersect_it,
-                                        tree_intersect_it_state,
-                                        metadata_product,
-                                        metadata_product_state,
-                                        first_a, last_a,
-                                        first_b, last_b)
+    return IntersectIteratorState{S, T}(i)
 end
 
 
 function Base.next{S, T}(it::IntersectIterator{S, T},
                          state::IntersectIteratorState{S, T})
-    (metadata_a, metadata_b), metadata_product_state =
-        next(state.metadata_product, state.metadata_product_state)
-    seqname = it.seqnames[state.seqname_idx]
-    interval_a = Interval{S}(seqname, state.first_a, state.last_a, metadata_a.strand,
-                             metadata_a.metadata)
-    interval_b = Interval{T}(seqname, state.first_b, state.last_b, metadata_b.strand,
-                             metadata_b.metadata)
-    value = (interval_a, interval_b)
-
-    seqname_idx = state.seqname_idx
-    metadata_product = state.metadata_product
-    tree_intersect_it = state.tree_intersect_it
-    tree_intersect_it_state = state.tree_intersect_it_state
-    first_a, last_a = state.first_a, state.last_a
-    first_b, last_b = state.first_b, state.last_b
-
-    while done(metadata_product, metadata_product_state)
-        if !done(tree_intersect_it, tree_intersect_it_state)
-            intersect_value, tree_intersect_it_state =
-                next(tree_intersect_it, tree_intersect_it_state)
-
-            (((first_a, last_a), metadata_list_a),
-            ((first_b, last_b), metadata_list_b)) = intersect_value
-
-            metadata_product = Iterators.product(metadata_list_a, metadata_list_b)
-            metadata_product_state = start(metadata_product)
-            break
-        else
-            seqname_idx += 1
-            if seqname_idx > length(it.seqnames)
+    intersect_iterator = state.intersect_iterator
+    value, intersect_iterator_state = next(intersect_iterator,
+                                           state.intersect_iterator_state)
+    i = state.i
+    if done(intersect_iterator, intersect_iterator_state)
+        i += 1
+        while i <= length(it.a_trees)
+            intersect_iterator = intersect(it.a_trees[i], it.b_trees[i])
+            intersect_iterator_state = start(intersect_iterator)
+            if !done(intersect_iterator, intersect_iterator_state)
                 break
             end
-            seqname = it.seqnames[seqname_idx]
-            tree_a = it.a.trees[seqname]
-            tree_b = it.b.trees[seqname]
-
-            tree_intersect_it = intersect(tree_a, tree_b)
-            tree_intersect_it_state = start(tree_intersect_it)
+            i += 1
         end
     end
 
-    state = IntersectIteratorState{S, T}(
-                seqname_idx,
-                tree_intersect_it,
-                tree_intersect_it_state,
-                metadata_product,
-                metadata_product_state,
-                first_a, last_a,
-                first_b, last_b)
-
-    return value, state
+    return value, IntersectIteratorState{S, T}(i, intersect_iterator,
+                                               intersect_iterator_state)
 end
+
 
 function Base.done{S, T}(it::IntersectIterator{S, T},
                          state::IntersectIteratorState{S, T})
-    return state.seqname_idx > length(it.seqnames)
+    return state.i > length(it.a_trees)
 end
 
 

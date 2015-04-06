@@ -44,8 +44,10 @@ function simple_intersection(intervals_a, intervals_b)
             j += 1
         else
             k = j
-            while k <= length(intervals_b) && isoverlapping(ai, intervals_b[k])
-                push!(intersections, (ai, intervals_b[k]))
+            while k <= length(intervals_b) && intervals_b[k].first <= ai.last
+                if isoverlapping(ai, intervals_b[k])
+                    push!(intersections, (ai, intervals_b[k]))
+                end
                 k += 1
             end
             i += 1
@@ -91,8 +93,6 @@ facts("IntervalCollection Intersection") do
         push!(ic_b, interval)
     end
 
-    xs = collect(intersect(ic_a, ic_b))
-    ys = simple_intersection(intervals_a, intervals_b)
     @fact sort(collect(intersect(ic_a, ic_b))) ==
           sort(simple_intersection(intervals_a, intervals_b)) => true
 end
