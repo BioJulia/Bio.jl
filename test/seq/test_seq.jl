@@ -110,69 +110,69 @@ facts("Nucleotides") do
     context("Conversions") do
         context("Uint8") do
             context("DNA conversions from Uint8") do
-                @fact convert(DNANucleotide, uint8(0)) => DNA_A
-                @fact convert(DNANucleotide, uint8(1)) => DNA_C
-                @fact convert(DNANucleotide, uint8(2)) => DNA_G
-                @fact convert(DNANucleotide, uint8(3)) => DNA_T
-                @fact convert(DNANucleotide, uint8(4)) => DNA_N
+                @fact convert(DNANucleotide, @compat UInt8(0)) => DNA_A
+                @fact convert(DNANucleotide, @compat UInt8(1)) => DNA_C
+                @fact convert(DNANucleotide, @compat UInt8(2)) => DNA_G
+                @fact convert(DNANucleotide, @compat UInt8(3)) => DNA_T
+                @fact convert(DNANucleotide, @compat UInt8(4)) => DNA_N
             end
 
             context("RNA conversions from Uint8") do
-                @fact convert(RNANucleotide, uint8(0)) => RNA_A
-                @fact convert(RNANucleotide, uint8(1)) => RNA_C
-                @fact convert(RNANucleotide, uint8(2)) => RNA_G
-                @fact convert(RNANucleotide, uint8(3)) => RNA_U
-                @fact convert(RNANucleotide, uint8(4)) => RNA_N
+                @fact convert(RNANucleotide, @compat UInt8(0)) => RNA_A
+                @fact convert(RNANucleotide, @compat UInt8(1)) => RNA_C
+                @fact convert(RNANucleotide, @compat UInt8(2)) => RNA_G
+                @fact convert(RNANucleotide, @compat UInt8(3)) => RNA_U
+                @fact convert(RNANucleotide, @compat UInt8(4)) => RNA_N
             end
 
             context("DNA conversions to Uint8") do
-                @fact convert(Uint8, DNA_A) => uint8(0)
-                @fact convert(Uint8, DNA_C) => uint8(1)
-                @fact convert(Uint8, DNA_G) => uint8(2)
-                @fact convert(Uint8, DNA_T) => uint8(3)
-                @fact convert(Uint8, DNA_N) => uint8(4)
+                @fact convert(Uint8, DNA_A) => @compat UInt8(0)
+                @fact convert(Uint8, DNA_C) => @compat UInt8(1)
+                @fact convert(Uint8, DNA_G) => @compat UInt8(2)
+                @fact convert(Uint8, DNA_T) => @compat UInt8(3)
+                @fact convert(Uint8, DNA_N) => @compat UInt8(4)
             end
 
             context("RNA conversions to Uint8") do
-                @fact convert(Uint8, RNA_A) => uint8(0)
-                @fact convert(Uint8, RNA_C) => uint8(1)
-                @fact convert(Uint8, RNA_G) => uint8(2)
-                @fact convert(Uint8, RNA_U) => uint8(3)
-                @fact convert(Uint8, RNA_N) => uint8(4)
+                @fact convert(Uint8, RNA_A) => @compat UInt8(0)
+                @fact convert(Uint8, RNA_C) => @compat UInt8(1)
+                @fact convert(Uint8, RNA_G) => @compat UInt8(2)
+                @fact convert(Uint8, RNA_U) => @compat UInt8(3)
+                @fact convert(Uint8, RNA_N) => @compat UInt8(4)
             end
         end
 
         context("Uint64") do
             context("DNA conversions from Uint64") do
-                @fact convert(DNANucleotide, uint64(0)) => DNA_A
-                @fact convert(DNANucleotide, uint64(1)) => DNA_C
-                @fact convert(DNANucleotide, uint64(2)) => DNA_G
-                @fact convert(DNANucleotide, uint64(3)) => DNA_T
-                @fact convert(DNANucleotide, uint64(4)) => DNA_N
+                @fact convert(DNANucleotide, @compat UInt64(0)) => DNA_A
+                @fact convert(DNANucleotide, @compat UInt64(1)) => DNA_C
+                @fact convert(DNANucleotide, @compat UInt64(2)) => DNA_G
+                @fact convert(DNANucleotide, @compat UInt64(3)) => DNA_T
+                @fact convert(DNANucleotide, @compat UInt64(4)) => DNA_N
             end
 
             context("RNA conversions from Uint64") do
-                @fact convert(RNANucleotide, uint64(0)) => RNA_A
-                @fact convert(RNANucleotide, uint64(1)) => RNA_C
-                @fact convert(RNANucleotide, uint64(2)) => RNA_G
-                @fact convert(RNANucleotide, uint64(3)) => RNA_U
-                @fact convert(RNANucleotide, uint64(4)) => RNA_N
+                @fact convert(RNANucleotide, @compat UInt64(0)) => RNA_A
+                @fact convert(RNANucleotide, @compat UInt64(1)) => RNA_C
+                @fact convert(RNANucleotide, @compat UInt64(2)) => RNA_G
+                @fact convert(RNANucleotide, @compat UInt64(3)) => RNA_U
+                @fact convert(RNANucleotide, @compat UInt64(4)) => RNA_N
             end
 
             context("DNA conversions to Uint64") do
-                @fact convert(Uint64, DNA_A) => uint64(0)
-                @fact convert(Uint64, DNA_C) => uint64(1)
-                @fact convert(Uint64, DNA_G) => uint64(2)
-                @fact convert(Uint64, DNA_T) => uint64(3)
-                @fact convert(Uint64, DNA_N) => uint64(4)
+                @fact convert(Uint64, DNA_A) => @compat UInt64(0)
+                @fact convert(Uint64, DNA_C) => @compat UInt64(1)
+                @fact convert(Uint64, DNA_G) => @compat UInt64(2)
+                @fact convert(Uint64, DNA_T) => @compat UInt64(3)
+                @fact convert(Uint64, DNA_N) => @compat UInt64(4)
             end
 
             context("RNA conversions to Uint64") do
-                @fact convert(Uint64, RNA_A) => uint64(0)
-                @fact convert(Uint64, RNA_C) => uint64(1)
-                @fact convert(Uint64, RNA_G) => uint64(2)
-                @fact convert(Uint64, RNA_U) => uint64(3)
-                @fact convert(Uint64, RNA_N) => uint64(4)
+                @fact convert(Uint64, RNA_A) => @compat UInt64(0)
+                @fact convert(Uint64, RNA_C) => @compat UInt64(1)
+                @fact convert(Uint64, RNA_G) => @compat UInt64(2)
+                @fact convert(Uint64, RNA_U) => @compat UInt64(3)
+                @fact convert(Uint64, RNA_N) => @compat UInt64(4)
             end
         end
 
@@ -714,13 +714,13 @@ facts("Nucleotides") do
 
                 context("Inequality") do
                     for len in [1, 10, 32]
-                        @fact isless(convert(DNAKmer{1}, uint64(0)), convert(DNAKmer{1}, uint64(1))) => true
-                        @fact isless(convert(DNAKmer{1}, uint64(0)), convert(DNAKmer{1}, uint64(0))) => false
-                        @fact isless(convert(DNAKmer{1}, uint64(1)), convert(DNAKmer{1}, uint64(0))) => false
+                        @fact isless(convert(DNAKmer{1}, @compat UInt64(0)), convert(DNAKmer{1}, @compat UInt64(1))) => true
+                        @fact isless(convert(DNAKmer{1}, @compat UInt64(0)), convert(DNAKmer{1}, @compat UInt64(0))) => false
+                        @fact isless(convert(DNAKmer{1}, @compat UInt64(1)), convert(DNAKmer{1}, @compat UInt64(0))) => false
 
-                        @fact isless(convert(RNAKmer{1}, uint64(0)), convert(RNAKmer{1}, uint64(1))) => true
-                        @fact isless(convert(RNAKmer{1}, uint64(0)), convert(RNAKmer{1}, uint64(0))) => false
-                        @fact isless(convert(RNAKmer{1}, uint64(1)), convert(RNAKmer{1}, uint64(0))) => false
+                        @fact isless(convert(RNAKmer{1}, @compat UInt64(0)), convert(RNAKmer{1}, @compat UInt64(1))) => true
+                        @fact isless(convert(RNAKmer{1}, @compat UInt64(0)), convert(RNAKmer{1}, @compat UInt64(0))) => false
+                        @fact isless(convert(RNAKmer{1}, @compat UInt64(1)), convert(RNAKmer{1}, @compat UInt64(0))) => false
                     end
                 end
             end

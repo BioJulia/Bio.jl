@@ -264,7 +264,7 @@ end
 
 function getindex{T}(seq::NucleotideSequence{T}, i::Integer)
     if i > length(seq) || i < 1
-        error(BoundsError())
+        throw(BoundsError())
     end
     i += seq.part.start - 1
     if seq.ns[i]
@@ -640,8 +640,8 @@ typealias Codon RNAKmer{3}
 # Conversion to/from Uint64
 convert{K}(::Type{DNAKmer{K}}, x::Uint64) = box(DNAKmer{K}, unbox(Uint64, x))
 convert{K}(::Type{RNAKmer{K}}, x::Uint64) = box(RNAKmer{K}, unbox(Uint64, x))
-convert(::Type{Uint64}, x::DNAKmer)       = box(Uint64, unbox(DNAKmer, x))
-convert(::Type{Uint64}, x::RNAKmer)       = box(Uint64, unbox(RNAKmer, x))
+convert{K}(::Type{Uint64}, x::DNAKmer{K})       = box(Uint64, unbox(DNAKmer{K}, x))
+convert{K}(::Type{Uint64}, x::RNAKmer{K})       = box(Uint64, unbox(RNAKmer{K}, x))
 
 
 # Convert from String
@@ -649,7 +649,7 @@ function convert{T, K}(::Type{Kmer{T, K}}, seq::String)
     @assert length(seq) <= 32 error("Cannot construct a K-mer longer than 32nt.")
     @assert length(seq) == K error("Cannot construct a $(K)-mer from a string of length $(length(seq))")
 
-    x     = uint64(0)
+    x     = @compat UInt64(0)
     shift = 0
     for (i, c) in enumerate(seq)
         nt = convert(T, c)
@@ -673,7 +673,7 @@ function convert{T, K}(::Type{Kmer{T, K}}, seq::NucleotideSequence{T})
     @assert length(seq) <= 32 error("Cannot construct a K-mer longer than 32nt.")
     @assert length(seq) == K error("Cannot construct a $(K)-mer from a NucleotideSequence of length $(length(seq))")
 
-    x     = uint64(0)
+    x     = @compat UInt64(0)
     shift = 0
     for (i, nt) in enumerate(seq)
         if nt == nnucleotide(T)
@@ -714,7 +714,7 @@ function kmer{T <: Nucleotide}(nts::T...)
         error(string("Cannot construct a K-mer longer than 32nt."))
     end
 
-    x = uint64(0)
+    x = @compat UInt64(0)
     shift = 0
     for (i, nt) in enumerate(nts)
         if nt == nnucleotide(T)
@@ -772,7 +772,7 @@ end
 
 function getindex{T, K}(x::Kmer{T, K}, i::Integer)
     if i < 1 || i > K
-        error(BoundsError())
+        throw(BoundsError())
     end
     return convert(T, (convert(Uint64, x) >>> (2*(i-1))) & 0b11)
 end
@@ -922,7 +922,7 @@ function start{T, K}(it::EachKmerIterator{T, K})
         next_n_pos, nit_state = next(it.nit, nit_state)
     end
 
-    state = EachKmerIteratorState{T, K}(0, uint64(0), next_n_pos, nit_state)
+    state = EachKmerIteratorState{T, K}(0, (@compat UInt64(0)), next_n_pos, nit_state)
     return nextkmer(it, state, K - 1)
 end
 
@@ -1052,8 +1052,8 @@ end
 # Basic Functions
 # ---------------
 
-getindex{T}(counts::NucleotideCounts{T}, nt::T) = getfield(counts, int(convert(Uint, nt) + 1))
-setindex!{T}(counts::NucleotideCounts{T}, c::Integer, nt::T) = setfield!(counts, int(convert(Uint, nt) + 1), c)
+getindex{T}(counts::NucleotideCounts{T}, nt::T) = getfield(counts, (@compat Int(convert(Uint, nt) + 1)))
+setindex!{T}(counts::NucleotideCounts{T}, c::Integer, nt::T) = setfield!(counts, (@compat Int(convert(Uint, nt) + 1)), c)
 
 # Pad strings so they are right justified when printed
 function format_counts(xs)

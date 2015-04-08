@@ -19,14 +19,14 @@ length(code::GeneticCode) = 64
 # Iterating through genetic code
 # ------------------------------
 
-start(code::GeneticCode) = uint64(0)
+start(code::GeneticCode) = @compat uint64(0)
 
 function next(code::GeneticCode, x::Uint64)
     c = convert(Codon, x)
     return ((c, code[c]), (x + 1))
 end
 
-done(code::GeneticCode, x::Uint64) = (x > uint64(0b111111))
+done(code::GeneticCode, x::Uint64) = (x > (@compat uint64(0b111111)))
 
 
 # Default genetic codes
