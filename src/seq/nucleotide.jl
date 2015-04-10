@@ -368,14 +368,11 @@ function unsafe_complement!(seq::NucleotideSequence)
     @inbounds for i in 1:length(seq.data)
         seq.data[i] = ~seq.data[i]
     end
+    return seq
 end
 
 # Nucleotide complement
-function complement(seq::NucleotideSequence)
-    seq = copy(seq)
-    unsafe_complement!(seq)
-    return seq
-end
+complement(seq::NucleotideSequence) = unsafe_complement!(copy(seq))
 
 # Nucleotide reverse. Reverse a kmer stored in a Uint64.
 function nucrev(x::Uint64)
@@ -413,11 +410,7 @@ function reverse{T}(seq::NucleotideSequence{T})
 end
 
 # Return the reverse complement of seq
-function reverse_complement(seq::NucleotideSequence)
-    seq = reverse(seq)
-    unsafe_complement!(seq)
-    return seq
-end
+reverse_complement(seq::NucleotideSequence) = unsafe_complement!(reverse(seq))
 
 
 # SequenceNIterator
