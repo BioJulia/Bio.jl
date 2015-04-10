@@ -75,6 +75,7 @@ end
 
 facts("IntervalCollection Intersection") do
     n = 1000
+    srand(1234)
     intervals_a = random_intervals(["one", "two", "three"], 1000000, n)
     intervals_b = random_intervals(["one", "two", "three"], 1000000, n)
 
@@ -94,6 +95,13 @@ facts("IntervalCollection Intersection") do
     end
 
     @fact sort(collect(intersect(ic_a, ic_b))) ==
+          sort(simple_intersection(intervals_a, intervals_b)) => true
+
+    it = Intervals.IntervalStreamIntersectIterator{Int,
+                                                   Int}(
+            ic_a, ic_b, Intervals.alphanum_isless)
+
+    @fact sort(collect(it)) ==
           sort(simple_intersection(intervals_a, intervals_b)) => true
 end
 
