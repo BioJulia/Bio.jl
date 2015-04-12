@@ -1072,8 +1072,14 @@ facts("FASTA Parsing") do
     get_bio_fmt_specimens()
 
     function check_fasta_parse(filename)
+        # Reading from a stream
         for seqrec in read(open(filename), FASTA)
         end
+
+        # Reading from a memory mapped file
+        for seqrec in read(filename, FASTA, memory_map=true)
+        end
+
         return true
     end
 
@@ -1092,8 +1098,14 @@ facts("FASTQ Parsing") do
     get_bio_fmt_specimens()
 
     function check_fastq_parse(filename)
+        # Reading from a stream
         for seqrec in read(open(filename), FASTQ)
         end
+
+        # Reading from a memory mapped file
+        for seqrec in read(filename, FASTQ, memory_map=true)
+        end
+
         return true
     end
 
