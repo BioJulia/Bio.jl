@@ -2,6 +2,7 @@
 module Ragel
 
 using Switch
+import Base.FS
 import Base: push!, pop!, endof, append!, empty!, isempty, length, getindex,
              setindex!, (==)
 
@@ -118,7 +119,10 @@ const RAGEL_PARSER_INITIAL_BUF_SIZE = 1000000
 type State
     # Input source. If nothing, it's assumed that buffer contains
     # all the input.
-    input::Union(IO, Nothing)
+    input::Union(IO, FS.File, Nothing)
+
+    # Should we close input when finished
+    input_owned::Bool
 
     # Buffered data.
     buffer::Vector{Uint8}
@@ -138,20 +142,21 @@ type State
     linenum::Int
 
     function State(cs, data::Vector{Uint8})
-        return new(nothing, data, Buffer{Int}(16), false, 0, length(data), cs, 1)
+        return new(nothing, false, data, Buffer{Int}(16), false, 0, length(data), cs, 1)
     end
 
     function State(cs, input::IO)
-        return new(input, Array(Uint8, RAGEL_PARSER_INITIAL_BUF_SIZE),
+        return new(input, false, Array(Uint8, RAGEL_PARSER_INITIAL_BUF_SIZE),
                    Buffer{Int}(16), false, 0, 0, cs, 1)
     end
 
     function State(cs, filename::String, memory_map=false)
         if memory_map
             data = mmap_array(Uint8, (filesize(filename),), open(filename))
-            return new(nothing, data, Buffer{Int}(16), false, 0, length(data), cs, 1)
+            return new(nothing, false, data, Buffer{Int}(16), false, 0, length(data), cs, 1)
         else
-            return new(open(filename), Array(Uint8, RAGEL_PARSER_INITIAL_BUF_SIZE),
+            file = FS.open(filename, FS.JL_O_RDONLY)
+            return new(file, true, Array(Uint8, RAGEL_PARSER_INITIAL_BUF_SIZE),
                        Buffer{Int}(16), false, 0, 0, cs, 1)
         end
     end
@@ -249,6 +254,10 @@ function fillbuffer!(parser::State)
         parser.marks[i] -= first_mark - 1
     end
 
+    if nb == 0 && parser.input_owned
+        close(parser.input)
+    end
+
     return nb
 end
 
@@ -260,6 +269,13 @@ function readchunk!(source::IO, dest::Vector{Uint8}, dest_start::Int, dest_stop:
         i += 1
     end
     return i - dest_start
+end
+
+
+function readchunk!(source::FS.File, dest::Vector{Uint8}, dest_start::Int, dest_stop::Int)
+    len = dest_stop - dest_start  + 1
+    return ccall(:jl_fs_read, Int32, (Int32, Ptr{Void}, Csize_t),
+                 source.handle, pointer(dest, dest_start), len)
 end
 
 
