@@ -1181,7 +1181,16 @@ facts("Translation") do
 end
 
 
+function get_bio_fmt_specimens()
+    path = Pkg.dir("Bio", "test", "BioFmtSpecimens")
+    if !isdir(path)
+        run(`git clone --depth 1 https://github.com/BioJulia/BioFmtSpecimens.git $(path)`)
+    end
+end
+
 facts("FASTA Parsing") do
+    get_bio_fmt_specimens()
+
     function check_fasta_parse(filename)
         for seqrec in read(open(filename), FASTA)
         end
@@ -1200,6 +1209,8 @@ facts("FASTA Parsing") do
 end
 
 facts("FASTQ Parsing") do
+    get_bio_fmt_specimens()
+
     function check_fastq_parse(filename)
         for seqrec in read(open(filename), FASTQ)
         end
