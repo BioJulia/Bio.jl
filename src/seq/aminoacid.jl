@@ -183,7 +183,7 @@ end
 
 # Construct of a subsequence from another amino acid sequence
 function AminoAcidSequence(seq::Union(Vector{Uint8}, String),
-                           startpos::Int, endpos::Int)
+                           startpos::Int, endpos::Int, unsafe::Bool=false)
     len = endpos - startpos + 1
     data = Array(AminoAcid, len)
     for (i, j) in enumerate(startpos:endpos)

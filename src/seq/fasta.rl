@@ -225,7 +225,7 @@ function advance!(it::FASTAIterator)
         it.default_alphabet = alphabet
         it.nextitem =
             FASTASeqRecord{S}(it.parser.namebuf,
-                              S(it.parser.seqbuf.data, 1, it.parser.seqbuf.pos - 1),
+                              S(it.parser.seqbuf.data, 1, it.parser.seqbuf.pos - 1, true),
                               FASTAMetadata(it.parser.descbuf))
         empty!(it.parser.seqbuf)
     end

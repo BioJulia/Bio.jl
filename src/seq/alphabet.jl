@@ -120,7 +120,15 @@ A type T to which the string data can be converted.
 """ ->
 function infer_alphabet(data::Vector{Uint8}, start, stop, default)
     alphabets = ALL_ALPHABETS
-    for i in start:stop
+    if start > stop
+        error("start must be less than stop")
+    end
+
+    if start < 1 ||  stop > length(data)
+        throw(BoundsError())
+    end
+
+    @inbounds for i in start:stop
         c = data[i]
         if (@compat UInt8('A')) <= c <= (@compat UInt8('z'))
             alphabets &= compatible_alphabets[c - (@compat UInt8('A')) + 1]
@@ -130,7 +138,6 @@ function infer_alphabet(data::Vector{Uint8}, start, stop, default)
     end
 
     if count_ones(convert(Uint16, alphabets)) == 0
-        @show k
         error("String is not compatible with any known sequence type.")
     elseif alphabets & default != EMPTY_ALPHABET
         return default

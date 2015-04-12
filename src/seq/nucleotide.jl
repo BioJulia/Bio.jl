@@ -83,16 +83,16 @@ nnucleotide(::Type{RNANucleotide}) = RNA_N
 # --------------------
 
 # lookup table for characters in 'A':'t'
-const char_to_dna = [
-     DNA_A,       DNA_INVALID, DNA_C,       DNA_INVALID, DNA_INVALID, DNA_INVALID,
-     DNA_G,       DNA_INVALID, DNA_INVALID, DNA_INVALID, DNA_INVALID, DNA_INVALID,
-     DNA_INVALID, DNA_N,       DNA_INVALID, DNA_INVALID, DNA_INVALID, DNA_INVALID,
-     DNA_INVALID, DNA_T,       DNA_INVALID, DNA_INVALID, DNA_INVALID, DNA_INVALID,
-     DNA_INVALID, DNA_INVALID, DNA_INVALID, DNA_INVALID, DNA_INVALID, DNA_INVALID,
-     DNA_INVALID, DNA_INVALID, DNA_A,       DNA_INVALID, DNA_C,       DNA_INVALID,
-     DNA_INVALID, DNA_INVALID, DNA_G,       DNA_INVALID, DNA_INVALID, DNA_INVALID,
-     DNA_INVALID, DNA_INVALID, DNA_INVALID, DNA_N,       DNA_INVALID, DNA_INVALID,
-     DNA_INVALID, DNA_INVALID, DNA_INVALID, DNA_T ]
+    const char_to_dna = [
+    DNA_A,       DNA_INVALID, DNA_C,       DNA_INVALID, DNA_INVALID, DNA_INVALID,
+    DNA_G,       DNA_INVALID, DNA_INVALID, DNA_INVALID, DNA_INVALID, DNA_INVALID,
+    DNA_INVALID, DNA_N,       DNA_INVALID, DNA_INVALID, DNA_INVALID, DNA_INVALID,
+    DNA_INVALID, DNA_T,       DNA_INVALID, DNA_INVALID, DNA_INVALID, DNA_INVALID,
+    DNA_INVALID, DNA_INVALID, DNA_INVALID, DNA_INVALID, DNA_INVALID, DNA_INVALID,
+    DNA_INVALID, DNA_INVALID, DNA_A,       DNA_INVALID, DNA_C,       DNA_INVALID,
+    DNA_INVALID, DNA_INVALID, DNA_G,       DNA_INVALID, DNA_INVALID, DNA_INVALID,
+    DNA_INVALID, DNA_INVALID, DNA_INVALID, DNA_N,       DNA_INVALID, DNA_INVALID,
+    DNA_INVALID, DNA_INVALID, DNA_INVALID, DNA_T ]
 
 @doc doc"Convert a Char to a DNANucleotide" ->
 function convert(::Type{DNANucleotide}, c::Char)
@@ -100,6 +100,12 @@ function convert(::Type{DNANucleotide}, c::Char)
     @assert nt != DNA_INVALID error("$(c) is not a valid DNA nucleotide")
     return nt
 end
+
+function unsafe_ascii_byte_to_nucleotide(T::Type{DNANucleotide}, c::Uint8)
+    @inbounds nt = char_to_dna[c - 0x41 + 1]
+    return nt
+end
+
 
 # lookup table for characters in 'A':'u'
 const char_to_rna = [
@@ -117,6 +123,11 @@ const char_to_rna = [
 function convert(::Type{RNANucleotide}, c::Char)
     @inbounds nt = 'A' <= c <= 'u' ? char_to_rna[c - 'A' + 1] : RNA_INVALID
     @assert nt != RNA_INVALID error("$(c) is not a valid RNA nucleotide")
+    return nt
+end
+
+function unsafe_ascii_byte_to_nucleotide(T::Type{RNANucleotide}, c::Uint8)
+    @inbounds nt = char_to_rna[c - 0x41 + 1]
     return nt
 end
 
@@ -209,7 +220,7 @@ end
 Construct a subsequence from the `seq` string""" ->
 # Construct a sequence from a string
 function NucleotideSequence{T<:Nucleotide}(::Type{T}, seq::Union(String, Vector{Uint8}),
-                                           startpos::Int, stoppos::Int)
+                                           startpos::Int, stoppos::Int, unsafe::Bool=false)
     len = seq_data_len(stoppos - startpos + 1)
     data = zeros(Uint64, len)
     ns = BitArray(stoppos - startpos + 1)
@@ -223,7 +234,7 @@ function NucleotideSequence{T<:Nucleotide}(::Type{T}, seq::Union(String, Vector{
             while shift < 64 && j <= stoppos
                 c = seq[j]
                 j += 1
-                nt = convert(T, convert(Char, c))
+                nt = unsafe ? unsafe_ascii_byte_to_nucleotide(T, c) : convert(T, convert(Char, c))
                 if nt == nnucleotide(T)
                     # manually inlined: ns[i] = true
                     d = (idx - 1) >>> 6
@@ -232,6 +243,7 @@ function NucleotideSequence{T<:Nucleotide}(::Type{T}, seq::Union(String, Vector{
                 else
                     data[i] |= convert(Uint64, nt) << shift
                 end
+
                 idx += 1
                 shift += 2
             end
@@ -374,14 +386,17 @@ DNASequence() = NucleotideSequence(DNANucleotide)
 
 @doc doc"Construct a DNA nucleotide subsequence from another sequence" ->
 DNASequence(other::NucleotideSequence, part::UnitRange) = NucleotideSequence(DNANucleotide, other, part)
+<<<<<<< HEAD
 
 @doc doc"Construct a DNA nucleotide sequence from a String" ->
 DNASequence(seq::String) = NucleotideSequence(DNANucleotide, seq)
 
 @doc doc"Construct a DNA nucleotide sequence from other sequences" ->
+=======
+>>>>>>> Some performance improvements to sequence parsing.
 DNASequence(chunk1::DNASequence, chunks::DNASequence...) = NucleotideSequence(chunk1, chunks...)
 DNASequence(seq::Union(Vector{Uint8}, String)) = NucleotideSequence(DNANucleotide, seq)
-DNASequence(seq::Union(Vector{Uint8}, String), startpos::Int, endpos::Int) = NucleotideSequence(DNANucleotide, seq, startpos, endpos)
+DNASequence(seq::Union(Vector{Uint8}, String), startpos::Int, endpos::Int, unsafe::Bool=false) = NucleotideSequence(DNANucleotide, seq, startpos, endpos, unsafe)
 
 
 # RNA Sequences
@@ -399,7 +414,7 @@ RNASequence(seq::String) = NucleotideSequence(RNANucleotide, seq)
 @doc doc"Construct a RNA nucleotide sequence from other sequences" ->
 RNASequence(chunk1::RNASequence, chunks::RNASequence...) = NucleotideSequence(chunk1, chunks...)
 RNASequence(seq::Union(Vector{Uint8}, String)) = NucleotideSequence(RNANucleotide, seq)
-RNASequence(seq::Union(Vector{Uint8}, String), startpos::Int, endpos::Int) = NucleotideSequence(RNANucleotide, seq, startpos, endpos)
+RNASequence(seq::Union(Vector{Uint8}, String), startpos::Int, endpos::Int, unsafe::Bool=false) = NucleotideSequence(RNANucleotide, seq, startpos, endpos, unsafe)
 
 
 # Conversion
