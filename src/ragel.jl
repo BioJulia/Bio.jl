@@ -86,7 +86,7 @@ end
 function append!{T}(buf::Buffer{T}, source::Vector{T}, start::Int, stop::Int)
     n = stop - start + 1
     ensureroom!(buf, n)
-    unsafe_copy!(buf.data, buf.pos, source, start, n)
+    copy!(buf.data, buf.pos, source, start, n)
     buf.pos += n
 end
 

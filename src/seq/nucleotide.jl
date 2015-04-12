@@ -59,12 +59,17 @@ const char_to_dna = [
      DNA_INVALID, DNA_INVALID, DNA_INVALID, DNA_N,       DNA_INVALID, DNA_INVALID,
      DNA_INVALID, DNA_INVALID, DNA_INVALID, DNA_T ]
 
-
 function convert(::Type{DNANucleotide}, c::Char)
     @inbounds nt = 'A' <= c <= 't' ? char_to_dna[c - 'A' + 1] : DNA_INVALID
     @assert nt != DNA_INVALID error("$(c) is not a valid DNA nucleotide")
     return nt
 end
+
+function unsafe_ascii_byte_to_nucleotide(T::Type{DNANucleotide}, c::Uint8)
+    @inbounds nt = char_to_dna[c - 0x41 + 1]
+    return nt
+end
+
 
 # lookup table for characters in 'A':'u'
 const char_to_rna = [
@@ -81,6 +86,11 @@ const char_to_rna = [
 function convert(::Type{RNANucleotide}, c::Char)
     @inbounds nt = 'A' <= c <= 'u' ? char_to_rna[c - 'A' + 1] : RNA_INVALID
     @assert nt != RNA_INVALID error("$(c) is not a valid RNA nucleotide")
+    return nt
+end
+
+function unsafe_ascii_byte_to_nucleotide(T::Type{RNANucleotide}, c::Uint8)
+    @inbounds nt = char_to_rna[c - 0x41 + 1]
     return nt
 end
 
@@ -157,7 +167,7 @@ end
 
 # Construct a sequence from a string
 function NucleotideSequence{T<:Nucleotide}(::Type{T}, seq::Union(String, Vector{Uint8}),
-                                           startpos::Int, stoppos::Int)
+                                           startpos::Int, stoppos::Int, unsafe::Bool=false)
     len = seq_data_len(stoppos - startpos + 1)
     data = zeros(Uint64, len)
     ns = BitArray(stoppos - startpos + 1)
@@ -171,7 +181,7 @@ function NucleotideSequence{T<:Nucleotide}(::Type{T}, seq::Union(String, Vector{
             while shift < 64 && j <= stoppos
                 c = seq[j]
                 j += 1
-                nt = convert(T, convert(Char, c))
+                nt = unsafe ? unsafe_ascii_byte_to_nucleotide(T, c) : convert(T, convert(Char, c))
                 if nt == nnucleotide(T)
                     # manually inlined: ns[i] = true
                     d = (idx - 1) >>> 6
@@ -180,6 +190,7 @@ function NucleotideSequence{T<:Nucleotide}(::Type{T}, seq::Union(String, Vector{
                 else
                     data[i] |= convert(Uint64, nt) << shift
                 end
+
                 idx += 1
                 shift += 2
             end
@@ -202,14 +213,17 @@ end
 typealias DNASequence NucleotideSequence{DNANucleotide}
 DNASequence() = NucleotideSequence(DNANucleotide)
 DNASequence(other::NucleotideSequence, part::UnitRange) = NucleotideSequence(DNANucleotide, other, part)
-DNASequence(seq::Union(Vector{Uint8}, String)) = NucleotideSequence(DNANucleotide, seq)
-DNASequence(seq::Union(Vector{Uint8}, String), startpos::Int, endpos::Int) = NucleotideSequence(DNANucleotide, seq, startpos, endpos)
+DNASequence(seq::Union(Vector{Uint8}, String)) =
+NucleotideSequence(DNANucleotide, seq)
+DNASequence(seq::Union(Vector{Uint8}, String), startpos::Int, endpos::Int, unsafe::Bool=false) = NucleotideSequence(DNANucleotide, seq, startpos, endpos,
+unsafe)
 
 typealias RNASequence NucleotideSequence{RNANucleotide}
 RNASequence() = NucleotideSequence(RNANucleotide)
 RNASequence(other::NucleotideSequence, part::UnitRange) = NucleotideSequence(RNANucleotide, other, part)
 RNASequence(seq::Union(Vector{Uint8}, String)) = NucleotideSequence(RNANucleotide, seq)
-RNASequence(seq::Union(Vector{Uint8}, String), startpos::Int, endpos::Int) = NucleotideSequence(RNANucleotide, seq, startpos, endpos)
+RNASequence(seq::Union(Vector{Uint8}, String), startpos::Int, endpos::Int,
+unsafe::Bool=false) = NucleotideSequence(RNANucleotide, seq, startpos, endpos, unsafe)
 
 
 # Conversion
