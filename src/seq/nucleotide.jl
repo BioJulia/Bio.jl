@@ -170,16 +170,27 @@ end
 # represented with an N mask BitArray. If the ns[i] bit is set, then the
 # sequence may have any nucleotide at that position and it must be ignored.
 #
-# Sequences are immutable by convention. Low-level functions will mutate the
-# underlying data, any user-facing function that does so should have `unsafe` in
-# the name. Immutability allows two sequences to share the same underlying data,
-# so that subsequences can be initialized without significant copying or
-# allocation.
-
+# Sequences are either explicitly immutable or mutable. Immutable sequences have
+# the benefit that subsequence operations (`seq[i:j]`) are cheap, since they
+# share the underlying data and do not copy anything. Mutable sequences may be
+# mutated, but as a consequence subsequences copy data rather than reference it.
+#
+# Sequences can be converted between mutable and immutable using `mutable!` and
+# `immutable!`, respectively. Converting from mutable to immutable is cheap: it
+# only flips the `mutable` flag. The converse, immutable to mutable, is cheap
+# *if* the sequence is not a subsequence and has no subsequences, otherwise it
+# must make a copy of the data.
+#
 type NucleotideSequence{T<:Nucleotide}
     data::Vector{Uint64} # 2-bit encoded sequence
     ns::BitVector        # 'N' mask
     part::UnitRange{Int} # interval within `data` and `ns` defining the (sub)sequence
+    mutable::Bool        # true if the sequence can be safely mutated
+
+    # true if this was constructed as a subsequence of another sequence or if
+    # subsequences were constructed from this sequence. When this is true, we
+    # need to copy the data to convert from 
+    hasrelatives::Bool
 end
 
 
@@ -192,7 +203,8 @@ end
 
 Construct an empty nucleotide sequence of the given type
 """
-NucleotideSequence{T<:Nucleotide}(::Type{T}) = NucleotideSequence{T}(zeros(Uint64, 0), BitVector(0), 1:0)
+NucleotideSequence{T<:Nucleotide}(::Type{T}; mutable::Bool=false) =
+    NucleotideSequence{T}(zeros(Uint64, 0), BitVector(0), 1:0, mutable, false)
 
 
 """
@@ -200,13 +212,30 @@ NucleotideSequence{T<:Nucleotide}(::Type{T}) = NucleotideSequence{T}(zeros(Uint6
 
 Construct a subsequence of the given type from another nucleotide sequence
 """
-function NucleotideSequence{T<:Nucleotide}(::Type{T}, other::NucleotideSequence, part::UnitRange)
+# Construct a subsequence of another nucleotide sequence
+function NucleotideSequence{T<:Nucleotide}(::Type{T}, other::NucleotideSequence,
+                                           part::UnitRange; mutable::Bool=false)
     start = other.part.start + part.start - 1
     stop = start + length(part) - 1
     if start < other.part.start || stop > other.part.stop
         error("Invalid subsequence range")
     end
-    return NucleotideSequence{T}(other.data, other.ns, start:stop)
+
+    seq = NucleotideSequence{T}(other.data, other.ns, start:stop, mutable, true)
+
+    if other.mutable || mutable
+        orphan!(seq, true)
+    end
+
+    if !other.mutable
+        other.hasrelatives = true
+    end
+
+    if !mutable
+        seq.hasrelatives = true
+    end
+
+    return seq
 end
 
 
@@ -265,7 +294,8 @@ end
 Construct a subsequence from the `seq` string
 """
 function NucleotideSequence{T<:Nucleotide}(::Type{T}, seq::Union(String, Vector{Uint8}),
-                                           startpos::Int, stoppos::Int, unsafe::Bool=false)
+                                           startpos::Int, stoppos::Int,
+                                           unsafe::Bool=false; mutable::Bool=false)
     len = seq_data_len(stoppos - startpos + 1)
     data = zeros(Uint64, len)
     ns = BitArray(stoppos - startpos + 1)
@@ -279,12 +309,13 @@ function NucleotideSequence{T<:Nucleotide}(::Type{T}, seq::Union(String, Vector{
         @encode_seq convert(T, convert(Char, c))
     end
 
-    return NucleotideSequence{T}(data, ns, 1:(stoppos - startpos + 1))
+    return NucleotideSequence{T}(data, ns, 1:(stoppos - startpos + 1), mutable, false)
 end
 
 
-function NucleotideSequence{T<:Nucleotide}(t::Type{T}, seq::Union(String, Vector{Uint8}))
-    return NucleotideSequence(t, seq, 1, length(seq))
+function NucleotideSequence{T<:Nucleotide}(t::Type{T}, seq::Union(String,
+                                           Vector{Uint8}); mutable::Bool=false)
+    return NucleotideSequence(t, seq, 1, length(seq), mutable=mutable)
 end
 
 
@@ -302,7 +333,7 @@ function NucleotideSequence{T<:Nucleotide}(chunks::NucleotideSequence{T}...)
     datalen = seq_data_len(seqlen)
     data = zeros(Uint64, datalen)
     ns   = BitArray(seqlen)
-    newseq = NucleotideSequence{T}(data, ns, 1:seqlen)
+    newseq = NucleotideSequence{T}(data, ns, 1:seqlen, false, false)
     fill!(ns, false)
 
     pos = 1
@@ -321,7 +352,7 @@ end
 """
 Construct a NucleotideSequence from an array of nucleotides.
 """
-function NucleotideSequence{T<:Nucleotide}(seq::AbstractVector{T})
+function NucleotideSequence{T<:Nucleotide}(seq::AbstractVector{T}; mutable::Bool=false)
     len = seq_data_len(length(seq))
     data = zeros(Uint64, len)
     ns = BitArray(length(seq))
@@ -336,7 +367,29 @@ function NucleotideSequence{T<:Nucleotide}(seq::AbstractVector{T})
         end
     end
 
-    return NucleotideSequence{T}(data, ns, 1:length(seq))
+    return NucleotideSequence{T}(data, ns, 1:length(seq), mutable, false)
+end
+
+# Mutability/Immutability
+# -----------------------
+
+ismutable(seq::NucleotideSequence) = return seq.mutable
+
+
+function mutable!(seq::NucleotideSequence)
+    if !seq.mutable
+        if seq.hasrelatives
+            orphan!(seq, true)
+        end
+        seq.mutable = true
+    end
+    return seq
+end
+
+
+function immutable!(seq::NucleotideSequence)
+    seq.mutable = false
+    return seq
 end
 
 
@@ -351,7 +404,7 @@ function repeat{T<:Nucleotide}(chunk::NucleotideSequence{T}, n::Integer)
     datalen = seq_data_len(seqlen)
     data = zeros(Uint64, datalen)
     ns   = BitArray(seqlen)
-    newseq = NucleotideSequence{T}(data, ns, 1:seqlen)
+    newseq = NucleotideSequence{T}(data, ns, 1:seqlen, false, false)
     fill!(ns, false)
 
     pos = 1
@@ -436,38 +489,51 @@ end
 typealias DNASequence NucleotideSequence{DNANucleotide}
 
 "Construct an empty DNA nucleotide sequence"
-DNASequence() = NucleotideSequence(DNANucleotide)
+DNASequence(; mutable::Bool=false) =
+    NucleotideSequence(DNANucleotide, mutable=mutable)
 
 "Construct a DNA nucleotide subsequence from another sequence"
-DNASequence(other::NucleotideSequence, part::UnitRange) = NucleotideSequence(DNANucleotide, other, part)
+DNASequence(other::NucleotideSequence, part::UnitRange; mutable::Bool=false) =
+    NucleotideSequence(DNANucleotide, other, part, mutable=mutable)
 
 "Construct a DNA nucleotide sequence from a String"
-DNASequence(seq::String) = NucleotideSequence(DNANucleotide, seq)
+DNASequence(seq::String; mutable=false) =
+    NucleotideSequence(DNANucleotide, seq, mutable=mutable)
+
 
 "Construct a DNA nucleotide sequence from other sequences"
 DNASequence(chunk1::DNASequence, chunks::DNASequence...) = NucleotideSequence(chunk1, chunks...)
-DNASequence(seq::Union(Vector{Uint8}, String)) = NucleotideSequence(DNANucleotide, seq)
-DNASequence(seq::Union(Vector{Uint8}, String), startpos::Int, endpos::Int, unsafe::Bool=false) = NucleotideSequence(DNANucleotide, seq, startpos, endpos, unsafe)
-DNASequence(seq::AbstractVector{DNANucleotide}) = NucleotideSequence(seq)
+DNASequence(seq::Union(Vector{Uint8}, String); mutable::Bool=false) =
+    NucleotideSequence(DNANucleotide, seq, mutable=mutable)
+DNASequence(seq::Union(Vector{Uint8}, String), startpos::Int, endpos::Int, unsafe::Bool=false; mutable::Bool=false) =
+    NucleotideSequence(DNANucleotide, seq, startpos, endpos, unsafe, mutable=mutable)
+DNASequence(seq::AbstractVector{DNANucleotide}; mutable::Bool=false) =
+    NucleotideSequence(seq, mutable=mutable)
 
 
 # RNA Sequences
 typealias RNASequence NucleotideSequence{RNANucleotide}
 
 "Construct an empty RNA nucleotide sequence"
-RNASequence() = NucleotideSequence(RNANucleotide)
+RNASequence(; mutable::Bool=false) =
+    NucleotideSequence(RNANucleotide, mutable=mutable)
 
 "Construct a RNA nucleotide subsequence from another sequence"
-RNASequence(other::NucleotideSequence, part::UnitRange) = NucleotideSequence(RNANucleotide, other, part)
+RNASequence(other::NucleotideSequence, part::UnitRange; mutable::Bool=false) =
+    NucleotideSequence(RNANucleotide, other, part, mutable=mutable)
 
 "Construct a RNA nucleotide sequence from a String"
-RNASequence(seq::String) = NucleotideSequence(RNANucleotide, seq)
+RNASequence(seq::String; mutable::Bool=false) =
+    NucleotideSequence(RNANucleotide, seq, mutable=mutable)
 
 "Construct a RNA nucleotide sequence from other sequences"
 RNASequence(chunk1::RNASequence, chunks::RNASequence...) = NucleotideSequence(chunk1, chunks...)
-RNASequence(seq::Union(Vector{Uint8}, String)) = NucleotideSequence(RNANucleotide, seq)
-RNASequence(seq::Union(Vector{Uint8}, String), startpos::Int, endpos::Int, unsafe::Bool=false) = NucleotideSequence(RNANucleotide, seq, startpos, endpos, unsafe)
-RNASequence(seq::AbstractVector{RNANucleotide}) = NucleotideSequence(seq)
+RNASequence(seq::Union(Vector{Uint8}, String); mutable::Bool=false) =
+    NucleotideSequence(RNANucleotide, seq, mutable=mutable)
+RNASequence(seq::Union(Vector{Uint8}, String), startpos::Int, endpos::Int, unsafe::Bool=false; mutable::Bool=false) =
+    NucleotideSequence(RNANucleotide, seq, startpos, endpos, unsafe, mutable=mutable)
+RNASequence(seq::AbstractVector{RNANucleotide}; mutable::Bool=false) =
+    NucleotideSequence(seq, mutable=mutable)
 
 
 # Conversion
@@ -487,11 +553,19 @@ convert(::Type{String}, seq::NucleotideSequence) = convert(String, [convert(Char
 
 # Convert between RNA and DNA
 
-"Convert a DNASequence to a RNASequence"
-convert(::Type{RNASequence}, seq::DNASequence) = RNASequence(seq.data, seq.ns, seq.part)
 
-"Convert a RNASequence to a DNASequence"
-convert(::Type{DNASequence}, seq::RNASequence) = DNASequence(seq.data, seq.ns, seq.part)
+convert{T}(::Type{NucleotideSequence{T}}, seq::NucleotideSequence{T}) = seq
+
+
+"Convert a DNASequence to a RNASequence and vice versa"
+function convert{T}(::Type{NucleotideSequence{T}}, seq::NucleotideSequence)
+    newseq = NucleotideSequence{T}(seq.data, seq.ns, seq.part, seq.mutable, seq.hasrelatives)
+    if seq.mutable
+        orphan!(newseq)
+        newseq.mutable = false
+    end
+    return newseq
+end
 
 
 # Basic Functions
@@ -503,7 +577,9 @@ endof(seq::NucleotideSequence)  = length(seq)
 # Pretting printing of sequences.
 function show{T}(io::IO, seq::NucleotideSequence{T})
     len = length(seq)
-    write(io, "$(string(len))nt ", T == DNANucleotide ? "DNA" : "RNA", " Sequence\n ")
+    write(io, "$(string(len))nt ",
+          seq.mutable ? "Mutable " : "",
+          T == DNANucleotide ? "DNA" : "RNA", " Sequence\n ")
 
     # don't show more than this many characters to avoid filling the screen
     # with junk
@@ -563,6 +639,32 @@ end
 getindex{T}(seq::NucleotideSequence{T}, r::UnitRange) = NucleotideSequence{T}(seq, r)
 
 
+function setindex!{T}(seq::NucleotideSequence{T}, nt::T, i::Integer)
+    if !seq.mutable
+        error("Cannot mutate an immutable sequence. Call `mutable!(seq)` first.")
+    end
+    if i < 1 || i > length(seq)
+        throw(BoundsError())
+    end
+
+    d, r = divrem(i - 1, 32)
+    if nt == nnucleotide(T)
+        seq.ns[i] = true
+        seq.data[d + 1] $= (@compat UInt64(0b11)) << (2*r)
+    else
+        seq.ns[i] = false
+        seq.data[d + 1] =
+            (seq.data[d + 1] $ ((@compat UInt64(0b11)) << (2*r))) |
+                (convert(Uint64, nt) << (2*r))
+    end
+    return nt
+end
+
+setindex!{T}(seq::NucleotideSequence{T}, nt::Char, i::Integer) =
+    setindex!(seq, convert(T, nt), i)
+
+
+
 # Replace a NucleotideSequence's data with a copy, copying only what's needed.
 #
 # If a sequence's starting position within its data != 1, this function
@@ -600,6 +702,7 @@ function orphan!{T}(seq::NucleotideSequence{T}, reorphan=false)
     seq.data = data
     seq.ns   = seq.ns[seq.part.start:seq.part.stop]
     seq.part = 1:length(seq.part)
+    seq.hasrelatives = false
     return seq
 end
 
@@ -610,7 +713,8 @@ end
 # never have to do this. It's useful only for low-level algorithms like
 # `reverse` which actually do make a copy and modify the copy in
 # place.
-copy{T}(seq::NucleotideSequence{T}) = orphan!(NucleotideSequence{T}(seq.data, seq.ns, seq.part), true)
+copy{T}(seq::NucleotideSequence{T}) =
+    orphan!(NucleotideSequence{T}(seq.data, seq.ns, seq.part, seq.mutable, seq.hasrelatives), true)
 
 
 # Iterating throug nucleotide sequences
@@ -709,7 +813,7 @@ function reverse{T}(seq::NucleotideSequence{T})
         i += 1
     end
 
-    return NucleotideSequence{T}(data, reverse(seq.ns), seq.part)
+    return NucleotideSequence{T}(data, reverse(seq.ns), seq.part, seq.mutable, false)
 end
 
 # Return the reverse complement of seq
@@ -1040,7 +1144,7 @@ convert{T}(::Type{Kmer{T}}, seq::NucleotideSequence{T}) = convert(Kmer{T, length
 function convert{T, K}(::Type{NucleotideSequence{T}}, x::Kmer{T, K})
     ns = BitVector(K)
     fill!(ns, false)
-    return NucleotideSequence{T}([convert(Uint64, x)], ns, 1:K)
+    return NucleotideSequence{T}([convert(Uint64, x)], ns, 1:K, false, false)
 end
 
 "Convert a Kmer to a NucleotideSequence"
