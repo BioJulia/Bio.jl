@@ -207,30 +207,43 @@ end
 `NucleotideSequence(DNANucleotide|RNANucleotide, seq::String)`
 
 Construct a subsequence from the `seq` string""" ->
-function NucleotideSequence{T<:Nucleotide}(::Type{T}, seq::String)
-    len  = seq_data_len(length(seq))
+# Construct a sequence from a string
+function NucleotideSequence{T<:Nucleotide}(::Type{T}, seq::Union(String, Vector{Uint8}),
+                                           startpos::Int, stoppos::Int)
+    len = seq_data_len(stoppos - startpos + 1)
     data = zeros(Uint64, len)
-    ns   = BitArray(length(seq))
+    ns = BitArray(stoppos - startpos + 1)
     fill!(ns, false)
 
-    j = start(seq)
+    j = startpos
     idx = 1
-    @inbounds for i in 1:length(data)
-        shift = 0
-        while shift < 64 && !done(seq, j)
-            c, j = next(seq, j)
-            nt   = convert(T, c)
-            if nt == nnucleotide(T)
-                ns[idx] = true
-            else
-                data[i] |= convert(Uint64, nt) << shift
+    @inbounds begin
+        for i in 1:length(data)
+            shift = 0
+            while shift < 64 && j <= stoppos
+                c = seq[j]
+                j += 1
+                nt = convert(T, convert(Char, c))
+                if nt == nnucleotide(T)
+                    # manually inlined: ns[i] = true
+                    d = (idx - 1) >>> 6
+                    r = (idx - 1) & 63
+                    ns.chunks[d + 1] |= (@compat UInt64(1)) << r
+                else
+                    data[i] |= convert(Uint64, nt) << shift
+                end
+                idx += 1
+                shift += 2
             end
-            idx += 1
-            shift += 2
         end
     end
 
-    return NucleotideSequence{T}(data, ns, 1:length(seq))
+    return NucleotideSequence{T}(data, ns, 1:(stoppos - startpos + 1))
+end
+
+
+function NucleotideSequence{T<:Nucleotide}(t::Type{T}, seq::Union(String, Vector{Uint8}))
+    return NucleotideSequence(t, seq, 1, length(seq))
 end
 
 
@@ -350,7 +363,6 @@ function unsafe_copy!{T}(dest::NucleotideSequence{T}, pos::Int, src::NucleotideS
 end
 
 
-
 # Aliases and contructors
 # -----------------------
 
@@ -368,6 +380,8 @@ DNASequence(seq::String) = NucleotideSequence(DNANucleotide, seq)
 
 @doc doc"Construct a DNA nucleotide sequence from other sequences" ->
 DNASequence(chunk1::DNASequence, chunks::DNASequence...) = NucleotideSequence(chunk1, chunks...)
+DNASequence(seq::Union(Vector{Uint8}, String)) = NucleotideSequence(DNANucleotide, seq)
+DNASequence(seq::Union(Vector{Uint8}, String), startpos::Int, endpos::Int) = NucleotideSequence(DNANucleotide, seq, startpos, endpos)
 
 
 # RNA Sequences
@@ -384,6 +398,8 @@ RNASequence(seq::String) = NucleotideSequence(RNANucleotide, seq)
 
 @doc doc"Construct a RNA nucleotide sequence from other sequences" ->
 RNASequence(chunk1::RNASequence, chunks::RNASequence...) = NucleotideSequence(chunk1, chunks...)
+RNASequence(seq::Union(Vector{Uint8}, String)) = NucleotideSequence(RNANucleotide, seq)
+RNASequence(seq::Union(Vector{Uint8}, String), startpos::Int, endpos::Int) = NucleotideSequence(RNANucleotide, seq, startpos, endpos)
 
 
 # Conversion
