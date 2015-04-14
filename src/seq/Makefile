@@ -1,0 +1,21 @@
+
+ # Run ragel to regenerate parsers after updating the .rl source file
+
+parsers=fasta.jl fastq.jl
+
+all: ${parsers}
+
+clean:
+	rm -f ${parsers}
+
+%.jl: %.rl
+	ragel -U -G2 $<
+
+
+# TODO: dumping DFA graphs is currently broken on ragel 7.0, so I'm using ragel 6.8
+%.dot: %.rl
+	~/src/ragel-6.8/ragel/ragel -p -V $< > $@
+
+%.svg: %.dot
+	dot -Tsvg < $< > $@
+

@@ -66,7 +66,6 @@ end
 const aa_to_char = [
     'A', 'R', 'N', 'D', 'C', 'Q', 'E', 'G', 'H', 'I',
     'L', 'K', 'M', 'F', 'P', 'S', 'T', 'W', 'Y', 'V', 'X' ]
-
 convert(::Type{Char}, aa::AminoAcid) = aa_to_char[convert(Uint8, aa) + 1]
 
 
@@ -114,15 +113,22 @@ function AminoAcidSequence(other::AminoAcidSequence, part::UnitRange)
     return AminoAcidSequence(other.data, part)
 end
 
+
 # Construct of a subsequence from another amino acid sequence
-function AminoAcidSequence(seq::String)
-    len = length(seq)
+function AminoAcidSequence(seq::Union(Vector{Uint8}, String),
+                           startpos::Int, endpos::Int, unsafe::Bool=false)
+    len = endpos - startpos + 1
     data = Array(AminoAcid, len)
-    for (i, c) in enumerate(seq)
-        data[i] = convert(AminoAcid, c)
+    for (i, j) in enumerate(startpos:endpos)
+        data[i] = convert(AminoAcid, convert(Char, seq[j]))
     end
 
     return AminoAcidSequence(data, 1:len)
+end
+
+
+function AminoAcidSequence(seq::Union(Vector{Uint8}, String))
+    return AminoAcidSequence(seq, 1, length(seq))
 end
 
 
