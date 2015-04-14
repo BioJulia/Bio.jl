@@ -158,10 +158,53 @@ function NucleotideSequence{T<:Nucleotide}(::Type{T}, other::NucleotideSequence,
     return NucleotideSequence{T}(other.data, other.ns, part)
 end
 
+
+# Faster divrem(n, 32)
+function divrem32(n::Integer)
+    return (n >> 5, n & 0b11111)
+end
+
+
+# Faster divrem(n, 64)
+function divrem64(n::Integer)
+    return (n >> 6, n & 0b111111)
+end
+
+
 # Return the number of Uint64s needed to represent a sequence of length n
 function seq_data_len(n::Integer)
-    d, r = divrem(n, 32)
+    d, r = divrem32(n)
     return d + (r > 0 ? 1 : 0)
+end
+
+
+# This is the body of the NucleotideSequence constructor below. It's separated
+# into a macro so we can generate two versions depending on wether the `unsafe`
+# flag is set.
+macro encode_seq(nt_convert_expr)
+    quote
+        @inbounds begin
+            for i in 1:length(data)
+                shift = 0
+                while shift < 64 && j <= stoppos
+                    c = seq[j]
+                    j += 1
+                    nt = $(nt_convert_expr)
+                    if nt == nnucleotide(T)
+                        # manually inlined: ns[i] = true
+                        d = (idx - 1) >>> 6
+                        r = (idx - 1) & 63
+                        ns.chunks[d + 1] |= (@compat UInt64(1)) << r
+                    else
+                        data[i] |= convert(Uint64, nt) << shift
+                    end
+
+                    idx += 1
+                    shift += 2
+                end
+            end
+        end
+    end
 end
 
 
@@ -175,26 +218,10 @@ function NucleotideSequence{T<:Nucleotide}(::Type{T}, seq::Union(String, Vector{
 
     j = startpos
     idx = 1
-    @inbounds begin
-        for i in 1:length(data)
-            shift = 0
-            while shift < 64 && j <= stoppos
-                c = seq[j]
-                j += 1
-                nt = unsafe ? unsafe_ascii_byte_to_nucleotide(T, c) : convert(T, convert(Char, c))
-                if nt == nnucleotide(T)
-                    # manually inlined: ns[i] = true
-                    d = (idx - 1) >>> 6
-                    r = (idx - 1) & 63
-                    ns.chunks[d + 1] |= (@compat UInt64(1)) << r
-                else
-                    data[i] |= convert(Uint64, nt) << shift
-                end
-
-                idx += 1
-                shift += 2
-            end
-        end
+    if unsafe
+        @encode_seq unsafe_ascii_byte_to_nucleotide(T, c)
+    else
+        @encode_seq convert(T, convert(Char, c))
     end
 
     return NucleotideSequence{T}(data, ns, 1:(stoppos - startpos + 1))
@@ -289,7 +316,7 @@ end
 
 # Get the nucleotide at position i, ignoring the N mask.
 function getnuc(T::Type, data::Vector{Uint64}, i::Integer)
-    d, r = divrem(i - 1, 32)
+    d, r = divrem32(i - 1)
     return convert(T, convert(Uint8, (data[d + 1] >>> (2*r)) & 0b11))
 end
 
@@ -326,7 +353,7 @@ function orphan!{T}(seq::NucleotideSequence{T}, reorphan=false)
     end
 
     data   = zeros(Uint64, seq_data_len(length(seq)))
-    d0, r0 = divrem(seq.part.start - 1, 32)
+    d0, r0 = divrem32(seq.part.start - 1)
 
     h = 64 - 2*r0
     k = 2*r0
@@ -465,7 +492,7 @@ npositions(seq::NucleotideSequence)        = SequenceNIterator(seq)
 # Return any position past the end of the sequence if there are no more Ns.
 #
 function nextn(it::SequenceNIterator, i)
-    d, r = divrem(i - 1, 64)
+    d, r = divrem64(i - 1)
     while d < length(it.ns.chunks) && it.ns.chunks[d + 1] >>> r == 0 && d * 64 < it.part.stop
         d += 1
         r  = 0
@@ -493,7 +520,7 @@ end
 start(it::SequenceNIterator) = nextn(it, it.part.start)
 
 function next(it::SequenceNIterator, i)
-    d, r = divrem(i - 1, 64)
+    d, r = divrem64(i - 1)
     next_i = nextn(it, i + 1)
     return i + it.part.start - 1, next_i
 end
@@ -554,7 +581,7 @@ function mismatches{T}(a::NucleotideSequence{T}, b::NucleotideSequence{T},
     end
 
     # Count mismatches, ignoring the presence of 'N's in the sequence.
-    d0, r0 = divrem(b.part.start - 1, 64)
+    d0, r0 = divrem64(b.part.start - 1)
     h = 64 - r0
     k = r0
 
@@ -901,7 +928,7 @@ function nextkmer{T, K}(it::EachKmerIterator{T, K},
     nit_state = state.nit_state
 
     shift = 2 * (K - 1)
-    d, r = divrem(2 * (it.seq.part.start + i - 2), 64)
+    d, r = divrem64(2 * (it.seq.part.start + i - 2))
     while i <= length(it.seq)
         while next_n_pos < i
             if done(it.nit, nit_state)
@@ -1004,7 +1031,7 @@ count_g(x::Uint64) = count_ones(((x >>> 1) & (~x)) & 0x5555555555555555)
 count_t(x::Uint64) = count_ones((x    & (x >>> 1)) & 0x5555555555555555)
 
 function NucleotideCounts{T}(seq::NucleotideSequence{T})
-    dn, rn = divrem(seq.part.start - 1, 64)
+    dn, rn = divrem64(seq.part.start - 1)
 
     d = 2*dn
     r = 2*dn
