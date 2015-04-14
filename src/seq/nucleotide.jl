@@ -222,7 +222,7 @@ function show{T}(io::IO, seq::NucleotideSequence{T})
 
     # don't show more than this many characters to avoid filling the screen
     # with junk
-    const maxcount = 50
+    const maxcount = Base.tty_size()[2] - 2
     if len > maxcount
         for nt in seq[1:div(maxcount, 2) - 1]
             write(io, convert(Char, nt))
