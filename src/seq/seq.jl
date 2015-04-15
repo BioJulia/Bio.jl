@@ -4,7 +4,7 @@ using Compat
 using Base.Intrinsics
 
 import Base: convert, getindex, show, length, start, next, done, copy, reverse,
-             show, endof, ==, isless
+             show, endof, ==, isless, clipboard
 
 export Nucleotide, DNANucleotide, RNANucleotide,
        DNA_A, DNA_C, DNA_G, DNA_T, DNA_N,
@@ -20,6 +20,7 @@ export Nucleotide, DNANucleotide, RNANucleotide,
 include("nucleotide.jl")
 include("aminoacid.jl")
 include("geneticcode.jl")
+include("util.jl")
 
 
 # TODO: pattern (pseudo-sequences with ambiguity codes, etc)
