@@ -39,33 +39,49 @@ function clearClipping!(x::ArrayGaps)
   x.clip = 0:length(x.source)
 end
 
+function viewPosition(x::ArrayGaps, position::Int)
+  viewposition = sourceposition = position - x.clip.start
+  nextBlock = start(x.array)
+  currentBlockSize, nextBlock = next(x.array, nextBlock)
+  while true
+    if done(x.array, nextBlock)
+      return viewposition
+    end
+    viewposition += currentBlockSize
+    currentBlockSize, nextBlock = next(x.array, nextBlock)
+    if sourceposition < currentBlockSize
+      return viewposition
+    end
+    sourceposition -= currentBlockSize
+    currentBlockSize, nextBlock = next(x.array, nextBlock)
+  end
+end
+
+
 function sourcePosition(x::ArrayGaps, position::Int)
   # Initialise iteration through the data array.
   nextBlock = start(x.array)
   currentBlockSize, nextBlock = next(x.array, nextBlock)
-  
   # Initialise variables representing the remaining distance from the source position.
   # And the distance covered across the source position. 
   remaining = position
-  covered = x.clipBeginPos
-
+  covered = x.clip.start
   while true
     if done(x.array, nextBlock)
       return covered
     end
     if remaining <= currentBlockSize
-      return sourcePos
+      return covered
     end
     remaining -= currentBlockSize
     currentBlockSize, nextBlock = next(x.array, nextBlock)
     if remaining <= currentBlockSize
-      return sourcePos + viewPos
+      return covered + remaining
     end
     covered += currentBlockSize
     remaining -= currentBlockSize
     currentBlockSize, nextBlock = next(x.array, nextBlock)
   end
-
 end
 
 ACCTGAC
