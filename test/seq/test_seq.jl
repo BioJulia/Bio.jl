@@ -317,6 +317,28 @@ facts("Nucleotides") do
                     @fact convert(RNASequence, DNASequence("ACGTN")) => rna"ACGUN"
                     @fact convert(DNASequence, RNASequence("ACGUN")) => dna"ACGTN"
                 end
+
+                context("Concatenation") do
+                    function check_concatenation(::Type{DNANucleotide}, n)
+                        chunks = [random_dna(rand(100:300)) for i in 1:n]
+                        parts = Any[]
+                        for i in 1:n
+                            start = rand(1:length(chunks[i]))
+                            stop = rand(start:length(chunks[i]))
+                            push!(parts, start:stop)
+                        end
+
+                        str = string([chunk[parts[i]]
+                                      for (i, chunk) in enumerate(chunks)]...)
+
+                        seq = DNASequence([DNASequence(chunk)[parts[i]]
+                                           for (i, chunk) in enumerate(chunks)]...)
+
+                        return convert(String, seq) == uppercase(str)
+                    end
+
+                    @fact all([check_concatenation(DNANucleotide, rand(1:10)) for _ in 1:100]) => true
+                end
             end
 
             context("Equality") do
@@ -981,6 +1003,28 @@ facts("Aminoacids") do
             end
 
             # Check creation of empty
+        end
+
+        context("Concatenation") do
+            function check_concatenation(n)
+                chunks = [random_aa(rand(100:300)) for i in 1:n]
+                parts = Any[]
+                for i in 1:n
+                    start = rand(1:length(chunks[i]))
+                    stop = rand(start:length(chunks[i]))
+                    push!(parts, start:stop)
+                end
+
+                str = string([chunk[parts[i]]
+                              for (i, chunk) in enumerate(chunks)]...)
+
+                seq = AminoAcidSequence([AminoAcidSequence(chunk)[parts[i]]
+                                         for (i, chunk) in enumerate(chunks)]...)
+
+                return convert(String, seq) == uppercase(str)
+            end
+
+            @fact all([check_concatenation(rand(1:10)) for _ in 1:100]) => true
         end
 
         context("Copy") do

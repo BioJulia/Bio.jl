@@ -148,6 +148,25 @@ function AminoAcidSequence(seq::String)
     return AminoAcidSequence(data, 1:len)
 end
 
+@doc """
+Construct an amino acid sequence by concatenating other sequences.
+""" ->
+function AminoAcidSequence(chunks::AminoAcidSequence...)
+    seqlen = 0
+    for chunk in chunks
+        seqlen += length(chunk)
+    end
+
+    data = Array(AminoAcid, seqlen)
+    pos = 1
+    for chunk in chunks
+        copy!(data, pos, chunk.data, chunk.part.start, length(chunk))
+        pos += length(chunk)
+    end
+
+    return AminoAcidSequence(data, 1:seqlen)
+end
+
 
 # Conversion from/to String
 # -------------------------

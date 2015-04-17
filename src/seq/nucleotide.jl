@@ -181,6 +181,98 @@ function NucleotideSequence{T<:Nucleotide}(::Type{T}, seq::String)
     return NucleotideSequence{T}(data, ns, 1:length(seq))
 end
 
+
+@doc """
+Construct a nucleotide sequence by concatenating other sequences.
+""" ->
+function NucleotideSequence{T<:Nucleotide}(chunks::NucleotideSequence{T}...)
+    seqlen = 0
+    for chunk in chunks
+        seqlen += length(chunk)
+    end
+
+    datalen = seq_data_len(seqlen)
+    data = zeros(Uint64, datalen)
+    ns   = BitArray(seqlen)
+    newseq = NucleotideSequence{T}(data, ns, 1:seqlen)
+    fill!(ns, false)
+
+    pos = 1
+    for chunk in chunks
+        unsafe_copy!(newseq, pos, chunk)
+        pos += length(chunk)
+    end
+
+    return newseq
+end
+
+
+@doc """
+Copy `src` to `dest` starting at position `pos`.
+
+This is unsafe in the following ways:
+    * Disregards immutability of `dest`
+    * May write a few bases past dest[pos + length(src) - 1]
+    * Doesn't bounds check anything.
+
+It's really only suitable for use in the concatenation constructor.
+
+""" ->
+function Base.unsafe_copy!{T}(dest::NucleotideSequence{T}, pos::Int, src::NucleotideSequence{T})
+    abspos = dest.part.start + pos - 1
+    copy!(dest.ns, abspos, src.ns, src.part.start, length(src))
+
+    d1, r1 = divrem(abspos - 1, 32)
+    d2, r2 = divrem(src.part.start - 1, 32)
+
+    l = 0
+    while l < length(src)
+        if r1 == r2 == 0
+            dest.data[d1+1] = src.data[d2+1]
+        else
+            dest.data[d1+1] |= (src.data[d2+1] >> (2*r2)) << (2*r1)
+        end
+
+        if r1 > r2
+            k = 32 - r1
+            d1 += 1
+            r1 = 0
+            r2 += k
+            l += k
+        elseif r2 > r1
+            k = 32 - r2
+            d2 += 1
+            r2 = 0
+            r1 += k
+            l += k
+        else # r1 == r2
+            k = 32 - r1
+            r1 += k
+            r2 += k
+            if r1 >= 32
+                r1 = 0
+                r2 = 0
+                d1 += 1
+                d2 += 1
+            end
+            l += k
+        end
+    end
+
+    # zero positions that we've overwritten at the end
+    while l - length(src) > 0
+        if r1 == 0
+            r1 = 32
+            d1 -= 1
+        end
+        r1 -= 1
+        l -= 1
+        dest.data[d1+1] &= ~(convert(Uint64, 0b11) << (2*r1))
+    end
+end
+
+
+
 # Aliases and contructors
 # -----------------------
 
@@ -188,11 +280,13 @@ typealias DNASequence NucleotideSequence{DNANucleotide}
 DNASequence() = NucleotideSequence(DNANucleotide)
 DNASequence(other::NucleotideSequence, part::UnitRange) = NucleotideSequence(DNANucleotide, other, part)
 DNASequence(seq::String) = NucleotideSequence(DNANucleotide, seq)
+DNASequence(chunk1::DNASequence, chunks::DNASequence...) = NucleotideSequence(chunk1, chunks...)
 
 typealias RNASequence NucleotideSequence{RNANucleotide}
 RNASequence() = NucleotideSequence(RNANucleotide)
 RNASequence(other::NucleotideSequence, part::UnitRange) = NucleotideSequence(RNANucleotide, other, part)
 RNASequence(seq::String) = NucleotideSequence(RNANucleotide, seq)
+RNASequence(chunk1::RNASequence, chunks::RNASequence...) = NucleotideSequence(chunk1, chunks...)
 
 
 # Conversion
