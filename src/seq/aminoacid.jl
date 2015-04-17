@@ -168,6 +168,29 @@ function AminoAcidSequence(chunks::AminoAcidSequence...)
 end
 
 
+(*)(chunk1::AminoAcidSequence, chunks::AminoAcidSequence...) = AminoAcidSequence(chunk1, chunks...)
+
+
+@doc """
+Construct an amino acid sequence by repeating another sequence.
+""" ->
+function repeat(chunk::AminoAcidSequence, n::Integer)
+    seqlen = n * length(chunk)
+
+    data = Array(AminoAcid, seqlen)
+    pos = 1
+    for i in 1:n
+        copy!(data, pos, chunk.data, chunk.part.start, length(chunk))
+        pos += length(chunk)
+    end
+
+    return AminoAcidSequence(data, 1:seqlen)
+end
+
+
+(^)(chunk::AminoAcidSequence, n::Integer) = repeat(chunk, n::Integer)
+
+
 # Conversion from/to String
 # -------------------------
 convert(::Type{AminoAcidSequence}, seq::String) = AminoAcidSequence(seq)

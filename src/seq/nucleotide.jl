@@ -207,6 +207,34 @@ function NucleotideSequence{T<:Nucleotide}(chunks::NucleotideSequence{T}...)
 end
 
 
+(*){T}(chunk1::NucleotideSequence{T}, chunks::NucleotideSequence{T}...) = NucleotideSequence(chunk1, chunks...)
+
+
+@doc """
+Construct a nucleotide sequence by repeating another sequences.
+""" ->
+function repeat{T<:Nucleotide}(chunk::NucleotideSequence{T}, n::Integer)
+    seqlen = n * length(chunk)
+
+    datalen = seq_data_len(seqlen)
+    data = zeros(Uint64, datalen)
+    ns   = BitArray(seqlen)
+    newseq = NucleotideSequence{T}(data, ns, 1:seqlen)
+    fill!(ns, false)
+
+    pos = 1
+    for i in 1:n
+        unsafe_copy!(newseq, pos, chunk)
+        pos += length(chunk)
+    end
+
+    return newseq
+end
+
+
+(^){T}(chunk::NucleotideSequence{T}, n::Integer) = repeat(chunk, n::Integer)
+
+
 @doc """
 Copy `src` to `dest` starting at position `pos`.
 

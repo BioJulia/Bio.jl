@@ -331,13 +331,27 @@ facts("Nucleotides") do
                         str = string([chunk[parts[i]]
                                       for (i, chunk) in enumerate(chunks)]...)
 
-                        seq = DNASequence([DNASequence(chunk)[parts[i]]
-                                           for (i, chunk) in enumerate(chunks)]...)
+                        seq = *([DNASequence(chunk)[parts[i]]
+                                 for (i, chunk) in enumerate(chunks)]...)
 
                         return convert(String, seq) == uppercase(str)
                     end
 
                     @fact all([check_concatenation(DNANucleotide, rand(1:10)) for _ in 1:100]) => true
+                end
+
+                context("Repitition") do
+                    function check_repitition(::Type{DNANucleotide}, n)
+                        chunk = random_dna(rand(100:300))
+                        start = rand(1:length(chunk))
+                        stop = rand(start:length(chunk))
+
+                        str = chunk[start:stop] ^ n
+                        seq = DNASequence(chunk)[start:stop] ^ n
+                        return convert(String, seq) == uppercase(str)
+                    end
+
+                    @fact all([check_repitition(DNANucleotide, rand(1:10)) for _ in 1:100]) => true
                 end
             end
 
@@ -1018,13 +1032,28 @@ facts("Aminoacids") do
                 str = string([chunk[parts[i]]
                               for (i, chunk) in enumerate(chunks)]...)
 
-                seq = AminoAcidSequence([AminoAcidSequence(chunk)[parts[i]]
-                                         for (i, chunk) in enumerate(chunks)]...)
+                seq = *([AminoAcidSequence(chunk)[parts[i]]
+                         for (i, chunk) in enumerate(chunks)]...)
 
                 return convert(String, seq) == uppercase(str)
             end
 
             @fact all([check_concatenation(rand(1:10)) for _ in 1:100]) => true
+        end
+
+        context("Repitition") do
+            function check_repitition(n)
+                chunk = random_aa(rand(100:300))
+                start = rand(1:length(chunk))
+                stop = rand(start:length(chunk))
+
+                str = chunk[start:stop] ^ n
+                seq = AminoAcidSequence(chunk)[start:stop] ^ n
+
+                return convert(String, seq) == uppercase(str)
+            end
+
+            @fact all([check_repitition(rand(1:10)) for _ in 1:100]) => true
         end
 
         context("Copy") do
