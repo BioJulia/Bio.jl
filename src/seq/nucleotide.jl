@@ -288,14 +288,12 @@ function Base.unsafe_copy!{T}(dest::NucleotideSequence{T}, pos::Int, src::Nucleo
     end
 
     # zero positions that we've overwritten at the end
-    while l - length(src) > 0
+    if l > length(src)
         if r1 == 0
             r1 = 32
             d1 -= 1
         end
-        r1 -= 1
-        l -= 1
-        dest.data[d1+1] &= ~(convert(Uint64, 0b11) << (2*r1))
+        dest.data[d1+1] &= 0xffffffffffffffff >> (2 * (32 - r1 + l - length(src)))
     end
 end
 

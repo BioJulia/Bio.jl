@@ -340,8 +340,8 @@ facts("Nucleotides") do
                     @fact all([check_concatenation(DNANucleotide, rand(1:10)) for _ in 1:100]) => true
                 end
 
-                context("Repitition") do
-                    function check_repitition(::Type{DNANucleotide}, n)
+                context("Repetition") do
+                    function check_repetition(::Type{DNANucleotide}, n)
                         chunk = random_dna(rand(100:300))
                         start = rand(1:length(chunk))
                         stop = rand(start:length(chunk))
@@ -351,7 +351,7 @@ facts("Nucleotides") do
                         return convert(String, seq) == uppercase(str)
                     end
 
-                    @fact all([check_repitition(DNANucleotide, rand(1:10)) for _ in 1:100]) => true
+                    @fact all([check_repetition(DNANucleotide, rand(1:10)) for _ in 1:100]) => true
                 end
             end
 
@@ -1041,8 +1041,8 @@ facts("Aminoacids") do
             @fact all([check_concatenation(rand(1:10)) for _ in 1:100]) => true
         end
 
-        context("Repitition") do
-            function check_repitition(n)
+        context("Repetition") do
+            function check_repetition(n)
                 chunk = random_aa(rand(100:300))
                 start = rand(1:length(chunk))
                 stop = rand(start:length(chunk))
@@ -1053,7 +1053,7 @@ facts("Aminoacids") do
                 return convert(String, seq) == uppercase(str)
             end
 
-            @fact all([check_repitition(rand(1:10)) for _ in 1:100]) => true
+            @fact all([check_repetition(rand(1:10)) for _ in 1:100]) => true
         end
 
         context("Copy") do
