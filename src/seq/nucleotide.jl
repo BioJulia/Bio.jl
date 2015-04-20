@@ -246,7 +246,7 @@ This is unsafe in the following ways:
 It's really only suitable for use in the concatenation constructor.
 
 """ ->
-function Base.unsafe_copy!{T}(dest::NucleotideSequence{T}, pos::Int, src::NucleotideSequence{T})
+function unsafe_copy!{T}(dest::NucleotideSequence{T}, pos::Int, src::NucleotideSequence{T})
     abspos = dest.part.start + pos - 1
     copy!(dest.ns, abspos, src.ns, src.part.start, length(src))
 
