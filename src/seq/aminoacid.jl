@@ -81,7 +81,30 @@ function show(io::IO, aa::AminoAcid)
     end
 end
 
+# lookup table of 20 standard amino acids
+const threeletter_to_aa = @compat Dict(
+    "ALA" => AA_A, "ARG" => AA_R, "ASN" => AA_N, "ASP" => AA_D, "CYS" => AA_C,
+    "GLN" => AA_Q, "GLU" => AA_E, "GLY" => AA_G, "HIS" => AA_H, "ILE" => AA_I,
+    "LEU" => AA_L, "LYS" => AA_K, "MET" => AA_M, "PHE" => AA_F, "PRO" => AA_P,
+    "SER" => AA_S, "THR" => AA_T, "TRP" => AA_W, "TYR" => AA_Y, "VAL" => AA_V,
+)
 
+function parse(::Type{AminoAcid}, s::String)
+    s′ = strip(s)
+    if length(s′) == 1
+        return convert(AminoAcid, s′[1])
+    end
+    try
+        return threeletter_to_aa[uppercase(s′)]
+    catch ex
+        if isa(ex, KeyError)
+            error("invalid amino acid string: \"$s\"")
+        end
+        rethrow()
+    end
+end
+
+# TODO: tryparse
 
 # Amino Acids Sequences
 # =====================

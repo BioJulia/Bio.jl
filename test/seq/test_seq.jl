@@ -1007,6 +1007,53 @@ facts("Aminoacids") do
             end
         end
     end
+
+    context("Parsers") do
+        context("Valid Cases") do
+            # case-insensitive and ignores spaces
+            @fact parse(AminoAcid, "a") => AA_A
+            @fact parse(AminoAcid, "Ala") => AA_A
+            @fact parse(AminoAcid, "aLa ") => AA_A
+            @fact parse(AminoAcid, " alA ") => AA_A
+            @fact parse(AminoAcid, "\tAlA\n") => AA_A
+            @fact parse(AminoAcid, "x") => AA_X
+            @fact parse(AminoAcid, "X") => AA_X
+            aas = [
+                ("A", "ALA", AA_A),
+                ("R", "ARG", AA_R),
+                ("N", "ASN", AA_N),
+                ("D", "ASP", AA_D),
+                ("C", "CYS", AA_C),
+                ("E", "GLU", AA_E),
+                ("Q", "GLN", AA_Q),
+                ("G", "GLY", AA_G),
+                ("H", "HIS", AA_H),
+                ("I", "ILE", AA_I),
+                ("L", "LEU", AA_L),
+                ("K", "LYS", AA_K),
+                ("M", "MET", AA_M),
+                ("F", "PHE", AA_F),
+                ("P", "PRO", AA_P),
+                ("S", "SER", AA_S),
+                ("T", "THR", AA_T),
+                ("W", "TRP", AA_W),
+                ("Y", "TYR", AA_Y),
+                ("V", "VAL", AA_V),
+            ]
+            @fact length(aas) => 20
+            for (one, three, aa) in aas
+                @fact parse(AminoAcid, one) => aa
+                @fact parse(AminoAcid, three) => aa
+            end
+        end
+
+        context("Invalid Cases") do
+            @fact_throws parse(AminoAcid, "")
+            @fact_throws parse(AminoAcid, "AL")
+            @fact_throws parse(AminoAcid, "LA")
+            @fact_throws parse(AminoAcid, "ALAA")
+        end
+    end
 end
 
 facts("Translation") do
