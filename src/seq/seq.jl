@@ -4,7 +4,7 @@ using Compat
 using Base.Intrinsics
 
 import Base: convert, getindex, show, length, start, next, done, copy, reverse,
-             show, endof, ==, isless, clipboard
+             show, endof, ==, isless, clipboard, parse
 
 export Nucleotide, DNANucleotide, RNANucleotide,
        DNA_A, DNA_C, DNA_G, DNA_T, DNA_N,

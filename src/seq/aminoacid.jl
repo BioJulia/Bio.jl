@@ -89,7 +89,7 @@ const threeletter_to_aa = @compat Dict(
     "SER" => AA_S, "THR" => AA_T, "TRP" => AA_W, "TYR" => AA_Y, "VAL" => AA_V,
 )
 
-function Base.parse(::Type{AminoAcid}, s::String)
+function parse(::Type{AminoAcid}, s::String)
     s′ = strip(s)
     if length(s′) == 1
         return convert(AminoAcid, s′[1])
