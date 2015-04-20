@@ -81,6 +81,7 @@ function show(io::IO, aa::AminoAcid)
     end
 end
 
+# lookup table of 20 standard amino acids
 const threeletter_to_aa = @compat Dict(
     "ALA" => AA_A, "ARG" => AA_R, "ASN" => AA_N, "ASP" => AA_D, "CYS" => AA_C,
     "GLN" => AA_Q, "GLU" => AA_E, "GLY" => AA_G, "HIS" => AA_H, "ILE" => AA_I,
