@@ -1048,10 +1048,10 @@ facts("Aminoacids") do
         end
 
         context("Invalid Cases") do
-            @fact_throws ErrorException parse(AminoAcid, "")
-            @fact_throws ErrorException parse(AminoAcid, "AL")
-            @fact_throws ErrorException parse(AminoAcid, "LA")
-            @fact_throws ErrorException parse(AminoAcid, "ALAA")
+            @fact_throws parse(AminoAcid, "")
+            @fact_throws parse(AminoAcid, "AL")
+            @fact_throws parse(AminoAcid, "LA")
+            @fact_throws parse(AminoAcid, "ALAA")
         end
     end
 end
