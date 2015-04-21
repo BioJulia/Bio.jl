@@ -84,23 +84,6 @@ function sourcePosition(x::ArrayGaps, position::Int)
   end
 end
 
-ACCTGAC
-|||
-ACC--TG-AC
-1234445667 : SourcePos
-1234567890 : ViewPos
-
-pos = 6
-
-viewpos = 6 , 3 , 1
-
-sourcepos = 2
-            
-
-
-0,3,2,2,1,2
-X X X
-
 # AnchorGaps are more efficient for column wise / site wise access. A binary search can
 # be done to find specific positions.
 
