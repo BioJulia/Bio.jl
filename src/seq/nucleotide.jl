@@ -19,25 +19,25 @@ bitstype 8 RNANucleotide <: Nucleotide
 @doc doc"Convert a Uint8 to a DNANucleotide" ->
 convert(::Type{DNANucleotide}, nt::Uint8) = box(DNANucleotide, unbox(Uint8, nt))
 
-@doc doc"Convert a DNANucletide to a Uint8" ->
+@doc doc"Convert a DNANucleotide to a Uint8" ->
 convert(::Type{Uint8}, nt::DNANucleotide) = box(Uint8, unbox(DNANucleotide, nt))
 
 @doc doc"Convert a Uint8 to a RNANucleotide" ->
 convert(::Type{RNANucleotide}, nt::Uint8) = box(RNANucleotide, unbox(Uint8, nt))
 
-@doc doc"Convert a RNANucletide to a Uint8" ->
+@doc doc"Convert a RNANucleotide to a Uint8" ->
 convert(::Type{Uint8}, nt::RNANucleotide) = box(Uint8, unbox(RNANucleotide, nt))
 
-@doc doc"Convert a RNANucletide to a Uint8" ->
+@doc doc"Convert a RNANucleotide to a Uint8" ->
 convert{T<:Unsigned, S<:Nucleotide}(::Type{T}, nt::S) = box(T, Base.zext_int(T, unbox(S, nt)))
 
-@doc doc"Convert a RNANucletide to a Uint8" ->
+@doc doc"Convert a RNANucleotide to a Uint8" ->
 convert{T<:Unsigned, S<:Nucleotide}(::Type{S}, nt::T) = convert(S, convert(Uint8, nt))
 
 # Nucleotide encoding definition
 # ------------------------------
 
-# DNA Nucletides
+# DNA Nucleotides
 
 @doc doc"DNA Adenine" ->
 const DNA_A = convert(DNANucleotide, 0b000)
@@ -99,7 +99,7 @@ const char_to_dna = [
      DNA_INVALID, DNA_INVALID, DNA_INVALID, DNA_N,       DNA_INVALID, DNA_INVALID,
      DNA_INVALID, DNA_INVALID, DNA_INVALID, DNA_T ]
 
-@doc doc"Convert a Char to a DNANucletide" ->
+@doc doc"Convert a Char to a DNANucleotide" ->
 function convert(::Type{DNANucleotide}, c::Char)
     @inbounds nt = 'A' <= c <= 't' ? char_to_dna[c - 'A' + 1] : DNA_INVALID
     @assert nt != DNA_INVALID error("$(c) is not a valid DNA nucleotide")
@@ -118,7 +118,7 @@ const char_to_rna = [
     RNA_INVALID, RNA_INVALID, RNA_INVALID, RNA_N,       RNA_INVALID, RNA_INVALID,
     RNA_INVALID, RNA_INVALID, RNA_INVALID, RNA_INVALID, RNA_U ]
 
-@doc doc"Convert a Char to a RNANucletide" ->
+@doc doc"Convert a Char to a RNANucleotide" ->
 function convert(::Type{RNANucleotide}, c::Char)
     @inbounds nt = 'A' <= c <= 'u' ? char_to_rna[c - 'A' + 1] : RNA_INVALID
     @assert nt != RNA_INVALID error("$(c) is not a valid RNA nucleotide")
@@ -131,12 +131,12 @@ end
 
 const dna_to_char = ['A', 'C', 'G', 'T', 'N']
 
-@doc doc"Convert a DNANucletide to a Char" ->
+@doc doc"Convert a DNANucleotide to a Char" ->
 convert(::Type{Char}, nt::DNANucleotide) = dna_to_char[convert(Uint8, nt) + 1]
 
 const rna_to_char = ['A', 'C', 'G', 'U', 'N']
 
-@doc doc"Convert a RNANucletide to a Char" ->
+@doc doc"Convert a RNANucleotide to a Char" ->
 convert(::Type{Char}, nt::RNANucleotide) = rna_to_char[convert(Uint8, nt) + 1]
 
 
@@ -191,7 +191,7 @@ NucleotideSequence{T<:Nucleotide}(::Type{T}) = NucleotideSequence{T}(zeros(Uint6
 @doc doc"""
 `NucleotideSequence(DNANucleotide|RNANucleotide, other::NucleotideSequence, part::UnitRange)`
 
-Construct a subsequence from another nucleotide sequence""" ->
+Construct a subsequence of the given type from another nucleotide sequence""" ->
 function NucleotideSequence{T<:Nucleotide}(::Type{T}, other::NucleotideSequence, part::UnitRange)
     start = other.part.start + part.start - 1
     stop = start + length(part) - 1
@@ -299,7 +299,7 @@ Copy `src` to `dest` starting at position `pos`.
 
 This is unsafe in the following ways:
 - Disregards immutability of `dest`
-- May write a few bases past dest[pos + length(src) - 1]
+- May write a few bases past `dest[pos + length(src) - 1]`
 - Doesn't bounds check anything.
 
 It's really only suitable for use in the concatenation constructor.""" ->
@@ -362,7 +362,7 @@ end
 # DNA Sequences
 typealias DNASequence NucleotideSequence{DNANucleotide}
 
-@doc doc"Construct an empty DNA nucletide sequence" ->
+@doc doc"Construct an empty DNA nucleotide sequence" ->
 DNASequence() = NucleotideSequence(DNANucleotide)
 
 @doc doc"Construct a DNA nucleotide subsequence from another sequence" ->
@@ -378,7 +378,7 @@ DNASequence(chunk1::DNASequence, chunks::DNASequence...) = NucleotideSequence(ch
 # RNA Sequences
 typealias RNASequence NucleotideSequence{RNANucleotide}
 
-@doc doc"Construct an empty RNA nucletide sequence" ->
+@doc doc"Construct an empty RNA nucleotide sequence" ->
 RNASequence() = NucleotideSequence(RNANucleotide)
 
 @doc doc"Construct a RNA nucleotide subsequence from another sequence" ->
@@ -577,7 +577,11 @@ function unsafe_complement!(seq::NucleotideSequence)
     return seq
 end
 
-# Nucleotide complement
+
+@doc doc"""
+`complement(seq::NucleotideSequence)`
+
+The nucleotide complement of the sequence `seq`""" ->
 complement(seq::NucleotideSequence) = unsafe_complement!(copy(seq))
 
 # Nucleotide reverse. Reverse a kmer stored in a Uint64.
@@ -590,7 +594,10 @@ function nucrev(x::Uint64)
      return x
 end
 
-# Return a reversed copy of seq
+@doc doc"""
+`reverse(seq::NucleotideSequence)`
+
+Reversed copy of the nucleotide sequence `seq`""" ->
 function reverse{T}(seq::NucleotideSequence{T})
     orphan!(seq)
 
@@ -616,6 +623,11 @@ function reverse{T}(seq::NucleotideSequence{T})
 end
 
 # Return the reverse complement of seq
+# Return a reversed copy of seq
+@doc doc"""
+`reverse_complement(seq::NucleotideSequence)`
+
+Reversed complement of the nucleotide sequence `seq`""" ->
 reverse_complement(seq::NucleotideSequence) = unsafe_complement!(reverse(seq))
 
 
@@ -686,30 +698,33 @@ end
 # Mismatch counting
 # -----------------
 
-# compute the mismatch count between two kmers stored in x, y
+@doc doc"Mismatch count between two kmers" ->
 function nucmismatches(x::Uint64, y::Uint64)
     xyxor = x $ y
     return count_ones((xyxor & 0x5555555555555555) | ((xyxor & 0xAAAAAAAAAAAAAAAA) >>> 1))
 end
 
-# return a mask of the first k bits of a Uint64
+@doc doc"Mask of the first `k` bits of a Uint64" ->
 function makemask(k::Integer)
     return 0xffffffffffffffff >> (64 - k)
 end
 
-# Return the number of mismatches between a and b.
-#
-# If a and b are of differing lengths, only the first min(length(a), length(b))
-# nucleotides are compared.
-#
-# Args:
-#   a: first sequence to compare
-#   b: second sequence to compare
-#   nbatches: if true, N matches anything, if false, N matches only itself.
-#
-# Returns:
-#   The number of mismatches.
-#
+@doc doc"""
+`mismatches(a::NucleotideSequence, b::NucleotideSequence, [nmatches=false])`
+
+Return the number of mismatches between `a` and `b`.
+
+If `a` and `b` are of differing lengths, only the first `min(length(a), length(b))`
+nucleotides are compared.
+
+# Arguments
+* `a`: first sequence to compare
+* `b`: second sequence to compare
+* `nbatches`: if true, N matches anything, if false, N matches only itself.
+
+# Returns
+The number of mismatches
+""" ->
 function mismatches{T}(a::NucleotideSequence{T}, b::NucleotideSequence{T},
                        nmatches::Bool=false)
 
@@ -837,13 +852,23 @@ typealias Codon RNAKmer{3}
 # ----------
 
 # Conversion to/from Uint64
+
+@doc doc"Convert a Uint64 to a DNAKmer" ->
 convert{K}(::Type{DNAKmer{K}}, x::Uint64) = box(DNAKmer{K}, unbox(Uint64, x))
+
+@doc doc"Convert a Uint64 to a RNAKmer" ->
 convert{K}(::Type{RNAKmer{K}}, x::Uint64) = box(RNAKmer{K}, unbox(Uint64, x))
+
+@doc doc"Convert a DNAKmer to a Uint64" ->
 convert{K}(::Type{Uint64}, x::DNAKmer{K})       = box(Uint64, unbox(DNAKmer{K}, x))
+
+@doc doc"Convert a RNAKmer to a Uint64" ->
 convert{K}(::Type{Uint64}, x::RNAKmer{K})       = box(Uint64, unbox(RNAKmer{K}, x))
 
 
-# Convert from String
+# Conversion to/from String
+
+@doc doc"Convert a String to a Kmer" ->
 function convert{T, K}(::Type{Kmer{T, K}}, seq::String)
     @assert length(seq) <= 32 error("Cannot construct a K-mer longer than 32nt.")
     @assert length(seq) == K error("Cannot construct a $(K)-mer from a string of length $(length(seq))")
@@ -861,13 +886,16 @@ function convert{T, K}(::Type{Kmer{T, K}}, seq::String)
     return convert(Kmer{T, K}, x)
 end
 
+@doc doc"Convert a String to a Kmer" ->
 convert{T}(::Type{Kmer{T}}, seq::String) = convert(Kmer{T, length(seq)}, seq)
 
-# Convert to String
+@doc doc"Convert a Kmer to a String" ->
 convert{T, K}(::Type{String}, seq::Kmer{T, K}) = convert(String, [convert(Char, x) for x in seq])
 
 
-# Convert from NucleotideSequence
+# Conversion to/from NucleotideSequence
+
+@doc doc"Convert a NucleotideSequence to a Kmer" ->
 function convert{T, K}(::Type{Kmer{T, K}}, seq::NucleotideSequence{T})
     @assert length(seq) <= 32 error("Cannot construct a K-mer longer than 32nt.")
     @assert length(seq) == K error("Cannot construct a $(K)-mer from a NucleotideSequence of length $(length(seq))")
@@ -884,16 +912,20 @@ function convert{T, K}(::Type{Kmer{T, K}}, seq::NucleotideSequence{T})
     return convert(Kmer{T, K}, x)
 end
 
+@doc doc"Convert a NucleotideSequence to a Kmer" ->
 convert{T}(::Type{Kmer}, seq::NucleotideSequence{T})    = convert(Kmer{T, length(seq)}, seq)
+
+@doc doc"Convert a NucleotideSequence to a Kmer" ->
 convert{T}(::Type{Kmer{T}}, seq::NucleotideSequence{T}) = convert(Kmer{T, length(seq)}, seq)
 
-# Convert to NucleotideSequence
+@doc doc"Convert a Kmer to a NucleotideSequence" ->
 function convert{T, K}(::Type{NucleotideSequence{T}}, x::Kmer{T, K})
     ns = BitVector(K)
     fill!(ns, false)
     return NucleotideSequence{T}([convert(Uint64, x)], ns, 1:K)
 end
 
+@doc doc"Convert a Kmer to a NucleotideSequence" ->
 convert{T, K}(::Type{NucleotideSequence}, x::Kmer{T, K}) = convert(NucleotideSequence{T}, x)
 
 
@@ -903,10 +935,14 @@ convert{T, K}(::Type{NucleotideSequence}, x::Kmer{T, K}) = convert(NucleotideSeq
 # ------------
 
 # From strings
+
+@doc doc"Construct a DNAKmer to a String" ->
 dnakmer(seq::String) = convert(DNAKmer, seq)
+
+@doc doc"Construct a RNAKmer to a String" ->
 rnakmer(seq::String) = convert(RNAKmer, seq)
 
-# Constructors taking a sequence of nucleotides
+@doc doc"Construct a Kmer from a sequence of Nucleotides" ->
 function kmer{T <: Nucleotide}(nts::T...)
     K = length(nts)
     if K > 32
@@ -925,22 +961,27 @@ function kmer{T <: Nucleotide}(nts::T...)
     return convert(Kmer{T, K}, x)
 end
 
+@doc doc"Construct a Kmer from a DNASequence" ->
 function kmer(seq::DNASequence)
     @assert length(seq) <= 32 error("Cannot construct a K-mer longer than 32nt.")
     return convert(DNAKmer{length(seq)}, seq)
 end
 
+@doc doc"Construct a Kmer from a RNASequence" ->
 function kmer(seq::RNASequence)
     @assert length(seq) <= 32 error("Cannot construct a K-mer longer than 32nt.")
     return convert(RNAKmer{length(seq)}, seq)
 end
 
 # call kmer with @inline macro would reduce the performance significantly?
+# Would the compiler inline even without @inline?
+@doc doc"Construct a DNAKmer from a DNASequence" ->
 function dnakmer(seq::DNASequence)
     @assert length(seq) <= 32 error("Cannot construct a K-mer longer than 32nt.")
     return convert(DNAKmer{length(seq)}, seq)
 end
 
+@doc doc"Construct a RNAKmer from a RNASequence" ->
 function rnakmer(seq::RNASequence)
     @assert length(seq) <= 32 error("Cannot construct a K-mer longer than 32nt.")
     return convert(RNAKmer{length(seq)}, seq)
@@ -1011,21 +1052,51 @@ done{T, K}(x::Kmer{T, K}, i::Int) = i > K
 # Other functions
 # ---------------
 
-reverse{T, K}(x::Kmer{T, K}) = convert(Kmer{T, K}, nucrev(convert(Uint64, x)) >>> (2 * (32 - K)))
+@doc doc"""
+`complement(kmer::Kmer)`
+
+The Kmer complement of `kmer`""" ->
 
 function complement{T, K}(x::Kmer{T, K})
     return convert(Kmer{T, K},
         (~convert(Uint64, x)) & (0xffffffffffffffff >>> (2 * (32 - K))))
 end
 
+@doc doc"""
+`reverse(kmer::Kmer)`
+
+Reversed copy of `kmer`""" ->
+reverse{T, K}(x::Kmer{T, K}) = convert(Kmer{T, K}, nucrev(convert(Uint64, x)) >>> (2 * (32 - K)))
+
+@doc doc"""
+`reverse_complement(kmer::Kmer)`
+
+Reversed complement of `kmer`""" ->
 reverse_complement{T, K}(x::Kmer{T, K}) = complement(reverse(x))
 
+@doc doc"""
+`mismatches(x::Kmer, y::Kmer)`
+
+Return the number of mismatches between `x` and `y`.
+
+# Arguments
+* `x`: first sequence to compare
+* `y`: second sequence to compare
+
+# Returns
+The number of mismatches
+""" ->
 mismatches{T, K}(x::Kmer{T, K}, y::Kmer{T, K}) = nucmismatches(convert(Uint64, x), convert(Uint64, y))
 
+@doc doc"""
+`canonical(x::Kmer)`
 
-# A canonical k-mer is the numerical lesser of a k-mer and its reverse complement.
-# This is useful in hashing/counting k-mers in data that is not strand specific,
-# and thus observing k-mer is equivalent to observing its reverse complement.
+Canonical k-mer of `x`
+
+A canonical k-mer is the numerical lesser of a k-mer and its reverse complement.
+This is useful in hashing/counting k-mers in data that is not strand specific,
+and thus observing k-mer is equivalent to observing its reverse complement.
+""" ->
 function canonical{T, K}(x::Kmer{T, K})
     y = reverse_complement(x)
     return x < y ? x : y
