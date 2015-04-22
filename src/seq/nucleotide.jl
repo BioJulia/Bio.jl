@@ -66,7 +66,7 @@ const RNA_C = convert(RNANucleotide, 0b001)
 @doc doc"RNA Guanine" ->
 const RNA_G = convert(RNANucleotide, 0b010)
 
-@doc doc"RNA Uracil"
+@doc doc"RNA Uracil" ->
 const RNA_U = convert(RNANucleotide, 0b011)
 
 @doc doc"Any RNA Nucleotide" ->
