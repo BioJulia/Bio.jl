@@ -3,13 +3,8 @@
 
 
 # Single nucleotides are represented in bytes using just the two low-order bits
-@doc doc"Abstract type to represent nucleotides" ->
 abstract Nucleotide
-
-@doc doc"Concrete type to represent DNA nucleotides" ->
 bitstype 8 DNANucleotide <: Nucleotide
-
-@doc doc"Concrete type to represent RNA nucleotides" ->
 bitstype 8 RNANucleotide <: Nucleotide
 
 
