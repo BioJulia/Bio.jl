@@ -266,7 +266,7 @@ end
 @doc doc"""
 `repeat(chunk::NucleotideSequence, n)`
 
-Construct a nucleotide sequence by repeating another sequence `n` times" ->
+Construct a nucleotide sequence by repeating another sequence `n` times""" ->
 function repeat{T<:Nucleotide}(chunk::NucleotideSequence{T}, n::Integer)
     seqlen = n * length(chunk)
 
