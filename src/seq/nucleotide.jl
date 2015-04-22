@@ -3,44 +3,84 @@
 
 
 # Single nucleotides are represented in bytes using just the two low-order bits
+@doc doc"Abstract type to represent nucleotides" ->
 abstract Nucleotide
 
+@doc doc"Concrete type to represent DNA nucleotides" ->
 bitstype 8 DNANucleotide <: Nucleotide
+
+@doc doc"Concrete type to represent RNA nucleotides" ->
 bitstype 8 RNANucleotide <: Nucleotide
 
 
 # Conversion from/to integers
 # ---------------------------
 
+@doc doc"Convert a Uint8 to a DNANucleotide" ->
 convert(::Type{DNANucleotide}, nt::Uint8) = box(DNANucleotide, unbox(Uint8, nt))
+
+@doc doc"Convert a DNANucletide to a Uint8" ->
 convert(::Type{Uint8}, nt::DNANucleotide) = box(Uint8, unbox(DNANucleotide, nt))
 
+@doc doc"Convert a Uint8 to a RNANucleotide" ->
 convert(::Type{RNANucleotide}, nt::Uint8) = box(RNANucleotide, unbox(Uint8, nt))
+
+@doc doc"Convert a RNANucletide to a Uint8" ->
 convert(::Type{Uint8}, nt::RNANucleotide) = box(Uint8, unbox(RNANucleotide, nt))
 
+@doc doc"Convert a RNANucletide to a Uint8" ->
 convert{T<:Unsigned, S<:Nucleotide}(::Type{T}, nt::S) = box(T, Base.zext_int(T, unbox(S, nt)))
-convert{T<:Unsigned, S<:Nucleotide}(::Type{S}, nt::T) = convert(S, convert(Uint8, nt))
 
+@doc doc"Convert a RNANucletide to a Uint8" ->
+convert{T<:Unsigned, S<:Nucleotide}(::Type{S}, nt::T) = convert(S, convert(Uint8, nt))
 
 # Nucleotide encoding definition
 # ------------------------------
 
+# DNA Nucletides
+
+@doc doc"DNA Adenine" ->
 const DNA_A = convert(DNANucleotide, 0b000)
+
+@doc doc"DNA Cytosine" ->
 const DNA_C = convert(DNANucleotide, 0b001)
+
+@doc doc"DNA Guanine" ->
 const DNA_G = convert(DNANucleotide, 0b010)
+
+@doc doc"DNA Thymine" ->
 const DNA_T = convert(DNANucleotide, 0b011)
+
+@doc doc"DNA Any Nucleotide" ->
 const DNA_N = convert(DNANucleotide, 0b100)
+
+@doc doc"DNA Invalid Nucleotide" ->
 const DNA_INVALID = convert(DNANucleotide, 0b1000) # Indicates invalid DNA when converting string
 
+@doc doc"Returns DNA Any Nucleotide" ->
 nnucleotide(::Type{DNANucleotide}) = DNA_N
 
-const RNA_A = convert(RNANucleotide, 0b000)
-const RNA_C = convert(RNANucleotide, 0b001)
-const RNA_G = convert(RNANucleotide, 0b010)
-const RNA_U = convert(RNANucleotide, 0b011)
-const RNA_N = convert(RNANucleotide, 0b100)
-const RNA_INVALID = convert(RNANucleotide, 0b1000) # Indicates invalid DNA when converting string
+# RNA Nucleotides
 
+@doc doc"RNA Adenine" ->
+const RNA_A = convert(RNANucleotide, 0b000)
+
+@doc doc"RNA Cytosine" ->
+const RNA_C = convert(RNANucleotide, 0b001)
+
+@doc doc"RNA Guanine" ->
+const RNA_G = convert(RNANucleotide, 0b010)
+
+@doc doc"RNA Uracil"
+const RNA_U = convert(RNANucleotide, 0b011)
+
+@doc doc"Any RNA Nucleotide" ->
+const RNA_N = convert(RNANucleotide, 0b100)
+
+@doc doc"Invalid RNA Nucleotide" ->
+const RNA_INVALID = convert(RNANucleotide, 0b1000) # Indicates invalid RNA when converting string
+
+@doc doc"Returns RNA_N" ->
 nnucleotide(::Type{RNANucleotide}) = RNA_N
 
 
@@ -59,7 +99,7 @@ const char_to_dna = [
      DNA_INVALID, DNA_INVALID, DNA_INVALID, DNA_N,       DNA_INVALID, DNA_INVALID,
      DNA_INVALID, DNA_INVALID, DNA_INVALID, DNA_T ]
 
-
+@doc doc"Convert a Char to a DNANucletide" ->
 function convert(::Type{DNANucleotide}, c::Char)
     @inbounds nt = 'A' <= c <= 't' ? char_to_dna[c - 'A' + 1] : DNA_INVALID
     @assert nt != DNA_INVALID error("$(c) is not a valid DNA nucleotide")
@@ -78,6 +118,7 @@ const char_to_rna = [
     RNA_INVALID, RNA_INVALID, RNA_INVALID, RNA_N,       RNA_INVALID, RNA_INVALID,
     RNA_INVALID, RNA_INVALID, RNA_INVALID, RNA_INVALID, RNA_U ]
 
+@doc doc"Convert a Char to a RNANucletide" ->
 function convert(::Type{RNANucleotide}, c::Char)
     @inbounds nt = 'A' <= c <= 'u' ? char_to_rna[c - 'A' + 1] : RNA_INVALID
     @assert nt != RNA_INVALID error("$(c) is not a valid RNA nucleotide")
@@ -89,9 +130,13 @@ end
 # ------------------
 
 const dna_to_char = ['A', 'C', 'G', 'T', 'N']
+
+@doc doc"Convert a DNANucletide to a Char" ->
 convert(::Type{Char}, nt::DNANucleotide) = dna_to_char[convert(Uint8, nt) + 1]
 
 const rna_to_char = ['A', 'C', 'G', 'U', 'N']
+
+@doc doc"Convert a RNANucletide to a Char" ->
 convert(::Type{Char}, nt::RNANucleotide) = rna_to_char[convert(Uint8, nt) + 1]
 
 
@@ -132,13 +177,21 @@ type NucleotideSequence{T<:Nucleotide}
 end
 
 
+
 # Constructors
 # ------------
 
-# Construct an empty sequence
+@doc doc"""
+`NucleotideSequence(DNANucleotide|RNANucleotide)`
+
+Construct an empty nucleotide sequence of the given type""" ->
 NucleotideSequence{T<:Nucleotide}(::Type{T}) = NucleotideSequence{T}(zeros(Uint64, 0), BitVector(0), 1:0)
 
-# Construct a subsequence of another nucleotide sequence
+
+@doc doc"""
+`NucleotideSequence(DNANucleotide|RNANucleotide, other::NucleotideSequence, part::UnitRange)`
+
+Construct a subsequence from another nucleotide sequence""" ->
 function NucleotideSequence{T<:Nucleotide}(::Type{T}, other::NucleotideSequence, part::UnitRange)
     start = other.part.start + part.start - 1
     stop = start + length(part) - 1
@@ -154,7 +207,11 @@ function seq_data_len(n::Integer)
     return d + (r > 0 ? 1 : 0)
 end
 
-# Construct a sequence from a string
+
+@doc doc"""
+`NucleotideSequence(DNANucleotide|RNANucleotide, seq::String)`
+
+Construct a subsequence from the `seq` string""" ->
 function NucleotideSequence{T<:Nucleotide}(::Type{T}, seq::String)
     len  = seq_data_len(length(seq))
     data = zeros(Uint64, len)
@@ -182,9 +239,10 @@ function NucleotideSequence{T<:Nucleotide}(::Type{T}, seq::String)
 end
 
 
-@doc """
-Construct a nucleotide sequence by concatenating other sequences.
-""" ->
+@doc doc"""
+`NucleotideSequence(chunks::NucleotideSequence...)`
+
+Construct a nucleotide sequence by concatenating the given sequences""" ->
 function NucleotideSequence{T<:Nucleotide}(chunks::NucleotideSequence{T}...)
     seqlen = 0
     for chunk in chunks
@@ -210,9 +268,10 @@ end
 (*){T}(chunk1::NucleotideSequence{T}, chunks::NucleotideSequence{T}...) = NucleotideSequence(chunk1, chunks...)
 
 
-@doc """
-Construct a nucleotide sequence by repeating another sequences.
-""" ->
+@doc doc"""
+`repeat(chunk::NucleotideSequence, n)`
+
+Construct a nucleotide sequence by repeating another sequence `n` times" ->
 function repeat{T<:Nucleotide}(chunk::NucleotideSequence{T}, n::Integer)
     seqlen = n * length(chunk)
 
@@ -231,21 +290,19 @@ function repeat{T<:Nucleotide}(chunk::NucleotideSequence{T}, n::Integer)
     return newseq
 end
 
-
+@doc doc"Repeat nucleotide sequences" ->
 (^){T}(chunk::NucleotideSequence{T}, n::Integer) = repeat(chunk, n::Integer)
 
 
-@doc """
+@doc doc"""
 Copy `src` to `dest` starting at position `pos`.
 
 This is unsafe in the following ways:
-    * Disregards immutability of `dest`
-    * May write a few bases past dest[pos + length(src) - 1]
-    * Doesn't bounds check anything.
+- Disregards immutability of `dest`
+- May write a few bases past dest[pos + length(src) - 1]
+- Doesn't bounds check anything.
 
-It's really only suitable for use in the concatenation constructor.
-
-""" ->
+It's really only suitable for use in the concatenation constructor.""" ->
 function unsafe_copy!{T}(dest::NucleotideSequence{T}, pos::Int, src::NucleotideSequence{T})
     abspos = dest.part.start + pos - 1
     copy!(dest.ns, abspos, src.ns, src.part.start, length(src))
@@ -302,16 +359,35 @@ end
 # Aliases and contructors
 # -----------------------
 
+# DNA Sequences
 typealias DNASequence NucleotideSequence{DNANucleotide}
+
+@doc doc"Construct an empty DNA nucletide sequence" ->
 DNASequence() = NucleotideSequence(DNANucleotide)
+
+@doc doc"Construct a DNA nucleotide subsequence from another sequence" ->
 DNASequence(other::NucleotideSequence, part::UnitRange) = NucleotideSequence(DNANucleotide, other, part)
+
+@doc doc"Construct a DNA nucleotide sequence from a String" ->
 DNASequence(seq::String) = NucleotideSequence(DNANucleotide, seq)
+
+@doc doc"Construct a DNA nucleotide sequence from other sequences" ->
 DNASequence(chunk1::DNASequence, chunks::DNASequence...) = NucleotideSequence(chunk1, chunks...)
 
+
+# RNA Sequences
 typealias RNASequence NucleotideSequence{RNANucleotide}
+
+@doc doc"Construct an empty RNA nucletide sequence" ->
 RNASequence() = NucleotideSequence(RNANucleotide)
+
+@doc doc"Construct a RNA nucleotide subsequence from another sequence" ->
 RNASequence(other::NucleotideSequence, part::UnitRange) = NucleotideSequence(RNANucleotide, other, part)
+
+@doc doc"Construct a RNA nucleotide sequence from a String" ->
 RNASequence(seq::String) = NucleotideSequence(RNANucleotide, seq)
+
+@doc doc"Construct a RNA nucleotide sequence from other sequences" ->
 RNASequence(chunk1::RNASequence, chunks::RNASequence...) = NucleotideSequence(chunk1, chunks...)
 
 
@@ -319,13 +395,23 @@ RNASequence(chunk1::RNASequence, chunks::RNASequence...) = NucleotideSequence(ch
 # ----------
 
 # Convert from/to Strings
+
+@doc doc"Convert a String to a DNASequence" ->
 convert(::Type{DNASequence}, seq::String) = DNASequence(seq)
+
+@doc doc"Convert a String to a RNASequence" ->
 convert(::Type{RNASequence}, seq::String) = RNASequence(seq)
+
+@doc doc"Convert a NucleotideSequence to a String" ->
 convert(::Type{String}, seq::NucleotideSequence) = convert(String, [convert(Char, x) for x in seq])
 
 
 # Convert between RNA and DNA
+
+@doc doc"Convert a DNASequence to a RNASequence" ->
 convert(::Type{RNASequence}, seq::DNASequence) = RNASequence(seq.data, seq.ns, seq.part)
+
+@doc doc"Convert a RNASequence to a DNASequence" ->
 convert(::Type{DNASequence}, seq::RNASequence) = DNASequence(seq.data, seq.ns, seq.part)
 
 
