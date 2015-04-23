@@ -17,27 +17,71 @@ convert{T <: Unsigned}(::Type{AminoAcid}, aa::T) = convert(AminoAcid, convert(Ui
 # Amino acid encoding definition
 # ------------------------------
 
+
+@doc doc"Alanine" ->
 const AA_A = convert(AminoAcid, 0x00)
+
+@doc doc"Arginine" ->
 const AA_R = convert(AminoAcid, 0x01)
+
+@doc doc"Asparagine" ->
 const AA_N = convert(AminoAcid, 0x02)
+
+@doc doc"Aspartic Acid" ->
 const AA_D = convert(AminoAcid, 0x03)
+
+@doc doc"Cysteine" ->
 const AA_C = convert(AminoAcid, 0x04)
+
+@doc doc"Glutamine" ->
 const AA_Q = convert(AminoAcid, 0x05)
+
+@doc doc"Glutamic Acid" ->
 const AA_E = convert(AminoAcid, 0x06)
+
+@doc doc"Glycine" ->
 const AA_G = convert(AminoAcid, 0x07)
+
+@doc doc"Histidine" ->
 const AA_H = convert(AminoAcid, 0x08)
+
+@doc doc"Isoleucine" ->
 const AA_I = convert(AminoAcid, 0x09)
+
+@doc doc"Leucine" ->
 const AA_L = convert(AminoAcid, 0x0a)
+
+@doc doc"Lysine" ->
 const AA_K = convert(AminoAcid, 0x0b)
+
+@doc doc"Methionine" ->
 const AA_M = convert(AminoAcid, 0x0c)
+
+@doc doc"Phenylalanine" ->
 const AA_F = convert(AminoAcid, 0x0d)
+
+@doc doc"Proline" ->
 const AA_P = convert(AminoAcid, 0x0e)
+
+@doc doc"Serine" ->
 const AA_S = convert(AminoAcid, 0x0f)
+
+@doc doc"Threonine" ->
 const AA_T = convert(AminoAcid, 0x10)
+
+@doc doc"Tryptophan" ->
 const AA_W = convert(AminoAcid, 0x11)
+
+@doc doc"Tyrosine" ->
 const AA_Y = convert(AminoAcid, 0x12)
+
+@doc doc"Valine" ->
 const AA_V = convert(AminoAcid, 0x13)
+
+@doc doc"Unspecified or Unknown Amino Acid" ->
 const AA_X = convert(AminoAcid, 0x14)
+
+@doc doc"Invalid Amino Acid" ->
 const AA_INVALID = convert(AminoAcid, 0x15) # Used during conversion from strings
 
 
