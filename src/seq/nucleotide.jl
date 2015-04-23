@@ -1118,17 +1118,27 @@ immutable EachKmerIteratorState{T, K}
     nit_state::Int
 end
 
+# Maybe this function should replace the default constructor.
+# Is the (unsafe) default constructor used throughout our code?
+@doc doc"""
+`eachkmer(seq::NucleotideSequence, k, [step=1])`
 
+Construct a EachKmerIterator from a NucleotideSequence `seq` of size `k` and, optionally, a `step` value.
+
+Differently from the default EachKmerIterator constructor, this function checks the validity of the arguments before construction.
+
+# Arguments
+* `seq`: A NucleotideSequence
+* `k`: The size of each Kmer
+* `step`: Number of steps
+
+# Returns
+A EachKmerIterator constructed with these parameters
+""" ->
 function eachkmer{T}(seq::NucleotideSequence{T}, k::Integer, step::Integer=1)
-    if k < 0
-        error("K must be ≥ 0 in EachKmer")
-    elseif k > 32
-        error("K must be ≤ 32 in EachKmer")
-    end
-
-    if step < 1
-        error("step must be ≥ 1")
-    end
+    @assert k >= 0 "K must be ≥ 0 in EachKmer"
+    @assert k <= 32 "K must be ≤ 32 in EachKmer"
+    @assert step >= 1 "step must be ≥ 1"
 
     return EachKmerIterator{T, k}(seq, npositions(seq), step)
 end
@@ -1244,6 +1254,11 @@ count_c(x::Uint64) = count_ones((((~x) >>> 1) & x) & 0x5555555555555555)
 count_g(x::Uint64) = count_ones(((x >>> 1) & (~x)) & 0x5555555555555555)
 count_t(x::Uint64) = count_ones((x    & (x >>> 1)) & 0x5555555555555555)
 
+@doc doc"""
+`NucleotideCounts(seq::NucleotideSequence)`
+
+Constructs a NucleotideCounts object from a NucleotideSequence `seq`.
+""" ->
 function NucleotideCounts{T}(seq::NucleotideSequence{T})
     dn, rn = divrem(seq.part.start - 1, 64)
 
@@ -1303,7 +1318,11 @@ function NucleotideCounts{T}(seq::NucleotideSequence{T})
     return counts
 end
 
-# Construct from K-mers
+@doc doc"""
+`NucleotideCounts(seq::Kmer)`
+
+Constructs a NucleotideCounts object from a Kmer `seq`.
+""" ->
 function NucleotideCounts{T,K}(seq::Kmer{T, K})
     x         = convert(Uint64, seq)
     counts    = NucleotideCounts{T}()
