@@ -2,7 +2,7 @@
 # Contributing
 
 We welcome contributions in the form of pull requests. For your code to be
-considered for inclusion it must be documented.
+considered it must meet the following guidelines.
 
   * By making a pull request, you're agreeing to license your code under an MIT
     license. See LICENSE.md.
@@ -22,11 +22,12 @@ considered for inclusion it must be documented.
     team members and there is general consensus (or general lack of objections)
     that it's useful and fits with the intended scope of Bio.jl.
 
+  * Code must be consistent with the prevailing style in Bio.jl, which includes,
+    but is not necessarily limited to the following style guide.
 
-# Style
 
-Please make your contribution consistent with the prevailing style in Bio.jl,
-which included, but is not necessarily limited to the following.
+## Style
+
 
   * Indent with 4 spaces.
 
