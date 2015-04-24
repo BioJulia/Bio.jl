@@ -2,6 +2,9 @@
 
 # FASTQ sequence types
 
+immutable FASTQ <: FileFormat end
+
+
 @doc """
 Metadata for FASTQ sequence records containing a `description` field,
 and a `quality` string corresponding to the sequence.

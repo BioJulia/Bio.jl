@@ -2,6 +2,9 @@
 
 # FASTA sequence types
 
+immutable FASTA <: FileFormat end
+
+
 @doc """
 Metadata for FASTA sequence records containing just a `description` field.
 """ ->
