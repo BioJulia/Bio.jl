@@ -4,7 +4,7 @@ module Ragel
 using Switch
 import Base.FS
 import Base: push!, pop!, endof, append!, empty!, isempty, length, getindex,
-             setindex!, (==)
+             setindex!, (==), takebuf_string, read!
 
 
 # A simple buffer type, similar to IOBuffer but faster and with fewer features.
@@ -105,7 +105,7 @@ function (==){T}(a::Buffer{T}, b::Buffer{T})
 end
 
 
-function Base.takebuf_string{T}(buf::Buffer{T})
+function takebuf_string{T}(buf::Buffer{T})
     s = bytestring(buf.data[1:buf.pos-1])
     empty!(buf)
     return s
@@ -358,7 +358,7 @@ macro generate_read_fuction(machine_name, input_type, output_type, ragel_body, a
             return true
         end
 
-        function Base.read!(input::$(esc(input_type)), output::$(esc(output_type)))
+        function read!(input::$(esc(input_type)), output::$(esc(output_type)))
             local $(esc(:input)) = input
             local $(esc(:output)) = output
             if advance!(input)
