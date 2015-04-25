@@ -9,6 +9,8 @@ import Base: convert, complement, getindex, show, length, start, next, done,
              copy, reverse, show, endof, ==, isless, clipboard, parse, *, repeat,
              unsafe_copy!, read, read!
 
+import Bio: FileFormat
+
 export Nucleotide, DNANucleotide, RNANucleotide,
        DNA_A, DNA_C, DNA_G, DNA_T, DNA_N,
        RNA_A, RNA_C, RNA_G, RNA_U, RNA_N,
@@ -23,7 +25,6 @@ export Nucleotide, DNANucleotide, RNANucleotide,
 
 
 abstract Sequence
-abstract FileFormat
 
 
 include("nucleotide.jl")

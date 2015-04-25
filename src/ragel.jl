@@ -1,6 +1,7 @@
 
 module Ragel
 
+using Compat
 using Switch
 import Base.FS
 import Base: push!, pop!, endof, append!, empty!, isempty, length, getindex,
@@ -223,10 +224,40 @@ macro asciistring_from_mark!()
     end
 end
 
+macro bytestring_from_mark!()
+    quote
+        firstpos = @popmark!
+        len = $(esc(:p)) - firstpos + 1
+        bytestring(pointer($(esc(:state)).buffer, firstpos), len)
+    end
+end
+
+
+# Parse an integer from an interval in the input buffer. This differs from
+# `parse(Int, ...)` in that we don't have to copy or allocate anything, and it
+# doesn't check that the characters are digits (we don't need to since this is
+# already checked during parsing).
+function parse_int64(buffer, firstpos, lastpos)
+    x = @compat Int64(0)
+    for i in lastpos:-1:firstpos
+        x = x * 10 + buffer[i] - '0'
+    end
+    return x
+end
+
+
+macro int64_from_mark!()
+    quote
+        firstpos = @popmark!
+        parse_int64($(esc(:state)).buffer, firstpos, $(esc(:p)))
+    end
+end
+
+
 # return the current character
 macro char()
     quote
-        $(esc(:state)).buffer[$(esc(:p))+1]
+        convert(Char, $(esc(:state)).buffer[$(esc(:p))+1])
     end
 end
 

@@ -8,7 +8,15 @@
 # the data is sorted
 
 
+@doc """
+A type deriving `IntervalStream{T}` must be iterable and produce
+Interval{T} objects in sorted order.
+""" ->
+abstract IntervalStream{T}
+
+
 typealias IntervalStreamOrArray{T} Union(AbstractArray{Interval{T}}, IntervalStream{T})
+
 
 type IntervalStreamIntersectIterator{S, T}
     a::IntervalStreamOrArray{S}

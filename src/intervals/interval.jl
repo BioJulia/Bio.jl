@@ -6,6 +6,7 @@ bitstype 8 Strand
 convert(::Type{Strand}, strand::Uint8) = box(Strand, unbox(Uint8, strand))
 convert(::Type{Uint8}, strand::Strand) = box(Uint8, unbox(Strand, strand))
 
+
 const STRAND_NA   = convert(Strand, 0b000)
 const STRAND_POS  = convert(Strand, 0b001)
 const STRAND_NEG  = convert(Strand, 0b010)
@@ -98,13 +99,6 @@ end
 function show(io::IO, i::Interval)
     print(io, i.seqname, ":", i.first, "-", i.last, "    ", i.strand, "    ", i.metadata)
 end
-
-
-@doc """
-A type deriving `IntervalStream{T}` must be iterable and produce
-Interval{T} objects in sorted order.
-""" ->
-abstract IntervalStream{T}
 
 
 
