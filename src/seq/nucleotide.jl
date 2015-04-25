@@ -715,7 +715,7 @@ nucleotides are compared.
 # Arguments
 * `a`: first sequence to compare
 * `b`: second sequence to compare
-* `nbatches`: if true, N matches anything, if false, N matches only itself.
+* `nmatches`: if true, N matches anything, if false, N matches only itself (false)
 
 # Returns
 The number of mismatches
