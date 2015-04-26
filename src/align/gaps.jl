@@ -90,6 +90,37 @@ end
 immutable GapAnchor
   gapPos::Int
   seqPos::Int
+  function GapAnchor(gp = 0, sp = 0)
+    return new(gp, sp)
+  end
+end
+
+function Base.copy(src::GapAnchor)
+  return GapAnchor(src.gapPos, src.seqPos)
+end
+
+function Base.==(a::GapAnnchor, b::GapAnchor)
+  return a.gapPos == b.gapPos && a.seqPos == b.seqPos
+end
+
+function Base.!=(a::GapAnchor, b::GapAnchor)
+  return !(a == b)
+end
+
+function Base.<(a::GapAnchor, b::GapAnchor)
+  return a.gapPos < b.gapPos || a.seqPos < b.seqPos
+end
+
+function Base.>(a::GapAnchor, b::GapAnchor)
+  return a.gapPos > b.gapPos || a.seqPos > b.seqPos
+end
+
+function Base.<=(a::GapAnchor, b::GapAnchor)
+  return a.gapPos <= b.gapPos || a.seqPos < b.seqPos
+end
+
+function Base.>=(a::GapAnchor, b::GapAnchor)
+  return a.gapPos >= b.gapPos || a.seqPos > b.seqPos
 end
 
 type AnchorGaps <: Gaps
