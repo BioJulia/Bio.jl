@@ -72,13 +72,13 @@ export FASTAParser
 
     newline     = '\r'? '\n'     >count_line;
     hspace      = [ \t\v];
-    whitespace  = newline | hspace;
+    whitespace  = space | newline;
 
-    identifier  = (any - space)+ >pushmark  %identifier;
-    description = [^\r\n]+       >pushmark  %description;
-    letters     = alpha+         >pushmark  %letters;
-    sequence    = whitespace* letters? (newline+ whitespace* letters (hspace+ letters)*)*;
-    fasta_entry = '>' identifier ( hspace+ description )? newline sequence whitespace*;
+    identifier  = (any - space)+          >pushmark  %identifier;
+    description = (any - hspace) [^\r\n]* >pushmark  %description;
+    letters     = (any - space - '>')+    >pushmark  %letters;
+    sequence    = whitespace* letters? (whitespace+ letters)*;
+    fasta_entry = '>' identifier (hspace+ description)? newline sequence whitespace*;
 
     main := whitespace* (fasta_entry %yield)*;
 }%%

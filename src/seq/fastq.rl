@@ -107,24 +107,24 @@ export FASTQParser
 
     newline     = '\r'? '\n'     >count_line;
     hspace      = [ \t\v];
-    whitespace  = newline | hspace;
+    whitespace  = space | newline;
 
-    identifier  = (any - space)+     >pushmark  %identifier;
-    description = [^\r\n]+           >pushmark  %description;
+    identifier  = (any - space)+           >pushmark  %identifier;
+    description = (any - space) [^\r\n]*   >pushmark  %description;
 
-    identifier2  = (any - space)+    >pushmark  %identifier2;
-    description2 = [^\r\n]+          >pushmark  %description2;
+    identifier2  = (any - space)+          >pushmark  %identifier2;
+    description2 = (any - space) [^\r\n]*  >pushmark  %description2;
 
-    letters     = alpha+             >pushmark  %letters;
-    sequence    = (newline+ letters)*;
+    letters     = [A-z]+                   >pushmark  %letters;
+    sequence    = letters? (newline+ letters)*;
 
     qletters    = ([!-~] when qlen_lt $inc_qual_count)+   >pushmark %qletters;
-    quality     = (newline+ qletters)*;
+    quality     = qletters? (newline+ qletters)*;
 
-    fastq_entry = '@' when qlen_eq identifier (hspace+ description)?
-                  sequence
-                  newline+ '+' hspace* (identifier2 (hspace+ description2)?)?
-                  quality newline+;
+    fastq_entry = ('@' when qlen_eq) identifier (hspace+ description)?
+                  newline sequence
+                  newline+ '+' (identifier2 (hspace+ description2)?)?
+                  newline quality newline+;
 
     main := whitespace* (fastq_entry %yield)*;
 }%%
