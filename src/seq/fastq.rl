@@ -81,58 +81,15 @@ export FASTQParser
         input.state.linenum += 1
     }
 
-    action identifier_start {
-        Ragel.@pushmark!
-    }
+    action pushmark { Ragel.@pushmark! }
 
-    action identifier_end {
-        firstpos = Ragel.@popmark!
-        append!(input.namebuf, state.buffer, firstpos, p)
-    }
-
-    action description_start {
-        Ragel.@pushmark!
-    }
-
-    action description_end {
-        firstpos = Ragel.@popmark!
-        append!(input.descbuf, state.buffer, firstpos, p)
-    }
-
-    action identifier2_start {
-        Ragel.@pushmark!
-    }
-
-    action identifier2_end {
-        firstpos = Ragel.@popmark!
-        append!(input.name2buf, state.buffer, firstpos, p)
-    }
-
-    action description2_start {
-        Ragel.@pushmark!
-    }
-
-    action description2_end {
-        firstpos = Ragel.@popmark!
-        append!(input.desc2buf, state.buffer, firstpos, p)
-    }
-
-    action letters_start {
-        Ragel.@pushmark!
-    }
-
-    action letters_end {
-        firstpos = Ragel.@popmark!
-        append!(input.seqbuf, state.buffer, firstpos, p)
-    }
-
-    action qletters_start {
-        Ragel.@pushmark!
-    }
-
+    action identifier_end   { append!(input.namebuf,  state.buffer, (Ragel.@popmark!), p) }
+    action description_end  { append!(input.descbuf,  state.buffer, (Ragel.@popmark!), p) }
+    action identifier2_end  { append!(input.name2buf, state.buffer, (Ragel.@popmark!), p) }
+    action description2_end { append!(input.desc2buf, state.buffer, (Ragel.@popmark!), p) }
+    action letters_end { append!(input.seqbuf, state.buffer, (Ragel.@popmark!), p) }
     action qletters_end {
-        firstpos = Ragel.@popmark!
-        append!(input.qualbuf, state.buffer, firstpos, p)
+        append!(input.qualbuf, state.buffer, (Ragel.@popmark!), p)
         input.qualcount = 0
     }
 
@@ -152,22 +109,22 @@ export FASTQParser
     hspace      = [ \t\v];
     whitespace  = newline | hspace;
 
-    identifier  = (any - space)+     >identifier_start   %identifier_end;
-    description = [^\r\n]+           >description_start  %description_end;
+    identifier  = (any - space)+     >pushmark  %identifier_end;
+    description = [^\r\n]+           >pushmark  %description_end;
 
-    identifier2  = (any - space)+    >identifier2_start  %identifier2_end;
-    description2 = [^\r\n]+          >description2_start %description2_end;
+    identifier2  = (any - space)+    >pushmark  %identifier2_end;
+    description2 = [^\r\n]+          >pushmark  %description2_end;
 
-    letters     = alpha+             >letters_start      %letters_end;
+    letters     = alpha+             >pushmark  %letters_end;
     sequence    = (newline+ letters)*;
 
-    qletters    = ([!-~] when qlen_lt $inc_qual_count)+   >qletters_start %qletters_end;
+    qletters    = ([!-~] when qlen_lt $inc_qual_count)+   >pushmark %qletters_end;
     quality     = (newline+ qletters)*;
 
-    fastq_entry = '@' when qlen_eq identifier ([ \t\v]+ description)?
+    fastq_entry = '@' when qlen_eq identifier (hspace+ description)?
                   sequence
-                  newline+ '+' hspace* (identifier2 ([ \t\v]+ description2)?)?
-                  quality newline+ whitespace*;
+                  newline+ '+' hspace* (identifier2 (hspace+ description2)?)?
+                  quality newline+;
 
     main := whitespace* (fastq_entry %yield)*;
 }%%
@@ -183,8 +140,8 @@ type FASTQParser
     state::Ragel.State
     seqbuf::Ragel.Buffer{Uint8}
     qualbuf::Ragel.Buffer{Uint8}
-    namebuf::Ragel.Buffer{Uint8}
-    descbuf::Ragel.Buffer{Uint8}
+    namebuf::String
+    descbuf::String
     name2buf::Ragel.Buffer{Uint8}
     desc2buf::Ragel.Buffer{Uint8}
     qualcount::Int
@@ -200,14 +157,12 @@ type FASTQParser
                 error("Parser must be given a file name in order to memory map.")
             end
             return new(Ragel.State(cs, input, true),
-                       Ragel.Buffer{Uint8}(),
-                       Ragel.Buffer{Uint8}(), Ragel.Buffer{Uint8}(),
-                       Ragel.Buffer{Uint8}(), Ragel.Buffer{Uint8}(),
-                       Ragel.Buffer{Uint8}(), 0, default_qual_encoding)
+                       Ragel.Buffer{Uint8}(), Ragel.Buffer{Uint8}(), "", "",
+                       Ragel.Buffer{Uint8}(), Ragel.Buffer{Uint8}(), 0,
+                       default_qual_encoding)
         else
             return new(Ragel.State(cs, input), Ragel.Buffer{Uint8}(),
-                       Ragel.Buffer{Uint8}(), Ragel.Buffer{Uint8}(),
-                       Ragel.Buffer{Uint8}(), Ragel.Buffer{Uint8}(),
+                       Ragel.Buffer{Uint8}(), "", "", Ragel.Buffer{Uint8}(),
                        Ragel.Buffer{Uint8}(), 0, default_qual_encoding)
         end
     end
@@ -234,8 +189,6 @@ function accept_state!(input::FASTQParser, output::FASTQSeqRecord)
     output.metadata.quality = decode_quality_string(encoding, input.qualbuf.
                                                     1, input.qualbuf.pos - 1)
 
-    input.namebuf = ""
-    input.descbuf = ""
     empty!(input.seqbuf)
     empty!(input.qualbuf)
 end
@@ -320,13 +273,13 @@ function advance!(it::FASTQIterator)
 
         if (!isempty(it.parser.name2buf) && it.parser.namebuf != it.parser.name2buf) ||
            (!isempty(it.parser.desc2buf) && it.parser.descbuf != it.parser.desc2buf)
-            error("Error parsing FASTQ: sequance and quality scores have non-matching identifiers")
+            error("Error parsing FASTQ: sequence and quality scores have non-matching identifiers")
         end
 
         it.nextitem =
-            FASTQSeqRecord(takebuf_string(it.parser.namebuf),
+            FASTQSeqRecord(it.parser.namebuf,
                            DNASequence(it.parser.seqbuf.data, 1, it.parser.seqbuf.pos - 1),
-                           FASTQMetadata(takebuf_string(it.parser.descbuf), qscores))
+                           FASTQMetadata(it.parser.descbuf, qscores))
         empty!(it.parser.seqbuf)
         empty!(it.parser.qualbuf)
         empty!(it.parser.name2buf)

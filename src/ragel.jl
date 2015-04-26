@@ -105,6 +105,21 @@ function (==){T}(a::Buffer{T}, b::Buffer{T})
 end
 
 
+function (==){T}(a::Buffer{T}, b::String)
+    if length(a) != length(b)
+        return false
+    end
+    for (i, u) in enumerate(b)
+        v = a.data[i]
+        if u != v
+            return false
+        end
+    end
+
+    return true
+end
+
+
 function takebuf_string{T}(buf::Buffer{T})
     s = bytestring(buf.data[1:buf.pos-1])
     empty!(buf)
@@ -198,6 +213,13 @@ end
 macro spanfrom(firstpos)
     quote
         $(esc(:state)).buffer[$(esc(firstpos)):$(esc(:p))]
+    end
+end
+
+macro bytestring_from_mark!()
+    quote
+        firstpos = Ragel.@popmark!
+        bytestring(pointer($(esc(:state)).buffer, firstpos), $(esc(:p)) - firstpos + 1)
     end
 end
 

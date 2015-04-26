@@ -150,8 +150,7 @@ end
 @goto st_out
 @label ctr0
 begin
-	input.state.linenum += 1
-    
+	input.state.linenum += 1 
 end
 @goto st10
 @label st10
@@ -224,9 +223,7 @@ end
 @goto st2
 @label ctr27
 begin
-	firstpos = Ragel.@popmark!
-        append!(input.seqbuf, state.buffer, firstpos, p)
-    
+	append!(input.seqbuf, state.buffer, (Ragel.@popmark!), p) 
 end
 begin
 	yield = true;
@@ -282,8 +279,7 @@ begin
 end
 @label ctr2
 begin
-	Ragel.@pushmark!
-    
+	Ragel.@pushmark! 
 end
 @goto st3
 @label st3
@@ -341,9 +337,7 @@ begin
 end
 @label ctr4
 begin
-	firstpos = Ragel.@popmark!
-        input.namebuf = bytestring(Ragel.@spanfrom firstpos)
-    
+	input.namebuf = Ragel.@bytestring_from_mark!  
 end
 @goto st4
 @label st4
@@ -403,8 +397,7 @@ begin
 end
 @label ctr7
 begin
-	Ragel.@pushmark!
-    
+	Ragel.@pushmark! 
 end
 @goto st5
 @label st5
@@ -446,30 +439,23 @@ begin
 end
 @label ctr14
 begin
-	input.state.linenum += 1
-    
+	input.state.linenum += 1 
 end
 @goto st11
 @label ctr5
 begin
-	firstpos = Ragel.@popmark!
-        input.namebuf = bytestring(Ragel.@spanfrom firstpos)
-    
+	input.namebuf = Ragel.@bytestring_from_mark!  
 end
 begin
-	input.state.linenum += 1
-    
+	input.state.linenum += 1 
 end
 @goto st11
 @label ctr10
 begin
-	firstpos = Ragel.@popmark!
-        input.descbuf = bytestring(Ragel.@spanfrom firstpos)
-    
+	input.descbuf = Ragel.@bytestring_from_mark! 
 end
 begin
-	input.state.linenum += 1
-    
+	input.state.linenum += 1 
 end
 @goto st11
 @label st11
@@ -527,19 +513,15 @@ begin
 end
 @label ctr12
 begin
-	input.state.linenum += 1
-    
+	input.state.linenum += 1 
 end
 @goto st12
 @label ctr25
 begin
-	firstpos = Ragel.@popmark!
-        append!(input.seqbuf, state.buffer, firstpos, p)
-    
+	append!(input.seqbuf, state.buffer, (Ragel.@popmark!), p) 
 end
 begin
-	input.state.linenum += 1
-    
+	input.state.linenum += 1 
 end
 @goto st12
 @label st12
@@ -597,9 +579,7 @@ begin
 end
 @label ctr26
 begin
-	firstpos = Ragel.@popmark!
-        append!(input.seqbuf, state.buffer, firstpos, p)
-    
+	append!(input.seqbuf, state.buffer, (Ragel.@popmark!), p) 
 end
 @goto st6
 @label st6
@@ -620,8 +600,7 @@ begin
 end
 @label ctr23
 begin
-	Ragel.@pushmark!
-    
+	Ragel.@pushmark! 
 end
 @goto st13
 @label st13
@@ -679,9 +658,7 @@ begin
 end
 @label ctr24
 begin
-	firstpos = Ragel.@popmark!
-        append!(input.seqbuf, state.buffer, firstpos, p)
-    
+	append!(input.seqbuf, state.buffer, (Ragel.@popmark!), p) 
 end
 @goto st14
 @label st14
@@ -739,15 +716,12 @@ begin
 end
 @label ctr13
 begin
-	input.state.linenum += 1
-    
+	input.state.linenum += 1 
 end
 @goto st15
 @label ctr32
 begin
-	firstpos = Ragel.@popmark!
-        append!(input.seqbuf, state.buffer, firstpos, p)
-    
+	append!(input.seqbuf, state.buffer, (Ragel.@popmark!), p) 
 end
 @goto st15
 @label st15
@@ -805,8 +779,7 @@ begin
 end
 @label ctr21
 begin
-	Ragel.@pushmark!
-    
+	Ragel.@pushmark! 
 end
 @goto st16
 @label st16
@@ -864,16 +837,12 @@ begin
 end
 @label ctr6
 begin
-	firstpos = Ragel.@popmark!
-        input.namebuf = bytestring(Ragel.@spanfrom firstpos)
-    
+	input.namebuf = Ragel.@bytestring_from_mark!  
 end
 @goto st8
 @label ctr11
 begin
-	firstpos = Ragel.@popmark!
-        input.descbuf = bytestring(Ragel.@spanfrom firstpos)
-    
+	input.descbuf = Ragel.@bytestring_from_mark! 
 end
 @goto st8
 @label st8
@@ -894,8 +863,7 @@ begin
 end
 @label ctr8
 begin
-	Ragel.@pushmark!
-    
+	Ragel.@pushmark! 
 end
 @goto st9
 @label st9
@@ -1008,9 +976,7 @@ end
 	@case 13
 @case 16
 begin
-	firstpos = Ragel.@popmark!
-        append!(input.seqbuf, state.buffer, firstpos, p)
-    
+	append!(input.seqbuf, state.buffer, (Ragel.@popmark!), p) 
 end
 begin
 	yield = true;

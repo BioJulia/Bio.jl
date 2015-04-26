@@ -68,10 +68,10 @@ using Docile, Switch
 export FASTQParser
 
 
-const fastq_start  = convert(Int , 24)
-const fastq_first_final  = convert(Int , 24)
+const fastq_start  = convert(Int , 23)
+const fastq_first_final  = convert(Int , 23)
 const fastq_error  = convert(Int , 0)
-const fastq_en_main  = convert(Int , 24)
+const fastq_en_main  = convert(Int , 23)
 @doc """
 A type encapsulating the current state of a FASTQ parser.
 """ ->
@@ -147,8 +147,8 @@ if p == pe
 
 end
 @switch cs  begin
-    @case 24
-@goto st_case_24
+    @case 23
+@goto st_case_23
 @case 0
 @goto st_case_0
 @case 1
@@ -173,10 +173,8 @@ end
 @goto st_case_10
 @case 11
 @goto st_case_11
-@case 25
-@goto st_case_25
-@case 26
-@goto st_case_26
+@case 24
+@goto st_case_24
 @case 12
 @goto st_case_12
 @case 13
@@ -185,10 +183,10 @@ end
 @goto st_case_14
 @case 15
 @goto st_case_15
+@case 25
+@goto st_case_25
 @case 16
 @goto st_case_16
-@case 27
-@goto st_case_27
 @case 17
 @goto st_case_17
 @case 18
@@ -201,8 +199,6 @@ end
 @goto st_case_21
 @case 22
 @goto st_case_22
-@case 23
-@goto st_case_23
 
 end
 @goto st_out
@@ -211,18 +207,18 @@ begin
 	input.state.linenum += 1
     
 end
-@goto st24
-@label st24
+@goto st23
+@label st23
 p+= 1;
 	if p == pe 
-	@goto _test_eof24
+	@goto _test_eof23
 
 end
-@label st_case_24
+@label st_case_23
 @switch ( data[1 + p ])  begin
     @case 9
 begin
-@goto st24
+@goto st23
 end
 @case 10
 begin
@@ -230,7 +226,7 @@ begin
 end
 @case 11
 begin
-@goto st24
+@goto st23
 end
 @case 13
 begin
@@ -238,7 +234,7 @@ begin
 end
 @case 32
 begin
-@goto st24
+@goto st23
 end
 @case 64
 begin
@@ -282,7 +278,7 @@ end
 begin
 @goto st0
 end
-@label ctr52
+@label ctr50
 begin
 	yield = true;
         begin
@@ -337,8 +333,7 @@ begin
 end
 @label ctr2
 begin
-	Ragel.@pushmark!
-    
+	Ragel.@pushmark! 
 end
 @goto st3
 @label st3
@@ -396,9 +391,7 @@ begin
 end
 @label ctr4
 begin
-	firstpos = Ragel.@popmark!
-        append!(input.namebuf, state.buffer, firstpos, p)
-    
+	append!(input.namebuf,  state.buffer, (Ragel.@popmark!), p) 
 end
 @goto st4
 @label st4
@@ -458,8 +451,7 @@ begin
 end
 @label ctr7
 begin
-	Ragel.@pushmark!
-    
+	Ragel.@pushmark! 
 end
 @goto st5
 @label st5
@@ -507,9 +499,7 @@ end
 @goto st6
 @label ctr5
 begin
-	firstpos = Ragel.@popmark!
-        append!(input.namebuf, state.buffer, firstpos, p)
-    
+	append!(input.namebuf,  state.buffer, (Ragel.@popmark!), p) 
 end
 begin
 	input.state.linenum += 1
@@ -518,20 +508,16 @@ end
 @goto st6
 @label ctr10
 begin
-	firstpos = Ragel.@popmark!
-        append!(input.descbuf, state.buffer, firstpos, p)
-    
+	append!(input.descbuf,  state.buffer, (Ragel.@popmark!), p) 
 end
 begin
 	input.state.linenum += 1
     
 end
 @goto st6
-@label ctr41
+@label ctr40
 begin
-	firstpos = Ragel.@popmark!
-        append!(input.seqbuf, state.buffer, firstpos, p)
-    
+	append!(input.seqbuf, state.buffer, (Ragel.@popmark!), p) 
 end
 begin
 	input.state.linenum += 1
@@ -581,23 +567,17 @@ begin
 end
 @label ctr6
 begin
-	firstpos = Ragel.@popmark!
-        append!(input.namebuf, state.buffer, firstpos, p)
-    
+	append!(input.namebuf,  state.buffer, (Ragel.@popmark!), p) 
 end
 @goto st7
 @label ctr11
 begin
-	firstpos = Ragel.@popmark!
-        append!(input.descbuf, state.buffer, firstpos, p)
-    
+	append!(input.descbuf,  state.buffer, (Ragel.@popmark!), p) 
 end
 @goto st7
-@label ctr42
+@label ctr41
 begin
-	firstpos = Ragel.@popmark!
-        append!(input.seqbuf, state.buffer, firstpos, p)
-    
+	append!(input.seqbuf, state.buffer, (Ragel.@popmark!), p) 
 end
 @goto st7
 @label st7
@@ -642,7 +622,7 @@ begin
 end
 @case 13
 begin
-@goto st13
+@goto st12
 end
 @case 32
 begin
@@ -671,8 +651,7 @@ begin
 end
 @label ctr16
 begin
-	Ragel.@pushmark!
-    
+	Ragel.@pushmark! 
 end
 @goto st9
 @label st9
@@ -730,9 +709,7 @@ begin
 end
 @label ctr20
 begin
-	firstpos = Ragel.@popmark!
-        append!(input.name2buf, state.buffer, firstpos, p)
-    
+	append!(input.name2buf, state.buffer, (Ragel.@popmark!), p) 
 end
 @goto st10
 @label st10
@@ -792,8 +769,7 @@ begin
 end
 @label ctr23
 begin
-	Ragel.@pushmark!
-    
+	Ragel.@pushmark! 
 end
 @goto st11
 @label st11
@@ -838,33 +814,28 @@ begin
 	input.state.linenum += 1
     
 end
-@goto st25
+@goto st24
 @label ctr21
 begin
-	firstpos = Ragel.@popmark!
-        append!(input.name2buf, state.buffer, firstpos, p)
-    
+	append!(input.name2buf, state.buffer, (Ragel.@popmark!), p) 
 end
 begin
 	input.state.linenum += 1
     
 end
-@goto st25
+@goto st24
 @label ctr26
 begin
-	firstpos = Ragel.@popmark!
-        append!(input.desc2buf, state.buffer, firstpos, p)
-    
+	append!(input.desc2buf, state.buffer, (Ragel.@popmark!), p) 
 end
 begin
 	input.state.linenum += 1
     
 end
-@goto st25
-@label ctr29
+@goto st24
+@label ctr28
 begin
-	firstpos = Ragel.@popmark!
-        append!(input.qualbuf, state.buffer, firstpos, p)
+	append!(input.qualbuf, state.buffer, (Ragel.@popmark!), p)
         input.qualcount = 0
     
 end
@@ -872,16 +843,13 @@ begin
 	input.state.linenum += 1
     
 end
-@goto st25
-@label ctr38
+@goto st24
+@label ctr37
 begin
-	firstpos = Ragel.@popmark!
-        append!(input.name2buf, state.buffer, firstpos, p)
-    
+	append!(input.name2buf, state.buffer, (Ragel.@popmark!), p) 
 end
 begin
-	firstpos = Ragel.@popmark!
-        append!(input.qualbuf, state.buffer, firstpos, p)
+	append!(input.qualbuf, state.buffer, (Ragel.@popmark!), p)
         input.qualcount = 0
     
 end
@@ -889,34 +857,22 @@ begin
 	input.state.linenum += 1
     
 end
-@goto st25
-@label st25
+@goto st24
+@label st24
 p+= 1;
 	if p == pe 
-	@goto _test_eof25
+	@goto _test_eof24
 
 end
-@label st_case_25
+@label st_case_24
 @switch ( data[1 + p ])  begin
-    @case 9
-begin
-@goto st26
-end
-@case 10
+    @case 10
 begin
 @goto ctr17
 end
-@case 11
-begin
-@goto st26
-end
 @case 13
 begin
-@goto st13
-end
-@case 32
-begin
-@goto st26
+@goto st12
 end
 @case 64
 begin
@@ -936,7 +892,7 @@ if ck < 2
 	begin
 if 1 <= ck 
 	begin
-@goto ctr51
+@goto ctr49
 end
 
 end
@@ -944,12 +900,12 @@ end
 
 elseif ( ck > 2  )
 	begin
-@goto ctr53
+@goto ctr51
 end
 
 else
 	begin
-@goto ctr52
+@goto ctr50
 end
 
 end
@@ -970,7 +926,7 @@ if (length(input.qualbuf) + input.qualcount < length(input.seqbuf)
 end
 if 1 <= ck 
 	begin
-@goto ctr51
+@goto ctr49
 end
 
 end
@@ -991,7 +947,7 @@ if (length(input.qualbuf) + input.qualcount < length(input.seqbuf)
 end
 if 1 <= ck 
 	begin
-@goto ctr51
+@goto ctr49
 end
 
 end
@@ -1002,62 +958,33 @@ end
 begin
 @goto st0
 end
-@label ctr28
+@label ctr22
 begin
-	input.state.linenum += 1
+	append!(input.name2buf, state.buffer, (Ragel.@popmark!), p) 
+end
+@goto st12
+@label ctr27
+begin
+	append!(input.desc2buf, state.buffer, (Ragel.@popmark!), p) 
+end
+@goto st12
+@label ctr29
+begin
+	append!(input.qualbuf, state.buffer, (Ragel.@popmark!), p)
+        input.qualcount = 0
     
 end
-@goto st26
-@label st26
-p+= 1;
-	if p == pe 
-	@goto _test_eof26
-
-end
-@label st_case_26
-@switch ( data[1 + p ])  begin
-    @case 9
-begin
-@goto st26
-end
-@case 10
-begin
-@goto ctr28
-end
-@case 11
-begin
-@goto st26
-end
-@case 13
-begin
 @goto st12
-end
-@case 32
+@label ctr38
 begin
-@goto st26
-end
-@case 64
-begin
-ck  = convert(Int , 0)
-
-if (length(input.qualbuf) == length(input.seqbuf)
-    )
-	ck += 1;
-	
-end
-if 1 <= ck 
-	begin
-@goto ctr52
-end
-
-end
-@goto st0
-end
-
+	append!(input.name2buf, state.buffer, (Ragel.@popmark!), p) 
 end
 begin
-@goto st0
+	append!(input.qualbuf, state.buffer, (Ragel.@popmark!), p)
+        input.qualcount = 0
+    
 end
+@goto st12
 @label st12
 p+= 1;
 	if p == pe 
@@ -1067,45 +994,25 @@ end
 @label st_case_12
 if ( data[1 + p ]) == 10 
 	begin
-@goto ctr28
+@goto ctr17
 end
 
 end
 begin
 @goto st0
 end
-@label ctr22
-begin
-	firstpos = Ragel.@popmark!
-        append!(input.name2buf, state.buffer, firstpos, p)
-    
-end
-@goto st13
-@label ctr27
-begin
-	firstpos = Ragel.@popmark!
-        append!(input.desc2buf, state.buffer, firstpos, p)
-    
-end
-@goto st13
 @label ctr30
 begin
-	firstpos = Ragel.@popmark!
-        append!(input.qualbuf, state.buffer, firstpos, p)
-        input.qualcount = 0
+	input.qualcount += 1
     
 end
 @goto st13
-@label ctr39
+@label ctr49
 begin
-	firstpos = Ragel.@popmark!
-        append!(input.name2buf, state.buffer, firstpos, p)
-    
+	Ragel.@pushmark! 
 end
 begin
-	firstpos = Ragel.@popmark!
-        append!(input.qualbuf, state.buffer, firstpos, p)
-        input.qualcount = 0
+	input.qualcount += 1
     
 end
 @goto st13
@@ -1116,46 +1023,14 @@ p+= 1;
 
 end
 @label st_case_13
-if ( data[1 + p ]) == 10 
-	begin
-@goto ctr17
-end
-
-end
-begin
-@goto st0
-end
-@label ctr31
-begin
-	input.qualcount += 1
-    
-end
-@goto st14
-@label ctr51
-begin
-	Ragel.@pushmark!
-    
-end
-begin
-	input.qualcount += 1
-    
-end
-@goto st14
-@label st14
-p+= 1;
-	if p == pe 
-	@goto _test_eof14
-
-end
-@label st_case_14
 @switch ( data[1 + p ])  begin
     @case 10
 begin
-@goto ctr29
+@goto ctr28
 end
 @case 13
 begin
-@goto ctr30
+@goto ctr29
 end
 
 end
@@ -1170,7 +1045,7 @@ if (length(input.qualbuf) + input.qualcount < length(input.seqbuf)
 end
 if 1 <= ck 
 	begin
-@goto ctr31
+@goto ctr30
 end
 
 end
@@ -1181,10 +1056,9 @@ end
 begin
 @goto st0
 end
-@label ctr53
+@label ctr51
 begin
-	Ragel.@pushmark!
-    
+	Ragel.@pushmark! 
 end
 begin
 	input.qualcount += 1
@@ -1193,28 +1067,28 @@ end
 begin
 	yield = true;
         begin
-	p+= 1; cs = 15; @goto _out
+	p+= 1; cs = 14; @goto _out
 
 end
 
     
 end
-@goto st15
-@label st15
+@goto st14
+@label st14
 p+= 1;
 	if p == pe 
-	@goto _test_eof15
+	@goto _test_eof14
 
 end
-@label st_case_15
+@label st_case_14
 @switch ( data[1 + p ])  begin
     @case 10
 begin
-@goto ctr29
+@goto ctr28
 end
 @case 13
 begin
-@goto ctr30
+@goto ctr29
 end
 @case 32
 begin
@@ -1249,7 +1123,7 @@ if (length(input.qualbuf) + input.qualcount < length(input.seqbuf)
 end
 if ck > 0 
 	begin
-@goto ctr32
+@goto ctr31
 end
 
 else
@@ -1273,29 +1147,28 @@ end
 begin
 @goto ctr2
 end
-@label ctr35
+@label ctr34
 begin
 	input.qualcount += 1
     
 end
-@goto st16
-@label ctr32
+@goto st15
+@label ctr31
 begin
-	Ragel.@pushmark!
-    
+	Ragel.@pushmark! 
 end
 begin
 	input.qualcount += 1
     
 end
-@goto st16
-@label st16
+@goto st15
+@label st15
 p+= 1;
 	if p == pe 
-	@goto _test_eof16
+	@goto _test_eof15
 
 end
-@label st_case_16
+@label st_case_15
 @switch ( data[1 + p ])  begin
     @case 9
 begin
@@ -1303,7 +1176,7 @@ begin
 end
 @case 10
 begin
-@goto ctr33
+@goto ctr32
 end
 @case 11
 begin
@@ -1315,7 +1188,7 @@ begin
 end
 @case 13
 begin
-@goto ctr34
+@goto ctr33
 end
 @case 32
 begin
@@ -1340,7 +1213,7 @@ if (length(input.qualbuf) + input.qualcount < length(input.seqbuf)
 end
 if ck > 0 
 	begin
-@goto ctr35
+@goto ctr34
 end
 
 else
@@ -1364,73 +1237,55 @@ end
 begin
 @goto st3
 end
-@label ctr36
+@label ctr35
 begin
 	input.state.linenum += 1
     
 end
-@goto st27
-@label ctr33
+@goto st25
+@label ctr32
 begin
-	firstpos = Ragel.@popmark!
-        append!(input.namebuf, state.buffer, firstpos, p)
-    
+	append!(input.namebuf,  state.buffer, (Ragel.@popmark!), p) 
 end
 begin
 	input.state.linenum += 1
     
 end
 begin
-	firstpos = Ragel.@popmark!
-        append!(input.qualbuf, state.buffer, firstpos, p)
+	append!(input.qualbuf, state.buffer, (Ragel.@popmark!), p)
         input.qualcount = 0
     
 end
-@goto st27
-@label ctr44
+@goto st25
+@label ctr43
 begin
-	firstpos = Ragel.@popmark!
-        append!(input.seqbuf, state.buffer, firstpos, p)
-    
+	append!(input.seqbuf, state.buffer, (Ragel.@popmark!), p) 
 end
 begin
 	input.state.linenum += 1
     
 end
 begin
-	firstpos = Ragel.@popmark!
-        append!(input.qualbuf, state.buffer, firstpos, p)
+	append!(input.qualbuf, state.buffer, (Ragel.@popmark!), p)
         input.qualcount = 0
     
 end
-@goto st27
-@label st27
+@goto st25
+@label st25
 p+= 1;
 	if p == pe 
-	@goto _test_eof27
+	@goto _test_eof25
 
 end
-@label st_case_27
+@label st_case_25
 @switch ( data[1 + p ])  begin
-    @case 9
+    @case 10
 begin
-@goto st26
-end
-@case 10
-begin
-@goto ctr36
-end
-@case 11
-begin
-@goto st26
+@goto ctr35
 end
 @case 13
 begin
-@goto st17
-end
-@case 32
-begin
-@goto st26
+@goto st16
 end
 @case 43
 begin
@@ -1443,7 +1298,7 @@ if (length(input.qualbuf) + input.qualcount < length(input.seqbuf)
 end
 if ck > 0 
 	begin
-@goto ctr56
+@goto ctr53
 end
 
 else
@@ -1472,7 +1327,7 @@ if ck < 2
 	begin
 if 1 <= ck 
 	begin
-@goto ctr51
+@goto ctr49
 end
 
 end
@@ -1480,12 +1335,12 @@ end
 
 elseif ( ck > 2  )
 	begin
-@goto ctr53
+@goto ctr51
 end
 
 else
 	begin
-@goto ctr52
+@goto ctr50
 end
 
 end
@@ -1508,7 +1363,7 @@ if (length(input.qualbuf) + input.qualcount < length(input.seqbuf)
 end
 if 1 <= ck 
 	begin
-@goto ctr51
+@goto ctr49
 end
 
 end
@@ -1529,7 +1384,7 @@ if (length(input.qualbuf) + input.qualcount < length(input.seqbuf)
 end
 if 1 <= ck 
 	begin
-@goto ctr51
+@goto ctr49
 end
 
 end
@@ -1553,7 +1408,7 @@ if (length(input.qualbuf) + input.qualcount < length(input.seqbuf)
 end
 if 1 <= ck 
 	begin
-@goto ctr51
+@goto ctr49
 end
 
 end
@@ -1574,7 +1429,7 @@ if (length(input.qualbuf) + input.qualcount < length(input.seqbuf)
 end
 if 1 <= ck 
 	begin
-@goto ctr51
+@goto ctr49
 end
 
 end
@@ -1595,7 +1450,7 @@ if (length(input.qualbuf) + input.qualcount < length(input.seqbuf)
 end
 if ck > 0 
 	begin
-@goto ctr57
+@goto ctr54
 end
 
 else
@@ -1621,7 +1476,7 @@ if (length(input.qualbuf) + input.qualcount < length(input.seqbuf)
 end
 if ck > 0 
 	begin
-@goto ctr57
+@goto ctr54
 end
 
 else
@@ -1637,29 +1492,48 @@ end
 begin
 @goto st0
 end
-@label ctr34
+@label ctr33
 begin
-	firstpos = Ragel.@popmark!
-        append!(input.namebuf, state.buffer, firstpos, p)
-    
+	append!(input.namebuf,  state.buffer, (Ragel.@popmark!), p) 
 end
 begin
-	firstpos = Ragel.@popmark!
-        append!(input.qualbuf, state.buffer, firstpos, p)
+	append!(input.qualbuf, state.buffer, (Ragel.@popmark!), p)
         input.qualcount = 0
     
 end
-@goto st17
-@label ctr45
+@goto st16
+@label ctr44
 begin
-	firstpos = Ragel.@popmark!
-        append!(input.seqbuf, state.buffer, firstpos, p)
-    
+	append!(input.seqbuf, state.buffer, (Ragel.@popmark!), p) 
 end
 begin
-	firstpos = Ragel.@popmark!
-        append!(input.qualbuf, state.buffer, firstpos, p)
+	append!(input.qualbuf, state.buffer, (Ragel.@popmark!), p)
         input.qualcount = 0
+    
+end
+@goto st16
+@label st16
+p+= 1;
+	if p == pe 
+	@goto _test_eof16
+
+end
+@label st_case_16
+if ( data[1 + p ]) == 10 
+	begin
+@goto ctr35
+end
+
+end
+begin
+@goto st0
+end
+@label ctr53
+begin
+	Ragel.@pushmark! 
+end
+begin
+	input.qualcount += 1
     
 end
 @goto st17
@@ -1670,32 +1544,6 @@ p+= 1;
 
 end
 @label st_case_17
-if ( data[1 + p ]) == 10 
-	begin
-@goto ctr36
-end
-
-end
-begin
-@goto st0
-end
-@label ctr56
-begin
-	Ragel.@pushmark!
-    
-end
-begin
-	input.qualcount += 1
-    
-end
-@goto st18
-@label st18
-p+= 1;
-	if p == pe 
-	@goto _test_eof18
-
-end
-@label st_case_18
 @switch ( data[1 + p ])  begin
     @case 9
 begin
@@ -1703,7 +1551,7 @@ begin
 end
 @case 10
 begin
-@goto ctr29
+@goto ctr28
 end
 @case 11
 begin
@@ -1715,7 +1563,7 @@ begin
 end
 @case 13
 begin
-@goto ctr30
+@goto ctr29
 end
 @case 32
 begin
@@ -1740,7 +1588,7 @@ if (length(input.qualbuf) + input.qualcount < length(input.seqbuf)
 end
 if ck > 0 
 	begin
-@goto ctr37
+@goto ctr36
 end
 
 else
@@ -1764,29 +1612,28 @@ end
 begin
 @goto ctr16
 end
-@label ctr40
+@label ctr39
 begin
 	input.qualcount += 1
     
 end
-@goto st19
-@label ctr37
+@goto st18
+@label ctr36
 begin
-	Ragel.@pushmark!
-    
+	Ragel.@pushmark! 
 end
 begin
 	input.qualcount += 1
     
 end
-@goto st19
-@label st19
+@goto st18
+@label st18
 p+= 1;
 	if p == pe 
-	@goto _test_eof19
+	@goto _test_eof18
 
 end
-@label st_case_19
+@label st_case_18
 @switch ( data[1 + p ])  begin
     @case 9
 begin
@@ -1794,7 +1641,7 @@ begin
 end
 @case 10
 begin
-@goto ctr38
+@goto ctr37
 end
 @case 11
 begin
@@ -1806,7 +1653,7 @@ begin
 end
 @case 13
 begin
-@goto ctr39
+@goto ctr38
 end
 @case 32
 begin
@@ -1831,7 +1678,7 @@ if (length(input.qualbuf) + input.qualcount < length(input.seqbuf)
 end
 if ck > 0 
 	begin
-@goto ctr40
+@goto ctr39
 end
 
 else
@@ -1857,7 +1704,58 @@ begin
 end
 @label ctr15
 begin
-	Ragel.@pushmark!
+	Ragel.@pushmark! 
+end
+@goto st19
+@label st19
+p+= 1;
+	if p == pe 
+	@goto _test_eof19
+
+end
+@label st_case_19
+@switch ( data[1 + p ])  begin
+    @case 10
+begin
+@goto ctr40
+end
+@case 13
+begin
+@goto ctr41
+end
+
+end
+if ( data[1 + p ]) > 90 
+	begin
+if 97 <= ( data[1 + p ]) && ( data[1 + p ]) <= 122 
+	begin
+@goto st19
+end
+
+end
+end
+
+elseif ( ( data[1 + p ]) >= 65  )
+	begin
+@goto st19
+end
+
+end
+begin
+@goto st0
+end
+@label ctr45
+begin
+	input.qualcount += 1
+    
+end
+@goto st20
+@label ctr54
+begin
+	Ragel.@pushmark! 
+end
+begin
+	input.qualcount += 1
     
 end
 @goto st20
@@ -1871,68 +1769,11 @@ end
 @switch ( data[1 + p ])  begin
     @case 10
 begin
-@goto ctr41
+@goto ctr43
 end
 @case 13
-begin
-@goto ctr42
-end
-
-end
-if ( data[1 + p ]) > 90 
-	begin
-if 97 <= ( data[1 + p ]) && ( data[1 + p ]) <= 122 
-	begin
-@goto st20
-end
-
-end
-end
-
-elseif ( ( data[1 + p ]) >= 65  )
-	begin
-@goto st20
-end
-
-end
-begin
-@goto st0
-end
-@label ctr46
-begin
-	input.qualcount += 1
-    
-end
-@goto st21
-@label ctr57
-begin
-	Ragel.@pushmark!
-    
-end
-begin
-	Ragel.@pushmark!
-    
-end
-begin
-	input.qualcount += 1
-    
-end
-@goto st21
-@label st21
-p+= 1;
-	if p == pe 
-	@goto _test_eof21
-
-end
-@label st_case_21
-@switch ( data[1 + p ])  begin
-    @case 10
 begin
 @goto ctr44
-end
-@case 13
-begin
-@goto ctr45
 end
 
 end
@@ -1950,12 +1791,12 @@ if (length(input.qualbuf) + input.qualcount < length(input.seqbuf)
 end
 if ck > 0 
 	begin
-@goto ctr46
+@goto ctr45
 end
 
 else
 	begin
-@goto st20
+@goto st19
 end
 
 end
@@ -1974,7 +1815,7 @@ if (length(input.qualbuf) + input.qualcount < length(input.seqbuf)
 end
 if 1 <= ck 
 	begin
-@goto ctr31
+@goto ctr30
 end
 
 end
@@ -1999,7 +1840,7 @@ if (length(input.qualbuf) + input.qualcount < length(input.seqbuf)
 end
 if 1 <= ck 
 	begin
-@goto ctr31
+@goto ctr30
 end
 
 end
@@ -2020,12 +1861,12 @@ if (length(input.qualbuf) + input.qualcount < length(input.seqbuf)
 end
 if ck > 0 
 	begin
-@goto ctr46
+@goto ctr45
 end
 
 else
 	begin
-@goto st20
+@goto st19
 end
 
 end
@@ -2046,7 +1887,7 @@ if (length(input.qualbuf) + input.qualcount < length(input.seqbuf)
 end
 if 1 <= ck 
 	begin
-@goto ctr31
+@goto ctr30
 end
 
 end
@@ -2059,17 +1900,16 @@ begin
 end
 @label ctr24
 begin
-	Ragel.@pushmark!
-    
+	Ragel.@pushmark! 
 end
-@goto st22
-@label st22
+@goto st21
+@label st21
 p+= 1;
 	if p == pe 
-	@goto _test_eof22
+	@goto _test_eof21
 
 end
-@label st_case_22
+@label st_case_21
 @switch ( data[1 + p ])  begin
     @case 9
 begin
@@ -2118,17 +1958,16 @@ begin
 end
 @label ctr8
 begin
-	Ragel.@pushmark!
-    
+	Ragel.@pushmark! 
 end
-@goto st23
-@label st23
+@goto st22
+@label st22
 p+= 1;
 	if p == pe 
-	@goto _test_eof23
+	@goto _test_eof22
 
 end
-@label st_case_23
+@label st_case_22
 @switch ( data[1 + p ])  begin
     @case 9
 begin
@@ -2176,8 +2015,8 @@ begin
 @goto ctr7
 end
 @label st_out
-@label _test_eof24
-cs = 24; @goto _test_eof
+@label _test_eof23
+cs = 23; @goto _test_eof
 @label _test_eof1
 cs = 1; @goto _test_eof
 @label _test_eof2
@@ -2200,10 +2039,8 @@ cs = 9; @goto _test_eof
 cs = 10; @goto _test_eof
 @label _test_eof11
 cs = 11; @goto _test_eof
-@label _test_eof25
-cs = 25; @goto _test_eof
-@label _test_eof26
-cs = 26; @goto _test_eof
+@label _test_eof24
+cs = 24; @goto _test_eof
 @label _test_eof12
 cs = 12; @goto _test_eof
 @label _test_eof13
@@ -2212,10 +2049,10 @@ cs = 13; @goto _test_eof
 cs = 14; @goto _test_eof
 @label _test_eof15
 cs = 15; @goto _test_eof
+@label _test_eof25
+cs = 25; @goto _test_eof
 @label _test_eof16
 cs = 16; @goto _test_eof
-@label _test_eof27
-cs = 27; @goto _test_eof
 @label _test_eof17
 cs = 17; @goto _test_eof
 @label _test_eof18
@@ -2228,17 +2065,14 @@ cs = 20; @goto _test_eof
 cs = 21; @goto _test_eof
 @label _test_eof22
 cs = 22; @goto _test_eof
-@label _test_eof23
-cs = 23; @goto _test_eof
 @label _test_eof
 begin
 end
 if p == eof 
 	begin
 @switch cs  begin
-    @case 25
-@case 26
-@case 27
+    @case 24
+@case 25
 begin
 	yield = true;
         begin
