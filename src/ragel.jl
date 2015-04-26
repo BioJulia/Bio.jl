@@ -239,7 +239,7 @@ end
 # already checked during parsing).
 function parse_int64(buffer, firstpos, lastpos)
     x = @compat Int64(0)
-    for i in lastpos:-1:firstpos
+    for i in firstpos:lastpos
         x = x * 10 + buffer[i] - '0'
     end
     return x
