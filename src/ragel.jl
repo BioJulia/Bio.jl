@@ -248,7 +248,7 @@ function fillbuffer!(parser::State)
 
     nb = readchunk!(parser.input, parser.buffer, keeplen + 1, buflen)
 
-    parser.p = 0
+    parser.p = keeplen
     parser.pe = keeplen + nb
     for i in 1:length(parser.marks)
         parser.marks[i] -= first_mark - 1
@@ -340,6 +340,12 @@ macro generate_read_fuction(machine_name, input_type, output_type, ragel_body, a
                         $("Error parsing $(machine_name) input on line "),
                         $(state).linenum))
                 elseif $(esc(:yield))
+                    if $(p) == $(pe)
+                        fillbuffer!($(state)) == 0
+                        $(p) = $(state).p
+                        $(pe) = $(state).pe
+                    end
+
                     break
                 end
             end
