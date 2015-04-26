@@ -4,6 +4,8 @@ using FactCheck
 using Distributions
 using Bio
 using Bio.Intervals
+using YAML
+import ..get_bio_fmt_specimens
 
 
 # Generate an array of n random Interval{Int} object. With sequence names
@@ -233,6 +235,38 @@ facts("IntervalStream") do
     end
 end
 
+
+facts("Interval Parsing") do
+    context("BED Parsing") do
+        get_bio_fmt_specimens()
+
+        function check_bed_parse(filename)
+            # Reading from a stream
+            for seqrec in read(open(filename), BED)
+            end
+
+            # Reading from a memory mapped file
+            for seqrec in read(filename, BED, memory_map=true)
+            end
+
+            # Reading from a regular file
+            for seqrec in read(filename, BED, memory_map=false)
+            end
+
+            return true
+        end
+
+        path = Pkg.dir("Bio", "test", "BioFmtSpecimens", "BED")
+        for specimen in YAML.load_file(joinpath(path, "index.yml"))
+            valid = get(specimen, "valid", true)
+            if valid
+                @fact check_bed_parse(joinpath(path, specimen["filename"])) => true
+            else
+                @fact_throws check_bed_parse(joinpath(path, specimen["filename"]))
+            end
+        end
+    end
+end
 
 end # module TestIntervals
 

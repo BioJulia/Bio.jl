@@ -42,10 +42,10 @@ using Docile, Switch, Compat, Color
 export BEDParser, takevalue!
 
 
-const bed_start  = convert(Int , 38)
-const bed_first_final  = convert(Int , 38)
+const bed_start  = convert(Int , 41)
+const bed_first_final  = convert(Int , 41)
 const bed_error  = convert(Int , 0)
-const bed_en_main  = convert(Int , 38)
+const bed_en_main  = convert(Int , 41)
 type BEDParser
     state::Ragel.State
 
@@ -67,19 +67,12 @@ type BEDParser
     block_sizes::Nullable{Vector{Int}}
     block_firsts::Nullable{Vector{Int}}
 
-
     function BEDParser(input::Union(IO, String, Vector{Uint8}),
                        memory_map::Bool=false)
         begin
 cs = bed_start;
 	end
-if memory_map
-            if !isa(input, String)
-                error("Parser must be given a file name in order to memory map.")
-            end
-        end
-
-        return new(Ragel.State(cs, input, memory_map),
+return new(Ragel.State(cs, input, memory_map),
                    "", 0, 0, STRAND_NA, 0.0, 0.0, 0.0,
                    Nullable{String}(), Nullable{Int}(), Nullable{Int}(),
                    Nullable{Int}(), Nullable{RGB{Float32}}(), Nullable{Int}(),
@@ -128,8 +121,8 @@ if p == pe
 
 end
 @switch cs  begin
-    @case 38
-@goto st_case_38
+    @case 41
+@goto st_case_41
 @case 0
 @goto st_case_0
 @case 1
@@ -190,10 +183,10 @@ end
 @goto st_case_28
 @case 29
 @goto st_case_29
-@case 39
-@goto st_case_39
 @case 30
 @goto st_case_30
+@case 42
+@goto st_case_42
 @case 31
 @goto st_case_31
 @case 32
@@ -208,6 +201,12 @@ end
 @goto st_case_36
 @case 37
 @goto st_case_37
+@case 38
+@goto st_case_38
+@case 39
+@goto st_case_39
+@case 40
+@goto st_case_40
 
 end
 @goto st_out
@@ -215,18 +214,18 @@ end
 begin
 	input.state.linenum += 1 
 end
-@goto st38
-@label st38
+@goto st41
+@label st41
 p+= 1;
 	if p == pe 
-	@goto _test_eof38
+	@goto _test_eof41
 
 end
-@label st_case_38
+@label st_case_41
 @switch ( data[1 + p ])  begin
     @case 9
 begin
-@goto ctr78
+@goto ctr83
 end
 @case 10
 begin
@@ -242,13 +241,13 @@ begin
 end
 @case 32
 begin
-@goto ctr79
+@goto ctr84
 end
 
 end
 if 33 <= ( data[1 + p ]) && ( data[1 + p ]) <= 126 
 	begin
-@goto ctr80
+@goto ctr85
 end
 
 end
@@ -259,12 +258,12 @@ end
 @label st0
 cs = 0;
 	@goto _out
-@label ctr76
+@label ctr81
 begin
 	input.seqname      = Ragel.@bytestring_from_mark! 
 end
 @goto st1
-@label ctr78
+@label ctr83
 begin
 	Ragel.@pushmark! 
 end
@@ -488,7 +487,7 @@ begin
 	input.name         = Nullable{String}(Ragel.@bytestring_from_mark!) 
 end
 @goto st8
-@label ctr72
+@label ctr77
 begin
 	input.name         = Nullable{String}(Ragel.@bytestring_from_mark!) 
 end
@@ -594,7 +593,7 @@ begin
 end
 @case 13
 begin
-@goto st32
+@goto st33
 end
 
 end
@@ -748,17 +747,25 @@ end
 begin
 @goto ctr36
 end
+@case 10
+begin
+@goto ctr37
+end
 @case 11
 begin
-@goto ctr36
+@goto ctr38
+end
+@case 13
+begin
+@goto ctr39
 end
 @case 32
 begin
-@goto ctr36
+@goto ctr38
 end
 @case 44
 begin
-@goto ctr37
+@goto ctr40
 end
 
 end
@@ -773,7 +780,10 @@ begin
 end
 @label ctr36
 begin
-	input.red          = (Ragel.@int64_from_mark!) / 255.0 
+	input.red = input.green = input.blue = (Ragel.@int64_from_mark!) / 255.0 
+end
+begin
+	input.item_rgb     = RGB{Float32}(input.red, input.green, input.blue ) 
 end
 @goto st18
 @label st18
@@ -786,28 +796,34 @@ end
 @switch ( data[1 + p ])  begin
     @case 9
 begin
-@goto st18
+@goto st19
 end
 @case 11
 begin
-@goto st18
+@goto st19
 end
 @case 32
 begin
-@goto st18
+@goto st19
 end
 @case 44
 begin
-@goto st19
+@goto st20
+end
+
+end
+if 48 <= ( data[1 + p ]) && ( data[1 + p ]) <= 57 
+	begin
+@goto ctr44
 end
 
 end
 begin
 @goto st0
 end
-@label ctr37
+@label ctr38
 begin
-	input.red          = (Ragel.@int64_from_mark!) / 255.0 
+	input.red = input.green = input.blue = (Ragel.@int64_from_mark!) / 255.0 
 end
 @goto st19
 @label st19
@@ -830,20 +846,18 @@ end
 begin
 @goto st19
 end
-
-end
-if 48 <= ( data[1 + p ]) && ( data[1 + p ]) <= 57 
-	begin
-@goto ctr41
+@case 44
+begin
+@goto st20
 end
 
 end
 begin
 @goto st0
 end
-@label ctr41
+@label ctr40
 begin
-	Ragel.@pushmark! 
+	input.red = input.green = input.blue = (Ragel.@int64_from_mark!) / 255.0 
 end
 @goto st20
 @label st20
@@ -853,24 +867,33 @@ p+= 1;
 
 end
 @label st_case_20
-if ( data[1 + p ]) == 44 
-	begin
-@goto ctr42
+@switch ( data[1 + p ])  begin
+    @case 9
+begin
+@goto st20
+end
+@case 11
+begin
+@goto st20
+end
+@case 32
+begin
+@goto st20
 end
 
 end
 if 48 <= ( data[1 + p ]) && ( data[1 + p ]) <= 57 
 	begin
-@goto st20
+@goto ctr45
 end
 
 end
 begin
 @goto st0
 end
-@label ctr42
+@label ctr45
 begin
-	input.green        = (Ragel.@int64_from_mark!) / 255.0 
+	Ragel.@pushmark! 
 end
 @goto st21
 @label st21
@@ -883,25 +906,36 @@ end
 @switch ( data[1 + p ])  begin
     @case 9
 begin
-@goto st21
+@goto ctr46
 end
 @case 11
 begin
-@goto st21
+@goto ctr46
 end
 @case 32
 begin
-@goto st21
+@goto ctr46
 end
 @case 44
 begin
-@goto st22
+@goto ctr47
+end
+
+end
+if 48 <= ( data[1 + p ]) && ( data[1 + p ]) <= 57 
+	begin
+@goto st21
 end
 
 end
 begin
 @goto st0
 end
+@label ctr46
+begin
+	input.green        = (Ragel.@int64_from_mark!) / 255.0 
+end
+@goto st22
 @label st22
 p+= 1;
 	if p == pe 
@@ -922,20 +956,18 @@ end
 begin
 @goto st22
 end
-
-end
-if 48 <= ( data[1 + p ]) && ( data[1 + p ]) <= 57 
-	begin
-@goto ctr46
+@case 44
+begin
+@goto st23
 end
 
 end
 begin
 @goto st0
 end
-@label ctr46
+@label ctr47
 begin
-	Ragel.@pushmark! 
+	input.green        = (Ragel.@int64_from_mark!) / 255.0 
 end
 @goto st23
 @label st23
@@ -948,42 +980,18 @@ end
 @switch ( data[1 + p ])  begin
     @case 9
 begin
-@goto ctr47
+@goto st23
 end
-@case 10
+@case 11
 begin
-@goto ctr48
+@goto st23
 end
-@case 13
+@case 32
 begin
-@goto ctr49
-end
-
-end
-if 48 <= ( data[1 + p ]) && ( data[1 + p ]) <= 57 
-	begin
 @goto st23
 end
 
 end
-begin
-@goto st0
-end
-@label ctr47
-begin
-	input.blue         = (Ragel.@int64_from_mark!) / 255.0 
-end
-begin
-	input.item_rgb     = RGB{Float32}(input.red, input.green, input.blue ) 
-end
-@goto st24
-@label st24
-p+= 1;
-	if p == pe 
-	@goto _test_eof24
-
-end
-@label st_case_24
 if 48 <= ( data[1 + p ]) && ( data[1 + p ]) <= 57 
 	begin
 @goto ctr51
@@ -997,14 +1005,14 @@ end
 begin
 	Ragel.@pushmark! 
 end
-@goto st25
-@label st25
+@goto st24
+@label st24
 p+= 1;
 	if p == pe 
-	@goto _test_eof25
+	@goto _test_eof24
 
 end
-@label st_case_25
+@label st_case_24
 @switch ( data[1 + p ])  begin
     @case 9
 begin
@@ -1022,7 +1030,7 @@ end
 end
 if 48 <= ( data[1 + p ]) && ( data[1 + p ]) <= 57 
 	begin
-@goto st25
+@goto st24
 end
 
 end
@@ -1031,16 +1039,31 @@ begin
 end
 @label ctr52
 begin
-	input..block_count = Ragel.@int64_from_mark! 
+	input.blue         = (Ragel.@int64_from_mark!) / 255.0 
 end
-@goto st26
-@label ctr60
 begin
-	if isnull(input..block_sizes)
-            input..block_sizes = Array(Int, 0)
-        end
-        push!(get(input.block_sizes), (Ragel.@int64_from_mark!))
-    
+	input.item_rgb     = RGB{Float32}(input.red, input.green, input.blue ) 
+end
+@goto st25
+@label st25
+p+= 1;
+	if p == pe 
+	@goto _test_eof25
+
+end
+@label st_case_25
+if 48 <= ( data[1 + p ]) && ( data[1 + p ]) <= 57 
+	begin
+@goto ctr44
+end
+
+end
+begin
+@goto st0
+end
+@label ctr44
+begin
+	Ragel.@pushmark! 
 end
 @goto st26
 @label st26
@@ -1050,9 +1073,24 @@ p+= 1;
 
 end
 @label st_case_26
+@switch ( data[1 + p ])  begin
+    @case 9
+begin
+@goto ctr56
+end
+@case 10
+begin
+@goto ctr57
+end
+@case 13
+begin
+@goto ctr58
+end
+
+end
 if 48 <= ( data[1 + p ]) && ( data[1 + p ]) <= 57 
 	begin
-@goto ctr56
+@goto st26
 end
 
 end
@@ -1061,7 +1099,7 @@ begin
 end
 @label ctr56
 begin
-	Ragel.@pushmark! 
+	input.block_count  = Ragel.@int64_from_mark! 
 end
 @goto st27
 @label st27
@@ -1071,50 +1109,18 @@ p+= 1;
 
 end
 @label st_case_27
-@switch ( data[1 + p ])  begin
-    @case 9
-begin
-@goto ctr57
-end
-@case 10
-begin
-@goto ctr58
-end
-@case 13
-begin
-@goto ctr59
-end
-@case 44
-begin
-@goto ctr60
-end
-
-end
 if 48 <= ( data[1 + p ]) && ( data[1 + p ]) <= 57 
 	begin
-@goto st27
+@goto ctr60
 end
 
 end
 begin
 @goto st0
 end
-@label ctr57
+@label ctr60
 begin
-	if isnull(input..block_sizes)
-            input..block_sizes = Array(Int, 0)
-        end
-        push!(get(input.block_sizes), (Ragel.@int64_from_mark!))
-    
-end
-@goto st28
-@label ctr65
-begin
-	if isnull(input.block_firsts)
-            input..block_firsts = Array(Int, 0)
-        end
-        push!(get(input.block_firsts), (Ragel.@int64_from_mark!))
-    
+	Ragel.@pushmark! 
 end
 @goto st28
 @label st28
@@ -1124,18 +1130,41 @@ p+= 1;
 
 end
 @label st_case_28
+@switch ( data[1 + p ])  begin
+    @case 9
+begin
+@goto ctr61
+end
+@case 10
+begin
+@goto ctr62
+end
+@case 13
+begin
+@goto ctr63
+end
+@case 44
+begin
+@goto ctr64
+end
+
+end
 if 48 <= ( data[1 + p ]) && ( data[1 + p ]) <= 57 
 	begin
-@goto ctr62
+@goto st28
 end
 
 end
 begin
 @goto st0
 end
-@label ctr62
+@label ctr61
 begin
-	Ragel.@pushmark! 
+	if isnull(input.block_sizes)
+            input.block_sizes = Array(Int, 0)
+        end
+        push!(get(input.block_sizes), (Ragel.@int64_from_mark!))
+    
 end
 @goto st29
 @label st29
@@ -1145,191 +1174,18 @@ p+= 1;
 
 end
 @label st_case_29
-@switch ( data[1 + p ])  begin
-    @case 10
-begin
-@goto ctr63
-end
-@case 13
-begin
-@goto ctr64
-end
-@case 44
-begin
-@goto ctr65
-end
-
-end
 if 48 <= ( data[1 + p ]) && ( data[1 + p ]) <= 57 
 	begin
-@goto st29
+@goto ctr66
 end
 
 end
 begin
 @goto st0
 end
-@label ctr23
-begin
-	input.state.linenum += 1 
-end
-@goto st39
-@label ctr9
-begin
-	input.last         = Ragel.@int64_from_mark! 
-end
-begin
-	input.state.linenum += 1 
-end
-@goto st39
-@label ctr13
+@label ctr66
 begin
 	Ragel.@pushmark! 
-end
-begin
-	input.name         = Nullable{String}(Ragel.@bytestring_from_mark!) 
-end
-begin
-	input.state.linenum += 1 
-end
-@goto st39
-@label ctr18
-begin
-	input.score        = Ragel.@int64_from_mark! 
-end
-begin
-	input.state.linenum += 1 
-end
-@goto st39
-@label ctr27
-begin
-	input.thick_first  = Ragel.@int64_from_mark! 
-end
-begin
-	input.state.linenum += 1 
-end
-@goto st39
-@label ctr32
-begin
-	input.thick_last   = Ragel.@int64_from_mark! 
-end
-begin
-	input.state.linenum += 1 
-end
-@goto st39
-@label ctr48
-begin
-	input.blue         = (Ragel.@int64_from_mark!) / 255.0 
-end
-begin
-	input.item_rgb     = RGB{Float32}(input.red, input.green, input.blue ) 
-end
-begin
-	input.state.linenum += 1 
-end
-@goto st39
-@label ctr53
-begin
-	input..block_count = Ragel.@int64_from_mark! 
-end
-begin
-	input.state.linenum += 1 
-end
-@goto st39
-@label ctr58
-begin
-	if isnull(input..block_sizes)
-            input..block_sizes = Array(Int, 0)
-        end
-        push!(get(input.block_sizes), (Ragel.@int64_from_mark!))
-    
-end
-begin
-	input.state.linenum += 1 
-end
-@goto st39
-@label ctr63
-begin
-	if isnull(input.block_firsts)
-            input..block_firsts = Array(Int, 0)
-        end
-        push!(get(input.block_firsts), (Ragel.@int64_from_mark!))
-    
-end
-begin
-	input.state.linenum += 1 
-end
-@goto st39
-@label ctr73
-begin
-	input.name         = Nullable{String}(Ragel.@bytestring_from_mark!) 
-end
-begin
-	input.state.linenum += 1 
-end
-@goto st39
-@label st39
-p+= 1;
-	if p == pe 
-	@goto _test_eof39
-
-end
-@label st_case_39
-@switch ( data[1 + p ])  begin
-    @case 9
-begin
-@goto ctr81
-end
-@case 10
-begin
-@goto ctr23
-end
-@case 11
-begin
-@goto st31
-end
-@case 13
-begin
-@goto st32
-end
-@case 32
-begin
-@goto ctr82
-end
-
-end
-if 33 <= ( data[1 + p ]) && ( data[1 + p ]) <= 126 
-	begin
-@goto ctr83
-end
-
-end
-begin
-@goto st0
-end
-@label ctr68
-begin
-	input.seqname      = Ragel.@bytestring_from_mark! 
-end
-@goto st30
-@label ctr81
-begin
-	yield = true
-        # // fbreak causes will cause the pushmark action for the next seqname
-        # // to be skipped, so we do it here
-        Ragel.@pushmark!
-        begin
-	p+= 1; cs = 30; @goto _out
-
-end
-
-    
-end
-begin
-	Ragel.@pushmark! 
-end
-begin
-	input.seqname      = Ragel.@bytestring_from_mark! 
 end
 @goto st30
 @label st30
@@ -1340,9 +1196,150 @@ p+= 1;
 end
 @label st_case_30
 @switch ( data[1 + p ])  begin
+    @case 10
+begin
+@goto ctr67
+end
+@case 13
+begin
+@goto ctr68
+end
+@case 44
+begin
+@goto ctr69
+end
+
+end
+if 48 <= ( data[1 + p ]) && ( data[1 + p ]) <= 57 
+	begin
+@goto st30
+end
+
+end
+begin
+@goto st0
+end
+@label ctr23
+begin
+	input.state.linenum += 1 
+end
+@goto st42
+@label ctr9
+begin
+	input.last         = Ragel.@int64_from_mark! 
+end
+begin
+	input.state.linenum += 1 
+end
+@goto st42
+@label ctr13
+begin
+	Ragel.@pushmark! 
+end
+begin
+	input.name         = Nullable{String}(Ragel.@bytestring_from_mark!) 
+end
+begin
+	input.state.linenum += 1 
+end
+@goto st42
+@label ctr18
+begin
+	input.score        = Ragel.@int64_from_mark! 
+end
+begin
+	input.state.linenum += 1 
+end
+@goto st42
+@label ctr27
+begin
+	input.thick_first  = Ragel.@int64_from_mark! 
+end
+begin
+	input.state.linenum += 1 
+end
+@goto st42
+@label ctr32
+begin
+	input.thick_last   = Ragel.@int64_from_mark! 
+end
+begin
+	input.state.linenum += 1 
+end
+@goto st42
+@label ctr37
+begin
+	input.red = input.green = input.blue = (Ragel.@int64_from_mark!) / 255.0 
+end
+begin
+	input.item_rgb     = RGB{Float32}(input.red, input.green, input.blue ) 
+end
+begin
+	input.state.linenum += 1 
+end
+@goto st42
+@label ctr53
+begin
+	input.blue         = (Ragel.@int64_from_mark!) / 255.0 
+end
+begin
+	input.item_rgb     = RGB{Float32}(input.red, input.green, input.blue ) 
+end
+begin
+	input.state.linenum += 1 
+end
+@goto st42
+@label ctr57
+begin
+	input.block_count  = Ragel.@int64_from_mark! 
+end
+begin
+	input.state.linenum += 1 
+end
+@goto st42
+@label ctr62
+begin
+	if isnull(input.block_sizes)
+            input.block_sizes = Array(Int, 0)
+        end
+        push!(get(input.block_sizes), (Ragel.@int64_from_mark!))
+    
+end
+begin
+	input.state.linenum += 1 
+end
+@goto st42
+@label ctr67
+begin
+	if isnull(input.block_firsts)
+            input.block_firsts = Array(Int, 0)
+        end
+        push!(get(input.block_firsts), (Ragel.@int64_from_mark!))
+    
+end
+begin
+	input.state.linenum += 1 
+end
+@goto st42
+@label ctr78
+begin
+	input.name         = Nullable{String}(Ragel.@bytestring_from_mark!) 
+end
+begin
+	input.state.linenum += 1 
+end
+@goto st42
+@label st42
+p+= 1;
+	if p == pe 
+	@goto _test_eof42
+
+end
+@label st_case_42
+@switch ( data[1 + p ])  begin
     @case 9
 begin
-@goto st31
+@goto ctr86
 end
 @case 10
 begin
@@ -1350,15 +1347,79 @@ begin
 end
 @case 11
 begin
-@goto st31
+@goto st32
 end
 @case 13
 begin
-@goto st32
+@goto st33
 end
 @case 32
 begin
+@goto ctr87
+end
+
+end
+if 33 <= ( data[1 + p ]) && ( data[1 + p ]) <= 126 
+	begin
+@goto ctr88
+end
+
+end
+begin
+@goto st0
+end
+@label ctr72
+begin
+	input.seqname      = Ragel.@bytestring_from_mark! 
+end
 @goto st31
+@label ctr86
+begin
+	yield = true
+        # // fbreak causes will cause the pushmark action for the next seqname
+        # // to be skipped, so we do it here
+        Ragel.@pushmark!
+        begin
+	p+= 1; cs = 31; @goto _out
+
+end
+
+    
+end
+begin
+	Ragel.@pushmark! 
+end
+begin
+	input.seqname      = Ragel.@bytestring_from_mark! 
+end
+@goto st31
+@label st31
+p+= 1;
+	if p == pe 
+	@goto _test_eof31
+
+end
+@label st_case_31
+@switch ( data[1 + p ])  begin
+    @case 9
+begin
+@goto st32
+end
+@case 10
+begin
+@goto ctr23
+end
+@case 11
+begin
+@goto st32
+end
+@case 13
+begin
+@goto st33
+end
+@case 32
+begin
+@goto st32
 end
 
 end
@@ -1371,17 +1432,17 @@ end
 begin
 @goto st0
 end
-@label st31
+@label st32
 p+= 1;
 	if p == pe 
-	@goto _test_eof31
+	@goto _test_eof32
 
 end
-@label st_case_31
+@label st_case_32
 @switch ( data[1 + p ])  begin
     @case 9
 begin
-@goto st31
+@goto st32
 end
 @case 10
 begin
@@ -1389,15 +1450,15 @@ begin
 end
 @case 11
 begin
-@goto st31
+@goto st32
 end
 @case 13
 begin
-@goto st32
+@goto st33
 end
 @case 32
 begin
-@goto st31
+@goto st32
 end
 
 end
@@ -1408,7 +1469,7 @@ end
 begin
 	input.last         = Ragel.@int64_from_mark! 
 end
-@goto st32
+@goto st33
 @label ctr14
 begin
 	Ragel.@pushmark! 
@@ -1416,89 +1477,64 @@ end
 begin
 	input.name         = Nullable{String}(Ragel.@bytestring_from_mark!) 
 end
-@goto st32
+@goto st33
 @label ctr19
 begin
 	input.score        = Ragel.@int64_from_mark! 
 end
-@goto st32
+@goto st33
 @label ctr28
 begin
 	input.thick_first  = Ragel.@int64_from_mark! 
 end
-@goto st32
+@goto st33
 @label ctr33
 begin
 	input.thick_last   = Ragel.@int64_from_mark! 
 end
-@goto st32
-@label ctr49
+@goto st33
+@label ctr39
+begin
+	input.red = input.green = input.blue = (Ragel.@int64_from_mark!) / 255.0 
+end
+begin
+	input.item_rgb     = RGB{Float32}(input.red, input.green, input.blue ) 
+end
+@goto st33
+@label ctr54
 begin
 	input.blue         = (Ragel.@int64_from_mark!) / 255.0 
 end
 begin
 	input.item_rgb     = RGB{Float32}(input.red, input.green, input.blue ) 
 end
-@goto st32
-@label ctr54
+@goto st33
+@label ctr58
 begin
-	input..block_count = Ragel.@int64_from_mark! 
+	input.block_count  = Ragel.@int64_from_mark! 
 end
-@goto st32
-@label ctr59
+@goto st33
+@label ctr63
 begin
-	if isnull(input..block_sizes)
-            input..block_sizes = Array(Int, 0)
+	if isnull(input.block_sizes)
+            input.block_sizes = Array(Int, 0)
         end
         push!(get(input.block_sizes), (Ragel.@int64_from_mark!))
     
 end
-@goto st32
-@label ctr64
+@goto st33
+@label ctr68
 begin
 	if isnull(input.block_firsts)
-            input..block_firsts = Array(Int, 0)
+            input.block_firsts = Array(Int, 0)
         end
         push!(get(input.block_firsts), (Ragel.@int64_from_mark!))
     
 end
-@goto st32
-@label ctr74
+@goto st33
+@label ctr79
 begin
 	input.name         = Nullable{String}(Ragel.@bytestring_from_mark!) 
-end
-@goto st32
-@label st32
-p+= 1;
-	if p == pe 
-	@goto _test_eof32
-
-end
-@label st_case_32
-if ( data[1 + p ]) == 10 
-	begin
-@goto ctr23
-end
-
-end
-begin
-@goto st0
-end
-@label ctr82
-begin
-	yield = true
-        # // fbreak causes will cause the pushmark action for the next seqname
-        # // to be skipped, so we do it here
-        Ragel.@pushmark!
-        begin
-	p+= 1; cs = 33; @goto _out
-
-end
-
-    
-end
-begin
-	Ragel.@pushmark! 
 end
 @goto st33
 @label st33
@@ -1508,44 +1544,16 @@ p+= 1;
 
 end
 @label st_case_33
-@switch ( data[1 + p ])  begin
-    @case 9
-begin
-@goto ctr68
-end
-@case 10
-begin
-@goto ctr23
-end
-@case 11
-begin
-@goto st31
-end
-@case 13
-begin
-@goto st32
-end
-@case 32
-begin
-@goto st33
-end
-
-end
-if 33 <= ( data[1 + p ]) && ( data[1 + p ]) <= 126 
+if ( data[1 + p ]) == 10 
 	begin
-@goto st34
+@goto ctr23
 end
 
 end
 begin
 @goto st0
 end
-@label ctr80
-begin
-	Ragel.@pushmark! 
-end
-@goto st34
-@label ctr83
+@label ctr87
 begin
 	yield = true
         # // fbreak causes will cause the pushmark action for the next seqname
@@ -1569,24 +1577,58 @@ p+= 1;
 
 end
 @label st_case_34
-if ( data[1 + p ]) == 9 
-	begin
-@goto ctr71
+@switch ( data[1 + p ])  begin
+    @case 9
+begin
+@goto ctr72
+end
+@case 10
+begin
+@goto ctr23
+end
+@case 11
+begin
+@goto st32
+end
+@case 13
+begin
+@goto st33
+end
+@case 32
+begin
+@goto st34
 end
 
 end
-if 32 <= ( data[1 + p ]) && ( data[1 + p ]) <= 126 
+if 33 <= ( data[1 + p ]) && ( data[1 + p ]) <= 126 
 	begin
-@goto st34
+@goto st35
 end
 
 end
 begin
 @goto st0
 end
-@label ctr71
+@label ctr85
 begin
-	input.seqname      = Ragel.@bytestring_from_mark! 
+	Ragel.@pushmark! 
+end
+@goto st35
+@label ctr88
+begin
+	yield = true
+        # // fbreak causes will cause the pushmark action for the next seqname
+        # // to be skipped, so we do it here
+        Ragel.@pushmark!
+        begin
+	p+= 1; cs = 35; @goto _out
+
+end
+
+    
+end
+begin
+	Ragel.@pushmark! 
 end
 @goto st35
 @label st35
@@ -1596,18 +1638,24 @@ p+= 1;
 
 end
 @label st_case_35
-if 48 <= ( data[1 + p ]) && ( data[1 + p ]) <= 57 
+if ( data[1 + p ]) == 9 
 	begin
-@goto ctr4
+@goto ctr75
+end
+
+end
+if 32 <= ( data[1 + p ]) && ( data[1 + p ]) <= 126 
+	begin
+@goto st35
 end
 
 end
 begin
 @goto st0
 end
-@label ctr15
+@label ctr75
 begin
-	Ragel.@pushmark! 
+	input.seqname      = Ragel.@bytestring_from_mark! 
 end
 @goto st36
 @label st36
@@ -1617,33 +1665,22 @@ p+= 1;
 
 end
 @label st_case_36
-@switch ( data[1 + p ])  begin
-    @case 9
-begin
-@goto ctr72
-end
-@case 10
-begin
-@goto ctr73
-end
-@case 13
-begin
-@goto ctr74
-end
-
-end
-if 32 <= ( data[1 + p ]) && ( data[1 + p ]) <= 126 
+if 48 <= ( data[1 + p ]) && ( data[1 + p ]) <= 57 
 	begin
-@goto st36
+@goto ctr4
 end
 
 end
 begin
 @goto st0
 end
-@label ctr79
+@label ctr69
 begin
-	Ragel.@pushmark! 
+	if isnull(input.block_firsts)
+            input.block_firsts = Array(Int, 0)
+        end
+        push!(get(input.block_firsts), (Ragel.@int64_from_mark!))
+    
 end
 @goto st37
 @label st37
@@ -1654,9 +1691,117 @@ p+= 1;
 end
 @label st_case_37
 @switch ( data[1 + p ])  begin
+    @case 10
+begin
+@goto ctr23
+end
+@case 13
+begin
+@goto st33
+end
+
+end
+if 48 <= ( data[1 + p ]) && ( data[1 + p ]) <= 57 
+	begin
+@goto ctr66
+end
+
+end
+begin
+@goto st0
+end
+@label ctr64
+begin
+	if isnull(input.block_sizes)
+            input.block_sizes = Array(Int, 0)
+        end
+        push!(get(input.block_sizes), (Ragel.@int64_from_mark!))
+    
+end
+@goto st38
+@label st38
+p+= 1;
+	if p == pe 
+	@goto _test_eof38
+
+end
+@label st_case_38
+@switch ( data[1 + p ])  begin
     @case 9
 begin
-@goto ctr76
+@goto st29
+end
+@case 10
+begin
+@goto ctr23
+end
+@case 13
+begin
+@goto st33
+end
+
+end
+if 48 <= ( data[1 + p ]) && ( data[1 + p ]) <= 57 
+	begin
+@goto ctr60
+end
+
+end
+begin
+@goto st0
+end
+@label ctr15
+begin
+	Ragel.@pushmark! 
+end
+@goto st39
+@label st39
+p+= 1;
+	if p == pe 
+	@goto _test_eof39
+
+end
+@label st_case_39
+@switch ( data[1 + p ])  begin
+    @case 9
+begin
+@goto ctr77
+end
+@case 10
+begin
+@goto ctr78
+end
+@case 13
+begin
+@goto ctr79
+end
+
+end
+if 32 <= ( data[1 + p ]) && ( data[1 + p ]) <= 126 
+	begin
+@goto st39
+end
+
+end
+begin
+@goto st0
+end
+@label ctr84
+begin
+	Ragel.@pushmark! 
+end
+@goto st40
+@label st40
+p+= 1;
+	if p == pe 
+	@goto _test_eof40
+
+end
+@label st_case_40
+@switch ( data[1 + p ])  begin
+    @case 9
+begin
+@goto ctr81
 end
 @case 10
 begin
@@ -1672,13 +1817,13 @@ begin
 end
 @case 32
 begin
-@goto st37
+@goto st40
 end
 
 end
 if 33 <= ( data[1 + p ]) && ( data[1 + p ]) <= 126 
 	begin
-@goto st34
+@goto st35
 end
 
 end
@@ -1686,8 +1831,8 @@ begin
 @goto st0
 end
 @label st_out
-@label _test_eof38
-cs = 38; @goto _test_eof
+@label _test_eof41
+cs = 41; @goto _test_eof
 @label _test_eof1
 cs = 1; @goto _test_eof
 @label _test_eof2
@@ -1746,10 +1891,10 @@ cs = 27; @goto _test_eof
 cs = 28; @goto _test_eof
 @label _test_eof29
 cs = 29; @goto _test_eof
-@label _test_eof39
-cs = 39; @goto _test_eof
 @label _test_eof30
 cs = 30; @goto _test_eof
+@label _test_eof42
+cs = 42; @goto _test_eof
 @label _test_eof31
 cs = 31; @goto _test_eof
 @label _test_eof32
@@ -1764,13 +1909,19 @@ cs = 35; @goto _test_eof
 cs = 36; @goto _test_eof
 @label _test_eof37
 cs = 37; @goto _test_eof
+@label _test_eof38
+cs = 38; @goto _test_eof
+@label _test_eof39
+cs = 39; @goto _test_eof
+@label _test_eof40
+cs = 40; @goto _test_eof
 @label _test_eof
 begin
 end
 if p == eof 
 	begin
 @switch cs  begin
-    @case 39
+    @case 42
 begin
 	yield = true
         # // fbreak causes will cause the pushmark action for the next seqname

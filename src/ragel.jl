@@ -161,7 +161,10 @@ type State
         return new(nothing, false, data, Buffer{Int}(16), false, 0, length(data), cs, 1)
     end
 
-    function State(cs, input::IO)
+    function State(cs, input::IO, memory_map=false)
+        if memory_map
+            error("Parser must be given a file name in order to memory map.")
+        end
         return new(input, false, Array(Uint8, RAGEL_PARSER_INITIAL_BUF_SIZE),
                    Buffer{Int}(16), false, 0, 0, cs, 1)
     end

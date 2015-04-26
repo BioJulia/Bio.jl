@@ -65,20 +65,20 @@ export BEDParser, takevalue!
     action strand      { input.strand       = convert(Strand, Ragel.@char) }
     action thick_first { input.thick_first  = Ragel.@int64_from_mark! }
     action thick_last  { input.thick_last   = Ragel.@int64_from_mark! }
-    action item_rgb_r  { input.red          = (Ragel.@int64_from_mark!) / 255.0 }
+    action item_rgb_r  { input.red = input.green = input.blue = (Ragel.@int64_from_mark!) / 255.0 }
     action item_rgb_g  { input.green        = (Ragel.@int64_from_mark!) / 255.0 }
     action item_rgb_b  { input.blue         = (Ragel.@int64_from_mark!) / 255.0 }
     action item_rgb    { input.item_rgb     = RGB{Float32}(input.red, input.green, input.blue ) }
-    action block_count { input..block_count = Ragel.@int64_from_mark! }
+    action block_count { input.block_count  = Ragel.@int64_from_mark! }
     action block_size {
-        if isnull(input..block_sizes)
-            input..block_sizes = Array(Int, 0)
+        if isnull(input.block_sizes)
+            input.block_sizes = Array(Int, 0)
         end
         push!(get(input.block_sizes), (Ragel.@int64_from_mark!))
     }
     action block_first {
         if isnull(input.block_firsts)
-            input..block_firsts = Array(Int, 0)
+            input.block_firsts = Array(Int, 0)
         end
         push!(get(input.block_firsts), (Ragel.@int64_from_mark!))
     }
@@ -99,15 +99,15 @@ export BEDParser, takevalue!
     item_rgb_r   = digit+   >pushmark     %item_rgb_r;
     item_rgb_g   = digit+   >pushmark     %item_rgb_g;
     item_rgb_b   = digit+   >pushmark     %item_rgb_b;
-    item_rgb     = item_rgb_r hspace* ',' hspace* item_rgb_g ',' hspace* ',' hspace* item_rgb_b %item_rgb;
+    item_rgb     = item_rgb_r (hspace* ',' hspace* item_rgb_g hspace* ',' hspace* item_rgb_b)? %item_rgb;
 
     block_count  = digit+   >pushmark    %block_count;
 
     block_size   = digit+   >pushmark    %block_size;
-    block_sizes  = block_size (',' block_size)*;
+    block_sizes  = block_size (',' block_size)* ','?;
 
     block_first  = digit+   >pushmark    %block_first;
-    block_firsts = block_first (',' block_first)*;
+    block_firsts = block_first (',' block_first)* ','?;
 
     bed_entry = seqname '\t' first '\t' last (
                     '\t' name ( '\t' score ( '\t' strand ( '\t' thick_first (
@@ -144,16 +144,9 @@ type BEDParser
     block_sizes::Nullable{Vector{Int}}
     block_firsts::Nullable{Vector{Int}}
 
-
     function BEDParser(input::Union(IO, String, Vector{Uint8}),
                        memory_map::Bool=false)
         %% write init;
-
-        if memory_map
-            if !isa(input, String)
-                error("Parser must be given a file name in order to memory map.")
-            end
-        end
 
         return new(Ragel.State(cs, input, memory_map),
                    "", 0, 0, STRAND_NA, 0.0, 0.0, 0.0,
