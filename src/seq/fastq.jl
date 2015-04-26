@@ -79,8 +79,8 @@ type FASTQParser
     state::Ragel.State
     seqbuf::Ragel.Buffer{Uint8}
     qualbuf::Ragel.Buffer{Uint8}
-    namebuf::Ragel.Buffer{Uint8}
-    descbuf::Ragel.Buffer{Uint8}
+    namebuf::String
+    descbuf::String
     name2buf::Ragel.Buffer{Uint8}
     desc2buf::Ragel.Buffer{Uint8}
     qualcount::Int
@@ -97,14 +97,12 @@ if memory_map
                 error("Parser must be given a file name in order to memory map.")
             end
             return new(Ragel.State(cs, input, true),
-                       Ragel.Buffer{Uint8}(),
-                       Ragel.Buffer{Uint8}(), Ragel.Buffer{Uint8}(),
-                       Ragel.Buffer{Uint8}(), Ragel.Buffer{Uint8}(),
-                       Ragel.Buffer{Uint8}(), 0, default_qual_encoding)
+                       Ragel.Buffer{Uint8}(), Ragel.Buffer{Uint8}(), "", "",
+                       Ragel.Buffer{Uint8}(), Ragel.Buffer{Uint8}(), 0,
+                       default_qual_encoding)
         else
             return new(Ragel.State(cs, input), Ragel.Buffer{Uint8}(),
-                       Ragel.Buffer{Uint8}(), Ragel.Buffer{Uint8}(),
-                       Ragel.Buffer{Uint8}(), Ragel.Buffer{Uint8}(),
+                       Ragel.Buffer{Uint8}(), "", "", Ragel.Buffer{Uint8}(),
                        Ragel.Buffer{Uint8}(), 0, default_qual_encoding)
         end
     end
@@ -131,8 +129,6 @@ function accept_state!(input::FASTQParser, output::FASTQSeqRecord)
     output.metadata.quality = decode_quality_string(encoding, input.qualbuf.
                                                     1, input.qualbuf.pos - 1)
 
-    input.namebuf = ""
-    input.descbuf = ""
     empty!(input.seqbuf)
     empty!(input.qualbuf)
 end
@@ -391,7 +387,7 @@ begin
 end
 @label ctr4
 begin
-	append!(input.namebuf,  state.buffer, (Ragel.@popmark!), p) 
+	input.namebuf = Ragel.@asciistring_from_mark! 
 end
 @goto st4
 @label st4
@@ -499,7 +495,7 @@ end
 @goto st6
 @label ctr5
 begin
-	append!(input.namebuf,  state.buffer, (Ragel.@popmark!), p) 
+	input.namebuf = Ragel.@asciistring_from_mark! 
 end
 begin
 	input.state.linenum += 1
@@ -508,7 +504,7 @@ end
 @goto st6
 @label ctr10
 begin
-	append!(input.descbuf,  state.buffer, (Ragel.@popmark!), p) 
+	input.descbuf = Ragel.@asciistring_from_mark! 
 end
 begin
 	input.state.linenum += 1
@@ -567,12 +563,12 @@ begin
 end
 @label ctr6
 begin
-	append!(input.namebuf,  state.buffer, (Ragel.@popmark!), p) 
+	input.namebuf = Ragel.@asciistring_from_mark! 
 end
 @goto st7
 @label ctr11
 begin
-	append!(input.descbuf,  state.buffer, (Ragel.@popmark!), p) 
+	input.descbuf = Ragel.@asciistring_from_mark! 
 end
 @goto st7
 @label ctr41
@@ -1245,7 +1241,7 @@ end
 @goto st25
 @label ctr32
 begin
-	append!(input.namebuf,  state.buffer, (Ragel.@popmark!), p) 
+	input.namebuf = Ragel.@asciistring_from_mark! 
 end
 begin
 	input.state.linenum += 1
@@ -1494,7 +1490,7 @@ begin
 end
 @label ctr33
 begin
-	append!(input.namebuf,  state.buffer, (Ragel.@popmark!), p) 
+	input.namebuf = Ragel.@asciistring_from_mark! 
 end
 begin
 	append!(input.qualbuf, state.buffer, (Ragel.@popmark!), p)
@@ -2166,15 +2162,16 @@ function advance!(it::FASTQIterator)
         qscores = decode_quality_string(encoding, it.parser.qualbuf.data,
                                         1, it.parser.qualbuf.pos - 1)
 
-        if (!isempty(it.parser.name2buf) && it.parser.namebuf != it.parser.name2buf) ||
-           (!isempty(it.parser.desc2buf) && it.parser.descbuf != it.parser.desc2buf)
-            error("Error parsing FASTQ: sequance and quality scores have non-matching identifiers")
+        if (!isempty(it.parser.name2buf) && it.parser.name2buf != it.parser.namebuf) ||
+           (!isempty(it.parser.desc2buf) && it.parser.desc2buf != it.parser.descbuf)
+            error("Error parsing FASTQ: sequence and quality scores have non-matching identifiers")
         end
 
         it.nextitem =
-            FASTQSeqRecord(takebuf_string(it.parser.namebuf),
+            FASTQSeqRecord(it.parser.namebuf,
                            DNASequence(it.parser.seqbuf.data, 1, it.parser.seqbuf.pos - 1),
-                           FASTQMetadata(takebuf_string(it.parser.descbuf), qscores))
+                           FASTQMetadata(it.parser.descbuf, qscores))
+
         empty!(it.parser.seqbuf)
         empty!(it.parser.qualbuf)
         empty!(it.parser.name2buf)

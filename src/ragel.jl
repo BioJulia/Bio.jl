@@ -216,10 +216,10 @@ macro spanfrom(firstpos)
     end
 end
 
-macro bytestring_from_mark!()
+macro asciistring_from_mark!()
     quote
         firstpos = Ragel.@popmark!
-        bytestring(pointer($(esc(:state)).buffer, firstpos), $(esc(:p)) - firstpos + 1)
+        ASCIIString($(esc(:state)).buffer[firstpos:$(esc(:p))])
     end
 end
 

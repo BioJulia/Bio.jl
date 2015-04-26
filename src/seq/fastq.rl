@@ -83,12 +83,12 @@ export FASTQParser
 
     action pushmark { Ragel.@pushmark! }
 
-    action identifier_end   { append!(input.namebuf,  state.buffer, (Ragel.@popmark!), p) }
-    action description_end  { append!(input.descbuf,  state.buffer, (Ragel.@popmark!), p) }
-    action identifier2_end  { append!(input.name2buf, state.buffer, (Ragel.@popmark!), p) }
-    action description2_end { append!(input.desc2buf, state.buffer, (Ragel.@popmark!), p) }
-    action letters_end { append!(input.seqbuf, state.buffer, (Ragel.@popmark!), p) }
-    action qletters_end {
+    action identifier   { input.namebuf = Ragel.@asciistring_from_mark! }
+    action description  { input.descbuf = Ragel.@asciistring_from_mark! }
+    action identifier2  { append!(input.name2buf, state.buffer, (Ragel.@popmark!), p) }
+    action description2 { append!(input.desc2buf, state.buffer, (Ragel.@popmark!), p) }
+    action letters { append!(input.seqbuf, state.buffer, (Ragel.@popmark!), p) }
+    action qletters {
         append!(input.qualbuf, state.buffer, (Ragel.@popmark!), p)
         input.qualcount = 0
     }
@@ -109,16 +109,16 @@ export FASTQParser
     hspace      = [ \t\v];
     whitespace  = newline | hspace;
 
-    identifier  = (any - space)+     >pushmark  %identifier_end;
-    description = [^\r\n]+           >pushmark  %description_end;
+    identifier  = (any - space)+     >pushmark  %identifier;
+    description = [^\r\n]+           >pushmark  %description;
 
-    identifier2  = (any - space)+    >pushmark  %identifier2_end;
-    description2 = [^\r\n]+          >pushmark  %description2_end;
+    identifier2  = (any - space)+    >pushmark  %identifier2;
+    description2 = [^\r\n]+          >pushmark  %description2;
 
-    letters     = alpha+             >pushmark  %letters_end;
+    letters     = alpha+             >pushmark  %letters;
     sequence    = (newline+ letters)*;
 
-    qletters    = ([!-~] when qlen_lt $inc_qual_count)+   >pushmark %qletters_end;
+    qletters    = ([!-~] when qlen_lt $inc_qual_count)+   >pushmark %qletters;
     quality     = (newline+ qletters)*;
 
     fastq_entry = '@' when qlen_eq identifier (hspace+ description)?
@@ -271,8 +271,8 @@ function advance!(it::FASTQIterator)
         qscores = decode_quality_string(encoding, it.parser.qualbuf.data,
                                         1, it.parser.qualbuf.pos - 1)
 
-        if (!isempty(it.parser.name2buf) && it.parser.namebuf != it.parser.name2buf) ||
-           (!isempty(it.parser.desc2buf) && it.parser.descbuf != it.parser.desc2buf)
+        if (!isempty(it.parser.name2buf) && it.parser.name2buf != it.parser.namebuf) ||
+           (!isempty(it.parser.desc2buf) && it.parser.desc2buf != it.parser.descbuf)
             error("Error parsing FASTQ: sequence and quality scores have non-matching identifiers")
         end
 
@@ -280,6 +280,7 @@ function advance!(it::FASTQIterator)
             FASTQSeqRecord(it.parser.namebuf,
                            DNASequence(it.parser.seqbuf.data, 1, it.parser.seqbuf.pos - 1),
                            FASTQMetadata(it.parser.descbuf, qscores))
+
         empty!(it.parser.seqbuf)
         empty!(it.parser.qualbuf)
         empty!(it.parser.name2buf)

@@ -46,19 +46,30 @@ const ALL_QUAL_ENCODINGS =
 
 
 # Ranges and score of the first character in the range.
-const qual_encoding_ranges = @compat Dict{QualityEncoding, (typeof((@compat UInt8(0)):(@compat UInt8(0))), Int8)}(
-    SANGER_QUAL_ENCODING     => ((@compat UInt8('!')):(@compat UInt8('~')), (@compat Int8(0))),
-    SOLEXA_QUAL_ENCODING     => ((@compat UInt8(';')):(@compat UInt8('~')), (@compat Int8(-5))),
-    ILLUMINA13_QUAL_ENCODING => ((@compat UInt8('@')):(@compat UInt8('~')), (@compat Int8(0))),
-    ILLUMINA15_QUAL_ENCODING => ((@compat UInt8('B')):(@compat UInt8('~')), (@compat Int8(3))),
-    ILLUMINA18_QUAL_ENCODING => ((@compat UInt8('!')):(@compat UInt8('~')), (@compat Int8(0))),
-)
+#const qual_encoding_ranges = @compat Dict{QualityEncoding, (typeof((@compat UInt8(0)):(@compat UInt8(0))), Int8)}(
+    #SANGER_QUAL_ENCODING     => ((@compat UInt8('!')):(@compat UInt8('~')), (@compat Int8(0))),
+    #SOLEXA_QUAL_ENCODING     => ((@compat UInt8(';')):(@compat UInt8('~')), (@compat Int8(-5))),
+    #ILLUMINA13_QUAL_ENCODING => ((@compat UInt8('@')):(@compat UInt8('~')), (@compat Int8(0))),
+    #ILLUMINA15_QUAL_ENCODING => ((@compat UInt8('B')):(@compat UInt8('~')), (@compat Int8(3))),
+    #ILLUMINA18_QUAL_ENCODING => ((@compat UInt8('!')):(@compat UInt8('~')), (@compat Int8(0))),
+#)
+
+# Index into this with `trailing_zeros(encoding) + 1`
+const qual_encoding_ranges = [
+    ((@compat UInt8('!')), (@compat UInt8('~')), (@compat Int8(0))),  # SANGER
+    ((@compat UInt8(';')), (@compat UInt8('~')), (@compat Int8(-5))), # SOLEXA
+    ((@compat UInt8('@')), (@compat UInt8('~')), (@compat Int8(0))),  # ILLUMINA13
+    ((@compat UInt8('B')), (@compat UInt8('~')), (@compat Int8(3))),  # ILLUMINA13
+    ((@compat UInt8('!')), (@compat UInt8('~')), (@compat Int8(0)))   # ILLUMINA15
+]
+
 
 # Build an encoding lookup table
 const compatible_qual_encoding = fill(EMPTY_QUAL_ENCODING, length('!':'~'))
 
-for (encoding, (range, start_score)) in qual_encoding_ranges
-    for c in range
+for (encoding_num, (first, last, start_score)) in enumerate(qual_encoding_ranges)
+    encoding = convert(QualityEncoding, (@compat UInt16(1)) << (encoding_num - 1))
+    for c in first:last
         compatible_qual_encoding[c - (@compat UInt8('!')) + 1] |= encoding
     end
 end
@@ -88,10 +99,10 @@ A `QualityEncoding`
 """ ->
 function infer_quality_encoding(data::Vector{Uint8}, start, stop, default)
     encodings = ALL_QUAL_ENCODINGS
-    for i in start:stop
+    @inbounds for i in start:stop
         c = data[i]
         if '!' <= c <= '~'
-            encodings &= compatible_qual_encoding[convert(Char, c) - '!' + 1]
+            encodings &= compatible_qual_encoding[c - '!' + 1]
         else
             error("Character $(convert(Char, c)) is not compatible with any known quality encoding.")
         end
@@ -108,6 +119,7 @@ function infer_quality_encoding(data::Vector{Uint8}, start, stop, default)
             end
         end
     end
+    return default
 end
 
 
@@ -127,12 +139,15 @@ Decode a quality string in place into integer Phred scores.
 """ ->
 function decode_quality_string!(encoding::QualityEncoding, input::Vector{Uint8},
                                 output::Vector{Int8}, start, stop)
-    range, startqual = qual_encoding_ranges[encoding]
-    for (i, j) in enumerate(start:stop)
-        c = input[j]
-        output[i] = startqual + (c - range.start)
+    @inbounds begin
+        encoding_num = trailing_zeros(convert(Uint16, encoding)) + 1
+        first, last, startqual = qual_encoding_ranges[encoding_num]
+        for (i, j) in enumerate(start:stop)
+            c = input[j]
+            output[i] = startqual + (c - first)
+        end
+        return output
     end
-    return output
 end
 
 

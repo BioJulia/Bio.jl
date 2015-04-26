@@ -66,17 +66,17 @@ export FASTAParser
 
     action count_line      { input.state.linenum += 1 }
     action pushmark        { Ragel.@pushmark! }
-    action identifier_end  { input.namebuf = Ragel.@bytestring_from_mark!  }
-    action description_end { input.descbuf = Ragel.@bytestring_from_mark! }
-    action letters_end     { append!(input.seqbuf, state.buffer, (Ragel.@popmark!), p) }
+    action identifier  { input.namebuf = Ragel.@asciistring_from_mark!  }
+    action description { input.descbuf = Ragel.@asciistring_from_mark! }
+    action letters     { append!(input.seqbuf, state.buffer, (Ragel.@popmark!), p) }
 
     newline     = '\r'? '\n'     >count_line;
     hspace      = [ \t\v];
     whitespace  = newline | hspace;
 
-    identifier  = (any - space)+ >pushmark  %identifier_end;
-    description = [^\r\n]+       >pushmark  %description_end;
-    letters     = alpha+         >pushmark  %letters_end;
+    identifier  = (any - space)+ >pushmark  %identifier;
+    description = [^\r\n]+       >pushmark  %description;
+    letters     = alpha+         >pushmark  %letters;
     sequence    = whitespace* letters? (newline+ whitespace* letters (hspace+ letters)*)*;
     fasta_entry = '>' identifier ( hspace+ description )? newline sequence whitespace*;
 

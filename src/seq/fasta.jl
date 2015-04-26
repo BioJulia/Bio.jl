@@ -337,7 +337,7 @@ begin
 end
 @label ctr4
 begin
-	input.namebuf = Ragel.@bytestring_from_mark!  
+	input.namebuf = Ragel.@asciistring_from_mark!  
 end
 @goto st4
 @label st4
@@ -444,7 +444,7 @@ end
 @goto st11
 @label ctr5
 begin
-	input.namebuf = Ragel.@bytestring_from_mark!  
+	input.namebuf = Ragel.@asciistring_from_mark!  
 end
 begin
 	input.state.linenum += 1 
@@ -452,7 +452,7 @@ end
 @goto st11
 @label ctr10
 begin
-	input.descbuf = Ragel.@bytestring_from_mark! 
+	input.descbuf = Ragel.@asciistring_from_mark! 
 end
 begin
 	input.state.linenum += 1 
@@ -837,12 +837,12 @@ begin
 end
 @label ctr6
 begin
-	input.namebuf = Ragel.@bytestring_from_mark!  
+	input.namebuf = Ragel.@asciistring_from_mark!  
 end
 @goto st8
 @label ctr11
 begin
-	input.descbuf = Ragel.@bytestring_from_mark! 
+	input.descbuf = Ragel.@asciistring_from_mark! 
 end
 @goto st8
 @label st8
