@@ -70,10 +70,8 @@ type FASTAParser
 
     function FASTAParser(input::Union(IO, String, Vector{Uint8});
                          memory_map::Bool=false)
-        begin
-cs = fasta_start;
-	end
-if memory_map
+        cs = fasta_start;
+	if memory_map
             if !isa(input, String)
                 error("Parser must be given a file name in order to memory map.")
             end
@@ -105,8 +103,7 @@ end
 Ragel.@generate_read_fuction("fasta", FASTAParser, FASTASeqRecord,
     begin
         @inbounds begin
-            begin
-if p == pe 
+            if p == pe 
 	@goto _test_eof
 
 end
@@ -135,9 +132,7 @@ end
 end
 @goto st_out
 @label ctr16
-begin
 	input.state.linenum += 1 
-end
 @goto st7
 @label st7
 p+= 1;
@@ -148,60 +143,38 @@ end
 @label st_case_7
 @switch ( data[1 + p ])  begin
     @case 9
-begin
 @goto st7
-end
 @case 10
-begin
 @goto ctr16
-end
 @case 32
-begin
 @goto st7
-end
 @case 62
-begin
 @goto st1
-end
 
 end
 if 11 <= ( data[1 + p ]) && ( data[1 + p ]) <= 13 
-	begin
-@goto st7
-end
+	@goto st7
 
 end
-begin
 @goto st0
-end
 @label st_case_0
 @label st0
 cs = 0;
 	@goto _out
 @label ctr20
-begin
 	yield = true;
-        begin
-	p+= 1; cs = 1; @goto _out
+        	p+= 1; cs = 1; @goto _out
 
-end
 
     
-end
 @goto st1
 @label ctr24
-begin
 	append!(input.seqbuf, state.buffer, (Ragel.@popmark!), p) 
-end
-begin
 	yield = true;
-        begin
-	p+= 1; cs = 1; @goto _out
+        	p+= 1; cs = 1; @goto _out
 
-end
 
     
-end
 @goto st1
 @label st1
 p+= 1;
@@ -211,44 +184,28 @@ p+= 1;
 end
 @label st_case_1
 if ( data[1 + p ]) == 32 
-	begin
-@goto st0
-end
+	@goto st0
 
 end
 if ( data[1 + p ]) < 14 
-	begin
-if 9 <= ( data[1 + p ]) 
-	begin
-@goto st0
-end
+	if 9 <= ( data[1 + p ]) 
+	@goto st0
 
-end
 end
 
 elseif ( ( data[1 + p ]) > 31  )
-	begin
-if 33 <= ( data[1 + p ]) 
-	begin
-@goto ctr0
-end
+	if 33 <= ( data[1 + p ]) 
+	@goto ctr0
 
-end
 end
 
 else
-	begin
-@goto ctr0
-end
+	@goto ctr0
 
 end
-begin
 @goto ctr0
-end
 @label ctr0
-begin
 	Ragel.@pushmark! 
-end
 @goto st2
 @label st2
 p+= 1;
@@ -259,54 +216,32 @@ end
 @label st_case_2
 @switch ( data[1 + p ])  begin
     @case 9
-begin
 @goto ctr3
-end
 @case 10
-begin
 @goto ctr4
-end
 @case 11
-begin
 @goto ctr3
-end
 @case 12
-begin
 @goto st0
-end
 @case 13
-begin
 @goto ctr5
-end
 @case 32
-begin
 @goto ctr3
-end
 
 end
 if ( data[1 + p ]) > 31 
-	begin
-if 33 <= ( data[1 + p ]) 
-	begin
-@goto st2
-end
+	if 33 <= ( data[1 + p ]) 
+	@goto st2
 
-end
 end
 
 elseif ( ( data[1 + p ]) >= 14  )
-	begin
-@goto st2
-end
+	@goto st2
 
 end
-begin
 @goto st2
-end
 @label ctr3
-begin
 	input.namebuf = Ragel.@asciistring_from_mark!  
-end
 @goto st3
 @label st3
 p+= 1;
@@ -317,42 +252,26 @@ end
 @label st_case_3
 @switch ( data[1 + p ])  begin
     @case 9
-begin
 @goto st3
-end
 @case 10
-begin
 @goto st4
-end
 @case 11
-begin
 @goto st3
-end
 @case 32
-begin
 @goto st3
-end
 
 end
 if ( data[1 + p ]) > 31 
-	begin
-if 33 <= ( data[1 + p ]) 
-	begin
-@goto st4
-end
+	if 33 <= ( data[1 + p ]) 
+	@goto st4
 
-end
 end
 
 elseif ( ( data[1 + p ]) >= 12  )
-	begin
-@goto st4
-end
+	@goto st4
 
 end
-begin
 @goto st4
-end
 @label st4
 p+= 1;
 	if p == pe 
@@ -362,38 +281,24 @@ end
 @label st_case_4
 @switch ( data[1 + p ])  begin
     @case 10
-begin
 @goto ctr9
-end
 @case 13
-begin
 @goto ctr10
-end
 
 end
 if ( data[1 + p ]) > 12 
-	begin
-if 14 <= ( data[1 + p ]) 
-	begin
-@goto ctr8
-end
+	if 14 <= ( data[1 + p ]) 
+	@goto ctr8
 
-end
 end
 
 elseif ( ( data[1 + p ]) >= 11  )
-	begin
-@goto ctr8
-end
+	@goto ctr8
 
 end
-begin
 @goto ctr8
-end
 @label ctr8
-begin
 	Ragel.@pushmark! 
-end
 @goto st5
 @label st5
 p+= 1;
@@ -404,78 +309,44 @@ end
 @label st_case_5
 @switch ( data[1 + p ])  begin
     @case 10
-begin
 @goto ctr12
-end
 @case 13
-begin
 @goto ctr13
-end
 
 end
 if ( data[1 + p ]) > 12 
-	begin
-if 14 <= ( data[1 + p ]) 
-	begin
-@goto st5
-end
+	if 14 <= ( data[1 + p ]) 
+	@goto st5
 
-end
 end
 
 elseif ( ( data[1 + p ]) >= 11  )
-	begin
-@goto st5
-end
+	@goto st5
 
 end
-begin
 @goto st5
-end
 @label ctr4
-begin
 	input.namebuf = Ragel.@asciistring_from_mark!  
-end
-begin
 	input.state.linenum += 1 
-end
 @goto st8
 @label ctr9
-begin
 	Ragel.@pushmark! 
-end
-begin
 	input.descbuf = Ragel.@asciistring_from_mark! 
-end
-begin
 	input.state.linenum += 1 
-end
 @goto st8
 @label ctr12
-begin
 	input.descbuf = Ragel.@asciistring_from_mark! 
-end
-begin
 	input.state.linenum += 1 
-end
 @goto st8
 @label ctr14
-begin
 	input.state.linenum += 1 
-end
 @goto st8
 @label ctr22
-begin
 	append!(input.seqbuf, state.buffer, (Ragel.@popmark!), p) 
-end
 @goto st8
 @label ctr23
-begin
 	append!(input.seqbuf, state.buffer, (Ragel.@popmark!), p) 
-end
-begin
 	input.state.linenum += 1 
-end
 @goto st8
 @label st8
 p+= 1;
@@ -486,66 +357,40 @@ end
 @label st_case_8
 @switch ( data[1 + p ])  begin
     @case 9
-begin
 @goto st8
-end
 @case 10
-begin
 @goto ctr14
-end
 @case 32
-begin
 @goto st8
-end
 @case 62
-begin
 @goto ctr20
-end
 
 end
 if ( data[1 + p ]) < 14 
-	begin
-if 11 <= ( data[1 + p ]) 
-	begin
-@goto st8
-end
+	if 11 <= ( data[1 + p ]) 
+	@goto st8
 
-end
 end
 
 elseif ( ( data[1 + p ]) > 31  )
-	begin
-if ( data[1 + p ]) > 61 
-	begin
-if 63 <= ( data[1 + p ]) 
-	begin
-@goto ctr18
-end
+	if ( data[1 + p ]) > 61 
+	if 63 <= ( data[1 + p ]) 
+	@goto ctr18
 
-end
 end
 
 elseif ( ( data[1 + p ]) >= 33  )
-	begin
-@goto ctr18
-end
+	@goto ctr18
 
-end
 end
 
 else
-	begin
-@goto ctr18
-end
+	@goto ctr18
 
 end
-begin
 @goto ctr18
-end
 @label ctr18
-begin
 	Ragel.@pushmark! 
-end
 @goto st9
 @label st9
 p+= 1;
@@ -556,79 +401,47 @@ end
 @label st_case_9
 @switch ( data[1 + p ])  begin
     @case 9
-begin
 @goto ctr22
-end
 @case 10
-begin
 @goto ctr23
-end
 @case 32
-begin
 @goto ctr22
-end
 @case 62
-begin
 @goto ctr24
-end
 
 end
 if ( data[1 + p ]) < 14 
-	begin
-if 11 <= ( data[1 + p ]) 
-	begin
-@goto ctr22
-end
+	if 11 <= ( data[1 + p ]) 
+	@goto ctr22
 
-end
 end
 
 elseif ( ( data[1 + p ]) > 31  )
-	begin
-if ( data[1 + p ]) > 61 
-	begin
-if 63 <= ( data[1 + p ]) 
-	begin
-@goto st9
-end
+	if ( data[1 + p ]) > 61 
+	if 63 <= ( data[1 + p ]) 
+	@goto st9
 
-end
 end
 
 elseif ( ( data[1 + p ]) >= 33  )
-	begin
-@goto st9
-end
+	@goto st9
 
-end
 end
 
 else
-	begin
-@goto st9
-end
+	@goto st9
 
 end
-begin
 @goto st9
-end
 @label ctr5
-begin
 	input.namebuf = Ragel.@asciistring_from_mark!  
-end
 @goto st6
 @label ctr10
-begin
 	Ragel.@pushmark! 
-end
-begin
 	input.descbuf = Ragel.@asciistring_from_mark! 
-end
 @goto st6
 @label ctr13
-begin
 	input.descbuf = Ragel.@asciistring_from_mark! 
-end
 @goto st6
 @label st6
 p+= 1;
@@ -638,14 +451,10 @@ p+= 1;
 end
 @label st_case_6
 if ( data[1 + p ]) == 10 
-	begin
-@goto ctr14
-end
+	@goto ctr14
 
 end
-begin
 @goto st0
-end
 @label st_out
 @label _test_eof7
 cs = 7; @goto _test_eof
@@ -666,47 +475,30 @@ cs = 9; @goto _test_eof
 @label _test_eof6
 cs = 6; @goto _test_eof
 @label _test_eof
-begin
-end
 if p == eof 
-	begin
-@switch cs  begin
+	@switch cs  begin
     @case 8
-begin
 	yield = true;
-        begin
-	p+= 1; cs = 0; @goto _out
+        	p+= 1; cs = 0; @goto _out
 
-end
 
     
-end
 
 	break;
 	@case 9
-begin
 	append!(input.seqbuf, state.buffer, (Ragel.@popmark!), p) 
-end
-begin
 	yield = true;
-        begin
-	p+= 1; cs = 0; @goto _out
+        	p+= 1; cs = 0; @goto _out
 
-end
 
     
-end
 
 	break;
 	
 end
-end
 
 end
 @label _out
-begin
-end
-end
 end
     end,
     begin
