@@ -47,10 +47,12 @@ considered it must meet the following guidelines.
 
     ```julia
     module AwesomeFeatures
-        using Compat, JSON
 
-        include("feature1.jl")
-        include("feature2.jl")
+    using Compat, JSON
+
+    include("feature1.jl")
+    include("feature2.jl")
+
     end
     ```
 
