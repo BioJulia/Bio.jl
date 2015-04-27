@@ -62,7 +62,7 @@ considered it must meet the following guidelines.
   * When extending method definitions, explicitly import the method.
 
     ```julia
-    import Base: start, next done
+    import Base: start, next, done
     ```
 
 
