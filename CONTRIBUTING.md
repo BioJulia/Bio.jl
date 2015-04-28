@@ -16,7 +16,7 @@ considered it must meet the following guidelines.
     internally) and is short and obvious. E.g. `cube(x) = x^3`.
 
   * All significant code must be tested. Tests should be organized into
-    contexts, and into seperate files based on module.
+    contexts, and into separate files based on module.
 
   * Contributions are included if the code has been reviewed by at least two
     team members and there is general consensus (or general lack of objections)
@@ -35,15 +35,15 @@ considered it must meet the following guidelines.
     `SomeVeryUsefulType`.
 
   * Function names, apart from constructors, are all lowercase. Include
-    underscores between words only if the name hard to read without. E.g.
-    `start`, `stop`, `findletter` `find_last_digit`.
+    underscores between words only if thelname would be hard to read without.
+    E.g.  `start`, `stop`, `findletter` `find_last_digit`.
 
   * Generally try to keep lines below 80-columns, unless splitting a long line
     onto multiple lines makes it harder to read.
 
-  * Files that declare modules should only declare the module, and import and
+  * Files that declare modules should only declare the module, and import any
     modules that it requires. Any code should
-    be included from seperate files. E.g.
+    be included from separate files. E.g.
 
     ```julia
     module AwesomeFeatures
