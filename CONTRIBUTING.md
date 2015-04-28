@@ -35,7 +35,7 @@ considered it must meet the following guidelines.
     `SomeVeryUsefulType`.
 
   * Function names, apart from constructors, are all lowercase. Include
-    underscores between words only if thelname would be hard to read without.
+    underscores between words only if the name would be hard to read without.
     E.g.  `start`, `stop`, `findletter` `find_last_digit`.
 
   * Generally try to keep lines below 80-columns, unless splitting a long line
