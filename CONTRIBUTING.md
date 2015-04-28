@@ -65,4 +65,8 @@ considered it must meet the following guidelines.
     import Base: start, next, done
     ```
 
+## Conduct
+
+We adhere to the Julia [community standards](http://julialang.org/community/standards/).
+
 
