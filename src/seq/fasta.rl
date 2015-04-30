@@ -64,9 +64,9 @@ export FASTAParser
     hspace      = [ \t\v];
     whitespace  = space | newline;
 
-    identifier  = (any - space)+            >pushmark  %identifier;
-    description = ((any - hspace) [^\r\n]*) >pushmark  %description;
-    letters     = (any - space - '>')+      >pushmark  %letters;
+    identifier  = (any - space)+            >mark  %identifier;
+    description = ((any - hspace) [^\r\n]*) >mark  %description;
+    letters     = (any - space - '>')+      >mark  %letters;
     sequence    = whitespace* letters? (whitespace+ letters)*;
     fasta_entry = '>' identifier (hspace+ description)? newline sequence whitespace*;
 

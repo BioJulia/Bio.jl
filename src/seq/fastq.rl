@@ -134,11 +134,11 @@ export FASTQParser
     hspace      = [ \t\v];
     whitespace  = space | newline;
 
-    identifier  = (any - space)+           >pushmark  %identifier;
-    description = ((any - space) [^\r\n]*) >pushmark  %description;
+    identifier  = (any - space)+           >mark  %identifier;
+    description = ((any - space) [^\r\n]*) >mark  %description;
 
-    identifier2  = (any - space)+           >pushmark  %identifier2;
-    description2 = ((any - space) [^\r\n]*) >pushmark  %description2;
+    identifier2  = (any - space)+           >mark  %identifier2;
+    description2 = ((any - space) [^\r\n]*) >mark  %description2;
 
     letters     = [A-z]+                   >mark  %letters;
     sequence    = letters? (newline+ letters)*;
