@@ -54,11 +54,11 @@ export FASTAParser
         fbreak;
     }
 
-    action count_line      { input.state.linenum += 1 }
-    action pushmark        { Ragel.@pushmark! }
+    action count_line  { input.state.linenum += 1 }
+    action mark        { Ragel.@mark! }
     action identifier  { input.namebuf = Ragel.@asciistring_from_mark!  }
     action description { input.descbuf = Ragel.@asciistring_from_mark! }
-    action letters     { append!(input.seqbuf, state.buffer, (Ragel.@popmark!), p) }
+    action letters     { append!(input.seqbuf, state.reader.buffer, (Ragel.@unmark!), p) }
 
     newline     = '\r'? '\n'     >count_line;
     hspace      = [ \t\v];

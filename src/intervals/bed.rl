@@ -58,12 +58,12 @@ export BEDParser, takevalue!
         yield = true
         # // fbreak causes will cause the pushmark action for the next seqname
         # // to be skipped, so we do it here
-        Ragel.@pushmark!
+        Ragel.@mark!
         fbreak;
     }
 
     action count_line { input.state.linenum += 1 }
-    action pushmark { Ragel.@pushmark! }
+    action mark { Ragel.@mark! }
 
     action seqname     { input.seqname      = Ragel.@asciistring_from_mark! }
     action first       { input.first        = 1 + Ragel.@int64_from_mark! }
@@ -95,26 +95,26 @@ export BEDParser, takevalue!
     hspace       = [ \t\v];
     blankline    = hspace* newline;
 
-    seqname      = [ -~]*   >pushmark     %seqname;
-    first        = digit+   >pushmark     %first;
-    last         = digit+   >pushmark     %last;
-    name         = [ -~]*   >pushmark     %name;
-    score        = digit+   >pushmark     %score;
+    seqname      = [ -~]*   >mark     %seqname;
+    first        = digit+   >mark     %first;
+    last         = digit+   >mark     %last;
+    name         = [ -~]*   >mark     %name;
+    score        = digit+   >mark     %score;
     strand       = [+\-\.?] >strand;
-    thick_first  = digit+   >pushmark     %thick_first;
-    thick_last   = digit+   >pushmark     %thick_last;
+    thick_first  = digit+   >mark     %thick_first;
+    thick_last   = digit+   >mark     %thick_last;
 
-    item_rgb_r   = digit+   >pushmark     %item_rgb_r;
-    item_rgb_g   = digit+   >pushmark     %item_rgb_g;
-    item_rgb_b   = digit+   >pushmark     %item_rgb_b;
+    item_rgb_r   = digit+   >mark     %item_rgb_r;
+    item_rgb_g   = digit+   >mark     %item_rgb_g;
+    item_rgb_b   = digit+   >mark     %item_rgb_b;
     item_rgb     = item_rgb_r (hspace* ',' hspace* item_rgb_g hspace* ',' hspace* item_rgb_b)? %item_rgb;
 
-    block_count  = digit+   >pushmark    %block_count;
+    block_count  = digit+   >mark    %block_count;
 
-    block_size   = digit+   >pushmark    %block_size;
+    block_size   = digit+   >mark    %block_size;
     block_sizes  = block_size (',' block_size)* ','?;
 
-    block_first  = digit+   >pushmark    %block_first;
+    block_first  = digit+   >mark    %block_first;
     block_firsts = block_first (',' block_first)* ','?;
 
     bed_entry = seqname '\t' first '\t' last (
