@@ -1,5 +1,8 @@
-# Copy a whole sequence into the user's clipboard; it would be useful for
-# pasting a query sequence in web services like BLAST
+@doc doc"""
+Copy a whole NucleotideSequence into the user's clipboard.
+
+Useful for pasting a query sequence in web services like BLAST.
+""" ->
 function clipboard(seq::Union(NucleotideSequence,AminoAcidSequence), width::Integer=50)
     buf = IOBuffer()
     for i in 1:length(seq)
@@ -11,4 +14,9 @@ function clipboard(seq::Union(NucleotideSequence,AminoAcidSequence), width::Inte
     clipboard(bytestring(buf))
 end
 
+@doc doc"""
+Copy a Kmer into the user's clipboard.
+
+Useful for pasting a query sequence in web services like BLAST.
+""" ->
 clipboard(x::Kmer) = clipboard(convert(String, x))
