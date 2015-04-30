@@ -92,7 +92,7 @@ export BEDParser, takevalue!
     last         = digit+   >pushmark     %last;
     name         = [ -~]*   >pushmark     %name;
     score        = digit+   >pushmark     %score;
-    strand       = [+\-]    >strand;
+    strand       = [+\-\.?] >strand;
     thick_first  = digit+   >pushmark     %thick_first;
     thick_last   = digit+   >pushmark     %thick_last;
 

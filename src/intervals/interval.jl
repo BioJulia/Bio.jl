@@ -14,7 +14,7 @@ const STRAND_BOTH = convert(Strand, 0b011)
 
 function show(io::IO, strand::Strand)
     if strand == STRAND_NA
-        print(io, "(indeterminate strand)")
+        print(io, "?")
     elseif strand == STRAND_POS
         print(io, "+")
     elseif strand == STRAND_NEG
@@ -28,6 +28,21 @@ end
 
 
 isless(a::Strand, b::Strand) = convert(Uint8, a) < convert(Uint8, b)
+
+
+function convert(::Type{Strand}, strand::Char)
+    if strand == '+'
+        return STRAND_POS
+    elseif strand == '-'
+        return STRAND_NEG
+    elseif strand == '.'
+        return STRAND_BOTH
+    elseif strand == '?'
+        return STRAND_NA
+    else
+        error("$(strand) is not a valid strand")
+    end
+end
 
 
 # Note, just to be clear: this shadows IntervalTrees.Interval
