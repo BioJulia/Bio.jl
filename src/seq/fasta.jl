@@ -227,7 +227,7 @@ elseif ( ( data[1 + p ]) >= 14  )
 end
 @goto st2
 @label ctr3
-	input.namebuf = Ragel.@asciistring_from_mark!  
+	input.namebuf = Ragel.@asciistring_from_mark! 
 @goto st3
 @label st3
 p+= 1;
@@ -287,7 +287,7 @@ elseif ( ( data[1 + p ]) >= 11  )
 end
 @goto st4
 @label ctr4
-	input.namebuf = Ragel.@asciistring_from_mark!  
+	input.namebuf = Ragel.@asciistring_from_mark! 
 	input.state.linenum += 1 
 @goto st7
 @label ctr9
@@ -390,7 +390,7 @@ else
 end
 @goto st8
 @label ctr5
-	input.namebuf = Ragel.@asciistring_from_mark!  
+	input.namebuf = Ragel.@asciistring_from_mark! 
 @goto st5
 @label ctr10
 	input.descbuf = Ragel.@asciistring_from_mark! 

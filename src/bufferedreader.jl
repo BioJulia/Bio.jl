@@ -1,14 +1,11 @@
 
 
-import Base: read, read!, seek, eof
+import Base: read, read!, seek, eof, nb_available, eof
 
 
 const BUFFERED_READER_INITIAL_BUF_SIZE = 1000000
 
 
-@doc """
-
-""" ->
 type BufferedReader <: IO
     # Input source. If null, it's assumed that buffer contains
     # all the input.
@@ -29,8 +26,8 @@ type BufferedReader <: IO
 end
 
 
-function BufferedReader(data::Vector{Uint8})
-    return BufferedReader(Nullable{IO}(), 0, false, data, length(data), 0)
+function BufferedReader(data::Vector{Uint8}, len=length(data))
+    return BufferedReader(Nullable{IO}(), 0, false, data, len, 0)
 end
 
 
@@ -55,7 +52,7 @@ function BufferedReader(filename::String, memory_map::Bool=false)
 end
 
 
-@doc """
+"""
 Refill a buffer, keeping some portion of it.
 
 The currently set mark will be shifted to the beginning of the buffer, the the
@@ -76,7 +73,7 @@ A (newpos, num_bytes_read), where newpos is the index within the newly
 refilled buffer that corresponds to the end of the buffer prior to refilling. If
 the buffer was entirely refilled and nothing was kept this will be 0.
 `num_bytes_read` is the number of bytes read from the input source.
-""" ->
+"""
 function fillbuffer!(reader::BufferedReader)
     if isnull(reader.input)
         return 0
@@ -84,7 +81,6 @@ function fillbuffer!(reader::BufferedReader)
 
     buflen = length(reader.buffer)
     keeplen = 0
-    first_mark = 0
     if reader.mark > 0
         keeplen = reader.buffer_end - reader.mark + 1
         if keeplen == buflen
@@ -145,6 +141,9 @@ end
 # We implement an IO interface on top of BufferedReader by treading buffer.mark
 # as the current position within the stream.
 
+"""
+Seek to the given position in the input stream. Unlike Base.seek, this is 1-based.
+"""
 function seek(reader::BufferedReader, pos::Integer)
     if isnull(reader.input)
         if pos <= length(reader.data)
@@ -157,7 +156,7 @@ function seek(reader::BufferedReader, pos::Integer)
             if reader.input_position - reader.buffer_end <= pos < reader.input_position
                 reader.mark = pos - (reader.input_position - reader.buffer_end) + 1
             else
-                seek(get(reader.input), pos)
+                seek(get(reader.input), pos - 1)
                 reader.mark = 1
                 reader.buffer_end = 0
             end
@@ -195,4 +194,21 @@ function read(reader::BufferedReader, ::Type{Uint8})
 end
 
 
+function nb_available(reader::BufferedReader)
+    @show (reader.mark, reader.buffer_end)
+    if reader.buffer_end >= reader.mark
+        return reader.buffer_end - reader.mark + 1
+    else
+        return 0
+    end
+end
+
+
+function eof(reader::BufferedReader)
+    if reader.mark > reader.buffer_end
+        return fillbuffer!(reader) == 0
+    else
+        return false
+    end
+end
 

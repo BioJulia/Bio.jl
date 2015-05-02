@@ -5,7 +5,8 @@ using Compat
 using Switch
 import Base: push!, pop!, endof, append!, empty!, isempty, length, getindex,
              setindex!, (==), takebuf_string, read!, seek
-using Bio: BufferedReader, fillbuffer!
+import Bio: fillbuffer!
+using Bio: BufferedReader
 
 
 # A simple buffer type, similar to IOBuffer but faster and with fewer features.
@@ -147,9 +148,8 @@ type State
     # Parser is responsible for updating this
     linenum::Int
 
-    function State(cs, data::Vector{Uint8})
-        return new(nothing, false, data, Buffer{Int}(16), false, 0,
-                   length(data), cs, cs, 1)
+    function State(cs, data::Vector{Uint8}, len::Integer=length(data))
+        return new(BufferedReader(data, len), false, 0, cs, cs, 1)
     end
 
     function State(cs, input::IO, memory_map=false)
@@ -162,6 +162,18 @@ type State
     function State(cs, filename::String, memory_map=false)
         return new(BufferedReader(filename, memory_map), false, 0,  cs, cs, 1)
     end
+end
+
+
+function fillbuffer!(state::State)
+    if state.reader.mark > 0
+        keeplen = state.reader.buffer_end - state.reader.mark + 1
+        state.p = keeplen
+    else
+        state.p = 0
+    end
+    nb = fillbuffer!(state.reader)
+    return nb
 end
 
 
@@ -181,6 +193,7 @@ end
 
 macro unmark!()
     quote
+        @assert $(esc(:state)).reader.mark != 0  "unmark! called with no mark set"
         m = $(esc(:state)).reader.mark
         $(esc(:state)).reader.mark = 0
         m
@@ -298,8 +311,8 @@ macro generate_read_fuction(machine_name, input_type, output_type, ragel_body, a
                 elseif $(yield)
                     if $(p) == $(pe)
                         $(state).p = $(p)
-                        $(state).pe = $(pe)
-                        fillbuffer!($(state).reader) == 0
+                        $(state).reader.buffer_end = $(pe)
+                        fillbuffer!($(state).reader)
                         $(p) = $(state).p
                         $(pe) = $(state).reader.buffer_end
                     end

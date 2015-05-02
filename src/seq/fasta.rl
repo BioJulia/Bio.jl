@@ -56,7 +56,7 @@ export FASTAParser
 
     action count_line  { input.state.linenum += 1 }
     action mark        { Ragel.@mark! }
-    action identifier  { input.namebuf = Ragel.@asciistring_from_mark!  }
+    action identifier  { input.namebuf = Ragel.@asciistring_from_mark! }
     action description { input.descbuf = Ragel.@asciistring_from_mark! }
     action letters     { append!(input.seqbuf, state.reader.buffer, (Ragel.@unmark!), p) }
 

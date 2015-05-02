@@ -177,7 +177,7 @@ end
 
 
 function takevalue!(input::BEDParser)
-    value = BEDInterval(input.seqname, input.first, input.last, input.strand,
+    value = BEDInterval(input.seqname, input.first + 1, input.last, input.strand,
                         BEDMetadata(input.name, input.score, input.thick_first,
                                     input.thick_last, input.item_rgb,
                                     input.block_count, input.block_sizes,

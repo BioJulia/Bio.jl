@@ -4,8 +4,8 @@ module Intervals
 import Base: show, isless, push!, shift!, intersect, start, next, done, length,
              convert, read, read!, getindex, get, isempty, endof, ==
 
-using Base.Intrinsics, Compat, Color, IntervalTrees
 import Iterators
+import Zlib
 #using DataStructures
 using Base.Intrinsics
 using Color
