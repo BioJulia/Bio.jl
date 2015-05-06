@@ -2,6 +2,7 @@ module Seq
 
 using Compat
 using Docile
+using Docile: @doc, @doc_str
 using Base.Intrinsics
 
 import Base: convert, complement, getindex, show, length, start, next, done, copy, reverse,
