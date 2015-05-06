@@ -17,7 +17,10 @@ function random_intervals(seqnames, maxpos::Int, n::Int)
 
     intervals = Array(Interval{Int}, n)
     for i in 1:n
-        intlen = ceil(Int, rand(length_dist))
+        intlen = maxpos
+        while intlen >= maxpos || intlen <= 0
+            intlen = ceil(Int, rand(length_dist))
+        end
         first = rand(1:maxpos-intlen)
         last = first + intlen - 1
         strand = rand(strand_dist) == 1 ? STRAND_POS : STRAND_NEG
@@ -233,6 +236,30 @@ facts("IntervalStream") do
             collect(it)
         end
     end
+
+
+    context("IntervalStream Intersection") do
+        n = 1000
+        srand(1234)
+        intervals_a = random_intervals(["one", "two", "three"], 1000000, n)
+        intervals_b = random_intervals(["one", "two", "three"], 1000000, n)
+
+        ic_a = IntervalCollection{Int}()
+        ic_b = IntervalCollection{Int}()
+
+        for interval in intervals_a
+            push!(ic_a, interval)
+        end
+
+        for interval in intervals_b
+            push!(ic_b, interval)
+        end
+
+        ItType = Intervals.IntervalStreamIntersectIterator{Int, Int}
+
+        @fact sort(collect(ItType(ic_a, ic_b, Intervals.alphanum_isless))) ==
+              sort(simple_intersection(intervals_a, intervals_b)) => true
+    end
 end
 
 
@@ -265,6 +292,54 @@ facts("Interval Parsing") do
                 @fact_throws check_bed_parse(joinpath(path, specimen["filename"]))
             end
         end
+    end
+
+    context("BED Intersection") do
+        # Testing strategy: there are two entirely separate intersection
+        # algorithms for IntervalCollection and IntervalStream. Here we test
+        # them both by checking that they agree by generating and intersecting
+        # random BED files.
+
+        function check_intersection(filename_a, filename_b)
+            ic_a = IntervalCollection{BEDMetadata}()
+            for interval in read(filename_a, BED)
+                push!(ic_a, interval)
+            end
+
+            ic_b = IntervalCollection{BEDMetadata}()
+            for interval in read(filename_b, BED)
+                push!(ic_b, interval)
+            end
+
+            xs = sort(collect(intersect(read(filename_a, BED), read(filename_b, BED))))
+            ys = sort(collect(intersect(ic_a, ic_b)))
+
+            return xs == ys
+        end
+
+        n = 10000
+        srand(1234)
+        intervals_a = random_intervals(["one", "two", "three", "four", "five"], 1000000, n)
+        filename_a = Pkg.dir("Bio", "test", "intervals", "test_a.bed")
+        out = open(filename_a, "w")
+        for interval in sort(intervals_a)
+            println(out, interval.seqname, "\t", interval.first - 1, "\t",
+                    interval.last, "\t", interval.metadata, "\t", 1000, "\t", interval.strand)
+        end
+        close(out)
+
+        intervals_b = random_intervals(["one", "two", "three", "four", "five"], 1000000, n)
+        filename_b = Pkg.dir("Bio", "test", "intervals", "test_b.bed")
+        ic_b = IntervalCollection{Int}()
+        out = open(filename_b, "w")
+        for interval in sort(intervals_b)
+            println(out, interval.seqname, "\t", interval.first - 1, "\t",
+                    interval.last, "\t", interval.metadata, "\t", 1000, "\t", interval.strand)
+            push!(ic_b, interval)
+        end
+        close(out)
+
+        @fact check_intersection(filename_a, filename_b) => true
     end
 end
 

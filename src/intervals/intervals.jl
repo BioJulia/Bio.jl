@@ -2,7 +2,7 @@
 module Intervals
 
 import Base: show, isless, push!, shift!, intersect, start, next, done, length,
-             convert, read, read!, getindex
+             convert, read, read!, getindex, ==
 using Base.Intrinsics, Compat, Color, Docile, IntervalTrees
 import Iterators
 #using DataStructures
@@ -15,7 +15,7 @@ import Bio: FileFormat
 
 export Strand, Interval, IntervalCollection, IntervalStream,
        STRAND_NA, STRAND_POS, STRAND_NEG, STRAND_BOTH,
-       isoverlapping, BED
+       isoverlapping, BED, BEDMetadata
 
 include("interval.jl")
 include("stream_buffer.jl")

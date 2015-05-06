@@ -28,6 +28,18 @@ immutable BEDMetadata
 end
 
 
+function (==)(a::BEDMetadata, b::BEDMetadata)
+    for name in fieldnames(BEDMetadata)
+        aval = getfield(a, name)
+        bval = getfield(b, name)
+        if !((isnull(aval) && isnull(bval)) || get(aval) == get(bval))
+            return false
+        end
+    end
+    return true
+end
+
+
 @doc """
 An `Interval` with associated metadata from a BED file.
 """ ->
