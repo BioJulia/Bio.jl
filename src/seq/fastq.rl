@@ -66,6 +66,7 @@ module FASTQParserImpl
 import Bio.Seq: FASTQSeqRecord, QualityEncoding, EMPTY_QUAL_ENCODING
 import Bio.Ragel
 using Docile, Switch
+using Docile: @doc, @doc_str
 export FASTQParser
 
 

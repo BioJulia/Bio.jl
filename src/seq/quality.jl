@@ -102,7 +102,7 @@ function infer_quality_encoding(data::Vector{Uint8}, start, stop, default)
     @inbounds for i in start:stop
         c = data[i]
         if '!' <= c <= '~'
-            encodings &= compatible_qual_encoding[c - '!' + 1]
+            encodings &= compatible_qual_encoding[c - (@compat UInt8('!')) + 1]
         else
             error("Character $(convert(Char, c)) is not compatible with any known quality encoding.")
         end

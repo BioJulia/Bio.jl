@@ -53,6 +53,7 @@ module FASTAParserImpl
 import Bio.Seq: FASTASeqRecord
 import Bio.Ragel
 using Docile, Switch
+using Docile: @doc, @doc_str
 export FASTAParser
 
 
