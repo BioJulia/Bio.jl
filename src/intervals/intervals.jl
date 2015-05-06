@@ -6,6 +6,9 @@ import Base: show, isless, push!, shift!, intersect, start, next, done, length,
 using Base.Intrinsics, Compat, Color, Docile, IntervalTrees
 import Iterators
 #using DataStructures
+using Base.Intrinsics
+using Color
+using Compat
 using Docile
 using Docile: @doc, @doc_str
 using IntervalTrees

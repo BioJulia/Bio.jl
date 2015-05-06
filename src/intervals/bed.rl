@@ -6,7 +6,7 @@ immutable BED <: FileFormat end
 Metadata for BED interval records.
 """ ->
 immutable BEDMetadata
-    name::Nullable{String}
+    name::Nullable{ASCIIString}
     score::Nullable{Int}
     thick_first::Nullable{Int}
     thick_last::Nullable{Int};
@@ -15,7 +15,7 @@ immutable BEDMetadata
     block_sizes::Nullable{Vector{Int}}
     block_firsts::Nullable{Vector{Int}}
 
-    function BEDMetadata(name=Nullable{String}(),
+    function BEDMetadata(name=Nullable{ASCIIString}(),
                          score=Nullable{Int}(),
                          thick_first=Nullable{Int}(),
                          thick_last=Nullable{Int}(),
@@ -72,7 +72,7 @@ export BEDParser, takevalue!
     action seqname     { input.seqname      = Ragel.@bytestring_from_mark! }
     action first       { input.first        = Ragel.@int64_from_mark! }
     action last        { input.last         = Ragel.@int64_from_mark! }
-    action name        { input.name         = Nullable{String}(Ragel.@bytestring_from_mark!) }
+    action name        { input.name         = Nullable{ASCIIString}(Ragel.@bytestring_from_mark!) }
     action score       { input.score        = Ragel.@int64_from_mark! }
     action strand      { input.strand       = convert(Strand, Ragel.@char) }
     action thick_first { input.thick_first  = Ragel.@int64_from_mark! }
@@ -139,7 +139,7 @@ type BEDParser
     state::Ragel.State
 
     # intermediate values when parsing
-    seqname::String
+    seqname::ASCIIString
     first::Int64
     last::Int64
     strand::Strand
@@ -147,7 +147,7 @@ type BEDParser
     red::Float32
     green::Float32
     blue::Float32
-    name::Nullable{String}
+    name::Nullable{ASCIIString}
     score::Nullable{Int}
     thick_first::Nullable{Int}
     thick_last::Nullable{Int};
@@ -162,7 +162,7 @@ type BEDParser
 
         return new(Ragel.State(cs, input, memory_map),
                    "", 0, 0, STRAND_NA, 0.0, 0.0, 0.0,
-                   Nullable{String}(), Nullable{Int}(), Nullable{Int}(),
+                   Nullable{ASCIIString}(), Nullable{Int}(), Nullable{Int}(),
                    Nullable{Int}(), Nullable{RGB{Float32}}(), Nullable{Int}(),
                    Nullable{Vector{Int}}(), Nullable{Vector{Int}}())
     end
@@ -187,7 +187,7 @@ function takevalue!(input::BEDParser)
                                     input.block_count, input.block_sizes,
                                     input.block_firsts))
     input.strand = STRAND_NA
-    name = Nullable{String}()
+    name = Nullable{ASCIIString}()
     score = Nullable{Int}()
     thick_first = Nullable{Int}()
     thick_last = Nullable{Int};()

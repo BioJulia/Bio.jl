@@ -115,9 +115,14 @@ function next{S, T, U, V}(it::IntervalStreamIntersectIterator{S, T},
 
     # another intersection in a_buffer?
     a_buffer_pos = state.a_buffer_pos + 1
-    while a_buffer_pos <= length(it.a_buffer) &&
-          !isoverlapping(it.a_buffer[a_buffer_pos], it.b_interval)
-        a_buffer_pos += 1
+    while a_buffer_pos <= length(it.a_buffer)
+        if precedes(it.b_interval, it.a_buffer[a_buffer_pos])
+            a_buffer_pos = length(it.a_buffer) + 1
+        elseif isoverlapping(it.b_interval, it.a_buffer[a_buffer_pos])
+            break
+        else
+            a_buffer_pos += 1
+        end
     end
 
     # look for an intersection for b_interval by reading more entries from a

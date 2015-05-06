@@ -50,7 +50,7 @@ end
 A genomic interval specifies interval with some associated metadata.
 """ ->
 immutable Interval{T} <: AbstractInterval{Int64}
-    seqname::String
+    seqname::ASCIIString
     first::Int64
     last::Int64
     strand::Strand
@@ -79,7 +79,7 @@ function isless{T}(a::Interval{T}, b::Interval{T},
     elseif a.strand != b.strand
         return a.strand < b.strand
     else
-        return a.metadata < b.metadata
+        return false
     end
 end
 
@@ -89,8 +89,8 @@ Return true if interval `a` entirely precedes `b`.
 """ ->
 function precedes{T}(a::Interval{T}, b::Interval{T},
                      seqname_isless::Function=alphanum_isless)
-    return seqname_isless(a.seqname, b.seqname) ||
-           a.seqname == b.seqname && a.last < b.first
+    return (a.last < b.first && a.seqname == b.seqname) ||
+        seqname_isless(a.seqname, b.seqname)
 end
 
 
@@ -107,7 +107,7 @@ end
 Return true if interval `a` overlaps interval `b`, with no consideration to strand.
 """ ->
 function isoverlapping{S, T}(a::Interval{S}, b::Interval{T})
-    return a.seqname == b.seqname && a.first <= b.last && b.first <= a.last
+    return a.first <= b.last && b.first <= a.last && a.seqname == b.seqname
 end
 
 

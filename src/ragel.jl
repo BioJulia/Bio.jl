@@ -243,7 +243,7 @@ end
 function parse_int64(buffer, firstpos, lastpos)
     x = @compat Int64(0)
     for i in firstpos:lastpos
-        x = x * 10 + buffer[i] - '0'
+        x = x * 10 + buffer[i] - (@compat UInt8('0'))
     end
     return x
 end
@@ -286,7 +286,7 @@ end
 #
 function fillbuffer!(parser::State)
     if parser.input === nothing
-        return 0
+        return (@compat UInt(0))
     end
 
     buflen = length(parser.buffer)
@@ -314,7 +314,7 @@ function fillbuffer!(parser::State)
         close(parser.input)
     end
 
-    return nb
+    return (@compat UInt(nb))
 end
 
 
