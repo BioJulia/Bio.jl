@@ -5,6 +5,7 @@ import Iterators
 using Base.Intrinsics
 #using DataStructures
 using Docile
+using Docile: @doc, @doc_str
 using IntervalTrees
 
 export Strand, Interval, IntervalCollection,
