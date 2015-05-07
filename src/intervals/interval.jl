@@ -71,7 +71,7 @@ end
 function isless{T}(a::Interval{T}, b::Interval{T},
                    seqname_isless::Function=alphanum_isless)
     if a.seqname != b.seqname
-        return seqname_isless(a.seqname, b.seqname)
+        return seqname_isless(a.seqname, b.seqname)::Bool
     elseif a.first != b.first
         return a.first < b.first
     elseif a.last != b.last
@@ -90,7 +90,7 @@ Return true if interval `a` entirely precedes `b`.
 function precedes{T}(a::Interval{T}, b::Interval{T},
                      seqname_isless::Function=alphanum_isless)
     return (a.last < b.first && a.seqname == b.seqname) ||
-        seqname_isless(a.seqname, b.seqname)
+        seqname_isless(a.seqname, b.seqname)::Bool
 end
 
 

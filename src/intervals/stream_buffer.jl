@@ -10,21 +10,16 @@ type StreamBuffer{T}
     data::Vector{T}
     first_idx::Int
     last_idx::Int
+    len::Int
 
     function StreamBuffer()
-        return new(Array(T, 16), 1, 0)
+        return new(Array(T, 16), 1, 0, 0)
     end
 end
 
 
 function length{T}(buf::StreamBuffer{T})
-    if buf.last_idx == 0
-        return 0
-    elseif buf.last_idx < buf.first_idx
-        return length(buf.data) + buf.last_idx - buf.first_idx + 1
-    else
-        return buf.last_idx - buf.first_idx + 1
-    end
+    return buf.len
 end
 
 
@@ -55,6 +50,8 @@ function push!{T}(buf::StreamBuffer{T}, x::T)
         buf.last_idx -= length(buf.data)
     end
     @inbounds buf.data[buf.last_idx] = x
+    buf.len += 1
+    return x
 end
 
 
@@ -74,6 +71,7 @@ function shift!{T}(buf::StreamBuffer{T})
         buf.first_idx += 1
     end
 
+    buf.len -= 1
     return x
 end
 

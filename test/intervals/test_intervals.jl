@@ -197,20 +197,25 @@ facts("IntervalStream") do
         end
 
         # non-empty versus non-empty, stream intersection
-        it = Intervals.IntervalStreamIntersectIterator{Int, Int}(
+        it = Intervals.IntervalStreamIntersectIterator{Int, Int,
+                IntervalCollection{Int}, IntervalCollection{Int}}(
                 ic_a, ic_b, Intervals.alphanum_isless)
 
         @fact sort(collect(it)) ==
               sort(simple_intersection(intervals_a, intervals_b)) => true
 
         # Interesction edge cases: skipping over whole sequences
-        it = Intervals.IntervalStreamIntersectIterator{Nothing, Nothing}(
+        typealias SimpleIntersectIterator 
+            Intervals.IntervalStreamIntersectIterator{Nothing, Nothing,
+                Vector{Interval{Nothing}}, Vector{Interval{Nothing}}}
+
+        it = SimpleIntersectIterator(
             [Interval("a", 1, 100, STRAND_POS, nothing), Interval("c", 1, 100, STRAND_POS, nothing)],
             [Interval("a", 1, 100, STRAND_POS, nothing), Interval("b", 1, 100, STRAND_POS, nothing)],
             isless)
         @fact length(collect(it)) => 1
 
-        it = Intervals.IntervalStreamIntersectIterator{Nothing, Nothing}(
+        it = SimpleIntersectIterator(
             [Interval("c", 1, 100, STRAND_POS, nothing), Interval("d", 1, 100, STRAND_POS, nothing)],
             [Interval("b", 1, 100, STRAND_POS, nothing), Interval("d", 1, 100, STRAND_POS, nothing)],
             isless)
@@ -218,7 +223,7 @@ facts("IntervalStream") do
 
         # unsorted streams are not allowed
         @fact_throws begin
-            it = Intervals.IntervalStreamIntersectIterator{Nothing, Nothing}(
+            it = SimpleIntersectIterator(
                 [Interval("b", 1, 1000, STRAND_POS, nothing),
                  Interval("a", 1, 1000, STRAND_POS, nothing)],
                 [Interval("a", 1, 1000, STRAND_POS, nothing),
@@ -227,7 +232,7 @@ facts("IntervalStream") do
         end
 
         @fact_throws begin
-            it = Intervals.IntervalStreamIntersectIterator{Nothing, Nothing}(
+            it = SimpleIntersectIterator(
                 [Interval("a", 1, 1000, STRAND_POS, nothing),
                  Interval("a", 500, 1000, STRAND_POS, nothing),
                  Interval("a", 400, 2000, STRAND_POS, nothing)],
@@ -255,9 +260,10 @@ facts("IntervalStream") do
             push!(ic_b, interval)
         end
 
-        ItType = Intervals.IntervalStreamIntersectIterator{Int, Int}
+        ItType = Intervals.IntervalStreamIntersectIterator{Int, Int,
+            IntervalCollection{Int}, IntervalCollection{Int}}
 
-        @fact sort(collect(ItType(ic_a, ic_b, Intervals.alphanum_isless))) ==
+        @fact sort(collect(ItType(ic_a, ic_b, isless))) ==
               sort(simple_intersection(intervals_a, intervals_b)) => true
     end
 end

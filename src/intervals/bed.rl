@@ -69,10 +69,10 @@ export BEDParser, takevalue!
     action count_line { input.state.linenum += 1 }
     action pushmark { Ragel.@pushmark! }
 
-    action seqname     { input.seqname      = Ragel.@bytestring_from_mark! }
+    action seqname     { input.seqname      = Ragel.@asciistring_from_mark! }
     action first       { input.first        = Ragel.@int64_from_mark! }
     action last        { input.last         = Ragel.@int64_from_mark! }
-    action name        { input.name         = Nullable{ASCIIString}(Ragel.@bytestring_from_mark!) }
+    action name        { input.name         = Nullable{ASCIIString}(Ragel.@asciistring_from_mark!) }
     action score       { input.score        = Ragel.@int64_from_mark! }
     action strand      { input.strand       = convert(Strand, Ragel.@char) }
     action thick_first { input.thick_first  = Ragel.@int64_from_mark! }

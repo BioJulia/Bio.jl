@@ -252,11 +252,11 @@ end
 cs = 0;
 	@goto _out
 @label ctr81
-	input.seqname      = Ragel.@bytestring_from_mark! 
+	input.seqname      = Ragel.@asciistring_from_mark! 
 @goto st1
 @label ctr83
 	Ragel.@pushmark! 
-	input.seqname      = Ragel.@bytestring_from_mark! 
+	input.seqname      = Ragel.@asciistring_from_mark! 
 @goto st1
 @label st1
 p+= 1;
@@ -400,10 +400,10 @@ end
 @goto st0
 @label ctr12
 	Ragel.@pushmark! 
-	input.name         = Nullable{ASCIIString}(Ragel.@bytestring_from_mark!) 
+	input.name         = Nullable{ASCIIString}(Ragel.@asciistring_from_mark!) 
 @goto st8
 @label ctr77
-	input.name         = Nullable{ASCIIString}(Ragel.@bytestring_from_mark!) 
+	input.name         = Nullable{ASCIIString}(Ragel.@asciistring_from_mark!) 
 @goto st8
 @label st8
 p+= 1;
@@ -905,7 +905,7 @@ end
 @goto st42
 @label ctr13
 	Ragel.@pushmark! 
-	input.name         = Nullable{ASCIIString}(Ragel.@bytestring_from_mark!) 
+	input.name         = Nullable{ASCIIString}(Ragel.@asciistring_from_mark!) 
 	input.state.linenum += 1 
 @goto st42
 @label ctr18
@@ -951,7 +951,7 @@ end
 	input.state.linenum += 1 
 @goto st42
 @label ctr78
-	input.name         = Nullable{ASCIIString}(Ragel.@bytestring_from_mark!) 
+	input.name         = Nullable{ASCIIString}(Ragel.@asciistring_from_mark!) 
 	input.state.linenum += 1 
 @goto st42
 @label st42
@@ -980,7 +980,7 @@ if 33 <= ( data[1 + p ]) && ( data[1 + p ]) <= 126
 end
 @goto st0
 @label ctr72
-	input.seqname      = Ragel.@bytestring_from_mark! 
+	input.seqname      = Ragel.@asciistring_from_mark! 
 @goto st31
 @label ctr86
 	yield = true
@@ -992,7 +992,7 @@ end
 
     
 	Ragel.@pushmark! 
-	input.seqname      = Ragel.@bytestring_from_mark! 
+	input.seqname      = Ragel.@asciistring_from_mark! 
 @goto st31
 @label st31
 p+= 1;
@@ -1045,7 +1045,7 @@ end
 @goto st33
 @label ctr14
 	Ragel.@pushmark! 
-	input.name         = Nullable{ASCIIString}(Ragel.@bytestring_from_mark!) 
+	input.name         = Nullable{ASCIIString}(Ragel.@asciistring_from_mark!) 
 @goto st33
 @label ctr19
 	input.score        = Ragel.@int64_from_mark! 
@@ -1082,7 +1082,7 @@ end
     
 @goto st33
 @label ctr79
-	input.name         = Nullable{ASCIIString}(Ragel.@bytestring_from_mark!) 
+	input.name         = Nullable{ASCIIString}(Ragel.@asciistring_from_mark!) 
 @goto st33
 @label st33
 p+= 1;
@@ -1163,7 +1163,7 @@ if 32 <= ( data[1 + p ]) && ( data[1 + p ]) <= 126
 end
 @goto st0
 @label ctr75
-	input.seqname      = Ragel.@bytestring_from_mark! 
+	input.seqname      = Ragel.@asciistring_from_mark! 
 @goto st36
 @label st36
 p+= 1;
