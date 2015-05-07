@@ -70,7 +70,7 @@ export BEDParser, takevalue!
     action pushmark { Ragel.@pushmark! }
 
     action seqname     { input.seqname      = Ragel.@asciistring_from_mark! }
-    action first       { input.first        = Ragel.@int64_from_mark! }
+    action first       { input.first        = 1 + Ragel.@int64_from_mark! }
     action last        { input.last         = Ragel.@int64_from_mark! }
     action name        { input.name         = Nullable{ASCIIString}(Ragel.@asciistring_from_mark!) }
     action score       { input.score        = Ragel.@int64_from_mark! }

@@ -336,7 +336,7 @@ if 48 <= ( data[1 + p ]) && ( data[1 + p ]) <= 57
 end
 @goto st0
 @label ctr5
-	input.first        = Ragel.@int64_from_mark! 
+	input.first        = 1 + Ragel.@int64_from_mark! 
 @goto st5
 @label st5
 p+= 1;
