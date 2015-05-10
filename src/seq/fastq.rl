@@ -111,10 +111,10 @@ export FASTQParser
     whitespace  = space | newline;
 
     identifier  = (any - space)+           >pushmark  %identifier;
-    description = (any - space) [^\r\n]*   >pushmark  %description;
+    description = ((any - space) [^\r\n]*) >pushmark  %description;
 
-    identifier2  = (any - space)+          >pushmark  %identifier2;
-    description2 = (any - space) [^\r\n]*  >pushmark  %description2;
+    identifier2  = (any - space)+           >pushmark  %identifier2;
+    description2 = ((any - space) [^\r\n]*) >pushmark  %description2;
 
     letters     = [A-z]+                   >pushmark  %letters;
     sequence    = letters? (newline+ letters)*;
