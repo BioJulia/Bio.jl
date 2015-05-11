@@ -83,16 +83,16 @@ nnucleotide(::Type{RNANucleotide}) = RNA_N
 # --------------------
 
 # lookup table for characters in 'A':'t'
-const char_to_dna = [
-     DNA_A,       DNA_INVALID, DNA_C,       DNA_INVALID, DNA_INVALID, DNA_INVALID,
-     DNA_G,       DNA_INVALID, DNA_INVALID, DNA_INVALID, DNA_INVALID, DNA_INVALID,
-     DNA_INVALID, DNA_N,       DNA_INVALID, DNA_INVALID, DNA_INVALID, DNA_INVALID,
-     DNA_INVALID, DNA_T,       DNA_INVALID, DNA_INVALID, DNA_INVALID, DNA_INVALID,
-     DNA_INVALID, DNA_INVALID, DNA_INVALID, DNA_INVALID, DNA_INVALID, DNA_INVALID,
-     DNA_INVALID, DNA_INVALID, DNA_A,       DNA_INVALID, DNA_C,       DNA_INVALID,
-     DNA_INVALID, DNA_INVALID, DNA_G,       DNA_INVALID, DNA_INVALID, DNA_INVALID,
-     DNA_INVALID, DNA_INVALID, DNA_INVALID, DNA_N,       DNA_INVALID, DNA_INVALID,
-     DNA_INVALID, DNA_INVALID, DNA_INVALID, DNA_T ]
+    const char_to_dna = [
+    DNA_A,       DNA_INVALID, DNA_C,       DNA_INVALID, DNA_INVALID, DNA_INVALID,
+    DNA_G,       DNA_INVALID, DNA_INVALID, DNA_INVALID, DNA_INVALID, DNA_INVALID,
+    DNA_INVALID, DNA_N,       DNA_INVALID, DNA_INVALID, DNA_INVALID, DNA_INVALID,
+    DNA_INVALID, DNA_T,       DNA_INVALID, DNA_INVALID, DNA_INVALID, DNA_INVALID,
+    DNA_INVALID, DNA_INVALID, DNA_INVALID, DNA_INVALID, DNA_INVALID, DNA_INVALID,
+    DNA_INVALID, DNA_INVALID, DNA_A,       DNA_INVALID, DNA_C,       DNA_INVALID,
+    DNA_INVALID, DNA_INVALID, DNA_G,       DNA_INVALID, DNA_INVALID, DNA_INVALID,
+    DNA_INVALID, DNA_INVALID, DNA_INVALID, DNA_N,       DNA_INVALID, DNA_INVALID,
+    DNA_INVALID, DNA_INVALID, DNA_INVALID, DNA_T ]
 
 @doc doc"Convert a Char to a DNANucleotide" ->
 function convert(::Type{DNANucleotide}, c::Char)
@@ -100,6 +100,12 @@ function convert(::Type{DNANucleotide}, c::Char)
     @assert nt != DNA_INVALID error("$(c) is not a valid DNA nucleotide")
     return nt
 end
+
+function unsafe_ascii_byte_to_nucleotide(T::Type{DNANucleotide}, c::Uint8)
+    @inbounds nt = char_to_dna[c - 0x41 + 1]
+    return nt
+end
+
 
 # lookup table for characters in 'A':'u'
 const char_to_rna = [
@@ -117,6 +123,11 @@ const char_to_rna = [
 function convert(::Type{RNANucleotide}, c::Char)
     @inbounds nt = 'A' <= c <= 'u' ? char_to_rna[c - 'A' + 1] : RNA_INVALID
     @assert nt != RNA_INVALID error("$(c) is not a valid RNA nucleotide")
+    return nt
+end
+
+function unsafe_ascii_byte_to_nucleotide(T::Type{RNANucleotide}, c::Uint8)
+    @inbounds nt = char_to_rna[c - 0x41 + 1]
     return nt
 end
 
@@ -196,10 +207,53 @@ function NucleotideSequence{T<:Nucleotide}(::Type{T}, other::NucleotideSequence,
     return NucleotideSequence{T}(other.data, other.ns, part)
 end
 
+
+# Faster divrem(n, 32)
+function divrem32(n::Integer)
+    return (n >> 5, n & 0b11111)
+end
+
+
+# Faster divrem(n, 64)
+function divrem64(n::Integer)
+    return (n >> 6, n & 0b111111)
+end
+
+
 # Return the number of Uint64s needed to represent a sequence of length n
 function seq_data_len(n::Integer)
-    d, r = divrem(n, 32)
+    d, r = divrem32(n)
     return d + (r > 0 ? 1 : 0)
+end
+
+
+# This is the body of the NucleotideSequence constructor below. It's separated
+# into a macro so we can generate two versions depending on wether the `unsafe`
+# flag is set.
+macro encode_seq(nt_convert_expr)
+    quote
+        @inbounds begin
+            for i in 1:length(data)
+                shift = 0
+                while shift < 64 && j <= stoppos
+                    c = seq[j]
+                    j += 1
+                    nt = $(nt_convert_expr)
+                    if nt == nnucleotide(T)
+                        # manually inlined: ns[i] = true
+                        d = (idx - 1) >>> 6
+                        r = (idx - 1) & 63
+                        ns.chunks[d + 1] |= (@compat UInt64(1)) << r
+                    else
+                        data[i] |= convert(Uint64, nt) << shift
+                    end
+
+                    idx += 1
+                    shift += 2
+                end
+            end
+        end
+    end
 end
 
 
@@ -207,30 +261,27 @@ end
 `NucleotideSequence(DNANucleotide|RNANucleotide, seq::String)`
 
 Construct a subsequence from the `seq` string""" ->
-function NucleotideSequence{T<:Nucleotide}(::Type{T}, seq::String)
-    len  = seq_data_len(length(seq))
+function NucleotideSequence{T<:Nucleotide}(::Type{T}, seq::Union(String, Vector{Uint8}),
+                                           startpos::Int, stoppos::Int, unsafe::Bool=false)
+    len = seq_data_len(stoppos - startpos + 1)
     data = zeros(Uint64, len)
-    ns   = BitArray(length(seq))
+    ns = BitArray(stoppos - startpos + 1)
     fill!(ns, false)
 
-    j = start(seq)
+    j = startpos
     idx = 1
-    @inbounds for i in 1:length(data)
-        shift = 0
-        while shift < 64 && !done(seq, j)
-            c, j = next(seq, j)
-            nt   = convert(T, c)
-            if nt == nnucleotide(T)
-                ns[idx] = true
-            else
-                data[i] |= convert(Uint64, nt) << shift
-            end
-            idx += 1
-            shift += 2
-        end
+    if unsafe
+        @encode_seq unsafe_ascii_byte_to_nucleotide(T, c)
+    else
+        @encode_seq convert(T, convert(Char, c))
     end
 
-    return NucleotideSequence{T}(data, ns, 1:length(seq))
+    return NucleotideSequence{T}(data, ns, 1:(stoppos - startpos + 1))
+end
+
+
+function NucleotideSequence{T<:Nucleotide}(t::Type{T}, seq::Union(String, Vector{Uint8}))
+    return NucleotideSequence(t, seq, 1, length(seq))
 end
 
 
@@ -350,7 +401,6 @@ function unsafe_copy!{T}(dest::NucleotideSequence{T}, pos::Int, src::NucleotideS
 end
 
 
-
 # Aliases and contructors
 # -----------------------
 
@@ -368,6 +418,8 @@ DNASequence(seq::String) = NucleotideSequence(DNANucleotide, seq)
 
 @doc doc"Construct a DNA nucleotide sequence from other sequences" ->
 DNASequence(chunk1::DNASequence, chunks::DNASequence...) = NucleotideSequence(chunk1, chunks...)
+DNASequence(seq::Union(Vector{Uint8}, String)) = NucleotideSequence(DNANucleotide, seq)
+DNASequence(seq::Union(Vector{Uint8}, String), startpos::Int, endpos::Int, unsafe::Bool=false) = NucleotideSequence(DNANucleotide, seq, startpos, endpos, unsafe)
 
 
 # RNA Sequences
@@ -384,6 +436,8 @@ RNASequence(seq::String) = NucleotideSequence(RNANucleotide, seq)
 
 @doc doc"Construct a RNA nucleotide sequence from other sequences" ->
 RNASequence(chunk1::RNASequence, chunks::RNASequence...) = NucleotideSequence(chunk1, chunks...)
+RNASequence(seq::Union(Vector{Uint8}, String)) = NucleotideSequence(RNANucleotide, seq)
+RNASequence(seq::Union(Vector{Uint8}, String), startpos::Int, endpos::Int, unsafe::Bool=false) = NucleotideSequence(RNANucleotide, seq, startpos, endpos, unsafe)
 
 
 # Conversion
@@ -459,7 +513,7 @@ end
 
 # Get the nucleotide at position i, ignoring the N mask.
 function getnuc(T::Type, data::Vector{Uint64}, i::Integer)
-    d, r = divrem(i - 1, 32)
+    d, r = divrem32(i - 1)
     return convert(T, convert(Uint8, (data[d + 1] >>> (2*r)) & 0b11))
 end
 
@@ -496,7 +550,7 @@ function orphan!{T}(seq::NucleotideSequence{T}, reorphan=false)
     end
 
     data   = zeros(Uint64, seq_data_len(length(seq)))
-    d0, r0 = divrem(seq.part.start - 1, 32)
+    d0, r0 = divrem32(seq.part.start - 1)
 
     h = 64 - 2*r0
     k = 2*r0
@@ -647,7 +701,7 @@ npositions(seq::NucleotideSequence)        = SequenceNIterator(seq)
 # Return any position past the end of the sequence if there are no more Ns.
 #
 function nextn(it::SequenceNIterator, i)
-    d, r = divrem(i - 1, 64)
+    d, r = divrem64(i - 1)
     while d < length(it.ns.chunks) && it.ns.chunks[d + 1] >>> r == 0 && d * 64 < it.part.stop
         d += 1
         r  = 0
@@ -675,7 +729,7 @@ end
 start(it::SequenceNIterator) = nextn(it, it.part.start)
 
 function next(it::SequenceNIterator, i)
-    d, r = divrem(i - 1, 64)
+    d, r = divrem64(i - 1)
     next_i = nextn(it, i + 1)
     return i + it.part.start - 1, next_i
 end
@@ -739,7 +793,7 @@ function mismatches{T}(a::NucleotideSequence{T}, b::NucleotideSequence{T},
     end
 
     # Count mismatches, ignoring the presence of 'N's in the sequence.
-    d0, r0 = divrem(b.part.start - 1, 64)
+    d0, r0 = divrem64(b.part.start - 1)
     h = 64 - r0
     k = r0
 
@@ -1152,7 +1206,7 @@ function nextkmer{T, K}(it::EachKmerIterator{T, K},
     nit_state = state.nit_state
 
     shift = 2 * (K - 1)
-    d, r = divrem(2 * (it.seq.part.start + i - 2), 64)
+    d, r = divrem64(2 * (it.seq.part.start + i - 2))
     while i <= length(it.seq)
         while next_n_pos < i
             if done(it.nit, nit_state)
@@ -1260,7 +1314,7 @@ count_t(x::Uint64) = count_ones((x    & (x >>> 1)) & 0x5555555555555555)
 Constructs a NucleotideCounts object from a NucleotideSequence `seq`.
 """ ->
 function NucleotideCounts{T}(seq::NucleotideSequence{T})
-    dn, rn = divrem(seq.part.start - 1, 64)
+    dn, rn = divrem64(seq.part.start - 1)
 
     d = 2*dn
     r = 2*dn

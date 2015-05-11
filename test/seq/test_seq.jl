@@ -2,6 +2,7 @@ module TestSeq
 
 using Compat
 using FactCheck
+using YAML
 using Bio
 using Bio.Seq
 
@@ -1177,6 +1178,75 @@ facts("Translation") do
     @fact_throws translate(dna"ACGTACGTA") # can't translate DNA
     @fact_throws translate(rna"ACGUACGU")  # can't translate non-multiples of three
     @fact_throws translate(rna"ACGUACGNU") # can't translate N
+end
+
+
+function get_bio_fmt_specimens()
+    path = Pkg.dir("Bio", "test", "BioFmtSpecimens")
+    if !isdir(path)
+        run(`git clone --depth 1 https://github.com/BioJulia/BioFmtSpecimens.git $(path)`)
+    end
+end
+
+
+facts("Sequence Parsing") do
+    context("FASTA Parsing") do
+        get_bio_fmt_specimens()
+
+        function check_fasta_parse(filename)
+            # Reading from a stream
+            for seqrec in read(open(filename), FASTA)
+            end
+
+            # Reading from a memory mapped file
+            for seqrec in read(filename, FASTA, memory_map=true)
+            end
+
+            return true
+        end
+
+        path = Pkg.dir("Bio", "test", "BioFmtSpecimens", "FASTA")
+        for specimen in YAML.load_file(joinpath(path, "index.yml"))
+            tags = specimen["tags"]
+            # currently unsupported features
+            if contains(tags, "gaps") || contains(tags, "comments") || contains(tags, "ambiguity")
+                continue
+            end
+            @fact check_fasta_parse(joinpath(path, specimen["filename"])) => true
+        end
+    end
+
+    context("FASTQ Parsing") do
+        get_bio_fmt_specimens()
+
+        function check_fastq_parse(filename)
+            # Reading from a stream
+            for seqrec in read(open(filename), FASTQ)
+            end
+
+            # Reading from a memory mapped file
+            for seqrec in read(filename, FASTQ, memory_map=true)
+            end
+
+            return true
+        end
+
+        path = Pkg.dir("Bio", "test", "BioFmtSpecimens", "FASTQ")
+        for specimen in YAML.load_file(joinpath(path, "index.yml"))
+            tags = get(specimen, "tags", "")
+            valid = get(specimen, "valid", true)
+            # currently unsupported features
+            if contains(tags, "rna") || contains(tags, "gaps") ||
+               contains(tags, "comments") || contains(tags, "ambiguity")
+                continue
+            end
+            if valid
+                @fact check_fastq_parse(joinpath(path, specimen["filename"])) => true
+            else
+                @fact_throws check_fastq_parse(joinpath(path, specimen["filename"]))
+            end
+        end
+    end
 end
 
 end # TestSeq
