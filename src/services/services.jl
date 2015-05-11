@@ -2,7 +2,7 @@ module Services
 
 using Compat
 
-import Base: convert, parse, box, unbox, ==, show, hash
+import Base: parse, ==, show, hash, ismatch
 
 include("accession.jl")
 

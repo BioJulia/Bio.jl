@@ -6,41 +6,75 @@ using Bio.Services
 
 facts("Accession Number") do
     context("Entrez Gene") do
-        # SMARCB1: Homo sapiens
-        smarcb1 = parse(Accession{EntrezGene}, "6598")
-        @fact string(smarcb1) => "6598"
-        @fact smarcb1 == "6598" => true
-        @fact smarcb1 == "6599" => false
-        @fact "6598" == smarcb1 => true
-        @fact "6599" == smarcb1 => false
-        @fact smarcb1 => parse(Accession{EntrezGene}, "6598")
-        # SMARCB1: Zonotrichia albicollis
-        smarcb1 = parse(Accession{EntrezGene}, "102067278")
-        @fact string(smarcb1) => "102067278"
-        @fact hash(smarcb1) => hash(parse(Accession{EntrezGene}, "102067278"))
+        list = """
+        1
+        6598
+        105352660
+         6598 \t 
+        """ |> chomp
+        for s in split(list, '\n')
+            geneid = parse(Accession{:EntrezGene}, s)
+            @fact isa(geneid, Accession{:EntrezGene}) => true
+            @fact string(geneid) => strip(s)
+            @fact geneid == s => true
+            @fact s == geneid => true
+            @fact geneid == parse(Accession{:EntrezGene}, s) => true
+        end
+        @fact_throws parse(Accession{:EntrezGene}, "-1234") "negative"
+        @fact_throws parse(Accession{:EntrezGene}, "0x1234") "alphabet"
+        # TODO: this fails
+        @fact_throws parse(Accession{:EntrezGene}, "4294967296") "too large"
     end
 
     context("GenBank") do
-        x = parse(Accession{GenBank}, "U46667.1")
-        @fact x == "U46667.1" => true
-        @fact string(x) => "U46667.1"
-        @fact hash(x) => hash(parse(Accession{GenBank}, "U46667.1"))
+        list = """
+        U46667.1
+        DL128137.1
+         DL128137.1 \t 
+        """ |> chomp
+        for s in split(list, '\n')
+            genbank = parse(Accession{:GenBank}, s)
+            @fact isa(genbank, Accession{:GenBank}) => true
+            @fact string(genbank) => strip(s)
+            @fact genbank == s => true
+            @fact s == genbank => true
+            @fact genbank == parse(Accession{:GenBank}, s) => true
+        end
     end
 
     context("RefSeq") do
-        @fact parse(Accession{RefSeq}, "NC_000022.11") |> string => "NC_000022.11"
-        @fact parse(Accession{RefSeq}, "XM_011530345.1") |> string => "XM_011530345.1"
-        @fact parse(Accession{RefSeq}, "XP_011528647.1") |> string => "XP_011528647.1"
-        x = parse(Accession{RefSeq}, "NC_000022.11")
-        @fact hash(x) => hash(parse(Accession{RefSeq}, "NC_000022.11"))
+        list = """
+        NC_000022.11
+        XM_011530345.1
+        XP_011528647.1
+         XP_011528647.1 \t 
+        """ |> chomp
+        for s in split(list, '\n')
+            refseq = parse(Accession{:RefSeq}, s)
+            @fact isa(refseq, Accession{:RefSeq}) => true
+            @fact string(refseq) => strip(s)
+            @fact refseq == s => true
+            @fact s == refseq => true
+            @fact refseq == parse(Accession{:RefSeq}, s) => true
+            @fact refseq == Accession(s) => true
+        end
     end
 
     context("Gene Ontology") do
-        # SWI/SNF complex
-        x = parse(Accession{GOTerm}, "GO:0016514")
-        @fact string(x) => "GO:0016514"
-        @fact x == "GO:0016514" => true
-        @fact hash(x) => hash(parse(Accession{GOTerm}, "GO:0016514"))
+        list = """
+        GO:0016514
+        GO:0044848
+         GO:0016514 \t 
+        """ |> chomp
+        for s in split(list, '\n')
+            go = parse(Accession{:GeneOntology}, s)
+            @fact isa(go, Accession{:GeneOntology}) => true
+            @fact string(go) => strip(s)
+            @fact go == s => true
+            @fact s == go => true
+            @fact go == parse(Accession{:GeneOntology}, s) => true
+            @fact go == Accession(s) => true
+        end
     end
 end
 
