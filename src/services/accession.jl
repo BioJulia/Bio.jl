@@ -8,6 +8,7 @@ end
 =={T}(x::Accession{T}, y::Accession{T}) = x.data == y.data
 =={T}(x::Accession{T}, y::String) = x.data == parse(T, y)
 =={T}(x::String, y::Accession{T}) = parse(T, x) == y.data
+hash(x::Accession) = hash(x.data)
 
 parse{T}(::Type{Accession{T}}, x::String) = Accession(parse(T, x))
 show(io::IO, x::Accession) = show(io, x.data)
@@ -26,6 +27,8 @@ parse(::Type{EntrezGene}, s::String) = convert(EntrezGene, parse(Uint32, s))
 function show(io::IO, geneid::EntrezGene)
     @printf io "%d" convert(Uint32, geneid)
 end
+
+hash(geneid::EntrezGene) = hash(convert(Uint32, geneid))
 
 @osx_only function browse(geneid::EntrezGene)
     run(`open http://www.ncbi.nlm.nih.gov/gene/?term=$geneid`)
@@ -56,6 +59,8 @@ function show(io::IO, genbank::GenBank)
     print(io, genbank.version)
 end
 
+hash(genbank::GenBank) = hash(genbank.accession) $ hash(genbank.version)
+
 @osx_only function browse(genbank::GenBank)
     run(`open http://www.ncbi.nlm.nih.gov/nuccore/$genbank`)
 end
@@ -68,7 +73,7 @@ immutable RefSeq
     version::Uint8
 end
 
-# generate lookup table 
+# generate lookup table
 macro gen_table(name, typ, xs)
     xs = eval(xs)
     enc_table = symbol(string(name, :_encode))
@@ -109,6 +114,8 @@ function show(io::IO, refseq::RefSeq)
     end
 end
 
+hash(refseq::RefSeq) = hash(refseq.prefix) $ hash(refseq.number) $ hash(refseq.version)
+
 @osx_only function browse(refseq::RefSeq)
     run(`open http://www.ncbi.nlm.nih.gov/nuccore/$refseq`)
 end
@@ -130,6 +137,8 @@ end
 function show(io::IO, goterm::GOTerm)
     @printf io "GO:%07d" convert(Uint32, goterm)
 end
+
+hash(goterm::GOTerm) = hash(convert(Uint32, goterm))
 
 @osx_only function browse(goterm::GOTerm)
     run(`open http://amigo.geneontology.org/amigo/term/$goterm`)
