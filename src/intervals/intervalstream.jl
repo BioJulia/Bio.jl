@@ -8,17 +8,19 @@
 # the data is sorted
 
 
+typealias IntervalStreamOrArray{T} Union(AbstractArray{Interval{T}}, IntervalStream{T})
+
 type IntervalStreamIntersectIterator{S, T}
-    a::IntervalStream{S}
-    b::IntervalStream{T}
+    a::IntervalStreamOrArray{S}
+    b::IntervalStreamOrArray{T}
     seqname_isless::Function
 
     # buffered intervals from a
     a_buffer::StreamBuffer{Interval{S}}
     b_interval::Interval{T}
 
-    function IntervalStreamIntersectIterator(a::IntervalStream{S},
-                                             b::IntervalStream{T},
+    function IntervalStreamIntersectIterator(a::IntervalStreamOrArray{S},
+                                             b::IntervalStreamOrArray{T},
                                              seqname_isless::Function)
         return new(a, b, seqname_isless, StreamBuffer{Interval{S}}())
     end
@@ -36,14 +38,15 @@ end
 Intersect two `IntervalStreams` returning an iterator over all pairs of
 intersecting intervals.
 """ ->
-function Base.intersect{S, T}(a::IntervalStream{S}, b::IntervalStream{T},
+function Base.intersect{S, T}(a::IntervalStreamOrArray{S},
+                              b::IntervalStreamOrArray{T},
                               seqname_isless::Function=isless)
     return IntervalStreamIntersectIterator{S, T}(a, b, seqname_isless)
 end
 
 
-function first_intersection{S, T, U, V}(a::IntervalStream{S},
-                                        b::IntervalStream{T},
+function first_intersection{S, T, U, V}(a::IntervalStreamOrArray{S},
+                                        b::IntervalStreamOrArray{T},
                                         a_state::U,
                                         b_state::V,
                                         a_interval::Interval{S},

@@ -78,12 +78,14 @@ facts("IntervalCollection") do
         n = 1000
         srand(1234)
         intervals_a = random_intervals(["one", "two", "three"], 1000000, n)
-        intervals_b = random_intervals(["one", "two", "three"], 1000000, n)
+        intervals_b = random_intervals(["one", "three", "four"], 1000000, n)
 
+        # empty versus empty
         ic_a = IntervalCollection{Int}()
         ic_b = IntervalCollection{Int}()
         @fact collect(intersect(ic_a, ic_b)) == Any[] => true
 
+        # empty versus non-empty
         for interval in intervals_a
             push!(ic_a, interval)
         end
@@ -91,6 +93,7 @@ facts("IntervalCollection") do
         @fact collect(intersect(ic_a, ic_b)) == Any[] => true
         @fact collect(intersect(ic_b, ic_a)) == Any[] => true
 
+        # non-empty versus non-empty
         for interval in intervals_b
             push!(ic_b, interval)
         end
@@ -98,12 +101,57 @@ facts("IntervalCollection") do
         @fact sort(collect(intersect(ic_a, ic_b))) ==
               sort(simple_intersection(intervals_a, intervals_b)) => true
 
-        it = Intervals.IntervalStreamIntersectIterator{Int,
-                                                       Int}(
+        # non-empty versus non-empty, stream intersection
+        it = Intervals.IntervalStreamIntersectIterator{Int, Int}(
                 ic_a, ic_b, Intervals.alphanum_isless)
 
         @fact sort(collect(it)) ==
               sort(simple_intersection(intervals_a, intervals_b)) => true
+
+        # unsorted streams are not allowed
+        @fact_throws begin
+            it = Intervals.IntervalStreamIntersectIterator{Nothing, Nothing}(
+                [Interval("b", 1, 1000, STRAND_POS, nothing),
+                 Interval("a", 1, 1000, STRAND_POS, nothing)],
+                [Interval("a", 1, 1000, STRAND_POS, nothing),
+                 Interval("b", 1, 1000, STRAND_POS, nothing)], isless)
+            collect(it)
+        end
+
+        @fact_throws begin
+            it = Intervals.IntervalStreamIntersectIterator{Nothing, Nothing}(
+                [Interval("a", 1, 1000, STRAND_POS, nothing),
+                 Interval("a", 500, 1000, STRAND_POS, nothing),
+                 Interval("a", 400, 2000, STRAND_POS, nothing)],
+                [Interval("a", 1, 1000, STRAND_POS, nothing),
+                 Interval("b", 1, 1000, STRAND_POS, nothing)], isless)
+            collect(it)
+        end
+    end
+
+
+    context("Show") do
+        nullout = open("/dev/null", "w")
+
+        ic = IntervalCollection{Int}()
+        show(nullout, ic)
+
+        push!(ic, Interval{Int}("one", 1, 1000, STRAND_POS, 0))
+        show(nullout, ic)
+
+        intervals = random_intervals(["one", "two", "three"], 1000000, 100)
+        for interval in intervals
+            push!(ic, interval)
+        end
+        show(nullout, ic)
+    end
+
+    context("Alphanumeric Sorting") do
+        @fact sort(["b", "c" ,"a"], lt=Intervals.alphanum_isless) => ["a", "b", "c"]
+        @fact sort(["a10", "a2" ,"a1"], lt=Intervals.alphanum_isless) => ["a1", "a2", "a10"]
+        @fact sort(["a10a", "a2c" ,"a3b"], lt=Intervals.alphanum_isless) => ["a2c", "a3b", "a10a"]
+        @fact sort(["a3c", "a3b" ,"a3a"], lt=Intervals.alphanum_isless) => ["a3a", "a3b", "a3c"]
+        @fact sort(["a1ac", "a1aa" ,"a1ab"], lt=Intervals.alphanum_isless) => ["a1aa", "a1ab", "a1ac"]
     end
 end
 
