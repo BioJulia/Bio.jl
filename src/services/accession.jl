@@ -31,22 +31,23 @@ function parse(::Type{Accession}, s::String)
     error("cannot guess accession number type")
 end
 
-# parser of decimal integer; this is very common among accession numbers
-function parse_decimal_int(s::String, start::Int=1, stop::Int=endof(s))
-    # TODO overflow handling
+# parser of unsigne decimal integer; this is very common among accession numbers
+function parse_decimal_uint(s::String, start::Int=1, stop::Int=endof(s))
     @assert 1 <= start <= stop <= endof(s)
-    n = 0
-    i = start
-    while i <= stop
+    n = zero(Uint)
+    for i in start:stop
         c = s[i]
         if '0' <= c <= '9'
-            n = 10n + (c - '0')
+            n′ = 10n + (c - '0')
+            if n′ < n
+                throw(OverflowError())
+            end
+            n = n′
         elseif isspace(c)
             break
         else
             error("invalid character: '$c'")
         end
-        i += 1
     end
     return n
 end
@@ -55,6 +56,9 @@ function search_nonspace(s::String)
     i = 1
     while isspace(s[i])
         i += 1
+        if i > endof(s)
+            return 0
+        end
     end
     return i
 end
@@ -63,7 +67,11 @@ end
 # Entrez Gene
 
 function parse(::Type{Accession{:EntrezGene}}, s::String)
-    return Accession{:EntrezGene,Uint32}(parse_decimal_int(s, search_nonspace(s)))
+    n = parse_decimal_uint(s, search_nonspace(s))
+    if n > typemax(Uint32)
+        error("too large accession number")
+    end
+    return Accession{:EntrezGene,Uint32}(n)
 end
 
 function show(io::IO, geneid::Accession{:EntrezGene})
@@ -89,7 +97,7 @@ function parse(::Type{Accession{:GenBank}}, s::String)
     dot = search(s, '.')
     @assert dot > 0
     accession = s[1:dot-1]
-    version = parse(Uint8, s[dot+1:end])
+    version = parse_decimal_uint(SubString(s, dot+1))
     return Accession{:GenBank,GenBank}(GenBank(accession, version))
 end
 
@@ -134,9 +142,9 @@ end
 ]
 
 function ismatch(::Type{Accession{:RefSeq}}, s::String)
-    ismatch(r"^\s*(:?A[CP]|N[CGTWSZMRP]|X[MRP]|YP|ZP)_\d{6}(:?\d{3})?\.\d+\s*$", s)
-    #             ^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^~~~~~~~~~~~~~~   ^~
-    #             prefix                              number            version
+    return ismatch(r"^\s*(:?A[CP]|N[CGTWSZMRP]|X[MRP]|YP|ZP)_\d{6}(:?\d{3})?\.\d+\s*$", s)
+    #                    ^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^~~~~~~~~~~~~~~   ^~
+    #                    prefix                              number            version
 end
 
 function parse(::Type{Accession{:RefSeq}}, s::String)
@@ -199,13 +207,17 @@ end
 # Gene Ontology
 
 function ismatch(::Type{Accession{:GeneOntology}}, s::String)
-    ismatch(r"^\s*GO:\d{7}\s*$", s)
+    return ismatch(r"^\s*GO:\d{7}\s*$", s)
 end
 
 function parse(::Type{Accession{:GeneOntology}}, s::String)
-    s = strip(s)
-    @assert startswith(s, "GO:")
-    return Accession{:GeneOntology,Uint32}(parse(Uint32, s[4:end]))
+    if !ismatch(Accession{:GeneOntology}, s)
+        error("invalid GeneOntology accession number")
+    end
+    i = search_nonspace(s)
+    # `+ 3` is an offset of the prefix 'GO:'
+    n = parse_decimal_uint(s, i + 3)
+    return Accession{:GeneOntology,Uint32}(n)
 end
 
 function show(io::IO, go::Accession{:GeneOntology})

@@ -22,7 +22,6 @@ facts("Accession Number") do
         end
         @fact_throws parse(Accession{:EntrezGene}, "-1234") "negative"
         @fact_throws parse(Accession{:EntrezGene}, "0x1234") "alphabet"
-        # TODO: this fails
         @fact_throws parse(Accession{:EntrezGene}, "4294967296") "too large"
     end
 
@@ -58,6 +57,8 @@ facts("Accession Number") do
             @fact refseq == parse(Accession{:RefSeq}, s) => true
             @fact refseq == Accession(s) => true
         end
+        @fact_throws parse(Accession{:RefSeq}, "NC_000022") "no version"
+        @fact_throws parse(Accession{:RefSeq}, "XX_000022.1") "invalid prefix"
     end
 
     context("Gene Ontology") do
@@ -75,6 +76,9 @@ facts("Accession Number") do
             @fact go == parse(Accession{:GeneOntology}, s) => true
             @fact go == Accession(s) => true
         end
+        @fact_throws parse(Accession{:GeneOntology}, "GO:123456") "short number"
+        @fact_throws parse(Accession{:GeneOntology}, "GO:12345678") "long number"
+        @fact_throws parse(Accession{:GeneOntology}, "GX:1234567") "invalid prefix"
     end
 end
 
