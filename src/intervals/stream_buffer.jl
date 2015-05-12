@@ -79,7 +79,7 @@ end
 
 
 function Base.getindex{T}(buf::StreamBuffer{T}, idx::Int)
-    if idx > length(buf)
+    if idx > length(buf) || idx < 1
         throw(BoundsError())
     end
 
