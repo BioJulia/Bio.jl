@@ -151,7 +151,7 @@ facts("IntervalStream") do
         sb = Intervals.StreamBuffer{Int}()
         @fact isempty(sb) => true
         @fact length(sb) == 0 => true
-        @fact_throws sb
+        @fact_throws shift!(sb)
 
         ref_shifts = Int[]
         sb_shifts = Int[]

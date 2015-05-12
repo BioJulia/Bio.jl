@@ -1,6 +1,7 @@
 
 module Intervals
 
+import Base: show, isless, push!, intersect, start, next, done, length
 import Iterators
 using Base.Intrinsics
 #using DataStructures

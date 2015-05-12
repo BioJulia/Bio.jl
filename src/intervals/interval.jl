@@ -11,7 +11,7 @@ const STRAND_POS  = convert(Strand, 0b001)
 const STRAND_NEG  = convert(Strand, 0b010)
 const STRAND_BOTH = convert(Strand, 0b011)
 
-function Base.show(io::IO, strand::Strand)
+function show(io::IO, strand::Strand)
     if strand == STRAND_NA
         print(io, "(indeterminate strand)")
     elseif strand == STRAND_POS
@@ -26,7 +26,7 @@ function Base.show(io::IO, strand::Strand)
 end
 
 
-function Base.isless(a::Strand, b::Strand)
+function isless(a::Strand, b::Strand)
     return convert(Uint8, a) < convert(Uint8, b)
 end
 
@@ -54,8 +54,8 @@ function IntervalTrees.last(i::Interval)
 end
 
 
-function Base.isless{T}(a::Interval{T}, b::Interval{T},
-                        seqname_isless::Function=alphanum_isless)
+function isless{T}(a::Interval{T}, b::Interval{T},
+                   seqname_isless::Function=alphanum_isless)
     if a.seqname != b.seqname
         return seqname_isless(a.seqname, b.seqname)
     elseif a.first != b.first
@@ -70,6 +70,9 @@ function Base.isless{T}(a::Interval{T}, b::Interval{T},
 end
 
 
+@doc """
+Return true if interval `a` entirely precedes `b`.
+""" ->
 function precedes{T}(a::Interval{T}, b::Interval{T},
                      seqname_isless::Function=alphanum_isless)
     return seqname_isless(a.seqname, b.seqname) ||
@@ -86,12 +89,15 @@ function =={T}(a::Interval{T}, b::Interval{T})
 end
 
 
+@doc """
+Return true if interval `a` overlaps interval `b`, with no consideration to strand.
+""" ->
 function isoverlapping{S, T}(a::Interval{S}, b::Interval{T})
     return a.seqname == b.seqname && a.first <= b.last && b.first <= a.last
 end
 
 
-function Base.show(io::IO, i::Interval)
+function show(io::IO, i::Interval)
     print(io, i.seqname, ":", i.first, "-", i.last, "    ", i.strand, "    ", i.metadata)
 end
 

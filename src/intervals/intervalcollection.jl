@@ -68,7 +68,7 @@ function update_ordered_trees!{T}(ic::IntervalCollection{T})
 end
 
 
-function Base.push!{T}(ic::IntervalCollection{T}, i::Interval{T})
+function push!{T}(ic::IntervalCollection{T}, i::Interval{T})
     if !haskey(ic.trees, i.seqname)
         tree = IntervalCollectionTree{T}()
         ic.trees[i.seqname] = tree
@@ -82,7 +82,7 @@ function Base.push!{T}(ic::IntervalCollection{T}, i::Interval{T})
 end
 
 
-function Base.show(io::IO, ic::IntervalCollection)
+function show(io::IO, ic::IntervalCollection)
     const max_entries = 8
     n_entries = length(ic)
     println(io, "IntervalCollection with $(n_entries) intervals:")
@@ -100,7 +100,7 @@ function Base.show(io::IO, ic::IntervalCollection)
 end
 
 
-function Base.length(ic::IntervalCollection)
+function length(ic::IntervalCollection)
     return ic.length
 end
 
@@ -122,7 +122,7 @@ immutable IntervalCollectionIteratorState{T}
 end
 
 
-function Base.start{T}(ic::IntervalCollection{T})
+function start{T}(ic::IntervalCollection{T})
     update_ordered_trees!(ic)
     i = 1
     while i <= length(ic.ordered_trees)
@@ -137,7 +137,7 @@ function Base.start{T}(ic::IntervalCollection{T})
 end
 
 
-function Base.next{T}(ic::IntervalCollection{T},
+function next{T}(ic::IntervalCollection{T},
                       state::IntervalCollectionIteratorState{T})
     i = state.i
     value, tree_state = next(ic.ordered_trees[i], state.tree_state)
@@ -157,7 +157,7 @@ function Base.next{T}(ic::IntervalCollection{T},
 end
 
 
-function Base.done{T}(ic::IntervalCollection{T},
+function done{T}(ic::IntervalCollection{T},
                       state::IntervalCollectionIteratorState{T})
     return state.i > length(ic.ordered_trees)
 end
@@ -188,7 +188,7 @@ end
 @doc """
 Iterate over pairs of intersecting intervals in two IntervalCollections.
 """ ->
-function Base.intersect{S, T}(a::IntervalCollection{S}, b::IntervalCollection{T})
+function intersect{S, T}(a::IntervalCollection{S}, b::IntervalCollection{T})
     seqnames = collect(String, intersect(Set(keys(a.trees)), Set(keys(b.trees))))
     sort!(seqnames, lt=alphanum_isless)
 
@@ -199,7 +199,7 @@ function Base.intersect{S, T}(a::IntervalCollection{S}, b::IntervalCollection{T}
 end
 
 
-function Base.start{S, T}(it::IntersectIterator{S, T})
+function start{S, T}(it::IntersectIterator{S, T})
     i = 1
     while i <= length(it.a_trees)
         intersect_iterator = intersect(it.a_trees[i], it.b_trees[i])
@@ -215,7 +215,7 @@ function Base.start{S, T}(it::IntersectIterator{S, T})
 end
 
 
-function Base.next{S, T}(it::IntersectIterator{S, T},
+function next{S, T}(it::IntersectIterator{S, T},
                          state::IntersectIteratorState{S, T})
     intersect_iterator = state.intersect_iterator
     value, intersect_iterator_state = next(intersect_iterator,
@@ -238,7 +238,7 @@ function Base.next{S, T}(it::IntersectIterator{S, T},
 end
 
 
-function Base.done{S, T}(it::IntersectIterator{S, T},
+function done{S, T}(it::IntersectIterator{S, T},
                          state::IntersectIteratorState{S, T})
     return state.i > length(it.a_trees)
 end
