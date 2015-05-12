@@ -17,7 +17,11 @@ end
 =={S}(x::String, y::Accession{S}) = parse(Accession{S}, x) == y
 hash(x::Accession) = hash(x.data)
 
-# smart parser (should not be used outside of an interactive session)
+# Smart Accession Parser
+#
+# This function should not be used outside of an interactive session because
+# the strategy of guessing accession types is ad hoc and the results should be
+# checked by callers: the inferred types may not be what you thought!
 function parse(::Type{Accession}, s::String)
     if ismatch(Accession{:RefSeq}, s)
         return parse(Accession{:RefSeq}, s)
@@ -53,14 +57,12 @@ function parse_decimal_uint(s::String, start::Int=1, stop::Int=endof(s))
 end
 
 function search_nonspace(s::String)
-    i = 1
-    while isspace(s[i])
-        i += 1
-        if i > endof(s)
-            return 0
+    for i in 1:endof(s)
+        if !isspace(s[i])
+            return i
         end
     end
-    return i
+    return 0
 end
 
 
@@ -84,6 +86,8 @@ end
 
 
 # GenBank
+
+# http://www.ncbi.nlm.nih.gov/Sequin/acc.html
 
 immutable GenBank
     accession::ASCIIString
@@ -215,7 +219,7 @@ function parse(::Type{Accession{:GeneOntology}}, s::String)
         error("invalid GeneOntology accession number")
     end
     i = search_nonspace(s)
-    # `+ 3` is an offset of the prefix 'GO:'
+    # `+ 3` is the offset of the prefix 'GO:'
     n = parse_decimal_uint(s, i + 3)
     return Accession{:GeneOntology,Uint32}(n)
 end
