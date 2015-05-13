@@ -1,4 +1,6 @@
-export Accession, browse
+export Accession, browse, uri
+
+using URIParser
 
 # Accession numbers (S::Symbol database name, T::DataType encoding type)
 immutable Accession{S,T}
@@ -16,6 +18,10 @@ end
 =={S}(x::Accession{S}, y::String) = x == parse(Accession{S}, y)
 =={S}(x::String, y::Accession{S}) = parse(Accession{S}, x) == y
 hash(x::Accession) = hash(x.data)
+
+function browse(accession::Accession)
+    run(`open $(uri(accession, format=:browser))`)
+end
 
 # Smart Accession Parser
 #
@@ -282,6 +288,8 @@ end
 
 # Gene Ontology
 
+# http://geneontology.org/page/ontology-structure#termstru
+
 function ismatch(::Type{Accession{:GeneOntology}}, s::String)
     return ismatch(r"^\s*GO:\d{7}\s*$", s)
 end
@@ -325,4 +333,14 @@ end
 function show(io::IO, uniprot::Accession{:UniProt})
     write(io, uniprot.data)
     return
+end
+
+function uri(uniprot::Accession{:UniProt}; format::Symbol=:browser)
+    if format === :browser
+        ext = ""
+    else
+        @assert format ∈ [:txt, :fasta, :xml, :rdf, :gff]
+        ext = "." * string(format)
+    end
+    return URI("http://www.uniprot.org/uniprot/$uniprot$ext")
 end
