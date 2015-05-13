@@ -11,9 +11,11 @@ facts("Accession Number") do
         @fact string(accession) => strip(s)
         @fact accession == s => true
         @fact s == accession => true
-        @fact accession == parse(Accession{sym}, s) => true
+        @fact parse(Accession{sym}, s) => accession
+        @fact parse(Accession{sym}, convert(ASCIIString, s)) => accession
+        @fact parse(Accession{sym}, convert(UTF8String, s)) => accession
         if guess
-            @fact accession == Accession(s) => true
+            @fact Accession(s) => accession
         end
     end
 
@@ -94,6 +96,20 @@ facts("Accession Number") do
         @fact_throws parse(Accession{:GeneOntology}, "GO:123456") "short number"
         @fact_throws parse(Accession{:GeneOntology}, "GO:12345678") "long number"
         @fact_throws parse(Accession{:GeneOntology}, "GX:1234567") "invalid prefix"
+    end
+
+    context("UniProt") do
+        list = """
+        A2BC19
+        P12345
+        A0A022YWF9
+         A0A022YWF9 \t 
+        """ |> chomp
+        for s in split(list, '\n')
+            test_base(:UniProt, s, guess=true)
+        end
+        @fact_throws parse(Accession{:UniProt}, "P1234") "short number"
+        @fact_throws parse(Accession{:UniProt}, "P123456") "long number"
     end
 end
 

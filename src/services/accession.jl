@@ -31,6 +31,8 @@ function parse(::Type{Accession}, s::String)
         return parse(Accession{:Ensembl}, s)
     elseif ismatch(Accession{:GeneOntology}, s)
         return parse(Accession{:GeneOntology}, s)
+    elseif ismatch(Accession{:UniProt}, s)
+        return parse(Accession{:UniProt}, s)
     end
     error("cannot guess accession number type")
 end
@@ -300,4 +302,27 @@ end
 
 @osx_only function browse(go::Accession{:GeneOntology})
     run(`open http://amigo.geneontology.org/amigo/term/$go`)
+end
+
+
+# UniProt
+
+# http://www.uniprot.org/help/accession_numbers
+
+function ismatch(::Type{Accession{:UniProt}}, s::String)
+    return ismatch(r"^\s*(:?[OPQ][0-9][A-Z0-9]{3}[0-9]|[A-NR-Z][0-9]([A-Z][A-Z0-9]{2}[0-9]){1,2})\s*$", s)
+end
+
+function parse(::Type{Accession{:UniProt}}, s::String)
+    if !ismatch(Accession{:UniProt}, s)
+        error("invalid UniProt accession number")
+    end
+    i = findfirst_nonspace(s)
+    j = findnext(c -> isspace(c), s, i)
+    return Accession{:UniProt,ASCIIString}(s[i:(j == 0 ? endof(s) : j - 1)])
+end
+
+function show(io::IO, uniprot::Accession{:UniProt})
+    write(io, uniprot.data)
+    return
 end
