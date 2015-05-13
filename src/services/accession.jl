@@ -56,20 +56,13 @@ function parse_decimal_uint(s::String, start::Int=1, stop::Int=endof(s))
     return n
 end
 
-function search_nonspace(s::String)
-    for i in 1:endof(s)
-        if !isspace(s[i])
-            return i
-        end
-    end
-    return 0
-end
+findfirst_nonspace(s) = findfirst(c -> !isspace(c), s)
 
 
 # Entrez Gene
 
 function parse(::Type{Accession{:EntrezGene}}, s::String)
-    n = parse_decimal_uint(s, search_nonspace(s))
+    n = parse_decimal_uint(s, findfirst_nonspace(s))
     if n > typemax(Uint32)
         error("too large accession number")
     end
@@ -96,19 +89,32 @@ end
 
 ==(x::GenBank, y::GenBank) = x.version == y.version && x.accession == y.accession
 
+function ismatch(::Type{Accession{:GenBank}}, s::String)
+    return ismatch(r"^\s*[A-Z]{1,5}\d+(:?\.\d+)?\s*$", s)
+end
+
 function parse(::Type{Accession{:GenBank}}, s::String)
-    s = strip(s)
+    if !ismatch(Accession{:GenBank}, s)
+        error("invalid GenBank accession number")
+    end
+    i = findfirst(c -> !isspace(c), s)
     dot = search(s, '.')
-    @assert dot > 0
-    accession = s[1:dot-1]
-    version = parse_decimal_uint(SubString(s, dot+1))
+    if dot == 0
+        j = findnext(c -> isspace(c), s, i)
+        accession = s[i:(j == 0 ? endof(s) : j - 1)]
+        version = 0
+    else
+        accession = s[i:dot-1]
+        version = parse_decimal_uint(s, dot + 1)
+    end
     return Accession{:GenBank,GenBank}(GenBank(accession, version))
 end
 
 function show(io::IO, genbank::Accession{:GenBank})
-    print(io, genbank.data.accession)
-    print(io, '.')
-    print(io, genbank.data.version)
+    write(io, genbank.data.accession)
+    if genbank.data.version > 0
+        @printf io ".%d" genbank.data.version
+    end
 end
 
 hash(genbank::GenBank) = hash(genbank.accession) $ hash(genbank.version)
@@ -146,18 +152,27 @@ end
 ]
 
 function ismatch(::Type{Accession{:RefSeq}}, s::String)
-    return ismatch(r"^\s*(:?A[CP]|N[CGTWSZMRP]|X[MRP]|YP|ZP)_\d{6}(:?\d{3})?\.\d+\s*$", s)
-    #                    ^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^~~~~~~~~~~~~~~   ^~
-    #                    prefix                              number            version
+    return ismatch(r"^\s*(:?A[CP]|N[CGTWSZMRP]|X[MRP]|YP|ZP)_\d{6}(:?\d{3})?(:?\.\d+)?\s*$", s)
+    #                    ^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^~~~~~~~~~~~~~~^~~~~~~~~~
+    #                    prefix                              number         version (optional)
 end
 
 function parse(::Type{Accession{:RefSeq}}, s::String)
-    s = strip(s)
-    prefix = refseq_prefix_encode[s[1:3]]
+    if !ismatch(Accession{:RefSeq}, s)
+        error("invalid RefSeq accession number")
+    end
+    i = findfirst(c -> !isspace(c), s)
+    prefix = refseq_prefix_encode[s[i:i+2]]
     dot = search(s, '.')
-    @assert dot > 0
-    number = parse(Uint32, s[4:dot-1])
-    version = parse(Uint8, s[dot+1:end])
+    if dot == 0
+        # not versioned
+        number = parse_decimal_uint(s, i + 3)
+        version = 0
+    else
+        # versioned
+        number = parse_decimal_uint(s, i + 3, dot - 1)
+        version = parse_decimal_uint(s, dot + 1)
+    end
     return Accession{:RefSeq,RefSeq}(RefSeq(prefix, number, version))
 end
 
@@ -165,11 +180,14 @@ function show(io::IO, refseq::Accession{:RefSeq})
     prefix = refseq_prefix_decode[refseq.data.prefix]
     nd = ndigits(refseq.data.number)
     if nd <= 6
-        @printf io "%s%06d.%d" prefix refseq.data.number refseq.data.version
+        @printf io "%s%06d" prefix refseq.data.number
     elseif nd <= 9
-        @printf io "%s%09d.%d" prefix refseq.data.number refseq.data.version
+        @printf io "%s%09d" prefix refseq.data.number
     else
         error("number overflow")
+    end
+    if refseq.data.version > 0
+        @printf io ".%d" refseq.data.version
     end
 end
 
@@ -189,7 +207,30 @@ immutable CCDS
 end
 
 function ismatch(::Type{Accession{:CCDS}}, s::String)
-    return ismatch(r"^\s*CCDS\d+\.\d+\s*$", s)
+    return ismatch(r"^\s*CCDS\d+(:?\.\d+)?\s*$", s)
+end
+
+function parse(::Type{Accession{:CCDS}}, s::String)
+    if !ismatch(Accession{:CCDS}, s)
+        error("invalid CCDS accession number")
+    end
+    i = findfirst_nonspace(s)
+    dot = search(s, '.')
+    if dot == 0
+        number = parse_decimal_uint(s, i + 4)
+        version = 0
+    else
+        number = parse_decimal_uint(s, i + 4, dot - 1)
+        version = parse_decimal_uint(s, dot + 1)
+    end
+    return Accession{:CCDS,CCDS}(CCDS(number, version))
+end
+
+function show(io::IO, ccds::Accession{:CCDS})
+    @printf io "CCDS%d" ccds.data.number
+    if ccds.data.version > 0
+        @printf io ".%d" ccds.data.version
+    end
 end
 
 
@@ -197,14 +238,43 @@ end
 
 # http://www.ensembl.org/info/genome/stable_ids/index.html
 
-function ismatch(::Type{Accession{:Ensembl}}, s::String)
-    return ismatch(r"^\s*(:?ENS(:?[A-Z]{3,4}?)|FB)(:?E|FM|G|GT|P|R|T)\d+\s*$", s)
-    #                    ^~~~~~~~~~~~~~~~~~~~~~~~~^~~~~~~~~~~~~~~~~~~^~~
-    #                    species prefix           feature prefix     number
+immutable Ensembl
+    accession::ASCIIString
+    version::Uint8
 end
 
-function parse(::Type{Accession{:Ensembl,ASCIIString}}, s::String)
-    return Accession{:Ensembl,ASCIIString}(strip(s))
+==(x::Ensembl, y::Ensembl) = x.version == y.version && x.accession == y.accession
+
+function ismatch(::Type{Accession{:Ensembl}}, s::String)
+    return ismatch(r"^\s*(:?ENS(:?[A-Z]{3,4}?)?|FB)(:?E|FM|G|GT|P|R|T)\d+(:?\.\d+)?\s*$", s)
+    #                    ^~~~~~~~~~~~~~~~~~~~~~~~~~^~~~~~~~~~~~~~~~~~~^~~^~~~~~~~~
+    #                    species prefix            feature prefix     |  version (optional)
+    #                                                                 number
+end
+
+function parse(::Type{Accession{:Ensembl}}, s::String)
+    if !ismatch(Accession{:Ensembl}, s)
+        error("invalid Ensembl accession number")
+    end
+    i = findfirst_nonspace(s)
+    dot = search(s, '.')
+    if dot == 0
+        j = findnext(c -> isspace(c), s, i)
+        accession = s[i:(j == 0 ? endof(s) : j - 1)]
+        version = 0
+    else
+        accession = s[i:dot-1]
+        version = parse_decimal_uint(s, dot + 1)
+    end
+    return Accession{:Ensembl,Ensembl}(Ensembl(accession, version))
+end
+
+
+function show(io::IO, ensembl::Accession{:Ensembl})
+    write(io, ensembl.data.accession)
+    if ensembl.data.version > 0
+        @printf io ".%d" ensembl.data.version
+    end
 end
 
 
@@ -218,7 +288,7 @@ function parse(::Type{Accession{:GeneOntology}}, s::String)
     if !ismatch(Accession{:GeneOntology}, s)
         error("invalid GeneOntology accession number")
     end
-    i = search_nonspace(s)
+    i = findfirst_nonspace(s)
     # `+ 3` is the offset of the prefix 'GO:'
     n = parse_decimal_uint(s, i + 3)
     return Accession{:GeneOntology,Uint32}(n)

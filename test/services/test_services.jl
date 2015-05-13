@@ -5,6 +5,18 @@ using Bio
 using Bio.Services
 
 facts("Accession Number") do
+    function test_base(sym::Symbol, s::String; guess=false)
+        accession = parse(Accession{sym}, s)
+        @fact isa(accession, Accession{sym}) => true
+        @fact string(accession) => strip(s)
+        @fact accession == s => true
+        @fact s == accession => true
+        @fact accession == parse(Accession{sym}, s) => true
+        if guess
+            @fact accession == Accession(s) => true
+        end
+    end
+
     context("Entrez Gene") do
         list = """
         1
@@ -13,12 +25,7 @@ facts("Accession Number") do
          6598 \t 
         """ |> chomp
         for s in split(list, '\n')
-            geneid = parse(Accession{:EntrezGene}, s)
-            @fact isa(geneid, Accession{:EntrezGene}) => true
-            @fact string(geneid) => strip(s)
-            @fact geneid == s => true
-            @fact s == geneid => true
-            @fact geneid == parse(Accession{:EntrezGene}, s) => true
+            test_base(:EntrezGene, s)
         end
         @fact_throws parse(Accession{:EntrezGene}, "-1234") "negative"
         @fact_throws parse(Accession{:EntrezGene}, "0x1234") "alphabet"
@@ -30,14 +37,10 @@ facts("Accession Number") do
         U46667.1
         DL128137.1
          DL128137.1 \t 
+        DL128137
         """ |> chomp
         for s in split(list, '\n')
-            genbank = parse(Accession{:GenBank}, s)
-            @fact isa(genbank, Accession{:GenBank}) => true
-            @fact string(genbank) => strip(s)
-            @fact genbank == s => true
-            @fact s == genbank => true
-            @fact genbank == parse(Accession{:GenBank}, s) => true
+            test_base(:GenBank, s)
         end
     end
 
@@ -47,18 +50,36 @@ facts("Accession Number") do
         XM_011530345.1
         XP_011528647.1
          XP_011528647.1 \t 
+        XP_011528647
         """ |> chomp
         for s in split(list, '\n')
-            refseq = parse(Accession{:RefSeq}, s)
-            @fact isa(refseq, Accession{:RefSeq}) => true
-            @fact string(refseq) => strip(s)
-            @fact refseq == s => true
-            @fact s == refseq => true
-            @fact refseq == parse(Accession{:RefSeq}, s) => true
-            @fact refseq == Accession(s) => true
+            test_base(:RefSeq, s, guess=true)
         end
-        @fact_throws parse(Accession{:RefSeq}, "NC_000022") "no version"
         @fact_throws parse(Accession{:RefSeq}, "XX_000022.1") "invalid prefix"
+    end
+
+    context("Consensus CDS (CCDS)") do
+        list = """
+        CCDS1.1
+        CCDS5251.2
+         CCDS5251.2 \t 
+        CCDS5251
+        """ |> chomp
+        for s  in split(list, '\n')
+            test_base(:CCDS, s, guess=true)
+        end
+        @fact_throws parse(Accession{:CCDS}, "CDS1234.1") "invalid prefix"
+    end
+
+    context("Ensembl") do
+        list = """
+        ENSG00000139618.13
+         ENSG00000139618.13 \t 
+        ENSG00000139618
+        """ |> chomp
+        for s in split(list, '\n')
+            test_base(:Ensembl, s, guess=true)
+        end
     end
 
     context("Gene Ontology") do
@@ -68,13 +89,7 @@ facts("Accession Number") do
          GO:0016514 \t 
         """ |> chomp
         for s in split(list, '\n')
-            go = parse(Accession{:GeneOntology}, s)
-            @fact isa(go, Accession{:GeneOntology}) => true
-            @fact string(go) => strip(s)
-            @fact go == s => true
-            @fact s == go => true
-            @fact go == parse(Accession{:GeneOntology}, s) => true
-            @fact go == Accession(s) => true
+            test_base(:GeneOntology, s, guess=true)
         end
         @fact_throws parse(Accession{:GeneOntology}, "GO:123456") "short number"
         @fact_throws parse(Accession{:GeneOntology}, "GO:12345678") "long number"
