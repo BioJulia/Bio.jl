@@ -81,8 +81,9 @@ function show(io::IO, geneid::Accession{:EntrezGene})
     @printf io "%d" convert(Uint32, geneid.data)
 end
 
-@osx_only function browse(geneid::Accession{:EntrezGene})
-    run(`open http://www.ncbi.nlm.nih.gov/gene/?term=$geneid`)
+function uri(geneid::Accession{:EntrezGene}; format::Symbol=:browser)
+    @assert format === :browser
+    return URI("http://www.ncbi.nlm.nih.gov/gene/?term=$geneid")
 end
 
 
@@ -127,8 +128,9 @@ end
 
 hash(genbank::GenBank) = hash(genbank.accession) $ hash(genbank.version)
 
-@osx_only function browse(genbank::Accession{:GenBank})
-    run(`open http://www.ncbi.nlm.nih.gov/nuccore/$genbank`)
+function uri(genbank::Accession{:GenBank}; format::Symbol=:browser)
+    @assert format === :browser
+    return URI("http://www.ncbi.nlm.nih.gov/nuccore/$genbank")
 end
 
 
@@ -201,8 +203,9 @@ end
 
 hash(refseq::RefSeq) = hash(refseq.prefix) $ hash(refseq.number) $ hash(refseq.version)
 
-@osx_only function browse(refseq::Accession{:RefSeq})
-    run(`open http://www.ncbi.nlm.nih.gov/nuccore/$refseq`)
+function uri(refseq::Accession{:RefSeq}; browser::Symbol=:browser)
+    @assert format === :browser
+    return URI("http://www.ncbi.nlm.nih.gov/nuccore/$refseq")
 end
 
 # Consensus CDS (CCDS)
@@ -239,6 +242,11 @@ function show(io::IO, ccds::Accession{:CCDS})
     if ccds.data.version > 0
         @printf io ".%d" ccds.data.version
     end
+end
+
+function uri(ccds::Accession{:CCDS}; format::Symbol=:browser)
+    @assert format === :browser
+    return URI("http://www.ncbi.nlm.nih.gov/CCDS/CcdsBrowse.cgi?REQUEST=CCDS&DATA=$ccds")
 end
 
 
@@ -285,6 +293,10 @@ function show(io::IO, ensembl::Accession{:Ensembl})
     end
 end
 
+# TODO: permanent link to an entry
+#function uri(ensembl::Accession{:Ensembl}; format::Symbol=:browser)
+#end
+
 
 # Gene Ontology
 
@@ -308,8 +320,15 @@ function show(io::IO, go::Accession{:GeneOntology})
     @printf io "GO:%07d" convert(Uint32, go.data)
 end
 
-@osx_only function browse(go::Accession{:GeneOntology})
-    run(`open http://amigo.geneontology.org/amigo/term/$go`)
+function uri(go::Accession{:GeneOntology}; format::Symbol=:browser)
+    if format === :browser
+        q = "id=$go"
+    else
+        @assert format ∈ [:mini, :obo, :oboxml]
+        q = "id=$go&format=$format"
+    end
+    # TODO: AmiGO or QuickGO
+    return URI("http://www.ebi.ac.uk/QuickGO/GTerm?$q")
 end
 
 
@@ -340,7 +359,7 @@ function uri(uniprot::Accession{:UniProt}; format::Symbol=:browser)
         ext = ""
     else
         @assert format ∈ [:txt, :fasta, :xml, :rdf, :gff]
-        ext = "." * string(format)
+        ext = ".$format"
     end
     return URI("http://www.uniprot.org/uniprot/$uniprot$ext")
 end
