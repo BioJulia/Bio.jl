@@ -20,7 +20,17 @@ end
 hash(x::Accession) = hash(x.data)
 
 function browse(accession::Accession)
-    run(`open $(uri(accession, format=:browser))`)
+    link = uri(accession, format=:browser)
+    # copied from Gadfly.jl
+    if OS_NAME == :Darwin
+        run(`open $link`)
+    elseif OS_NAME == :Linux || OS_NAME == :FreeBSD
+        run(`xdg-open $link`)
+    elseif OS_NAME == :Windows
+        run(`$(ENV["COMSPEC"]) /c start $link`)
+    else
+        warn("Opening a web browser is not supported on OS $(string(OS_NAME))")
+    end
 end
 
 # Smart Accession Parser
@@ -203,7 +213,7 @@ end
 
 hash(refseq::RefSeq) = hash(refseq.prefix) $ hash(refseq.number) $ hash(refseq.version)
 
-function uri(refseq::Accession{:RefSeq}; browser::Symbol=:browser)
+function uri(refseq::Accession{:RefSeq}; format::Symbol=:browser)
     @assert format === :browser
     return URI("http://www.ncbi.nlm.nih.gov/nuccore/$refseq")
 end
