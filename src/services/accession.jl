@@ -1,8 +1,13 @@
+# Accessions
+# ==========
+
 export Accession, browse, uri
 
 using URIParser
 
-# Accession numbers (S::Symbol database name, T::DataType encoding type)
+# Accession number type.
+#   S: Symbol    database name
+#   T: DataType  encoding type of accession number
 immutable Accession{S,T}
     # encoded accession number
     data::T
@@ -17,6 +22,7 @@ end
 =={S,T}(x::Accession{S,T}, y::Accession{S,T}) = x.data == y.data
 =={S}(x::Accession{S}, y::String) = x == parse(Accession{S}, y)
 =={S}(x::String, y::Accession{S}) = parse(Accession{S}, x) == y
+isless{S,T}(x::Accession{S,T}, y::Accession{S,T}) = isless(x.data, y.data)
 hash(x::Accession) = hash(x.data)
 
 function browse(accession::Accession)
@@ -75,15 +81,55 @@ function parse_decimal_uint(s::String, start::Int=1, stop::Int=endof(s))
 end
 
 findfirst_nonspace(s) = findfirst(c -> !isspace(c), s)
+findlast_nonspace(s) = findnext(c -> isspace(c), s, i)
+
+macro check_match(name, s)
+    quote
+        if !ismatch(Accession{$name}, $s)
+            error("invalid $($name) accession number: '$($s)'")
+        end
+    end
+end
+
+macro check_version(typ, version)
+    quote
+        if $version > typemax($typ)
+            error("version number $($version) is too large to encode with $($typ)")
+        end
+    end
+end
+
+# Accession Encodings
+# ===================
+
+# Accession numbers must support following methods:
+#   * ==(x::T, y::T)
+#   * isless(x::T, y::T)
+#   * hash(x::T)
+#   * ismatch(::Type{Accession{S}}, s::String)
+#   * parse(::Type{Accession{S}}, s::String)
+#   * show(io::IO, accnum::Accession{S})
+#
+# And recommended methods:
+#   * uri(accnum::Accession{S}; format::Symbol=:browser)
 
 
 # Entrez Gene
+# -----------
+
+# webpage:
+#   http://www.ncbi.nlm.nih.gov/gene
+# accession format:
+#   http://www.ncbi.nlm.nih.gov/books/NBK3841/#EntrezGene.Numbering_system
+
+function ismatch(::Type{Accession{:EntrezGene}}, s::String)
+    # typemax(UInt32) == 4,294,967,295
+    return ismatch(r"^\s*(:?[1-9]\d{0,8}|[1-3]?\d{9})\s*$", s)
+end
 
 function parse(::Type{Accession{:EntrezGene}}, s::String)
+    @check_match :EntrezGene s
     n = parse_decimal_uint(s, findfirst_nonspace(s))
-    if n > typemax(Uint32)
-        error("too large accession number")
-    end
     return Accession{:EntrezGene,Uint32}(n)
 end
 
@@ -97,9 +143,13 @@ function uri(geneid::Accession{:EntrezGene}; format::Symbol=:browser)
 end
 
 
-# GenBank
+# GenBank 
+# -------
 
-# http://www.ncbi.nlm.nih.gov/Sequin/acc.html
+# webpage:
+#   http://www.ncbi.nlm.nih.gov/genbank/
+# accession format:
+#   http://www.ncbi.nlm.nih.gov/Sequin/acc.html
 
 immutable GenBank
     accession::ASCIIString
@@ -107,15 +157,21 @@ immutable GenBank
 end
 
 ==(x::GenBank, y::GenBank) = x.version == y.version && x.accession == y.accession
+function isless(x::GenBank, y::GenBank)
+    (x.accession <  y.accession) ||
+    (x.accession == y.accession && x.version < y.version)
+end
+hash(genbank::GenBank) = hash(genbank.accession) $ hash(genbank.version)
 
 function ismatch(::Type{Accession{:GenBank}}, s::String)
-    return ismatch(r"^\s*[A-Z]{1,5}\d+(:?\.\d+)?\s*$", s)
+    return ismatch(r"^\s*[A-Z]{1,5}\d{5,10}(:?\.\d+)?\s*$", s)
+    #                    ^~~~~~~~~~^~~~~~~~^~~~~~~~~
+    #                    prefix    |       version
+    #                              numerals
 end
 
 function parse(::Type{Accession{:GenBank}}, s::String)
-    if !ismatch(Accession{:GenBank}, s)
-        error("invalid GenBank accession number")
-    end
+    @check_match :GenBank s
     i = findfirst(c -> !isspace(c), s)
     dot = search(s, '.')
     if dot == 0
@@ -126,6 +182,7 @@ function parse(::Type{Accession{:GenBank}}, s::String)
         accession = s[i:dot-1]
         version = parse_decimal_uint(s, dot + 1)
     end
+    @check_version Uint8 version
     return Accession{:GenBank,GenBank}(GenBank(accession, version))
 end
 
@@ -136,8 +193,6 @@ function show(io::IO, genbank::Accession{:GenBank})
     end
 end
 
-hash(genbank::GenBank) = hash(genbank.accession) $ hash(genbank.version)
-
 function uri(genbank::Accession{:GenBank}; format::Symbol=:browser)
     @assert format === :browser
     return URI("http://www.ncbi.nlm.nih.gov/nuccore/$genbank")
@@ -145,73 +200,29 @@ end
 
 
 # RefSeq
+# ------
 
-immutable RefSeq
-    prefix::Uint8
-    number::Uint32
-    version::Uint8
-end
-
-# generate lookup table
-macro gen_table(name, typ, xs)
-    xs = eval(xs)
-    enc_table = symbol(string(name, :_encode))
-    dec_table = symbol(string(name, :_decode))
-    esc(quote
-        const $enc_table = [x => convert($typ, i) for (i, x) in enumerate($xs)]
-        const $dec_table = $xs
-    end)
-end
-
-# http://www.ncbi.nlm.nih.gov/books/NBK21091/ (Table 1)
-@gen_table refseq_prefix Uint8 [
-    "AC_", "NC_", "NG_", "NT_", "NW_",
-    "NS_", "NZ_", "NM_", "NR_", "XM_",
-    "XR_", "AP_", "NP_", "YP_", "XP_",
-    "ZP_",
-]
+# webpage:
+#   http://www.ncbi.nlm.nih.gov/refseq/
+# accession format:
+#   http://www.ncbi.nlm.nih.gov/books/NBK21091/
 
 function ismatch(::Type{Accession{:RefSeq}}, s::String)
-    return ismatch(r"^\s*(:?A[CP]|N[CGTWSZMRP]|X[MRP]|YP|ZP)_\d{6}(:?\d{3})?(:?\.\d+)?\s*$", s)
-    #                    ^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^~~~~~~~~~~~~~~^~~~~~~~~~
-    #                    prefix                              number         version (optional)
+    return ismatch(r"^\s*(:?A[CP]|N[CGTWSZMRP]|X[MRP]|YP|ZP)_[A-Z0-9]+(:?\.\d+)?\s*$", s)
+    #                    ^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^~~~~~~~~^~~~~~~~~~
+    #                    prefix                              |        version (optional)
+    #                                                        alpha-numerals
 end
 
 function parse(::Type{Accession{:RefSeq}}, s::String)
-    if !ismatch(Accession{:RefSeq}, s)
-        error("invalid RefSeq accession number")
-    end
-    i = findfirst(c -> !isspace(c), s)
-    prefix = refseq_prefix_encode[s[i:i+2]]
-    dot = search(s, '.')
-    if dot == 0
-        # not versioned
-        number = parse_decimal_uint(s, i + 3)
-        version = 0
-    else
-        # versioned
-        number = parse_decimal_uint(s, i + 3, dot - 1)
-        version = parse_decimal_uint(s, dot + 1)
-    end
-    return Accession{:RefSeq,RefSeq}(RefSeq(prefix, number, version))
+    @check_match :RefSeq s
+    return Accession{:RefSeq,ASCIIString}(strip(s))
 end
 
 function show(io::IO, refseq::Accession{:RefSeq})
-    prefix = refseq_prefix_decode[refseq.data.prefix]
-    nd = ndigits(refseq.data.number)
-    if nd <= 6
-        @printf io "%s%06d" prefix refseq.data.number
-    elseif nd <= 9
-        @printf io "%s%09d" prefix refseq.data.number
-    else
-        error("number overflow")
-    end
-    if refseq.data.version > 0
-        @printf io ".%d" refseq.data.version
-    end
+    write(io, refseq.data)
+    return
 end
-
-hash(refseq::RefSeq) = hash(refseq.prefix) $ hash(refseq.number) $ hash(refseq.version)
 
 function uri(refseq::Accession{:RefSeq}; format::Symbol=:browser)
     @assert format === :browser
@@ -219,12 +230,21 @@ function uri(refseq::Accession{:RefSeq}; format::Symbol=:browser)
 end
 
 # Consensus CDS (CCDS)
+# --------------------
 
-# http://www.ncbi.nlm.nih.gov/CCDS/CcdsBrowse.cgi#ccdsIds
+# webpage:
+#   http://www.ncbi.nlm.nih.gov/CCDS/CcdsBrowse.cgi
+# accession format:
+#   http://www.ncbi.nlm.nih.gov/CCDS/CcdsBrowse.cgi#ccdsIds
 
 immutable CCDS
     number::Uint32
     version::Uint8
+end
+
+function isless(x::CCDS, y::CCDS)
+    (x.number <  y.number) ||
+    (x.number == y.number && x.version < y.version)
 end
 
 function ismatch(::Type{Accession{:CCDS}}, s::String)
@@ -232,9 +252,7 @@ function ismatch(::Type{Accession{:CCDS}}, s::String)
 end
 
 function parse(::Type{Accession{:CCDS}}, s::String)
-    if !ismatch(Accession{:CCDS}, s)
-        error("invalid CCDS accession number")
-    end
+    @check_match :CCDS s
     i = findfirst_nonspace(s)
     dot = search(s, '.')
     if dot == 0
@@ -244,6 +262,7 @@ function parse(::Type{Accession{:CCDS}}, s::String)
         number = parse_decimal_uint(s, i + 4, dot - 1)
         version = parse_decimal_uint(s, dot + 1)
     end
+    @check_version Uint8 version
     return Accession{:CCDS,CCDS}(CCDS(number, version))
 end
 
@@ -261,65 +280,49 @@ end
 
 
 # Ensembl
+# -------
 
-# http://www.ensembl.org/info/genome/stable_ids/index.html
-
-immutable Ensembl
-    accession::ASCIIString
-    version::Uint8
-end
-
-==(x::Ensembl, y::Ensembl) = x.version == y.version && x.accession == y.accession
+# webpage:
+#   http://www.ensembl.org/index.html
+# accession format:
+#   http://www.ensembl.org/info/genome/stable_ids/index.html
 
 function ismatch(::Type{Accession{:Ensembl}}, s::String)
     return ismatch(r"^\s*(:?ENS(:?[A-Z]{3,4}?)?|FB)(:?E|FM|G|GT|P|R|T)\d+(:?\.\d+)?\s*$", s)
     #                    ^~~~~~~~~~~~~~~~~~~~~~~~~~^~~~~~~~~~~~~~~~~~~^~~^~~~~~~~~
     #                    species prefix            feature prefix     |  version (optional)
-    #                                                                 number
+    #                                                                 numerals
 end
 
 function parse(::Type{Accession{:Ensembl}}, s::String)
-    if !ismatch(Accession{:Ensembl}, s)
-        error("invalid Ensembl accession number")
-    end
-    i = findfirst_nonspace(s)
-    dot = search(s, '.')
-    if dot == 0
-        j = findnext(c -> isspace(c), s, i)
-        accession = s[i:(j == 0 ? endof(s) : j - 1)]
-        version = 0
-    else
-        accession = s[i:dot-1]
-        version = parse_decimal_uint(s, dot + 1)
-    end
-    return Accession{:Ensembl,Ensembl}(Ensembl(accession, version))
+    @check_match :Ensembl s
+    return Accession{:Ensembl,ASCIIString}(strip(s))
 end
-
 
 function show(io::IO, ensembl::Accession{:Ensembl})
-    write(io, ensembl.data.accession)
-    if ensembl.data.version > 0
-        @printf io ".%d" ensembl.data.version
-    end
+    write(io, ensembl.data)
+    return
 end
 
-# TODO: permanent link to an entry
+# TODO: Is there a permanent link to an entry?
 #function uri(ensembl::Accession{:Ensembl}; format::Symbol=:browser)
 #end
 
 
 # Gene Ontology
+# -------------
 
-# http://geneontology.org/page/ontology-structure#termstru
+# webpage:
+#   http://geneontology.org/
+# accession format:
+#   http://geneontology.org/page/ontology-structure#termstru
 
 function ismatch(::Type{Accession{:GeneOntology}}, s::String)
     return ismatch(r"^\s*GO:\d{7}\s*$", s)
 end
 
 function parse(::Type{Accession{:GeneOntology}}, s::String)
-    if !ismatch(Accession{:GeneOntology}, s)
-        error("invalid GeneOntology accession number")
-    end
+    @check_match :GeneOntology s
     i = findfirst_nonspace(s)
     # `+ 3` is the offset of the prefix 'GO:'
     n = parse_decimal_uint(s, i + 3)
@@ -343,17 +346,19 @@ end
 
 
 # UniProt
+# -------
 
-# http://www.uniprot.org/help/accession_numbers
+# webpage:
+#   http://www.uniprot.org/
+# accession format:
+#   http://www.uniprot.org/help/accession_numbers
 
 function ismatch(::Type{Accession{:UniProt}}, s::String)
-    return ismatch(r"^\s*(:?[OPQ][0-9][A-Z0-9]{3}[0-9]|[A-NR-Z][0-9]([A-Z][A-Z0-9]{2}[0-9]){1,2})\s*$", s)
+    return ismatch(r"^\s*(:?[OPQ][0-9][A-Z0-9]{3}[0-9]|[A-NR-Z][0-9](:?[A-Z][A-Z0-9]{2}[0-9]){1,2})\s*$", s)
 end
 
 function parse(::Type{Accession{:UniProt}}, s::String)
-    if !ismatch(Accession{:UniProt}, s)
-        error("invalid UniProt accession number")
-    end
+    @check_match :UniProt s
     i = findfirst_nonspace(s)
     j = findnext(c -> isspace(c), s, i)
     return Accession{:UniProt,ASCIIString}(s[i:(j == 0 ? endof(s) : j - 1)])
