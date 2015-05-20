@@ -26,16 +26,14 @@ function show(io::IO, strand::Strand)
 end
 
 
-function isless(a::Strand, b::Strand)
-    return convert(Uint8, a) < convert(Uint8, b)
-end
+isless(a::Strand, b::Strand) = convert(Uint8, a) < convert(Uint8, b)
 
 
 # Note, just to be clear: this shadows IntervalTrees.Interval
 @doc """
 A genomic interval specifies interval with some associated metadata.
 """ ->
-immutable Interval{T} <: IntervalTrees.AbstractInterval{Int64}
+immutable Interval{T} <: AbstractInterval{Int64}
     seqname::String
     first::Int64
     last::Int64
@@ -44,12 +42,12 @@ immutable Interval{T} <: IntervalTrees.AbstractInterval{Int64}
 end
 
 
-function IntervalTrees.first(i::Interval)
+function first(i::Interval)
     return i.first
 end
 
 
-function IntervalTrees.last(i::Interval)
+function last(i::Interval)
     return i.last
 end
 

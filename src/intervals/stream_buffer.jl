@@ -17,7 +17,7 @@ type StreamBuffer{T}
 end
 
 
-function Base.length{T}(buf::StreamBuffer{T})
+function length{T}(buf::StreamBuffer{T})
     if buf.last_idx == 0
         return 0
     elseif buf.last_idx < buf.first_idx
@@ -28,17 +28,17 @@ function Base.length{T}(buf::StreamBuffer{T})
 end
 
 
-function Base.isempty{T}(buf::StreamBuffer{T})
+function isempty{T}(buf::StreamBuffer{T})
     return buf.last_idx == 0
 end
 
 
-function Base.endof{T}(buf::StreamBuffer{T})
+function endof{T}(buf::StreamBuffer{T})
     return length(buf)
 end
 
 
-function Base.push!{T}(buf::StreamBuffer{T}, x::T)
+function push!{T}(buf::StreamBuffer{T}, x::T)
     if length(buf) == length(buf.data)
         newdata = Array(T, 2 * length(buf.data))
         len = length(buf)
@@ -58,7 +58,7 @@ function Base.push!{T}(buf::StreamBuffer{T}, x::T)
 end
 
 
-function Base.shift!{T}(buf::StreamBuffer{T})
+function shift!{T}(buf::StreamBuffer{T})
     if buf.last_idx == 0
         throw(BoundsError())
     end
@@ -78,7 +78,7 @@ function Base.shift!{T}(buf::StreamBuffer{T})
 end
 
 
-function Base.getindex{T}(buf::StreamBuffer{T}, idx::Int)
+function getindex{T}(buf::StreamBuffer{T}, idx::Int)
     if idx > length(buf) || idx < 1
         throw(BoundsError())
     end

@@ -100,9 +100,7 @@ function show(io::IO, ic::IntervalCollection)
 end
 
 
-function length(ic::IntervalCollection)
-    return ic.length
-end
+length(ic::IntervalCollection) = ic.length
 
 
 typealias IntervalCollectionTreeIteratorState{T} IntervalTrees.IntervalBTreeIteratorState{Int64, Interval{T}, 64}
@@ -169,7 +167,7 @@ immutable IntersectIterator{S, T}
 end
 
 
-immutable IntersectIteratorState{S, T}
+immutable IntersectIteratorState
     i::Int # index into a_trees/b_trees.
     intersect_iterator
     intersect_iterator_state
@@ -189,7 +187,7 @@ end
 Iterate over pairs of intersecting intervals in two IntervalCollections.
 """ ->
 function intersect{S, T}(a::IntervalCollection{S}, b::IntervalCollection{T})
-    seqnames = collect(String, intersect(Set(keys(a.trees)), Set(keys(b.trees))))
+    seqnames = collect(String, keys(a.trees) ∩ keys(b.trees))
     sort!(seqnames, lt=alphanum_isless)
 
     a_trees = IntervalCollectionTree{S}[a.trees[seqname] for seqname in seqnames]
@@ -205,18 +203,18 @@ function start{S, T}(it::IntersectIterator{S, T})
         intersect_iterator = intersect(it.a_trees[i], it.b_trees[i])
         intersect_iterator_state = start(intersect_iterator)
         if !done(intersect_iterator, intersect_iterator_state)
-            return IntersectIteratorState{S, T}(i, intersect_iterator,
-                                                intersect_iterator_state)
+            return IntersectIteratorState(i, intersect_iterator,
+                                          intersect_iterator_state)
         end
         i += 1
     end
 
-    return IntersectIteratorState{S, T}(i)
+    return IntersectIteratorState(i)
 end
 
 
 function next{S, T}(it::IntersectIterator{S, T},
-                         state::IntersectIteratorState{S, T})
+                    state::IntersectIteratorState)
     intersect_iterator = state.intersect_iterator
     value, intersect_iterator_state = next(intersect_iterator,
                                            state.intersect_iterator_state)
@@ -233,13 +231,13 @@ function next{S, T}(it::IntersectIterator{S, T},
         end
     end
 
-    return value, IntersectIteratorState{S, T}(i, intersect_iterator,
-                                               intersect_iterator_state)
+    return value, IntersectIteratorState(i, intersect_iterator,
+                                         intersect_iterator_state)
 end
 
 
 function done{S, T}(it::IntersectIterator{S, T},
-                         state::IntersectIteratorState{S, T})
+                    state::IntersectIteratorState)
     return state.i > length(it.a_trees)
 end
 

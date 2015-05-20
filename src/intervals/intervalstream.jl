@@ -38,9 +38,9 @@ end
 Intersect two `IntervalStreams` returning an iterator over all pairs of
 intersecting intervals.
 """ ->
-function Base.intersect{S, T}(a::IntervalStreamOrArray{S},
-                              b::IntervalStreamOrArray{T},
-                              seqname_isless::Function=isless)
+function intersect{S, T}(a::IntervalStreamOrArray{S},
+                         b::IntervalStreamOrArray{T},
+                         seqname_isless::Function=isless)
     return IntervalStreamIntersectIterator{S, T}(a, b, seqname_isless)
 end
 
@@ -75,7 +75,7 @@ function first_intersection{S, T, U, V}(a::IntervalStreamOrArray{S},
 end
 
 
-function Base.start{S, T}(it::IntervalStreamIntersectIterator{S, T})
+function start{S, T}(it::IntervalStreamIntersectIterator{S, T})
     a_state = start(it.a)
     b_state = start(it.b)
 
@@ -99,8 +99,8 @@ end
 
 # Do we need a state if this is going to be stateful. State can maybe just
 # be the current interval in b
-function Base.next{S, T, U, V}(it::IntervalStreamIntersectIterator{S, T},
-                               state::IntervalStreamIntersectIteratorState{U, V})
+function next{S, T, U, V}(it::IntervalStreamIntersectIterator{S, T},
+                          state::IntervalStreamIntersectIteratorState{U, V})
     value = (it.a_buffer[state.a_buffer_pos], it.b_interval)
     a_state = state.a_state
     b_state = state.b_state
@@ -171,8 +171,8 @@ function Base.next{S, T, U, V}(it::IntervalStreamIntersectIterator{S, T},
 end
 
 
-function Base.done{S, T, U, V}(it::IntervalStreamIntersectIterator{S, T},
-                               state::IntervalStreamIntersectIteratorState{U, V})
+function done{S, T, U, V}(it::IntervalStreamIntersectIterator{S, T},
+                          state::IntervalStreamIntersectIteratorState{U, V})
     return state.a_buffer_pos > length(it.a_buffer)
 end
 
