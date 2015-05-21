@@ -281,3 +281,69 @@ end
 function done(it::BEDIterator, state::Nothing)
     return isnull(it.nextitem)
 end
+
+
+"""
+Write a BEDInterval in BED format.
+"""
+function write(out::IO, interval::BEDInterval)
+    print(out, interval.seqname, '\t', interval.first - 1, '\t', interval.last)
+    write_optional_fields(out, interval)
+    write(out, '\n')
+end
+
+
+function write_optional_fields(out::IO, interval::BEDInterval, leadingtab::Bool=true)
+    if !isnull(interval.metadata.name)
+        if leadingtab
+            write(out, '\t')
+        end
+        write(out, get(interval.metadata.name))
+    else return end
+
+    if !isnull(interval.metadata.score)
+        print(out, '\t', get(interval.metadata.score))
+    else return end
+
+    if interval.strand != STRAND_NA
+        print(out, '\t', interval.strand)
+    else return end
+
+    if !isnull(interval.metadata.thick_first)
+        print(out, '\t', get(interval.metadata.thick_first) - 1)
+    else return end
+
+    if !isnull(interval.metadata.thick_last)
+        print(out, '\t', get(interval.metadata.thick_last))
+    else return end
+
+    if !isnull(interval.metadata.item_rgb)
+        item_rgb = get(interval.metadata.thick_last)
+        print(out, '\t', item_rgb.r, ',', item_rgb.g, ',', item_rgb.b)
+    else return end
+
+    if !isnull(interval.metadata.block_count)
+        print(out, '\t', get(interval.metadata.block_count))
+    else return end
+
+    if !isnull(interval.metadata.block_sizes)
+        block_sizes = get(interval.metadata.block_sizes)
+        if !isempty(block_sizes)
+            print(out, '\t', block_sizes[1])
+            for i in 2:length(block_sizes)
+                print(out, ',', block_sizes[i])
+            end
+        end
+    else return end
+
+    if !isnull(interval.metadata.block_firsts)
+        block_firsts = get(interval.metadata.block_firsts)
+        if !isempty(block_firsts)
+            print(out, '\t', block_firsts[1] - 1)
+            for i in 2:length(block_firsts)
+                print(out, ',', block_firsts[i] - 1)
+            end
+        end
+    end
+end
+

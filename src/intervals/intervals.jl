@@ -2,7 +2,7 @@
 module Intervals
 
 import Base: show, isless, push!, shift!, intersect, start, next, done, length,
-             convert, read, read!, getindex, get, isempty, endof, ==
+             convert, read, read!, write, getindex, get, isempty, endof, ==
 
 import Iterators
 import Zlib
