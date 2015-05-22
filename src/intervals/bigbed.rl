@@ -182,6 +182,20 @@ function read(io::IO, ::Type{BigBedRTreeHeader})
 end
 
 
+function write(io::IO, header::BigBedRTreeHeader)
+    write(io, header.magic)
+    write(io, header.block_size)
+    write(io, header.item_count)
+    write(io, header.start_chrom_ix)
+    write(io, header.start_base)
+    write(io, header.end_chrom_ix)
+    write(io, header.end_base)
+    write(io, header.end_file_offset)
+    write(io, header.items_per_slot)
+    write(io, header.reserved)
+end
+
+
 # Supplemental Table 15
 immutable BigBedRTreeNode
     isleaf::Uint8
@@ -192,6 +206,13 @@ end
 
 function read(io::IO, ::Type{BigBedRTreeNode})
     return BigBedRTreeNode(read(io, Uint8), read(io, Uint8), read(io, Uint16))
+end
+
+
+function write(io::IO, node::BigBedRTreeNode)
+    write(io, node.isleaf)
+    write(io, node.reserved)
+    write(io, node.count)
 end
 
 
@@ -210,6 +231,16 @@ function read(io::IO, ::Type{BigBedRTreeLeafNode})
     return BigBedRTreeLeafNode(
         read(io, Uint32), read(io, Uint32), read(io, Uint32), read(io, Uint32),
         read(io, Uint64), read(io, Uint64))
+end
+
+
+function write(io::IO, node::BigBedRTreeLeafNode)
+    write(io, node.start_chrom_ix)
+    write(io, node.start_base)
+    write(io, node.end_chrom_ix)
+    write(io, node.end_base)
+    write(io, node.data_offset)
+    write(io, node.data_size)
 end
 
 
@@ -830,7 +861,7 @@ function bigbed_btree_write_leaf_level(out::IO, block_size,
 end
 
 
-function write_bigbed_chrom_tree(out::IO, intervals::IntervalCollection,
+function bigbed_write_chrom_tree(out::IO, intervals::IntervalCollection,
                                  block_size,
                                  chrom_sizes::Dict=Dict{String, Int64}())
     # See bbiWriteChromInfo in bbiWrite.c
@@ -894,8 +925,10 @@ end
 function bigbed_write_blocks(out::IO, intervals::IntervalCollection,
                              chrom_info::Vector{BigBedChromInfo},
                              items_per_slot, bounds::Vector{BigBedBounds},
-                             section_count, compressed::Bool, 
+                             section_count, compressed::Bool,
                              res_try_count, res_scales, res_sizes)
+    # See writeBlocks in bedToBigBed.c
+
     section_ix = 0
     buf = IOBuffer()
     res_ends = zeros(Int, res_try_count)
@@ -909,7 +942,7 @@ function bigbed_write_blocks(out::IO, intervals::IntervalCollection,
             item_ix = 1
             block_offset = position(out)
             first_interval = first(intervals.trees[info.name])
-            start_pos = first_interval.first - 1
+            start_pos = -1
             end_pos  = first_interval.last
 
             while item_ix <= items_per_slot && !done(tree, it_state)
@@ -917,6 +950,9 @@ function bigbed_write_blocks(out::IO, intervals::IntervalCollection,
 
                 interval_start = interval.first - 1 # bed is 0-based
                 interval_end   = interval.last
+                if start_pos < 0
+                    start_pos = interval_start
+                end
                 end_pos = max(end_pos, interval_end)
 
                 write(buf, convert(Uint32, info.id))
@@ -956,6 +992,320 @@ function bigbed_write_blocks(out::IO, intervals::IntervalCollection,
 end
 
 
+type BigBedRTree
+    next::Nullable{BigBedRTree}
+    children::Nullable{BigBedRTree}
+    parent::Nullable{BigBedRTree}
+    start_chrom_ix::Uint32
+    start_base::Uint32
+    end_chrom_ix::Uint32
+    end_base::Uint32
+    start_file_offset::Uint64
+    end_file_offset::Uint64
+
+    function BigBedRTree(next, children, parent, start_chrom_ix, start_base,
+                         end_chrom_ix, end_base, start_file_offset, end_file_offset)
+        return new(next, children, parent, start_chrom_ix, end_chrom_ix,
+                   start_base, end_base, start_file_offset, end_file_offset)
+    end
+
+    function BigBedRTree()
+        return new()
+    end
+end
+
+
+function copy(tree::BigBedRTree)
+    return BigBedRTree(tree.next, tree.children, tree.parent,
+                       tree.start_chrom_ix, tree.start_base,
+                       tree.end_chrom_ix, tree.end_base,
+                       tree.start_file_offset, tree.end_file_offset)
+end
+
+
+function length(list::Nullable{BigBedRTree})
+    count = 0
+    while !isnull(list)
+        count += 1
+        list = get(list).next
+    end
+    return count
+end
+
+
+function bigbed_calc_rtree_level_sizes!(level_sizes, tree::Nullable{BigBedRTree},
+                                        level, max_level)
+    # See calcLevelSizes in cirTree.c
+
+    el = tree
+    while !isnull(el)
+        level_sizes[level] += 1
+        if level <= max_level
+            bigbed_calc_rtree_level_sizes!(level_sizes, get(el).children,
+                                           level + 1, max_level)
+        end
+        el = get(el).next
+    end
+end
+
+
+function bigbed_rtree_write_index_level(out::IO, block_size, child_node_size,
+                                        tree::BigBedRTree, cur_level,
+                                        dest_level, offset_of_first_child)
+    offset = offset_of_first_child
+    if cur_level == dest_level
+        # we've reached the right level, write out a node header
+        count_one = length(tree.children)
+        write(out, BigBedRTreeNode(0, 0, count_one))
+
+        # write out elements of this node
+        nel = tree.children
+        while !isnull(nel)
+            el = get(nel)
+            write(out, BigBedRTreeInternalNode(el.start_chrom_ix, el.start_base,
+                                               el.end_chrom_ix, el.end_base, offset))
+            offset += child_node_size
+            nel = el.next
+        end
+
+        # write out zeroes for empty slots in node
+        for i in count_one:(block_size-1)
+            for j in 1:sizeof(BigBedRTreeInternalNode)
+                write(out, 0x00)
+            end
+        end
+    else
+        # otherwise recurse on children
+        nel = tree.children
+        while !isnull(nel)
+            el = get(nel)
+            offset = bigbed_rtree_write_index_level(out, block_size,
+                                                    child_node_size, el,
+                                                    cur_level + 1,
+                                                    dest_level,
+                                                    offset)
+            nel = el.next
+        end
+    end
+    return offset
+end
+
+
+function bigbed_rtree_write_leaf_level(out::IO, items_per_slot, leaf_node_size,
+                                       tree::BigBedRTree, cur_level, leaf_level)
+    if cur_level == leaf_level
+        # we've reached the right level, write out node header
+        count_one = length(tree.children)
+        write(out, BigBedRTreeNode(1, 0, count_one))
+
+        nel = tree.children
+        while !isnull(nel)
+            el = get(nel)
+            write(out, BigBedRTreeLeafNode(el.start_chrom_ix, el.start_base,
+                                           el.end_chrom_ix, el.end_base,
+                                           el.start_file_offset,
+                                           el.end_file_offset - el.start_file_offset))
+            nel = el.next
+        end
+
+        # write out zeroes for empty slots in node
+        for i in count_one:(items_per_slot-1)
+            for j in 1:sizeof(BigBedRTreeInternalNode)
+                write(out, 0x00)
+            end
+        end
+    else
+        # otherwise recurse on children
+        nel = tree.chidren
+        while !isnull(nel)
+            el = get(nel)
+            bigbed_rtree_write_leaf_level(out, items_per_slot, leaf_node_size,
+                                          el, cur_level + 1, leaf_level)
+            nel = el.next
+        end
+    end
+end
+
+
+function write(out::IO, tree::BigBedRTree, block_size, level_count)
+    # See writeTreeToOpenFile in cirTree.c
+
+    level_sizes = zeros(Int, level_count)
+    bigbed_calc_rtree_level_sizes!(level_sizes, Nullable{BigBedRTree}(tree), 1, level_count)
+
+    level_offsets = Array(Uint64, level_count)
+
+    index_node_size = sizeof(BigBedRTreeNode) + block_size * sizeof(BigBedRTreeInternalNode)
+    leaf_node_size = sizeof(BigBedRTreeNode) + block_size * sizeof(BigBedRTreeLeafNode)
+
+    offset = position(out)
+    for i in 1:level_count
+        level_offsets[i] = offset
+        offset += level_sizes[i] * index_node_size
+    end
+
+    final_level = level_count - 2
+    for i in 1:final_level
+        child_node_size = i == final_level ? leaf_node_size : index_node_size
+        bigbed_rtree_write_index_level(out, block_size, child_node_size, tree,
+                                       level_offsets[i+1], 1, i)
+        @assert position(out) == level_offsets[i+1]
+    end
+
+    leaf_level = level_count - 1
+    bigbed_rtree_write_leaf_level(out, block_size, leaf_node_size, tree,
+                                  1, leaf_level)
+end
+
+
+function reverse!(tree::Nullable{BigBedRTree})
+    if isnull(tree)
+        return tree
+    end
+
+    nodes = BigBedRTree[]
+    node = tree
+    while !isnull(node)
+        push!(nodes, get(node))
+        node = get(node).next
+    end
+
+    for i in length(nodes):-1:2
+        nodes[i].next = nodes[i-1]
+    end
+    nodes[1].next = Nullable{BigBedRTree}()
+    return Nullable{BigBedRTree}(nodes[end])
+end
+
+
+function bigbed_build_rtree(bounds::Vector{BigBedBounds}, block_size,
+                            items_per_slot, end_file_offset)
+    # See rTreeFromChromRangeArray in cirTree.c
+
+    list  = Nullable{BigBedRTree}()
+    next_offset = isempty(bounds) ? 0 : bounds[1].offset
+    for i in 1:items_per_slot:length(bounds)
+        final_iteration = false
+        one_size = length(bounds) - i + 1
+        if one_size > items_per_slot
+            one_size = items_per_slot
+        else
+            final_iteration = true
+        end
+
+        bound = bounds[i]
+        el = BigBedRTree()
+        el.next = Nullable{BigBedRTree}()
+        el.children = Nullable{BigBedRTree}()
+        el.parent = Nullable{BigBedRTree}()
+        el.start_chrom_ix = el.end_chrom_ix = bound.chrom_ix
+        el.start_base = bound.start
+        el.end_base = bound.stop
+        el.start_file_offset = next_offset
+
+        # Figure out end of element from offset of next element (or file size
+        # for final element.)
+        if final_iteration
+            next_offset = end_file_offset
+        else
+            next_offset = bounds[i + one_size].offset
+        end
+        el.end_file_offset = next_offset
+
+        # expand area spanned to include all items in block
+        for j in 2:one_size
+            bound = bounds[i + j - 1]
+            if bound.chrom_ix < el.start_chrom_ix
+                el.start_chrom_ix = bound.chrom_ix
+                el.start_base = bound.start
+            elseif bound.chrom_ix == el.start_chrom_ix
+                el.start_base = min(el.start_base, bound.start)
+            elseif bound.chrom_ix > el.end_chrom_ix
+                el.end_chrom_ix = bound.chrom_ix
+                el.end_base = bound.stop
+            elseif bound.chrom_ix == el.end_chrom_ix
+                el.end_base = max(el.end_base, bound.stop)
+            end
+        end
+
+        el.next = list
+        list = Nullable{BigBedRTree}(el)
+    end
+    list = reverse!(list)
+
+    # Now iterate through making more and more condensed versions until have
+    # just one
+    tree = list
+    level_count = 1
+    while (!isnull(tree) && !isnull(get(tree).next)) || level_count < 2
+        list = Nullable{BigBedRTree}()
+        slots_used = block_size
+        parent = Nullable{BigBedRTree}()
+        nel = tree
+        while !isnull(nel)
+            el = get(nel)
+            next_el = el.next
+            if slots_used >= block_size
+                slots_used = 1
+                parent = Nullable{BigBedRTree}(copy(el))
+                get(parent).children = el
+                el.parent = parent
+                el.next = Nullable{BigBedRTree}()
+
+                get(parent).next = list
+                list = parent
+            else
+                slots_used += 1
+                el.next = get(parent).children
+                get(parent).children = el
+                el.parent = parent
+                if el.start_chrom_ix < get(parent).start_chrom_ix
+                    get(parent).start_chrom_ix = el.start_chrom_ix
+                    get(parent).start_base = el.start_base
+                elseif el.start_chrom_ix == get(parent).start_chrom_ix
+                    get(parent).start_base = min(el.start_base, get(parent).start_base)
+                end
+
+                if el.end_chrom_ix > get(parent).end_chrom_ix
+                    get(parent).end_chrom_ix = el.end_chrom_ix
+                    get(parent).end_base = el.end_base
+                elseif el.end_chrom_ix == get(parent).end_chrom_ix
+                    get(parent).end_base  = max(el.end_base, get(parent).end_base)
+                end
+            end
+            nel = next_el
+        end
+
+        list = reverse!(list)
+        el = list
+        while !isnull(el)
+            get(el).children = reverse!(get(el).children)
+            el = get(el).next
+        end
+        tree = list
+        level_count += 1
+    end
+
+    @assert !isnull(tree)
+
+    (get(tree), level_count)
+end
+
+
+function bigbed_write_index(out::IO, bounds::Vector{BigBedBounds},
+                            block_size, items_per_slot, end_file_offset)
+    # See cirTreeFileBulkIndexToOpenFile in cirTree.c
+
+    rtree, level_count = bigbed_build_rtree(bounds, block_size, items_per_slot,
+                                            end_file_offset)
+    write(out, BigBedRTreeHeader(BIGBED_RTREE_MAGIC, block_size, length(bounds),
+                                 rtree.start_chrom_ix, rtree.start_base,
+                                 rtree.end_chrom_ix, rtree.end_base,
+                                 end_file_offset, items_per_slot, 0))
+    write(out, rtree, block_size, level_count)
+end
+
+
 function write(out::IO, ::Type{BigBed}, intervals::IntervalCollection;
                block_size::Int=256, items_per_slot::Int=512,
                compressed::Bool=true)
@@ -976,7 +1326,7 @@ function write(out::IO, ::Type{BigBed}, intervals::IntervalCollection;
     write_zeros(out, sizeof(BigBedTotalSummary))
 
     chrom_tree_offset = position(out)
-    chrom_info = write_bigbed_chrom_tree(out, intervals, block_size)
+    chrom_info = bigbed_write_chrom_tree(out, intervals, block_size)
 
     # set up to keep track of possible initial reduction levels
     total_bases = 0
@@ -1011,6 +1361,9 @@ function write(out::IO, ::Type{BigBed}, intervals::IntervalCollection;
                         bounds, block_count, compressed,
                         res_try_count, res_scales, res_sizes)
 
+    # write out primary data index
+    index_offset = position(out)
+    bigbed_write_index(out, bounds, block_size, items_per_slot, index_offset)
 
     # TODO: Build and write R-tree
     # TODO: Rewind and write header info
