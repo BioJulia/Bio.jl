@@ -29,7 +29,6 @@ include("intervalstream.jl")
 include("bed.jl")
 
 # TODO: reorg
-include("bigbedwig.jl")
 include("bigbed.jl")
 
 end

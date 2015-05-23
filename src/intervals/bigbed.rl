@@ -14,6 +14,9 @@ const BIGWIG_MAGIC = 0x888FFC26
 const BIGBED_BTREE_MAGIC = 0x78CA8C91
 const BIGBED_RTREE_MAGIC = 0x2468ACE0
 
+const BIGBED_MAX_ZOOM_LEVELS = 10
+const BIGBED_CURRENT_VERSION = 4
+
 
 # See Supplemental Table 5
 immutable BigBedHeader
@@ -27,7 +30,7 @@ immutable BigBedHeader
     defined_field_count::Uint16
     auto_sql_offset::Uint64
     total_summary_offset::Uint64
-    uncompressed_buf_size::Uint32
+    uncompress_buf_size::Uint32
     reserved::Uint64
 end
 
@@ -38,6 +41,22 @@ function read(io::IO, ::Type{BigBedHeader})
         read(io, Uint64), read(io, Uint64), read(io, Uint64),
         read(io, Uint16), read(io, Uint16), read(io, Uint64),
         read(io, Uint64), read(io, Uint32), read(io, Uint64))
+end
+
+
+function write(io::IO, header::BigBedHeader)
+    write(io, header.magic)
+    write(io, header.version)
+    write(io, header.zoom_levels)
+    write(io, header.chromosome_tree_offset)
+    write(io, header.full_data_offset)
+    write(io, header.full_index_offset)
+    write(io, header.field_count)
+    write(io, header.defined_field_count)
+    write(io, header.auto_sql_offset)
+    write(io, header.total_summary_offset)
+    write(io, header.uncompress_buf_size)
+    write(io, header.reserved)
 end
 
 
@@ -56,6 +75,14 @@ function read(io::IO, ::Type{BigBedZoomHeader})
 end
 
 
+function write(io::IO, header::BigBedZoomHeader)
+    write(io, header.reduction_level)
+    write(io, header.reserved)
+    write(io, header.data_offset)
+    write(io, header.index_offset)
+end
+
+
 # Supplemental Table 7
 immutable BigBedTotalSummary
     bases_covered::Uint64
@@ -70,6 +97,38 @@ function read(io::IO, ::Type{BigBedTotalSummary})
     return BigBedTotalSummary(
         read(io, Uint64), read(io, Uint64), read(io, Uint64),
         read(io, Uint64), read(io, Uint64))
+end
+
+
+# Supplemental Table 19
+immutable BigBedZoomData
+    chrom_id::Uint32
+    chrom_start::Uint32
+    chrom_end::Uint32
+    valid_count::Uint32
+    min_val::Float32
+    max_val::Float32
+    sum_data::Float32
+    sum_squares::Float32
+end
+
+
+function read(io::IO, ::Type{BigBedZoomData})
+    return BigBedZoomData(
+        read(io, Uint32), read(io, Uint32), read(io, Uint32), read(io, Uint32),
+        read(io, Float32), read(io, Float32), read(Float32), read(Float32))
+end
+
+
+function write(io::IO, data::BigBedZoomData)
+    write(io, data.chrom_id)
+    write(io, data.chrom_start)
+    write(io, data.chrom_end)
+    write(io, data.valid_count)
+    write(io, data.min_val)
+    write(io, data.max_val)
+    write(io, data.sum_data)
+    write(io, data.sum_squares)
 end
 
 
@@ -258,6 +317,15 @@ function read(io::IO, ::Type{BigBedRTreeInternalNode})
     return BigBedRTreeInternalNode(
         read(io, Uint32), read(io, Uint32), read(io, Uint32), read(io, Uint32),
         read(io, Uint64))
+end
+
+
+function write(io::IO, node::BigBedRTreeInternalNode)
+    write(io, node.start_chrom_ix)
+    write(io, node.start_base)
+    write(io, node.end_chrom_ix)
+    write(io, node.end_base)
+    write(io, node.data_offset)
 end
 
 
@@ -462,7 +530,7 @@ function read(input::Union(IO, String, Vector{Uint8}),
     end
 
     # autosql
-    if head.auto_sql_offset == 0
+    if header.auto_sql_offset == 0
         autosql = ""
     else
         seek(reader, header.auto_sql_offset + 1)
@@ -504,7 +572,7 @@ function read(input::Union(IO, String, Vector{Uint8}),
                                           for _ in 1:btree_header.block_size],
                       Array(Uint8, btree_header.key_size),
                       Array(Vector{Uint8}, btree_header.block_size),
-                      Array(Uint8, header.uncompressed_buf_size))
+                      Array(Uint8, header.uncompress_buf_size))
 end
 
 
@@ -720,9 +788,6 @@ function write_zeros(out::IO, n::Integer)
 end
 
 
-const BIGBED_MAX_ZOOM_LEVELS = 10
-
-
 immutable BigBedChromInfo
     name::ASCIIString   # chromosome name
     id::Uint32          # unique id for chromosome
@@ -789,7 +854,7 @@ function bigbed_btree_write_index_level(out::IO, block_size,
         count_one = min(block_size, div(length(items) - (i-1) + slot_size_per - 1, slot_size_per))
 
         # write block header
-        write(out, BigBedBTreeNode(false, 0, count_one))
+        write(out, BigBedBTreeNode(0, 0, count_one))
 
         # write used slots
         slots_used = 0
@@ -832,7 +897,7 @@ function bigbed_btree_write_leaf_level(out::IO, block_size,
         count_one = min(count_left, block_size)
 
         # write block header
-        write(out, BigBedBTreeNode(false, 0, count_one))
+        write(out, BigBedBTreeNode(1, 0, count_one))
 
         # write out position in genome and in file for each item
         for j in 1:count_one
@@ -932,6 +997,7 @@ function bigbed_write_blocks(out::IO, intervals::IntervalCollection,
     section_ix = 0
     buf = IOBuffer()
     res_ends = zeros(Int, res_try_count)
+    max_block_size = 0
 
     for info in chrom_info
         tree = intervals.trees[info.name]
@@ -959,6 +1025,7 @@ function bigbed_write_blocks(out::IO, intervals::IntervalCollection,
                 write(buf, convert(Uint32, interval_start))
                 write(buf, convert(Uint32, interval_end))
                 write_optional_fields(buf, interval, false)
+                write(buf, '\0')
 
                 item_ix += 1
 
@@ -975,12 +1042,15 @@ function bigbed_write_blocks(out::IO, intervals::IntervalCollection,
                 end
             end
 
+            block = takebuf_array(buf)
+            max_block_size = max(max_block_size, length(block))
+
             if compressed
                 writer = Zlib.Writer(out, 6)
-                write(writer, takebuf_array(buf))
+                write(writer, block)
                 close(writer)
             else
-                write(out, takebuf_array(buf))
+                write(out, block)
             end
 
             bounds[section_ix] = BigBedBounds(block_offset, info.id,
@@ -989,6 +1059,8 @@ function bigbed_write_blocks(out::IO, intervals::IntervalCollection,
     end
 
     @assert section_ix == section_count "Incorrect number of sections when writing BigBed data"
+
+    return max_block_size
 end
 
 
@@ -1050,8 +1122,8 @@ end
 
 
 function bigbed_rtree_write_index_level(out::IO, block_size, child_node_size,
-                                        tree::BigBedRTree, cur_level,
-                                        dest_level, offset_of_first_child)
+                                        tree::BigBedRTree, offset_of_first_child,
+                                        cur_level, dest_level)
     offset = offset_of_first_child
     if cur_level == dest_level
         # we've reached the right level, write out a node header
@@ -1116,7 +1188,7 @@ function bigbed_rtree_write_leaf_level(out::IO, items_per_slot, leaf_node_size,
         end
     else
         # otherwise recurse on children
-        nel = tree.chidren
+        nel = tree.children
         while !isnull(nel)
             el = get(nel)
             bigbed_rtree_write_leaf_level(out, items_per_slot, leaf_node_size,
@@ -1306,6 +1378,82 @@ function bigbed_write_index(out::IO, bounds::Vector{BigBedBounds},
 end
 
 
+# Write out data reduced by factor of initialReduction.  Also calculate and keep
+# in memory next reduction level.  This is more work than some ways, but it
+# keeps us from having to keep the first reduction entirely in memory.
+function bigbed_write_reduced_once_return_reduced_twice(
+                out::IO, chrom_info::Vector{BigBedChromInfo},
+                field_count, intervals::IntervalCollection,
+                initial_reduction, initial_reduced_count,
+                zoom_increment, block_size, items_per_slot, compressed)
+
+    double_reduction_size = initial_reduction * zoom_increment
+    bounds_pt = Array(BigBedBounds, initial_reduced_count)
+
+    ret_data_start = position(out)
+    write(out, convert(Uint32, initial_reduced_count))
+
+    # This gets a little complicated I'm afraid.  The strategy is to:
+    #  1) Build up a range tree that represents coverage depth on that chromosome
+    #     This also has the nice side effect of getting rid of overlaps.
+    #  2) Stream through the range tree, outputting the initial summary level and
+    #     further reducing. 
+    #
+    # TODO
+end
+
+
+function bed_field_count(intervals::IntervalCollection{BEDMetadata})
+    num_fields = 0
+    for interval in intervals
+        interval_num_fields = 3
+
+        if !isnull(interval.metadata.name)
+            interval_num_fields += 1
+        else @goto finished end
+
+        if !isnull(interval.metadata.score)
+            interval_num_fields += 1
+        else @goto finished end
+
+        if interval.strand != STRAND_NA
+            interval_num_fields += 1
+        else @goto finished end
+
+        if !isnull(interval.metadata.thick_first)
+            interval_num_fields += 1
+        else @goto finished end
+
+        if !isnull(interval.metadata.thick_last)
+            interval_num_fields += 1
+        else @goto finished end
+
+        if !isnull(interval.metadata.item_rgb)
+            interval_num_fields += 1
+        else @goto finished end
+
+        if !isnull(interval.metadata.block_count)
+            interval_num_fields += 1
+        else @goto finished end
+
+        if !isnull(interval.metadata.block_sizes)
+            interval_num_fields += 1
+        else @goto finished end
+
+        if !isnull(interval.metadata.block_firsts)
+            interval_num_fields += 1
+        else @goto finished end
+
+        @label finished
+
+        if num_fields == 0 || num_fields > interval_num_fields
+            num_fields = interval_num_fields
+        end
+    end
+    return num_fields
+end
+
+
 function write(out::IO, ::Type{BigBed}, intervals::IntervalCollection;
                block_size::Int=256, items_per_slot::Int=512,
                compressed::Bool=true)
@@ -1316,11 +1464,14 @@ function write(out::IO, ::Type{BigBed}, intervals::IntervalCollection;
         error("BigBed can only be written to seekable output streams.")
     end
 
+    field_count = bed_field_count(intervals)
+
     # write dummy headers, come back and fill them later
     write_zeros(out, sizeof(BigBedHeader))
     write_zeros(out, BIGBED_MAX_ZOOM_LEVELS * sizeof(BigBedZoomHeader))
 
     # TODO: optional autoSql specification
+    as_offset = 0
 
     total_summary_offset = position(out)
     write_zeros(out, sizeof(BigBedTotalSummary))
@@ -1357,16 +1508,94 @@ function write(out::IO, ::Type{BigBed}, intervals::IntervalCollection;
     write(out, convert(Uint64, length(intervals)))
     block_count = bigbed_count_sections_needed(chrom_info, items_per_slot)
     bounds = Array(BigBedBounds, block_count)
-    bigbed_write_blocks(out, intervals, chrom_info, items_per_slot,
-                        bounds, block_count, compressed,
-                        res_try_count, res_scales, res_sizes)
+    max_block_size = bigbed_write_blocks(out, intervals, chrom_info, items_per_slot,
+                                         bounds, block_count, compressed,
+                                         res_try_count, res_scales, res_sizes)
 
     # write out primary data index
     index_offset = position(out)
-    bigbed_write_index(out, bounds, block_size, items_per_slot, index_offset)
+    bigbed_write_index(out, bounds, block_size, 1, index_offset)
 
-    # TODO: Build and write R-tree
-    # TODO: Rewind and write header info
+    # declare arrays and vars that track the zoom levels we actually output
+    # TODO: build and write zoom level data
+    zoom_levels = 0
+    if false
+        zoom_amounts = Array(Uint32, BIGBED_MAX_ZOOM_LEVELS)
+        zoom_data_offsets = Array(Uint64, BIGBED_MAX_ZOOM_LEVELS)
+        zoom_index_offsets = Array(Uint64, BIGBED_MAX_ZOOM_LEVELS)
+        zoom_levels = 0
+
+        @show ave_span
+        @show res_try_count
+        @show res_sizes
+
+        if ave_span > 0
+            data_size = index_offset - data_offset
+            max_reduced_size = div(data_size, 2)
+            initial_reduction = 0
+            initial_reduced_count = 0
+
+            for res_try in 1:res_try_count
+                reduced_size = res_sizes[res_try] * sizeof(BigBedZoomData)
+                if compressed
+                    reduced_size = div(reduced_size, 2) # estimate!
+                end
+
+                if reduced_size <= max_reduced_size
+                    initial_reduction = res_scales[res_try]
+                    initial_reduced_count = res_sizes[res_try]
+                    break
+                end
+            end
+
+            @show initial_reduction
+            @show initial_reduced_count
+
+            if initial_reduction > 0
+                zoom_increment = 4
+                reoomed_list = bigbed_write_reduced_once_return_reduced_twice()
+                zoom_amounts[1] = initial_reduction
+                zoom_levels = 1
+
+                while zoom_levels < BIGBED_MAX_ZOOM_LEVELS
+                    # TODO
+                end
+            end
+        end
+    end
+
+    uncompress_buf_size = 0
+    if compressed
+        max_zoom_uncomp_size = items_per_slot * sizeof(BigBedZoomData)
+        uncompress_buf_size = max(max_block_size, max_zoom_uncomp_size)
+    end
+
+    # go back and rewrite header
+    seek(out, 0)
+    write(out,
+        BigBedHeader(BIGBED_MAGIC, BIGBED_CURRENT_VERSION, zoom_levels,
+                     chrom_tree_offset, data_offset, index_offset,
+                     field_count, min(field_count, 12), as_offset,
+                     total_summary_offset, uncompress_buf_size, 0))
+
+    # write summary headers with data
+    for i in 1:zoom_levels
+        write(out, BigBedZoomHeader(zoom_amounts[i], 0, zoom_data_offsets[i],
+                                    zoom_index_offsets[i]))
+    end
+
+    # write rest of summary header with no data
+    for i in zoom_levels:(BIGBED_MAX_ZOOM_LEVELS-1)
+        write(out, BigBedZoomHeader(0, 0, 0, 0))
+    end
+
+    # write total summary
+    seek(out, total_summary_offset)
+    # TODO: summary
+
+    # write end signature
+    seekend(out)
+    write(out, convert(Uint32, BIGBED_MAGIC))
 end
 
 
