@@ -18,12 +18,12 @@ import Bio: FileFormat
 
 export Strand, Interval, IntervalCollection, IntervalStream,
        STRAND_NA, STRAND_POS, STRAND_NEG, STRAND_BOTH,
-       isoverlapping, BED, BEDMetadata
+       coverage, isoverlapping, BED, BEDMetadata
 
 include("interval.jl")
 include("stream_buffer.jl")
-include("intervalstream.jl")
 include("intervalcollection.jl")
+include("intervalstream.jl")
 
 # Parsing file types
 include("bed.jl")

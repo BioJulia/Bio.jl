@@ -66,6 +66,48 @@ function simple_intersection(intervals_a, intervals_b)
 end
 
 
+function simple_coverage(intervals)
+    seqlens = Dict{String, Int}()
+    for interval in intervals
+        if get(seqlens, interval.seqname, -1) < interval.last
+            seqlens[interval.seqname] = interval.last
+        end
+    end
+
+    covarrays = Dict{String, Vector{Int}}()
+    for (seqname, seqlen) in seqlens
+        covarrays[seqname] = zeros(Int, seqlen)
+    end
+
+    for interval in intervals
+        arr = covarrays[interval.seqname]
+        for i in interval.first:interval.last
+            arr[i] += 1
+        end
+    end
+
+    covintervals = Interval{Uint32}[]
+    for (seqname, arr) in covarrays
+        i = j = 1
+        while i <= length(arr)
+            if arr[i] > 0
+                j = i + 1
+                while j <= length(arr) && arr[j] == arr[i]
+                    j += 1
+                end
+                push!(covintervals,
+                      Interval{Uint32}(seqname, i, j - 1, STRAND_BOTH, arr[i]))
+                i = j
+            else
+                i += 1
+            end
+        end
+    end
+
+    return covintervals
+end
+
+
 facts("IntervalCollection") do
 
     context("Insertion/Iteration") do
@@ -205,7 +247,7 @@ facts("IntervalStream") do
               sort(simple_intersection(intervals_a, intervals_b)) => true
 
         # Interesction edge cases: skipping over whole sequences
-        typealias SimpleIntersectIterator 
+        typealias SimpleIntersectIterator
             Intervals.IntervalStreamIntersectIterator{Nothing, Nothing,
                 Vector{Interval{Nothing}}, Vector{Interval{Nothing}}}
 
@@ -265,6 +307,19 @@ facts("IntervalStream") do
 
         @fact sort(collect(ItType(ic_a, ic_b, isless))) ==
               sort(simple_intersection(intervals_a, intervals_b)) => true
+    end
+
+    context("IntervalStream Coverage") do
+        n = 10000
+        srand(1234)
+        intervals = random_intervals(["one", "two", "three"], 1000000, n)
+
+        ic = IntervalCollection{Int}()
+        for interval in intervals
+            push!(ic, interval)
+        end
+
+        @fact sort(simple_coverage(intervals)) == sort(collect(coverage(ic))) => true
     end
 end
 
