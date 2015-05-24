@@ -59,27 +59,6 @@ function parse(::Type{Accession}, s::String)
     error("cannot guess accession number type")
 end
 
-# parser of unsigne decimal integer; this is very common among accession numbers
-function parse_decimal_uint(s::String, start::Int=1, stop::Int=endof(s))
-    @assert 1 <= start <= stop <= endof(s)
-    n = zero(Uint)
-    for i in start:stop
-        c = s[i]
-        if '0' <= c <= '9'
-            n′ = 10n + (c - '0')
-            if n′ < n
-                throw(OverflowError())
-            end
-            n = n′
-        elseif isspace(c)
-            break
-        else
-            error("invalid character: '$c'")
-        end
-    end
-    return n
-end
-
 findfirst_nonspace(s) = findfirst(c -> !isspace(c), s)
 findlast_nonspace(s) = findnext(c -> isspace(c), s, i)
 
@@ -129,7 +108,7 @@ end
 
 function parse(::Type{Accession{:EntrezGene}}, s::String)
     @check_match :EntrezGene s
-    n = parse_decimal_uint(s, findfirst_nonspace(s))
+    n = parse(Uint32, s)
     return Accession{:EntrezGene,Uint32}(n)
 end
 
@@ -180,7 +159,7 @@ function parse(::Type{Accession{:GenBank}}, s::String)
         version = 0
     else
         accession = s[i:dot-1]
-        version = parse_decimal_uint(s, dot + 1)
+        version = parse(Uint8, s[dot+1:end])
     end
     @check_version Uint8 version
     return Accession{:GenBank,GenBank}(GenBank(accession, version))
@@ -256,11 +235,11 @@ function parse(::Type{Accession{:CCDS}}, s::String)
     i = findfirst_nonspace(s)
     dot = search(s, '.')
     if dot == 0
-        number = parse_decimal_uint(s, i + 4)
+        number = parse(Uint32, s[i+4:end])
         version = 0
     else
-        number = parse_decimal_uint(s, i + 4, dot - 1)
-        version = parse_decimal_uint(s, dot + 1)
+        number = parse(Uint32, s[i+4:dot-1])
+        version = parse(Uint8, s[dot+1:end])
     end
     @check_version Uint8 version
     return Accession{:CCDS,CCDS}(CCDS(number, version))
@@ -325,7 +304,7 @@ function parse(::Type{Accession{:GeneOntology}}, s::String)
     @check_match :GeneOntology s
     i = findfirst_nonspace(s)
     # `+ 3` is the offset of the prefix 'GO:'
-    n = parse_decimal_uint(s, i + 3)
+    n = parse(Uint32, s[i+3:end])
     return Accession{:GeneOntology,Uint32}(n)
 end
 
