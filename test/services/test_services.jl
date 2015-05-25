@@ -65,6 +65,22 @@ facts("Accession Number") do
         @fact_throws parse(Accession{:EntrezGene}, "4294967296") "too large"
     end
 
+    context("GI") do
+        list = split(chomp("""
+        22539468
+        42406218
+        89161185
+        568815597
+        """))
+        for s in list
+            test_base(:GI, s)
+        end
+        test_order(:GI, list)
+        @fact_throws parse(Accession{:GI}, "0123") "starting with zero"
+        @fact_throws parse(Accession{:GI}, "1a2539468") "alphabet"
+        @fact_throws parse(Accession{:GI}, "22539468.1") "versioned"
+    end
+
     context("GenBank") do
         list = split(chomp("""
         DL128137
@@ -101,7 +117,7 @@ facts("Accession Number") do
         @fact_throws parse(Accession{:RefSeq}, "XP_011528647.300") "too large version"
     end
 
-    context("Consensus CDS (CCDS)") do
+    context("CCDS") do
         list = split(chomp("""
         CCDS1.1
         CCDS5251

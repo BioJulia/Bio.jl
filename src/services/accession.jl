@@ -159,6 +159,29 @@ function uri(geneid::Accession{:EntrezGene}; format::Symbol=:browser)
 end
 
 
+# GenInfo Identifier (GI)
+# -----------------------
+
+# accession format:
+#   http://www.ncbi.nlm.nih.gov/genbank/sequenceids/
+
+function ismatch(::Type{Accession{:GI}}, s::String)
+    return ismatch(r"^\s*[1-9]\d*\s*$", s)
+end
+
+function parse(::Type{Accession{:GI}}, s::String)
+    @check_match :GI s
+    return Accession{:GI,Uint}(parse(Uint, s))
+end
+
+show(io::IO, gi::Accession{:GI}) = print(io, gi.data)
+
+function uri(gi::Accession{:GI}; format::Symbol=:browser)
+    @assert format === :browser
+    return URI("http://www.ncbi.nlm.nih.gov/nuccore/$gi")
+end
+
+
 # GenBank 
 # -------
 
@@ -209,6 +232,7 @@ end
 #   http://www.ncbi.nlm.nih.gov/refseq/
 # accession format:
 #   http://www.ncbi.nlm.nih.gov/books/NBK21091/
+#   http://www.ncbi.nlm.nih.gov/genbank/sequenceids/
 
 function ismatch(::Type{Accession{:RefSeq}}, s::String)
     return ismatch(r"^\s*(:?A[CP]|N[CGTWSZMRP]|X[MRP]|YP|ZP)_[A-Z0-9]+(:?\.\d+)?\s*$", s)
