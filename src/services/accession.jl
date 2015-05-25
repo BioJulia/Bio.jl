@@ -5,11 +5,18 @@ export Accession, browse, uri
 
 using URIParser
 
-# Accession number type.
-#   S: Symbol    database name
-#   T: DataType  encoding type of accession number
+@doc """
+`Accession{S,T}` is a type holding an accession number of a database named as `S`,
+a symbol like `:RefSeq` or `:GeneOntology`. The accession number is encoded in a
+type `T`, but users don't have to care about `T` in most cases.
+
+To make an `Accession` object from a string, you can call `parse(Accession{S}, str)`.
+For example, `parse(Accession{:RefSeq}, "NC_000017.11")` creates an accession object
+of the NCBI RefSeq database. But in this case, `parse(Accession, "NC_000017.11")`
+or even more compactly `Accession("NC_000017.11")` works well because the accession
+string has a distinctive prefix "NC_" and its accession type can be nicely inferred.
+""" ->
 immutable Accession{S,T}
-    # encoded accession number
     data::T
 end
 
@@ -25,6 +32,9 @@ end
 isless{S,T}(x::Accession{S,T}, y::Accession{S,T}) = isless(x.data, y.data)
 hash(x::Accession) = hash(x.data)
 
+@doc """
+Open a web browser to view an entry of an accession number.
+""" ->
 function browse(accession::Accession)
     link = uri(accession, format=:browser)
     # copied from Gadfly.jl
@@ -39,22 +49,25 @@ function browse(accession::Accession)
     end
 end
 
-# Smart Accession Parser
-#
-# This function should not be used outside of an interactive session because
-# the strategy of guessing accession types is ad hoc and the results should be
-# checked by callers: the inferred types may not be what you thought!
+const parse_trial_order = [
+    :RefSeq,
+    :CCDS,
+    :Ensembl,
+    :GeneOntology,
+    :UniProt,
+]
+
+@doc """
+Parse an accession string smartly. If the accession string has a distinctive pattern
+like a unique prefix, this function will be able to guess the type of the accession
+number; otherwise it will fail to parse and raise an error. Since the guessing method
+is not so reliable, the result should be checked by a caller.
+""" ->
 function parse(::Type{Accession}, s::String)
-    if ismatch(Accession{:RefSeq}, s)
-        return parse(Accession{:RefSeq}, s)
-    elseif ismatch(Accession{:CCDS}, s)
-        return parse(Accession{:CCDS}, s)
-    elseif ismatch(Accession{:Ensembl}, s)
-        return parse(Accession{:Ensembl}, s)
-    elseif ismatch(Accession{:GeneOntology}, s)
-        return parse(Accession{:GeneOntology}, s)
-    elseif ismatch(Accession{:UniProt}, s)
-        return parse(Accession{:UniProt}, s)
+    for name in parse_trial_order
+        if ismatch(Accession{name}, s)
+            return parse(Accession{name}, s)
+        end
     end
     error("cannot guess accession number type")
 end
@@ -133,16 +146,19 @@ function ismatch(::Type{Accession{:EntrezGene}}, s::String)
     return ismatch(r"^\s*(:?[1-9]\d{0,8}|[1-3]?\d{9})\s*$", s)
 end
 
+@doc """
+Parse an accession number string of Entrez Gene (e.g. "7157" for TP53 gene of H.sapiens).
+""" ->
 function parse(::Type{Accession{:EntrezGene}}, s::String)
     @check_match :EntrezGene s
-    n = parse(Uint32, s)
-    return Accession{:EntrezGene,Uint32}(n)
+    return Accession{:EntrezGene,Uint32}(parse(Uint32, s))
 end
 
 function show(io::IO, geneid::Accession{:EntrezGene})
     @printf io "%d" convert(Uint32, geneid.data)
 end
 
+@doc """Return a URI for an Entrez Gene entry.""" ->
 function uri(geneid::Accession{:EntrezGene}; format::Symbol=:browser)
     @assert format === :browser
     return URI("http://www.ncbi.nlm.nih.gov/gene/?term=$geneid")
@@ -159,6 +175,9 @@ function ismatch(::Type{Accession{:GI}}, s::String)
     return ismatch(r"^\s*[1-9]\d*\s*$", s)
 end
 
+@doc """
+Parse an accession number string of NCBI GenInfo Identifier (or GI number).
+""" ->
 function parse(::Type{Accession{:GI}}, s::String)
     @check_match :GI s
     return Accession{:GI,Uint}(parse(Uint, s))
@@ -166,6 +185,7 @@ end
 
 show(io::IO, gi::Accession{:GI}) = print(io, gi.data)
 
+@doc """Return a URI for an NCBI GenInfo Identifier (or GI number) entry.""" ->
 function uri(gi::Accession{:GI}; format::Symbol=:browser)
     @assert format === :browser
     return URI("http://www.ncbi.nlm.nih.gov/nuccore/$gi")
@@ -187,6 +207,9 @@ function ismatch(::Type{Accession{:GenBank}}, s::String)
     #                              numerals
 end
 
+@doc """
+Parse an accession number of GenBank (e.g. "AB082923.1" for H.sapiens mRNA for P53).
+""" ->
 function parse(::Type{Accession{:GenBank}}, s::String)
     @check_match :GenBank s
     dot = search(s, '.')
@@ -209,6 +232,7 @@ function show(io::IO, genbank::Accession{:GenBank})
     return
 end
 
+@doc """Return a URI for a GenBank accession number.""" ->
 function uri(genbank::Accession{:GenBank}; format::Symbol=:browser)
     @assert format === :browser
     return URI("http://www.ncbi.nlm.nih.gov/nuccore/$genbank")
@@ -231,6 +255,9 @@ function ismatch(::Type{Accession{:RefSeq}}, s::String)
     #                                                        alpha-numerals
 end
 
+@doc """
+Parse an accession number string of NCBI RefSeq (e.g. "NC_000017.11" for a genomic assembly).
+""" ->
 function parse(::Type{Accession{:RefSeq}}, s::String)
     @check_match :RefSeq s
     dot = search(s, '.')
@@ -253,6 +280,7 @@ function show(io::IO, refseq::Accession{:RefSeq})
     return
 end
 
+@doc """Return a URI for a RefSeq entry.""" ->
 function uri(refseq::Accession{:RefSeq}; format::Symbol=:browser)
     @assert format === :browser
     return URI("http://www.ncbi.nlm.nih.gov/nuccore/$refseq")
@@ -271,6 +299,9 @@ function ismatch(::Type{Accession{:CCDS}}, s::String)
     return ismatch(r"^\s*CCDS\d+(:?\.\d+)?\s*$", s)
 end
 
+@doc """
+Parse an accession number of Consensus CDS (e.g. "CCDS11118.1").
+""" ->
 function parse(::Type{Accession{:CCDS}}, s::String)
     @check_match :CCDS s
     ccds = search(s, "CCDS")
@@ -293,6 +324,7 @@ function show(io::IO, ccds::Accession{:CCDS})
     end
 end
 
+@doc """Return a URI for a Consensus CDS entry.""" ->
 function uri(ccds::Accession{:CCDS}; format::Symbol=:browser)
     @assert format === :browser
     return URI("http://www.ncbi.nlm.nih.gov/CCDS/CcdsBrowse.cgi?REQUEST=CCDS&DATA=$ccds")
@@ -314,6 +346,9 @@ function ismatch(::Type{Accession{:Ensembl}}, s::String)
     #                                                                 numerals
 end
 
+@doc """
+Parse an accession number string of Ensembl (e.g. "ENSG00000141510").
+""" ->
 function parse(::Type{Accession{:Ensembl}}, s::String)
     @check_match :Ensembl s
     dot = search(s, '.')
@@ -353,6 +388,9 @@ function ismatch(::Type{Accession{:GeneOntology}}, s::String)
     return ismatch(r"^\s*GO:\d{7}\s*$", s)
 end
 
+@doc """
+Parse an accession number string of Gene Ontology (e.g. "GO:0030330").
+""" ->
 function parse(::Type{Accession{:GeneOntology}}, s::String)
     @check_match :GeneOntology s
     go = search(s, "GO:")
@@ -364,6 +402,9 @@ function show(io::IO, go::Accession{:GeneOntology})
     @printf io "GO:%07d" convert(Uint32, go.data)
 end
 
+@doc """
+Return a URI for a Gene Ontology entry.
+""" ->
 function uri(go::Accession{:GeneOntology}; format::Symbol=:browser)
     if format === :browser
         q = "id=$go"
@@ -388,6 +429,9 @@ function ismatch(::Type{Accession{:UniProt}}, s::String)
     return ismatch(r"^\s*(:?[OPQ][0-9][A-Z0-9]{3}[0-9]|[A-NR-Z][0-9](:?[A-Z][A-Z0-9]{2}[0-9]){1,2})\s*$", s)
 end
 
+@doc """
+Parse an accession number string of UniProt (e.g. "P04637").
+""" ->
 function parse(::Type{Accession{:UniProt}}, s::String)
     @check_match :UniProt s
     return Accession{:UniProt,ASCIIString}(strip(s))
@@ -398,6 +442,9 @@ function show(io::IO, uniprot::Accession{:UniProt})
     return
 end
 
+@doc """
+Return a URI for a UniProt entry.
+""" ->
 function uri(uniprot::Accession{:UniProt}; format::Symbol=:browser)
     if format === :browser
         ext = ""

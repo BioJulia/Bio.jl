@@ -2,11 +2,12 @@ module TestServices
 
 using FactCheck
 using Compat
+using URIParser
 using Bio
 using Bio.Services
 
 facts("Accession Number") do
-    function test_base(sym::Symbol, s::String; guess=false)
+    function test_base(sym::Symbol, s::String; guess=false, nouri=false)
         accession = parse(Accession{sym}, s)
         @fact isa(accession, Accession{sym}) => true
         @fact string(accession) => strip(s)
@@ -18,6 +19,9 @@ facts("Accession Number") do
         @fact parse(Accession{sym}, convert(UTF8String, s)) => accession
         if guess
             @fact Accession(s) => accession
+        end
+        if !nouri
+            @fact isa(uri(accession), URI) => true
         end
     end
 
@@ -83,6 +87,7 @@ facts("Accession Number") do
 
     context("GenBank") do
         list = split(chomp("""
+        AB082923.1
         DL128137
         DL128137.1
         JL971710
@@ -123,6 +128,7 @@ facts("Accession Number") do
         CCDS5251
         CCDS5251.1
         CCDS5251.2
+        CCDS11118.1
         """))
         for s  in list
             test_base(:CCDS, s, guess=true)
@@ -136,9 +142,10 @@ facts("Accession Number") do
         list = split(chomp("""
         ENSG00000139618
         ENSG00000139618.13
+        ENSG00000141510
         """))
         for s in list
-            test_base(:Ensembl, s, guess=true)
+            test_base(:Ensembl, s, guess=true, nouri=true)
         end
         test_order(:Ensembl, list)
         @fact_throws parse(Accession{:Ensembl}, "ENSG00000139618.300") "too large version"
@@ -148,6 +155,7 @@ facts("Accession Number") do
         list = split(chomp("""
         GO:0000003
         GO:0016514
+        GO:0030330
         GO:0044183
         GO:0044848
         GO:2001306
@@ -167,6 +175,7 @@ facts("Accession Number") do
         A2BC19
         N1QTE2
         O55743
+        P04637
         P12345
         Q197B5
         Q6GZX4
