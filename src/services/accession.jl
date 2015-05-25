@@ -93,6 +93,43 @@ end
 #   * uri(accnum::Accession{S}; format::Symbol=:browser)
 
 
+# internal representation of versioned accession numbers
+immutable Versioned{T}
+    accession::T
+    version::Nullable{Uint8}
+end
+
+Versioned(x) = Versioned(x, Nullable{Uint8}())
+Versioned(x, v) = Versioned(x, parse(Uint8, v))
+
+function =={T}(x::Versioned{T}, y::Versioned{T})
+    if x.accession != y.accession
+        return false
+    elseif isnull(x.version)
+        return ifelse(isnull(y.version), true, false)
+    elseif isnull(y.version)
+        return false
+    end
+    return get(x.version) == get(y.version)
+end
+
+function isless{T}(x::Versioned{T}, y::Versioned{T})
+    if x.accession != y.accession
+        return x.accession < y.accession
+    elseif isnull(x.version)
+        return ifelse(isnull(y.version), false, true)
+    elseif isnull(y.version)
+        return false
+    end
+    return get(x.version) < get(y.version)
+end
+
+hash(x::Versioned) = hash(x.accession) $ hash(x.version)
+
+isversioned(x::Versioned) = !isnull(x.version)
+getversion(x::Versioned) = get(x.version)
+
+
 # Entrez Gene
 # -----------
 
@@ -130,18 +167,6 @@ end
 # accession format:
 #   http://www.ncbi.nlm.nih.gov/Sequin/acc.html
 
-immutable GenBank
-    accession::ASCIIString
-    version::Uint8
-end
-
-==(x::GenBank, y::GenBank) = x.version == y.version && x.accession == y.accession
-function isless(x::GenBank, y::GenBank)
-    (x.accession <  y.accession) ||
-    (x.accession == y.accession && x.version < y.version)
-end
-hash(genbank::GenBank) = hash(genbank.accession) $ hash(genbank.version)
-
 function ismatch(::Type{Accession{:GenBank}}, s::String)
     return ismatch(r"^\s*[A-Z]{1,5}\d{5,10}(:?\.\d+)?\s*$", s)
     #                    ^~~~~~~~~~^~~~~~~~^~~~~~~~~
@@ -151,25 +176,24 @@ end
 
 function parse(::Type{Accession{:GenBank}}, s::String)
     @check_match :GenBank s
-    i = findfirst(c -> !isspace(c), s)
     dot = search(s, '.')
     if dot == 0
-        j = findnext(c -> isspace(c), s, i)
-        accession = s[i:(j == 0 ? endof(s) : j - 1)]
-        version = 0
+        accession = strip(s)
+        version = Nullable{Uint8}()
     else
-        accession = s[i:dot-1]
-        version = parse(Uint8, s[dot+1:end])
+        accession = strip(s[1:dot-1])
+        version = Nullable(parse(Uint8, s[dot+1:end]))
     end
-    @check_version Uint8 version
-    return Accession{:GenBank,GenBank}(GenBank(accession, version))
+    return Accession{:GenBank,Versioned{ASCIIString}}(Versioned{ASCIIString}(accession, version))
 end
 
 function show(io::IO, genbank::Accession{:GenBank})
     write(io, genbank.data.accession)
-    if genbank.data.version > 0
-        @printf io ".%d" genbank.data.version
+    if isversioned(genbank.data)
+        write(io, '.')
+        write(io, string(getversion(genbank.data)))
     end
+    return
 end
 
 function uri(genbank::Accession{:GenBank}; format::Symbol=:browser)
@@ -195,11 +219,23 @@ end
 
 function parse(::Type{Accession{:RefSeq}}, s::String)
     @check_match :RefSeq s
-    return Accession{:RefSeq,ASCIIString}(strip(s))
+    dot = search(s, '.')
+    if dot == 0
+        accession = strip(s)
+        version = Nullable{Uint8}()
+    else
+        accession = strip(s[1:dot-1])
+        version = Nullable(parse(Uint8, s[dot+1:end]))
+    end
+    return Accession{:RefSeq,Versioned{ASCIIString}}(Versioned{ASCIIString}(accession, version))
 end
 
 function show(io::IO, refseq::Accession{:RefSeq})
-    write(io, refseq.data)
+    write(io, refseq.data.accession)
+    if isversioned(refseq.data)
+        write(io, '.')
+        write(io, string(getversion(refseq.data)))
+    end
     return
 end
 
@@ -216,39 +252,29 @@ end
 # accession format:
 #   http://www.ncbi.nlm.nih.gov/CCDS/CcdsBrowse.cgi#ccdsIds
 
-immutable CCDS
-    number::Uint32
-    version::Uint8
-end
-
-function isless(x::CCDS, y::CCDS)
-    (x.number <  y.number) ||
-    (x.number == y.number && x.version < y.version)
-end
-
 function ismatch(::Type{Accession{:CCDS}}, s::String)
     return ismatch(r"^\s*CCDS\d+(:?\.\d+)?\s*$", s)
 end
 
 function parse(::Type{Accession{:CCDS}}, s::String)
     @check_match :CCDS s
-    i = findfirst_nonspace(s)
+    ccds = search(s, "CCDS")
     dot = search(s, '.')
     if dot == 0
-        number = parse(Uint32, s[i+4:end])
-        version = 0
+        accession = parse(Uint32, s[last(ccds)+1:end])
+        version = Nullable{Uint8}()
     else
-        number = parse(Uint32, s[i+4:dot-1])
-        version = parse(Uint8, s[dot+1:end])
+        accession = parse(Uint32, s[last(ccds)+1:dot-1])
+        version = Nullable(parse(Uint8, s[dot+1:end]))
     end
-    @check_version Uint8 version
-    return Accession{:CCDS,CCDS}(CCDS(number, version))
+    return Accession{:CCDS,Versioned{Uint32}}(Versioned{Uint32}(accession, version))
 end
 
 function show(io::IO, ccds::Accession{:CCDS})
-    @printf io "CCDS%d" ccds.data.number
-    if ccds.data.version > 0
-        @printf io ".%d" ccds.data.version
+    @printf io "CCDS%d" ccds.data.accession
+    if isversioned(ccds.data)
+        write(io, '.')
+        write(io, string(getversion(ccds.data)))
     end
 end
 
@@ -275,11 +301,23 @@ end
 
 function parse(::Type{Accession{:Ensembl}}, s::String)
     @check_match :Ensembl s
-    return Accession{:Ensembl,ASCIIString}(strip(s))
+    dot = search(s, '.')
+    if dot == 0
+        accession = strip(s)
+        version = Nullable{Uint8}()
+    else
+        accession = strip(s[1:dot-1])
+        version = Nullable(parse(Uint8, s[dot+1:end]))
+    end
+    return Accession{:Ensembl,Versioned{ASCIIString}}(Versioned{ASCIIString}(accession, version))
 end
 
 function show(io::IO, ensembl::Accession{:Ensembl})
-    write(io, ensembl.data)
+    write(io, ensembl.data.accession)
+    if isversioned(ensembl.data)
+        write(io, '.')
+        write(io, string(getversion(ensembl.data)))
+    end
     return
 end
 

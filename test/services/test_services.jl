@@ -1,6 +1,7 @@
 module TestServices
 
 using FactCheck
+using Compat
 using Bio
 using Bio.Services
 
@@ -25,6 +26,25 @@ facts("Accession Number") do
         for (s, accession) in zip(ss, sort(accessions))
             @fact string(accession) => s
         end
+    end
+
+    context("Versioned Encoding") do
+        Versioned = Bio.Services.Versioned
+        aaa = Versioned("AAA")
+        aaa′ = Versioned("AAA")
+        aaa1 = Versioned{ASCIIString}("AAA", 0x01)
+        aaa2 = Versioned{ASCIIString}("AAA", 0x02)
+        bbb = Versioned("BBB")
+        bbb1 = Versioned{ASCIIString}("BBB", 0x01)
+        @fact aaa == aaa′ => true
+        @fact aaa == aaa1 => false
+        @fact aaa == bbb  => false
+        @fact aaa < aaa′ => false
+        @fact aaa < aaa1 < aaa2 => true
+        @fact aaa < bbb  < bbb1 => true
+        @fact hash(aaa) == hash(aaa′) => true
+        @fact hash(aaa) == hash(aaa1) => false
+        @fact hash(aaa) == hash(bbb)  => false
     end
 
     context("Entrez Gene") do
@@ -59,6 +79,7 @@ facts("Accession Number") do
         end
         test_order(:GenBank, list)
         @fact_throws parse(Accession{:GenBank}, "12345") "no prefix"
+        @fact_throws parse(Accession{:GenBank}, "U12345.300") "too large version"
     end
 
     context("RefSeq") do
@@ -77,6 +98,7 @@ facts("Accession Number") do
         end
         test_order(:RefSeq, list)
         @fact_throws parse(Accession{:RefSeq}, "XX_000022.1") "invalid prefix"
+        @fact_throws parse(Accession{:RefSeq}, "XP_011528647.300") "too large version"
     end
 
     context("Consensus CDS (CCDS)") do
@@ -91,6 +113,7 @@ facts("Accession Number") do
         end
         test_order(:CCDS, list)
         @fact_throws parse(Accession{:CCDS}, "CDS1234.1") "invalid prefix"
+        @fact_throws parse(Accession{:CCDS}, "CCDS5251.300") "too large version"
     end
 
     context("Ensembl") do
@@ -102,6 +125,7 @@ facts("Accession Number") do
             test_base(:Ensembl, s, guess=true)
         end
         test_order(:Ensembl, list)
+        @fact_throws parse(Accession{:Ensembl}, "ENSG00000139618.300") "too large version"
     end
 
     context("Gene Ontology") do
