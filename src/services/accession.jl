@@ -6,14 +6,15 @@ export Accession, browse, uri
 using URIParser
 
 @doc """
-`Accession{S,T}` is a type holding an accession number of a database named as `S`,
-a symbol like `:RefSeq` or `:GeneOntology`. The accession number is encoded in a
-type `T`, but users don't have to care about `T` in most cases.
+`Accession{S,T}` is a type holding an accession number of a database named as
+`S`, a symbol like `:RefSeq` or `:GeneOntology`. The accession number is encoded
+in a type `T`, but users don't have to care about `T` in most cases.
 
-To make an `Accession` object from a string, you can call `parse(Accession{S}, str)`.
-For example, `parse(Accession{:RefSeq}, "NC_000017.11")` creates an accession object
-of the NCBI RefSeq database. But in this case, `parse(Accession, "NC_000017.11")`
-or even more compactly `Accession("NC_000017.11")` works well because the accession
+To make an `Accession` object from a string, you can call
+`parse(Accession{S}, str)`.  For example,
+`parse(Accession{:RefSeq}, "NC_000017.11")` creates an accession object of the
+NCBI RefSeq database. But in this case, `parse(Accession, "NC_000017.11")` or
+even more compactly `Accession("NC_000017.11")` works well because the accession
 string has a distinctive prefix "NC_" and its accession type can be nicely inferred.
 """ ->
 immutable Accession{S,T}
@@ -58,10 +59,11 @@ const parse_trial_order = [
 ]
 
 @doc """
-Parse an accession string smartly. If the accession string has a distinctive pattern
-like a unique prefix, this function will be able to guess the type of the accession
-number; otherwise it will fail to parse and raise an error. Since the guessing method
-is not so reliable, the result should be checked by a caller.
+Parse an accession string smartly. If the accession string has a distinctive
+pattern like a unique prefix, this function will be able to guess the type of
+the accession number; otherwise it will fail to parse and raise an error.
+Since the guessing method is not so reliable, the result should be checked by
+a caller.
 """ ->
 function parse(::Type{Accession}, s::String)
     for name in parse_trial_order
@@ -147,7 +149,7 @@ function ismatch(::Type{Accession{:EntrezGene}}, s::String)
 end
 
 @doc """
-Parse an accession number string of Entrez Gene (e.g. "7157" for TP53 gene of H.sapiens).
+Parse an accession number string of Entrez Gene (e.g. "7157").
 """ ->
 function parse(::Type{Accession{:EntrezGene}}, s::String)
     @check_match :EntrezGene s
@@ -208,7 +210,7 @@ function ismatch(::Type{Accession{:GenBank}}, s::String)
 end
 
 @doc """
-Parse an accession number of GenBank (e.g. "AB082923.1" for H.sapiens mRNA for P53).
+Parse an accession number of GenBank (e.g. "AB082923.1").
 """ ->
 function parse(::Type{Accession{:GenBank}}, s::String)
     @check_match :GenBank s
@@ -256,7 +258,7 @@ function ismatch(::Type{Accession{:RefSeq}}, s::String)
 end
 
 @doc """
-Parse an accession number string of NCBI RefSeq (e.g. "NC_000017.11" for a genomic assembly).
+Parse an accession number string of NCBI RefSeq (e.g. "NC_000017.11").
 """ ->
 function parse(::Type{Accession{:RefSeq}}, s::String)
     @check_match :RefSeq s
@@ -426,7 +428,10 @@ end
 #   http://www.uniprot.org/help/accession_numbers
 
 function ismatch(::Type{Accession{:UniProt}}, s::String)
-    return ismatch(r"^\s*(:?[OPQ][0-9][A-Z0-9]{3}[0-9]|[A-NR-Z][0-9](:?[A-Z][A-Z0-9]{2}[0-9]){1,2})\s*$", s)
+    return ismatch(
+        r"^\s*(:?[OPQ][0-9][A-Z0-9]{3}[0-9]|[A-NR-Z][0-9](:?[A-Z][A-Z0-9]{2}[0-9]){1,2})\s*$",
+        s
+    )
 end
 
 @doc """
