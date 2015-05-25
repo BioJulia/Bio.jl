@@ -59,9 +59,6 @@ function parse(::Type{Accession}, s::String)
     error("cannot guess accession number type")
 end
 
-findfirst_nonspace(s) = findfirst(c -> !isspace(c), s)
-findlast_nonspace(s) = findnext(c -> isspace(c), s, i)
-
 macro check_match(name, s)
     quote
         if !ismatch(Accession{$name}, $s)
@@ -70,13 +67,6 @@ macro check_match(name, s)
     end
 end
 
-macro check_version(typ, version)
-    quote
-        if $version > typemax($typ)
-            error("version number $($version) is too large to encode with $($typ)")
-        end
-    end
-end
 
 # Accession Encodings
 # ===================
@@ -268,6 +258,7 @@ function uri(refseq::Accession{:RefSeq}; format::Symbol=:browser)
     return URI("http://www.ncbi.nlm.nih.gov/nuccore/$refseq")
 end
 
+
 # Consensus CDS (CCDS)
 # --------------------
 
@@ -364,9 +355,8 @@ end
 
 function parse(::Type{Accession{:GeneOntology}}, s::String)
     @check_match :GeneOntology s
-    i = findfirst_nonspace(s)
-    # `+ 3` is the offset of the prefix 'GO:'
-    n = parse(Uint32, s[i+3:end])
+    go = search(s, "GO:")
+    n = parse(Uint32, s[last(go)+1:end])
     return Accession{:GeneOntology,Uint32}(n)
 end
 
@@ -400,9 +390,7 @@ end
 
 function parse(::Type{Accession{:UniProt}}, s::String)
     @check_match :UniProt s
-    i = findfirst_nonspace(s)
-    j = findnext(c -> isspace(c), s, i)
-    return Accession{:UniProt,ASCIIString}(s[i:(j == 0 ? endof(s) : j - 1)])
+    return Accession{:UniProt,ASCIIString}(strip(s))
 end
 
 function show(io::IO, uniprot::Accession{:UniProt})
