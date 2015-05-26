@@ -842,7 +842,7 @@ function bigbed_btree_write_index_level(out::IO, block_size,
     # calculate sizes and offsets
     block_header_size = 4
     value_size = 8
-    bytes_in_index_block = block_header_size + block_size * (key_size * 8)
+    bytes_in_index_block = block_header_size + block_size * (key_size + sizeof(Uint64))
     bytes_in_leaf_block = block_header_size + block_size * (key_size + value_size)
     bytes_in_next_level_block = level == 1 ? bytes_in_leaf_block : bytes_in_index_block
     level_size = node_count * bytes_in_index_block
@@ -858,7 +858,7 @@ function bigbed_btree_write_index_level(out::IO, block_size,
 
         # write used slots
         slots_used = 0
-        endix = min(length(items), i + node_size_per)
+        end_ix = min(length(items), i + node_size_per)
         for j in i:slot_size_per:end_ix
             item = items[j]
             write(out, item.name)
@@ -1491,7 +1491,7 @@ function write(out::IO, ::Type{BigBed}, intervals::IntervalCollection;
     res_scales = Array(Int, res_try_count)
     res_sizes = Array(Int, res_try_count)
     min_zoom = 10
-    res = max(ave_span, min_zoom)
+    res = max(round(Int, ave_span), min_zoom)
     for res_try in 1:res_try_count
         res_sizes[res_try] = 0
         res_scales[res_try] = res
