@@ -8,7 +8,7 @@ Bioinformatics and Computational Biology infrastructure for [Julia](http://julia
 
 ## Running tests
 
-`julia tests/runtests.jl`
+`julia test/runtests.jl`
 
 ## Contributing
 
