@@ -8,11 +8,11 @@ considered it must meet the following guidelines.
     license. See LICENSE.md.
 
   * Types and functions must be documented using
-    [Docile](https://github.com/MichaelHatherly/Docile.jl) style docstring.
+    [Docile](https://github.com/MichaelHatherly/Docile.jl) style docstrings.
     Documentation regarding specific implementation details that aren't relevent
     to users should be in the form of comments.
 
-    Documentation may be omitted if the function not exported (i.e. only used
+    Documentation may be omitted if the function is not exported (i.e. only used
     internally) and is short and obvious. E.g. `cube(x) = x^3`.
 
   * All significant code must be tested. Tests should be organized into
