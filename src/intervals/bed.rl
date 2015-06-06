@@ -318,7 +318,7 @@ function write_optional_fields(out::IO, interval::BEDInterval, leadingtab::Bool=
     else return end
 
     if !isnull(interval.metadata.item_rgb)
-        item_rgb = get(interval.metadata.thick_last)
+        item_rgb = get(interval.metadata.item_rgb)
         print(out, '\t', item_rgb.r, ',', item_rgb.g, ',', item_rgb.b)
     else return end
 
