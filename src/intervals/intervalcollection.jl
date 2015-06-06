@@ -3,32 +3,36 @@
 # An IntervalCollection is an efficiently stored and indexed set of annotated
 # genomic intervals. It looks something like this.
 #
-#                                   ┌────┐            ┌────┐
-#         Each Sequence has         │chr1│            │chr2│
-#           an associated       ┌───┴────┴────┐   ┌───┴────┴────┐      ...
-#            IntervalTree       │IntervalTree │   │IntervalTree │
-#                               └─────────────┘   └─────────────┘
-#                                      │
-#                         ┌────────────┴───┬────────────┐
-#                 ╔═══════▼══════╗ ╔═══════▼══════╗     ▼
-#                 ║(10000, 20000)║ ║(35000, 40000)║
-#                 ╚══════════════╝ ╚══════════════╝     ...
-#                         │
-#    Intervals            ▼
-#     map to       ╔════════════╗
-#   liked lists    ║ Metadata 1 ║
-#   of metadata    ╚════════════╝
-#                         │
-#                         ▼
-#                  ╔════════════╗
-#                  ║ Metadata 2 ║
-#                  ╚════════════╝
-#                         │
-#                         ▼
+#                                      ┌─────┐
+#                                      │trees│
+#                                      └─────┘
+#                                         │
+#                              ┌──────────┴──────────┬────────────┐
+#                              ▼                     ▼            │
+#  Each sequence has       ┌──────┐              ┌──────┐         ▼
+#    an associated         │ chr1 │              │ chr2 │
+#    IntervalTree     ┌────┴──────┴────┐    ┌────┴──────┴────┐    ...
+#                     │ IntervalTree 1 │    │ IntervalTree 2 │
+#                     └────────────────┘    └────────────────┘
+#                              │
+#                    ┌─────────┴─────────────────────────┬────────────────────────┐
+#                    │                                   │                        │
+#                    ▼                                   ▼                        ▼
+#   ┏━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┓  ┏━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┓
+#   ┃ Interval{T}(10000, 20000, ...) ┃  ┃ Interval{T}(35000, 40000, ...) ┃      ...
+#   ┗━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┛  ┗━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┛
 #
-#                        ...
 #
-# Strand information is stored in the metadata.
+#
+#
+#                               ┌────────────────┐
+#       ordered_trees holds     │ IntervalTree 1 │
+#         an array of the       ├────────────────┤
+#       some IntervalTrees,     │ IntervalTree 2 │
+#           ordered by          └────────────────┘
+#       chromosome for fast
+#       ordered iteration.             ...
+#
 #
 typealias IntervalCollectionTree{T} IntervalTree{Int64, Interval{T}}
 
@@ -45,7 +49,6 @@ type IntervalCollection{T} <: IntervalStream{T}
     # updated as needed, indicated by the ordered_trees_outdated flag.
     ordered_trees::Vector{IntervalCollectionTree{T}}
     ordered_trees_outdated::Bool
-
 
     function IntervalCollection()
         return new(Dict{String, IntervalCollectionTree{T}}(), 0,
