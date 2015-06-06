@@ -2,7 +2,7 @@
 module Intervals
 
 import Base: show, isless, push!, shift!, intersect, start, next, done, length,
-             convert, read, read!, getindex, ==
+             convert, read, read!, getindex, isempty, endof, ==
 using Base.Intrinsics, Compat, Color, Docile, IntervalTrees
 import Iterators
 #using DataStructures
