@@ -86,10 +86,10 @@ end
 # Supplemental Table 7
 immutable BigBedTotalSummary
     bases_covered::Uint64
-    minval::Float64
-    maxval::Float64
-    sumdata::Float64
-    sumsquares::Float64
+    min_val::Float64
+    max_val::Float64
+    sum_data::Float64
+    sum_squares::Float64
 end
 
 
@@ -97,6 +97,15 @@ function read(io::IO, ::Type{BigBedTotalSummary})
     return BigBedTotalSummary(
         read(io, Uint64), read(io, Uint64), read(io, Uint64),
         read(io, Uint64), read(io, Uint64))
+end
+
+
+function write(io::IO, summary::BigBedTotalSummary)
+    write(io, summary.bases_covered)
+    write(io, summary.min_val)
+    write(io, summary.max_val)
+    write(io, summary.sum_data)
+    write(io, summary.sum_squares)
 end
 
 
@@ -1378,17 +1387,57 @@ function bigbed_write_index(out::IO, bounds::Vector{BigBedBounds},
 end
 
 
+# Write out sum to file, keeping track of minimal info on it in, and also adding
+# it to second level summary
+function output_one_summary_further_reduce(out::IO, sum::BigBedZoomData,
+                                           twice_reduced_list::Vector{BigBedZoomData},
+                                           double_reduction_size,
+                                           bounds_array::Vector{BigBedBounds},
+                                           bounds_array_idx,
+                                           chrom_size)
+    # See bbiOutputOneSummaryFurtherReduce in bbiWrite.c
+
+    @assert bounds_array_idx <= length(bounds_array)
+
+    bounds_array[bounds_array_idx] = BigBedBounds(position(out), sum.chrom_id,
+                                                  sum.chrom_start, sum.chrom_end)
+    write(out, sum)
+
+    # Fold summary info into twice_reduced_list
+    if isempty(twice_reduced_list) || twice_reduced_list[end].chrom_id != sum.chrom_id ||
+       twice_reduced_list[end].chrom_start + double_reduction_size < sum.chrom_end
+        push!(twice_reduced_list, sum)
+    else
+        twice_reduced_list[end] = BigBedZoomData(
+            twice_reduced_list[end].chrom_id,
+            twice_reduced_list[end].chrom_start,
+            sum.chrom_end,
+            twice_reduced_list[end].valid_count + sum.valid_count,
+            min(sum.min_val, twice_reduced_list[end].min_val),
+            max(sum.max_val, twice_reduced_list[end].max_val),
+            twice_reduced_list[end].sum_data + sum.sum_data,
+            twice_reduced_list[end].sum_squares + sum.sum_squares)
+    end
+
+    return bounds_array_idx + 1
+end
+
+
 # Write out data reduced by factor of initialReduction.  Also calculate and keep
 # in memory next reduction level.  This is more work than some ways, but it
 # keeps us from having to keep the first reduction entirely in memory.
 function bigbed_write_reduced_once_return_reduced_twice(
-                out::IO, chrom_info::Vector{BigBedChromInfo},
-                field_count, intervals::IntervalCollection,
-                initial_reduction, initial_reduced_count,
+                out::IO, intervals::IntervalCollection{BEDMetadata},
+                chrom_info::Vector{BigBedChromInfo},
+                field_count, initial_reduction, initial_reduced_count,
                 zoom_increment, block_size, items_per_slot, compressed)
 
+    # See writeReducedOnceReturnReducedTwice in bedToBigBed.c
+
     double_reduction_size = initial_reduction * zoom_increment
-    bounds_pt = Array(BigBedBounds, initial_reduced_count)
+    bounds_array = Array(BigBedBounds, initial_reduced_count)
+    bounds_array_idx = 1
+    twice_reduced_list = BigBedZoomData[]
 
     ret_data_start = position(out)
     write(out, convert(Uint32, initial_reduced_count))
@@ -1397,9 +1446,199 @@ function bigbed_write_reduced_once_return_reduced_twice(
     #  1) Build up a range tree that represents coverage depth on that chromosome
     #     This also has the nice side effect of getting rid of overlaps.
     #  2) Stream through the range tree, outputting the initial summary level and
-    #     further reducing. 
+    #     further reducing.
     #
-    # TODO
+
+    valid_count = @compat UInt64(0)
+    minval = 0.0
+    maxval = 0.0
+    sum_data = 0.0
+    sum_squares = 0.0
+    first_time = true
+
+    sum = Nullable{BigBedZoomData}()
+
+    for info in chrom_info
+        #@show length(collect(coverage(intervals.trees[info.name])))
+        for range in coverage(intervals.trees[info.name])
+            val = convert(Float64, range.metadata)
+            chrom_start = range.first - 1
+            chrom_end = range.last
+            size = chrom_end - chrom_start
+            if first_time
+                valid_count = size
+                min_val = max_val = val
+                sum_data = val * size
+                sum_squares = val * val * size
+                first_time = false
+            else
+                valid_count += size
+                min_val = min(min_val, val)
+                max_val = max(max_val, val)
+                sum_data += val * size
+                sum_squares += val * val * size
+            end
+
+            # If start past existing block then output it
+            if !isnull(sum) && get(sum).chrom_end <= chrom_start
+                bounds_array_idx = output_one_summary_further_reduce(
+                        out, get(sum), twice_reduced_list,
+                        double_reduction_size, bounds_array,
+                        bounds_array_idx, info.size)
+                sum = Nullable{BigBedZoomData}()
+            end
+
+            # If don't have a summary we're working on now, make one
+            if isnull(sum)
+                sum = Nullable{BigBedZoomData}(
+                    BigBedZoomData(info.id, chrom_start,
+                                   min(info.size, chrom_start + initial_reduction),
+                                   0, val, val, 0.0, 0.0))
+            end
+
+            # Deal with case where might have to split an item between multiple
+            # summaries. This loop handles all but the final affected summary in
+            # that case
+            s = get(sum)
+            while chrom_end > s.chrom_end
+                # Fold in bits that ovelap with existing summary and output
+                overlap = max(chrom_end, s.chrom_end) - min(chrom_start, s.chrom_start)
+                @assert overlap > 0
+
+                s = BigBedZoomData(
+                        s.chrom_id, s.chrom_start, s.chrom_end,
+                        s.valid_count + overlap,
+                        min(s.min_val, val), max(s.max_val, val),
+                        s.sum_data + val * overlap,
+                        s.sum_squares + val * val * overlap)
+
+                bounds_array_idx = output_one_summary_further_reduce(
+                        out, s, twice_reduced_list, double_reduction_size,
+                        bounds_array, bounds_array_idx, info.size)
+                size -= overlap
+
+                # Move summary to next part
+                chrom_start = s.chrom_end
+                chrom_end = min(info.size, chrom_start + initial_reduction)
+                s = BigBedZoomData(
+                        s.chrom_id, chrom_start, chrom_end,
+                        0, val, val, 0.0, 0.0)
+            end
+
+            # Add to summary
+            s = BigBedZoomData(
+                    s.chrom_id, s.chrom_start, s.chrom_end,
+                    s.valid_count + size,
+                    min(s.min_val, val), max(s.max_val, val),
+                    s.sum_data + val * size,
+                    s.sum_data + val * val * size)
+            sum = Nullable(s)
+        end
+
+        if !isnull(sum)
+            bounds_array_idx = output_one_summary_further_reduce(
+                    out, get(sum), twice_reduced_list, double_reduction_size,
+                    bounds_array, bounds_array_idx, info.size)
+        end
+    end
+
+    # Write out 1st zoom index
+    index_offset = position(out)
+    @show (bounds_array_idx, length(bounds_array))
+    @assert bounds_array_idx == length(bounds_array) + 1
+    bigbed_write_index(out, bounds_array, block_size, items_per_slot,
+                       index_offset)
+    return twice_reduced_list, BigBedTotalSummary(valid_count, min_val, max_val,
+                                                  sum_data, sum_squares)
+end
+
+
+function bigbed_write_summary_and_index(
+        out::IO, summary_list::Vector{BigBedZoomData}, block_size,
+        items_per_slot, compressed)
+    # See: bbiWriteSummaryAndIndex in bbiWrite.c
+    if compressed
+        bigbed_write_summary_and_index_comp(out, summary_list, block_size, items_per_slot)
+    else
+        bigbed_write_summary_and_index_unc(out, summary_list, block_size, items_per_slot)
+    end
+end
+
+
+function bigbed_write_summary_and_index_unc(
+        out::IO, summary_list::Vector{BigBedZoomData}, block_size,
+        items_per_slot, compressed)
+    # See: bbiWriteSummaryAndIndexUnc in bbiWrite.c
+    count = length(summary_list)
+    write(out, convert(Uint32, count))
+    bounds_array = Array(BigBedBounds, count)
+    for (i, summary) in enumerate(summary_list)
+        bounds_array[i] = BigBedBounds(
+            position(out), summary.chrom_id, summary.chrom_start,
+            summary.chrom_end)
+        write(out, summary)
+    end
+    index_offset = position(out)
+    bigbed_write_index(out, bounds_array, block_size, items_per_slot, false)
+    return index_offset
+end
+
+
+function bigbed_write_summary_and_index_comp(
+        out::IO, summary_list::Vector{BigBedZoomData}, block_size,
+        items_per_slot, compressed)
+    # See: bbiWriteSummaryAndIndexComp in bbiWrite.c
+    count = length(summary_list)
+    write(out, convert(Uint32, count))
+
+    items_left = count
+    sum_ix = 0
+    compression_buf = IOBuffer()
+    i = 1
+    while items_left > 0
+        items_in_slot = min(items_per_slot, items_left)
+        writer = Zlib.Write(out, 6)
+        file_pos = position(out)
+        for _ in 1:items_in_slot
+            bounds_array[sum_ix] = BigBedBounds(file_pos, summary.chrom_id,
+                                                summary.chrom_start, summary.chrom_end)
+            sum_ix += 1
+            write(writer, summary_list[i])
+            i += 1
+            if i > count
+                break
+            end
+        end
+        items_left -= items_in_slot
+        close(writer)
+    end
+    index_offset = position(out)
+    bigbed_write_index(out, bounds_array, block_size, items_per_slot, false)
+    return index_offset
+end
+
+
+function bigbed_summary_simple_reduce(summary_list::Vector{BigBedZoomData}, reduction)
+    new_summary_list = BigBedZoomData[]
+    for summary in summary_list
+        if isempty(new_summary_list) ||
+           new_summary_list[end].chrom_id != summary.chrom_id ||
+           summary.chrom_end > new_summary_list[end].chrom_start + reduction
+            push!(new_summary_list, summary)
+        else
+            @assert new_summary_list[end].chrom_end < summary.chrom_end
+            new_summary_list[end] = BigBedZoomData(
+                new_summary_list[end].chrom_id,
+                new_summary_list[end].chrom_start,
+                summary.chrom_end,
+                new_summary_list[end].valid_count += summary.valid_count,
+                min(new_summary_list[end].min_val, summary.min_val),
+                max(new_summary_list[end].max_val, summary.max_val),
+                new_summary_list[end].sum_data + summary.sum_data,
+                new_summary_list[end].sum_squares + summary.sum_squared)
+       end
+    end
+    return new_summary_list
 end
 
 
@@ -1474,7 +1713,8 @@ function write(out::IO, ::Type{BigBed}, intervals::IntervalCollection;
     as_offset = 0
 
     total_summary_offset = position(out)
-    write_zeros(out, sizeof(BigBedTotalSummary))
+    total_summary = BigBedTotalSummary(0, 0.0, 0.0, 0.0, 0.0)
+    write(out, total_summary)
 
     chrom_tree_offset = position(out)
     chrom_info = bigbed_write_chrom_tree(out, intervals, block_size)
@@ -1517,49 +1757,67 @@ function write(out::IO, ::Type{BigBed}, intervals::IntervalCollection;
     bigbed_write_index(out, bounds, block_size, 1, index_offset)
 
     # declare arrays and vars that track the zoom levels we actually output
-    # TODO: build and write zoom level data
     zoom_levels = 0
-    if false
-        zoom_amounts = Array(Uint32, BIGBED_MAX_ZOOM_LEVELS)
-        zoom_data_offsets = Array(Uint64, BIGBED_MAX_ZOOM_LEVELS)
-        zoom_index_offsets = Array(Uint64, BIGBED_MAX_ZOOM_LEVELS)
-        zoom_levels = 0
+    zoom_amounts = Array(Uint32, BIGBED_MAX_ZOOM_LEVELS)
+    zoom_data_offsets = Array(Uint64, BIGBED_MAX_ZOOM_LEVELS)
+    zoom_index_offsets = Array(Uint64, BIGBED_MAX_ZOOM_LEVELS)
+    zoom_levels = 0
 
-        @show ave_span
-        @show res_try_count
-        @show res_sizes
+    @show ave_span
+    @show res_try_count
+    @show res_sizes
 
-        if ave_span > 0
-            data_size = index_offset - data_offset
-            max_reduced_size = div(data_size, 2)
-            initial_reduction = 0
-            initial_reduced_count = 0
+    if ave_span > 0
+        data_size = index_offset - data_offset
+        max_reduced_size = div(data_size, 2)
+        initial_reduction = 0
+        initial_reduced_count = 0
 
-            for res_try in 1:res_try_count
-                reduced_size = res_sizes[res_try] * sizeof(BigBedZoomData)
-                if compressed
-                    reduced_size = div(reduced_size, 2) # estimate!
-                end
-
-                if reduced_size <= max_reduced_size
-                    initial_reduction = res_scales[res_try]
-                    initial_reduced_count = res_sizes[res_try]
-                    break
-                end
+        for res_try in 1:res_try_count
+            reduced_size = res_sizes[res_try] * sizeof(BigBedZoomData)
+            if compressed
+                reduced_size = div(reduced_size, 2) # estimate!
             end
 
-            @show initial_reduction
-            @show initial_reduced_count
+            if reduced_size <= max_reduced_size
+                initial_reduction = res_scales[res_try]
+                initial_reduced_count = res_sizes[res_try]
+                break
+            end
+        end
 
-            if initial_reduction > 0
-                zoom_increment = 4
-                reoomed_list = bigbed_write_reduced_once_return_reduced_twice()
-                zoom_amounts[1] = initial_reduction
-                zoom_levels = 1
+        @show initial_reduction
+        @show initial_reduced_count
 
-                while zoom_levels < BIGBED_MAX_ZOOM_LEVELS
-                    # TODO
+        if initial_reduction > 0
+            zoom_increment = 4
+            rezoomed_list, total_summary = bigbed_write_reduced_once_return_reduced_twice(
+                    out, intervals, chrom_info, field_count, initial_reduction,
+                    initial_reduced_count, zoom_increment, block_size,
+                    items_per_slot, compressed)
+
+            zoom_amounts[1] = initial_reduction
+            zoom_levels = 1
+
+            zoom_count = initial_reduced_count
+            reduction = initial_reduction * zoom_increment
+            while zoom_levels < BIGBED_MAX_ZOOM_LEVELS
+                @show (zoom_levels, zoom_count, reduction)
+                rezoom_count = length(rezoomed_list)
+                if rezoom_count >= zoom_count
+                    break
                 end
+
+                zoom_count = rezoom_count
+                zoom_data_offsets[zoom_levels] = position(out)
+                zoom_index_offsets[zoom_levels] =
+                        bigbed_write_summary_and_index(out, rezoomed_list, block_size,
+                                                       items_per_slot, compressed)
+                zoom_amounts[zoom_levels] = reduction
+                zoom_levels += 1
+                reduction *= zoom_increment
+
+                rezoomed_list = bigbed_summary_simple_reduce(rezoomed_list, reduction)
             end
         end
     end
@@ -1591,7 +1849,7 @@ function write(out::IO, ::Type{BigBed}, intervals::IntervalCollection;
 
     # write total summary
     seek(out, total_summary_offset)
-    # TODO: summary
+    write(out, total_summary)
 
     # write end signature
     seekend(out)
