@@ -19,7 +19,11 @@ end
 # -------------------------------------
 
 function show(io::IO, anc::AlignmentAnchor)
-  write(io, )
+  write(io, 
+    "AlignmentAnchor:\nGap-Space position: $(anc.gapPos)
+    \nSource-space position: $(anc.seqPos)
+    \nAlignment operation: $(anc.op)")
+end
 
 
 function copy(src::AlignmentAnchor)

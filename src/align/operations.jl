@@ -71,18 +71,11 @@ end
 const op_to_char = ['-', 'M', 'N', '=', 'X', 'S', 'H', 'I', 'D', 'P']
 
 function convert(::Type{Char}, op::Operation)
-  @inbounds ch = op != OP_INVALID ? op_to_char[convert(Uint8, op) + 1] : '?'
+  @assert op != OP_INVALID error("$(op) is not a valid alignment operation.")
+  @inbounds ch = op_to_char[convert(Uint8, op) + 1]
   return ch
 end
 
-
-# Base functions
-# --------------
-
 function show(io::IO, op::Operation)
-    if op == OP_INVALID
-        write(io, "Invalid alignment operation")
-    else
-        write(io, convert(Char, op))
-    end
+    write(io, convert(Char, op))
 end
