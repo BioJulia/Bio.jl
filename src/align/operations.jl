@@ -71,7 +71,7 @@ end
 const op_to_char = ['-', 'M', 'N', '=', 'X', 'S', 'H', 'I', 'D', 'P']
 
 function convert(::Type{Char}, op::Operation)
-  @assert op != OP_INVALID error("$(op) is not a valid alignment operation.")
+  @assert op != OP_INVALID error("Alignment operation is not valid.")
   @inbounds ch = op_to_char[convert(Uint8, op) + 1]
   return ch
 end
