@@ -67,32 +67,6 @@ end
 typealias AlignmentAnchors Vector{AlignmentAnchor}
 
 
-
-
-
-# Other gap structures
-# ---------------------
-
-type AnchorGaps <: Gaps
-  source
-  anchors::Vector{GapAnchor}
-  cutBegin::Int
-  cutEnd::Int
-  viewCutBegin::Int
-  viewCutEnd::Int
-
-  function AnchorGaps(source, anchors = GapAnchor[], cutBegin = 0, cutEnd = 0, viewCutBegin = 0, viewCutEnd = 0)
-    x = new()
-    x.source = source
-    x.anchors = anchors
-    x.cutBegin = cutBegin
-    x.cutEnd
-    x.viewCutBegin
-    x.viewCutEnd
-    return x
-  end
-end
-
 function upperBound{T}(array::Vector{T}, first::Int, last::Int, value::T, comp = x -> value < x)
   count::Int = last - first
   idx::Int = 0
