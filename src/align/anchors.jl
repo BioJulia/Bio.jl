@@ -18,7 +18,7 @@ end
 # Basic operators for AlignmentAnchors
 # -------------------------------------
 
-function Base.copy(src::AlignmentAnchor)
+function copy(src::AlignmentAnchor)
   return GapAnchor(src.gapPos, src.seqPos, src.op)
 end
 
@@ -26,27 +26,27 @@ end
 # Basic operators for boolean operations consider
 # positions, not operations
 
-function Base.==(a::AlignmentAnchor, b::AlignmentAnchor)
+function ==(a::AlignmentAnchor, b::AlignmentAnchor)
   return a.gapPos == b.gapPos && a.seqPos == b.seqPos
 end
 
-function Base.!=(a::AlignmentAnchor, b::AlignmentAnchor)
+function !=(a::AlignmentAnchor, b::AlignmentAnchor)
   return !(a == b)
 end
 
-function Base.<(a::AlignmentAnchor, b::AlignmentAnchor)
+function <(a::AlignmentAnchor, b::AlignmentAnchor)
   return a.gapPos < b.gapPos || a.seqPos < b.seqPos
 end
 
-function Base.>(a::AlignmentAnchor, b::AlignmentAnchor)
+function >(a::AlignmentAnchor, b::AlignmentAnchor)
   return a.gapPos > b.gapPos || a.seqPos > b.seqPos
 end
 
-function Base.<=(a::AlignmentAnchor, b::AlignmentAnchor)
+function <=(a::AlignmentAnchor, b::AlignmentAnchor)
   return a.gapPos <= b.gapPos || a.seqPos < b.seqPos
 end
 
-function Base.>=(a::AlignmentAnchor, b::AlignmentAnchor)
+function >=(a::AlignmentAnchor, b::AlignmentAnchor)
   return a.gapPos >= b.gapPos || a.seqPos > b.seqPos
 end
 
