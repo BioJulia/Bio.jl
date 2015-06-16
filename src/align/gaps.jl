@@ -63,7 +63,7 @@ function sourcePosition(x::ArrayGaps, position::Int)
   nextBlock = start(x.array)
   currentBlockSize, nextBlock = next(x.array, nextBlock)
   # Initialise variables representing the remaining distance from the source position.
-  # And the distance covered across the source position. 
+  # And the distance covered across the source position.
   remaining = position
   covered = x.clip.start
   while true
@@ -82,71 +82,4 @@ function sourcePosition(x::ArrayGaps, position::Int)
     remaining -= currentBlockSize
     currentBlockSize, nextBlock = next(x.array, nextBlock)
   end
-end
-
-# AnchorGaps are more efficient for column wise / site wise access. A binary search can
-# be done to find specific positions.
-
-immutable GapAnchor
-  gapPos::Int
-  seqPos::Int
-  function GapAnchor(gp = 0, sp = 0)
-    return new(gp, sp)
-  end
-end
-
-function Base.copy(src::GapAnchor)
-  return GapAnchor(src.gapPos, src.seqPos)
-end
-
-function Base.==(a::GapAnnchor, b::GapAnchor)
-  return a.gapPos == b.gapPos && a.seqPos == b.seqPos
-end
-
-function Base.!=(a::GapAnchor, b::GapAnchor)
-  return !(a == b)
-end
-
-function Base.<(a::GapAnchor, b::GapAnchor)
-  return a.gapPos < b.gapPos || a.seqPos < b.seqPos
-end
-
-function Base.>(a::GapAnchor, b::GapAnchor)
-  return a.gapPos > b.gapPos || a.seqPos > b.seqPos
-end
-
-function Base.<=(a::GapAnchor, b::GapAnchor)
-  return a.gapPos <= b.gapPos || a.seqPos < b.seqPos
-end
-
-function Base.>=(a::GapAnchor, b::GapAnchor)
-  return a.gapPos >= b.gapPos || a.seqPos > b.seqPos
-end
-
-type AnchorGaps <: Gaps
-  source
-  anchors::Vector{GapAnchor}
-  cutBegin::Int
-  cutEnd::Int
-  viewCutBegin::Int
-  viewCutEnd::Int
-
-  function AnchorGaps(source, anchors = GapAnchor[], cutBegin = 0, cutEnd = 0, viewCutBegin = 0, viewCutEnd = 0)
-    x = new()
-    x.source = source
-    x.anchors = anchors
-    x.cutBegin = cutBegin
-    x.cutEnd
-    x.viewCutBegin
-    x.viewCutEnd
-    return x
-  end
-end
-
-function clearGaps(x::AnchorGaps)
-  x.anchors = GapAnchor[]
-  x.cutBegin = 0
-  x.cutEnd = 0
-  x.viewCutBegin = 0
-  x.viewCutEnd = 0
 end
