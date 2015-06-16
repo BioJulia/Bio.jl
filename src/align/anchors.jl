@@ -18,6 +18,10 @@ end
 # Basic operators for AlignmentAnchors
 # -------------------------------------
 
+function show(io::IO, anc::AlignmentAnchor)
+  write(io, )
+
+
 function copy(src::AlignmentAnchor)
   return GapAnchor(src.gapPos, src.seqPos, src.op)
 end

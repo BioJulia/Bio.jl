@@ -69,7 +69,11 @@ end
 # ----------------------------------------
 
 const op_to_char = ['-', 'M', 'N', '=', 'X', 'S', 'H', 'I', 'D', 'P']
-convert(::Type{Char}, op::Operation) = op_to_char[convert(Uint8, op) + 1]
+
+function convert(::Type{Char}, op::Operation)
+  @inbounds ch = op != OP_INVALID ? op_to_char[convert(Uint8, op) + 1] : '?'
+  return ch
+end
 
 
 # Base functions
