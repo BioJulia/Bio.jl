@@ -29,7 +29,7 @@ end
 
 
 function copy(src::AlignmentAnchor)
-  return GapAnchor(src.gapPos, src.seqPos, src.op)
+  return AlignmentAnchor(src.gapPos, src.seqPos, src.op)
 end
 
 

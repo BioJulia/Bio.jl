@@ -15,32 +15,39 @@ convert(::Type{Operation}, num::Uint8)  = box(Operation, unbox(Uint8, num))
 convert(::Type{Uint8}, op::Operation) = box(Uint8, unbox(Operation, op))
 
 convert{T<:Unsigned}(::Type{Operation}, unint::T) = convert(Operation, convert(Uint8, unint))
-convert{T<:Unsigned}(::Type{T}, op::Operation) = box(T, Base.zext_int(T, unbox(Operation, op)))
+convert{T<:Unsigned}(::Type{T}, op::Operation) = convert(T, convert(Uint8, op))
 
 
 # Operation encoding definitions
 # ------------------------------
-for op = [(:OP_GAP, 0), (:OP_CIGAR_M, 1), (:OP_CIGAR_N, 2), (:OP_CIGAR_EQ, 3),
+
+#= Meanings of the Operations
+-----------------------------
+
+OP_GAP      | '-'       | Denotes a plain gap region
+OP_CIGAR_M  | CIGAR 'M' | Match/Mismatch
+OP_CIGAR_N  | CIGAR 'N' |
+OP_CIGAR_EQ | CIGAR '=' | Match
+OP_CIGAR_X  | CIGAR 'X' | Mismatch
+OP_CIGAR_S  | CIGAR 'S' | Soft clipping
+OP_CIGAR_H  | CIGAR 'H' | Hard clipping
+OP_CIGAR_I  | CIGAR 'I' | Insertion
+OP_CIGAR_D  | CIGAR 'D' | Deletion
+OP_CIGAR_P  | CIGAR 'P' | Padding
+OP_INVALID  | Invalid   | Invalid operation.
+
+=#
+
+for op = [
+  (:OP_GAP, 0), (:OP_CIGAR_M, 1), (:OP_CIGAR_N, 2), (:OP_CIGAR_EQ, 3),
   (:OP_CIGAR_X, 4), (:OP_CIGAR_S, 5), (:OP_CIGAR_H, 6), (:OP_CIGAR_I, 7),
-  (:OP_CIGAR_D, 8), (:OP_CIGAR_P, 9), (:OP_INVALID, 255)]
+  (:OP_CIGAR_D, 8), (:OP_CIGAR_P, 9), (:OP_INVALID, 255)
+  ]
 
   @eval const $(op[1]) = convert(Operation, Uint8($(op[2])))
 
 end
 
-#=
-const OP_GAP = convert(Operation, Uint8(0))         # Denotes a plain gap region
-const OP_CIGAR_M = convert(Operation, Uint8(1))     # CIGAR M | Match/Mismatch
-const OP_CIGAR_N = convert(Operation, Uint8(2))     # CIGAR N
-const OP_CIGAR_EQ = convert(Operation, Uint8(3))    # CIGAR = | Match
-const OP_CIGAR_X = convert(Operation, Uint8(4))     # CIGAR X | Mismatch
-const OP_CIGAR_S = convert(Operation, Uint8(5))     # CIGAR S | Soft clipping
-const OP_CIGAR_H = convert(Operation, Uint8(6))     # CIGAR H | Hard clipping
-const OP_CIGAR_I = convert(Operation, Uint8(7))     # CIGAR I | Insertion
-const OP_CIGAR_D = convert(Operation, Uint8(8))     # CIGAR D | Deletion
-const OP_CIGAR_P = convert(Operation, Uint8(9))     # CIGAR P | Padding
-const OP_INVALID = convert(Operation, Uint8(255))   # Invalid Operation
-=#
 
 # Conversion from characters to operations
 # ----------------------------------------
