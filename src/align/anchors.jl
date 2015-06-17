@@ -20,7 +20,7 @@ end
 
 function show(io::IO, anc::AlignmentAnchor)
   write(io, 
-    "AlignmentAnchor:
+"AlignmentAnchor:
 ----------------
 Gap-Space position: $(anc.gapPos)
 Source-space position: $(anc.seqPos)
@@ -79,7 +79,7 @@ typealias AlignmentAnchors Vector{AlignmentAnchor}
 function show(io::IO, aa::AlignmentAnchors)
   out::String = ""
   for i in aa
-    out *= "($(aa.seqPos), $(aa.gapPos), $(Char(aa.op)))"
+    out *= "($(i.seqPos), $(i.gapPos), $(Char(i.o)))"
   end
   write(io, out)
 end
