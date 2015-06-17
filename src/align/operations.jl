@@ -59,9 +59,9 @@ const char_to_op = [
 
 
 function convert(::Type{Operation}, c::Char)
-    @inbounds op = '-' <= c <= 'x' ? char_to_op[c - '-' + 1] : OP_INVALID
-    @assert op != OP_INVALID error("$(c) is not a valid alignment operation.")
-    return op
+  @inbounds op = '-' <= c <= 'x' ? char_to_op[c - '-' + 1] : OP_INVALID
+  @assert op != OP_INVALID error("$(c) is not a valid alignment operation.")
+  return op
 end
 
 

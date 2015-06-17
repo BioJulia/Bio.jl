@@ -21,10 +21,10 @@ end
 function show(io::IO, anc::AlignmentAnchor)
   write(io, 
     "AlignmentAnchor:
-    ----------------
-    Gap-Space position: $(anc.gapPos)
-    Source-space position: $(anc.seqPos)
-    Alignment operation: $(anc.op)")
+----------------
+Gap-Space position: $(anc.gapPos)
+Source-space position: $(anc.seqPos)
+Alignment operation: $(anc.op)")
 end
 
 
@@ -75,6 +75,14 @@ end
 # -----------------------
 
 typealias AlignmentAnchors Vector{AlignmentAnchor}
+
+function show(io::IO, aa::AlignmentAnchors)
+  out::String = ""
+  for i in aa
+    out *= "($(aa.seqPos), $(aa.gapPos), $(Char(aa.op)))"
+  end
+  write(io, out)
+end
 
 
 function upperBound{T}(array::Vector{T}, first::Int, last::Int, value::T, comp = x -> value < x)
