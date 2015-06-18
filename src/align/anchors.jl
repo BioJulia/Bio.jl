@@ -6,8 +6,8 @@
 # ------------------
 
 immutable AlignmentAnchor
-  gapPos::Int
-  seqPos::Int
+  alnPos::Int
+  srcPos::Int
   op::Operation
   function AlignmentAnchor(gp::Int = 0, sp::Int = 0, op::Operation = OP_INVALID)
     return new(gp, sp, op)
@@ -19,17 +19,12 @@ end
 # -------------------------------------
 
 function show(io::IO, anc::AlignmentAnchor)
-  write(io, 
-"AlignmentAnchor:
-----------------
-Gap-Space position: $(anc.gapPos)
-Source-space position: $(anc.seqPos)
-Alignment operation: $(anc.op)")
+  write(io, "AlignmentAnchor: APos: $(anc.alnPos), SPos: $(anc.srcPos), Op: $(anc.op)")
 end
 
 
 function copy(src::AlignmentAnchor)
-  return AlignmentAnchor(src.gapPos, src.seqPos, src.op)
+  return AlignmentAnchor(src.alnPos, src.srcPos, src.op)
 end
 
 
@@ -37,7 +32,7 @@ end
 # positions, not operations
 
 function ==(a::AlignmentAnchor, b::AlignmentAnchor)
-  return a.gapPos == b.gapPos && a.seqPos == b.seqPos
+  return a.alnPos == b.alnPos && a.srcPos == b.srcPos
 end
 
 function !=(a::AlignmentAnchor, b::AlignmentAnchor)
@@ -45,19 +40,19 @@ function !=(a::AlignmentAnchor, b::AlignmentAnchor)
 end
 
 function <(a::AlignmentAnchor, b::AlignmentAnchor)
-  return a.gapPos < b.gapPos || a.seqPos < b.seqPos
+  return a.alnPos < b.alnPos || a.srcPos < b.srcPos
 end
 
 function >(a::AlignmentAnchor, b::AlignmentAnchor)
-  return a.gapPos > b.gapPos || a.seqPos > b.seqPos
+  return a.alnPos > b.alnPos || a.srcPos > b.srcPos
 end
 
 function <=(a::AlignmentAnchor, b::AlignmentAnchor)
-  return a.gapPos <= b.gapPos || a.seqPos < b.seqPos
+  return a.alnPos <= b.alnPos || a.srcPos < b.srcPos
 end
 
 function >=(a::AlignmentAnchor, b::AlignmentAnchor)
-  return a.gapPos >= b.gapPos || a.seqPos > b.seqPos
+  return a.alnPos >= b.alnPos || a.srcPos > b.srcPos
 end
 
 
@@ -69,7 +64,7 @@ typealias AlignmentAnchors Vector{AlignmentAnchor}
 function show(io::IO, aa::AlignmentAnchors)
   out::String = ""
   for i in aa
-    out *= "($(i.seqPos), $(i.gapPos), $(Char(i.o)))"
+    out *= "($(i.srcPos), $(i.alnPos), $(Char(i.o)))"
   end
   write(io, out)
 end
@@ -87,18 +82,18 @@ own types inheriting from Base.Order.Ordering and create our own lt methods. The
 will then be used by the core Julia sorting API efficiently.
 =#
 
-immutable seqPosOrdering <: Ordering end
-immutable gapPosOrdering <: Ordering end
+immutable srcPosOrdering <: Ordering end
+immutable alnPosOrdering <: Ordering end
 
 
-const BY_SEQ = seqPosOrdering()
-const BY_GAP = gapPosOrdering()
+const BY_SRC = srcPosOrdering()
+const BY_ALN = alnPosOrdering()
 
 
-function lt(o::seqPosOrdering, a::AlignmentAnchor, b::AlignmentAnchor)
-  return a.seqPos < b.seqPos
+function lt(o::srcPosOrdering, a::AlignmentAnchor, b::AlignmentAnchor)
+  return a.srcPos < b.srcPos
 end
 
-function lt(o::gapPosOrdering, a::AlignmentAnchor, b::AlignmentAnchor)
-  return a.gapPos < b.gapPos
+function lt(o::alnPosOrdering, a::AlignmentAnchor, b::AlignmentAnchor)
+  return a.alnPos < b.alnPos
 end
