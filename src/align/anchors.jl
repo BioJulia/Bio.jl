@@ -95,10 +95,10 @@ const BY_SEQ = seqPosOrdering()
 const BY_GAP = gapPosOrdering()
 
 
-function lt(o::seqPosOrdering, a::AlignmentAnchor, x::Int)
-  return a.seqPos < x
+function lt(o::seqPosOrdering, a::AlignmentAnchor, b::AlignmentAnchor)
+  return a.seqPos < b.seqPos
 end
 
-function lt(o::gapPosOrdering, a::AlignmentAnchor, x::Int)
-  return a.gapPos < x
+function lt(o::gapPosOrdering, a::AlignmentAnchor, b::AlignmentAnchor)
+  return a.gapPos < b.gapPos
 end
