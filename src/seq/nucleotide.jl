@@ -657,22 +657,20 @@ Reversed copy of the nucleotide sequence `seq`
 function reverse{T}(seq::NucleotideSequence{T})
     orphan!(seq)
 
-    k = (2 * length(seq)) % 64
+    k = (2 * length(seq) + 63) % 64 + 1
     h = 64 - k
-    if k == 0
-        k = 64
-        h = 0
-    end
 
     data = zeros(Uint64, length(seq.data))
     j = length(data)
-    @inbounds for i in 1:length(data)
+    i = 1
+    @inbounds while true
         x = nucrev(seq.data[i])
         data[j] |= x >>> h
         if (j -= 1) == 0
             break
         end
         data[j] |= x << k;
+        i += 1
     end
 
     return NucleotideSequence{T}(data, reverse(seq.ns), seq.part)
