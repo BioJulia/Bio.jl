@@ -418,20 +418,17 @@ facts("Nucleotides") do
                 end
 
                 context("Iteration through DNA Sequence") do
-                    @fact start(dna"ACNTG") => 0
-                    @fact start(dna"")      => 0
+                    @fact start(dna"ACNTG") => (1,3)
+                    @fact start(dna"")      => (1,1)
 
-                    @fact next(dna"ACTGN", 1) => (DNA_C, 2)
-                    @fact next(dna"ACTGN", 4) => (DNA_N, 5)
-                    @fact_throws next(dna"ACTGN", 5)
-                    @fact_throws next(dna"ACTGN", -1)
+                    @fact next(dna"ACTGN", (2,5)) => (DNA_C, (3,5))
+                    @fact next(dna"ACTGN", (5,5)) => (DNA_N, (6,6))
 
-                    @fact done(dna"", 1)       => true
-                    @fact done(dna"ACTGN", 1)  => false
-                    @fact done(dna"ACTGN", 4)  => false
-                    @fact done(dna"ACTGN", 5)  => true
-                    @fact done(dna"ACTGN", -1) => false
-
+                    @fact done(dna"", (1,1))       => true
+                    @fact done(dna"ACTGN", (2,5))  => false
+                    @fact done(dna"ACTGN", (5,5))  => false
+                    @fact done(dna"ACTGN", (6,5))  => true
+                    @fact done(dna"ACTGN", (0,5))  => false
 
                     dna_vector = [DNA_A, DNA_C, DNA_T, DNA_G]
                     @fact all([nucleotide == dna_vector[i] for (i, nucleotide) in enumerate(dna_seq)]) =>  true
@@ -448,19 +445,17 @@ facts("Nucleotides") do
                 end
 
                 context("Iteration through RNA Sequence") do
-                    @fact start(rna"ACNUG") => 0
-                    @fact start(rna"")      => 0
+                    @fact start(rna"ACNUG") => (1,3)
+                    @fact start(rna"")      => (1,1)
 
-                    @fact next(rna"ACUGN", 1) => (RNA_C, 2)
-                    @fact next(rna"ACUGN", 4) => (RNA_N, 5)
-                    @fact_throws next(rna"ACUGN", 5)
-                    @fact_throws next(rna"ACUGN", -1)
+                    @fact next(rna"ACUGN", (2,5)) => (RNA_C, (3,5))
+                    @fact next(rna"ACUGN", (5,5)) => (RNA_N, (6,6))
 
-                    @fact done(rna"", 1)       => true
-                    @fact done(rna"ACUGN", 1)  => false
-                    @fact done(rna"ACUGN", 4)  => false
-                    @fact done(rna"ACUGN", 5)  => true
-                    @fact done(rna"ACUGN", -1) => false
+                    @fact done(rna"", (1,1))       => true
+                    @fact done(rna"ACUGN", (2,5))  => false
+                    @fact done(rna"ACUGN", (5,5))  => false
+                    @fact done(rna"ACUGN", (6,5))  => true
+                    @fact done(rna"ACUGN", (0,5))  => false
 
                     # Iteration through RNA Sequence
 

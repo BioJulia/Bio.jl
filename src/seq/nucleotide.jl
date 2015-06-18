@@ -590,21 +590,25 @@ copy{T}(seq::NucleotideSequence{T}) = orphan!(NucleotideSequence{T}(seq.data, se
 
 
 # Iterating throug nucleotide sequences
-start(seq::NucleotideSequence) = seq.part.start
+@inline function start(seq::NucleotideSequence)
+    npos = nextone(seq.ns, seq.part.start)
+    return seq.part.start, npos
+end
 
-function next{T}(seq::NucleotideSequence{T}, i)
-    nd, nr = divrem64(i - 1)
-    if seq.ns.chunks[nd + 1] & ((@compat Uint64(1)) << nr) != 0
+@inline function next{T}(seq::NucleotideSequence{T}, state)
+    i, npos = state
+    if i == npos
+        npos = nextone(seq.ns, i + 1)
         value = nnucleotide(T)
     else
         d, r = divrem32(i - 1)
-        value = convert(T, (seq.data[d + 1] >>> (2 * r)) & 0b11)
+        @inbounds value = convert(T, ((seq.data[d + 1] >>> (2 * r)) & 0b11) % Uint8)
     end
 
-    return value, i + 1
+    return value, (i + 1, npos)
 end
 
-done(seq::NucleotideSequence, i) = i > seq.part.stop
+@inline done(seq::NucleotideSequence, state) = state[1] > seq.part.stop
 
 # String Decorator
 # ----------------
@@ -655,6 +659,10 @@ end
 Reversed copy of the nucleotide sequence `seq`
 """
 function reverse{T}(seq::NucleotideSequence{T})
+    if isempty(seq)
+        return seq
+    end
+
     orphan!(seq)
 
     k = (2 * length(seq) + 63) % 64 + 1
@@ -726,6 +734,30 @@ function nextn(it::SequenceNIterator, i)
     end
 
     return d * 64 + r + 1
+end
+
+
+# Find the index of the next 1 bit, starting at index i.
+function nextone(b::BitVector, i)
+    d, r = divrem64(i - 1)
+    @inbounds while r < 64
+        if (b.chunks[d + 1] >>> r) & (@compat UInt64(1)) != 0
+            return i
+        end
+        r += 1
+        i += 1
+    end
+
+    r = 0
+    d += 1
+    @inbounds for l in (d+1):length(b.chunks)
+        if b.chunks[l] != 0
+            return i + trailing_zeros(b.chunks[l])
+        end
+        i += 64
+    end
+
+    return min(length(b) + 1, i)
 end
 
 
