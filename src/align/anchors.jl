@@ -9,7 +9,7 @@ immutable AlignmentAnchor
   gapPos::Int
   seqPos::Int
   op::Operation
-  function AlignmentAnchor(gp = 0, sp = 0, op = OP_INVALID)
+  function AlignmentAnchor(gp::Int = 0, sp::Int = 0, op::Operation = OP_INVALID)
     return new(gp, sp, op)
   end
 end
@@ -60,16 +60,6 @@ function >=(a::AlignmentAnchor, b::AlignmentAnchor)
   return a.gapPos >= b.gapPos || a.seqPos > b.seqPos
 end
 
-# Sorting gap anchors by their sequence space position.
-function sortSeqPos(a::AlignmentAnchor, b::AlignmentAnchor)
-  return a.seqPos < b.seqPos
-end
-
-# Sorting gap anchors by their gap space position.
-function sortGapPos(a::AlignmentAnchor, b::AlignmentAnchor)
-  return a.gapPos < b.gapPos
-end
-
 
 # AlignmentAnchors Array
 # -----------------------
@@ -85,21 +75,30 @@ function show(io::IO, aa::AlignmentAnchors)
 end
 
 
-function upperBound{T}(array::Vector{T}, first::Int, last::Int, value::T, comp = x -> value < x)
-  count::Int = last - first
-  idx::Int = 0
-  step::Int = 0
-  while count > 0
-    idx = first
-    step = Int(round(count / 2))
-    idx += step
-    if !comp(array[idx])
-      idx += 1
-      first = idx
-      count -= step + 1
-    else
-      count = step
-    end
-  end
-  return first
+#=
+In order to make use of Julia's sorting API and avoid having to write our own
+searchsortedfirst and searchsortedlast methods, whilst ALSO avoiding slowing down
+things by passing functions about as arguments to other functions, we make use of
+how the sort API constructs its searching and sorting algorithms. It uses types 
+that inherit from the Ordering abstract type, and this type, combined with use of
+different Base.Order.lt methods - define how the values in the array are compared
+to the query value and in what order. So we take advantage of this and define our
+own types inheriting from Base.Order.Ordering and create our own lt methods. These
+will then be used by the core Julia sorting API efficiently.
+=#
+
+immutable seqPosOrdering <: Ordering end
+immutable gapPosOrdering <: Ordering end
+
+
+const BY_SEQ = seqPosOrdering()
+const BY_GAP = gapPosOrdering()
+
+
+function lt(o::seqPosOrdering, a::AlignmentAnchor, x::Int)
+  return a.seqPos < x
+end
+
+function lt(o::gapPosOrdering, a::AlignmentAnchor, x::Int)
+  return a.gapPos < x
 end
