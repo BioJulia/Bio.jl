@@ -590,22 +590,21 @@ copy{T}(seq::NucleotideSequence{T}) = orphan!(NucleotideSequence{T}(seq.data, se
 
 
 # Iterating throug nucleotide sequences
-# TODO: This can be made a lot faster.
-start(seq::NucleotideSequence) = seq.part.start - 1
+start(seq::NucleotideSequence) = seq.part.start
 
 function next{T}(seq::NucleotideSequence{T}, i)
-    # Check bounds
-    (seq.part.start - 1 <= i < seq.part.stop) || throw(BoundsError())
-
-    nvalue, _ = next(seq.ns, i)
-    if nvalue
-        return (nnucleotide(T), i + 1)
+    nd, nr = divrem64(i - 1)
+    if seq.ns.chunks[nd + 1] & ((@compat Uint64(1)) << nr) != 0
+        value = nnucleotide(T)
     else
-        return (getnuc(T, seq.data, i + 1), i + 1)
+        d, r = divrem32(i - 1)
+        value = convert(T, (seq.data[d + 1] >>> (2 * r)) & 0b11)
     end
+
+    return value, i + 1
 end
 
-done(seq::NucleotideSequence, i) = i >= seq.part.stop
+done(seq::NucleotideSequence, i) = i > seq.part.stop
 
 # String Decorator
 # ----------------
