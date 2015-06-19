@@ -1210,7 +1210,6 @@ end
 immutable EachKmerIteratorState{T, K}
     i::Int
     npos::Int
-    x::Uint64
 end
 
 # Maybe this function should replace the default constructor.
@@ -1244,87 +1243,54 @@ function eachkmer{T}(seq::NucleotideSequence{T}, k::Integer, step::Integer=1)
 end
 
 
-@inline function nextkmer{T, K}(it::EachKmerIterator{T, K},
-                                state::EachKmerIteratorState{T, K}, skip::Int)
-    i = state.i + 1
-    npos = state.npos
-    x = state.x >>> (2 * skip)
-
-    if i > it.seq.part.stop
-        return EachKmerIteratorState{T, K}(i, npos, x)
-    end
-
-    shift = 2 * (K - 1)
+@inline function getkmer{T, K}(::Type{Kmer{T, K}}, seq::NucleotideSequence{T}, i)
     d, r = divrem32(i - 1)
-    data_d = it.seq.data[d + 1] >> 2*r
-
-    lastn = 0
-    @inbounds while true
-        if i == npos
-            npos = nextone(it.seq.ns, i + 1)
-            lastn = i
-        else
-            shift = 2 * (K - skip)
-            x |= (((data_d) & 0b11) << shift)
-        end
-
-        skip -= 1
-        if skip == 0
-            if i - lastn < K
-                x >>= (2 * it.step)
-                skip = it.step
-            else
-                break
-            end
-        end
-
-        i += 1
-        if i > it.seq.part.stop
-            break
-        end
-
-        r += 1
-        data_d >>= 2
-        if r == 32
-            r = 0
-            d += 1
-            if d < length(it.seq.data)
-                data_d = it.seq.data[d + 1]
-            end
-        end
+    x = seq.data[d + 1] >>> (2*r)
+    if r + K > 32
+        x |= seq.data[d + 2] << (2 * (32 - r))
     end
-
-    return EachKmerIteratorState{T, K}(i, npos, x)
+    mask = 0xffffffffffffffff >>> (64 - (2*K))
+    return convert(Kmer{T, K}, x & mask)
 end
 
 
-@inline function start{T, K}(it::EachKmerIterator{T, K})
-    i = it.seq.part.start
-    npos = nextone(it.seq.ns, i)
-    state = EachKmerIteratorState{T, K}(i - 1, npos, @compat UInt64(0))
-    if i <= it.seq.part.stop
-        return nextkmer(it, state, K)
-    else
-        return EachKmerIteratorState{T, K}(i, npos, 0)
+@inline function nextkmerpos{T, K}(it::EachKmerIterator{T, K}, i, npos)
+    while i + K - 1 >= npos
+        while npos < i
+            npos = nextone(it.seq.ns, i)
+        end
+
+        if i + K - 1 < npos
+            break
+        end
+
+        i += it.step
+        if i + K - 1 > it.seq.part.stop
+            return EachKmerIteratorState{T, K}(i, npos)
+        end
     end
+    return EachKmerIteratorState{T, K}(i, npos)
+end
+
+
+function start{T, K}(it::EachKmerIterator{T, K})
+    npos = nextone(it.seq.ns, it.seq.part.start)
+    return nextkmerpos(it, 1, npos)
 end
 
 
 @inline function next{T, K}(it::EachKmerIterator{T, K},
-                            state::EachKmerIteratorState{T, K})
-    value = convert(Kmer{T, K}, state.x)
-    next_state = nextkmer(it, state, it.step)
-    return (state.i - it.seq.part.start - K + 2, value), next_state
+                    state::EachKmerIteratorState{T, K})
+    value = getkmer(Kmer{T, K}, it.seq, state.i)
+    next_state = nextkmerpos(it, state.i + it.step, state.npos)
+    return (state.i, value), next_state
 end
 
 
 @inline function done{T, K}(it::EachKmerIterator{T, K},
                             state::EachKmerIteratorState{T, K})
-    return state.i > it.seq.part.stop
+    return state.i + K - 1 > it.seq.part.stop
 end
-
-# TODO: count_nucleotides
-
 
 
 # Nucleotide Composition
