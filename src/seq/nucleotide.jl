@@ -1545,6 +1545,7 @@ Count ocurrences of short (<= 32) k-mers in a sequence.
 # Arguments:
   * 'seq`: A NucleotideSequence
   * `step`: K-mers counted are separated by this many nucleotides (deafult: 1)
+<<<<<<< HEAD
 """
 immutable KmerCounts{T, K}
     data::Vector{Uint32}
