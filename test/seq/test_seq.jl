@@ -883,7 +883,7 @@ facts("Nucleotides") do
             end
 
             function check_eachkmer(T, seq::String, k, step=1)
-                xs = [convert(String, x) for (i, x) in collect(eachkmer(NucleotideSequence{T}(seq), k, step))]
+                xs = [convert(String, x) for (i, x) in collect(each(Kmer{T, k}, NucleotideSequence{T}(seq), step))]
                 ys = string_eachkmer(seq, k, step)
                 return xs == ys
             end
@@ -901,11 +901,11 @@ facts("Nucleotides") do
                 @fact all([check_eachkmer(RNANucleotide, random_rna(len), k, 3) for _ in 1:reps]) => true
             end
 
-            @fact isempty(collect(eachkmer(dna"", 1))) => true
-            @fact isempty(collect(eachkmer(dna"NNNNNNNNNN", 1))) => true
-            @fact isempty(collect(eachkmer(dna"ACGT", 0))) => true
-            @fact_throws eachkmer(dna"ACGT", -1)
-            @fact_throws eachkmer(dna"ACGT", 33)
+            @fact isempty(collect(each(DNAKmer{1}, dna""))) => true
+            @fact isempty(collect(each(DNAKmer{1}, dna"NNNNNNNNNN"))) => true
+            @fact isempty(collect(each(DNAKmer{0}, dna"ACGT"))) => true
+            @fact_throws each(DNAKmer{-1}, dna"ACGT")
+            @fact_throws each(DNAKmer{33}, dna"ACGT")
         end
 
         context("Counting") do

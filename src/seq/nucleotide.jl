@@ -739,15 +739,18 @@ end
 
 # Find the index of the next 1 bit, starting at index i.
 function nextone(b::BitVector, i)
-    d, r = divrem64(i - 1)
-    @inbounds while r < 64
-        if (b.chunks[d + 1] >>> r) & (@compat UInt64(1)) != 0
-            return i
-        end
-        r += 1
-        i += 1
+    if i > length(b)
+        return i
     end
 
+    d, r = divrem64(i - 1)
+    chunk = b.chunks[d + 1] >>> r
+    if chunk != 0
+        t = trailing_zeros(chunk)
+        return i + t
+    end
+
+    i += 64 - r
     r = 0
     d += 1
     @inbounds for l in (d+1):length(b.chunks)
@@ -1200,16 +1203,14 @@ end
 # Iterate through every k-mer in a nucleotide sequence
 immutable EachKmerIterator{T, K}
     seq::NucleotideSequence{T}
-    nit::SequenceNIterator
     step::Int
 end
 
 
 immutable EachKmerIteratorState{T, K}
     i::Int
+    npos::Int
     x::Uint64
-    next_n_pos::Int
-    nit_state::Int
 end
 
 # Maybe this function should replace the default constructor.
@@ -1229,84 +1230,97 @@ Differently from the default EachKmerIterator constructor, this function checks 
 # Returns
 A EachKmerIterator constructed with these parameters
 """
-function eachkmer{T}(seq::NucleotideSequence{T}, k::Integer, step::Integer=1)
-    @assert k >= 0 "K must be ≥ 0 in EachKmer"
-    @assert k <= 32 "K must be ≤ 32 in EachKmer"
+function each{T, K}(::Type{Kmer{T, K}}, seq::NucleotideSequence{T}, step::Integer=1)
+    @assert K >= 0 "K must be ≥ 0 in EachKmer"
+    @assert K <= 32 "K must be ≤ 32 in EachKmer"
     @assert step >= 1 "step must be ≥ 1"
 
-    return EachKmerIterator{T, k}(seq, npositions(seq), step)
+    return EachKmerIterator{T, K}(seq, step)
 end
 
 
-function nextkmer{T, K}(it::EachKmerIterator{T, K},
-                        state::EachKmerIteratorState{T, K}, skip::Int)
+function eachkmer{T}(seq::NucleotideSequence{T}, k::Integer, step::Integer=1)
+    return each(Kmer{T, K}, seq, step)
+end
+
+
+@inline function nextkmer{T, K}(it::EachKmerIterator{T, K},
+                                state::EachKmerIteratorState{T, K}, skip::Int)
     i = state.i + 1
-    x = state.x
-    next_n_pos = state.next_n_pos
-    nit_state = state.nit_state
+    npos = state.npos
+    x = state.x >>> (2 * skip)
+
+    if i > it.seq.part.stop
+        return EachKmerIteratorState{T, K}(i, npos, x)
+    end
 
     shift = 2 * (K - 1)
-    d, r = divrem64(2 * (it.seq.part.start + i - 2))
-    while i <= length(it.seq)
-        while next_n_pos < i
-            if done(it.nit, nit_state)
-                next_n_pos = length(it.seq) + 1
-                break
-            else
-                next_n_pos, nit_state = next(it.nit, nit_state)
-            end
+    d, r = divrem32(i - 1)
+    data_d = it.seq.data[d + 1] >> 2*r
+
+    lastn = 0
+    @inbounds while true
+        if i == npos
+            npos = nextone(it.seq.ns, i + 1)
+            lastn = i
+        else
+            shift = 2 * (K - skip)
+            x |= (((data_d) & 0b11) << shift)
         end
 
-        if i - K + 1 <= next_n_pos <= i
-            off = it.step * @compat ceil(Int, (K - skip) / it.step)
-            if skip < K
-                skip += off
-            end
-        end
-
-        x = (x >>> 2) | (((it.seq.data[d + 1] >>> r) & 0b11) << shift)
-
+        skip -= 1
         if skip == 0
+            if i - lastn < K
+                x >>= (2 * it.step)
+                skip = it.step
+            else
+                break
+            end
+        end
+
+        i += 1
+        if i > it.seq.part.stop
             break
         end
-        skip -= 1
 
-        r += 2
-        if r == 64
+        r += 1
+        data_d >>= 2
+        if r == 32
             r = 0
             d += 1
+            if d < length(it.seq.data)
+                data_d = it.seq.data[d + 1]
+            end
         end
-        i += 1
     end
 
-    return EachKmerIteratorState{T, K}(i, x, next_n_pos, nit_state)
+    return EachKmerIteratorState{T, K}(i, npos, x)
 end
 
 
-function start{T, K}(it::EachKmerIterator{T, K})
-    nit_state = start(it.nit)
-    if done(it.nit, nit_state)
-        next_n_pos = length(it.seq) + 1
+@inline function start{T, K}(it::EachKmerIterator{T, K})
+    i = it.seq.part.start
+    npos = nextone(it.seq.ns, i)
+    state = EachKmerIteratorState{T, K}(i - 1, npos, @compat UInt64(0))
+    if i <= it.seq.part.stop
+        return nextkmer(it, state, K)
     else
-        next_n_pos, nit_state = next(it.nit, nit_state)
+        return EachKmerIteratorState{T, K}(i, npos, 0)
     end
-
-    state = EachKmerIteratorState{T, K}(0, (@compat UInt64(0)), next_n_pos, nit_state)
-    return nextkmer(it, state, K - 1)
 end
 
 
-function next{T, K}(it::EachKmerIterator{T, K},
-                    state::EachKmerIteratorState{T, K})
+@inline function next{T, K}(it::EachKmerIterator{T, K},
+                            state::EachKmerIteratorState{T, K})
     value = convert(Kmer{T, K}, state.x)
-    next_state = nextkmer(it, state, it.step - 1)
-    return (state.i - K + 1, value), next_state
+    next_state = nextkmer(it, state, it.step)
+    return (state.i - it.seq.part.start - K + 2, value), next_state
 end
 
 
-function done{T, K}(it::EachKmerIterator{T, K},
-                    state::EachKmerIteratorState{T, K})
-    return state.i > length(it.seq)
+@inline function done{T, K}(it::EachKmerIterator{T, K},
+                            state::EachKmerIteratorState{T, K})
+    return state.i > it.seq.part.stop
 end
 
 # TODO: count_nucleotides

@@ -193,6 +193,7 @@ function translate(seq::RNASequence, code::GeneticCode=standard_genetic_code)
 
     # try to translate codons whose third nucleotide is N
     aaseq = Array(AminoAcid, aaseqlen)
+
     for i in npositions(seq)
         d, r = divrem(i - 1, 3)
 
@@ -208,8 +209,7 @@ function translate(seq::RNASequence, code::GeneticCode=standard_genetic_code)
         aa = translate_ambiguous_codon(code, seq[i-2], seq[i-1])
         aaseq[d + 1] = aa
     end
-
-    for (i, codon) in eachkmer(seq, 3, 3)
+    for (i, codon) in each(RNAKmer{3}, seq, 3)
         aa = code[codon]
         if aa == AA_INVALID
             error("Cannot translate stop codons.")
