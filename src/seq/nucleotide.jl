@@ -1274,8 +1274,12 @@ end
 
 
 function start{T, K}(it::EachKmerIterator{T, K})
-    npos = nextone(it.seq.ns, it.seq.part.start)
-    return nextkmerpos(it, 1, npos)
+    if K == 0
+        return EachKmerIteratorState{T, K}(it.seq.part.stop + 2, 0)
+    else
+        npos = nextone(it.seq.ns, it.seq.part.start)
+        return nextkmerpos(it, 1, npos)
+    end
 end
 
 
@@ -1407,6 +1411,8 @@ function NucleotideCounts{T,K}(seq::Kmer{T, K})
     return counts
 end
 
+
+
 # Basic Functions
 # ---------------
 
@@ -1455,3 +1461,46 @@ function show(io::IO, counts::RNANucleotideCounts)
           N => $(count_strings[5])
         """)
 end
+
+
+# Kmer Composition
+# ----------------
+
+@doc """
+Count occurances of short (<= 32) k-mers in a sequence.
+
+# Arguments:
+  * 'seq`: A NucleotideSequence
+  * `step`: K-mers counted are separated by this many nucleotides (deafult: 1)
+""" ->
+immutable KmerCounts{T, K}
+    data::Vector{Uint32}
+
+    function KmerCounts(seq::NucleotideSequence{T}, step::Integer=1)
+        data = zeros(Uint32, 4^K)
+        @inbounds for (_, x) in each(Kmer{T, K}, seq, step)
+            data[convert(Uint64, x) + 1] += 1
+        end
+        return new(data)
+    end
+end
+
+typealias DNAKmerCounts{K} KmerCounts{DNANucleotide, K}
+typealias RNAKmerCounts{K} KmerCounts{DNANucleotide, K}
+
+
+function getindex{T, K}(counts::KmerCounts{T, K}, x::Kmer{T, K})
+    @inbounds c = counts.data[convert(Uint64, x) + 1]
+    return c
+end
+
+
+function show{T, K}(io::IO, counts::KmerCounts{T, K})
+    println(io, (T == DNANucleotide ? "DNA" : "RNA"), "KmerCounts{", K, "}:")
+    for x in (@compat UInt64(1)):(@compat UInt64(4^K))
+        s = convert(String, convert(Kmer{T, K}, x - 1))
+        println(io, "  ", s, " => ", counts.data[x])
+    end
+end
+
+

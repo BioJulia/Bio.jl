@@ -908,7 +908,7 @@ facts("Nucleotides") do
             @fact_throws each(DNAKmer{33}, dna"ACGT")
         end
 
-        context("Counting") do
+        context("Nucleotide Counting") do
             function string_nucleotide_count(::Type{DNANucleotide}, seq::String)
                 counts = @compat Dict{DNANucleotide, Int}(
                     DNA_A => 0,
@@ -990,6 +990,49 @@ facts("Nucleotides") do
                            for _ in 1:reps]) => true
                 @fact all([check_kmer_nucleotide_count(RNANucleotide, random_rna_kmer(len))
                            for _ in 1:reps]) => true
+            end
+        end
+
+        context("Kmer Counting") do
+            function string_kmer_count{T <: Nucleotide}(::Type{T}, seq::String, k, step)
+                counts = @compat Dict{Kmer{T, k}, Int}()
+                for x in (@compat UInt64(0)):(@compat UInt64(4^k-1))
+                    counts[convert(Kmer{T, k}, x)] = 0
+                end
+
+                for i in 1:step:(length(seq)-k+1)
+                    s = seq[i:i+k-1]
+                    if 'N' in s
+                        continue
+                    end
+                    counts[convert(Kmer{T, k}, s)] += 1
+                end
+
+                return counts
+            end
+
+            function check_kmer_count{T <: Nucleotide}(::Type{T}, seq::String, k, step)
+                string_counts = string_kmer_count(T, seq, k, step)
+                kmer_counts = KmerCounts{T, k}(convert(NucleotideSequence{T}, seq), step)
+                for y in (@compat UInt64(0)):(@compat UInt64(4^k-1))
+                    x = convert(Kmer{T, k}, y)
+                    if string_counts[x] != kmer_counts[x]
+                        return false
+                    end
+                end
+                return true
+            end
+
+            reps = 10
+            for len in [1, 10, 32, 1000, 10000]
+                for k in [1, 2, 5]
+                    for step in [1, 3]
+                        @fact all([check_kmer_count(DNANucleotide, random_dna(len), k, step)
+                                   for _ in 1:reps]) => true
+                        @fact all([check_kmer_count(RNANucleotide, random_rna(len), k, step)
+                                   for _ in 1:reps]) => true
+                    end
+                end
             end
         end
     end
