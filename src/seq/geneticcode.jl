@@ -11,7 +11,7 @@ end
 # Basic Functions
 # ---------------
 
-getindex(code::GeneticCode, idx::RNAKmer{3}) = code.tbl[convert(Uint64, idx) + 1]
+@inline getindex(code::GeneticCode, idx::RNAKmer{3}) = code.tbl[convert(Uint64, idx) + 1]
 setindex!(code::GeneticCode, aa::AminoAcid, idx::RNAKmer{3}) = (code.tbl[convert(Uint64, idx) + 1] = aa)
 copy(code::GeneticCode) = GeneticCode(copy(code.tbl))
 length(code::GeneticCode) = 64
@@ -185,7 +185,8 @@ end
 
 
 "Convert an RNASequence to an AminoAcidSequence"
-function translate(seq::RNASequence, code::GeneticCode=standard_genetic_code)
+function translate(seq::RNASequence, code::GeneticCode=standard_genetic_code,
+                   allow_ambiguous_codons::Bool=false)
     aaseqlen, r = divrem(length(seq), 3)
     if r != 0
         error("RNASequence length is not divisible by three. Cannot translate.")
@@ -198,18 +199,22 @@ function translate(seq::RNASequence, code::GeneticCode=standard_genetic_code)
         d, r = divrem(i - 1, 3)
 
         if r != 2
-            if r == 0
-                codon = "N$(seq[i+1])$(seq[i+2])"
+            if allow_ambiguous_codons
+                aaseq[d + 1] = AA_X
             else
-                codon = "$(seq[i-1])N$(seq[i+1])"
+                if r == 0
+                    codon_str = "N$(seq[i+1])$(seq[i+2])"
+                else
+                    codon_str = "$(seq[i-1])N$(seq[i+1])"
+                end
+                error("Codon $(codon_str) cannot be unambiguously translated.")
             end
-            error("Codon $(codon) cannot be unambiguously translated.")
+        else
+            aa = translate_ambiguous_codon(code, seq[i-2], seq[i-1])
+            aaseq[d + 1] = aa
         end
-
-        aa = translate_ambiguous_codon(code, seq[i-2], seq[i-1])
-        aaseq[d + 1] = aa
     end
-    for (i, codon) in each(RNAKmer{3}, seq, 3)
+    @inbounds for (i, codon) in each(RNAKmer{3}, seq, 3)
         aa = code[codon]
         if aa == AA_INVALID
             error("Cannot translate stop codons.")
