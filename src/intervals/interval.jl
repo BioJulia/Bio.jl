@@ -180,3 +180,18 @@ function alphanum_isless(a::String, b::String)
     return j <= length(b)
 end
 
+
+@doc """
+A type deriving `IntervalStream{T}` must be iterable and produce
+Interval{T} objects in sorted order.
+""" ->
+abstract IntervalStream{T}
+
+
+typealias IntervalStreamOrArray{T} Union(Vector{Interval{T}}, IntervalStream{T})
+
+
+function metadatatype{T}(::IntervalStream{T})
+    return T
+end
+
