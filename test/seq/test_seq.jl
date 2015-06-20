@@ -5,6 +5,7 @@ using FactCheck
 using YAML
 using Bio
 using Bio.Seq
+import ..get_bio_fmt_specimens
 
 # Return a random DNA/RNA sequence of the given length
 function random_seq(n::Integer, nts, probs)
@@ -1178,14 +1179,6 @@ facts("Translation") do
     @fact_throws translate(dna"ACGTACGTA") # can't translate DNA
     @fact_throws translate(rna"ACGUACGU")  # can't translate non-multiples of three
     @fact_throws translate(rna"ACGUACGNU") # can't translate N
-end
-
-
-function get_bio_fmt_specimens()
-    path = Pkg.dir("Bio", "test", "BioFmtSpecimens")
-    if !isdir(path)
-        run(`git clone --depth 1 https://github.com/BioJulia/BioFmtSpecimens.git $(path)`)
-    end
 end
 
 

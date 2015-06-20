@@ -4,6 +4,8 @@ using FactCheck
 using Distributions
 using Bio
 using Bio.Intervals
+using YAML
+import ..get_bio_fmt_specimens
 
 
 # Generate an array of n random Interval{Int} object. With sequence names
@@ -15,7 +17,10 @@ function random_intervals(seqnames, maxpos::Int, n::Int)
 
     intervals = Array(Interval{Int}, n)
     for i in 1:n
-        intlen = ceil(Int, rand(length_dist))
+        intlen = maxpos
+        while intlen >= maxpos || intlen <= 0
+            intlen = ceil(Int, rand(length_dist))
+        end
         first = rand(1:maxpos-intlen)
         last = first + intlen - 1
         strand = rand(strand_dist) == 1 ? STRAND_POS : STRAND_NEG
@@ -192,20 +197,25 @@ facts("IntervalStream") do
         end
 
         # non-empty versus non-empty, stream intersection
-        it = Intervals.IntervalStreamIntersectIterator{Int, Int}(
+        it = Intervals.IntervalStreamIntersectIterator{Int, Int,
+                IntervalCollection{Int}, IntervalCollection{Int}}(
                 ic_a, ic_b, Intervals.alphanum_isless)
 
         @fact sort(collect(it)) ==
               sort(simple_intersection(intervals_a, intervals_b)) => true
 
         # Interesction edge cases: skipping over whole sequences
-        it = Intervals.IntervalStreamIntersectIterator{Nothing, Nothing}(
+        typealias SimpleIntersectIterator 
+            Intervals.IntervalStreamIntersectIterator{Nothing, Nothing,
+                Vector{Interval{Nothing}}, Vector{Interval{Nothing}}}
+
+        it = SimpleIntersectIterator(
             [Interval("a", 1, 100, STRAND_POS, nothing), Interval("c", 1, 100, STRAND_POS, nothing)],
             [Interval("a", 1, 100, STRAND_POS, nothing), Interval("b", 1, 100, STRAND_POS, nothing)],
             isless)
         @fact length(collect(it)) => 1
 
-        it = Intervals.IntervalStreamIntersectIterator{Nothing, Nothing}(
+        it = SimpleIntersectIterator(
             [Interval("c", 1, 100, STRAND_POS, nothing), Interval("d", 1, 100, STRAND_POS, nothing)],
             [Interval("b", 1, 100, STRAND_POS, nothing), Interval("d", 1, 100, STRAND_POS, nothing)],
             isless)
@@ -213,7 +223,7 @@ facts("IntervalStream") do
 
         # unsorted streams are not allowed
         @fact_throws begin
-            it = Intervals.IntervalStreamIntersectIterator{Nothing, Nothing}(
+            it = SimpleIntersectIterator(
                 [Interval("b", 1, 1000, STRAND_POS, nothing),
                  Interval("a", 1, 1000, STRAND_POS, nothing)],
                 [Interval("a", 1, 1000, STRAND_POS, nothing),
@@ -222,7 +232,7 @@ facts("IntervalStream") do
         end
 
         @fact_throws begin
-            it = Intervals.IntervalStreamIntersectIterator{Nothing, Nothing}(
+            it = SimpleIntersectIterator(
                 [Interval("a", 1, 1000, STRAND_POS, nothing),
                  Interval("a", 500, 1000, STRAND_POS, nothing),
                  Interval("a", 400, 2000, STRAND_POS, nothing)],
@@ -231,8 +241,113 @@ facts("IntervalStream") do
             collect(it)
         end
     end
+
+
+    context("IntervalStream Intersection") do
+        n = 1000
+        srand(1234)
+        intervals_a = random_intervals(["one", "two", "three"], 1000000, n)
+        intervals_b = random_intervals(["one", "two", "three"], 1000000, n)
+
+        ic_a = IntervalCollection{Int}()
+        ic_b = IntervalCollection{Int}()
+
+        for interval in intervals_a
+            push!(ic_a, interval)
+        end
+
+        for interval in intervals_b
+            push!(ic_b, interval)
+        end
+
+        ItType = Intervals.IntervalStreamIntersectIterator{Int, Int,
+            IntervalCollection{Int}, IntervalCollection{Int}}
+
+        @fact sort(collect(ItType(ic_a, ic_b, isless))) ==
+              sort(simple_intersection(intervals_a, intervals_b)) => true
+    end
 end
 
+
+facts("Interval Parsing") do
+    context("BED Parsing") do
+        get_bio_fmt_specimens()
+
+        function check_bed_parse(filename)
+            # Reading from a stream
+            for seqrec in read(open(filename), BED)
+            end
+
+            # Reading from a memory mapped file
+            for seqrec in read(filename, BED, memory_map=true)
+            end
+
+            # Reading from a regular file
+            for seqrec in read(filename, BED, memory_map=false)
+            end
+
+            return true
+        end
+
+        path = Pkg.dir("Bio", "test", "BioFmtSpecimens", "BED")
+        for specimen in YAML.load_file(joinpath(path, "index.yml"))
+            valid = get(specimen, "valid", true)
+            if valid
+                @fact check_bed_parse(joinpath(path, specimen["filename"])) => true
+            else
+                @fact_throws check_bed_parse(joinpath(path, specimen["filename"]))
+            end
+        end
+    end
+
+    context("BED Intersection") do
+        # Testing strategy: there are two entirely separate intersection
+        # algorithms for IntervalCollection and IntervalStream. Here we test
+        # them both by checking that they agree by generating and intersecting
+        # random BED files.
+
+        function check_intersection(filename_a, filename_b)
+            ic_a = IntervalCollection{BEDMetadata}()
+            for interval in read(filename_a, BED)
+                push!(ic_a, interval)
+            end
+
+            ic_b = IntervalCollection{BEDMetadata}()
+            for interval in read(filename_b, BED)
+                push!(ic_b, interval)
+            end
+
+            xs = sort(collect(intersect(read(filename_a, BED), read(filename_b, BED))))
+            ys = sort(collect(intersect(ic_a, ic_b)))
+
+            return xs == ys
+        end
+
+        n = 10000
+        srand(1234)
+        intervals_a = random_intervals(["one", "two", "three", "four", "five"], 1000000, n)
+        filename_a = Pkg.dir("Bio", "test", "intervals", "test_a.bed")
+        out = open(filename_a, "w")
+        for interval in sort(intervals_a)
+            println(out, interval.seqname, "\t", interval.first - 1, "\t",
+                    interval.last, "\t", interval.metadata, "\t", 1000, "\t", interval.strand)
+        end
+        close(out)
+
+        intervals_b = random_intervals(["one", "two", "three", "four", "five"], 1000000, n)
+        filename_b = Pkg.dir("Bio", "test", "intervals", "test_b.bed")
+        ic_b = IntervalCollection{Int}()
+        out = open(filename_b, "w")
+        for interval in sort(intervals_b)
+            println(out, interval.seqname, "\t", interval.first - 1, "\t",
+                    interval.last, "\t", interval.metadata, "\t", 1000, "\t", interval.strand)
+            push!(ic_b, interval)
+        end
+        close(out)
+
+        @fact check_intersection(filename_a, filename_b) => true
+    end
+end
 
 end # module TestIntervals
 
