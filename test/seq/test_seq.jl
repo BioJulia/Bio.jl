@@ -320,6 +320,18 @@ facts("Nucleotides") do
                     @fact convert(DNASequence, RNASequence("ACGUN")) => dna"ACGTN"
                 end
 
+                context("Construction from nucleotide vectors") do
+                    function check_vector_construction(::Type, seq::String)
+                        xs = T[convert(T, c) for c in seq]
+                        return NucleotideSequence{T}(xs) == NucleotideSequence{T}(seq)
+                    end
+
+                    for len in [0, 1, 10, 32, 1000, 10000, 100000]
+                        @fact all([check_vector_construction(DNANucleotide, random_dna(len)) for _ in 1:reps]) => true
+                        @fact all([check_vector_construction(RNANucleotide, random_rna(len)) for _ in 1:reps]) => true
+                    end
+                end
+
                 context("Concatenation") do
                     function check_concatenation(::Type{DNANucleotide}, n)
                         chunks = [random_dna(rand(100:300)) for i in 1:n]

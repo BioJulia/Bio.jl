@@ -319,6 +319,28 @@ end
 
 
 """
+Construct a NucleotideSequence from an array of nucleotides.
+"""
+function NucleotideSequence{T<:Nucleotide}(seq::AbstractVector{T})
+    len = seq_data_len(length(seq))
+    data = zeros(Uint64, len)
+    ns = BitArray(length(seq))
+    fill!(ns, false)
+
+    for (i, nt) in enumerate(seq)
+        if nt == DNA_N
+            ns[i] = true
+        else
+            d, r = divrem32(i - 1)
+            data[d + 1] |= convert(Uint64, nt) << (2*r)
+        end
+    end
+
+    return NucleotideSequence{T}(data, ns, 1:length(seq))
+end
+
+
+"""
 `repeat(chunk::NucleotideSequence, n)`
 
 Construct a nucleotide sequence by repeating another sequence `n` times
@@ -426,6 +448,7 @@ DNASequence(seq::String) = NucleotideSequence(DNANucleotide, seq)
 DNASequence(chunk1::DNASequence, chunks::DNASequence...) = NucleotideSequence(chunk1, chunks...)
 DNASequence(seq::Union(Vector{Uint8}, String)) = NucleotideSequence(DNANucleotide, seq)
 DNASequence(seq::Union(Vector{Uint8}, String), startpos::Int, endpos::Int, unsafe::Bool=false) = NucleotideSequence(DNANucleotide, seq, startpos, endpos, unsafe)
+DNASequence(seq::AbstractVector{DNANucleotide}) = NucleotideSequence(seq)
 
 
 # RNA Sequences
@@ -444,6 +467,7 @@ RNASequence(seq::String) = NucleotideSequence(RNANucleotide, seq)
 RNASequence(chunk1::RNASequence, chunks::RNASequence...) = NucleotideSequence(chunk1, chunks...)
 RNASequence(seq::Union(Vector{Uint8}, String)) = NucleotideSequence(RNANucleotide, seq)
 RNASequence(seq::Union(Vector{Uint8}, String), startpos::Int, endpos::Int, unsafe::Bool=false) = NucleotideSequence(RNANucleotide, seq, startpos, endpos, unsafe)
+RNASequence(seq::AbstractVector{RNANucleotide}) = NucleotideSequence(seq)
 
 
 # Conversion
