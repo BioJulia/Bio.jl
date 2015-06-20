@@ -1195,6 +1195,24 @@ function canonical{T, K}(x::Kmer{T, K})
 end
 
 
+@doc """
+Iterate through k-mers neighboring on a de Bruijn graph.
+""" ->
+function neighbors{T, K}(x::Kmer{T, K})
+    return KmerNeighborIterator{T, K}(x)
+end
+
+
+immutable KmerNeighborIterator{T, K}
+    x::Kmer{T, K}
+end
+
+
+start(it::KmerNeighborIterator) = @compat UInt64(0)
+done(it::KmerNeighborIterator, i) = i == 4
+length(::KmerNeighborIterator) = 4
+next{T, K}(it::KmerNeighborIterator{T, K}, i) =
+    convert(Kmer{T, K}, (convert(Uint64, it.x) >>> 2) | (i << (2 * K - 2))), i + 1
 
 
 # EachKmerIterator and EachKmerIteratorState
