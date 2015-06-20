@@ -179,6 +179,11 @@ function Base.read(input::IO, ::Type{FASTA}, alphabet::Alphabet=DNA_ALPHABET)
 end
 
 
+function Base.read(input::Cmd, ::Type{FASTA}, alphabet::Alphabet=DNA_ALPHABET)
+    return FASTAIterator(FASTAParser(open(input, "r")[1]), alphabet, false, nothing)
+end
+
+
 function advance!(it::FASTAIterator)
     it.isdone = !FASTAParserImpl.advance!(it.parser)
     if !it.isdone
