@@ -1438,6 +1438,11 @@ function read(input::IO, ::Type{BED})
 end
 
 
+function read(input::Cmd, ::Type{BED})
+    return BEDIterator(BEDParserImpl.BEDParser(open(input, "r")[1]), Nullable{BEDInterval}())
+end
+
+
 function start(it::BEDIterator)
     advance!(it)
     return nothing

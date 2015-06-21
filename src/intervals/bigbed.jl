@@ -227,6 +227,50 @@ function read!(io::IO, node::BigBedBTreeInternalNode)
 end
 
 
+# Supplemental Table 13
+immutable BigWigSectionHeader
+    chrom_id::Uint32
+    chrom_start::Uint32
+    chrom_end::Uint32
+    item_step::Uint32
+    item_span::Uint32
+    data_type::Uint8
+    reserved::Uint8
+    item_count::Uint16
+end
+
+
+const BIGWIG_DATATYPE_BEDGRAPH  = @compat UInt8(1)
+const BIGWIG_DATATYPE_VARSTEP   = @compat UInt8(2)
+const BIGWIG_DATATYPE_FIXEDSTEP = @compat UInt8(3)
+
+
+function write(io::IO, header::BigWigSectionHeader)
+    write(io, header.chrom_id)
+    write(io, header.chrom_start)
+    write(io, header.chrom_end)
+    write(io, header.item_step)
+    write(io, header.item_span)
+    write(io, header.data_type)
+    write(io, header.reserved)
+    write(io, header.item_count)
+end
+
+
+immutable BedGraphItem
+    chrom_start::Uint32
+    chrom_end::Uint32
+    val::Float32
+end
+
+
+function write(io::IO, item::BedGraphItem)
+    write(io, item.chrom_start)
+    write(io, item.chrom_end)
+    write(io, item.val)
+end
+
+
 # Supplemental Table 14
 immutable BigBedRTreeHeader
     magic::Uint32
@@ -341,171 +385,10 @@ end
 using Bio: BufferedReader
 
 immutable BigBed <: FileFormat end
+immutable BigWig <: FileFormat end
 
 
-type BigBedData
-    reader::BufferedReader
-    header::BigBedHeader
-    zoom_headers::Vector{BigBedZoomHeader}
-    autosql::String
-    summary::BigBedTotalSummary
-    btree_header::BigBedBTreeHeader
-    rtree_header::BigBedRTreeHeader
-    data_count::Uint32
-
-    # preallocated space for reading and searching the B-tree
-    btree_internal_nodes::Vector{BigBedBTreeInternalNode}
-    btree_leaf_nodes::Vector{BigBedBTreeLeafNode}
-    key::Vector{Uint8}
-    node_keys::Vector{Vector{Uint8}}
-    uncompressed_data::Vector{Uint8}
-end
-
-
-module BigBedDataParserImpl
-
-import Bio.Ragel, Zlib
-import Bio.Intervals: Strand, STRAND_NA, BEDInterval, BEDMetadata
-using Color, Compat, Switch
-
-# Parser for data blocks in a BigBed file. This is very similar
-# to the BED parser in bed.rl, with the following exceptions:
-#
-#    * BigBed has binary chrom_index, start, and end, insteado of ASCII
-#      chromosome name, start, end.
-#    * BigBed entries are null ('\0') terminated, rather than newline separated.
-#
-%%{
-    machine bigbed;
-
-    action yield {
-        yield = true
-        # // fbreak causes will cause the pushmark action for the next seqname
-        # // to be skipped, so we do it here
-        Ragel.@mark!
-        fbreak;
-    }
-
-    action mark { Ragel.@mark! }
-
-    action chrom_id {
-        m = Ragel.@unmark!
-        input.chrom_id = unsafe_load(convert(Ptr{Uint32}, pointer(state.reader.buffer, m)))
-    }
-
-    action first {
-        m = Ragel.@unmark!
-        input.first = unsafe_load(convert(Ptr{Uint32}, pointer(state.reader.buffer, m))) - 1
-    }
-
-    action last {
-        m = Ragel.@unmark!
-        input.last = unsafe_load(convert(Ptr{Uint32}, pointer(state.reader.buffer, m)))
-    }
-
-    action name        { input.name         = Nullable{String}(Ragel.@asciistring_from_mark!) }
-    action score       { input.score        = Ragel.@int64_from_mark! }
-    action strand      { input.strand       = convert(Strand, Ragel.@char) }
-    action thick_first { input.thick_first  = Ragel.@int64_from_mark! }
-    action thick_last  { input.thick_last   = Ragel.@int64_from_mark! }
-    action item_rgb_r  { input.red = input.green = input.blue = (Ragel.@int64_from_mark!) / 255.0 }
-    action item_rgb_g  { input.green        = (Ragel.@int64_from_mark!) / 255.0 }
-    action item_rgb_b  { input.blue         = (Ragel.@int64_from_mark!) / 255.0 }
-    action item_rgb    { input.item_rgb     = RGB{Float32}(input.red, input.green, input.blue ) }
-    action block_count { input.block_count  = Ragel.@int64_from_mark! }
-    action block_size {
-        if isnull(input.block_sizes)
-            input.block_sizes = Array(Int, 0)
-        end
-        push!(get(input.block_sizes), (Ragel.@int64_from_mark!))
-    }
-    action block_first {
-        if isnull(input.block_firsts)
-            input.block_firsts = Array(Int, 0)
-        end
-        push!(get(input.block_firsts), (Ragel.@int64_from_mark!))
-    }
-
-    hspace       = [ \t\v];
-
-    chrom_id     = any{4}   >mark     %chrom_id;
-    first        = any{4}   >mark     %first;
-    last         = any{4}   >mark     %last;
-    name         = [ -~]*   >mark     %name;
-    score        = digit+   >mark     %score;
-    strand       = [+\-\.?] >strand;
-    thick_first  = digit+   >mark     %thick_first;
-    thick_last   = digit+   >mark     %thick_last;
-
-    item_rgb_r   = digit+   >mark     %item_rgb_r;
-    item_rgb_g   = digit+   >mark     %item_rgb_g;
-    item_rgb_b   = digit+   >mark     %item_rgb_b;
-    item_rgb     = item_rgb_r (hspace* ',' hspace* item_rgb_g hspace* ',' hspace* item_rgb_b)? %item_rgb;
-
-    block_count  = digit+   >mark    %block_count;
-
-    block_size   = digit+   >mark    %block_size;
-    block_sizes  = block_size (',' block_size)* ','?;
-
-    block_first  = digit+   >mark    %block_first;
-    block_firsts = block_first (',' block_first)* ','?;
-
-    bed_entry = chrom_id first last (
-                    name ( '\t' score ( '\t' strand ( '\t' thick_first (
-                    '\t' thick_last ( '\t' item_rgb ( '\t' block_count (
-                    '\t' block_sizes ( '\t' block_firsts )? )? )? )? )? )? )? )?
-                    )? '\0';
-    main := (bed_entry %yield)*;
-}%%
-
-
-%%write data;
-
-type BigBedDataParser
-    state::Ragel.State
-
-    chrom_id::Uint32
-    first::Int64
-    last::Int64
-    strand::Strand
-
-    red::Float32
-    green::Float32
-    blue::Float32
-    name::Nullable{String}
-    score::Nullable{Int}
-    thick_first::Nullable{Int}
-    thick_last::Nullable{Int};
-    item_rgb::Nullable{RGB{Float32}};
-    block_count::Nullable{Int}
-    block_sizes::Nullable{Vector{Int}}
-    block_firsts::Nullable{Vector{Int}}
-
-    function BigBedDataParser(input::Vector{Uint8}, len::Integer)
-        %%write init;
-
-        return new(Ragel.State(cs, input, len),
-                   0, 0, 0, STRAND_NA, 0.0, 0.0, 0.0,
-                   Nullable{String}(), Nullable{Int}(), Nullable{Int}(),
-                   Nullable{Int}(), Nullable{RGB{Float32}}(), Nullable{Int}(),
-                   Nullable{Vector{Int}}(), Nullable{Vector{Int}}())
-    end
-end
-
-
-
-Ragel.@generate_read_fuction("bigbed", BigBedDataParser, BigBedDataEntry,
-    begin
-        @inbounds begin
-            %%write exec;
-        end
-    end,
-    begin
-    end)
-
-
-end # module BigBedDataParserImpl
-
+include("bigbeddata.jl")
 
 
 @doc """
@@ -1011,6 +894,7 @@ function bigbed_write_blocks(out::IO, intervals::IntervalCollection,
     for info in chrom_info
         tree = intervals.trees[info.name]
         it_state = start(tree)
+        fill!(res_ends, 0)
 
         while !done(tree, it_state)
             section_ix += 1
@@ -1070,6 +954,83 @@ function bigbed_write_blocks(out::IO, intervals::IntervalCollection,
     @assert section_ix == section_count "Incorrect number of sections when writing BigBed data"
 
     return max_block_size
+end
+
+
+function bigwig_write_blocks{T<:Number}(out::IO, intervals::IntervalCollection{T},
+                                        chrom_info::Vector{BigBedChromInfo},
+                                        items_per_slot, bounds::Vector{BigBedBounds},
+                                        section_count, compressed::Bool,
+                                        res_try_count, res_scales, res_sizes)
+    section_ix = 0
+    res_ends = zeros(Int, res_try_count)
+    items = Array(BedGraphItem, items_per_slot)
+    max_section_size = 0
+
+    # See writeSections in BedGraphToBigWig.c
+    for info in chrom_info
+        tree = intervals.trees[info.name]
+        it_state = start(tree)
+        fill!(res_ends, 0)
+
+        while !done(tree, it_state)
+            section_ix += 1
+            item_ix = 1
+
+            while item_ix <= items_per_slot && !done(tree, it_state)
+                interval, it_state = next(tree, it_state)
+                interval_start = interval.first - 1
+                interval_end = interval.last
+                items[item_ix] = BedGraphItem(
+                    interval_start, interval_end, interval.metadata)
+                item_ix += 1
+
+                for res_try in 1:res_try_count
+                    res_end = res_ends[res_try]
+                    if interval_start >= res_end
+                        res_sizes[res_try] += 1
+                        res_ends[res_try] = res_end = interval_start + res_scales[res_try]
+                    end
+                    while interval_end > res_end
+                        res_sizes[res_try] += 1
+                        res_ends[res_try] = res_end = res_end + res_scales[res_try]
+                    end
+                end
+            end
+
+            # write a section
+            chrom_id = info.id
+            section_start = items[1].chrom_start
+            section_end = items[end].chrom_end
+
+            section_offset = position(out)
+            header = BigWigSectionHeader(chrom_id, section_start, section_end,
+                                         0, 0, BIGWIG_DATATYPE_BEDGRAPH, 0, item_ix - 1)
+
+            if compressed
+                writer = Zlib.Writer(out, 6)
+                write(writer, header)
+                for i in 1:item_ix-1
+                    write(writer, items[i])
+                end
+                close(writer)
+            else
+                write(out, header)
+                for i in 1:item_ix-1
+                    write(out, items[i])
+                end
+            end
+            section_end_offset = position(out)
+            max_section_size = max(max_section_size, section_end_offset - section_offset)
+
+            bounds[section_ix] = BigBedBounds(section_offset, info.id,
+                                              section_start, section_end)
+        end
+    end
+
+    @assert section_ix == section_count "Incorrect number of sections when writing BigWig data"
+
+    return max_section_size
 end
 
 
@@ -1427,9 +1388,10 @@ end
 # in memory next reduction level.  This is more work than some ways, but it
 # keeps us from having to keep the first reduction entirely in memory.
 function bigbed_write_reduced_once_return_reduced_twice(
-                out::IO, intervals::IntervalCollection{BEDMetadata},
+                out::IO, intervals::IntervalCollection,
+                interval_tree_transform::Function,
                 chrom_info::Vector{BigBedChromInfo},
-                field_count, initial_reduction, initial_reduced_count,
+                initial_reduction, initial_reduced_count,
                 zoom_increment, block_size, items_per_slot, compressed)
 
     # See writeReducedOnceReturnReducedTwice in bedToBigBed.c
@@ -1450,8 +1412,8 @@ function bigbed_write_reduced_once_return_reduced_twice(
     #
 
     valid_count = @compat UInt64(0)
-    minval = 0.0
-    maxval = 0.0
+    min_val = 0.0
+    max_val = 0.0
     sum_data = 0.0
     sum_squares = 0.0
     first_time = true
@@ -1459,12 +1421,13 @@ function bigbed_write_reduced_once_return_reduced_twice(
     sum = Nullable{BigBedZoomData}()
 
     for info in chrom_info
-        #@show length(collect(coverage(intervals.trees[info.name])))
-        for range in coverage(intervals.trees[info.name])
+        sum = Nullable{BigBedZoomData}()
+        for range in interval_tree_transform(intervals.trees[info.name])
             val = convert(Float64, range.metadata)
             chrom_start = range.first - 1
             chrom_end = range.last
             size = chrom_end - chrom_start
+            @assert size >= 0 "Bad size: $chrom_start, $chrom_end"
             if first_time
                 valid_count = size
                 min_val = max_val = val
@@ -1502,8 +1465,9 @@ function bigbed_write_reduced_once_return_reduced_twice(
             s = get(sum)
             while chrom_end > s.chrom_end
                 # Fold in bits that ovelap with existing summary and output
-                overlap = max(chrom_end, s.chrom_end) - min(chrom_start, s.chrom_start)
+                overlap = min(chrom_end, s.chrom_end) - max(chrom_start, s.chrom_start)
                 @assert overlap > 0
+                @assert overlap <= size
 
                 s = BigBedZoomData(
                         s.chrom_id, s.chrom_start, s.chrom_end,
@@ -1519,9 +1483,10 @@ function bigbed_write_reduced_once_return_reduced_twice(
 
                 # Move summary to next part
                 chrom_start = s.chrom_end
-                chrom_end = min(info.size, chrom_start + initial_reduction)
+                #chrom_end = min(info.size, chrom_start + initial_reduction)
                 s = BigBedZoomData(
-                        s.chrom_id, chrom_start, chrom_end,
+                        s.chrom_id, chrom_start,
+                        min(info.size, chrom_start + initial_reduction),
                         0, val, val, 0.0, 0.0)
             end
 
@@ -1544,7 +1509,6 @@ function bigbed_write_reduced_once_return_reduced_twice(
 
     # Write out 1st zoom index
     index_offset = position(out)
-    @show (bounds_array_idx, length(bounds_array))
     @assert bounds_array_idx == length(bounds_array) + 1
     bigbed_write_index(out, bounds_array, block_size, items_per_slot,
                        index_offset)
@@ -1567,7 +1531,7 @@ end
 
 function bigbed_write_summary_and_index_unc(
         out::IO, summary_list::Vector{BigBedZoomData}, block_size,
-        items_per_slot, compressed)
+        items_per_slot)
     # See: bbiWriteSummaryAndIndexUnc in bbiWrite.c
     count = length(summary_list)
     write(out, convert(Uint32, count))
@@ -1586,26 +1550,27 @@ end
 
 function bigbed_write_summary_and_index_comp(
         out::IO, summary_list::Vector{BigBedZoomData}, block_size,
-        items_per_slot, compressed)
+        items_per_slot)
     # See: bbiWriteSummaryAndIndexComp in bbiWrite.c
     count = length(summary_list)
     write(out, convert(Uint32, count))
+    bounds_array = Array(BigBedBounds, count)
 
     items_left = count
-    sum_ix = 0
+    sum_ix = 1
     compression_buf = IOBuffer()
     i = 1
     while items_left > 0
         items_in_slot = min(items_per_slot, items_left)
-        writer = Zlib.Write(out, 6)
+        writer = Zlib.Writer(out, 6)
         file_pos = position(out)
         for _ in 1:items_in_slot
+            summary = summary_list[sum_ix]
             bounds_array[sum_ix] = BigBedBounds(file_pos, summary.chrom_id,
                                                 summary.chrom_start, summary.chrom_end)
+            write(writer, summary_list[sum_ix])
             sum_ix += 1
-            write(writer, summary_list[i])
-            i += 1
-            if i > count
+            if sum_ix > count
                 break
             end
         end
@@ -1631,11 +1596,11 @@ function bigbed_summary_simple_reduce(summary_list::Vector{BigBedZoomData}, redu
                 new_summary_list[end].chrom_id,
                 new_summary_list[end].chrom_start,
                 summary.chrom_end,
-                new_summary_list[end].valid_count += summary.valid_count,
+                new_summary_list[end].valid_count + summary.valid_count,
                 min(new_summary_list[end].min_val, summary.min_val),
                 max(new_summary_list[end].max_val, summary.max_val),
                 new_summary_list[end].sum_data + summary.sum_data,
-                new_summary_list[end].sum_squares + summary.sum_squared)
+                new_summary_list[end].sum_squares + summary.sum_squares)
        end
     end
     return new_summary_list
@@ -1693,17 +1658,35 @@ function bed_field_count(intervals::IntervalCollection{BEDMetadata})
 end
 
 
-function write(out::IO, ::Type{BigBed}, intervals::IntervalCollection;
+function write(out::IO, ::Type{BigBed}, intervals::IntervalCollection{BEDMetadata};
                block_size::Int=256, items_per_slot::Int=512,
                compressed::Bool=true)
+    write_bigbed_bigwig(out, BigBed, intervals, block_size, items_per_slot, compressed)
+end
+
+
+function write{T<:Number}(out::IO, ::Type{BigWig}, intervals::IntervalCollection{T};
+                         block_size::Int=256, items_per_slot::Int=512,
+                         compressed::Bool=true)
+    write_bigbed_bigwig(out, BigWig, intervals, block_size, items_per_slot, compressed)
+end
+
+
+# Unified write function for bigwig and bigbed
+function write_bigbed_bigwig(out::IO, fmt::Union(Type{BigBed}, Type{BigWig}),
+                             intervals::IntervalCollection,
+                             block_size::Int=256, items_per_slot::Int=512,
+                             compressed::Bool=true)
+
     # See the function bbFileCreate in bedToBigBed.c in kent to see the only
-    # other implementation of this I'm aware of.
+    # other implementation of this I'm aware of. Also bedGraphToBigWig in
+    # bedGraphToBigWig.c
 
     if !applicable(seek, out, 1)
         error("BigBed can only be written to seekable output streams.")
     end
 
-    field_count = bed_field_count(intervals)
+    field_count = fmt == BigBed ? bed_field_count(intervals) : 0
 
     # write dummy headers, come back and fill them later
     write_zeros(out, sizeof(BigBedHeader))
@@ -1748,9 +1731,16 @@ function write(out::IO, ::Type{BigBed}, intervals::IntervalCollection;
     write(out, convert(Uint64, length(intervals)))
     block_count = bigbed_count_sections_needed(chrom_info, items_per_slot)
     bounds = Array(BigBedBounds, block_count)
-    max_block_size = bigbed_write_blocks(out, intervals, chrom_info, items_per_slot,
-                                         bounds, block_count, compressed,
-                                         res_try_count, res_scales, res_sizes)
+
+    if fmt == BigBed
+        max_block_size = bigbed_write_blocks(out, intervals, chrom_info, items_per_slot,
+                                             bounds, block_count, compressed,
+                                             res_try_count, res_scales, res_sizes)
+    else
+        max_block_size = bigwig_write_blocks(out, intervals, chrom_info, items_per_slot,
+                                             bounds, block_count, compressed,
+                                             res_try_count, res_scales, res_sizes)
+    end
 
     # write out primary data index
     index_offset = position(out)
@@ -1762,10 +1752,6 @@ function write(out::IO, ::Type{BigBed}, intervals::IntervalCollection;
     zoom_data_offsets = Array(Uint64, BIGBED_MAX_ZOOM_LEVELS)
     zoom_index_offsets = Array(Uint64, BIGBED_MAX_ZOOM_LEVELS)
     zoom_levels = 0
-
-    @show ave_span
-    @show res_try_count
-    @show res_sizes
 
     if ave_span > 0
         data_size = index_offset - data_offset
@@ -1786,13 +1772,12 @@ function write(out::IO, ::Type{BigBed}, intervals::IntervalCollection;
             end
         end
 
-        @show initial_reduction
-        @show initial_reduced_count
-
         if initial_reduction > 0
             zoom_increment = 4
             rezoomed_list, total_summary = bigbed_write_reduced_once_return_reduced_twice(
-                    out, intervals, chrom_info, field_count, initial_reduction,
+                    out, intervals,
+                    fmt == BigBed ? coverage : identity,
+                    chrom_info, initial_reduction,
                     initial_reduced_count, zoom_increment, block_size,
                     items_per_slot, compressed)
 
@@ -1802,7 +1787,6 @@ function write(out::IO, ::Type{BigBed}, intervals::IntervalCollection;
             zoom_count = initial_reduced_count
             reduction = initial_reduction * zoom_increment
             while zoom_levels < BIGBED_MAX_ZOOM_LEVELS
-                @show (zoom_levels, zoom_count, reduction)
                 rezoom_count = length(rezoomed_list)
                 if rezoom_count >= zoom_count
                     break
@@ -1831,7 +1815,8 @@ function write(out::IO, ::Type{BigBed}, intervals::IntervalCollection;
     # go back and rewrite header
     seek(out, 0)
     write(out,
-        BigBedHeader(BIGBED_MAGIC, BIGBED_CURRENT_VERSION, zoom_levels,
+        BigBedHeader(fmt == BigBed ? BIGBED_MAGIC : BIGWIG_MAGIC,
+                     BIGBED_CURRENT_VERSION, zoom_levels,
                      chrom_tree_offset, data_offset, index_offset,
                      field_count, min(field_count, 12), as_offset,
                      total_summary_offset, uncompress_buf_size, 0))
@@ -1853,7 +1838,7 @@ function write(out::IO, ::Type{BigBed}, intervals::IntervalCollection;
 
     # write end signature
     seekend(out)
-    write(out, convert(Uint32, BIGBED_MAGIC))
+    write(out, convert(Uint32, fmt == BigBed ? BIGBED_MAGIC : BIGWIG_MAGIC))
 end
 
 
