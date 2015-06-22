@@ -76,11 +76,11 @@ the buffer was entirely refilled and nothing was kept this will be 0.
 """
 function fillbuffer!(reader::BufferedReader)
     if isnull(reader.input)
-        return 0
+        return (@compat Uint(0))
     end
 
     buflen = length(reader.buffer)
-    keeplen = 0
+    keeplen = (@compat Uint(0))
     if reader.mark > 0
         keeplen = reader.buffer_end - reader.mark + 1
         if keeplen == buflen
@@ -112,7 +112,7 @@ function readchunk!(source::IO, dest::Vector{Uint8}, dest_start::Integer,
         @inbounds dest[i] = read(source, Uint8)
         i += 1
     end
-    return i - dest_start
+    return @compat Uint(i - dest_start)
 end
 
 

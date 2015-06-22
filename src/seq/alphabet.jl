@@ -149,4 +149,5 @@ function infer_alphabet(data::Vector{Uint8}, start, stop, default)
             end
         end
     end
+    return default
 end

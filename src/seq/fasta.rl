@@ -80,9 +80,9 @@ export FASTAParser
 "A type encapsulating the current state of a FASTA parser"
 type FASTAParser
     state::Ragel.State
-    seqbuf::Ragel.Buffer
-    namebuf::String
-    descbuf::String
+    seqbuf::Ragel.Buffer{UInt8}
+    namebuf::ASCIIString
+    descbuf::ASCIIString
 
     function FASTAParser(input::Union(IO, String, Vector{Uint8});
                          memory_map::Bool=false)
