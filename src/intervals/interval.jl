@@ -82,7 +82,27 @@ function isless{T}(a::Interval{T}, b::Interval{T},
 end
 
 
-"Return true if interval `a` entirely precedes `b`"
+"""
+Check if two intervals are well ordered.
+
+Intervals are considered well ordered if a.seqname <= b.seqnamend and
+a.first <= b.first.
+"""
+function isordered{T}(a::Interval{T}, b::Interval{T},
+                      seqname_isless::Function=alphanum_isless)
+    if a.seqname != b.seqname
+        return seqname_isless(a.seqname, b.seqname)::Bool
+    elseif a.first != b.first
+        return a.first < b.first
+    else
+        return true
+    end
+end
+
+
+"""
+Return true if interval `a` entirely precedes `b`.
+"""
 function precedes{T}(a::Interval{T}, b::Interval{T},
                      seqname_isless::Function=alphanum_isless)
     return (a.last < b.first && a.seqname == b.seqname) ||
