@@ -39,7 +39,7 @@ typealias IntervalCollectionTree{T} IntervalTree{Int64, Interval{T}}
 type IntervalCollection{T} <: IntervalStream{T}
     # Sequence name mapped to IntervalTree, which in turn maps intervals to
     # a list of metadata.
-    trees::Dict{String, IntervalCollectionTree{T}}
+    trees::Dict{ASCIIString, IntervalCollectionTree{T}}
 
     # Keep track of the number of stored intervals
     length::Int
@@ -51,13 +51,44 @@ type IntervalCollection{T} <: IntervalStream{T}
     ordered_trees_outdated::Bool
 
     function IntervalCollection()
-        return new(Dict{String, IntervalCollectionTree{T}}(), 0,
+        return new(Dict{ASCIIString, IntervalCollectionTree{T}}(), 0,
                    IntervalCollectionTree{T}[], false)
     end
 
-    # TODO: bulk insertion
-    #function IntervalCollection(intervals::Vector{T})
-    #end
+    # bulk insertion
+    function IntervalCollection(intervals::AbstractVector{Interval{T}}, sort=false)
+        if sort
+            sort!(intervals)
+        else
+            if !issorted(intervals)
+                error("Intervals must be sorted, or `sort=true` set, to construct an IntervalCollection")
+            end
+        end
+
+        n = length(intervals)
+        trees = Dict{ASCIIString, IntervalCollectionTree{T}}()
+        i = 1
+        while i <= n
+            j = i
+            while j <= n && intervals[i].seqname == intervals[j].seqname
+                j += 1
+            end
+            trees[intervals[i].seqname] = IntervalCollectionTree{T}(sub(intervals, i:j-1))
+            i = j
+        end
+        return new(trees, n, IntervalCollectionTree{T}[], false)
+    end
+end
+
+
+function IntervalCollection{T}(intervals::AbstractVector{Interval{T}}, sort=false)
+    return IntervalCollection{T}(intervals, sort)
+end
+
+
+function IntervalCollection{T}(interval_stream::IntervalStream{T})
+    intervals = collect(Interval{T}, interval_stream)
+    return IntervalCollection{T}(intervals, true)
 end
 
 
