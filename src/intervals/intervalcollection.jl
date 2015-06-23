@@ -170,17 +170,17 @@ immutable IntersectIterator{S, T}
 end
 
 
-immutable IntersectIteratorState
+immutable IntersectIteratorState{U, V}
     i::Int # index into a_trees/b_trees.
-    intersect_iterator
-    intersect_iterator_state
+    intersect_iterator::U
+    intersect_iterator_state::V
 
     function IntersectIteratorState(i::Int)
         return new(i)
     end
 
-    function IntersectIteratorState(i::Int, intersect_iterator,
-                                    intersect_iterator_state)
+    function IntersectIteratorState(i::Int, intersect_iterator::U,
+                                    intersect_iterator_state::V)
         return new(i, intersect_iterator, intersect_iterator_state)
     end
 end
@@ -204,8 +204,10 @@ function start{S, T}(it::IntersectIterator{S, T})
         intersect_iterator = intersect(it.a_trees[i], it.b_trees[i])
         intersect_iterator_state = start(intersect_iterator)
         if !done(intersect_iterator, intersect_iterator_state)
-            return IntersectIteratorState(i, intersect_iterator,
-                                          intersect_iterator_state)
+            U = typeof(intersect_iterator)
+            V = typeof(intersect_iterator_state)
+            return IntersectIteratorState{U, V}(i, intersect_iterator,
+                                                intersect_iterator_state)
         end
         i += 1
     end
@@ -214,8 +216,8 @@ function start{S, T}(it::IntersectIterator{S, T})
 end
 
 
-function next{S, T}(it::IntersectIterator{S, T},
-                    state::IntersectIteratorState)
+function next{S, T, U, V}(it::IntersectIterator{S, T},
+                          state::IntersectIteratorState{U, V})
     intersect_iterator = state.intersect_iterator
     value, intersect_iterator_state = next(intersect_iterator,
                                            state.intersect_iterator_state)
@@ -232,8 +234,8 @@ function next{S, T}(it::IntersectIterator{S, T},
         end
     end
 
-    return value, IntersectIteratorState(i, intersect_iterator,
-                                         intersect_iterator_state)
+    return value, IntersectIteratorState{U, V}(i, intersect_iterator,
+                                               intersect_iterator_state)
 end
 
 
