@@ -25,6 +25,8 @@ considered it must meet the following guidelines.
   * Code must be consistent with the prevailing style in Bio.jl, which includes,
     but is not necessarily limited to the following style guide.
 
+  * Code contributed should be compatible with Julia v0.4.
+
 
 ## Style
 
