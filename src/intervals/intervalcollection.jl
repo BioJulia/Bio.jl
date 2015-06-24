@@ -274,3 +274,90 @@ function done{S, T}(it::IntersectIterator{S, T},
                     state::IntersectIteratorState)
     return state.i > length(it.a_trees)
 end
+
+
+"""
+Iterate over pairs of intersections in an IntervalCollection versus an
+IntervalStream.
+"""
+function intersect{S, TV}(a::IntervalCollection{S}, b::IntervalStream{TV})
+    return IntervalCollectionStreamIterator(TV, a, b)
+end
+
+
+immutable IntervalCollectionStreamIterator{S, T, TV}
+    a::IntervalCollection{S}
+    b::T
+end
+
+function IntervalCollectionStreamIterator{S, T}(TV::Type, a::IntervalCollection{S},
+                                                b::T)
+    return IntervalCollectionStreamIterator{S, T, TV}(a, b)
+end
+
+
+immutable IntervalCollectionStreamIteratorState{S, TS, TV}
+    intersection::IntervalTrees.Intersection{Int64, Interval{S}, 64}
+    b_state::TS
+    b_value::Interval{TV}
+
+    function IntervalCollectionStreamIteratorState(intersection, b_state, b_value)
+        return new(intersection, b_state, b_value)
+    end
+
+    function IntervalCollectionStreamIteratorState()
+        return new(IntervalTree.Intersection{Int64, Interval{S}, 64}())
+    end
+end
+
+
+# This mostly follows from SuccessiveTreeIntersectionIterator in IntervalTrees
+function start{S, T, TV}(it::IntervalCollectionStreamIterator{S, T, TV})
+    b_state = start(it.b)
+
+    # TODO: We need to figure out a way to know these types at compile time.
+    TS = typeof(b_state)
+
+    while !done(it.b, b_state)
+        b_value, b_state = next(it.b, b_state)
+        if haskey(it.a.trees, b_value.seqname)
+            tree = it.a.trees[b_value.seqname]
+            intersection = IntervalTrees.firstintersection(tree, b_value)
+            if intersection.index != 0
+                return IntervalCollectionStreamIteratorState{S, TS, TV}(
+                    intersection, b_state, b_value)
+            end
+        end
+    end
+
+    return IntervalCollectionStreamIteratorState{S, TS, TV}()
+end
+
+
+function next{S, T, TS, TV}(it::IntervalCollectionStreamIterator{S, T, TV},
+                            state::IntervalCollectionStreamIteratorState{S, TS, TV})
+    intersection = state.intersection
+    entry = intersection.node.entries[intersection.index]
+    return_value = (entry, state.b_value)
+    b_state = state.b_state
+    b_value = state.b_value
+    intersection = IntervalTrees.nextintersection(intersection.node, intersection.index, b_value)
+    while intersection.index == 0 && !done(it.b, b_state)
+        b_value, b_state = next(it.b, b_state)
+        if haskey(it.a.trees, b_value.seqname)
+            tree = it.a.trees[b_value.seqname]
+            intersection = IntervalTrees.firstintersection(tree, b_value)
+        end
+    end
+
+    return return_value, IntervalCollectionStreamIteratorState{S, TS, TV}(
+                            intersection, b_state, b_value)
+end
+
+
+function done{S, T, TS, TV}(it::IntervalCollectionStreamIterator{S, T, TV},
+                            state::IntervalCollectionStreamIteratorState{S, TS, TV})
+    return state.intersection.index == 0
+end
+
+
