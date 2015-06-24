@@ -57,6 +57,27 @@ function Base.show(io::IO, seqrec::FASTQSeqRecord)
     write(io, '\n')
 end
 
+function Base.write(io::IO, seqrec::FASTQSeqRecord; offset::Integer=33,
+                    qualheader::Bool=false)
+    write(io, "@", seqrec.name, " ", seqrec.metadata.description, "\n")
+
+    for c in seqrec.seq
+        show(io, c)
+    end
+    write(io, "\n")
+
+    if qualheader
+        write(io, "+", seqrec.name, " ", seqrec.metadata.description, "\n")
+    else
+        write(io, "+\n")
+    end
+
+    for q in seqrec.metadata.quality
+        write(io, char(q + offset))
+    end
+    write(io, "\n")
+end
+
 
 module FASTQParserImpl
 
