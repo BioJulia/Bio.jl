@@ -142,7 +142,8 @@ Decode a quality string in place into integer Phred scores.
 `output`
 """
 function decode_quality_string!(encoding::QualityEncoding, input::Vector{Uint8},
-                                output::Vector{Int8}, start, stop)
+                                output::Vector{Int8}, start=1,
+                                stop=min(length(output), length(input)))
     @inbounds begin
         encoding_num = trailing_zeros(convert(Uint16, encoding)) + 1
         first, last, startqual = qual_encoding_ranges[encoding_num]
@@ -168,7 +169,54 @@ Decode a quality string in place into integer Phred scores.
 A `Vector{Uint8}` of length `stop - start + 1` containing integer Phred scores.
 """
 function decode_quality_string(encoding::QualityEncoding, input::Vector{Uint8},
-                               start, stop)
+                               start=1, stop=length(input))
     output = Array(Int8, stop - start + 1)
     return decode_quality_string!(encoding, input, output, start, stop)
+end
+
+"""
+Encode a Phred quality score vector in place into a quality string.
+
+# Arguments:
+  * `encoding::QualityEncoding`: how the quality scores are encoded.
+  * `input::Vector{Uint8}`: character data to decode
+  * `output:::Vector{Uint8}`: Phred score output vector, assumed to be
+    of length `stop - start + 1`.
+  * `start`: First position in `input` to decode.
+  * `stop`: Last position with in `input` to decode.
+
+# Returns
+`output`
+"""
+function encode_quality_string!(encoding::QualityEncoding, input::Vector{Int8},
+                                output::Vector{Uint8}, start=1,
+                                stop=min(length(output), length(input)))
+    @inbounds begin
+        encoding_num = trailing_zeros(convert(Uint16, encoding)) + 1
+        first, last, startqual = qual_encoding_ranges[encoding_num]
+        for (i, j) in enumerate(start:stop)
+            c = input[j]
+            output[i] =  (c + first) - startqual
+        end
+        return output
+    end
+end
+
+"""
+Encode a vector of integer Phred scores into a quality string
+
+# Arguments:
+  * `encoding::QualityEncoding`: how the quality scores are encoded.
+  * `input::Vector{Uint8}`: character data to decode
+  * `start`: First position in `input` to decode.
+  * `stop`: Last position with in `input` to decode.
+
+# Returns
+A `Vector{Uint8}` of length `stop - start + 1` containing ASCII-encoded phred
+scores
+"""
+function encode_quality_string(encoding::QualityEncoding, input::Vector{Int8},
+                               start=1, stop=length(input))
+    output = Array(Uint8, stop - start + 1)
+    return encode_quality_string!(encoding, input, output, start, stop)
 end
