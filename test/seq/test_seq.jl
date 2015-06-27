@@ -1320,4 +1320,95 @@ facts("Sequence Parsing") do
     end
 end
 
+facts("Quality scores") do
+    using Bio.Seq: encode_quality_string!,
+                   encode_quality_string,
+                   decode_quality_string!,
+                   decode_quality_string,
+                   ILLUMINA13_QUAL_ENCODING,
+                   ILLUMINA15_QUAL_ENCODING,
+                   ILLUMINA18_QUAL_ENCODING,
+                   SANGER_QUAL_ENCODING,
+                   SOLEXA_QUAL_ENCODING
+
+    context("Decoding PHRED scores") do
+
+        function test_decode(encoding, values, expected)
+            result = Array(Int8, length(expected))
+            decode_quality_string!(encoding, values, result, 1,
+                                   length(result))
+            @fact result => expected
+
+            # Without start and end does the entire string
+            decode_quality_string!(encoding, values, result)
+            @fact result => expected
+
+            # Non in-place version of the above
+            result = decode_quality_string(encoding, values, 1, length(result))
+            @fact result => expected
+            resutlt = decode_quality_string(encoding, values)
+            @fact result => expected
+        end
+
+        test_decode(SANGER_QUAL_ENCODING,
+                    Uint8['!', '#', '$', '%', '&', 'I', '~'],
+                    Int8[0, 2, 3, 4, 5, 40, 93])
+
+        test_decode(SOLEXA_QUAL_ENCODING,
+                    Uint8[';', 'B', 'C', 'D', 'E', 'h', '~'],
+                    Int8[-5, 2, 3, 4, 5, 40, 62])
+
+        test_decode(ILLUMINA13_QUAL_ENCODING,
+                    Uint8['@', 'B', 'C', 'D', 'E', 'h', '~'],
+                    Int8[0, 2, 3, 4, 5, 40, 62])
+
+        test_decode(ILLUMINA15_QUAL_ENCODING,
+                    Uint8['C', 'D', 'E', 'h', '~'],
+                    Int8[3, 4, 5, 40, 62])
+
+        test_decode(ILLUMINA18_QUAL_ENCODING,
+                    Uint8['!', '#', '$', '%', '&', 'I', '~'],
+                    Int8[0, 2, 3, 4, 5, 40, 93])
+    end
+
+    context("Encoding PHRED scores") do
+
+        function test_encode(encoding, values, expected)
+            # With start & end
+            result = Array(Uint8, length(expected))
+            encode_quality_string!(encoding, values, result, 1,
+                                   length(result))
+            @fact result => expected
+            # Without start & end means the entire length
+            encode_quality_string!(encoding, values, result)
+            @fact result => expected
+
+            result = encode_quality_string(encoding, values, 1, length(result))
+            @fact result => expected
+            result = encode_quality_string(encoding, values)
+            @fact result => expected
+        end
+
+        test_encode(SANGER_QUAL_ENCODING,
+                    Int8[0, 2, 3, 4, 5, 40, 93],
+                    Uint8['!', '#', '$', '%', '&', 'I', '~'])
+
+        test_encode(SOLEXA_QUAL_ENCODING,
+                    Int8[-5, 2, 3, 4, 5, 40, 62],
+                    Uint8[';', 'B', 'C', 'D', 'E', 'h', '~'])
+
+        test_encode(ILLUMINA13_QUAL_ENCODING,
+                    Int8[0, 2, 3, 4, 5, 40, 62],
+                    Uint8['@', 'B', 'C', 'D', 'E', 'h', '~'])
+
+        test_encode(ILLUMINA15_QUAL_ENCODING,
+                    Int8[3, 4, 5, 40, 62],
+                    Uint8['C', 'D', 'E', 'h', '~'])
+
+        test_encode(ILLUMINA18_QUAL_ENCODING,
+                    Int8[0, 2, 3, 4, 5, 40, 93],
+                    Uint8['!', '#', '$', '%', '&', 'I', '~'])
+    end
+end
+
 end # TestSeq
