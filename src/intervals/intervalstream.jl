@@ -33,10 +33,10 @@ immutable IntervalStreamIntersectIteratorState{U, V}
 end
 
 
-@doc """
+"""
 Intersect two `IntervalStreams` returning an iterator over all pairs of
 intersecting intervals.
-""" ->
+"""
 function intersect{SS <: IntervalStreamOrArray, TS <: IntervalStreamOrArray}(
         a::SS, b::TS, seqname_isless::Function=isless)
     S = metadatatype(a)
@@ -214,7 +214,7 @@ function coverage_process_lasts_heap!(cov::IntervalCollection{Uint32},
     @assert current_coverage == 0
 end
 
-@doc """
+"""
 Compute the coverage of a collection of intervals.
 
 # Args
@@ -234,7 +234,7 @@ coverage like:
 ```
     [1][-2-][-1-][--2--][--1--]
 ```
-""" ->
+"""
 function coverage(stream::IntervalStreamOrArray,
                   seqname_isless::Function=isless)
     cov = IntervalCollection{Uint32}()
@@ -324,5 +324,3 @@ end
 function coverage(ic::IntervalCollection)
     return coverage(ic, alphanum_isless)
 end
-
-

@@ -5,12 +5,12 @@
 immutable FASTQ <: FileFormat end
 
 
-@doc """
+"""
 Metadata for FASTQ sequence records containing a `description` field,
 and a `quality` string corresponding to the sequence.
 
 Quality scores are stored as integer Phred scores.
-""" ->
+"""
 type FASTQMetadata
     description::String
     quality::Vector{Int8}
@@ -25,9 +25,7 @@ type FASTQMetadata
 end
 
 
-@doc """
-A `SeqRecord` for FASTQ sequences.
-""" ->
+"A `SeqRecord` for FASTQ sequences"
 typealias FASTQSeqRecord DNASeqRecord{FASTQMetadata}
 
 
@@ -65,8 +63,7 @@ module FASTQParserImpl
 
 import Bio.Seq: FASTQSeqRecord, QualityEncoding, EMPTY_QUAL_ENCODING
 import Bio.Ragel
-using Docile, Switch
-using Docile: @doc, @doc_str
+using Switch
 export FASTQParser
 
 
@@ -134,9 +131,7 @@ export FASTQParser
 %% write data;
 
 
-@doc """
-A type encapsulating the current state of a FASTQ parser.
-""" ->
+"A type encapsulating the current state of a FASTQ parser"
 type FASTQParser
     state::Ragel.State
     seqbuf::Ragel.Buffer{Uint8}
@@ -210,9 +205,7 @@ end # module FASTQParserImpl
 
 using Bio.Seq.FASTQParserImpl
 
-@doc """
-An iterator over entries in a FASTQ file or stream.
-""" ->
+"An iterator over entries in a FASTQ file or stream"
 type FASTQIterator
     parser::FASTQParser
 
@@ -222,7 +215,7 @@ type FASTQIterator
     nextitem
 end
 
-@doc """
+"""
 Parse a FASTQ file.
 
 # Arguments
@@ -234,7 +227,7 @@ Parse a FASTQ file.
 
 # Returns
 An iterator over `SeqRecord`s contained in the file.
-""" ->
+"""
 function Base.read(filename::String, ::Type{FASTQ},
                    qual_encoding::QualityEncoding=EMPTY_QUAL_ENCODING;
                    memory_map=false)
@@ -242,7 +235,7 @@ function Base.read(filename::String, ::Type{FASTQ},
                          qual_encoding, false, nothing)
 end
 
-@doc """
+"""
 Parse a FASTQ file.
 
 # Arguments
@@ -252,7 +245,7 @@ Parse a FASTQ file.
 
 # Returns
 An iterator over `SeqRecord`s contained in the file.
-""" ->
+"""
 function Base.read(input::IO, ::Type{FASTQ},
                    qual_encoding::QualityEncoding=EMPTY_QUAL_ENCODING)
     return FASTQIterator(FASTQParser(input), qual_encoding, false, nothing)
@@ -306,5 +299,3 @@ end
 function done(it::FASTQIterator, state)
     return it.isdone
 end
-
-

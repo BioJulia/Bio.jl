@@ -7,8 +7,7 @@ considered it must meet the following guidelines.
   * By making a pull request, you're agreeing to license your code under an MIT
     license. See LICENSE.md.
 
-  * Types and functions must be documented using
-    [Docile](https://github.com/MichaelHatherly/Docile.jl) style docstrings.
+  * Types and functions must be documented using Julia's [docstrings](http://docs.julialang.org/en/latest/manual/documentation/).
     Documentation regarding specific implementation details that aren't relevent
     to users should be in the form of comments.
 
@@ -67,8 +66,13 @@ considered it must meet the following guidelines.
     import Base: start, next, done
     ```
 
+  * Document functions using bare docstrings before a definition:
+
+  ```julia
+  "This function foo's something"
+  foo(x) = 2*x
+  ```
+
 ## Conduct
 
 We adhere to the Julia [community standards](http://julialang.org/community/standards/).
-
-

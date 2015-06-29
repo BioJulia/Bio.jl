@@ -2,9 +2,7 @@
 
 immutable BED <: FileFormat end
 
-@doc """
-Metadata for BED interval records.
-""" ->
+"Metadata for BED interval records"
 immutable BEDMetadata
     name::Nullable{ASCIIString}
     score::Nullable{Int}
@@ -41,9 +39,7 @@ function (==)(a::BEDMetadata, b::BEDMetadata)
 end
 
 
-@doc """
-An `Interval` with associated metadata from a BED file.
-""" ->
+"An `Interval` with associated metadata from a BED file"
 typealias BEDInterval Interval{BEDMetadata}
 
 
@@ -51,7 +47,7 @@ module BEDParserImpl
 
 import Bio.Intervals: Strand, STRAND_NA, BEDInterval, BEDMetadata
 import Bio.Ragel
-using Docile, Switch, Compat, Color
+using Switch, Compat, Color
 export BEDParser, takevalue!
 
 
@@ -220,16 +216,14 @@ end # module BEDParserImpl
 # This inexplicably doesn't work, which is why I qualify BEDParser below.
 #using BEDParserImpl
 
-@doc """
-An iterator over entries in a BED file or stream.
-""" ->
+"An iterator over entries in a BED file or stream"
 type BEDIterator <: IntervalStream{BEDMetadata}
     parser::BEDParserImpl.BEDParser
     nextitem::Nullable{BEDInterval}
 end
 
 
-@doc """
+"""
 Parse a BED file.
 
 # Arguments
@@ -239,7 +233,7 @@ Parse a BED file.
 
 # Returns
 An iterator over `BEDInterval`s contained in the file.
-""" ->
+"""
 function read(filename::String, ::Type{BED}; memory_map::Bool=false)
     it = BEDIterator(BEDParserImpl.BEDParser(filename, memory_map),
                        Nullable{BEDInterval}())
@@ -247,7 +241,7 @@ function read(filename::String, ::Type{BED}; memory_map::Bool=false)
 end
 
 
-@doc """
+"""
 Parse a BED file.
 
 # Arguments
@@ -255,7 +249,7 @@ Parse a BED file.
 
 # Returns
 An iterator over `BEDInterval`s contained in the file.
-""" ->
+"""
 function read(input::IO, ::Type{BED})
     return BEDIterator(BEDParserImpl.BEDParser(input), Nullable{BEDInterval}())
 end
@@ -287,4 +281,3 @@ end
 function done(it::BEDIterator, state::Nothing)
     return isnull(it.nextitem)
 end
-

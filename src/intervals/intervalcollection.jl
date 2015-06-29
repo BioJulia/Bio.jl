@@ -186,9 +186,7 @@ immutable IntersectIteratorState
 end
 
 
-@doc """
-Iterate over pairs of intersecting intervals in two IntervalCollections.
-""" ->
+"Iterate over pairs of intersecting intervals in two IntervalCollections"
 function intersect{S, T}(a::IntervalCollection{S}, b::IntervalCollection{T})
     seqnames = collect(String, keys(a.trees) ∩ keys(b.trees))
     sort!(seqnames, lt=alphanum_isless)
@@ -243,4 +241,3 @@ function done{S, T}(it::IntersectIterator{S, T},
                     state::IntersectIteratorState)
     return state.i > length(it.a_trees)
 end
-

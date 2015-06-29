@@ -1,13 +1,12 @@
-
-
 # Assign flags for sequence types so we can maintain a set of compatible
 # alphabets in an integer.
 
-# TODO: documenting a bitstype doesn't work on 0.3
-#@doc """
-#An `Alphabet` value holds a set of alphabets compatible with a sequence.
-#Usually this is just one.
-#""" ->
+"""
+Type representing an alphabet
+
+An `Alphabet` value holds a set of alphabets compatible with a sequence.
+Usually this is just one.
+"""
 bitstype 16 Alphabet
 
 function Base.convert(::Type{Alphabet}, nt::Uint16)
@@ -30,19 +29,19 @@ function Base.&(a::Alphabet, b::Alphabet)
 end
 
 
-@doc "`Alphabet` value indicating no compatible alphabets." ->
+"`Alphabet` value indicating no compatible alphabets."
 const EMPTY_ALPHABET = convert(Alphabet, @compat UInt16(0))
 
-@doc "DNA alphabet" ->
+"DNA alphabet"
 const DNA_ALPHABET   = convert(Alphabet, @compat UInt16(0b0001))
 
-@doc "RNA alphabet" ->
+"RNA alphabet"
 const RNA_ALPHABET   = convert(Alphabet, @compat UInt16(0b0010))
 
-@doc "amino acid alphabet" ->
+"amino acid alphabet"
 const AA_ALPHABET    = convert(Alphabet, @compat UInt16(0b0100))
 
-@doc "`Alphabet` value indicating that all known alphabets are compatible" ->
+"`Alphabet` value indicating that all known alphabets are compatible"
 const ALL_ALPHABETS =
     DNA_ALPHABET | RNA_ALPHABET | AA_ALPHABET
 
@@ -105,19 +104,19 @@ const compatible_alphabets = [
 ]
 
 
-@doc """
+"""
 Infer the sequence type by inspecting a string.
 
-# Arguments
+### Arguments
    * `data`: sequence data in a string
    * `start`: first position to consider in data
    * `stop`: last position to consider in data
    * `default`: if there are multiple compatible alphabets, default
              to this one if it's compatible.
 
-# Returns
+### Returns
 A type T to which the string data can be converted.
-""" ->
+"""
 function infer_alphabet(data::Vector{Uint8}, start, stop, default)
     alphabets = ALL_ALPHABETS
     if start > stop
@@ -149,5 +148,3 @@ function infer_alphabet(data::Vector{Uint8}, start, stop, default)
         end
     end
 end
-
-
