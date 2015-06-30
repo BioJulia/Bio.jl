@@ -1,4 +1,3 @@
-
 module Ragel
 
 using Compat
@@ -433,6 +432,4 @@ macro generate_read_fuction(machine_name, input_type, output_type, ragel_body, a
     end
 end
 
-
 end # module Ragel
-
