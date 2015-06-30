@@ -2,8 +2,8 @@ module Bio
 
 abstract FileFormat
 
-include("ragel.jl")
-include("seq/seq.jl")
-include("intervals/intervals.jl")
+include("Ragel.jl")
+include("seq/Seq.jl")
+include("intervals/Intervals.jl")
 
-end # module
+end # module Bio

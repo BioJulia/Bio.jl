@@ -57,6 +57,8 @@ considered it must meet the following guidelines.
 
     end
     ```
+  * Files that declare modules should have the same name of the module, and
+    start with uppercase (e.g `MyModule.jl`).
 
   * Separate logical blocks of code with one blank line, or two blank lines for
     function/type definitions.
@@ -70,5 +72,3 @@ considered it must meet the following guidelines.
 ## Conduct
 
 We adhere to the Julia [community standards](http://julialang.org/community/standards/).
-
-
