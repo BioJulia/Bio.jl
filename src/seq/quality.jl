@@ -63,8 +63,8 @@ const qual_encoding_ranges = [
     ((@compat UInt8('!')), (@compat UInt8('~')), (@compat Int8(0))),  # SANGER
     ((@compat UInt8(';')), (@compat UInt8('~')), (@compat Int8(-5))), # SOLEXA
     ((@compat UInt8('@')), (@compat UInt8('~')), (@compat Int8(0))),  # ILLUMINA13
-    ((@compat UInt8('B')), (@compat UInt8('~')), (@compat Int8(3))),  # ILLUMINA13
-    ((@compat UInt8('!')), (@compat UInt8('~')), (@compat Int8(0)))   # ILLUMINA15
+    ((@compat UInt8('C')), (@compat UInt8('~')), (@compat Int8(3))),  # ILLUMINA15
+    ((@compat UInt8('!')), (@compat UInt8('~')), (@compat Int8(0)))   # ILLUMINA18
 ]
 
 
