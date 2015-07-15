@@ -1,11 +1,11 @@
+# Steam Buffer
 
-
-@doc """
+"""
 A buffer in which pushing to the back, popping from the front (shift),
 and indexing is efficient.
 
 It's constructed as a circular buffer that resizes when it runs out of space.
-""" ->
+"""
 type StreamBuffer{T}
     data::Vector{T}
     first_idx::Int
@@ -88,5 +88,3 @@ function getindex{T}(buf::StreamBuffer{T}, idx::Int)
     @inbounds x = buf.data[idx]
     return x
 end
-
-

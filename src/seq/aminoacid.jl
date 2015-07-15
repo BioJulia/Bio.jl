@@ -1,7 +1,7 @@
 # Aminoacids
 # ==========
 
-
+"Type representing AminoAcids"
 bitstype 8 AminoAcid
 
 
@@ -18,70 +18,70 @@ convert{T <: Unsigned}(::Type{AminoAcid}, aa::T) = convert(AminoAcid, convert(Ui
 # ------------------------------
 
 
-@doc doc"Alanine" ->
+"Alanine"
 const AA_A = convert(AminoAcid, 0x00)
 
-@doc doc"Arginine" ->
+"Arginine"
 const AA_R = convert(AminoAcid, 0x01)
 
-@doc doc"Asparagine" ->
+"Asparagine"
 const AA_N = convert(AminoAcid, 0x02)
 
-@doc doc"Aspartic Acid" ->
+"Aspartic Acid"
 const AA_D = convert(AminoAcid, 0x03)
 
-@doc doc"Cysteine" ->
+"Cysteine"
 const AA_C = convert(AminoAcid, 0x04)
 
-@doc doc"Glutamine" ->
+"Glutamine"
 const AA_Q = convert(AminoAcid, 0x05)
 
-@doc doc"Glutamic Acid" ->
+"Glutamic Acid"
 const AA_E = convert(AminoAcid, 0x06)
 
-@doc doc"Glycine" ->
+"Glycine"
 const AA_G = convert(AminoAcid, 0x07)
 
-@doc doc"Histidine" ->
+"Histidine"
 const AA_H = convert(AminoAcid, 0x08)
 
-@doc doc"Isoleucine" ->
+"Isoleucine"
 const AA_I = convert(AminoAcid, 0x09)
 
-@doc doc"Leucine" ->
+"Leucine"
 const AA_L = convert(AminoAcid, 0x0a)
 
-@doc doc"Lysine" ->
+"Lysine"
 const AA_K = convert(AminoAcid, 0x0b)
 
-@doc doc"Methionine" ->
+"Methionine"
 const AA_M = convert(AminoAcid, 0x0c)
 
-@doc doc"Phenylalanine" ->
+"Phenylalanine"
 const AA_F = convert(AminoAcid, 0x0d)
 
-@doc doc"Proline" ->
+"Proline"
 const AA_P = convert(AminoAcid, 0x0e)
 
-@doc doc"Serine" ->
+"Serine"
 const AA_S = convert(AminoAcid, 0x0f)
 
-@doc doc"Threonine" ->
+"Threonine"
 const AA_T = convert(AminoAcid, 0x10)
 
-@doc doc"Tryptophan" ->
+"Tryptophan"
 const AA_W = convert(AminoAcid, 0x11)
 
-@doc doc"Tyrosine" ->
+"Tyrosine"
 const AA_Y = convert(AminoAcid, 0x12)
 
-@doc doc"Valine" ->
+"Valine"
 const AA_V = convert(AminoAcid, 0x13)
 
-@doc doc"Unspecified or Unknown Amino Acid" ->
+"Unspecified or Unknown Amino Acid"
 const AA_X = convert(AminoAcid, 0x14)
 
-@doc doc"Invalid Amino Acid" ->
+"Invalid Amino Acid"
 const AA_INVALID = convert(AminoAcid, 0x15) # Used during conversion from strings
 
 
@@ -141,7 +141,7 @@ function parse(::Type{AminoAcid}, s::String)
         return threeletter_to_aa[uppercase(s′)]
     catch ex
         if isa(ex, KeyError)
-            error("invalid amino acid string: \"$s\"")
+            error("invalid amino acid string: \"$s\" ")
         end
         rethrow()
     end
@@ -161,6 +161,7 @@ end
 #
 # Like NucleotideSequence, amino acid sequences are immutable by convention.
 
+"Type representing AminoAcid Sequences"
 type AminoAcidSequence
     data::Vector{AminoAcid}
     part::UnitRange{Int} # interval within `data` defining the (sub)sequence
@@ -170,7 +171,7 @@ end
 # Constructors
 # ------------
 
-# Construct a subsequence of another amino acid sequence
+"Construct a subsequence of another amino acid sequence"
 function AminoAcidSequence(other::AminoAcidSequence, part::UnitRange)
     start = other.part.start + part.start - 1
     stop = start + length(part) - 1
@@ -181,7 +182,7 @@ function AminoAcidSequence(other::AminoAcidSequence, part::UnitRange)
 end
 
 
-# Construct of a subsequence from another amino acid sequence
+"Construct of a subsequence from another amino acid sequence"
 function AminoAcidSequence(seq::Union(Vector{Uint8}, String),
                            startpos::Int, endpos::Int, unsafe::Bool=false)
     len = endpos - startpos + 1
@@ -193,9 +194,7 @@ function AminoAcidSequence(seq::Union(Vector{Uint8}, String),
     return AminoAcidSequence(data, 1:len)
 end
 
-@doc """
-Construct an amino acid sequence by concatenating other sequences.
-""" ->
+"Construct an amino acid sequence by concatenating other sequences"
 function AminoAcidSequence(chunks::AminoAcidSequence...)
     seqlen = 0
     for chunk in chunks
@@ -216,9 +215,7 @@ end
 (*)(chunk1::AminoAcidSequence, chunks::AminoAcidSequence...) = AminoAcidSequence(chunk1, chunks...)
 
 
-@doc """
-Construct an amino acid sequence by repeating another sequence.
-""" ->
+"Construct an amino acid sequence by repeating another sequence"
 function repeat(chunk::AminoAcidSequence, n::Integer)
     seqlen = n * length(chunk)
 

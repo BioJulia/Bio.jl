@@ -2,6 +2,7 @@
 # ============
 
 # A genetic code is a table mapping RNA 3-mers (i.e. RNAKmer{3}) to AminoAcids.
+"Type representing a Genetic Code"
 immutable GeneticCode <: Associative{RNAKmer{3}, AminoAcid}
     tbl::Vector{AminoAcid}
 end
@@ -183,7 +184,7 @@ function translate_ambiguous_codon(code::GeneticCode, u::RNANucleotide,
 end
 
 
-# Convert an RNASequence to an AminoAcidSequence
+"Convert an RNASequence to an AminoAcidSequence"
 function translate(seq::RNASequence, code::GeneticCode=standard_genetic_code)
     aaseqlen, r = divrem(length(seq), 3)
     if r != 0

@@ -46,9 +46,7 @@ end
 
 
 # Note, just to be clear: this shadows IntervalTrees.Interval
-@doc """
-A genomic interval specifies interval with some associated metadata.
-""" ->
+"A genomic interval specifies interval with some associated metadata"
 immutable Interval{T} <: AbstractInterval{Int64}
     seqname::ASCIIString
     first::Int64
@@ -84,9 +82,7 @@ function isless{T}(a::Interval{T}, b::Interval{T},
 end
 
 
-@doc """
-Return true if interval `a` entirely precedes `b`.
-""" ->
+"Return true if interval `a` entirely precedes `b`"
 function precedes{T}(a::Interval{T}, b::Interval{T},
                      seqname_isless::Function=alphanum_isless)
     return (a.last < b.first && a.seqname == b.seqname) ||
@@ -103,9 +99,7 @@ function =={T}(a::Interval{T}, b::Interval{T})
 end
 
 
-@doc """
-Return true if interval `a` overlaps interval `b`, with no consideration to strand.
-""" ->
+"Return true if interval `a` overlaps interval `b`, with no consideration to strand"
 function isoverlapping{S, T}(a::Interval{S}, b::Interval{T})
     return a.first <= b.last && b.first <= a.last && a.seqname == b.seqname
 end
@@ -117,7 +111,7 @@ end
 
 
 
-@doc """
+"""
 A comparison function used to sort on numbers within text.
 
 This is useful since sequences are often named things like "chr12" or
@@ -125,7 +119,7 @@ This is useful since sequences are often named things like "chr12" or
 ordering.
 
 This is similar to the '--version-sort' option in GNU coreutils sort.
-""" ->
+"""
 function alphanum_isless(a::String, b::String)
     i = 1
     j = 1
@@ -181,10 +175,10 @@ function alphanum_isless(a::String, b::String)
 end
 
 
-@doc """
+"""
 A type deriving `IntervalStream{T}` must be iterable and produce
 Interval{T} objects in sorted order.
-""" ->
+"""
 abstract IntervalStream{T}
 
 
@@ -194,4 +188,3 @@ typealias IntervalStreamOrArray{T} Union(Vector{Interval{T}}, IntervalStream{T})
 function metadatatype{T}(::IntervalStream{T})
     return T
 end
-

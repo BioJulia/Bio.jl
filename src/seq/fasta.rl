@@ -5,9 +5,7 @@
 immutable FASTA <: FileFormat end
 
 
-@doc """
-Metadata for FASTA sequence records containing just a `description` field.
-""" ->
+"Metadata for FASTA sequence records containing just a `description` field"
 type FASTAMetadata
     description::String
 
@@ -21,24 +19,16 @@ type FASTAMetadata
 end
 
 
-@doc """
-FASTASeqRecord{S} is a `SeqRecord` for FASTA sequences of type `S`.
-""" ->
+"FASTASeqRecord{S} is a `SeqRecord` for FASTA sequences of type `S`"
 typealias FASTASeqRecord{S}       SeqRecord{S, FASTAMetadata}
 
-@doc """
-A `SeqRecord` type for FASTA DNA sequences.
-""" ->
+"A `SeqRecord` type for FASTA DNA sequences"
 typealias FASTADNASeqRecord       DNASeqRecord{FASTAMetadata}
 
-@doc """
-A `SeqRecord` type for FASTA RNA sequences.
-""" ->
+"A `SeqRecord` type for FASTA RNA sequences"
 typealias FASTARNASeqRecord       RNASeqRecord{FASTAMetadata}
 
-@doc """
-A `SeqRecord` type for FASTA amino acid sequences.
-""" ->
+"A `SeqRecord` type for FASTA amino acid sequences"
 typealias FASTAAminoAcidSeqRecord AminoAcidSeqRecord{FASTAMetadata}
 
 
@@ -52,8 +42,7 @@ module FASTAParserImpl
 
 import Bio.Seq: FASTASeqRecord
 import Bio.Ragel
-using Docile, Switch
-using Docile: @doc, @doc_str
+using Switch
 export FASTAParser
 
 
@@ -88,9 +77,7 @@ export FASTAParser
 %% write data;
 
 
-@doc """
-A type encapsulating the current state of a FASTA parser.
-""" ->
+"A type encapsulating the current state of a FASTA parser"
 type FASTAParser
     state::Ragel.State
     seqbuf::Ragel.Buffer
@@ -146,9 +133,7 @@ end # module FASTAParserImpl
 using Bio.Seq.FASTAParserImpl
 
 
-@doc """
-An iterator over entries in a FASTA file or stream.
-""" ->
+"An iterator over entries in a FASTA file or stream."
 type FASTAIterator
     parser::FASTAParser
 
@@ -158,7 +143,7 @@ type FASTAIterator
     nextitem
 end
 
-@doc """
+"""
 Parse a FASTA file.
 
 # Arguments
@@ -170,7 +155,7 @@ Parse a FASTA file.
 
 # Returns
 An iterator over `SeqRecord`s contained in the file.
-""" ->
+"""
 function Base.read(filename::String, ::Type{FASTA},
                    alphabet::Alphabet=DNA_ALPHABET; memory_map::Bool=false)
     return FASTAIterator(FASTAParser(filename, memory_map=memory_map),
@@ -178,7 +163,7 @@ function Base.read(filename::String, ::Type{FASTA},
 end
 
 
-@doc """
+"""
 Parse a FASTA file.
 
 # Arguments
@@ -188,7 +173,7 @@ Parse a FASTA file.
 
 # Returns
 An iterator over `SeqRecord`s contained in the file.
-""" ->
+"""
 function Base.read(input::IO, ::Type{FASTA}, alphabet::Alphabet=DNA_ALPHABET)
     return FASTAIterator(FASTAParser(input), alphabet, false, nothing)
 end
@@ -226,4 +211,3 @@ end
 function done(it::FASTAIterator, state)
     return it.isdone
 end
-

@@ -3,14 +3,12 @@ module Intervals
 
 import Base: show, isless, push!, shift!, intersect, start, next, done, length,
              convert, read, read!, getindex, isempty, endof, ==
-using Base.Intrinsics, Compat, Color, Docile, IntervalTrees
+using Base.Intrinsics, Compat, Color, IntervalTrees
 import Iterators
 #using DataStructures
 using Base.Intrinsics
 using Color
 using Compat
-using Docile
-using Docile: @doc, @doc_str
 using IntervalTrees
 import IntervalTrees: first, last
 
@@ -30,4 +28,3 @@ include("bed.jl")
 
 
 end
-

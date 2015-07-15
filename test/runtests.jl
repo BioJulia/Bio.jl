@@ -6,6 +6,7 @@ function get_bio_fmt_specimens()
     end
 end
 
+
 include("align/test_align.jl")
 include("phylo/test_phylo.jl")
 include("intervals/test_intervals.jl")
