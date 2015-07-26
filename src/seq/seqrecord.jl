@@ -33,4 +33,4 @@ end
 
 typealias DNASeqRecord{T}       SeqRecord{DNASequence, T}
 typealias RNASeqRecord{T}       SeqRecord{RNASequence, T}
-typealias AminoAcidSeqRecord{T} SeqRecord{RNASequence, T}
+typealias AminoAcidSeqRecord{T} SeqRecord{AminoAcidSequence, T}
