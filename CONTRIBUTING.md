@@ -1,4 +1,3 @@
-
 # Contributing
 
 We welcome contributions in the form of pull requests. For your code to be
@@ -8,6 +7,7 @@ considered it must meet the following guidelines.
     license. See LICENSE.md.
 
   * Types and functions must be documented using Julia's [docstrings](http://docs.julialang.org/en/latest/manual/documentation/).
+
     Documentation regarding specific implementation details that aren't relevant
     to users should be in the form of comments.
 
@@ -86,5 +86,4 @@ considered it must meet the following guidelines.
   ```
 
 ## Conduct
-
 We adhere to the Julia [community standards](http://julialang.org/community/standards/).

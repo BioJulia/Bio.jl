@@ -11,7 +11,7 @@ bitstype 8 Operation
 # Conversion to and from integers
 # -------------------------------
 
-convert(::Type{Operation}, num::Uint8)  = box(Operation, unbox(Uint8, num))
+convert(::Type{Operation}, num::Uint8) = box(Operation, unbox(Uint8, num))
 convert(::Type{Uint8}, op::Operation) = box(Uint8, unbox(Operation, op))
 
 convert{T<:Unsigned}(::Type{Operation}, unint::T) = convert(Operation, convert(Uint8, unint))
@@ -54,7 +54,7 @@ end
 
 # Lookup table for conversion from Char to Operation
 const char_to_op = [
-  OP_GAP, OP_INVALID, OP_INVALID, OP_INVALID, OP_INVALID, 
+  OP_GAP, OP_INVALID, OP_INVALID, OP_INVALID, OP_INVALID,
   OP_INVALID, OP_INVALID, OP_INVALID, OP_INVALID, OP_INVALID,
   OP_INVALID, OP_INVALID, OP_INVALID, OP_INVALID, OP_INVALID,
   OP_INVALID, OP_CIGAR_EQ, OP_INVALID, OP_INVALID, OP_INVALID,
@@ -69,7 +69,7 @@ const char_to_op = [
   OP_CIGAR_I, OP_INVALID, OP_INVALID, OP_INVALID, OP_CIGAR_M,
   OP_CIGAR_N, OP_INVALID, OP_CIGAR_P, OP_INVALID, OP_INVALID,
   OP_CIGAR_S, OP_INVALID, OP_INVALID, OP_INVALID, OP_INVALID,
-  OP_CIGAR_X 
+  OP_CIGAR_X
 ]
 
 
