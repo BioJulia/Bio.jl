@@ -1219,9 +1219,9 @@ function canonical{T, K}(x::Kmer{T, K})
 end
 
 
-@doc """
+"""
 Iterate through k-mers neighboring on a de Bruijn graph.
-""" ->
+"""
 function neighbors{T, K}(x::Kmer{T, K})
     return KmerNeighborIterator{T, K}(x)
 end
@@ -1508,13 +1508,13 @@ end
 # Kmer Composition
 # ----------------
 
-@doc """
+"""
 Count occurances of short (<= 32) k-mers in a sequence.
 
 # Arguments:
   * 'seq`: A NucleotideSequence
   * `step`: K-mers counted are separated by this many nucleotides (deafult: 1)
-""" ->
+"""
 immutable KmerCounts{T, K}
     data::Vector{Uint32}
 
