@@ -328,7 +328,7 @@ function NucleotideSequence{T<:Nucleotide}(seq::AbstractVector{T})
     fill!(ns, false)
 
     for (i, nt) in enumerate(seq)
-        if nt == DNA_N
+        if nt == nnucleotide(T)
             ns[i] = true
         else
             d, r = divrem32(i - 1)

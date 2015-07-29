@@ -172,7 +172,7 @@ type State
 
     function State(cs, filename::String, memory_map=false)
         if memory_map
-            data = mmap_array(Uint8, (filesize(filename),), open(filename))
+            data = Mmap.mmap(open(filename), Vector{Uint8}, (filesize(filename),))
             return new(nothing, false, data, Buffer{Int}(16), false, 0, length(data), cs, 1)
         else
             file = FS.open(filename, FS.JL_O_RDONLY)

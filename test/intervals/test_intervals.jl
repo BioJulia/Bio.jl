@@ -8,6 +8,17 @@ using YAML
 import ..get_bio_fmt_specimens
 
 
+# Test that an array of intervals is well ordered
+function Intervals.isordered{I <: Interval}(intervals::Vector{I})
+    for i = 2:length(intervals)
+        if !Intervals.isordered(intervals[i-1], intervals[i])
+            return false
+        end
+    end
+    return true
+end
+
+
 # Generate an array of n random Interval{Int} object. With sequence names
 # samples from seqnames, and intervals drawn to lie in [1, maxpos].
 function random_intervals(seqnames, maxpos::Int, n::Int)
@@ -121,7 +132,7 @@ facts("IntervalCollection") do
         for interval in intervals
             push!(ic, interval)
         end
-        @fact collect(ic) == sort(intervals) => true
+        @fact Intervals.isordered(collect(Interval{Int}, ic)) => true
     end
 
 

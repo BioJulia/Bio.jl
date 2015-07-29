@@ -230,6 +230,14 @@ end
 
 
 function start{S, T}(it::IntersectIterator{S, T})
+    # TODO: Here and in next, the U, V type parameters IntersectIteratorState
+    # must be deduced dynamically because IntervalTrees' intersect function
+    # decides what algorithm to use based on the size of the two trees. This
+    # turns what is otherwise a quite efficient alorithm into a performance
+    # catastrophe. I think there are two possible solutions: 1. don't try to
+    # automatically choose the algorithm, make it explicit. 2. figure out some
+    # clever way to share the same state structure and manually dispatch between
+    # algorithms.
     i = 1
     while i <= length(it.a_trees)
         intersect_iterator = intersect(it.a_trees[i], it.b_trees[i])
@@ -243,7 +251,7 @@ function start{S, T}(it::IntersectIterator{S, T})
         i += 1
     end
 
-    return IntersectIteratorState(i)
+    return IntersectIteratorState{Nothing, Nothing}(i)
 end
 
 
@@ -265,8 +273,10 @@ function next{S, T, U, V}(it::IntersectIterator{S, T},
         end
     end
 
-    return value, IntersectIteratorState{U, V}(i, intersect_iterator,
-                                               intersect_iterator_state)
+    U_ = typeof(intersect_iterator)
+    V_ = typeof(intersect_iterator_state)
+    return value, IntersectIteratorState{U_, V_}(i, intersect_iterator,
+                                                 intersect_iterator_state)
 end
 
 

@@ -321,7 +321,7 @@ facts("Nucleotides") do
                 end
 
                 context("Construction from nucleotide vectors") do
-                    function check_vector_construction(::Type, seq::String)
+                    function check_vector_construction(T::Type, seq::String)
                         xs = T[convert(T, c) for c in seq]
                         return NucleotideSequence{T}(xs) == NucleotideSequence{T}(seq)
                     end
