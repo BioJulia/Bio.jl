@@ -316,7 +316,7 @@ immutable IntervalCollectionStreamIteratorState{S, TS, TV}
     end
 
     function IntervalCollectionStreamIteratorState()
-        return new(IntervalTree.Intersection{Int64, Interval{S}, 64}())
+        return new(IntervalTrees.Intersection{Int64, Interval{S}, 64}())
     end
 end
 
