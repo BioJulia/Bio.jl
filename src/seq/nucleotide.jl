@@ -542,7 +542,7 @@ function =={T}(a::NucleotideSequence{T}, b::NucleotideSequence{T})
 end
 
 # Get the nucleotide at position i, ignoring the N mask.
-function getnuc(T::Type, data::Vector{Uint64}, i::Integer)
+@inline function getnuc(T::Type, data::Vector{Uint64}, i::Integer)
     d, r = divrem32(i - 1)
     return convert(T, convert(Uint8, (data[d + 1] >>> (2*r)) & 0b11))
 end
