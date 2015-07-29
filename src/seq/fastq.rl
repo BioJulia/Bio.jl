@@ -252,6 +252,12 @@ function Base.read(input::IO, ::Type{FASTQ},
 end
 
 
+function Base.read(input::Cmd, ::Type{FASTQ},
+                   qual_encoding::QualityEncoding=EMPTY_QUAL_ENCODING)
+    return FASTQIterator(FASTQParser(open(input, "r")[1]), qual_encoding, false, nothing)
+end
+
+
 function advance!(it::FASTQIterator)
     it.isdone = !FASTQParserImpl.advance!(it.parser)
     if !it.isdone

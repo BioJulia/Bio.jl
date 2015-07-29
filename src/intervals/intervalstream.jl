@@ -123,7 +123,7 @@ function next{S, T, SS, TS, U, V}(it::IntervalStreamIntersectIterator{S, T, SS, 
     if a_buffer_pos > length(it.a_buffer) && !done(it.a, a_state)
         while true
             a_interval, a_state = next(it.a, a_state)
-            if isless(a_interval, it.a_buffer[end], it.seqname_isless)
+            if !isordered(it.a_buffer[end], a_interval, it.seqname_isless)
                 error("Interval streams must be sorted to perform intersection.")
             end
             push!(it.a_buffer, a_interval)
@@ -146,7 +146,7 @@ function next{S, T, SS, TS, U, V}(it::IntervalStreamIntersectIterator{S, T, SS, 
            !isoverlapping(it.a_buffer[a_buffer_pos], b_interval)) && !done(it.b, b_state)
 
         b_interval_next, b_state = next(it.b, b_state)
-        if isless(b_interval_next, b_interval, it.seqname_isless)
+        if !isordered(b_interval, b_interval_next, it.seqname_isless)
             error("Interval streams must be sorted to perform intersection.")
         end
         b_interval = b_interval_next

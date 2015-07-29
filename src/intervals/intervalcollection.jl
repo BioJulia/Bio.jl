@@ -39,7 +39,7 @@ typealias IntervalCollectionTree{T} IntervalTree{Int64, Interval{T}}
 type IntervalCollection{T} <: IntervalStream{T}
     # Sequence name mapped to IntervalTree, which in turn maps intervals to
     # a list of metadata.
-    trees::Dict{String, IntervalCollectionTree{T}}
+    trees::Dict{ASCIIString, IntervalCollectionTree{T}}
 
     # Keep track of the number of stored intervals
     length::Int
@@ -51,13 +51,44 @@ type IntervalCollection{T} <: IntervalStream{T}
     ordered_trees_outdated::Bool
 
     function IntervalCollection()
-        return new(Dict{String, IntervalCollectionTree{T}}(), 0,
+        return new(Dict{ASCIIString, IntervalCollectionTree{T}}(), 0,
                    IntervalCollectionTree{T}[], false)
     end
 
-    # TODO: bulk insertion
-    #function IntervalCollection(intervals::Vector{T})
-    #end
+    # bulk insertion
+    function IntervalCollection(intervals::AbstractVector{Interval{T}}, sort=false)
+        if sort
+            sort!(intervals)
+        else
+            if !issorted(intervals)
+                error("Intervals must be sorted, or `sort=true` set, to construct an IntervalCollection")
+            end
+        end
+
+        n = length(intervals)
+        trees = Dict{ASCIIString, IntervalCollectionTree{T}}()
+        i = 1
+        while i <= n
+            j = i
+            while j <= n && intervals[i].seqname == intervals[j].seqname
+                j += 1
+            end
+            trees[intervals[i].seqname] = IntervalCollectionTree{T}(sub(intervals, i:j-1))
+            i = j
+        end
+        return new(trees, n, IntervalCollectionTree{T}[], false)
+    end
+end
+
+
+function IntervalCollection{T}(intervals::AbstractVector{Interval{T}}, sort=false)
+    return IntervalCollection{T}(intervals, sort)
+end
+
+
+function IntervalCollection{T}(interval_stream::IntervalStream{T})
+    intervals = collect(Interval{T}, interval_stream)
+    return IntervalCollection{T}(intervals, true)
 end
 
 
@@ -170,17 +201,17 @@ immutable IntersectIterator{S, T}
 end
 
 
-immutable IntersectIteratorState
+immutable IntersectIteratorState{U, V}
     i::Int # index into a_trees/b_trees.
-    intersect_iterator
-    intersect_iterator_state
+    intersect_iterator::U
+    intersect_iterator_state::V
 
     function IntersectIteratorState(i::Int)
         return new(i)
     end
 
-    function IntersectIteratorState(i::Int, intersect_iterator,
-                                    intersect_iterator_state)
+    function IntersectIteratorState(i::Int, intersect_iterator::U,
+                                    intersect_iterator_state::V)
         return new(i, intersect_iterator, intersect_iterator_state)
     end
 end
@@ -199,23 +230,33 @@ end
 
 
 function start{S, T}(it::IntersectIterator{S, T})
+    # TODO: Here and in next, the U, V type parameters IntersectIteratorState
+    # must be deduced dynamically because IntervalTrees' intersect function
+    # decides what algorithm to use based on the size of the two trees. This
+    # turns what is otherwise a quite efficient alorithm into a performance
+    # catastrophe. I think there are two possible solutions: 1. don't try to
+    # automatically choose the algorithm, make it explicit. 2. figure out some
+    # clever way to share the same state structure and manually dispatch between
+    # algorithms.
     i = 1
     while i <= length(it.a_trees)
         intersect_iterator = intersect(it.a_trees[i], it.b_trees[i])
         intersect_iterator_state = start(intersect_iterator)
         if !done(intersect_iterator, intersect_iterator_state)
-            return IntersectIteratorState(i, intersect_iterator,
-                                          intersect_iterator_state)
+            U = typeof(intersect_iterator)
+            V = typeof(intersect_iterator_state)
+            return IntersectIteratorState{U, V}(i, intersect_iterator,
+                                                intersect_iterator_state)
         end
         i += 1
     end
 
-    return IntersectIteratorState(i)
+    return IntersectIteratorState{Nothing, Nothing}(i)
 end
 
 
-function next{S, T}(it::IntersectIterator{S, T},
-                    state::IntersectIteratorState)
+function next{S, T, U, V}(it::IntersectIterator{S, T},
+                          state::IntersectIteratorState{U, V})
     intersect_iterator = state.intersect_iterator
     value, intersect_iterator_state = next(intersect_iterator,
                                            state.intersect_iterator_state)
@@ -232,8 +273,10 @@ function next{S, T}(it::IntersectIterator{S, T},
         end
     end
 
-    return value, IntersectIteratorState(i, intersect_iterator,
-                                         intersect_iterator_state)
+    U_ = typeof(intersect_iterator)
+    V_ = typeof(intersect_iterator_state)
+    return value, IntersectIteratorState{U_, V_}(i, intersect_iterator,
+                                                 intersect_iterator_state)
 end
 
 
@@ -241,3 +284,90 @@ function done{S, T}(it::IntersectIterator{S, T},
                     state::IntersectIteratorState)
     return state.i > length(it.a_trees)
 end
+
+
+"""
+Iterate over pairs of intersections in an IntervalCollection versus an
+IntervalStream.
+"""
+function intersect{S, TV}(a::IntervalCollection{S}, b::IntervalStream{TV})
+    return IntervalCollectionStreamIterator(TV, a, b)
+end
+
+
+immutable IntervalCollectionStreamIterator{S, T, TV}
+    a::IntervalCollection{S}
+    b::T
+end
+
+function IntervalCollectionStreamIterator{S, T}(TV::Type, a::IntervalCollection{S},
+                                                b::T)
+    return IntervalCollectionStreamIterator{S, T, TV}(a, b)
+end
+
+
+immutable IntervalCollectionStreamIteratorState{S, TS, TV}
+    intersection::IntervalTrees.Intersection{Int64, Interval{S}, 64}
+    b_state::TS
+    b_value::Interval{TV}
+
+    function IntervalCollectionStreamIteratorState(intersection, b_state, b_value)
+        return new(intersection, b_state, b_value)
+    end
+
+    function IntervalCollectionStreamIteratorState()
+        return new(IntervalTree.Intersection{Int64, Interval{S}, 64}())
+    end
+end
+
+
+# This mostly follows from SuccessiveTreeIntersectionIterator in IntervalTrees
+function start{S, T, TV}(it::IntervalCollectionStreamIterator{S, T, TV})
+    b_state = start(it.b)
+
+    # TODO: We need to figure out a way to know these types at compile time.
+    TS = typeof(b_state)
+
+    while !done(it.b, b_state)
+        b_value, b_state = next(it.b, b_state)
+        if haskey(it.a.trees, b_value.seqname)
+            tree = it.a.trees[b_value.seqname]
+            intersection = IntervalTrees.firstintersection(tree, b_value)
+            if intersection.index != 0
+                return IntervalCollectionStreamIteratorState{S, TS, TV}(
+                    intersection, b_state, b_value)
+            end
+        end
+    end
+
+    return IntervalCollectionStreamIteratorState{S, TS, TV}()
+end
+
+
+function next{S, T, TS, TV}(it::IntervalCollectionStreamIterator{S, T, TV},
+                            state::IntervalCollectionStreamIteratorState{S, TS, TV})
+    intersection = state.intersection
+    entry = intersection.node.entries[intersection.index]
+    return_value = (entry, state.b_value)
+    b_state = state.b_state
+    b_value = state.b_value
+    intersection = IntervalTrees.nextintersection(intersection.node, intersection.index, b_value)
+    while intersection.index == 0 && !done(it.b, b_state)
+        b_value, b_state = next(it.b, b_state)
+        if haskey(it.a.trees, b_value.seqname)
+            tree = it.a.trees[b_value.seqname]
+            intersection = IntervalTrees.firstintersection(tree, b_value)
+        end
+    end
+
+    return return_value, IntervalCollectionStreamIteratorState{S, TS, TV}(
+                            intersection, b_state, b_value)
+end
+
+
+function done{S, T, TS, TV}(it::IntervalCollectionStreamIterator{S, T, TV},
+                            state::IntervalCollectionStreamIteratorState{S, TS, TV})
+    return state.intersection.index == 0
+end
+
+

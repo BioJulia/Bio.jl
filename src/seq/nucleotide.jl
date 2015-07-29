@@ -319,6 +319,28 @@ end
 
 
 """
+Construct a NucleotideSequence from an array of nucleotides.
+"""
+function NucleotideSequence{T<:Nucleotide}(seq::AbstractVector{T})
+    len = seq_data_len(length(seq))
+    data = zeros(Uint64, len)
+    ns = BitArray(length(seq))
+    fill!(ns, false)
+
+    for (i, nt) in enumerate(seq)
+        if nt == nnucleotide(T)
+            ns[i] = true
+        else
+            d, r = divrem32(i - 1)
+            data[d + 1] |= convert(Uint64, nt) << (2*r)
+        end
+    end
+
+    return NucleotideSequence{T}(data, ns, 1:length(seq))
+end
+
+
+"""
 `repeat(chunk::NucleotideSequence, n)`
 
 Construct a nucleotide sequence by repeating another sequence `n` times
@@ -426,6 +448,7 @@ DNASequence(seq::String) = NucleotideSequence(DNANucleotide, seq)
 DNASequence(chunk1::DNASequence, chunks::DNASequence...) = NucleotideSequence(chunk1, chunks...)
 DNASequence(seq::Union(Vector{Uint8}, String)) = NucleotideSequence(DNANucleotide, seq)
 DNASequence(seq::Union(Vector{Uint8}, String), startpos::Int, endpos::Int, unsafe::Bool=false) = NucleotideSequence(DNANucleotide, seq, startpos, endpos, unsafe)
+DNASequence(seq::AbstractVector{DNANucleotide}) = NucleotideSequence(seq)
 
 
 # RNA Sequences
@@ -444,6 +467,7 @@ RNASequence(seq::String) = NucleotideSequence(RNANucleotide, seq)
 RNASequence(chunk1::RNASequence, chunks::RNASequence...) = NucleotideSequence(chunk1, chunks...)
 RNASequence(seq::Union(Vector{Uint8}, String)) = NucleotideSequence(RNANucleotide, seq)
 RNASequence(seq::Union(Vector{Uint8}, String), startpos::Int, endpos::Int, unsafe::Bool=false) = NucleotideSequence(RNANucleotide, seq, startpos, endpos, unsafe)
+RNASequence(seq::AbstractVector{RNANucleotide}) = NucleotideSequence(seq)
 
 
 # Conversion
@@ -590,22 +614,25 @@ copy{T}(seq::NucleotideSequence{T}) = orphan!(NucleotideSequence{T}(seq.data, se
 
 
 # Iterating throug nucleotide sequences
-# TODO: This can be made a lot faster.
-start(seq::NucleotideSequence) = seq.part.start - 1
-
-function next{T}(seq::NucleotideSequence{T}, i)
-    # Check bounds
-    (seq.part.start - 1 <= i < seq.part.stop) || throw(BoundsError())
-
-    nvalue, _ = next(seq.ns, i)
-    if nvalue
-        return (nnucleotide(T), i + 1)
-    else
-        return (getnuc(T, seq.data, i + 1), i + 1)
-    end
+@inline function start(seq::NucleotideSequence)
+    npos = nextone(seq.ns, seq.part.start)
+    return seq.part.start, npos
 end
 
-done(seq::NucleotideSequence, i) = i >= seq.part.stop
+@inline function next{T}(seq::NucleotideSequence{T}, state)
+    i, npos = state
+    if i == npos
+        npos = nextone(seq.ns, i + 1)
+        value = nnucleotide(T)
+    else
+        d, r = divrem32(i - 1)
+        @inbounds value = convert(T, ((seq.data[d + 1] >>> (2 * r)) & 0b11) % Uint8)
+    end
+
+    return value, (i + 1, npos)
+end
+
+@inline done(seq::NucleotideSequence, state) = state[1] > seq.part.stop
 
 # String Decorator
 # ----------------
@@ -656,24 +683,26 @@ end
 Reversed copy of the nucleotide sequence `seq`
 """
 function reverse{T}(seq::NucleotideSequence{T})
+    if isempty(seq)
+        return seq
+    end
+
     orphan!(seq)
 
-    k = (2 * length(seq)) % 64
+    k = (2 * length(seq) + 63) % 64 + 1
     h = 64 - k
-    if k == 0
-        k = 64
-        h = 0
-    end
 
     data = zeros(Uint64, length(seq.data))
     j = length(data)
-    @inbounds for i in 1:length(data)
+    i = 1
+    @inbounds while true
         x = nucrev(seq.data[i])
         data[j] |= x >>> h
         if (j -= 1) == 0
             break
         end
         data[j] |= x << k;
+        i += 1
     end
 
     return NucleotideSequence{T}(data, reverse(seq.ns), seq.part)
@@ -729,6 +758,33 @@ function nextn(it::SequenceNIterator, i)
     end
 
     return d * 64 + r + 1
+end
+
+
+# Find the index of the next 1 bit, starting at index i.
+function nextone(b::BitVector, i)
+    if i > length(b)
+        return i
+    end
+
+    d, r = divrem64(i - 1)
+    chunk = b.chunks[d + 1] >>> r
+    if chunk != 0
+        t = trailing_zeros(chunk)
+        return i + t
+    end
+
+    i += 64 - r
+    r = 0
+    d += 1
+    @inbounds for l in (d+1):length(b.chunks)
+        if b.chunks[l] != 0
+            return i + trailing_zeros(b.chunks[l])
+        end
+        i += 64
+    end
+
+    return min(length(b) + 1, i)
 end
 
 
@@ -1163,6 +1219,24 @@ function canonical{T, K}(x::Kmer{T, K})
 end
 
 
+"""
+Iterate through k-mers neighboring on a de Bruijn graph.
+"""
+function neighbors{T, K}(x::Kmer{T, K})
+    return KmerNeighborIterator{T, K}(x)
+end
+
+
+immutable KmerNeighborIterator{T, K}
+    x::Kmer{T, K}
+end
+
+
+start(it::KmerNeighborIterator) = @compat UInt64(0)
+done(it::KmerNeighborIterator, i) = i == 4
+length(::KmerNeighborIterator) = 4
+next{T, K}(it::KmerNeighborIterator{T, K}, i) =
+    convert(Kmer{T, K}, (convert(Uint64, it.x) >>> 2) | (i << (2 * K - 2))), i + 1
 
 
 # EachKmerIterator and EachKmerIteratorState
@@ -1171,16 +1245,13 @@ end
 # Iterate through every k-mer in a nucleotide sequence
 immutable EachKmerIterator{T, K}
     seq::NucleotideSequence{T}
-    nit::SequenceNIterator
     step::Int
 end
 
 
 immutable EachKmerIteratorState{T, K}
     i::Int
-    x::Uint64
-    next_n_pos::Int
-    nit_state::Int
+    npos::Int
 end
 
 # Maybe this function should replace the default constructor.
@@ -1200,88 +1271,72 @@ Differently from the default EachKmerIterator constructor, this function checks 
 # Returns
 A EachKmerIterator constructed with these parameters
 """
-function eachkmer{T}(seq::NucleotideSequence{T}, k::Integer, step::Integer=1)
-    @assert k >= 0 "K must be ≥ 0 in EachKmer"
-    @assert k <= 32 "K must be ≤ 32 in EachKmer"
+function each{T, K}(::Type{Kmer{T, K}}, seq::NucleotideSequence{T}, step::Integer=1)
+    @assert K >= 0 "K must be ≥ 0 in EachKmer"
+    @assert K <= 32 "K must be ≤ 32 in EachKmer"
     @assert step >= 1 "step must be ≥ 1"
 
-    return EachKmerIterator{T, k}(seq, npositions(seq), step)
+    return EachKmerIterator{T, K}(seq, step)
 end
 
 
-function nextkmer{T, K}(it::EachKmerIterator{T, K},
-                        state::EachKmerIteratorState{T, K}, skip::Int)
-    i = state.i + 1
-    x = state.x
-    next_n_pos = state.next_n_pos
-    nit_state = state.nit_state
+function eachkmer{T}(seq::NucleotideSequence{T}, k::Integer, step::Integer=1)
+    return each(Kmer{T, K}, seq, step)
+end
 
-    shift = 2 * (K - 1)
-    d, r = divrem64(2 * (it.seq.part.start + i - 2))
-    while i <= length(it.seq)
-        while next_n_pos < i
-            if done(it.nit, nit_state)
-                next_n_pos = length(it.seq) + 1
-                break
-            else
-                next_n_pos, nit_state = next(it.nit, nit_state)
-            end
+
+@inline function getkmer{T, K}(::Type{Kmer{T, K}}, seq::NucleotideSequence{T}, i)
+    d, r = divrem32(i - 1)
+    x = seq.data[d + 1] >>> (2*r)
+    if r + K > 32
+        x |= seq.data[d + 2] << (2 * (32 - r))
+    end
+    mask = 0xffffffffffffffff >>> (64 - (2*K))
+    return convert(Kmer{T, K}, x & mask)
+end
+
+
+@inline function nextkmerpos{T, K}(it::EachKmerIterator{T, K}, i, npos)
+    while i + K - 1 >= npos
+        while npos < i
+            npos = nextone(it.seq.ns, i)
         end
 
-        if i - K + 1 <= next_n_pos <= i
-            off = it.step * @compat ceil(Int, (K - skip) / it.step)
-            if skip < K
-                skip += off
-            end
-        end
-
-        x = (x >>> 2) | (((it.seq.data[d + 1] >>> r) & 0b11) << shift)
-
-        if skip == 0
+        if i + K - 1 < npos
             break
         end
-        skip -= 1
 
-        r += 2
-        if r == 64
-            r = 0
-            d += 1
+        i += it.step
+        if i + K - 1 > it.seq.part.stop
+            return EachKmerIteratorState{T, K}(i, npos)
         end
-        i += 1
     end
-
-    return EachKmerIteratorState{T, K}(i, x, next_n_pos, nit_state)
+    return EachKmerIteratorState{T, K}(i, npos)
 end
 
 
 function start{T, K}(it::EachKmerIterator{T, K})
-    nit_state = start(it.nit)
-    if done(it.nit, nit_state)
-        next_n_pos = length(it.seq) + 1
+    if K == 0
+        return EachKmerIteratorState{T, K}(it.seq.part.stop + 2, 0)
     else
-        next_n_pos, nit_state = next(it.nit, nit_state)
+        npos = nextone(it.seq.ns, it.seq.part.start)
+        return nextkmerpos(it, 1, npos)
     end
-
-    state = EachKmerIteratorState{T, K}(0, (@compat UInt64(0)), next_n_pos, nit_state)
-    return nextkmer(it, state, K - 1)
 end
 
 
-function next{T, K}(it::EachKmerIterator{T, K},
+@inline function next{T, K}(it::EachKmerIterator{T, K},
                     state::EachKmerIteratorState{T, K})
-    value = convert(Kmer{T, K}, state.x)
-    next_state = nextkmer(it, state, it.step - 1)
-    return (state.i - K + 1, value), next_state
+    value = getkmer(Kmer{T, K}, it.seq, state.i)
+    next_state = nextkmerpos(it, state.i + it.step, state.npos)
+    return (state.i, value), next_state
 end
 
 
-function done{T, K}(it::EachKmerIterator{T, K},
-                    state::EachKmerIteratorState{T, K})
-    return state.i > length(it.seq)
+@inline function done{T, K}(it::EachKmerIterator{T, K},
+                            state::EachKmerIteratorState{T, K})
+    return state.i + K - 1 > it.seq.part.stop
 end
-
-# TODO: count_nucleotides
-
 
 
 # Nucleotide Composition
@@ -1398,6 +1453,8 @@ function NucleotideCounts{T,K}(seq::Kmer{T, K})
     return counts
 end
 
+
+
 # Basic Functions
 # ---------------
 
@@ -1446,3 +1503,46 @@ function show(io::IO, counts::RNANucleotideCounts)
           N => $(count_strings[5])
         """)
 end
+
+
+# Kmer Composition
+# ----------------
+
+"""
+Count occurances of short (<= 32) k-mers in a sequence.
+
+# Arguments:
+  * 'seq`: A NucleotideSequence
+  * `step`: K-mers counted are separated by this many nucleotides (deafult: 1)
+"""
+immutable KmerCounts{T, K}
+    data::Vector{Uint32}
+
+    function KmerCounts(seq::NucleotideSequence{T}, step::Integer=1)
+        data = zeros(Uint32, 4^K)
+        @inbounds for (_, x) in each(Kmer{T, K}, seq, step)
+            data[convert(Uint64, x) + 1] += 1
+        end
+        return new(data)
+    end
+end
+
+typealias DNAKmerCounts{K} KmerCounts{DNANucleotide, K}
+typealias RNAKmerCounts{K} KmerCounts{DNANucleotide, K}
+
+
+function getindex{T, K}(counts::KmerCounts{T, K}, x::Kmer{T, K})
+    @inbounds c = counts.data[convert(Uint64, x) + 1]
+    return c
+end
+
+
+function show{T, K}(io::IO, counts::KmerCounts{T, K})
+    println(io, (T == DNANucleotide ? "DNA" : "RNA"), "KmerCounts{", K, "}:")
+    for x in (@compat UInt64(1)):(@compat UInt64(4^K))
+        s = convert(String, convert(Kmer{T, K}, x - 1))
+        println(io, "  ", s, " => ", counts.data[x])
+    end
+end
+
+
