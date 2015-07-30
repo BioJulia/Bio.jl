@@ -18,7 +18,7 @@ considered it must meet the following guidelines.
     contexts, and into separate files based on module.
 
   * Contributions are included if the code has been reviewed by at least two
-    team members who are *not* the author of the proposed merge, 
+    team members who are **not** the author of the proposed merge, 
     and there is general consensus (or general lack of objections) that it's useful
     and fits with the intended scope of Bio.jl.
 
