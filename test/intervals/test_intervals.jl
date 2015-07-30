@@ -127,7 +127,7 @@ facts("IntervalCollection") do
         ic = IntervalCollection{Int}()
 
         @fact isempty(ic) => true
-        @fact collect(Interval{Int}, ic) == Interval{Int}[] => true
+        @fact (collect(Interval{Int}, ic) == Interval{Int}[]) => true
 
         for interval in intervals
             push!(ic, interval)
@@ -145,23 +145,23 @@ facts("IntervalCollection") do
         # empty versus empty
         ic_a = IntervalCollection{Int}()
         ic_b = IntervalCollection{Int}()
-        @fact collect(intersect(ic_a, ic_b)) == Any[] => true
+        @fact (collect(intersect(ic_a, ic_b)) == Any[]) => true
 
         # empty versus non-empty
         for interval in intervals_a
             push!(ic_a, interval)
         end
 
-        @fact collect(intersect(ic_a, ic_b)) == Any[] => true
-        @fact collect(intersect(ic_b, ic_a)) == Any[] => true
+        @fact (collect(intersect(ic_a, ic_b)) == Any[]) => true
+        @fact (collect(intersect(ic_b, ic_a)) == Any[]) => true
 
         # non-empty versus non-empty
         for interval in intervals_b
             push!(ic_b, interval)
         end
 
-        @fact sort(collect(intersect(ic_a, ic_b))) ==
-              sort(simple_intersection(intervals_a, intervals_b)) => true
+        @fact (sort(collect(intersect(ic_a, ic_b))) ==
+               sort(simple_intersection(intervals_a, intervals_b))) => true
     end
 
 
@@ -208,7 +208,7 @@ facts("IntervalStream") do
         ref = Int[]
         sb = Intervals.StreamBuffer{Int}()
         @fact isempty(sb) => true
-        @fact length(sb) == 0 => true
+        @fact (length(sb) == 0) => true
         @fact_throws shift!(sb)
 
         ref_shifts = Int[]
@@ -225,9 +225,9 @@ facts("IntervalStream") do
             end
         end
 
-        @fact length(sb) == length(ref) => true
-        @fact [sb[i] for i in 1:length(sb)] == ref => true
-        @fact ref_shifts == sb_shifts => true
+        @fact (length(sb) == length(ref)) => true
+        @fact ([sb[i] for i in 1:length(sb)] == ref) => true
+        @fact (ref_shifts == sb_shifts) => true
         @fact_throws sb[0]
         @fact_throws sb[length(sb) + 1]
     end
@@ -254,8 +254,8 @@ facts("IntervalStream") do
                 IntervalCollection{Int}, IntervalCollection{Int}}(
                 ic_a, ic_b, Intervals.alphanum_isless)
 
-        @fact sort(collect(it)) ==
-              sort(simple_intersection(intervals_a, intervals_b)) => true
+        @fact (sort(collect(it)) ==
+               sort(simple_intersection(intervals_a, intervals_b))) => true
 
         # Interesction edge cases: skipping over whole sequences
         typealias SimpleIntersectIterator
@@ -316,8 +316,8 @@ facts("IntervalStream") do
         ItType = Intervals.IntervalStreamIntersectIterator{Int, Int,
             IntervalCollection{Int}, IntervalCollection{Int}}
 
-        @fact sort(collect(ItType(ic_a, ic_b, isless))) ==
-              sort(simple_intersection(intervals_a, intervals_b)) => true
+        @fact (sort(collect(ItType(ic_a, ic_b, isless))) ==
+               sort(simple_intersection(intervals_a, intervals_b))) => true
     end
 
     context("IntervalStream Coverage") do
@@ -330,7 +330,7 @@ facts("IntervalStream") do
             push!(ic, interval)
         end
 
-        @fact sort(simple_coverage(intervals)) == sort(collect(coverage(ic))) => true
+        @fact (sort(simple_coverage(intervals)) == sort(collect(coverage(ic)))) => true
     end
 end
 
