@@ -126,13 +126,13 @@ facts("IntervalCollection") do
         intervals = random_intervals(["one", "two", "three"], 1000000, n)
         ic = IntervalCollection{Int}()
 
-        @fact isempty(ic) => true
-        @fact (collect(Interval{Int}, ic) == Interval{Int}[]) => true
+        @fact isempty(ic) --> true
+        @fact (collect(Interval{Int}, ic) == Interval{Int}[]) --> true
 
         for interval in intervals
             push!(ic, interval)
         end
-        @fact Intervals.isordered(collect(Interval{Int}, ic)) => true
+        @fact Intervals.isordered(collect(Interval{Int}, ic)) --> true
     end
 
 
@@ -145,15 +145,15 @@ facts("IntervalCollection") do
         # empty versus empty
         ic_a = IntervalCollection{Int}()
         ic_b = IntervalCollection{Int}()
-        @fact (collect(intersect(ic_a, ic_b)) == Any[]) => true
+        @fact (collect(intersect(ic_a, ic_b)) == Any[]) --> true
 
         # empty versus non-empty
         for interval in intervals_a
             push!(ic_a, interval)
         end
 
-        @fact (collect(intersect(ic_a, ic_b)) == Any[]) => true
-        @fact (collect(intersect(ic_b, ic_a)) == Any[]) => true
+        @fact (collect(intersect(ic_a, ic_b)) == Any[]) --> true
+        @fact (collect(intersect(ic_b, ic_a)) == Any[]) --> true
 
         # non-empty versus non-empty
         for interval in intervals_b
@@ -161,7 +161,7 @@ facts("IntervalCollection") do
         end
 
         @fact (sort(collect(intersect(ic_a, ic_b))) ==
-               sort(simple_intersection(intervals_a, intervals_b))) => true
+               sort(simple_intersection(intervals_a, intervals_b))) --> true
     end
 
 
@@ -189,16 +189,16 @@ end
 
 
 facts("Alphanumeric Sorting") do
-    @fact sort(["b", "c" ,"a"], lt=Intervals.alphanum_isless) => ["a", "b", "c"]
-    @fact sort(["a10", "a2" ,"a1"], lt=Intervals.alphanum_isless) => ["a1", "a2", "a10"]
-    @fact sort(["a10a", "a2c" ,"a3b"], lt=Intervals.alphanum_isless) => ["a2c", "a3b", "a10a"]
-    @fact sort(["a3c", "a3b" ,"a3a"], lt=Intervals.alphanum_isless) => ["a3a", "a3b", "a3c"]
-    @fact sort(["a1ac", "a1aa" ,"a1ab"], lt=Intervals.alphanum_isless) => ["a1aa", "a1ab", "a1ac"]
+    @fact sort(["b", "c" ,"a"], lt=Intervals.alphanum_isless) --> ["a", "b", "c"]
+    @fact sort(["a10", "a2" ,"a1"], lt=Intervals.alphanum_isless) --> ["a1", "a2", "a10"]
+    @fact sort(["a10a", "a2c" ,"a3b"], lt=Intervals.alphanum_isless) --> ["a2c", "a3b", "a10a"]
+    @fact sort(["a3c", "a3b" ,"a3a"], lt=Intervals.alphanum_isless) --> ["a3a", "a3b", "a3c"]
+    @fact sort(["a1ac", "a1aa" ,"a1ab"], lt=Intervals.alphanum_isless) --> ["a1aa", "a1ab", "a1ac"]
 
-    @fact Intervals.alphanum_isless("aa", "aa1") => true
-    @fact Intervals.alphanum_isless("aa1", "aa") => false
+    @fact Intervals.alphanum_isless("aa", "aa1") --> true
+    @fact Intervals.alphanum_isless("aa1", "aa") --> false
 
-    @fact sort(["ac3", "aa", "ab", "aa1", "ac", "ab2"], lt=Intervals.alphanum_isless) =>
+    @fact sort(["ac3", "aa", "ab", "aa1", "ac", "ab2"], lt=Intervals.alphanum_isless) -->
         ["aa", "aa1", "ab", "ab2", "ac", "ac3"]
 end
 
@@ -207,8 +207,8 @@ facts("IntervalStream") do
     context("StreamBuffer") do
         ref = Int[]
         sb = Intervals.StreamBuffer{Int}()
-        @fact isempty(sb) => true
-        @fact (length(sb) == 0) => true
+        @fact isempty(sb) --> true
+        @fact (length(sb) == 0) --> true
         @fact_throws shift!(sb)
 
         ref_shifts = Int[]
@@ -225,9 +225,9 @@ facts("IntervalStream") do
             end
         end
 
-        @fact (length(sb) == length(ref)) => true
-        @fact ([sb[i] for i in 1:length(sb)] == ref) => true
-        @fact (ref_shifts == sb_shifts) => true
+        @fact (length(sb) == length(ref)) --> true
+        @fact ([sb[i] for i in 1:length(sb)] == ref) --> true
+        @fact (ref_shifts == sb_shifts) --> true
         @fact_throws sb[0]
         @fact_throws sb[length(sb) + 1]
     end
@@ -255,7 +255,7 @@ facts("IntervalStream") do
                 ic_a, ic_b, Intervals.alphanum_isless)
 
         @fact (sort(collect(it)) ==
-               sort(simple_intersection(intervals_a, intervals_b))) => true
+               sort(simple_intersection(intervals_a, intervals_b))) --> true
 
         # Interesction edge cases: skipping over whole sequences
         typealias SimpleIntersectIterator
@@ -266,13 +266,13 @@ facts("IntervalStream") do
             [Interval("a", 1, 100, STRAND_POS, nothing), Interval("c", 1, 100, STRAND_POS, nothing)],
             [Interval("a", 1, 100, STRAND_POS, nothing), Interval("b", 1, 100, STRAND_POS, nothing)],
             isless)
-        @fact length(collect(it)) => 1
+        @fact length(collect(it)) --> 1
 
         it = SimpleIntersectIterator(
             [Interval("c", 1, 100, STRAND_POS, nothing), Interval("d", 1, 100, STRAND_POS, nothing)],
             [Interval("b", 1, 100, STRAND_POS, nothing), Interval("d", 1, 100, STRAND_POS, nothing)],
             isless)
-        @fact length(collect(it)) => 1
+        @fact length(collect(it)) --> 1
 
         # unsorted streams are not allowed
         @fact_throws begin
@@ -317,7 +317,7 @@ facts("IntervalStream") do
             IntervalCollection{Int}, IntervalCollection{Int}}
 
         @fact (sort(collect(ItType(ic_a, ic_b, isless))) ==
-               sort(simple_intersection(intervals_a, intervals_b))) => true
+               sort(simple_intersection(intervals_a, intervals_b))) --> true
     end
 
     context("IntervalStream Coverage") do
@@ -330,7 +330,7 @@ facts("IntervalStream") do
             push!(ic, interval)
         end
 
-        @fact (sort(simple_coverage(intervals)) == sort(collect(coverage(ic)))) => true
+        @fact (sort(simple_coverage(intervals)) == sort(collect(coverage(ic)))) --> true
     end
 end
 
@@ -359,7 +359,7 @@ facts("Interval Parsing") do
         for specimen in YAML.load_file(joinpath(path, "index.yml"))
             valid = get(specimen, "valid", true)
             if valid
-                @fact check_bed_parse(joinpath(path, specimen["filename"])) => true
+                @fact check_bed_parse(joinpath(path, specimen["filename"])) --> true
             else
                 @fact_throws check_bed_parse(joinpath(path, specimen["filename"]))
             end
@@ -411,10 +411,8 @@ facts("Interval Parsing") do
         end
         close(out)
 
-        @fact check_intersection(filename_a, filename_b) => true
+        @fact check_intersection(filename_a, filename_b) --> true
     end
 end
 
 end # module TestIntervals
-
-
