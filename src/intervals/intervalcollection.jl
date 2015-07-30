@@ -195,24 +195,15 @@ function done{T}(ic::IntervalCollection{T},
 end
 
 
-immutable IntersectIterator{S, T}
-    a_trees::Vector{IntervalCollectionTree{S}}
-    b_trees::Vector{IntervalCollectionTree{T}}
-end
+type IntersectIterator{S, T}
+    a_trees::Vector{IntervalTrees.IntervalBTree{Int64, Interval{S}, 64}}
+    b_trees::Vector{IntervalTrees.IntervalBTree{Int64, Interval{T}, 64}}
 
-
-immutable IntersectIteratorState{U, V}
     i::Int # index into a_trees/b_trees.
-    intersect_iterator::U
-    intersect_iterator_state::V
+    intersect_iterator::IntervalTrees.IntersectionIterator{Int64, Interval{S}, 64, Interval{T}, 64}
 
-    function IntersectIteratorState(i::Int)
-        return new(i)
-    end
-
-    function IntersectIteratorState(i::Int, intersect_iterator::U,
-                                    intersect_iterator_state::V)
-        return new(i, intersect_iterator, intersect_iterator_state)
+    function IntersectIterator(a_trees, b_trees)
+        return new(a_trees, b_trees)
     end
 end
 
@@ -230,37 +221,27 @@ end
 
 
 function start{S, T}(it::IntersectIterator{S, T})
-    # TODO: Here and in next, the U, V type parameters IntersectIteratorState
-    # must be deduced dynamically because IntervalTrees' intersect function
-    # decides what algorithm to use based on the size of the two trees. This
-    # turns what is otherwise a quite efficient alorithm into a performance
-    # catastrophe. I think there are two possible solutions: 1. don't try to
-    # automatically choose the algorithm, make it explicit. 2. figure out some
-    # clever way to share the same state structure and manually dispatch between
-    # algorithms.
     i = 1
     while i <= length(it.a_trees)
         intersect_iterator = intersect(it.a_trees[i], it.b_trees[i])
         intersect_iterator_state = start(intersect_iterator)
         if !done(intersect_iterator, intersect_iterator_state)
-            U = typeof(intersect_iterator)
-            V = typeof(intersect_iterator_state)
-            return IntersectIteratorState{U, V}(i, intersect_iterator,
-                                                intersect_iterator_state)
+            it.i = i
+            it.intersect_iterator = intersect_iterator
+            return nothing
         end
         i += 1
     end
+    it.i = i
 
-    return IntersectIteratorState{Nothing, Nothing}(i)
+    return nothing
 end
 
 
-function next{S, T, U, V}(it::IntersectIterator{S, T},
-                          state::IntersectIteratorState{U, V})
-    intersect_iterator = state.intersect_iterator
-    value, intersect_iterator_state = next(intersect_iterator,
-                                           state.intersect_iterator_state)
-    i = state.i
+function next{S, T}(it::IntersectIterator{S, T}, nothing)
+    intersect_iterator = it.intersect_iterator
+    value, intersect_iterator_state = next(intersect_iterator, nothing)
+    i = it.i
     if done(intersect_iterator, intersect_iterator_state)
         i += 1
         while i <= length(it.a_trees)
@@ -272,17 +253,15 @@ function next{S, T, U, V}(it::IntersectIterator{S, T},
             i += 1
         end
     end
+    it.i = i
+    it.intersect_iterator = intersect_iterator
 
-    U_ = typeof(intersect_iterator)
-    V_ = typeof(intersect_iterator_state)
-    return value, IntersectIteratorState{U_, V_}(i, intersect_iterator,
-                                                 intersect_iterator_state)
+    return value, nothing
 end
 
 
-function done{S, T}(it::IntersectIterator{S, T},
-                    state::IntersectIteratorState)
-    return state.i > length(it.a_trees)
+function done{S, T}(it::IntersectIterator{S, T}, state)
+    return it.i > length(it.a_trees)
 end
 
 
