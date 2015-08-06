@@ -1107,6 +1107,20 @@ facts("Aminoacids") do
             @fact all(Bool[check_concatenation(rand(1:10)) for _ in 1:100]) --> true
         end
 
+        context("Equality") do
+            seq = aa"ARNDCQEGHILKMFPSTWYVX"
+            @fact ==(seq, aa"ARNDCQEGHILKMFPSTWYVX") --> true
+            @fact ==(seq, aa"ARNDCQEGHILKMFPSTWYXV") --> false
+            @fact ==(seq, aa"ARNDCQEGHLKMFPSTWYVX")  --> false
+
+            seq′ = aa"""
+            ARNDCQEGHI
+            LKMFPSTWYV
+            X
+            """
+            @fact ==(seq, seq′) --> true
+        end
+
         context("Repetition") do
             function check_repetition(n)
                 chunk = random_aa(rand(100:300))

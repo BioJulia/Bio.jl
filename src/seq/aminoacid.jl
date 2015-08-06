@@ -247,6 +247,18 @@ convert(::Type{String}, seq::AminoAcidSequence) = convert(String, [convert(Char,
 # Basic functions
 # ---------------
 
+function ==(a::AminoAcidSequence, b::AminoAcidSequence)
+    if (len = length(a)) != length(b)
+        return false
+    end
+    for i in 1:len
+        if a[i] != b[i]
+            return false
+        end
+    end
+    return true
+end
+
 function show(io::IO, seq::AminoAcidSequence)
     len = length(seq)
     write(io, "$(string(len))aa Sequence:\n ")
@@ -309,5 +321,5 @@ done(seq::AminoAcidSequence, i) = (i > seq.part.stop)
 
 # Enable building sequence literals like: aa"ACDEFMN"
 macro aa_str(seq, flags...)
-    return AminoAcidSequence(seq)
+    return AminoAcidSequence(remove_newlines(seq))
 end
