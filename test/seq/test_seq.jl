@@ -393,6 +393,20 @@ facts("Nucleotides") do
                 @fact ==(rna"ACUGN", rna"ACUGA") --> false
                 @fact ==(rna"ACUGN", rna"ACUG") --> false
                 @fact ==(rna"ACUG", rna"ACUGN") --> false
+
+                a = dna"ACGTNACGTN"
+                b = dna"""
+                ACGTN
+                ACGTN
+                """
+                @fact ==(a, b) --> true
+
+                c = rna"ACUGNACUGN"
+                d = rna"""
+                ACUGN
+                ACUGN
+                """
+                @fact ==(c, d) --> true
             end
 
             context("Length") do
