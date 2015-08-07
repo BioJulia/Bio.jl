@@ -1292,4 +1292,27 @@ facts("Sequence Parsing") do
     end
 end
 
+facts("Sequence Writing") do
+    context("FASTA writing") do
+        dna_seq = random_dna(79)
+        seq_name = "Some sequence name"
+
+        dna_with_line_breaks = string(dna_seq, "\n", dna_seq, "\n", dna_seq, "\n")
+        expected = string(">", seq_name, "\n", dna_with_line_breaks)
+
+        long_dna_seq = dna_seq ^ 3
+        fasta_seq = Bio.Seq.FASTASeqRecord{DNASequence}(seq_name, DNASequence(long_dna_seq), Bio.Seq.FASTAMetadata())
+
+        tempfile = tempname()
+        try
+            open(tempfile, "w") do fh
+                write(fh, fasta_seq)
+            end
+            @fact readall(open(tempfile)) --> expected
+        finally
+            rm(tempfile)
+        end
+    end
+end
+
 end # TestSeq
