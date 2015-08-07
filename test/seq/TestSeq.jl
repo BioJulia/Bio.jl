@@ -1386,6 +1386,7 @@ facts("Sequence Parsing") do
     end
 end
 
+<<<<<<< d0c8881f1edebf8ff6a9d44e3d3884343b2d6dca:test/seq/TestSeq.jl
 facts("Quality scores") do
     using Bio.Seq: encode_quality_string!,
                    encode_quality_string,
@@ -1474,6 +1475,24 @@ facts("Quality scores") do
         test_encode(ILLUMINA18_QUAL_ENCODING,
                     Int8[0, 2, 3, 4, 5, 40, 93],
                     UInt8['!', '#', '$', '%', '&', 'I', '~'])
+    end
+
+    context("Sequence Writing") do
+        context("FASTA writing") do
+            dna_seq = random_dna(79)
+            seq_name = "Some sequence name"
+
+            dna_with_line_breaks = string(dna_seq, "\n", dna_seq, "\n", dna_seq, "\n")
+            expected = string(">", seq_name, "\n", dna_with_line_breaks)
+
+            long_dna_seq = dna_seq ^ 3
+            fasta_seq = Seq.FASTADNASeqRecord(
+                seq_name, DNASequence(long_dna_seq), Seq.FASTAMetadata())
+
+            output = IOBuffer()
+            write(output, fasta_seq)
+            @fact takebuf_string(output) --> expected
+        end
     end
 end
 
