@@ -1294,19 +1294,29 @@ end
 
 facts("Sequence Writing") do
     context("FASTA writing") do
-        dna_seq = random_dna(79)
-        seq_name = "Some sequence name"
+        dna_seq1 = random_dna(79 * 3) # full lines
+        dna_seq2 = random_dna(50)     # short line
+        seq_name1 = "Sequence 1"
+        seq_name2 = "Sequence 2"
+        seq_description1 = "Description 1"
+        seq_description2 = "Description 2"
 
-        dna_with_line_breaks = string(dna_seq, "\n", dna_seq, "\n", dna_seq, "\n")
-        expected = string(">", seq_name, "\n", dna_with_line_breaks)
+        wrapped_seq1 = join([dna_seq1[1:79], dna_seq1[80:158], dna_seq1[159:end]], "\n")
 
-        long_dna_seq = dna_seq ^ 3
-        fasta_seq = Bio.Seq.FASTASeqRecord{DNASequence}(seq_name, DNASequence(long_dna_seq), Bio.Seq.FASTAMetadata())
+        expected_seq1 = string(">", seq_name1, " ", seq_description1, "\n", wrapped_seq1, "\n")
+        expected_seq2 = string(">", seq_name2, " ", seq_description2, "\n", dna_seq2, "\n")
+        expected = string(expected_seq1, expected_seq2)
+
+        fasta_seq1 = Bio.Seq.FASTASeqRecord{DNASequence}(seq_name1, DNASequence(dna_seq1), Bio.Seq.FASTAMetadata(seq_description1))
+        fasta_seq2 = Bio.Seq.FASTASeqRecord{DNASequence}(seq_name2, DNASequence(dna_seq2), Bio.Seq.FASTAMetadata(seq_description2))
+        sequences = [fasta_seq1, fasta_seq2]
 
         tempfile = tempname()
         try
             open(tempfile, "w") do fh
-                write(fh, fasta_seq)
+                for seq in sequences
+                    write(fh, seq)
+                end
             end
             @fact readall(open(tempfile)) --> expected
         finally
