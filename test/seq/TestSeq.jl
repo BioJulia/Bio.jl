@@ -1386,6 +1386,7 @@ facts("Sequence Parsing") do
     end
 end
 
+<<<<<<< 6081c32c52479f1f54e87da631c85e2eb6312e53:test/seq/TestSeq.jl
 <<<<<<< d0c8881f1edebf8ff6a9d44e3d3884343b2d6dca:test/seq/TestSeq.jl
 facts("Quality scores") do
     using Bio.Seq: encode_quality_string!,
@@ -1479,18 +1480,29 @@ facts("Quality scores") do
 
     context("Sequence Writing") do
         context("FASTA writing") do
-            dna_seq = random_dna(79)
-            seq_name = "Some sequence name"
+            dna_seq1 = random_dna(79 * 3) # full lines
+            dna_seq2 = random_dna(50)     # short line
+            seq_name1 = "Sequence 1"
+            seq_name2 = "Sequence 2"
+            seq_description1 = "Description 1"
+            seq_description2 = "Description 2"
 
-            dna_with_line_breaks = string(dna_seq, "\n", dna_seq, "\n", dna_seq, "\n")
-            expected = string(">", seq_name, "\n", dna_with_line_breaks)
+            wrapped_seq1 = join([dna_seq1[1:79], dna_seq1[80:158], dna_seq1[159:end]], "\n")
 
-            long_dna_seq = dna_seq ^ 3
-            fasta_seq = Seq.FASTADNASeqRecord(
-                seq_name, DNASequence(long_dna_seq), Seq.FASTAMetadata())
+            expected_seq1 = string(">", seq_name1, " ", seq_description1, "\n", wrapped_seq1, "\n")
+            expected_seq2 = string(">", seq_name2, " ", seq_description2, "\n", dna_seq2, "\n")
+            expected = string(expected_seq1, expected_seq2)
+
+            fasta_seq1 = Seq.FASTADNASeqRecord(
+                seq_name1, DNASequence(dna_seq1), Seq.FASTAMetadata(seq_description1))
+            fasta_seq2 = Seq.FASTADNASeqRecord(
+                seq_name2, DNASequence(dna_seq2), Seq.FASTAMetadata(seq_description2))
+            sequences = [fasta_seq1, fasta_seq2]
 
             output = IOBuffer()
-            write(output, fasta_seq)
+            for seq in sequences
+                write(output, seq)
+            end
             @fact takebuf_string(output) --> expected
         end
     end
