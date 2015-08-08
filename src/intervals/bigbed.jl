@@ -391,12 +391,12 @@ immutable BigWig <: FileFormat end
 include("bigbeddata.jl")
 
 
-@doc """
+"""
 Open a BigBed file for reading.
 
 Once opened, entries can be read from the file either by iterating over it, or
 by indexing into it with an interval.
-""" ->
+"""
 function read(input::Union(IO, String, Vector{Uint8}),
               ::Type{BigBed}; memory_map::Bool=false)
     reader = BufferedReader(input, memory_map)
@@ -483,9 +483,9 @@ function memisless(a::Vector{Uint8}, b::Vector{Uint8})
 end
 
 
-@doc """
+"""
 An iterator over all entries in a BigBed file.
-""" ->
+"""
 immutable BigBedIterator
 end
 
@@ -493,11 +493,11 @@ end
 
 
 
-@doc """
+"""
 An iterator over entries in a BigBed file that intersect a given interval.
 
 Constructed by indexing into `BigBedData` with an interval.
-""" ->
+"""
 type BigBedIntersectIterator
     bb::BigBedData
 
@@ -519,10 +519,10 @@ type BigBedIntersectIterator
 end
 
 
-@doc """
+"""
 Find the given seqname in the BigBed file's index and read the corresponding
 sequence id and length
-""" ->
+"""
 function lookup_seqname(bb::BigBedData, seqname::String)
     seek(bb.reader, bb.header.chromosome_tree_offset + sizeof(BigBedBTreeHeader) + 1)
 

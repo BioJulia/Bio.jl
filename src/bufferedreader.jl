@@ -42,7 +42,7 @@ end
 
 function BufferedReader(filename::String, memory_map::Bool=false)
     if memory_map
-        data = mmap_array(Uint8, (filesize(filename),), open(filename))
+        data = Mmap.mmap(open(filename), Vector{Uint8}, (filesize(filename),))
         return BufferedReader(Nullable{IO}(), 0, false, data, length(data), 0)
     else
         return BufferedReader(Nullable{IO}(open(filename)), 1, true,
