@@ -393,6 +393,20 @@ facts("Nucleotides") do
                 @fact ==(rna"ACUGN", rna"ACUGA") --> false
                 @fact ==(rna"ACUGN", rna"ACUG") --> false
                 @fact ==(rna"ACUG", rna"ACUGN") --> false
+
+                a = dna"ACGTNACGTN"
+                b = dna"""
+                ACGTN
+                ACGTN
+                """
+                @fact ==(a, b) --> true
+
+                c = rna"ACUGNACUGN"
+                d = rna"""
+                ACUGN
+                ACUGN
+                """
+                @fact ==(c, d) --> true
             end
 
             context("Length") do
@@ -1091,6 +1105,20 @@ facts("Aminoacids") do
             end
 
             @fact all(Bool[check_concatenation(rand(1:10)) for _ in 1:100]) --> true
+        end
+
+        context("Equality") do
+            seq = aa"ARNDCQEGHILKMFPSTWYVX"
+            @fact ==(seq, aa"ARNDCQEGHILKMFPSTWYVX") --> true
+            @fact ==(seq, aa"ARNDCQEGHILKMFPSTWYXV") --> false
+            @fact ==(seq, aa"ARNDCQEGHLKMFPSTWYVX")  --> false
+
+            seq′ = aa"""
+            ARNDCQEGHI
+            LKMFPSTWYV
+            X
+            """
+            @fact ==(seq, seq′) --> true
         end
 
         context("Repetition") do

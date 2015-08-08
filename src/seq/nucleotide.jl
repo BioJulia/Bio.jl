@@ -639,11 +639,15 @@ end
 
 # Enable building sequence literals like: dna"ACGTACGT" and rna"ACGUACGU"
 macro dna_str(seq, flags...)
-    return DNASequence(seq)
+    return DNASequence(remove_newlines(seq))
 end
 
 macro rna_str(seq, flags...)
-    return RNASequence(seq)
+    return RNASequence(remove_newlines(seq))
+end
+
+function remove_newlines(seq)
+    return replace(seq, r"\r|\n", "")
 end
 
 
