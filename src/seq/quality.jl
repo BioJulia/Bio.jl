@@ -54,7 +54,7 @@ const ALL_QUAL_ENCODINGS =
     #SANGER_QUAL_ENCODING     => ((@compat UInt8('!')):(@compat UInt8('~')), (@compat Int8(0))),
     #SOLEXA_QUAL_ENCODING     => ((@compat UInt8(';')):(@compat UInt8('~')), (@compat Int8(-5))),
     #ILLUMINA13_QUAL_ENCODING => ((@compat UInt8('@')):(@compat UInt8('~')), (@compat Int8(0))),
-    #ILLUMINA15_QUAL_ENCODING => ((@compat UInt8('B')):(@compat UInt8('~')), (@compat Int8(3))),
+    #ILLUMINA15_QUAL_ENCODING => ((@compat UInt8('B')):(@compat UInt8('~')), (@compat Int8(2))),
     #ILLUMINA18_QUAL_ENCODING => ((@compat UInt8('!')):(@compat UInt8('~')), (@compat Int8(0))),
 #)
 
@@ -63,7 +63,7 @@ const qual_encoding_ranges = [
     ((@compat UInt8('!')), (@compat UInt8('~')), (@compat Int8(0))),  # SANGER
     ((@compat UInt8(';')), (@compat UInt8('~')), (@compat Int8(-5))), # SOLEXA
     ((@compat UInt8('@')), (@compat UInt8('~')), (@compat Int8(0))),  # ILLUMINA13
-    ((@compat UInt8('C')), (@compat UInt8('~')), (@compat Int8(3))),  # ILLUMINA15
+    ((@compat UInt8('B')), (@compat UInt8('~')), (@compat Int8(2))),  # ILLUMINA15
     ((@compat UInt8('!')), (@compat UInt8('~')), (@compat Int8(0)))   # ILLUMINA18
 ]
 
