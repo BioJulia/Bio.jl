@@ -1337,17 +1337,17 @@ facts("Quality scores") do
             result = Array(Int8, length(expected))
             decode_quality_string!(encoding, values, result, 1,
                                    length(result))
-            @fact result => expected
+            @fact result --> expected
 
             # Without start and end does the entire string
             decode_quality_string!(encoding, values, result)
-            @fact result => expected
+            @fact result --> expected
 
             # Non in-place version of the above
             result = decode_quality_string(encoding, values, 1, length(result))
-            @fact result => expected
+            @fact result --> expected
             resutlt = decode_quality_string(encoding, values)
-            @fact result => expected
+            @fact result --> expected
         end
 
         test_decode(SANGER_QUAL_ENCODING,
@@ -1378,15 +1378,15 @@ facts("Quality scores") do
             result = Array(Uint8, length(expected))
             encode_quality_string!(encoding, values, result, 1,
                                    length(result))
-            @fact result => expected
+            @fact result --> expected
             # Without start & end means the entire length
             encode_quality_string!(encoding, values, result)
-            @fact result => expected
+            @fact result --> expected
 
             result = encode_quality_string(encoding, values, 1, length(result))
-            @fact result => expected
+            @fact result --> expected
             result = encode_quality_string(encoding, values)
-            @fact result => expected
+            @fact result --> expected
         end
 
         test_encode(SANGER_QUAL_ENCODING,
