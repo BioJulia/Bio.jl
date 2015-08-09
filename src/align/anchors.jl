@@ -93,6 +93,14 @@ function >=(a::AlignmentAnchor, b::AlignmentAnchor)
   return a.alnPos >= b.alnPos || a.srcPos > b.srcPos
 end
 
+Docile.@doc """
+Check whether the alignment anchor contains the specified operation.
+""" ->
+function hasOp(anc::AlignmentAnchor, op::Operation)
+    return anc.op == op
+end
+
+
 
 # AlignmentAnchors Definition
 # ----------------------------
@@ -106,6 +114,7 @@ function show(io::IO, aa::AlignmentAnchors)
   end
   write(io, out)
 end
+
 
 
 # Sorting AlignmentAnchors
@@ -199,10 +208,48 @@ function lt(o::alnPosOrdering, a::Int, b::AlignmentAnchor)
   return a < b.alnPos
 end
 
-function srcToAln()
-
+function upperBoundAnchor(arr::AlignmentAnchors, i::Int, o::alnPosOrdering)
+    return searchsortedlast(arr, i, o) + 1
 end
 
-function alnToSrc()
+function lowerBoundAnchor(arr::AlignmentAnchors, i::Int, o::alnPosOrdering)
+    return searchsortedfirst(arr, i, o)
+end
 
+
+immutable AlignedSequence
+    src # Sequence from Bio.seq.
+    anchors::AlignmentAnchors
+end
+
+
+function alnToSrc(alignedSeq::AlignedSequence, alnPosition::Int)
+    sequenceLength = length(alignedSeq.src)
+    if length(alignedSeq.anchors) > 0
+        loBracket = searchsortedlast(alignedSeq.anchors, alnPosition, BY_ALN)
+    else
+        loBracket = alignmentPosition < sequenceLength ? 0 : 1
+    end
+    hiBracket = loBracket + 1
+    # We need code here just to handle a few edge cases.
+
+    hiAnc = alignedSeq.anchors[hiBracket]
+    loAnc = alignedSeq.anchors[loBracket]
+    srcDist = hiAnc.srcPos - loAnc.srcPos
+    alnDist = alnPosition - loAnc.alnPos
+    if srcDist > alnDist
+        sourcePosition = loAnc.srcPos + alnDist
+    else
+        sourcePosition = hiAnc.srcPos
+    end
+    return sourcePosition
+end
+
+
+function srcToAln(alignedSeq::AlignedSequence, alnPosition::Int)
+    if length(alignedSeq.anchors) > 0
+        loBracket = searchsortedlast(alignedSeq.anchors, alnPosition, BY_SRC)
+    else
+        loBracket = alignmentPosition < sequenceLength ? 0 : 1
+    end
 end
