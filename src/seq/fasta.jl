@@ -40,6 +40,24 @@ function Base.show(io::IO, seqrec::FASTASeqRecord)
 end
 
 
+"Writes a FASTASeqRecord to an IO-stream (and obeys FASTAs max character constraint)"
+function Base.write(io::IO, seqrec::FASTASeqRecord)
+    header = strip(string(">", seqrec.name, " ", seqrec.metadata.description))
+    write(io, header, "\n")
+    maxchars = 79
+    counter = 1
+    len = length(seqrec.seq)
+    for nt in seqrec.seq
+        write(io, convert(Char, nt))
+        if counter % maxchars == 0 && counter < len
+            write(io, "\n")
+        end
+        counter += 1
+    end
+    write(io, "\n")
+end
+
+
 module FASTAParserImpl
 
 import Bio.Seq: FASTASeqRecord
