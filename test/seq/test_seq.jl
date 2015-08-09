@@ -1318,7 +1318,7 @@ facts("Sequence Writing") do
                     write(fh, seq)
                 end
             end
-            @fact readall(open(tempfile)) --> expected
+            @fact open(readall, tempfile) --> expected
         finally
             rm(tempfile)
         end
