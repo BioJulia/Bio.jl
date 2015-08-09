@@ -29,9 +29,9 @@ end
 typealias FASTQSeqRecord DNASeqRecord{FASTQMetadata}
 
 
-@doc """
+"""
 Show a `FASTQSeqRecord` to `io`, with graphical display of quality scores.
-""" ->
+"""
 function Base.show(io::IO, seqrec::FASTQSeqRecord)
     write(io, "@", seqrec.name, " ", seqrec.metadata.description, "\n")
     for c in seqrec.seq
@@ -61,9 +61,9 @@ function Base.show(io::IO, seqrec::FASTQSeqRecord)
     write(io, '\n')
 end
 
-@doc """
+"""
 Write a `FASTQSeqRecord` to `io`, as a valid FASTQ record.
-""" ->
+"""
 function Base.write(io::IO, seqrec::FASTQSeqRecord; offset::Integer=33,
                     qualheader::Bool=false)
     write(io, "@", seqrec.name, " ", seqrec.metadata.description, "\n")
