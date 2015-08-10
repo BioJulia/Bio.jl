@@ -23,3 +23,11 @@ end
 macro cigar_str(str)
     return CIGARString(str)
 end
+
+function convert(::Type{String}, cigar::CIGARString)
+    outString = ""
+    for op in cigar
+        outString *= "$(op.Size)$(Char(op.OP))"
+    end
+    return outString
+end
