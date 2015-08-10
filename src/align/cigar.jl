@@ -8,6 +8,14 @@ function CIGAR(op::Char, size::Int)
     return CIGAR(Operation(op), size)
 end
 
+function convert(::Type{String}, cigar::CIGAR)
+    return "$(cigar.Size)$(Char(cigar.OP))"
+end
+
+function show(io::IO, cigar::CIGAR)
+    write(io, convert(String, cigar))
+end
+
 typealias CIGARString Vector{CIGAR}
 
 function convert(::Type{CIGARString}, str::String)
@@ -30,4 +38,8 @@ function convert(::Type{String}, cigar::CIGARString)
         outString *= "$(op.Size)$(Char(op.OP))"
     end
     return outString
+end
+
+function show(io::IO, cigarstr::CIGARString)
+    write(io, convert(String, cigarstr))
 end
