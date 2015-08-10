@@ -4,7 +4,7 @@ immutable CIGAR
     Size::Int
 end
 
-function CIGAR(op::Character, size::Int)
+function CIGAR(op::Char, size::Int)
     return CIGAR(Operation(op), size)
 end
 
