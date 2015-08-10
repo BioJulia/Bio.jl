@@ -8,7 +8,7 @@ function CIGAR(op::Char, size::Int)
     return CIGAR(Operation(op), size)
 end
 
-function convert(CIGAR, str::String)
+function convert(CIGARString, str::String)
     matches = matchall(r"(\d+)(\w)", str)
     cigarString = Vector{CIGAR}(length(matches))
     @inbounds for i in 1:length(matches)
@@ -19,5 +19,5 @@ function convert(CIGAR, str::String)
 end
 
 macro cigar_str(str)
-    return CIGAR(str)
+    return CIGARString(str)
 end
