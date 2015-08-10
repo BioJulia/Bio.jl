@@ -96,7 +96,6 @@ const fastq_start  = convert(Int , 25)
 const fastq_first_final  = convert(Int , 25)
 const fastq_error  = convert(Int , 0)
 const fastq_en_main  = convert(Int , 25)
-
 "A type encapsulating the current state of a FASTQ parser"
 type FASTQParser
     state::Ragel.State

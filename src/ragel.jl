@@ -362,10 +362,11 @@ macro generate_read_fuction(machine_name, input_type, output_type, ragel_body, a
     cs = esc(:cs)
     data = esc(:data)
     state = esc(:state)
+    eof = esc(:eof)
+    yield = esc(:yield)
 
     quote
         function $(esc(:advance!))(input::$(esc(input_type)))
-            # TODO: is there a more idiomatic way to do this?
             local $(esc(:input)) = input
 
             $(state) = ragelstate(input)
@@ -377,32 +378,41 @@ macro generate_read_fuction(machine_name, input_type, output_type, ragel_body, a
             $(pe) = $(state).pe
             $(cs) = $(state).cs
             $(data) = $(state).buffer
-            $(esc(:yield)) = false
+            $(yield) = false
 
             # run the parser until all input is consumed or a match is found
+            local $(eof) = $(pe) + 1
             while true
                 if $(p) == $(pe)
-                    if fillbuffer!($(state)) == 0
-                        break
-                    end
-
+                    $(state).p = $(p)
+                    $(state).pe = $(pe)
+                    nb = fillbuffer!($(state))
                     $(p) = $(state).p
                     $(pe) = $(state).pe
+                    if nb == 0
+                        $(eof) = $(pe) # trigger ragel's eof handling
+                    else
+                        $(eof) = $(pe) + 1
+                    end
                 end
 
                 $(esc(ragel_body))
 
-                if $(cs) == $(error_state)
+                if $(cs) == $(error_state) && !$(yield)
                     error(string(
                         $("Error parsing $(machine_name) input on line "),
                         $(state).linenum))
-                elseif $(esc(:yield))
+                elseif $(yield)
                     if $(p) == $(pe)
+                        $(state).p = $(p)
+                        $(state).pe = $(pe)
                         fillbuffer!($(state)) == 0
                         $(p) = $(state).p
                         $(pe) = $(state).pe
                     end
 
+                    break
+                elseif $(p) == $(pe) == $(eof)
                     break
                 end
             end
@@ -415,7 +425,7 @@ macro generate_read_fuction(machine_name, input_type, output_type, ragel_body, a
             $(state).pe = $(pe)
             $(state).cs = $(cs)
 
-            if $(p) == $(pe)
+            if $(p) >= $(pe)
                 $(state).finished = true
             end
             return true
