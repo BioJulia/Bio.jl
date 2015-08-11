@@ -415,4 +415,15 @@ facts("Interval Parsing") do
     end
 end
 
+
+facts("BigBed") do
+    # This going to be such a pain in the ass to test. Possible approaches:
+    #  1. test round trip from bed to bigbed and back to bed.
+    #  2. test summary information against output from kent's bigBedSummary
+    #  3. test intersection queries against bigBedToBed
+    #
+    # We can't depend on having kent utils installed, so I need to precompute
+    # test cases.
+end
+
 end # module TestIntervals

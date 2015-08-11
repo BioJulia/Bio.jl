@@ -1,6 +1,6 @@
 
 
-import Base: read, read!, seek, eof, nb_available, eof
+import Base: read, read!, seek, position, eof, nb_available, eof
 
 
 const BUFFERED_READER_INITIAL_BUF_SIZE = 1000000
@@ -174,6 +174,16 @@ function eof(reader::BufferedReader)
 end
 
 
+"""
+Current position in the stream. 1-based, unlike Base.seek.
+"""
+function position(reader::BufferedReader)
+    @assert reader.mark != 0
+    # TODO: better double check this shit
+    return reader.input_position - (reader.buffer_end - reader.mark)
+end
+
+
 function read(reader::BufferedReader, ::Type{Uint8})
     if reader.mark == 0
         reader.mark = 1
@@ -195,7 +205,6 @@ end
 
 
 function nb_available(reader::BufferedReader)
-    @show (reader.mark, reader.buffer_end)
     if reader.buffer_end >= reader.mark
         return reader.buffer_end - reader.mark + 1
     else

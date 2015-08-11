@@ -199,11 +199,13 @@ end
 
 
 function read!(io::IO, node::BigBedBTreeLeafNode)
-    if readbytes!(io, node.key, length(node.key)) < length(node.key)
+    nb = readbytes!(io, node.key, length(node.key))
+    if nb < length(node.key)
         error("Unexpected end of input.")
     end
     node.chrom_id = read(io, Uint32)
     node.chrom_size = read(io, Uint32)
+    return nb + 8
 end
 
 
@@ -484,12 +486,128 @@ end
 
 
 """
-An iterator over all entries in a BigBed file.
+Return all sequence (name, id, size) tuples in a BigBed B-tree.
 """
-immutable BigBedIterator
+function first_btree_leaf_position(bb::BigBedData)
+    # find the first leaf-node in the b-tree
+    offset = bb.header.chromosome_tree_offset + sizeof(BigBedBTreeHeader) + 1
+    seek(bb.reader, offset)
+    leafpos = 0
+    while true
+        node = read(bb.reader, BigBedBTreeNode)
+        if node.isleaf != 0
+            leafpos = offset
+            break
+        else
+            for i in 1:bb.btree_header.block_size
+                read!(bb.reader, bb.btree_internal_nodes[i])
+                bb.node_keys[i] = bb.btree_internal_nodes[i].key
+            end
+            offset = bb.btree_internal_nodes[1].child_offset + 1
+            seek(bb.reader, offset)
+        end
+    end
+
+    if leafpos == 0
+        error("Malformed BigBed file: no leaf nodes found in index.")
+    end
+
+    return leafpos
 end
 
-# TODO: Linear iterator over all BigBed elements.
+
+"""
+An iterator over all entries in a BigBed file.
+"""
+type BigBedIteratorState
+    seq_names::Vector{ASCIIString}
+    data_count::Int
+    data_num::Int
+    zlib_reader::Zlib.Reader
+    parser::BigBedDataParserImpl.BigBedDataParser
+    parser_isdone::Bool
+    next_interval::Interval{BEDMetadata}
+end
+
+
+function start(bb::BigBedData)
+    # read sequence names
+    leafpos = first_btree_leaf_position(bb)
+    seq_names = Array(ASCIIString, bb.btree_header.item_count)
+    leafnode = BigBedBTreeLeafNode(bb.btree_header.key_size)
+    seek(bb.reader, leafpos)
+    i = 1
+    while i <= bb.btree_header.item_count
+        node = read(bb.reader, BigBedBTreeNode)
+        @assert node.isleaf != 0
+        for j in 1:node.count
+            read!(bb.reader, leafnode)
+            p = findfirst(leafnode.key, 0) - 1
+            if p == -1
+                p = length(leafnode.key)
+            end
+            seq_names[i] = ASCIIString(leafnode.key[1:p])
+            i += 1
+        end
+    end
+
+    # read the first data block
+    seek(bb.reader, bb.header.full_data_offset + 1)
+    data_count = read(bb.reader, Uint64)
+    zlib_reader = Zlib.Reader(bb.reader)
+    unc_block_size = readbytes!(zlib_reader, bb.uncompressed_data,
+                               length(bb.uncompressed_data))
+
+    parser = BigBedDataParserImpl.BigBedDataParser(
+        bb.uncompressed_data, unc_block_size)
+    parser_isdone = !BigBedDataParserImpl.advance!(parser)
+
+    next_interval = BEDInterval(
+                      seq_names[parser.chrom_id + 1],
+                      parser.first + 1, parser.last, parser.strand,
+                      BEDMetadata(parser.name, parser.score, parser.thick_first,
+                                  parser.thick_last, parser.item_rgb,
+                                  parser.block_count, parser.block_sizes,
+                                  parser.block_firsts))
+
+    return BigBedIteratorState(seq_names, data_count, 1, zlib_reader,
+                               parser, parser_isdone, next_interval)
+end
+
+
+function next(bb::BigBedData, state::BigBedIteratorState)
+    value = state.next_interval
+
+    state.data_num += 1
+    if state.data_num > state.data_count
+        return value, state
+    end
+
+    if state.parser_isdone
+        unc_block_size = readbytes!(state.zlib_reader, bb.uncompressed_data,
+                                    length(bb.uncompressed_data))
+        state.parser = BigBedDataParserImpl.BigBedDataParser(
+             bb.uncompressed_data, unc_block_size)
+    end
+
+    parser = state.parser
+    state.parser_isdone = !BigBedDataParserImpl.advance!(parser)
+
+    state.next_interval = BEDInterval(
+                      state.seq_names[parser.chrom_id + 1],
+                      parser.first + 1, parser.last, parser.strand,
+                      BEDMetadata(parser.name, parser.score, parser.thick_first,
+                                  parser.thick_last, parser.item_rgb,
+                                  parser.block_count, parser.block_sizes,
+                                  parser.block_firsts))
+
+    return value, state
+end
+
+
+function done(bb::BigBedData, state::BigBedIteratorState)
+    return state.data_num > state.data_count
+end
 
 
 
@@ -1728,6 +1846,9 @@ function write_bigbed_bigwig(out::IO, fmt::Union(Type{BigBed}, Type{BigWig}),
     # write out primary full resolution data in sections, collect stats to
     # use for reductions
     data_offset = position(out)
+    # TODO: The BigBed/BigWig specification differs from Kent's impementation
+    # here. The spec says this count is a 32bit int, but the implmentation uses
+    # a 64bit int. We follow the implementation for practical reasons.
     write(out, convert(Uint64, length(intervals)))
     block_count = bigbed_count_sections_needed(chrom_info, items_per_slot)
     bounds = Array(BigBedBounds, block_count)
