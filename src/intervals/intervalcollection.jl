@@ -76,7 +76,7 @@ type IntervalCollection{T} <: IntervalStream{T}
             trees[intervals[i].seqname] = IntervalCollectionTree{T}(sub(intervals, i:j-1))
             i = j
         end
-        return new(trees, n, IntervalCollectionTree{T}[], false)
+        return new(trees, n, IntervalCollectionTree{T}[], true)
     end
 end
 
@@ -297,6 +297,21 @@ immutable IntervalCollectionStreamIteratorState{S, TS, TV}
     function IntervalCollectionStreamIteratorState()
         return new(IntervalTrees.Intersection{Int64, Interval{S}, 64}())
     end
+end
+
+
+function (==){T}(a::IntervalCollection{T}, b::IntervalCollection{T})
+    if length(a) != length(b)
+        return false
+    end
+
+    for (i, j) in zip(a, b)
+        if i != j
+            return false
+        end
+    end
+
+    return true
 end
 
 

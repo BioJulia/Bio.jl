@@ -30,7 +30,9 @@ function (==)(a::BEDMetadata, b::BEDMetadata)
     for name in fieldnames(BEDMetadata)
         aval = getfield(a, name)
         bval = getfield(b, name)
-        if !((isnull(aval) && isnull(bval)) || get(aval) == get(bval))
+        if (isnull(aval) != isnull(bval)) || (!isnull(aval) && (get(aval) != get(bval)))
+            @show aval
+            @show bval
             return false
         end
     end
@@ -516,7 +518,7 @@ if 48 <= ( data[1 + p ]) && ( data[1 + p ]) <= 57
 end
 @goto st0
 @label ctr26
-	input.thick_first  = Ragel.@int64_from_mark!
+	input.thick_first  = (Ragel.@int64_from_mark!) + 1
 @goto st14
 @label st14
 p+= 1;
@@ -909,7 +911,7 @@ end
 	input.state.linenum += 1
 @goto st42
 @label ctr27
-	input.thick_first  = Ragel.@int64_from_mark!
+	input.thick_first  = (Ragel.@int64_from_mark!) + 1
 	input.state.linenum += 1
 @goto st42
 @label ctr32
@@ -942,7 +944,7 @@ end
 	if isnull(input.block_firsts)
             input.block_firsts = Array(Int, 0)
         end
-        push!(get(input.block_firsts), (Ragel.@int64_from_mark!))
+        push!(get(input.block_firsts), (Ragel.@int64_from_mark!) + 1)
 
 	input.state.linenum += 1
 @goto st42
@@ -1047,7 +1049,7 @@ end
 	input.score        = Ragel.@int64_from_mark!
 @goto st33
 @label ctr28
-	input.thick_first  = Ragel.@int64_from_mark!
+	input.thick_first  = (Ragel.@int64_from_mark!) + 1
 @goto st33
 @label ctr33
 	input.thick_last   = Ragel.@int64_from_mark!
@@ -1074,7 +1076,7 @@ end
 	if isnull(input.block_firsts)
             input.block_firsts = Array(Int, 0)
         end
-        push!(get(input.block_firsts), (Ragel.@int64_from_mark!))
+        push!(get(input.block_firsts), (Ragel.@int64_from_mark!) + 1)
 
 @goto st33
 @label ctr79
@@ -1177,7 +1179,7 @@ end
 	if isnull(input.block_firsts)
             input.block_firsts = Array(Int, 0)
         end
-        push!(get(input.block_firsts), (Ragel.@int64_from_mark!))
+        push!(get(input.block_firsts), (Ragel.@int64_from_mark!) + 1)
 
 @goto st37
 @label st37
@@ -1507,7 +1509,10 @@ function write_optional_fields(out::IO, interval::BEDInterval, leadingtab::Bool=
 
     if !isnull(interval.metadata.item_rgb)
         item_rgb = get(interval.metadata.item_rgb)
-        print(out, '\t', item_rgb.r, ',', item_rgb.g, ',', item_rgb.b)
+        print(out, '\t',
+              round(Int, 255 * item_rgb.r), ',',
+              round(Int, 255 * item_rgb.g), ',',
+              round(Int, 255 * item_rgb.b))
     else return end
 
     if !isnull(interval.metadata.block_count)

@@ -31,7 +31,9 @@ function (==)(a::BEDMetadata, b::BEDMetadata)
     for name in fieldnames(BEDMetadata)
         aval = getfield(a, name)
         bval = getfield(b, name)
-        if !((isnull(aval) && isnull(bval)) || get(aval) == get(bval))
+        if (isnull(aval) != isnull(bval)) || (!isnull(aval) && (get(aval) != get(bval)))
+            @show aval
+            @show bval
             return false
         end
     end
@@ -71,7 +73,7 @@ export BEDParser, takevalue!
     action name        { input.name         = Nullable{ASCIIString}(Ragel.@asciistring_from_mark!) }
     action score       { input.score        = Ragel.@int64_from_mark! }
     action strand      { input.strand       = convert(Strand, Ragel.@char) }
-    action thick_first { input.thick_first  = Ragel.@int64_from_mark! }
+    action thick_first { input.thick_first  = (Ragel.@int64_from_mark!) + 1 }
     action thick_last  { input.thick_last   = Ragel.@int64_from_mark! }
     action item_rgb_r  { input.red = input.green = input.blue = (Ragel.@int64_from_mark!) / 255.0 }
     action item_rgb_g  { input.green        = (Ragel.@int64_from_mark!) / 255.0 }
@@ -88,7 +90,7 @@ export BEDParser, takevalue!
         if isnull(input.block_firsts)
             input.block_firsts = Array(Int, 0)
         end
-        push!(get(input.block_firsts), (Ragel.@int64_from_mark!))
+        push!(get(input.block_firsts), (Ragel.@int64_from_mark!) + 1)
     }
 
     newline      = '\r'? '\n'     >count_line;
@@ -324,7 +326,10 @@ function write_optional_fields(out::IO, interval::BEDInterval, leadingtab::Bool=
 
     if !isnull(interval.metadata.item_rgb)
         item_rgb = get(interval.metadata.item_rgb)
-        print(out, '\t', item_rgb.r, ',', item_rgb.g, ',', item_rgb.b)
+        print(out, '\t',
+              round(Int, 255 * item_rgb.r), ',',
+              round(Int, 255 * item_rgb.g), ',',
+              round(Int, 255 * item_rgb.b))
     else return end
 
     if !isnull(interval.metadata.block_count)

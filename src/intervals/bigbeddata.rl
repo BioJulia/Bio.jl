@@ -1,5 +1,5 @@
 
-type BigBedData
+type BigBedData <: IntervalStream{BEDMetadata}
     reader::BufferedReader
     header::BigBedHeader
     zoom_headers::Vector{BigBedZoomHeader}
@@ -51,7 +51,7 @@ using Color, Compat, Switch
 
     action first {
         m = Ragel.@unmark!
-        input.first = unsafe_load(convert(Ptr{Uint32}, pointer(state.reader.buffer, m))) - 1
+        input.first = unsafe_load(convert(Ptr{Uint32}, pointer(state.reader.buffer, m)))
     }
 
     action last {
@@ -62,7 +62,7 @@ using Color, Compat, Switch
     action name        { input.name         = Nullable{String}(Ragel.@asciistring_from_mark!) }
     action score       { input.score        = Ragel.@int64_from_mark! }
     action strand      { input.strand       = convert(Strand, Ragel.@char) }
-    action thick_first { input.thick_first  = Ragel.@int64_from_mark! }
+    action thick_first { input.thick_first  = (Ragel.@int64_from_mark!) + 1 }
     action thick_last  { input.thick_last   = Ragel.@int64_from_mark! }
     action item_rgb_r  { input.red = input.green = input.blue = (Ragel.@int64_from_mark!) / 255.0 }
     action item_rgb_g  { input.green        = (Ragel.@int64_from_mark!) / 255.0 }
@@ -79,7 +79,7 @@ using Color, Compat, Switch
         if isnull(input.block_firsts)
             input.block_firsts = Array(Int, 0)
         end
-        push!(get(input.block_firsts), (Ragel.@int64_from_mark!))
+        push!(get(input.block_firsts), (Ragel.@int64_from_mark!) + 1)
     }
 
     hspace       = [ \t\v];
@@ -140,7 +140,7 @@ type BigBedDataParser
     function BigBedDataParser(input::Vector{Uint8}, len::Integer)
         %%write init;
 
-        return new(Ragel.State(cs, input, len),
+        return new(Ragel.State(cs, input, false, len),
                    0, 0, 0, STRAND_NA, 0.0, 0.0, 0.0,
                    Nullable{String}(), Nullable{Int}(), Nullable{Int}(),
                    Nullable{Int}(), Nullable{RGB{Float32}}(), Nullable{Int}(),

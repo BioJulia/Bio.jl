@@ -26,7 +26,10 @@ type BufferedReader <: IO
 end
 
 
-function BufferedReader(data::Vector{Uint8}, len=length(data))
+function BufferedReader(data::Vector{Uint8}, memory_map::Bool=false, len=length(data))
+    if memory_map
+        error("Parser must be given a file name in order to memory map.")
+    end
     return BufferedReader(Nullable{IO}(), 0, false, data, len, 0)
 end
 
@@ -146,7 +149,7 @@ Seek to the given position in the input stream. Unlike Base.seek, this is 1-base
 """
 function seek(reader::BufferedReader, pos::Integer)
     if isnull(reader.input)
-        if pos <= length(reader.data)
+        if pos <= length(reader.buffer)
             reader.mark = pos
         else
             throw(BoundsError)

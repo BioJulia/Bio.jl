@@ -417,13 +417,32 @@ end
 
 
 facts("BigBed") do
-    # This going to be such a pain in the ass to test. Possible approaches:
-    #  1. test round trip from bed to bigbed and back to bed.
-    #  2. test summary information against output from kent's bigBedSummary
-    #  3. test intersection queries against bigBedToBed
-    #
-    # We can't depend on having kent utils installed, so I need to precompute
-    # test cases.
+    context("BED → BigBed → BED round-trip") do
+        path = Pkg.dir("Bio", "test", "BioFmtSpecimens", "BED")
+        for specimen in YAML.load_file(joinpath(path, "index.yml"))
+            if !get(specimen, "valid", true)
+                continue
+            end
+
+            #@show specimen["filename"]
+
+            # BED → BigBed
+            intervals = IntervalCollection(
+                read(open(joinpath(path, specimen["filename"])), BED))
+            out = IOBuffer()
+            write(out, BigBed, intervals)
+            bigbed_data = takebuf_array(out)
+
+            # BigBed → BED
+            bb = read(bigbed_data, BigBed)
+            intervals2 = IntervalCollection(bb)
+
+            @fact intervals == intervals2 --> true
+        end
+    end
+
+    # TODO: test summary information against output from kent's bigBedSummary
+    # TODO: test intersection queries against bigBedToBed
 end
 
 end # module TestIntervals

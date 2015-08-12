@@ -148,8 +148,8 @@ type State
     # Parser is responsible for updating this
     linenum::Int
 
-    function State(cs, data::Vector{Uint8}, len::Integer=length(data))
-        return new(BufferedReader(data, len), false, 0, cs, cs, 1)
+    function State(cs, data::Vector{Uint8}, memory_map::Bool=false, len::Integer=length(data))
+        return new(BufferedReader(data, memory_map, len), memory_map, 0, cs, cs, 1)
     end
 
     function State(cs, input::IO, memory_map=false)

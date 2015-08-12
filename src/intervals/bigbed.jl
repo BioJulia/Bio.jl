@@ -942,7 +942,7 @@ function bigbed_write_chrom_tree(out::IO, intervals::IntervalCollection,
     # See bbiWriteChromInfo in bbiWrite.c
     length(intervals.trees)
     for seqname in keys(intervals.trees)
-        if !in(seqname, chrom_sizes)
+        if !haskey(chrom_sizes, seqname)
             chrom_sizes[seqname] =
                 length(intervals.trees[seqname]) > 0 ?
                     intervals.trees[seqname].root.maxend : 0
