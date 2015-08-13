@@ -1513,7 +1513,7 @@ end
 # ----------------
 
 """
-Count occurances of short (<= 32) k-mers in a sequence.
+Count ocurrences of short (<= 32) k-mers in a sequence.
 
 # Arguments:
   * 'seq`: A NucleotideSequence
