@@ -523,7 +523,7 @@ type BigBedIteratorState
     seq_names::Vector{ASCIIString}
     data_count::Int
     data_num::Int
-    zlib_reader::Zlib.Reader
+    data_offset::UInt
     parser::BigBedDataParserImpl.BigBedDataParser
     parser_isdone::Bool
     next_interval::Interval{BEDMetadata}
@@ -562,15 +562,11 @@ function start(bb::BigBedData)
         bb.uncompressed_data, unc_block_size)
     parser_isdone = !BigBedDataParserImpl.advance!(parser)
 
-    next_interval = BEDInterval(
-                      seq_names[parser.chrom_id + 1],
-                      parser.first + 1, parser.last, parser.strand,
-                      BEDMetadata(parser.name, parser.score, parser.thick_first,
-                                  parser.thick_last, parser.item_rgb,
-                                  parser.block_count, parser.block_sizes,
-                                  parser.block_firsts))
+    next_interval = BigBedDataParserImpl.takevalue!(
+        parser, seq_names[parser.chrom_id + 1])
 
-    return BigBedIteratorState(seq_names, data_count, 1, zlib_reader,
+    return BigBedIteratorState(seq_names, data_count, 1,
+                               zlib_reader.strm.total_in,
                                parser, parser_isdone, next_interval)
 end
 
@@ -583,23 +579,26 @@ function next(bb::BigBedData, state::BigBedIteratorState)
         return value, state
     end
 
+    state.parser_isdone = !BigBedDataParserImpl.advance!(state.parser)
+
     if state.parser_isdone
-        unc_block_size = readbytes!(state.zlib_reader, bb.uncompressed_data,
+        seek(bb.reader, bb.header.full_data_offset + state.data_offset + sizeof(UInt64) + 1)
+        zlib_reader = Zlib.Reader(bb.reader)
+        # TODO: calling inflateReset may be a little faster
+        #ret = ccall((:inflateReset, "libz"), Cint, (Ptr{Zlib.z_stream},), &zlib_reader.strm)
+
+        unc_block_size = readbytes!(zlib_reader, bb.uncompressed_data,
                                     length(bb.uncompressed_data))
         state.parser = BigBedDataParserImpl.BigBedDataParser(
              bb.uncompressed_data, unc_block_size)
+        state.data_offset += zlib_reader.strm.total_in
+
+        state.parser_isdone = !BigBedDataParserImpl.advance!(state.parser)
+        @assert !state.parser_isdone
     end
 
-    parser = state.parser
-    state.parser_isdone = !BigBedDataParserImpl.advance!(parser)
-
-    state.next_interval = BEDInterval(
-                      state.seq_names[parser.chrom_id + 1],
-                      parser.first + 1, parser.last, parser.strand,
-                      BEDMetadata(parser.name, parser.score, parser.thick_first,
-                                  parser.thick_last, parser.item_rgb,
-                                  parser.block_count, parser.block_sizes,
-                                  parser.block_firsts))
+    state.next_interval = BigBedDataParserImpl.takevalue!(
+        state.parser, state.seq_names[state.parser.chrom_id + 1])
 
     return value, state
 end
@@ -740,13 +739,8 @@ function find_next_intersection!(it::BigBedIntersectIterator)
             if parser.chrom_id == it.query_chrom_id &&
                parser.first <= it.query_last &&
                parser.last - 1 >= it.query_first
-                it.nextinterval = BEDInterval(
-                    it.query_seqname, parser.first + 1, parser.last,
-                    parser.strand,
-                    BEDMetadata(parser.name, parser.score, parser.thick_first,
-                                parser.thick_last, parser.item_rgb,
-                                parser.block_count, parser.block_sizes,
-                                parser.block_firsts))
+                it.next_interval = BigBedDataParserImpl.takevalue!(
+                    it.query_seqname, parser)
                 return
             end
         end

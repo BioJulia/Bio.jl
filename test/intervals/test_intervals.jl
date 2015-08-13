@@ -424,8 +424,6 @@ facts("BigBed") do
                 continue
             end
 
-            #@show specimen["filename"]
-
             # BED → BigBed
             intervals = IntervalCollection(
                 read(open(joinpath(path, specimen["filename"])), BED))

@@ -32,8 +32,6 @@ function (==)(a::BEDMetadata, b::BEDMetadata)
         aval = getfield(a, name)
         bval = getfield(b, name)
         if (isnull(aval) != isnull(bval)) || (!isnull(aval) && (get(aval) != get(bval)))
-            @show aval
-            @show bval
             return false
         end
     end

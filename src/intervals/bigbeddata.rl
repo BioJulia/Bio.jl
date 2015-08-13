@@ -149,6 +149,29 @@ type BigBedDataParser
 end
 
 
+function takevalue!(input::BigBedDataParser, seqname::ASCIIString)
+
+    interval = BEDInterval(
+        seqname,
+        input.first + 1, input.last, input.strand,
+        BEDMetadata(input.name, input.score, input.thick_first,
+                    input.thick_last, input.item_rgb,
+                    input.block_count, input.block_sizes,
+                    input.block_firsts))
+
+    input.strand = STRAND_NA
+    input.name = Nullable{ASCIIString}()
+    input.score = Nullable{Int}()
+    input.thick_first = Nullable{Int}()
+    input.thick_last = Nullable{Int}()
+    input.item_rgb = Nullable{RGB{Float32}}()
+    input.block_count = Nullable{Int}()
+    input.block_sizes = Nullable{Vector{Int}}()
+    input.block_firsts = Nullable{Vector{Int}}()
+
+    return interval
+end
+
 
 Ragel.@generate_read_fuction("bigbed", BigBedDataParser, BigBedDataEntry,
     begin
