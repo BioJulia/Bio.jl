@@ -9,6 +9,8 @@ import Base: convert, getindex, show, length, start, next, done, copy, reverse,
 
 import Base.Order: lt
 
+export @cigar_str
+
 include("operations.jl")
 include("cigar.jl")
 include("anchors.jl")
