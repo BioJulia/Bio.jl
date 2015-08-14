@@ -40,6 +40,6 @@ function convert(::Type{String}, cigarString::CIGARString)
     return outString
 end
 
-function show(io::IO, cigarstr::Vector{CIGAR})
+function show(io::IO, cigarstr::Array{CIGAR, 1})
     write(io, convert(String, cigarstr))
 end
