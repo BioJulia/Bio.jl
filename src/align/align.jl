@@ -9,7 +9,8 @@ import Base: convert, getindex, show, length, start, next, done, copy, reverse,
 
 import Base.Order: lt
 
-export @cigar_str
+export Operation, @cigar_str, CIGAR, CIGARString, AlignmentAnchor, hasOp,
+       AlignmentAnchors, AlignedSequence 
 
 include("operations.jl")
 include("cigar.jl")
