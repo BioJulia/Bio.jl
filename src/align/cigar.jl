@@ -9,7 +9,7 @@ function CIGAR(op::Char, size::Int)
 end
 
 function convert(::Type{String}, cigar::CIGAR)
-    return "$(cigar.Size)$(Char(cigar.OP))"
+    return string(cigar.Size, Char(cigar.OP))
 end
 
 function show(io::IO, cigar::CIGAR)
@@ -40,6 +40,6 @@ function convert(::Type{String}, cigarString::CIGARString)
     return outString
 end
 
-function show(io::IO, cigarstr::CIGARString)
+function show(io::IO, cigarstr::Vector{CIGAR})
     write(io, convert(String, cigarstr))
 end
