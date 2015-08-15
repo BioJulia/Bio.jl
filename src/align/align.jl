@@ -9,6 +9,8 @@ import Base: convert, getindex, show, length, start, next, done, copy, reverse,
 
 import Base.Order: lt
 
+import Base.Multimedia: MIME, writemime
+
 export Operation, @cigar_str, CIGAR, CIGARString, AlignmentAnchor, hasOp,
        AlignmentAnchors, AlignedSequence
 
