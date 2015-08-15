@@ -43,3 +43,7 @@ end
 function Base.show(io::IO, cigarstr::Array{CIGAR, 1})
     write(io, convert(String, cigarstr))
 end
+
+function *(a::CIGARString, b::CIGARString)
+    return [a;b]
+end
