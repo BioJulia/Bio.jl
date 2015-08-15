@@ -44,6 +44,11 @@ function Base.show(io::IO, cigarstr::Array{CIGAR, 1})
     write(io, convert(String, cigarstr))
 end
 
+function Base.Multimedia.writemime(io::IO, ::Base.Multimedia.MIME{symbol("text/plain")}, cs::Vector{CIGAR})
+    show(io, cs)
+end
+
+
 function *(a::CIGARString, b::CIGARString)
     return [a;b]
 end
