@@ -40,15 +40,26 @@ function convert(::Type{String}, cigarString::CIGARString)
     return outString
 end
 
-function Base.show(io::IO, cigarstr::Array{CIGAR, 1})
+function show(io::IO, cigarstr::CIGARString)
     write(io, convert(String, cigarstr))
 end
 
-function writemime(io::IO, ::MIME{symbol("text/plain")}, cs::Vector{CIGAR})
+function writemime(io::IO, ::MIME{symbol("text/plain")}, cs::CIGARString)
     show(io, cs)
 end
 
-
 function *(a::CIGARString, b::CIGARString)
     return [a;b]
+end
+
+function viewPosition(x::CIGARString, position::Int)
+    nextIdx = start(x)
+    currentPos = position
+    while !done(x, nextIdx)
+        currentCIGAR, nextIdx = next(x, nextIdx)
+        currentPos -= currentCIGAR.Size
+        if currentPos <= 0
+            return nextIdx - 1
+        end
+    end
 end
