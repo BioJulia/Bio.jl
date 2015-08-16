@@ -678,7 +678,7 @@ function lookup_seqname(bb::BigBedData, seqname::String)
 end
 
 
-function getindex(bb::BigBedData, query::Interval)
+function intersect(bb::BigBedData, query::Interval)
     seqname, first, last = query.seqname, query.first, query.last
     chrom_id, chrom_size = lookup_seqname(bb, seqname)
 
@@ -737,10 +737,10 @@ function find_next_intersection!(it::BigBedIntersectIterator)
             # Note: (parser.first, parser.last) is 0-based, end-exclusive,
             # while (it.query_first, it.query_last) is 1-based, end-inclusive.
             if parser.chrom_id == it.query_chrom_id &&
-               parser.first <= it.query_last &&
-               parser.last - 1 >= it.query_first
-                it.next_interval = BigBedDataParserImpl.takevalue!(
-                    it.query_seqname, parser)
+               parser.first + 1 <= it.query_last &&
+               parser.last >= it.query_first
+                it.nextinterval = BigBedDataParserImpl.takevalue!(
+                    parser, it.query_seqname)
                 return
             end
         end
@@ -770,7 +770,7 @@ end
 
 
 function next(it::BigBedIntersectIterator, ::Nothing)
-    value = it.nextinterval
+    value = get(it.nextinterval)
     find_next_intersection!(it)
     return value, nothing
 end

@@ -18,7 +18,7 @@ import Bio: FileFormat
 
 export Strand, Interval, IntervalCollection, IntervalStream,
        STRAND_NA, STRAND_POS, STRAND_NEG, STRAND_BOTH,
-       coverage, isoverlapping, BED, BEDMetadata, BigBed, BigWig
+       coverage, isoverlapping, BED, BEDMetadata, BEDInterval, BigBed, BigWig
 
 include("interval.jl")
 include("stream_buffer.jl")
