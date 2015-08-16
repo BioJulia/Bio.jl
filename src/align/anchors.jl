@@ -223,20 +223,21 @@ immutable AlignedSequence
 end
 
 
-function alnToSrc(alignedSeq::AlignedSequence, alnPosition::Int)
-    sequenceLength = length(alignedSeq.src)
-    if length(alignedSeq.anchors) > 0
-        loBracket = searchsortedlast(alignedSeq.anchors, alnPosition, BY_ALN)
-    else
-        loBracket = alignmentPosition < sequenceLength ? 0 : 1
-    end
+function findPosition(anchors::AlignmentAnchors, position::Int, ordering::alnPosOrdering)
+    loBracket = searchsortedlast(anchors, position, ordering)
     hiBracket = loBracket + 1
-    # We need code here just to handle a few edge cases.
+    # We probably need code here to handle a few edge cases.
+    return loBracket, hiBracket
+end
 
-    hiAnc = alignedSeq.anchors[hiBracket]
-    loAnc = alignedSeq.anchors[loBracket]
-    srcDist = hiAnc.srcPos - loAnc.srcPos
-    alnDist = alnPosition - loAnc.alnPos
+
+function alnToSrc(alignedSeq::AlignedSequence, alnPosition::Int)
+    lowIdx, highIdx = findPosition(alignedSeq, alnPosition, BY_ALN)
+    highAnchor = alignedSeq.anchors[highIdx]
+    lowAnchor = alignedSeq.anchors[lowIdx]
+    sourceDistance = hiAnc.srcPos - loAnc.srcPos
+    alignDistance = alnPosition - loAnc.alnPos
+    
     if srcDist > alnDist
         sourcePosition = loAnc.srcPos + alnDist
     else
@@ -247,9 +248,5 @@ end
 
 
 function srcToAln(alignedSeq::AlignedSequence, alnPosition::Int)
-    if length(alignedSeq.anchors) > 0
-        loBracket = searchsortedlast(alignedSeq.anchors, alnPosition, BY_SRC)
-    else
-        loBracket = alignmentPosition < sequenceLength ? 0 : 1
-    end
+    lowIdx, highIdx = findPosition(alignedSeq, alnPosition, BY_SRC)
 end
