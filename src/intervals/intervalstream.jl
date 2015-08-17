@@ -234,7 +234,6 @@ coverage like:
 ```
     [1][-2-][-1-][--2--][--1--]
 ```
-<<<<<<< HEAD
 """
 function coverage(stream::Union(IntervalStreamOrArray, IntervalTree),
                   seqname_isless::Function=isless)
