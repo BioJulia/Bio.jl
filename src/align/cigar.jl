@@ -1,7 +1,3 @@
-const CIGAR_CHARS = ['-', '=', 'M', 'm', 'N', 'n', 'X', 'x', 'S', 's', 'H',
-                         'h', 'I', 'i', 'D', 'd', 'P', 'p']
-
-const NON_CIGAR_CHARS =
 
 immutable CIGAR
     OP::Operation
@@ -10,6 +6,10 @@ end
 
 function CIGAR(op::Char, size::Int)
     return CIGAR(Operation(op), size)
+end
+
+function convert(::Type{CIGAR}, str::String)
+    return CIGAR(str[end], parse(Int, str[1:end-1]))
 end
 
 function convert(::Type{String}, cigar::CIGAR)
@@ -26,8 +26,7 @@ function convert(::Type{CIGARString}, str::String)
     matches = matchall(r"(\d+)(\w)", str)
     cigarString = Vector{CIGAR}(length(matches))
     @inbounds for i in 1:length(matches)
-        m = matches[i]
-        cigarString[i] = CIGAR(m[end], parse(Int, m[1:end-1]))
+        cigarString[i] = CIGAR(matches[i])
     end
     return cigarString
 end
@@ -54,6 +53,10 @@ end
 
 function *(a::CIGARString, b::CIGARString)
     return [a;b]
+end
+
+function *(a::Operation, n::Int)
+    return CIGAR(a, n)
 end
 
 function viewPosition(x::CIGARString, position::Int)
