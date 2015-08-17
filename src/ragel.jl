@@ -166,13 +166,9 @@ end
 
 
 function fillbuffer!(state::State)
-    if state.reader.mark > 0
-        keeplen = state.reader.buffer_end - state.reader.mark + 1
-        state.p = keeplen
-    else
-        state.p = 0
-    end
+    old_buffer_end = state.reader.buffer_end
     nb = fillbuffer!(state.reader)
+    state.p = state.p + state.reader.buffer_end - old_buffer_end - nb
     return nb
 end
 
@@ -292,7 +288,7 @@ macro generate_read_fuction(machine_name, input_type, output_type, ragel_body, a
                 if $(p) == $(pe)
                     $(state).p = $(p)
                     $(state).reader.buffer_end = $(pe)
-                    nb = fillbuffer!($(state).reader)
+                    nb = fillbuffer!($(state))
                     $(p) = $(state).p
                     $(pe) = $(state).reader.buffer_end
                     if nb == 0
@@ -312,7 +308,7 @@ macro generate_read_fuction(machine_name, input_type, output_type, ragel_body, a
                     if $(p) == $(pe)
                         $(state).p = $(p)
                         $(state).reader.buffer_end = $(pe)
-                        fillbuffer!($(state).reader)
+                        fillbuffer!($(state))
                         $(p) = $(state).p
                         $(pe) = $(state).reader.buffer_end
                     end
@@ -328,6 +324,7 @@ macro generate_read_fuction(machine_name, input_type, output_type, ragel_body, a
             end
 
             $(state).p = $(p)
+            $(state).reader.buffer_end = $(pe)
             $(state).cs = $(cs)
 
             if $(p) >= $(pe)
