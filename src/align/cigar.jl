@@ -1,3 +1,7 @@
+const CIGAR_CHARS = ['-', '=', 'M', 'm', 'N', 'n', 'X', 'x', 'S', 's', 'H',
+                         'h', 'I', 'i', 'D', 'd', 'P', 'p']
+
+const NON_CIGAR_CHARS =
 
 immutable CIGAR
     OP::Operation

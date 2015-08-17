@@ -237,7 +237,6 @@ function alnToSrc(alignedSeq::AlignedSequence, alnPosition::Int)
     lowAnchor = alignedSeq.anchors[lowIdx]
     sourceDistance = hiAnc.srcPos - loAnc.srcPos
     alignDistance = alnPosition - loAnc.alnPos
-    
     if srcDist > alnDist
         sourcePosition = loAnc.srcPos + alnDist
     else

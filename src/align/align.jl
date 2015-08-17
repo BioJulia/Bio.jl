@@ -12,7 +12,8 @@ import Base.Order: lt
 import Base.Multimedia: MIME, writemime
 
 export Operation, @cigar_str, CIGAR, CIGARString, AlignmentAnchor, hasOp,
-       AlignmentAnchors, AlignedSequence
+       AlignmentAnchors, AlignedSequence, OP_GAP, OP_N, OP_MM, OP_PAD, OP_MATCH,
+       OP_SCLIP, OP_MATCH, OP_HCLIP, OP_DELETE, OP_INSERT, OP_INVALID
 
 include("operations.jl")
 include("cigar.jl")
