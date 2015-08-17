@@ -11,11 +11,12 @@ facts("Alignments") do
             OP_HCLIP, OP_HCLIP, OP_INSERT, OP_INSERT,
             OP_DELETE, OP_DELETE, OP_PAD, OP_PAD]
             @inbounds for i in 1:length(CIGAR_CHARS)
-                @fact Operation(CIGAR_CHARS[i]) --> ops[i] "Operation($(CIGAR_CHARS[i]))"
+                @fact Operation(CIGAR_CHARS[i]) --> ops[i]
             end
             ops = unique(ops)
-            @inbounds for i in ops
-                @fact
+            chars = ['-', '=', 'M', 'N', 'X', 'S', 'H', 'I', 'D', 'P']
+            @inbounds for i in 1:length(ops)
+                @fact Char(eval(ops[i])) --> chars[i]
             end
         end
     end
