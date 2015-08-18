@@ -41,8 +41,8 @@ end
 facts("Alignments") do
     context("Operations") do
         context("Constructors and Conversions") do
-            @inbounds for i in 1:length(chars1)
-                @fact Operation(chars1[i]) --> OPS_TWICE[i]
+            @inbounds for i in 1:length(OPS_TWICE)
+                @fact Operation(OPS_TWICE[i]) --> OPS_TWICE[i]
             end
             @inbounds for i in 1:length(OPS_UNIQUE)
                 @fact Char(eval(OPS_UNIQUE[i])) --> CHARS_FROM_OPS[i]
@@ -88,8 +88,12 @@ facts("Alignments") do
             context("From String to CIGARS") do
                 for i in 1:NUMBER_OF_RANDOM_CIGAR_STRINGS
                     numCigar = rand(1:MAX_CIGARS_IN_CIGAR_STRING)
+
+                    # These two lines assume that conversion between Operations
+                    # and characters works as tested in earlier contexts.
                     operationChars = rand(ALLOWED_CHARS, numCigar)
                     operationOPS = [Operation(i) for i in operationChars]
+
                     cigarLengths = rand(1:MAX_CIGAR_SIZE, numCigar)
                     out = ""
                     @inbounds for i in 1:MAX_CIGARS_IN_CIGAR_STRING
