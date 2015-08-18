@@ -99,7 +99,7 @@ facts("Alignments") do
                     @inbounds for i in 1:MAX_CIGARS_IN_CIGAR_STRING
                         out *= "$(cigarLengths[i])$(operationChars[i])"
                     end
-                    cigars = CIGARS(out)
+                    cigars = convert(CIGARS, out)
                     @fact length(cigars) --> numCigar
                     for i in 1:numCigar
                         @fact cigars[i].OP --> operationOPS[i]

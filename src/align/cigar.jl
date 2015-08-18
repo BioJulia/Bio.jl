@@ -1,3 +1,10 @@
+# =========================
+# CIGARs and CIGAR Strings
+# =========================
+
+
+# Single CIGARs
+# --------------
 
 immutable CIGAR
     OP::Operation
@@ -19,6 +26,10 @@ end
 function show(io::IO, cigar::CIGAR)
     write(io, convert(String, cigar))
 end
+
+
+# CIGARS or CIGAR Strings
+# ------------------------
 
 typealias CIGARS Vector{CIGAR}
 
