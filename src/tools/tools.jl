@@ -1,6 +1,9 @@
 module Tools
 
-include("tokenizer.jl")
+using Base.Intrinsics
 
+export Tokenizer, tokenize
+
+include("tokenizer.jl")
 
 end

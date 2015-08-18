@@ -18,7 +18,14 @@ Code Quality: [![Build Status](https://travis-ci.org/BioJulia/Bio.jl.svg?branch=
 
 [Read the reference manual here.](http://biojulia.github.io/Bio.jl/latest)
 
-### Running tests
+## Modules and their features
+### Phylo
+* Type for representing phylogeneies.
+* Manipulation of phylogenies.
+* Types for traversing phylogenies.
+* Search methods for searching a tree according to a given condition and traverser type.
+
+## Running tests
 
 `julia test/runtests.jl`
 
