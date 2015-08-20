@@ -2,6 +2,8 @@ module Tokenizer
 
 using Base.Intrinsics
 
+export Tokenizer, tokenizestring
+
 # ========================
 # A Tokenizer for Strings
 # ========================
@@ -36,6 +38,10 @@ type Tokenizer
     finalstring = "($combinedstring)"
     return new([i => j for (i, j) in x], Regex(finalstring))
   end
+end
+
+function tokenizestring(s::String, t::Tokenizer)
+  return matchall(t.tokenizer, s)
 end
 
 
