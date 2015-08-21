@@ -6,6 +6,7 @@ julia:
   - nightly
 notifications:
   email: false
+sudo: false
 script:
   - if [[ -a .git/shallow ]]; then git fetch --unshallow; fi
   - julia --check-bounds=yes -e 'Pkg.clone(pwd()); Pkg.build("Bio"); Pkg.test("Bio"; coverage=true)'
