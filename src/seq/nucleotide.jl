@@ -206,7 +206,7 @@ function NucleotideSequence{T<:Nucleotide}(::Type{T}, other::NucleotideSequence,
     if start < other.part.start || stop > other.part.stop
         error("Invalid subsequence range")
     end
-    return NucleotideSequence{T}(other.data, other.ns, part)
+    return NucleotideSequence{T}(other.data, other.ns, start:stop)
 end
 
 
