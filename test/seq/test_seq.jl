@@ -535,6 +535,12 @@ facts("Nucleotides") do
                     # Empty ranges
                     @fact (RNASequence(rna"AUCGAUCG", 5:4) == RNASequence()) --> true
                     @fact (DNASequence(dna"ATCGATCG", 5:4) == DNASequence()) --> true
+
+                    # Subsequence of subsequence
+                    @fact dna"ACGTAG"[4:end][1:2] == dna"TA" --> true
+                    @fact dna"ACGTAG"[4:end][2:3] == dna"AG" --> true
+                    @fact_throws dna"ACGTAG"[4:end][0:1]
+                    @fact_throws dna"ACGTAG"[4:end][3:4]
                 end
             end
 
