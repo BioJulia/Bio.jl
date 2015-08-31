@@ -76,7 +76,7 @@ type IntervalCollection{T} <: IntervalStream{T}
             trees[intervals[i].seqname] = IntervalCollectionTree{T}(sub(intervals, i:j-1))
             i = j
         end
-        return new(trees, n, IntervalCollectionTree{T}[], false)
+        return new(trees, n, IntervalCollectionTree{T}[], true)
     end
 end
 
@@ -195,6 +195,19 @@ function done{T}(ic::IntervalCollection{T},
 end
 
 
+
+"""
+Return an iterator over all intervals in the collection that overlap the query interval.
+"""
+function intersect{T}(a::IntervalCollection{T}, b::Interval)
+    if haskey(a.trees, b.seqname)
+        return intersect(a.trees[b.seqname], b)
+    else
+        return IntervalTrees.IntervalIntersectionIterator{Int64, Interval{T}, 64}()
+    end
+end
+
+
 type IntersectIterator{S, T}
     a_trees::Vector{IntervalTrees.IntervalBTree{Int64, Interval{S}, 64}}
     b_trees::Vector{IntervalTrees.IntervalBTree{Int64, Interval{T}, 64}}
@@ -297,6 +310,21 @@ immutable IntervalCollectionStreamIteratorState{S, TS, TV}
     function IntervalCollectionStreamIteratorState()
         return new(IntervalTrees.Intersection{Int64, Interval{S}, 64}())
     end
+end
+
+
+function (==){T}(a::IntervalCollection{T}, b::IntervalCollection{T})
+    if length(a) != length(b)
+        return false
+    end
+
+    for (i, j) in zip(a, b)
+        if i != j
+            return false
+        end
+    end
+
+    return true
 end
 
 

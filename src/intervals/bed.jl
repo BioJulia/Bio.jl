@@ -30,7 +30,7 @@ function (==)(a::BEDMetadata, b::BEDMetadata)
     for name in fieldnames(BEDMetadata)
         aval = getfield(a, name)
         bval = getfield(b, name)
-        if !((isnull(aval) && isnull(bval)) || get(aval) == get(bval))
+        if (isnull(aval) != isnull(bval)) || (!isnull(aval) && (get(aval) != get(bval)))
             return false
         end
     end
@@ -99,7 +99,7 @@ end
 
 
 function takevalue!(input::BEDParser)
-    value = BEDInterval(input.seqname, input.first, input.last, input.strand,
+    value = BEDInterval(input.seqname, input.first + 1, input.last, input.strand,
                         BEDMetadata(input.name, input.score, input.thick_first,
                                     input.thick_last, input.item_rgb,
                                     input.block_count, input.block_sizes,
@@ -251,7 +251,7 @@ cs = 0;
 	input.seqname      = Ragel.@asciistring_from_mark!
 @goto st1
 @label ctr83
-	Ragel.@pushmark!
+	Ragel.@mark!
 	input.seqname      = Ragel.@asciistring_from_mark!
 @goto st1
 @label st1
@@ -313,7 +313,7 @@ if ( data[1 + p ]) == 10
 end
 @goto st0
 @label ctr4
-	Ragel.@pushmark!
+	Ragel.@mark!
 @goto st4
 @label st4
 p+= 1;
@@ -332,7 +332,7 @@ if 48 <= ( data[1 + p ]) && ( data[1 + p ]) <= 57
 end
 @goto st0
 @label ctr5
-	input.first        = 1 + Ragel.@int64_from_mark!
+	input.first        = Ragel.@int64_from_mark!
 @goto st5
 @label st5
 p+= 1;
@@ -347,7 +347,7 @@ if 48 <= ( data[1 + p ]) && ( data[1 + p ]) <= 57
 end
 @goto st0
 @label ctr7
-	Ragel.@pushmark!
+	Ragel.@mark!
 @goto st6
 @label st6
 p+= 1;
@@ -395,7 +395,7 @@ if 32 <= ( data[1 + p ]) && ( data[1 + p ]) <= 126
 end
 @goto st0
 @label ctr12
-	Ragel.@pushmark!
+	Ragel.@mark!
 	input.name         = Nullable{ASCIIString}(Ragel.@asciistring_from_mark!)
 @goto st8
 @label ctr77
@@ -414,7 +414,7 @@ if 48 <= ( data[1 + p ]) && ( data[1 + p ]) <= 57
 end
 @goto st0
 @label ctr16
-	Ragel.@pushmark!
+	Ragel.@mark!
 @goto st9
 @label st9
 p+= 1;
@@ -492,7 +492,7 @@ if 48 <= ( data[1 + p ]) && ( data[1 + p ]) <= 57
 end
 @goto st0
 @label ctr25
-	Ragel.@pushmark!
+	Ragel.@mark!
 @goto st13
 @label st13
 p+= 1;
@@ -516,7 +516,7 @@ if 48 <= ( data[1 + p ]) && ( data[1 + p ]) <= 57
 end
 @goto st0
 @label ctr26
-	input.thick_first  = Ragel.@int64_from_mark!
+	input.thick_first  = (Ragel.@int64_from_mark!) + 1
 @goto st14
 @label st14
 p+= 1;
@@ -531,7 +531,7 @@ if 48 <= ( data[1 + p ]) && ( data[1 + p ]) <= 57
 end
 @goto st0
 @label ctr30
-	Ragel.@pushmark!
+	Ragel.@mark!
 @goto st15
 @label st15
 p+= 1;
@@ -570,7 +570,7 @@ if 48 <= ( data[1 + p ]) && ( data[1 + p ]) <= 57
 end
 @goto st0
 @label ctr35
-	Ragel.@pushmark!
+	Ragel.@mark!
 @goto st17
 @label st17
 p+= 1;
@@ -673,7 +673,7 @@ if 48 <= ( data[1 + p ]) && ( data[1 + p ]) <= 57
 end
 @goto st0
 @label ctr45
-	Ragel.@pushmark!
+	Ragel.@mark!
 @goto st21
 @label st21
 p+= 1;
@@ -745,7 +745,7 @@ if 48 <= ( data[1 + p ]) && ( data[1 + p ]) <= 57
 end
 @goto st0
 @label ctr51
-	Ragel.@pushmark!
+	Ragel.@mark!
 @goto st24
 @label st24
 p+= 1;
@@ -785,7 +785,7 @@ if 48 <= ( data[1 + p ]) && ( data[1 + p ]) <= 57
 end
 @goto st0
 @label ctr44
-	Ragel.@pushmark!
+	Ragel.@mark!
 @goto st26
 @label st26
 p+= 1;
@@ -824,7 +824,7 @@ if 48 <= ( data[1 + p ]) && ( data[1 + p ]) <= 57
 end
 @goto st0
 @label ctr60
-	Ragel.@pushmark!
+	Ragel.@mark!
 @goto st28
 @label st28
 p+= 1;
@@ -869,7 +869,7 @@ if 48 <= ( data[1 + p ]) && ( data[1 + p ]) <= 57
 end
 @goto st0
 @label ctr66
-	Ragel.@pushmark!
+	Ragel.@mark!
 @goto st30
 @label st30
 p+= 1;
@@ -900,7 +900,7 @@ end
 	input.state.linenum += 1
 @goto st42
 @label ctr13
-	Ragel.@pushmark!
+	Ragel.@mark!
 	input.name         = Nullable{ASCIIString}(Ragel.@asciistring_from_mark!)
 	input.state.linenum += 1
 @goto st42
@@ -909,7 +909,7 @@ end
 	input.state.linenum += 1
 @goto st42
 @label ctr27
-	input.thick_first  = Ragel.@int64_from_mark!
+	input.thick_first  = (Ragel.@int64_from_mark!) + 1
 	input.state.linenum += 1
 @goto st42
 @label ctr32
@@ -942,7 +942,7 @@ end
 	if isnull(input.block_firsts)
             input.block_firsts = Array(Int, 0)
         end
-        push!(get(input.block_firsts), (Ragel.@int64_from_mark!))
+        push!(get(input.block_firsts), (Ragel.@int64_from_mark!) + 1)
 
 	input.state.linenum += 1
 @goto st42
@@ -982,12 +982,12 @@ end
 	yield = true
         # // fbreak causes will cause the pushmark action for the next seqname
         # // to be skipped, so we do it here
-        Ragel.@pushmark!
+        Ragel.@mark!
         	p+= 1; cs = 31; @goto _out
 
 
 
-	Ragel.@pushmark!
+	Ragel.@mark!
 	input.seqname      = Ragel.@asciistring_from_mark!
 @goto st31
 @label st31
@@ -1040,14 +1040,14 @@ end
 	input.last         = Ragel.@int64_from_mark!
 @goto st33
 @label ctr14
-	Ragel.@pushmark!
+	Ragel.@mark!
 	input.name         = Nullable{ASCIIString}(Ragel.@asciistring_from_mark!)
 @goto st33
 @label ctr19
 	input.score        = Ragel.@int64_from_mark!
 @goto st33
 @label ctr28
-	input.thick_first  = Ragel.@int64_from_mark!
+	input.thick_first  = (Ragel.@int64_from_mark!) + 1
 @goto st33
 @label ctr33
 	input.thick_last   = Ragel.@int64_from_mark!
@@ -1074,7 +1074,7 @@ end
 	if isnull(input.block_firsts)
             input.block_firsts = Array(Int, 0)
         end
-        push!(get(input.block_firsts), (Ragel.@int64_from_mark!))
+        push!(get(input.block_firsts), (Ragel.@int64_from_mark!) + 1)
 
 @goto st33
 @label ctr79
@@ -1096,12 +1096,12 @@ end
 	yield = true
         # // fbreak causes will cause the pushmark action for the next seqname
         # // to be skipped, so we do it here
-        Ragel.@pushmark!
+        Ragel.@mark!
         	p+= 1; cs = 34; @goto _out
 
 
 
-	Ragel.@pushmark!
+	Ragel.@mark!
 @goto st34
 @label st34
 p+= 1;
@@ -1129,18 +1129,18 @@ if 33 <= ( data[1 + p ]) && ( data[1 + p ]) <= 126
 end
 @goto st0
 @label ctr85
-	Ragel.@pushmark!
+	Ragel.@mark!
 @goto st35
 @label ctr88
 	yield = true
         # // fbreak causes will cause the pushmark action for the next seqname
         # // to be skipped, so we do it here
-        Ragel.@pushmark!
+        Ragel.@mark!
         	p+= 1; cs = 35; @goto _out
 
 
 
-	Ragel.@pushmark!
+	Ragel.@mark!
 @goto st35
 @label st35
 p+= 1;
@@ -1177,7 +1177,7 @@ end
 	if isnull(input.block_firsts)
             input.block_firsts = Array(Int, 0)
         end
-        push!(get(input.block_firsts), (Ragel.@int64_from_mark!))
+        push!(get(input.block_firsts), (Ragel.@int64_from_mark!) + 1)
 
 @goto st37
 @label st37
@@ -1228,7 +1228,7 @@ if 48 <= ( data[1 + p ]) && ( data[1 + p ]) <= 57
 end
 @goto st0
 @label ctr15
-	Ragel.@pushmark!
+	Ragel.@mark!
 @goto st39
 @label st39
 p+= 1;
@@ -1252,7 +1252,7 @@ if 32 <= ( data[1 + p ]) && ( data[1 + p ]) <= 126
 end
 @goto st0
 @label ctr84
-	Ragel.@pushmark!
+	Ragel.@mark!
 @goto st40
 @label st40
 p+= 1;
@@ -1371,7 +1371,7 @@ if p == eof
 	yield = true
         # // fbreak causes will cause the pushmark action for the next seqname
         # // to be skipped, so we do it here
-        Ragel.@pushmark!
+        Ragel.@mark!
         	p+= 1; cs = 0; @goto _out
 
 
@@ -1438,6 +1438,11 @@ function read(input::IO, ::Type{BED})
 end
 
 
+function read(input::Cmd, ::Type{BED})
+    return BEDIterator(BEDParserImpl.BEDParser(open(input, "r")[1]), Nullable{BEDInterval}())
+end
+
+
 function start(it::BEDIterator)
     advance!(it)
     return nothing
@@ -1464,3 +1469,72 @@ end
 function done(it::BEDIterator, state::Nothing)
     return isnull(it.nextitem)
 end
+
+
+"""
+Write a BEDInterval in BED format.
+"""
+function write(out::IO, interval::BEDInterval)
+    print(out, interval.seqname, '\t', interval.first - 1, '\t', interval.last)
+    write_optional_fields(out, interval)
+    write(out, '\n')
+end
+
+
+function write_optional_fields(out::IO, interval::BEDInterval, leadingtab::Bool=true)
+    if !isnull(interval.metadata.name)
+        if leadingtab
+            write(out, '\t')
+        end
+        write(out, get(interval.metadata.name))
+    else return end
+
+    if !isnull(interval.metadata.score)
+        print(out, '\t', get(interval.metadata.score))
+    else return end
+
+    if interval.strand != STRAND_NA
+        print(out, '\t', interval.strand)
+    else return end
+
+    if !isnull(interval.metadata.thick_first)
+        print(out, '\t', get(interval.metadata.thick_first) - 1)
+    else return end
+
+    if !isnull(interval.metadata.thick_last)
+        print(out, '\t', get(interval.metadata.thick_last))
+    else return end
+
+    if !isnull(interval.metadata.item_rgb)
+        item_rgb = get(interval.metadata.item_rgb)
+        print(out, '\t',
+              round(Int, 255 * item_rgb.r), ',',
+              round(Int, 255 * item_rgb.g), ',',
+              round(Int, 255 * item_rgb.b))
+    else return end
+
+    if !isnull(interval.metadata.block_count)
+        print(out, '\t', get(interval.metadata.block_count))
+    else return end
+
+    if !isnull(interval.metadata.block_sizes)
+        block_sizes = get(interval.metadata.block_sizes)
+        if !isempty(block_sizes)
+            print(out, '\t', block_sizes[1])
+            for i in 2:length(block_sizes)
+                print(out, ',', block_sizes[i])
+            end
+        end
+    else return end
+
+    if !isnull(interval.metadata.block_firsts)
+        block_firsts = get(interval.metadata.block_firsts)
+        if !isempty(block_firsts)
+            print(out, '\t', block_firsts[1] - 1)
+            for i in 2:length(block_firsts)
+                print(out, ',', block_firsts[i] - 1)
+            end
+        end
+    end
+end
+

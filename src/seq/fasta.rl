@@ -54,19 +54,19 @@ export FASTAParser
         fbreak;
     }
 
-    action count_line      { input.state.linenum += 1 }
-    action pushmark        { Ragel.@pushmark! }
-    action identifier  { input.namebuf = Ragel.@asciistring_from_mark!  }
+    action count_line  { input.state.linenum += 1 }
+    action mark        { Ragel.@mark! }
+    action identifier  { input.namebuf = Ragel.@asciistring_from_mark! }
     action description { input.descbuf = Ragel.@asciistring_from_mark! }
-    action letters     { append!(input.seqbuf, state.buffer, (Ragel.@popmark!), p) }
+    action letters     { append!(input.seqbuf, state.reader.buffer, (Ragel.@unmark!), p) }
 
     newline     = '\r'? '\n'     >count_line;
     hspace      = [ \t\v];
     whitespace  = space | newline;
 
-    identifier  = (any - space)+            >pushmark  %identifier;
-    description = ((any - hspace) [^\r\n]*) >pushmark  %description;
-    letters     = (any - space - '>')+      >pushmark  %letters;
+    identifier  = (any - space)+            >mark  %identifier;
+    description = ((any - hspace) [^\r\n]*) >mark  %description;
+    letters     = (any - space - '>')+      >mark  %letters;
     sequence    = whitespace* letters? (whitespace+ letters)*;
     fasta_entry = '>' identifier (hspace+ description)? newline sequence whitespace*;
 
@@ -80,9 +80,9 @@ export FASTAParser
 "A type encapsulating the current state of a FASTA parser"
 type FASTAParser
     state::Ragel.State
-    seqbuf::Ragel.Buffer
-    namebuf::String
-    descbuf::String
+    seqbuf::Ragel.Buffer{UInt8}
+    namebuf::ASCIIString
+    descbuf::ASCIIString
 
     function FASTAParser(input::Union(IO, String, Vector{Uint8});
                          memory_map::Bool=false)

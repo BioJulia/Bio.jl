@@ -27,6 +27,7 @@ end
 "A `SeqRecord` for FASTQ sequences"
 typealias FASTQSeqRecord DNASeqRecord{FASTQMetadata}
 
+
 """
 Show a `FASTQSeqRecord` to `io`, with graphical display of quality scores.
 """
@@ -301,7 +302,7 @@ else
 end
 @goto ctr0
 @label ctr0
-	Ragel.@pushmark!
+	Ragel.@mark!
 @goto st2
 @label st2
 p+= 1;
@@ -373,7 +374,7 @@ else
 end
 @goto ctr6
 @label ctr6
-	Ragel.@pushmark!
+	Ragel.@mark!
 @goto st4
 @label st4
 p+= 1;
@@ -438,7 +439,7 @@ end
 
 @goto st6
 @label ctr43
-	append!(input.seqbuf, state.buffer, (Ragel.@popmark!), p)
+	append!(input.seqbuf, state.reader.buffer, (Ragel.@unmark!), p)
 	input.state.linenum += 1
 
 @goto st6
@@ -464,7 +465,7 @@ if 65 <= ( data[1 + p ]) && ( data[1 + p ]) <= 122
 end
 @goto st0
 @label ctr44
-	append!(input.seqbuf, state.buffer, (Ragel.@popmark!), p)
+	append!(input.seqbuf, state.reader.buffer, (Ragel.@unmark!), p)
 @goto st7
 @label st7
 p+= 1;
@@ -512,7 +513,7 @@ else
 end
 @goto ctr15
 @label ctr15
-	Ragel.@pushmark!
+	Ragel.@mark!
 @goto st9
 @label st9
 p+= 1;
@@ -548,7 +549,7 @@ elseif ( ( data[1 + p ]) >= 14  )
 end
 @goto st9
 @label ctr19
-	append!(input.name2buf, state.buffer, (Ragel.@popmark!), p)
+	append!(input.name2buf, state.reader.buffer, (Ragel.@unmark!), p)
 @goto st10
 @label st10
 p+= 1;
@@ -584,7 +585,7 @@ else
 end
 @goto ctr22
 @label ctr22
-	Ragel.@pushmark!
+	Ragel.@mark!
 @goto st11
 @label st11
 p+= 1;
@@ -616,12 +617,12 @@ end
 
 @goto st12
 @label ctr20
-	append!(input.name2buf, state.buffer, (Ragel.@popmark!), p)
+	append!(input.name2buf, state.reader.buffer, (Ragel.@unmark!), p)
 	input.state.linenum += 1
 
 @goto st12
 @label ctr25
-	append!(input.desc2buf, state.buffer, (Ragel.@popmark!), p)
+	append!(input.desc2buf, state.reader.buffer, (Ragel.@unmark!), p)
 	input.state.linenum += 1
 
 @goto st12
@@ -660,7 +661,7 @@ end
 
 @goto st26
 @label ctr30
-	append!(input.qualbuf, state.buffer, (Ragel.@popmark!), p)
+	append!(input.qualbuf, state.reader.buffer, (Ragel.@unmark!), p)
         input.qualcount = 0
 
 	input.state.linenum += 1
@@ -669,15 +670,15 @@ end
 @label ctr38
 	input.state.linenum += 1
 
-	append!(input.qualbuf, state.buffer, (Ragel.@popmark!), p)
+	append!(input.qualbuf, state.reader.buffer, (Ragel.@unmark!), p)
         input.qualcount = 0
 
 @goto st26
 @label ctr40
-	append!(input.name2buf, state.buffer, (Ragel.@popmark!), p)
+	append!(input.name2buf, state.reader.buffer, (Ragel.@unmark!), p)
 	input.state.linenum += 1
 
-	append!(input.qualbuf, state.buffer, (Ragel.@popmark!), p)
+	append!(input.qualbuf, state.reader.buffer, (Ragel.@unmark!), p)
         input.qualcount = 0
 
 @goto st26
@@ -756,13 +757,13 @@ end
 end
 @goto st0
 @label ctr31
-	append!(input.qualbuf, state.buffer, (Ragel.@popmark!), p)
+	append!(input.qualbuf, state.reader.buffer, (Ragel.@unmark!), p)
         input.qualcount = 0
 
 @goto st13
 @label ctr41
-	append!(input.name2buf, state.buffer, (Ragel.@popmark!), p)
-	append!(input.qualbuf, state.buffer, (Ragel.@popmark!), p)
+	append!(input.name2buf, state.reader.buffer, (Ragel.@unmark!), p)
+	append!(input.qualbuf, state.reader.buffer, (Ragel.@unmark!), p)
         input.qualcount = 0
 
 @goto st13
@@ -779,7 +780,7 @@ if ( data[1 + p ]) == 10
 end
 @goto st0
 @label ctr29
-	Ragel.@pushmark!
+	Ragel.@mark!
 	input.qualcount += 1
 
 @goto st14
@@ -818,7 +819,7 @@ end
 end
 @goto st0
 @label ctr55
-	Ragel.@pushmark!
+	Ragel.@mark!
 	input.qualcount += 1
 
 	yield = true;
@@ -877,7 +878,7 @@ else
 end
 @goto ctr0
 @label ctr33
-	Ragel.@pushmark!
+	Ragel.@mark!
 	input.qualcount += 1
 
 @goto st16
@@ -942,7 +943,7 @@ end
 	input.namebuf = Ragel.@asciistring_from_mark!
 	input.state.linenum += 1
 
-	append!(input.qualbuf, state.buffer, (Ragel.@popmark!), p)
+	append!(input.qualbuf, state.reader.buffer, (Ragel.@unmark!), p)
         input.qualcount = 0
 
 @goto st27
@@ -1045,10 +1046,10 @@ end
 
 @goto st28
 @label ctr46
-	append!(input.seqbuf, state.buffer, (Ragel.@popmark!), p)
+	append!(input.seqbuf, state.reader.buffer, (Ragel.@unmark!), p)
 	input.state.linenum += 1
 
-	append!(input.qualbuf, state.buffer, (Ragel.@popmark!), p)
+	append!(input.qualbuf, state.reader.buffer, (Ragel.@unmark!), p)
         input.qualcount = 0
 
 @goto st28
@@ -1180,8 +1181,8 @@ end
 end
 @goto st0
 @label ctr47
-	append!(input.seqbuf, state.buffer, (Ragel.@popmark!), p)
-	append!(input.qualbuf, state.buffer, (Ragel.@popmark!), p)
+	append!(input.seqbuf, state.reader.buffer, (Ragel.@unmark!), p)
+	append!(input.qualbuf, state.reader.buffer, (Ragel.@unmark!), p)
         input.qualcount = 0
 
 @goto st17
@@ -1198,7 +1199,7 @@ if ( data[1 + p ]) == 10
 end
 @goto st0
 @label ctr58
-	Ragel.@pushmark!
+	Ragel.@mark!
 	input.qualcount += 1
 
 @goto st18
@@ -1252,7 +1253,7 @@ else
 end
 @goto ctr15
 @label ctr39
-	Ragel.@pushmark!
+	Ragel.@mark!
 	input.qualcount += 1
 
 @goto st19
@@ -1310,7 +1311,7 @@ elseif ( ( data[1 + p ]) >= 14  )
 end
 @goto st9
 @label ctr13
-	Ragel.@pushmark!
+	Ragel.@mark!
 @goto st20
 @label st20
 p+= 1;
@@ -1332,7 +1333,7 @@ if 65 <= ( data[1 + p ]) && ( data[1 + p ]) <= 122
 end
 @goto st0
 @label ctr57
-	Ragel.@pushmark!
+	Ragel.@mark!
 	input.qualcount += 1
 
 @goto st21
@@ -1409,7 +1410,7 @@ end
 @goto st0
 @label ctr35
 	input.namebuf = Ragel.@asciistring_from_mark!
-	append!(input.qualbuf, state.buffer, (Ragel.@popmark!), p)
+	append!(input.qualbuf, state.reader.buffer, (Ragel.@unmark!), p)
         input.qualcount = 0
 
 @goto st22
@@ -1426,10 +1427,10 @@ if ( data[1 + p ]) == 10
 end
 @goto st0
 @label ctr21
-	append!(input.name2buf, state.buffer, (Ragel.@popmark!), p)
+	append!(input.name2buf, state.reader.buffer, (Ragel.@unmark!), p)
 @goto st23
 @label ctr26
-	append!(input.desc2buf, state.buffer, (Ragel.@popmark!), p)
+	append!(input.desc2buf, state.reader.buffer, (Ragel.@unmark!), p)
 @goto st23
 @label st23
 p+= 1;

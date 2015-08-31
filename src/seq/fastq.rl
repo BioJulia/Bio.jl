@@ -106,15 +106,15 @@ export FASTQParser
         input.state.linenum += 1
     }
 
-    action pushmark { Ragel.@pushmark! }
+    action mark { Ragel.@mark! }
 
     action identifier   { input.namebuf = Ragel.@asciistring_from_mark! }
     action description  { input.descbuf = Ragel.@asciistring_from_mark! }
-    action identifier2  { append!(input.name2buf, state.buffer, (Ragel.@popmark!), p) }
-    action description2 { append!(input.desc2buf, state.buffer, (Ragel.@popmark!), p) }
-    action letters { append!(input.seqbuf, state.buffer, (Ragel.@popmark!), p) }
+    action identifier2  { append!(input.name2buf, state.reader.buffer, (Ragel.@unmark!), p) }
+    action description2 { append!(input.desc2buf, state.reader.buffer, (Ragel.@unmark!), p) }
+    action letters { append!(input.seqbuf, state.reader.buffer, (Ragel.@unmark!), p) }
     action qletters {
-        append!(input.qualbuf, state.buffer, (Ragel.@popmark!), p)
+        append!(input.qualbuf, state.reader.buffer, (Ragel.@unmark!), p)
         input.qualcount = 0
     }
 
@@ -134,16 +134,16 @@ export FASTQParser
     hspace      = [ \t\v];
     whitespace  = space | newline;
 
-    identifier  = (any - space)+           >pushmark  %identifier;
-    description = ((any - space) [^\r\n]*) >pushmark  %description;
+    identifier  = (any - space)+           >mark  %identifier;
+    description = ((any - space) [^\r\n]*) >mark  %description;
 
-    identifier2  = (any - space)+           >pushmark  %identifier2;
-    description2 = ((any - space) [^\r\n]*) >pushmark  %description2;
+    identifier2  = (any - space)+           >mark  %identifier2;
+    description2 = ((any - space) [^\r\n]*) >mark  %description2;
 
-    letters     = [A-z]+                   >pushmark  %letters;
+    letters     = [A-z]+                   >mark  %letters;
     sequence    = letters? (newline+ letters)*;
 
-    qletters    = ([!-~] when qlen_lt $inc_qual_count)+   >pushmark %qletters;
+    qletters    = ([!-~] when qlen_lt $inc_qual_count)+   >mark %qletters;
     quality     = qletters? (newline+ qletters)*;
 
     fastq_entry = ('@' when qlen_eq) identifier (hspace+ description)?

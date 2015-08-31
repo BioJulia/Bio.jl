@@ -31,7 +31,7 @@ function (==)(a::BEDMetadata, b::BEDMetadata)
     for name in fieldnames(BEDMetadata)
         aval = getfield(a, name)
         bval = getfield(b, name)
-        if !((isnull(aval) && isnull(bval)) || get(aval) == get(bval))
+        if (isnull(aval) != isnull(bval)) || (!isnull(aval) && (get(aval) != get(bval)))
             return false
         end
     end
@@ -58,20 +58,20 @@ export BEDParser, takevalue!
         yield = true
         # // fbreak causes will cause the pushmark action for the next seqname
         # // to be skipped, so we do it here
-        Ragel.@pushmark!
+        Ragel.@mark!
         fbreak;
     }
 
     action count_line { input.state.linenum += 1 }
-    action pushmark { Ragel.@pushmark! }
+    action mark { Ragel.@mark! }
 
     action seqname     { input.seqname      = Ragel.@asciistring_from_mark! }
-    action first       { input.first        = 1 + Ragel.@int64_from_mark! }
+    action first       { input.first        = Ragel.@int64_from_mark! }
     action last        { input.last         = Ragel.@int64_from_mark! }
     action name        { input.name         = Nullable{ASCIIString}(Ragel.@asciistring_from_mark!) }
     action score       { input.score        = Ragel.@int64_from_mark! }
     action strand      { input.strand       = convert(Strand, Ragel.@char) }
-    action thick_first { input.thick_first  = Ragel.@int64_from_mark! }
+    action thick_first { input.thick_first  = (Ragel.@int64_from_mark!) + 1 }
     action thick_last  { input.thick_last   = Ragel.@int64_from_mark! }
     action item_rgb_r  { input.red = input.green = input.blue = (Ragel.@int64_from_mark!) / 255.0 }
     action item_rgb_g  { input.green        = (Ragel.@int64_from_mark!) / 255.0 }
@@ -88,33 +88,33 @@ export BEDParser, takevalue!
         if isnull(input.block_firsts)
             input.block_firsts = Array(Int, 0)
         end
-        push!(get(input.block_firsts), (Ragel.@int64_from_mark!))
+        push!(get(input.block_firsts), (Ragel.@int64_from_mark!) + 1)
     }
 
     newline      = '\r'? '\n'     >count_line;
     hspace       = [ \t\v];
     blankline    = hspace* newline;
 
-    seqname      = [ -~]*   >pushmark     %seqname;
-    first        = digit+   >pushmark     %first;
-    last         = digit+   >pushmark     %last;
-    name         = [ -~]*   >pushmark     %name;
-    score        = digit+   >pushmark     %score;
+    seqname      = [ -~]*   >mark     %seqname;
+    first        = digit+   >mark     %first;
+    last         = digit+   >mark     %last;
+    name         = [ -~]*   >mark     %name;
+    score        = digit+   >mark     %score;
     strand       = [+\-\.?] >strand;
-    thick_first  = digit+   >pushmark     %thick_first;
-    thick_last   = digit+   >pushmark     %thick_last;
+    thick_first  = digit+   >mark     %thick_first;
+    thick_last   = digit+   >mark     %thick_last;
 
-    item_rgb_r   = digit+   >pushmark     %item_rgb_r;
-    item_rgb_g   = digit+   >pushmark     %item_rgb_g;
-    item_rgb_b   = digit+   >pushmark     %item_rgb_b;
+    item_rgb_r   = digit+   >mark     %item_rgb_r;
+    item_rgb_g   = digit+   >mark     %item_rgb_g;
+    item_rgb_b   = digit+   >mark     %item_rgb_b;
     item_rgb     = item_rgb_r (hspace* ',' hspace* item_rgb_g hspace* ',' hspace* item_rgb_b)? %item_rgb;
 
-    block_count  = digit+   >pushmark    %block_count;
+    block_count  = digit+   >mark    %block_count;
 
-    block_size   = digit+   >pushmark    %block_size;
+    block_size   = digit+   >mark    %block_size;
     block_sizes  = block_size (',' block_size)* ','?;
 
-    block_first  = digit+   >pushmark    %block_first;
+    block_first  = digit+   >mark    %block_first;
     block_firsts = block_first (',' block_first)* ','?;
 
     bed_entry = seqname '\t' first '\t' last (
@@ -177,7 +177,7 @@ end
 
 
 function takevalue!(input::BEDParser)
-    value = BEDInterval(input.seqname, input.first, input.last, input.strand,
+    value = BEDInterval(input.seqname, input.first + 1, input.last, input.strand,
                         BEDMetadata(input.name, input.score, input.thick_first,
                                     input.thick_last, input.item_rgb,
                                     input.block_count, input.block_sizes,
@@ -255,6 +255,11 @@ function read(input::IO, ::Type{BED})
 end
 
 
+function read(input::Cmd, ::Type{BED})
+    return BEDIterator(BEDParserImpl.BEDParser(open(input, "r")[1]), Nullable{BEDInterval}())
+end
+
+
 function start(it::BEDIterator)
     advance!(it)
     return nothing
@@ -281,3 +286,72 @@ end
 function done(it::BEDIterator, state::Nothing)
     return isnull(it.nextitem)
 end
+
+
+"""
+Write a BEDInterval in BED format.
+"""
+function write(out::IO, interval::BEDInterval)
+    print(out, interval.seqname, '\t', interval.first - 1, '\t', interval.last)
+    write_optional_fields(out, interval)
+    write(out, '\n')
+end
+
+
+function write_optional_fields(out::IO, interval::BEDInterval, leadingtab::Bool=true)
+    if !isnull(interval.metadata.name)
+        if leadingtab
+            write(out, '\t')
+        end
+        write(out, get(interval.metadata.name))
+    else return end
+
+    if !isnull(interval.metadata.score)
+        print(out, '\t', get(interval.metadata.score))
+    else return end
+
+    if interval.strand != STRAND_NA
+        print(out, '\t', interval.strand)
+    else return end
+
+    if !isnull(interval.metadata.thick_first)
+        print(out, '\t', get(interval.metadata.thick_first) - 1)
+    else return end
+
+    if !isnull(interval.metadata.thick_last)
+        print(out, '\t', get(interval.metadata.thick_last))
+    else return end
+
+    if !isnull(interval.metadata.item_rgb)
+        item_rgb = get(interval.metadata.item_rgb)
+        print(out, '\t',
+              round(Int, 255 * item_rgb.r), ',',
+              round(Int, 255 * item_rgb.g), ',',
+              round(Int, 255 * item_rgb.b))
+    else return end
+
+    if !isnull(interval.metadata.block_count)
+        print(out, '\t', get(interval.metadata.block_count))
+    else return end
+
+    if !isnull(interval.metadata.block_sizes)
+        block_sizes = get(interval.metadata.block_sizes)
+        if !isempty(block_sizes)
+            print(out, '\t', block_sizes[1])
+            for i in 2:length(block_sizes)
+                print(out, ',', block_sizes[i])
+            end
+        end
+    else return end
+
+    if !isnull(interval.metadata.block_firsts)
+        block_firsts = get(interval.metadata.block_firsts)
+        if !isempty(block_firsts)
+            print(out, '\t', block_firsts[1] - 1)
+            for i in 2:length(block_firsts)
+                print(out, ',', block_firsts[i] - 1)
+            end
+        end
+    end
+end
+

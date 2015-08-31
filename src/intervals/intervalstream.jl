@@ -235,7 +235,7 @@ coverage like:
     [1][-2-][-1-][--2--][--1--]
 ```
 """
-function coverage(stream::IntervalStreamOrArray,
+function coverage(stream::Union(IntervalStreamOrArray, IntervalTree),
                   seqname_isless::Function=isless)
     cov = IntervalCollection{Uint32}()
     lasts = Int64[]
@@ -244,9 +244,6 @@ function coverage(stream::IntervalStreamOrArray,
     if done(stream, stream_state)
         return cov
     end
-
-    # TODO: How are we going to do this in a strand specific manner??
-    # Just filter the stream?
 
     current_coverage = 0
     coverage_seqname = ""

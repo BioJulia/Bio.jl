@@ -56,6 +56,12 @@ immutable Interval{T} <: AbstractInterval{Int64}
 end
 
 
+function Interval(seqname::String, first::Integer, last::Integer,
+                  strand::Strand=STRAND_BOTH)
+    return Interval{Nothing}(seqname, first, last, strand, nothing)
+end
+
+
 function first(i::Interval)
     return i.first
 end
