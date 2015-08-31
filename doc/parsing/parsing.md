@@ -104,10 +104,10 @@ chr9    68331113        68424451
 Though we are using a newer version of ragel, the specification language has not
 significantly changed, so the the [manual for
 ragel-6.9](http://www.colm.net/files/ragel/ragel-guide-6.9.pdf) is the best
-source to learn the basics of how to write ragel parsers. The main feature of
+source to learn the basics of how to write ragel parsers. It's also useful to
+have a basic understanding of finite state machines (FSMs). The main feature of
 ragel, compared to other parser generator tools for regular languages, is that
-it allows arbitrary code to be executed on transitions in the finite state
-machine.
+it allows arbitrary code to be executed on transitions in the FSM.
 
 Let's start with a basic specification BED3 in ragel.
 
@@ -116,16 +116,16 @@ Let's start with a basic specification BED3 in ragel.
     machine bed3;
 
     seqname = [ -~]*;
-    first   = digit+;
-    last    = digit+;
-    bed3_entry = seqname '\t' first '\t' last '\n';
+    start   = digit+;
+    stop    = digit+;
+    bed3_entry = seqname '\t' start '\t' stop '\n';
     main := bed3_entry*;
 }%%
 ```
 
 In `.rl` files, ragel annotations and code are marked with `%%` to separate it
 from the host language (Julia, in our case). The first line of the specification
-gives a name to the machine, the remaining lines define the language that it
+gives a name to the FSM, the remaining lines define the language that it
 accepts. Each line of the specification assigns a name to some part of the
 overall machine, which is itself called `main`. We could write the whole thing
 as
@@ -146,22 +146,138 @@ expression grammars `+` indicates "one or more of", `*` "any number of", and `[
 -~]` a range of accepted characters. In this case space through `~`, which is
 all printable ASCII characters and space.
 
-## Practical considerations
+## Actions
 
-Parsing data contained in a string in one shot is made quite simple with ragel,
-however with many formats we don't have the luxury of reading all the input into
-memory before parsing, since the input is simply too large. The BED3 files we
-wish to parse may represent short read alignments or other high-throughput data,
-so may be hundreds of millions of lines. Instead we have to work from buffered
+A distinguishing feature of ragel is the ability to execute arbitrary code on
+state machine transitions (see Chapter 3 of the ragel manual). Ragel with
+generate code to parse the input, but it's up to us to decide what to do when
+parts of the language are matched. Here are some basic actions that print
+annoying messages whenever the machine starts or finishes matching a sequence
+name.
+
+```ragel
+%%{
+    action seqname_begin {
+        println("started matching seqname")
+    }
+
+    action seqname_finish {
+        println("finished matching seqname")
+    }
+
+    seqname = [ -~]* >seqname_begin %seqname_finish;
+}%%
+```
+
+Actions are named blocks of Julia code which get copied into the appropriate
+place by ragel. There are a number of annotations that can used to decide when
+they are executed, but typically just `>` and `%` are needed. The former causes
+an action to be executed when part of the state machine is transitioned into,
+and the latter when part is transitioned out of. Together they can be used to
+process input fields.
+
+## Parsing in parts
+
+Before we go further, we need to discuss some practical considerations. Parsing
+data contained in a string in one shot is made quite simple with ragel (most of
+the examples you'll see in the manual follow this pattern). However with many
+formats we don't have the luxury of reading all the input into memory before
+parsing, since the input is simply too large. The BED3 files we wish to parse
+may represent short read alignments or other high-throughput data, so they could
+consist of hundreds of millions of lines. Instead we have to work from buffered
 input streams. This complicates parsing, but most of this complexity is hid in
 the `Bio.Ragel` module, which contains macros that generate code to handle
-buffer refills, and other details.
+buffer refills, and other gory details.
 
-## `@mark` and `@unmark`
+## Capturing input with `@mark!`
 
-Along with parsing on buffered streams, `Bio.Ragel` has some tricks to
-avoid making unecessary allocations or copies during parsing. These revolve
-around "marking" positions in a buffer.
+To efficiently parse on buffered stream, `Bio.Ragel` has some tricks to avoid
+making unecessary allocations or copies. These revolve around "marking" the
+start of regions in the input that need to be processed using the `Ragel.@mark!`
+macro. Using `@mark!` saves the current position and informs the input stream
+not to evict that part of the input from the input buffer. If the buffer needs
+to be refilled, it is shifted over but saved.
+
+Let's see how that works by defining a slightly more meaningful action
+`seqname`.
+
+```ragel
+%%{
+    action mark {
+        Ragel.@mark
+    }
+
+    action seqname {
+        println("seqname captured: ", (Ragel.@asciistring_from_mark!))
+    }
+
+    seqname = [ -~]* >mark %seqname;
+}%%
+```
+
+When we enter FSM state associated with `seqname`, the `mark` action gets
+executed, internally marking the input stream and guaranteeing that it will stay
+in the buffer. We then use another macro `Ragel.@asciistring_from_mark!` which
+extracts a string directly from the input buffer as an `ASCIIString`, and unsets
+the mark, so that the data is no longer preserved.
+
+There are some other handy macros for efficiently processing marked data:
+`Ragel.@int64_from_mark!` will parse an integer from a marked region without
+making an intermediate copy, `Ragel.@unmark!` will unset the mark and return
+it's position in the input buffer. The matched region of the input buffer can
+extracted as an `UInt8` vector like.
+
+```ragel
+state.reader.buffer[(Ragel.@unmark!):p]
+````
+
+Using `@mark!` has some limitations. Because it causes data to preserved and
+shifted on buffer refills, it can be slow if the data that it needs to preserved
+is very large. It efficient assuming the buffer is significantly larger than the
+fields being caputured so that shifts are rare. If a very long field needs to be
+captured, another mechanism should be used, like copying the input one character
+at a time to a buffer.
+
+## Supporting code
+
+We now know how to define a ragel grammar and associate matching with useful
+actions. Putting this together regquires writing a little supporting code.
+
+The code generated by ragel can pollute the namespace with variable definitions
+so it's best to keep everything in a module. By convention these module are
+called `XParserImpl`, where X is the format being parsed. The `write data`
+directive will cause ragel to output definitions for any supporting data.
+
+```julia
+module BED3ParserImpl
+
+%% write data;
+
+end
+```
+
+Since most formats are read entry-by-entry, we need a type to keep track of the
+parser state between calls. This type must have a field called `state` of type
+`Ragel.State`. It can contain any other supporting data useful for parsing, such
+as intermediate results.
+
+Next we need to output the actual parsing code. We'll need a few things to do
+this: first we need to define a type that keeps track of the parser state.
+
+```julia
+type BED3Parser
+    state::Ragel.State
+end
+```
+
+The `Ragel.@generate_read_function` is an ugly looking macro that generates a
+`read` function that is able to deal with progressive parsing on a buffered
+stream. It takes five arguments: a machine name, a type containing the parser
+state, an output type, an expression constituting the body of the parser.
+
+TODO: I'm going to need to refactor this stuff, so I'm going to avoid
+documenting the current state of things in detail. But I need to finish writing
+this.
 
 # Optimizing and debugging parsers
 
@@ -194,6 +310,4 @@ The makefile rules we use to generate diagrams are
 This assumes ragel 6.9 is compiled in `~/src/ragel-6.9/`. It first runs ragel to
 generate `.dot` graphviz specification file, then runs the graphviz `dot`
 program to generate an svg file.
-
-
 
