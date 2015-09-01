@@ -91,8 +91,7 @@ end
 
 Ragel.@generate_read_fuction("fasta", FASTAParser, FASTASeqRecord,
     begin
-        @inbounds begin
-            if p == pe
+        if p == pe
 	@goto _test_eof
 
 end
@@ -156,7 +155,7 @@ cs = 0;
 
 @goto st1
 @label ctr21
-	append!(input.seqbuf, state.reader.buffer, (Ragel.@unmark!), p)
+	append!(input.seqbuf, state.stream.buffer, Ragel.upanchor!(state), p)
 	yield = true;
         	p+= 1; cs = 1; @goto _out
 
@@ -192,7 +191,7 @@ else
 end
 @goto ctr0
 @label ctr0
-	Ragel.@mark!
+	Ragel.anchor!(state, p)
 @goto st2
 @label st2
 p+= 1;
@@ -228,7 +227,7 @@ elseif ( ( data[1 + p ]) >= 14  )
 end
 @goto st2
 @label ctr3
-	input.namebuf = Ragel.@asciistring_from_mark!
+	input.namebuf = Ragel.@asciistring_from_anchor!
 @goto st3
 @label st3
 p+= 1;
@@ -260,7 +259,7 @@ elseif ( ( data[1 + p ]) >= 12  )
 end
 @goto ctr6
 @label ctr6
-	Ragel.@mark!
+	Ragel.anchor!(state, p)
 @goto st4
 @label st4
 p+= 1;
@@ -288,21 +287,21 @@ elseif ( ( data[1 + p ]) >= 11  )
 end
 @goto st4
 @label ctr4
-	input.namebuf = Ragel.@asciistring_from_mark!
+	input.namebuf = Ragel.@asciistring_from_anchor!
 	input.state.linenum += 1
 @goto st7
 @label ctr9
-	input.descbuf = Ragel.@asciistring_from_mark!
+	input.descbuf = Ragel.@asciistring_from_anchor!
 	input.state.linenum += 1
 @goto st7
 @label ctr11
 	input.state.linenum += 1
 @goto st7
 @label ctr19
-	append!(input.seqbuf, state.reader.buffer, (Ragel.@unmark!), p)
+	append!(input.seqbuf, state.stream.buffer, Ragel.upanchor!(state), p)
 @goto st7
 @label ctr20
-	append!(input.seqbuf, state.reader.buffer, (Ragel.@unmark!), p)
+	append!(input.seqbuf, state.stream.buffer, Ragel.upanchor!(state), p)
 	input.state.linenum += 1
 @goto st7
 @label st7
@@ -347,7 +346,7 @@ else
 end
 @goto ctr15
 @label ctr15
-	Ragel.@mark!
+	Ragel.anchor!(state, p)
 @goto st8
 @label st8
 p+= 1;
@@ -391,10 +390,10 @@ else
 end
 @goto st8
 @label ctr5
-	input.namebuf = Ragel.@asciistring_from_mark!
+	input.namebuf = Ragel.@asciistring_from_anchor!
 @goto st5
 @label ctr10
-	input.descbuf = Ragel.@asciistring_from_mark!
+	input.descbuf = Ragel.@asciistring_from_anchor!
 @goto st5
 @label st5
 p+= 1;
@@ -437,7 +436,7 @@ if p == eof
 
 	break;
 	@case 8
-	append!(input.seqbuf, state.reader.buffer, (Ragel.@unmark!), p)
+	append!(input.seqbuf, state.stream.buffer, Ragel.upanchor!(state), p)
 	yield = true;
         	p+= 1; cs = 0; @goto _out
 
@@ -450,8 +449,7 @@ end
 
 end
 @label _out
-end
-    end,
+end,
     begin
         accept_state!(input, output)
     end)

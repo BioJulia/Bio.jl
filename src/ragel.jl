@@ -8,9 +8,21 @@ import Base: push!, pop!, endof, append!, empty!, isempty, length, getindex,
              setindex!, (==), takebuf_string, read!, seek
 
 
+# TODO: Remove this when we are no longer using it
+function Base.(:(==))(a::BufferedOutputStream{EmptyStreamSource},
+                      b::String)
+    if length(a) == length(b)
+        return ccall(:memcmp, Cint, (Ptr{Void}, Ptr{Void}, Csize_t),
+                     a.buffer, b.data, a.position - 1) == 0
+    else
+        return false
+    end
+end
+
+
 # A type keeping track of a ragel-based parser's state.
-type State
-    stream::BufferedInputStream
+type State{T <: BufferedInputStream}
+    stream::T
 
     # Internal ragel state:
     p::Int  # index into the input stream (0-based)
@@ -22,33 +34,39 @@ type State
 
     # true when all input has been consumed
     finished::Bool
+end
 
-    function State(cs, data::Vector{Uint8}, memory_map::Bool=false, len::Integer=length(data))
-        if memory_map
-            error("Parser must be given a file name in order to memory map.")
-        end
-        return new(BufferedInputStream(data), 0, cs, cs, 1, false)
+
+function State(cs, data::Vector{Uint8}, memory_map::Bool=false, len::Integer=length(data))
+    if memory_map
+        error("Parser must be given a file name in order to memory map.")
     end
+    stream = BufferedInputStream(data)
+    return State{typeof(T)}(stream, 0, cs, cs, 1, false)
+end
 
-    function State(cs, input::IO, memory_map=false)
-        if memory_map
-            error("Parser must be given a file name in order to memory map.")
-        end
-        stream = BufferedInputStream(input)
+
+function State(cs, input::IO, memory_map=false)
+    if memory_map
+        error("Parser must be given a file name in order to memory map.")
+    end
+    stream = BufferedInputStream(input)
+    BufferedStreams.fillbuffer!(stream)
+    return State{typeof(stream)}(stream, 0, cs, cs, 1, false)
+end
+
+
+function State(cs, filename::String, memory_map=false)
+    if memory_map
+        input = Mmap.mmap(open(filename), Vector{Uint8}, (filesize(filename),))
+    else
+        input = open(filename)
+    end
+    stream = BufferedInputStream(input)
+    if stream.available == 0
         BufferedStreams.fillbuffer!(stream)
-        return new(stream, 0, cs, cs, 1, false)
     end
-
-    function State(cs, filename::String, memory_map=false)
-        if memory_map
-            input = Mmap.mmap(open(filename), Vector{Uint8}, (filesize(filename),))
-        else
-            input = open(filename)
-        end
-        stream = BufferedInputStream(input)
-        BufferedStreams.fillbuffer!(stream)
-        return new(stream, 0, cs, cs, 1, false)
-    end
+    return State{typeof(stream)}(stream, 0, cs, cs, 1, false)
 end
 
 
@@ -68,12 +86,20 @@ end
 
 
 # Macros for push and popping anchors from within a ragel parser
+# TODO: get rid of this
 macro anchor!()
     quote
         $(esc(:state)).stream.anchor = 1 + $(esc(:p))
     end
 end
 
+
+@inline function anchor!(state, p)
+    state.stream.anchor = 1 + p
+end
+
+
+# TODO: get rid of this
 macro upanchor!()
     quote
         @assert $(esc(:state)).stream.anchor != 0  "upanchor! called with no anchor set"
@@ -83,17 +109,21 @@ macro upanchor!()
     end
 end
 
-macro position()
-    quote
-        1 + $(esc(:p))
-    end
+
+@inline function upanchor!(state)
+    @assert state.stream.anchor != 0  "upanchor! called with no anchor set"
+    anchor = state.stream.anchor
+    state.stream.anchor = 0
+    return anchor
 end
+
 
 macro spanfrom(firstpos)
     quote
         $(esc(:state)).stream.buffer[$(esc(firstpos)):$(esc(:p))]
     end
 end
+
 
 macro asciistring_from_anchor!()
     quote
@@ -155,10 +185,10 @@ macro generate_read_fuction(machine_name, input_type, output_type, ragel_body, a
     yield = esc(:yield)
 
     quote
-        function $(esc(:advance!))(input::$(esc(input_type)))
-            local $(esc(:input)) = input
+        function $(esc(:advance!))(input::$(esc(input_type)), state::State)
+            $(esc(:input)) = input
+            $(state) = state
 
-            $(state) = ragelstate(input)
             if $(state).finished
                 return false
             end
@@ -171,7 +201,7 @@ macro generate_read_fuction(machine_name, input_type, output_type, ragel_body, a
 
             # run the parser until all input is consumed or a match is found
             local $(eof) = $(pe) + 1
-            while true
+            @inbounds while true
                 if $(p) == $(pe)
                     $(state).p = $(p)
                     $(state).stream.available = $(pe)
@@ -218,6 +248,10 @@ macro generate_read_fuction(machine_name, input_type, output_type, ragel_body, a
                 $(state).finished = true
             end
             return true
+        end
+
+        function $(esc(:advance!))(input::$(esc(input_type)))
+            $(esc(:advance!))(input, input.state)
         end
     end
 end

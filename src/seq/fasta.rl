@@ -56,10 +56,10 @@ export FASTAParser
     }
 
     action count_line  { input.state.linenum += 1 }
-    action mark        { Ragel.@mark! }
-    action identifier  { input.namebuf = Ragel.@asciistring_from_mark! }
-    action description { input.descbuf = Ragel.@asciistring_from_mark! }
-    action letters     { append!(input.seqbuf, state.reader.buffer, (Ragel.@unmark!), p) }
+    action mark        { Ragel.anchor!(state, p) }
+    action identifier  { input.namebuf = Ragel.@asciistring_from_anchor! }
+    action description { input.descbuf = Ragel.@asciistring_from_anchor! }
+    action letters     { append!(input.seqbuf, state.stream.buffer, Ragel.upanchor!(state), p) }
 
     newline     = '\r'? '\n'     >count_line;
     hspace      = [ \t\v];
@@ -120,9 +120,7 @@ end
 
 Ragel.@generate_read_fuction("fasta", FASTAParser, FASTASeqRecord,
     begin
-        @inbounds begin
-            %% write exec;
-        end
+        %% write exec;
     end,
     begin
         accept_state!(input, output)
