@@ -26,9 +26,9 @@ include("intervalcollection.jl")
 include("intervalstream.jl")
 
 # Parsing file types
-include("bed.jl")
+#include("bed.jl")
 
 # TODO: reorg
-include("bigbed.jl")
+#include("bigbed.jl")
 
 end

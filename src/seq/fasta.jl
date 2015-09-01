@@ -41,6 +41,7 @@ module FASTAParserImpl
 
 import Bio.Seq: FASTASeqRecord
 import Bio.Ragel
+using BufferedStreams
 using Switch
 export FASTAParser
 
@@ -52,7 +53,7 @@ const fasta_en_main  = convert(Int , 6)
 "A type encapsulating the current state of a FASTA parser"
 type FASTAParser
     state::Ragel.State
-    seqbuf::Ragel.Buffer{UInt8}
+    seqbuf::BufferedOutputStream{BufferedStreams.EmptyStreamSource}
     namebuf::ASCIIString
     descbuf::ASCIIString
 
@@ -64,9 +65,9 @@ type FASTAParser
                 error("Parser must be given a file name in order to memory map.")
             end
             return new(Ragel.State(cs, input, true),
-                       Ragel.Buffer{Uint8}(), "", "")
+                       BufferedOutputStream(), "", "")
         else
-            return new(Ragel.State(cs, input), Ragel.Buffer{Uint8}(), "", "")
+            return new(Ragel.State(cs, input), BufferedOutputStream(), "", "")
         end
     end
 end
@@ -515,13 +516,13 @@ end
 function advance!(it::FASTAIterator)
     it.isdone = !FASTAParserImpl.advance!(it.parser)
     if !it.isdone
-        alphabet = infer_alphabet(it.parser.seqbuf.data, 1, it.parser.seqbuf.pos - 1,
+        alphabet = infer_alphabet(it.parser.seqbuf.buffer, 1, it.parser.seqbuf.position - 1,
                                   it.default_alphabet)
         S = alphabet_type[alphabet]
         it.default_alphabet = alphabet
         it.nextitem =
             FASTASeqRecord{S}(it.parser.namebuf,
-                              S(it.parser.seqbuf.data, 1, it.parser.seqbuf.pos - 1, true),
+                              S(it.parser.seqbuf.buffer, 1, it.parser.seqbuf.position - 1, true),
                               FASTAMetadata(it.parser.descbuf))
         empty!(it.parser.seqbuf)
     end

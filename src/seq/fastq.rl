@@ -90,6 +90,7 @@ module FASTQParserImpl
 
 import Bio.Seq: FASTQSeqRecord, QualityEncoding, EMPTY_QUAL_ENCODING
 import Bio.Ragel
+using BufferedStreams
 using Switch
 export FASTQParser
 
@@ -106,15 +107,15 @@ export FASTQParser
         input.state.linenum += 1
     }
 
-    action mark { Ragel.@mark! }
+    action anchor { Ragel.@anchor! }
 
-    action identifier   { input.namebuf = Ragel.@asciistring_from_mark! }
-    action description  { input.descbuf = Ragel.@asciistring_from_mark! }
-    action identifier2  { append!(input.name2buf, state.reader.buffer, (Ragel.@unmark!), p) }
-    action description2 { append!(input.desc2buf, state.reader.buffer, (Ragel.@unmark!), p) }
-    action letters { append!(input.seqbuf, state.reader.buffer, (Ragel.@unmark!), p) }
+    action identifier   { input.namebuf = Ragel.@asciistring_from_anchor! }
+    action description  { input.descbuf = Ragel.@asciistring_from_anchor! }
+    action identifier2  { append!(input.name2buf, state.stream.buffer, (Ragel.@upanchor!), p) }
+    action description2 { append!(input.desc2buf, state.stream.buffer, (Ragel.@upanchor!), p) }
+    action letters { append!(input.seqbuf, state.stream.buffer, (Ragel.@upanchor!), p) }
     action qletters {
-        append!(input.qualbuf, state.reader.buffer, (Ragel.@unmark!), p)
+        append!(input.qualbuf, state.stream.buffer, (Ragel.@upanchor!), p)
         input.qualcount = 0
     }
 
@@ -134,16 +135,16 @@ export FASTQParser
     hspace      = [ \t\v];
     whitespace  = space | newline;
 
-    identifier  = (any - space)+           >mark  %identifier;
-    description = ((any - space) [^\r\n]*) >mark  %description;
+    identifier  = (any - space)+           >anchor  %identifier;
+    description = ((any - space) [^\r\n]*) >anchor  %description;
 
-    identifier2  = (any - space)+           >mark  %identifier2;
-    description2 = ((any - space) [^\r\n]*) >mark  %description2;
+    identifier2  = (any - space)+           >anchor  %identifier2;
+    description2 = ((any - space) [^\r\n]*) >anchor  %description2;
 
-    letters     = [A-z]+                   >mark  %letters;
+    letters     = [A-z]+                   >anchor  %letters;
     sequence    = letters? (newline+ letters)*;
 
-    qletters    = ([!-~] when qlen_lt $inc_qual_count)+   >mark %qletters;
+    qletters    = ([!-~] when qlen_lt $inc_qual_count)+   >anchor %qletters;
     quality     = qletters? (newline+ qletters)*;
 
     fastq_entry = ('@' when qlen_eq) identifier (hspace+ description)?
@@ -161,12 +162,12 @@ export FASTQParser
 "A type encapsulating the current state of a FASTQ parser"
 type FASTQParser
     state::Ragel.State
-    seqbuf::Ragel.Buffer{Uint8}
-    qualbuf::Ragel.Buffer{Uint8}
+    seqbuf::BufferedOutputStream{BufferedStreams.EmptyStreamSource}
+    qualbuf::BufferedOutputStream{BufferedStreams.EmptyStreamSource}
     namebuf::String
     descbuf::String
-    name2buf::Ragel.Buffer{Uint8}
-    desc2buf::Ragel.Buffer{Uint8}
+    name2buf::BufferedOutputStream{BufferedStreams.EmptyStreamSource}
+    desc2buf::BufferedOutputStream{BufferedStreams.EmptyStreamSource}
     qualcount::Int
     default_qual_encoding::QualityEncoding
 
@@ -180,13 +181,13 @@ type FASTQParser
                 error("Parser must be given a file name in order to memory map.")
             end
             return new(Ragel.State(cs, input, true),
-                       Ragel.Buffer{Uint8}(), Ragel.Buffer{Uint8}(), "", "",
-                       Ragel.Buffer{Uint8}(), Ragel.Buffer{Uint8}(), 0,
+                       BufferedOutputStream(), BufferedOutputStream(), "", "",
+                       BufferedOutputStream(), BufferedOutputStream(), 0,
                        default_qual_encoding)
         else
-            return new(Ragel.State(cs, input), Ragel.Buffer{Uint8}(),
-                       Ragel.Buffer{Uint8}(), "", "", Ragel.Buffer{Uint8}(),
-                       Ragel.Buffer{Uint8}(), 0, default_qual_encoding)
+            return new(Ragel.State(cs, input), BufferedOutputStream(),
+                       BufferedOutputStream(), "", "", BufferedOutputStream(),
+                       BufferedOutputStream(), 0, default_qual_encoding)
         end
     end
 end
@@ -203,14 +204,14 @@ function accept_state!(input::FASTQParser, output::FASTQSeqRecord)
     end
     output.name = input.namebuf
     output.metadata.description = input.descbuf
-    output.seq = DNASequence(input.seqbuf.data, 1, input.seqbuf.pos - 1)
+    output.seq = DNASequence(input.seqbuf.buffer, 1, input.seqbuf.position - 1)
 
-    encoding = infer_quality_encoding(input.qualbuf.data, 1,
-                                      input.qualbuf.pos - 1,
+    encoding = infer_quality_encoding(input.qualbuf.buffer, 1,
+                                      input.qualbuf.position - 1,
                                       input.default_qual_encoding)
     input.default_qual_encoding = encoding
     output.metadata.quality = decode_quality_string(encoding, input.qualbuf.
-                                                    1, input.qualbuf.pos - 1)
+                                                    1, input.qualbuf.position - 1)
 
     empty!(input.seqbuf)
     empty!(input.qualbuf)
@@ -291,12 +292,12 @@ function advance!(it::FASTQIterator)
         if length(it.parser.seqbuf) != length(it.parser.qualbuf)
             error("Error parsing FASTQ: sequence and quality scores must be of equal length")
         end
-        encoding = infer_quality_encoding(it.parser.qualbuf.data, 1,
-                                          it.parser.qualbuf.pos - 1,
+        encoding = infer_quality_encoding(it.parser.qualbuf.buffer, 1,
+                                          it.parser.qualbuf.position - 1,
                                           it.default_qual_encoding)
         it.default_qual_encoding = encoding
-        qscores = decode_quality_string(encoding, it.parser.qualbuf.data,
-                                        1, it.parser.qualbuf.pos - 1)
+        qscores = decode_quality_string(encoding, it.parser.qualbuf.buffer,
+                                        1, it.parser.qualbuf.position - 1)
 
         if (!isempty(it.parser.name2buf) && it.parser.name2buf != it.parser.namebuf) ||
            (!isempty(it.parser.desc2buf) && it.parser.desc2buf != it.parser.descbuf)
@@ -305,7 +306,7 @@ function advance!(it::FASTQIterator)
 
         it.nextitem =
             FASTQSeqRecord(it.parser.namebuf,
-                           DNASequence(it.parser.seqbuf.data, 1, it.parser.seqbuf.pos - 1),
+                           DNASequence(it.parser.seqbuf.buffer, 1, it.parser.seqbuf.position - 1),
                            FASTQMetadata(it.parser.descbuf, qscores))
 
         empty!(it.parser.seqbuf)

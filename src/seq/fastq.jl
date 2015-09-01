@@ -89,6 +89,7 @@ module FASTQParserImpl
 
 import Bio.Seq: FASTQSeqRecord, QualityEncoding, EMPTY_QUAL_ENCODING
 import Bio.Ragel
+using BufferedStreams
 using Switch
 export FASTQParser
 
@@ -100,12 +101,12 @@ const fastq_en_main  = convert(Int , 25)
 "A type encapsulating the current state of a FASTQ parser"
 type FASTQParser
     state::Ragel.State
-    seqbuf::Ragel.Buffer{Uint8}
-    qualbuf::Ragel.Buffer{Uint8}
+    seqbuf::BufferedOutputStream{BufferedStreams.EmptyStreamSource}
+    qualbuf::BufferedOutputStream{BufferedStreams.EmptyStreamSource}
     namebuf::String
     descbuf::String
-    name2buf::Ragel.Buffer{Uint8}
-    desc2buf::Ragel.Buffer{Uint8}
+    name2buf::BufferedOutputStream{BufferedStreams.EmptyStreamSource}
+    desc2buf::BufferedOutputStream{BufferedStreams.EmptyStreamSource}
     qualcount::Int
     default_qual_encoding::QualityEncoding
 
@@ -118,13 +119,13 @@ type FASTQParser
                 error("Parser must be given a file name in order to memory map.")
             end
             return new(Ragel.State(cs, input, true),
-                       Ragel.Buffer{Uint8}(), Ragel.Buffer{Uint8}(), "", "",
-                       Ragel.Buffer{Uint8}(), Ragel.Buffer{Uint8}(), 0,
+                       BufferedOutputStream(), BufferedOutputStream(), "", "",
+                       BufferedOutputStream(), BufferedOutputStream(), 0,
                        default_qual_encoding)
         else
-            return new(Ragel.State(cs, input), Ragel.Buffer{Uint8}(),
-                       Ragel.Buffer{Uint8}(), "", "", Ragel.Buffer{Uint8}(),
-                       Ragel.Buffer{Uint8}(), 0, default_qual_encoding)
+            return new(Ragel.State(cs, input), BufferedOutputStream(),
+                       BufferedOutputStream(), "", "", BufferedOutputStream(),
+                       BufferedOutputStream(), 0, default_qual_encoding)
         end
     end
 end
@@ -141,14 +142,14 @@ function accept_state!(input::FASTQParser, output::FASTQSeqRecord)
     end
     output.name = input.namebuf
     output.metadata.description = input.descbuf
-    output.seq = DNASequence(input.seqbuf.data, 1, input.seqbuf.pos - 1)
+    output.seq = DNASequence(input.seqbuf.buffer, 1, input.seqbuf.position - 1)
 
-    encoding = infer_quality_encoding(input.qualbuf.data, 1,
-                                      input.qualbuf.pos - 1,
+    encoding = infer_quality_encoding(input.qualbuf.buffer, 1,
+                                      input.qualbuf.position - 1,
                                       input.default_qual_encoding)
     input.default_qual_encoding = encoding
     output.metadata.quality = decode_quality_string(encoding, input.qualbuf.
-                                                    1, input.qualbuf.pos - 1)
+                                                    1, input.qualbuf.position - 1)
 
     empty!(input.seqbuf)
     empty!(input.qualbuf)
@@ -302,7 +303,7 @@ else
 end
 @goto ctr0
 @label ctr0
-	Ragel.@mark!
+	Ragel.@anchor!
 @goto st2
 @label st2
 p+= 1;
@@ -338,7 +339,7 @@ elseif ( ( data[1 + p ]) >= 14  )
 end
 @goto st2
 @label ctr3
-	input.namebuf = Ragel.@asciistring_from_mark!
+	input.namebuf = Ragel.@asciistring_from_anchor!
 @goto st3
 @label st3
 p+= 1;
@@ -374,7 +375,7 @@ else
 end
 @goto ctr6
 @label ctr6
-	Ragel.@mark!
+	Ragel.@anchor!
 @goto st4
 @label st4
 p+= 1;
@@ -402,12 +403,12 @@ elseif ( ( data[1 + p ]) >= 11  )
 end
 @goto st4
 @label ctr4
-	input.namebuf = Ragel.@asciistring_from_mark!
+	input.namebuf = Ragel.@asciistring_from_anchor!
 	input.state.linenum += 1
 
 @goto st5
 @label ctr9
-	input.descbuf = Ragel.@asciistring_from_mark!
+	input.descbuf = Ragel.@asciistring_from_anchor!
 	input.state.linenum += 1
 
 @goto st5
@@ -439,7 +440,7 @@ end
 
 @goto st6
 @label ctr43
-	append!(input.seqbuf, state.reader.buffer, (Ragel.@unmark!), p)
+	append!(input.seqbuf, state.stream.buffer, (Ragel.@upanchor!), p)
 	input.state.linenum += 1
 
 @goto st6
@@ -465,7 +466,7 @@ if 65 <= ( data[1 + p ]) && ( data[1 + p ]) <= 122
 end
 @goto st0
 @label ctr44
-	append!(input.seqbuf, state.reader.buffer, (Ragel.@unmark!), p)
+	append!(input.seqbuf, state.stream.buffer, (Ragel.@upanchor!), p)
 @goto st7
 @label st7
 p+= 1;
@@ -513,7 +514,7 @@ else
 end
 @goto ctr15
 @label ctr15
-	Ragel.@mark!
+	Ragel.@anchor!
 @goto st9
 @label st9
 p+= 1;
@@ -549,7 +550,7 @@ elseif ( ( data[1 + p ]) >= 14  )
 end
 @goto st9
 @label ctr19
-	append!(input.name2buf, state.reader.buffer, (Ragel.@unmark!), p)
+	append!(input.name2buf, state.stream.buffer, (Ragel.@upanchor!), p)
 @goto st10
 @label st10
 p+= 1;
@@ -585,7 +586,7 @@ else
 end
 @goto ctr22
 @label ctr22
-	Ragel.@mark!
+	Ragel.@anchor!
 @goto st11
 @label st11
 p+= 1;
@@ -617,12 +618,12 @@ end
 
 @goto st12
 @label ctr20
-	append!(input.name2buf, state.reader.buffer, (Ragel.@unmark!), p)
+	append!(input.name2buf, state.stream.buffer, (Ragel.@upanchor!), p)
 	input.state.linenum += 1
 
 @goto st12
 @label ctr25
-	append!(input.desc2buf, state.reader.buffer, (Ragel.@unmark!), p)
+	append!(input.desc2buf, state.stream.buffer, (Ragel.@upanchor!), p)
 	input.state.linenum += 1
 
 @goto st12
@@ -661,7 +662,7 @@ end
 
 @goto st26
 @label ctr30
-	append!(input.qualbuf, state.reader.buffer, (Ragel.@unmark!), p)
+	append!(input.qualbuf, state.stream.buffer, (Ragel.@upanchor!), p)
         input.qualcount = 0
 
 	input.state.linenum += 1
@@ -670,15 +671,15 @@ end
 @label ctr38
 	input.state.linenum += 1
 
-	append!(input.qualbuf, state.reader.buffer, (Ragel.@unmark!), p)
+	append!(input.qualbuf, state.stream.buffer, (Ragel.@upanchor!), p)
         input.qualcount = 0
 
 @goto st26
 @label ctr40
-	append!(input.name2buf, state.reader.buffer, (Ragel.@unmark!), p)
+	append!(input.name2buf, state.stream.buffer, (Ragel.@upanchor!), p)
 	input.state.linenum += 1
 
-	append!(input.qualbuf, state.reader.buffer, (Ragel.@unmark!), p)
+	append!(input.qualbuf, state.stream.buffer, (Ragel.@upanchor!), p)
         input.qualcount = 0
 
 @goto st26
@@ -757,13 +758,13 @@ end
 end
 @goto st0
 @label ctr31
-	append!(input.qualbuf, state.reader.buffer, (Ragel.@unmark!), p)
+	append!(input.qualbuf, state.stream.buffer, (Ragel.@upanchor!), p)
         input.qualcount = 0
 
 @goto st13
 @label ctr41
-	append!(input.name2buf, state.reader.buffer, (Ragel.@unmark!), p)
-	append!(input.qualbuf, state.reader.buffer, (Ragel.@unmark!), p)
+	append!(input.name2buf, state.stream.buffer, (Ragel.@upanchor!), p)
+	append!(input.qualbuf, state.stream.buffer, (Ragel.@upanchor!), p)
         input.qualcount = 0
 
 @goto st13
@@ -780,7 +781,7 @@ if ( data[1 + p ]) == 10
 end
 @goto st0
 @label ctr29
-	Ragel.@mark!
+	Ragel.@anchor!
 	input.qualcount += 1
 
 @goto st14
@@ -819,7 +820,7 @@ end
 end
 @goto st0
 @label ctr55
-	Ragel.@mark!
+	Ragel.@anchor!
 	input.qualcount += 1
 
 	yield = true;
@@ -878,7 +879,7 @@ else
 end
 @goto ctr0
 @label ctr33
-	Ragel.@mark!
+	Ragel.@anchor!
 	input.qualcount += 1
 
 @goto st16
@@ -940,10 +941,10 @@ end
 
 @goto st27
 @label ctr34
-	input.namebuf = Ragel.@asciistring_from_mark!
+	input.namebuf = Ragel.@asciistring_from_anchor!
 	input.state.linenum += 1
 
-	append!(input.qualbuf, state.reader.buffer, (Ragel.@unmark!), p)
+	append!(input.qualbuf, state.stream.buffer, (Ragel.@upanchor!), p)
         input.qualcount = 0
 
 @goto st27
@@ -1046,10 +1047,10 @@ end
 
 @goto st28
 @label ctr46
-	append!(input.seqbuf, state.reader.buffer, (Ragel.@unmark!), p)
+	append!(input.seqbuf, state.stream.buffer, (Ragel.@upanchor!), p)
 	input.state.linenum += 1
 
-	append!(input.qualbuf, state.reader.buffer, (Ragel.@unmark!), p)
+	append!(input.qualbuf, state.stream.buffer, (Ragel.@upanchor!), p)
         input.qualcount = 0
 
 @goto st28
@@ -1181,8 +1182,8 @@ end
 end
 @goto st0
 @label ctr47
-	append!(input.seqbuf, state.reader.buffer, (Ragel.@unmark!), p)
-	append!(input.qualbuf, state.reader.buffer, (Ragel.@unmark!), p)
+	append!(input.seqbuf, state.stream.buffer, (Ragel.@upanchor!), p)
+	append!(input.qualbuf, state.stream.buffer, (Ragel.@upanchor!), p)
         input.qualcount = 0
 
 @goto st17
@@ -1199,7 +1200,7 @@ if ( data[1 + p ]) == 10
 end
 @goto st0
 @label ctr58
-	Ragel.@mark!
+	Ragel.@anchor!
 	input.qualcount += 1
 
 @goto st18
@@ -1253,7 +1254,7 @@ else
 end
 @goto ctr15
 @label ctr39
-	Ragel.@mark!
+	Ragel.@anchor!
 	input.qualcount += 1
 
 @goto st19
@@ -1311,7 +1312,7 @@ elseif ( ( data[1 + p ]) >= 14  )
 end
 @goto st9
 @label ctr13
-	Ragel.@mark!
+	Ragel.@anchor!
 @goto st20
 @label st20
 p+= 1;
@@ -1333,7 +1334,7 @@ if 65 <= ( data[1 + p ]) && ( data[1 + p ]) <= 122
 end
 @goto st0
 @label ctr57
-	Ragel.@mark!
+	Ragel.@anchor!
 	input.qualcount += 1
 
 @goto st21
@@ -1409,8 +1410,8 @@ end
 end
 @goto st0
 @label ctr35
-	input.namebuf = Ragel.@asciistring_from_mark!
-	append!(input.qualbuf, state.reader.buffer, (Ragel.@unmark!), p)
+	input.namebuf = Ragel.@asciistring_from_anchor!
+	append!(input.qualbuf, state.stream.buffer, (Ragel.@upanchor!), p)
         input.qualcount = 0
 
 @goto st22
@@ -1427,10 +1428,10 @@ if ( data[1 + p ]) == 10
 end
 @goto st0
 @label ctr21
-	append!(input.name2buf, state.reader.buffer, (Ragel.@unmark!), p)
+	append!(input.name2buf, state.stream.buffer, (Ragel.@upanchor!), p)
 @goto st23
 @label ctr26
-	append!(input.desc2buf, state.reader.buffer, (Ragel.@unmark!), p)
+	append!(input.desc2buf, state.stream.buffer, (Ragel.@upanchor!), p)
 @goto st23
 @label st23
 p+= 1;
@@ -1445,10 +1446,10 @@ if ( data[1 + p ]) == 10
 end
 @goto st0
 @label ctr5
-	input.namebuf = Ragel.@asciistring_from_mark!
+	input.namebuf = Ragel.@asciistring_from_anchor!
 @goto st24
 @label ctr10
-	input.descbuf = Ragel.@asciistring_from_mark!
+	input.descbuf = Ragel.@asciistring_from_anchor!
 @goto st24
 @label st24
 p+= 1;
@@ -1607,12 +1608,12 @@ function advance!(it::FASTQIterator)
         if length(it.parser.seqbuf) != length(it.parser.qualbuf)
             error("Error parsing FASTQ: sequence and quality scores must be of equal length")
         end
-        encoding = infer_quality_encoding(it.parser.qualbuf.data, 1,
-                                          it.parser.qualbuf.pos - 1,
+        encoding = infer_quality_encoding(it.parser.qualbuf.buffer, 1,
+                                          it.parser.qualbuf.position - 1,
                                           it.default_qual_encoding)
         it.default_qual_encoding = encoding
-        qscores = decode_quality_string(encoding, it.parser.qualbuf.data,
-                                        1, it.parser.qualbuf.pos - 1)
+        qscores = decode_quality_string(encoding, it.parser.qualbuf.buffer,
+                                        1, it.parser.qualbuf.position - 1)
 
         if (!isempty(it.parser.name2buf) && it.parser.name2buf != it.parser.namebuf) ||
            (!isempty(it.parser.desc2buf) && it.parser.desc2buf != it.parser.descbuf)
@@ -1621,7 +1622,7 @@ function advance!(it::FASTQIterator)
 
         it.nextitem =
             FASTQSeqRecord(it.parser.namebuf,
-                           DNASequence(it.parser.seqbuf.data, 1, it.parser.seqbuf.pos - 1),
+                           DNASequence(it.parser.seqbuf.buffer, 1, it.parser.seqbuf.position - 1),
                            FASTQMetadata(it.parser.descbuf, qscores))
 
         empty!(it.parser.seqbuf)

@@ -335,133 +335,133 @@ facts("IntervalStream") do
 end
 
 
-facts("Interval Parsing") do
-    context("BED Parsing") do
-        get_bio_fmt_specimens()
+#facts("Interval Parsing") do
+    #context("BED Parsing") do
+        #get_bio_fmt_specimens()
 
-        function check_bed_parse(filename)
-            # Reading from a stream
-            for seqrec in read(open(filename), BED)
-            end
+        #function check_bed_parse(filename)
+            ## Reading from a stream
+            #for seqrec in read(open(filename), BED)
+            #end
 
-            # Reading from a memory mapped file
-            for seqrec in read(filename, BED, memory_map=true)
-            end
+            ## Reading from a memory mapped file
+            #for seqrec in read(filename, BED, memory_map=true)
+            #end
 
-            # Reading from a regular file
-            for seqrec in read(filename, BED, memory_map=false)
-            end
+            ## Reading from a regular file
+            #for seqrec in read(filename, BED, memory_map=false)
+            #end
 
-            return true
-        end
+            #return true
+        #end
 
-        path = Pkg.dir("Bio", "test", "BioFmtSpecimens", "BED")
-        for specimen in YAML.load_file(joinpath(path, "index.yml"))
-            valid = get(specimen, "valid", true)
-            if valid
-                @fact check_bed_parse(joinpath(path, specimen["filename"])) --> true
-            else
-                @fact_throws check_bed_parse(joinpath(path, specimen["filename"]))
-            end
-        end
-    end
+        #path = Pkg.dir("Bio", "test", "BioFmtSpecimens", "BED")
+        #for specimen in YAML.load_file(joinpath(path, "index.yml"))
+            #valid = get(specimen, "valid", true)
+            #if valid
+                #@fact check_bed_parse(joinpath(path, specimen["filename"])) --> true
+            #else
+                #@fact_throws check_bed_parse(joinpath(path, specimen["filename"]))
+            #end
+        #end
+    #end
 
-    context("BED Intersection") do
-        # Testing strategy: there are two entirely separate intersection
-        # algorithms for IntervalCollection and IntervalStream. Here we test
-        # them both by checking that they agree by generating and intersecting
-        # random BED files.
+    #context("BED Intersection") do
+        ## Testing strategy: there are two entirely separate intersection
+        ## algorithms for IntervalCollection and IntervalStream. Here we test
+        ## them both by checking that they agree by generating and intersecting
+        ## random BED files.
 
-        function check_intersection(filename_a, filename_b)
-            ic_a = IntervalCollection{BEDMetadata}()
-            for interval in read(filename_a, BED)
-                push!(ic_a, interval)
-            end
+        #function check_intersection(filename_a, filename_b)
+            #ic_a = IntervalCollection{BEDMetadata}()
+            #for interval in read(filename_a, BED)
+                #push!(ic_a, interval)
+            #end
 
-            ic_b = IntervalCollection{BEDMetadata}()
-            for interval in read(filename_b, BED)
-                push!(ic_b, interval)
-            end
+            #ic_b = IntervalCollection{BEDMetadata}()
+            #for interval in read(filename_b, BED)
+                #push!(ic_b, interval)
+            #end
 
-            xs = sort(collect(intersect(read(filename_a, BED), read(filename_b, BED))))
-            ys = sort(collect(intersect(ic_a, ic_b)))
+            #xs = sort(collect(intersect(read(filename_a, BED), read(filename_b, BED))))
+            #ys = sort(collect(intersect(ic_a, ic_b)))
 
-            return xs == ys
-        end
+            #return xs == ys
+        #end
 
-        n = 10000
-        srand(1234)
-        intervals_a = random_intervals(["one", "two", "three", "four", "five"], 1000000, n)
-        filename_a = Pkg.dir("Bio", "test", "intervals", "test_a.bed")
-        out = open(filename_a, "w")
-        for interval in sort(intervals_a)
-            println(out, interval.seqname, "\t", interval.first - 1, "\t",
-                    interval.last, "\t", interval.metadata, "\t", 1000, "\t", interval.strand)
-        end
-        close(out)
+        #n = 10000
+        #srand(1234)
+        #intervals_a = random_intervals(["one", "two", "three", "four", "five"], 1000000, n)
+        #filename_a = Pkg.dir("Bio", "test", "intervals", "test_a.bed")
+        #out = open(filename_a, "w")
+        #for interval in sort(intervals_a)
+            #println(out, interval.seqname, "\t", interval.first - 1, "\t",
+                    #interval.last, "\t", interval.metadata, "\t", 1000, "\t", interval.strand)
+        #end
+        #close(out)
 
-        intervals_b = random_intervals(["one", "two", "three", "four", "five"], 1000000, n)
-        filename_b = Pkg.dir("Bio", "test", "intervals", "test_b.bed")
-        ic_b = IntervalCollection{Int}()
-        out = open(filename_b, "w")
-        for interval in sort(intervals_b)
-            println(out, interval.seqname, "\t", interval.first - 1, "\t",
-                    interval.last, "\t", interval.metadata, "\t", 1000, "\t", interval.strand)
-            push!(ic_b, interval)
-        end
-        close(out)
+        #intervals_b = random_intervals(["one", "two", "three", "four", "five"], 1000000, n)
+        #filename_b = Pkg.dir("Bio", "test", "intervals", "test_b.bed")
+        #ic_b = IntervalCollection{Int}()
+        #out = open(filename_b, "w")
+        #for interval in sort(intervals_b)
+            #println(out, interval.seqname, "\t", interval.first - 1, "\t",
+                    #interval.last, "\t", interval.metadata, "\t", 1000, "\t", interval.strand)
+            #push!(ic_b, interval)
+        #end
+        #close(out)
 
-        @fact check_intersection(filename_a, filename_b) --> true
-    end
-end
+        #@fact check_intersection(filename_a, filename_b) --> true
+    #end
+#end
 
 
-facts("BigBed") do
-    context("BED → BigBed → BED round-trip") do
-        path = Pkg.dir("Bio", "test", "BioFmtSpecimens", "BED")
-        for specimen in YAML.load_file(joinpath(path, "index.yml"))
-            if !get(specimen, "valid", true)
-                continue
-            end
+#facts("BigBed") do
+    #context("BED → BigBed → BED round-trip") do
+        #path = Pkg.dir("Bio", "test", "BioFmtSpecimens", "BED")
+        #for specimen in YAML.load_file(joinpath(path, "index.yml"))
+            #if !get(specimen, "valid", true)
+                #continue
+            #end
 
-            # BED → BigBed
-            intervals = IntervalCollection(
-                read(open(joinpath(path, specimen["filename"])), BED))
-            out = IOBuffer()
-            write(out, BigBed, intervals)
-            bigbed_data = takebuf_array(out)
+            ## BED → BigBed
+            #intervals = IntervalCollection(
+                #read(open(joinpath(path, specimen["filename"])), BED))
+            #out = IOBuffer()
+            #write(out, BigBed, intervals)
+            #bigbed_data = takebuf_array(out)
 
-            # BigBed → BED
-            bb = read(bigbed_data, BigBed)
-            intervals2 = IntervalCollection(bb)
+            ## BigBed → BED
+            #bb = read(bigbed_data, BigBed)
+            #intervals2 = IntervalCollection(bb)
 
-            @fact intervals == intervals2 --> true
-        end
-    end
+            #@fact intervals == intervals2 --> true
+        #end
+    #end
 
-    context("BigBed Intersection") do
-        n = 10000
-        srand(1234)
-        chroms = ["one", "two", "three", "four", "five"]
-        intervals = IntervalCollection(
-            [Interval{BEDMetadata}(i.seqname, i.first, i.last, i.strand, BEDMetadata("", 1000))
-             for i in random_intervals(chroms, 1000000, n)], true)
+    #context("BigBed Intersection") do
+        #n = 10000
+        #srand(1234)
+        #chroms = ["one", "two", "three", "four", "five"]
+        #intervals = IntervalCollection(
+            #[Interval{BEDMetadata}(i.seqname, i.first, i.last, i.strand, BEDMetadata("", 1000))
+             #for i in random_intervals(chroms, 1000000, n)], true)
 
-        # convert to bigbed in memory
-        out = IOBuffer()
-        write(out, BigBed, intervals)
-        bb = read(takebuf_array(out), BigBed)
+        ## convert to bigbed in memory
+        #out = IOBuffer()
+        #write(out, BigBed, intervals)
+        #bb = read(takebuf_array(out), BigBed)
 
-        # intersection queries
-        num_queries = 1000
-        queries = random_intervals(chroms, 1000000, num_queries)
+        ## intersection queries
+        #num_queries = 1000
+        #queries = random_intervals(chroms, 1000000, num_queries)
 
-        @fact all(Bool[IntervalCollection(collect(BEDInterval, intersect(intervals, query))) ==
-                       IntervalCollection(collect(BEDInterval, intersect(bb, query)))
-                       for query in queries]) --> true
-    end
+        #@fact all(Bool[IntervalCollection(collect(BEDInterval, intersect(intervals, query))) ==
+                       #IntervalCollection(collect(BEDInterval, intersect(bb, query)))
+                       #for query in queries]) --> true
+    #end
 
-    # TODO: test summary information against output from kent's bigBedSummary
-end
+    ## TODO: test summary information against output from kent's bigBedSummary
+#end
 
 end # module TestIntervals

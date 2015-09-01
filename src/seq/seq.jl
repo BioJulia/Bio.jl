@@ -37,7 +37,7 @@ include("seqrecord.jl")
 
 
 # Parsing of various file types
-include("fasta.jl")
+#include("fasta.jl")
 include("fastq.jl")
 
 

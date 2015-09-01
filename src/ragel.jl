@@ -2,143 +2,15 @@
 module Ragel
 
 using Compat
+using BufferedStreams
 using Switch
 import Base: push!, pop!, endof, append!, empty!, isempty, length, getindex,
              setindex!, (==), takebuf_string, read!, seek
-import Bio: fillbuffer!
-using Bio: BufferedReader
 
-
-# A simple buffer type, similar to IOBuffer but faster and with fewer features.
-# It's essentially just a vector that can grow but is never allowed to
-# reallocate to smaller size.
-
-const INITIAL_BUF_SIZE = 1000000
-
-type Buffer{T}
-    data::Vector{T}
-    pos::Int
-
-    function Buffer(initial_size=10000)
-        new(Array(T, initial_size), 1)
-    end
-end
-
-
-function isempty(buf::Buffer)
-    return buf.pos == 1
-end
-
-
-function length(buf::Buffer)
-    return buf.pos - 1
-end
-
-
-function empty!(buf::Buffer)
-    buf.pos = 1
-end
-
-
-function getindex(buf::Buffer, i::Integer)
-    if !(1 <= i < buf.pos)
-        throw(BoundsError())
-    end
-    @inbounds x = buf.data[i]
-    return x
-end
-
-
-function setindex!{T}(buf::Buffer{T}, value::T, i::Integer)
-    if !(1 <= i < buf.pos)
-        throw(BoundsError())
-    end
-    @inbounds buf.data[i] = value
-end
-
-
-function ensureroom!(buf::Buffer, n::Integer)
-    if buf.pos + n > length(buf.data)
-        newsize = max(2 * length(buf.data), buf.pos + n)
-        resize!(buf.data, newsize)
-    end
-end
-
-
-function push!{T}(buf::Buffer{T}, c::T)
-    ensureroom!(buf, 1)
-    @inbounds buf.data[buf.pos] = c
-    buf.pos += 1
-end
-
-
-function pop!(buf::Buffer)
-    if buf.pos == 1
-        throw(BoundsError())
-    end
-    @inbounds c = buf.data[buf.pos - 1]
-    buf.pos -= 1
-    return c
-end
-
-
-function endof(buf::Buffer)
-    return buf.pos - 1
-end
-
-
-function append!{T}(buf::Buffer{T}, source::Vector{T}, start::Integer, stop::Integer)
-    n = stop - start + 1
-    ensureroom!(buf, n)
-    copy!(buf.data, buf.pos, source, start, n)
-    buf.pos += n
-end
-
-
-function (==){T}(a::Buffer{T}, b::Buffer{T})
-    if a.pos != b.pos
-        return false
-    end
-    for i in 1:a.pos-1
-        if a.data[i] != b.data[i]
-            return false
-        end
-    end
-    return true
-end
-
-
-function (==){T}(a::Buffer{T}, b::String)
-    if length(a) != length(b)
-        return false
-    end
-    for (i, u) in enumerate(b)
-        v = a.data[i]
-        if u != v
-            return false
-        end
-    end
-
-    return true
-end
-
-
-function takebuf_string{T}(buf::Buffer{T})
-    s = bytestring(buf.data[1:buf.pos-1])
-    empty!(buf)
-    return s
-end
-
-
-# Nuber of bytes to read at a time
-const RAGEL_PARSER_INITIAL_BUF_SIZE = 1000000
 
 # A type keeping track of a ragel-based parser's state.
 type State
-    reader::BufferedReader
-
-    # true when all input has been parsed
-    finished::Bool
+    stream::BufferedInputStream
 
     # Internal ragel state:
     p::Int  # index into the input stream (0-based)
@@ -148,27 +20,42 @@ type State
     # Parser is responsible for updating this
     linenum::Int
 
+    # true when all input has been consumed
+    finished::Bool
+
     function State(cs, data::Vector{Uint8}, memory_map::Bool=false, len::Integer=length(data))
-        return new(BufferedReader(data, memory_map, len), memory_map, 0, cs, cs, 1)
+        if memory_map
+            error("Parser must be given a file name in order to memory map.")
+        end
+        return new(BufferedInputStream(data), 0, cs, cs, 1, false)
     end
 
     function State(cs, input::IO, memory_map=false)
         if memory_map
             error("Parser must be given a file name in order to memory map.")
         end
-        return new(BufferedReader(input, memory_map), false, 0, cs, cs, 1)
+        stream = BufferedInputStream(input)
+        BufferedStreams.fillbuffer!(stream)
+        return new(stream, 0, cs, cs, 1, false)
     end
 
     function State(cs, filename::String, memory_map=false)
-        return new(BufferedReader(filename, memory_map), false, 0,  cs, cs, 1)
+        if memory_map
+            input = Mmap.mmap(open(filename), Vector{Uint8}, (filesize(filename),))
+        else
+            input = open(filename)
+        end
+        stream = BufferedInputStream(input)
+        BufferedStreams.fillbuffer!(stream)
+        return new(stream, 0, cs, cs, 1, false)
     end
 end
 
 
-function fillbuffer!(state::State)
-    old_buffer_end = state.reader.buffer_end
-    nb = fillbuffer!(state.reader)
-    state.p = state.p + state.reader.buffer_end - old_buffer_end - nb
+function BufferedStreams.fillbuffer!(state::State)
+    old_available = state.stream.available
+    nb = BufferedStreams.fillbuffer!(state.stream)
+    state.p = state.p + state.stream.available - old_available - nb
     return nb
 end
 
@@ -180,19 +67,19 @@ function ragelstate(x)
 end
 
 
-# Macros for push and popping marks from within a ragel parser
-macro mark!()
+# Macros for push and popping anchors from within a ragel parser
+macro anchor!()
     quote
-        $(esc(:state)).reader.mark = 1 + $(esc(:p))
+        $(esc(:state)).stream.anchor = 1 + $(esc(:p))
     end
 end
 
-macro unmark!()
+macro upanchor!()
     quote
-        @assert $(esc(:state)).reader.mark != 0  "unmark! called with no mark set"
-        m = $(esc(:state)).reader.mark
-        $(esc(:state)).reader.mark = 0
-        m
+        @assert $(esc(:state)).stream.anchor != 0  "upanchor! called with no anchor set"
+        a = $(esc(:state)).stream.anchor
+        $(esc(:state)).stream.anchor = 0
+        a
     end
 end
 
@@ -204,14 +91,14 @@ end
 
 macro spanfrom(firstpos)
     quote
-        $(esc(:state)).reader.buffer[$(esc(firstpos)):$(esc(:p))]
+        $(esc(:state)).stream.buffer[$(esc(firstpos)):$(esc(:p))]
     end
 end
 
-macro asciistring_from_mark!()
+macro asciistring_from_anchor!()
     quote
-        firstpos = Ragel.@unmark!
-        ASCIIString($(esc(:state)).reader.buffer[firstpos:$(esc(:p))])
+        firstpos = Ragel.@upanchor!
+        ASCIIString($(esc(:state)).stream.buffer[firstpos:$(esc(:p))])
     end
 end
 
@@ -229,10 +116,10 @@ function parse_int64(buffer, firstpos, lastpos)
 end
 
 
-macro int64_from_mark!()
+macro int64_from_anchor!()
     quote
-        firstpos = @unmark!
-        parse_int64($(esc(:state)).reader.buffer, firstpos, $(esc(:p)))
+        firstpos = @upanchor!
+        parse_int64($(esc(:state)).stream.buffer, firstpos, $(esc(:p)))
     end
 end
 
@@ -240,7 +127,7 @@ end
 # return the current character
 macro char()
     quote
-        convert(Char, $(esc(:state)).reader.buffer[$(esc(:p))+1])
+        convert(Char, $(esc(:state)).stream.buffer[$(esc(:p))+1])
     end
 end
 
@@ -277,9 +164,9 @@ macro generate_read_fuction(machine_name, input_type, output_type, ragel_body, a
             end
 
             $(p) = $(state).p
-            $(pe) = $(state).reader.buffer_end
+            $(pe) = $(state).stream.available
             $(cs) = $(state).cs
-            $(data) = $(state).reader.buffer
+            $(data) = $(state).stream.buffer
             $(yield) = false
 
             # run the parser until all input is consumed or a match is found
@@ -287,10 +174,10 @@ macro generate_read_fuction(machine_name, input_type, output_type, ragel_body, a
             while true
                 if $(p) == $(pe)
                     $(state).p = $(p)
-                    $(state).reader.buffer_end = $(pe)
+                    $(state).stream.available = $(pe)
                     nb = fillbuffer!($(state))
                     $(p) = $(state).p
-                    $(pe) = $(state).reader.buffer_end
+                    $(pe) = $(state).stream.available
                     if nb == 0
                         $(eof) = $(pe) # trigger ragel's eof handling
                     else
@@ -307,10 +194,10 @@ macro generate_read_fuction(machine_name, input_type, output_type, ragel_body, a
                 elseif $(yield)
                     if $(p) == $(pe)
                         $(state).p = $(p)
-                        $(state).reader.buffer_end = $(pe)
+                        $(state).stream.available = $(pe)
                         fillbuffer!($(state))
                         $(p) = $(state).p
-                        $(pe) = $(state).reader.buffer_end
+                        $(pe) = $(state).stream.available
                     end
 
                     break
@@ -324,7 +211,7 @@ macro generate_read_fuction(machine_name, input_type, output_type, ragel_body, a
             end
 
             $(state).p = $(p)
-            $(state).reader.buffer_end = $(pe)
+            $(state).stream.available = $(pe)
             $(state).cs = $(cs)
 
             if $(p) >= $(pe)
