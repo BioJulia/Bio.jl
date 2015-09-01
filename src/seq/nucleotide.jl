@@ -266,6 +266,7 @@ macro encode_seq(nt_convert_expr)
         @inbounds begin
             for i in 1:length(data)
                 shift = 0
+                data_i = UInt64(0)
                 while shift < 64 && j <= stoppos
                     c = seq[j]
                     j += 1
@@ -276,12 +277,13 @@ macro encode_seq(nt_convert_expr)
                         r = (idx - 1) & 63
                         ns.chunks[d + 1] |= (@compat UInt64(1)) << r
                     else
-                        data[i] |= convert(Uint64, nt) << shift
+                        data_i |= convert(Uint64, nt) << shift
                     end
 
                     idx += 1
                     shift += 2
                 end
+                data[i] = data_i
             end
         end
     end

@@ -118,7 +118,7 @@ end
 end
 @goto st_out
 @label ctr13
-	input.state.linenum += 1
+	state.linenum += 1
 @goto st6
 @label st6
 p+= 1;
@@ -288,21 +288,21 @@ end
 @goto st4
 @label ctr4
 	input.namebuf = Ragel.@asciistring_from_anchor!
-	input.state.linenum += 1
+	state.linenum += 1
 @goto st7
 @label ctr9
 	input.descbuf = Ragel.@asciistring_from_anchor!
-	input.state.linenum += 1
+	state.linenum += 1
 @goto st7
 @label ctr11
-	input.state.linenum += 1
+	state.linenum += 1
 @goto st7
 @label ctr19
 	append!(input.seqbuf, state.stream.buffer, Ragel.upanchor!(state), p)
 @goto st7
 @label ctr20
 	append!(input.seqbuf, state.stream.buffer, Ragel.upanchor!(state), p)
-	input.state.linenum += 1
+	state.linenum += 1
 @goto st7
 @label st7
 p+= 1;

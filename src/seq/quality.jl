@@ -147,9 +147,11 @@ function decode_quality_string!(encoding::QualityEncoding, input::Vector{Uint8},
     @inbounds begin
         encoding_num = trailing_zeros(convert(Uint16, encoding)) + 1
         first, last, startqual = qual_encoding_ranges[encoding_num]
-        for (i, j) in enumerate(start:stop)
+        i = 1
+        for j in start:stop
             c = input[j]
             output[i] = startqual + (c - first)
+            i += 1
         end
         return output
     end

@@ -55,7 +55,7 @@ export FASTAParser
         fbreak;
     }
 
-    action count_line  { input.state.linenum += 1 }
+    action count_line  { state.linenum += 1 }
     action mark        { Ragel.anchor!(state, p) }
     action identifier  { input.namebuf = Ragel.@asciistring_from_anchor! }
     action description { input.descbuf = Ragel.@asciistring_from_anchor! }

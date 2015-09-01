@@ -226,7 +226,7 @@ end
 end
 @goto st_out
 @label ctr52
-	input.state.linenum += 1
+	state.linenum += 1
 
 @goto st25
 @label st25
@@ -404,16 +404,16 @@ end
 @goto st4
 @label ctr4
 	input.namebuf = Ragel.@asciistring_from_anchor!
-	input.state.linenum += 1
+	state.linenum += 1
 
 @goto st5
 @label ctr9
 	input.descbuf = Ragel.@asciistring_from_anchor!
-	input.state.linenum += 1
+	state.linenum += 1
 
 @goto st5
 @label ctr50
-	input.state.linenum += 1
+	state.linenum += 1
 
 @goto st5
 @label st5
@@ -436,12 +436,12 @@ if 65 <= ( data[1 + p ]) && ( data[1 + p ]) <= 122
 end
 @goto st0
 @label ctr11
-	input.state.linenum += 1
+	state.linenum += 1
 
 @goto st6
 @label ctr43
-	append!(input.seqbuf, state.stream.buffer, (Ragel.@upanchor!), p)
-	input.state.linenum += 1
+	append!(input.seqbuf, state.stream.buffer, Ragel.upanchor!(state), p)
+	state.linenum += 1
 
 @goto st6
 @label st6
@@ -466,7 +466,7 @@ if 65 <= ( data[1 + p ]) && ( data[1 + p ]) <= 122
 end
 @goto st0
 @label ctr44
-	append!(input.seqbuf, state.stream.buffer, (Ragel.@upanchor!), p)
+	append!(input.seqbuf, state.stream.buffer, Ragel.upanchor!(state), p)
 @goto st7
 @label st7
 p+= 1;
@@ -550,7 +550,7 @@ elseif ( ( data[1 + p ]) >= 14  )
 end
 @goto st9
 @label ctr19
-	append!(input.name2buf, state.stream.buffer, (Ragel.@upanchor!), p)
+	append!(input.name2buf, state.stream.buffer, Ragel.upanchor!(state), p)
 @goto st10
 @label st10
 p+= 1;
@@ -614,17 +614,17 @@ elseif ( ( data[1 + p ]) >= 11  )
 end
 @goto st11
 @label ctr16
-	input.state.linenum += 1
+	state.linenum += 1
 
 @goto st12
 @label ctr20
-	append!(input.name2buf, state.stream.buffer, (Ragel.@upanchor!), p)
-	input.state.linenum += 1
+	append!(input.name2buf, state.stream.buffer, Ragel.upanchor!(state), p)
+	state.linenum += 1
 
 @goto st12
 @label ctr25
-	append!(input.desc2buf, state.stream.buffer, (Ragel.@upanchor!), p)
-	input.state.linenum += 1
+	append!(input.desc2buf, state.stream.buffer, Ragel.upanchor!(state), p)
+	state.linenum += 1
 
 @goto st12
 @label st12
@@ -658,28 +658,28 @@ end
 end
 @goto st0
 @label ctr27
-	input.state.linenum += 1
+	state.linenum += 1
 
 @goto st26
 @label ctr30
-	append!(input.qualbuf, state.stream.buffer, (Ragel.@upanchor!), p)
+	append!(input.qualbuf, state.stream.buffer, Ragel.upanchor!(state), p)
         input.qualcount = 0
 
-	input.state.linenum += 1
+	state.linenum += 1
 
 @goto st26
 @label ctr38
-	input.state.linenum += 1
+	state.linenum += 1
 
-	append!(input.qualbuf, state.stream.buffer, (Ragel.@upanchor!), p)
+	append!(input.qualbuf, state.stream.buffer, Ragel.upanchor!(state), p)
         input.qualcount = 0
 
 @goto st26
 @label ctr40
-	append!(input.name2buf, state.stream.buffer, (Ragel.@upanchor!), p)
-	input.state.linenum += 1
+	append!(input.name2buf, state.stream.buffer, Ragel.upanchor!(state), p)
+	state.linenum += 1
 
-	append!(input.qualbuf, state.stream.buffer, (Ragel.@upanchor!), p)
+	append!(input.qualbuf, state.stream.buffer, Ragel.upanchor!(state), p)
         input.qualcount = 0
 
 @goto st26
@@ -758,13 +758,13 @@ end
 end
 @goto st0
 @label ctr31
-	append!(input.qualbuf, state.stream.buffer, (Ragel.@upanchor!), p)
+	append!(input.qualbuf, state.stream.buffer, Ragel.upanchor!(state), p)
         input.qualcount = 0
 
 @goto st13
 @label ctr41
-	append!(input.name2buf, state.stream.buffer, (Ragel.@upanchor!), p)
-	append!(input.qualbuf, state.stream.buffer, (Ragel.@upanchor!), p)
+	append!(input.name2buf, state.stream.buffer, Ragel.upanchor!(state), p)
+	append!(input.qualbuf, state.stream.buffer, Ragel.upanchor!(state), p)
         input.qualcount = 0
 
 @goto st13
@@ -937,14 +937,14 @@ elseif ( ( data[1 + p ]) >= 14  )
 end
 @goto st2
 @label ctr49
-	input.state.linenum += 1
+	state.linenum += 1
 
 @goto st27
 @label ctr34
 	input.namebuf = Ragel.@asciistring_from_anchor!
-	input.state.linenum += 1
+	state.linenum += 1
 
-	append!(input.qualbuf, state.stream.buffer, (Ragel.@upanchor!), p)
+	append!(input.qualbuf, state.stream.buffer, Ragel.upanchor!(state), p)
         input.qualcount = 0
 
 @goto st27
@@ -1043,14 +1043,14 @@ end
 end
 @goto st0
 @label ctr37
-	input.state.linenum += 1
+	state.linenum += 1
 
 @goto st28
 @label ctr46
-	append!(input.seqbuf, state.stream.buffer, (Ragel.@upanchor!), p)
-	input.state.linenum += 1
+	append!(input.seqbuf, state.stream.buffer, Ragel.upanchor!(state), p)
+	state.linenum += 1
 
-	append!(input.qualbuf, state.stream.buffer, (Ragel.@upanchor!), p)
+	append!(input.qualbuf, state.stream.buffer, Ragel.upanchor!(state), p)
         input.qualcount = 0
 
 @goto st28
@@ -1182,8 +1182,8 @@ end
 end
 @goto st0
 @label ctr47
-	append!(input.seqbuf, state.stream.buffer, (Ragel.@upanchor!), p)
-	append!(input.qualbuf, state.stream.buffer, (Ragel.@upanchor!), p)
+	append!(input.seqbuf, state.stream.buffer, Ragel.upanchor!(state), p)
+	append!(input.qualbuf, state.stream.buffer, Ragel.upanchor!(state), p)
         input.qualcount = 0
 
 @goto st17
@@ -1411,7 +1411,7 @@ end
 @goto st0
 @label ctr35
 	input.namebuf = Ragel.@asciistring_from_anchor!
-	append!(input.qualbuf, state.stream.buffer, (Ragel.@upanchor!), p)
+	append!(input.qualbuf, state.stream.buffer, Ragel.upanchor!(state), p)
         input.qualcount = 0
 
 @goto st22
@@ -1428,10 +1428,10 @@ if ( data[1 + p ]) == 10
 end
 @goto st0
 @label ctr21
-	append!(input.name2buf, state.stream.buffer, (Ragel.@upanchor!), p)
+	append!(input.name2buf, state.stream.buffer, Ragel.upanchor!(state), p)
 @goto st23
 @label ctr26
-	append!(input.desc2buf, state.stream.buffer, (Ragel.@upanchor!), p)
+	append!(input.desc2buf, state.stream.buffer, Ragel.upanchor!(state), p)
 @goto st23
 @label st23
 p+= 1;
@@ -1620,9 +1620,9 @@ function advance!(it::FASTQIterator)
             error("Error parsing FASTQ: sequence and quality scores have non-matching identifiers")
         end
 
+        seq = DNASequence(it.parser.seqbuf.buffer, 1, it.parser.seqbuf.position - 1)
         it.nextitem =
-            FASTQSeqRecord(it.parser.namebuf,
-                           DNASequence(it.parser.seqbuf.buffer, 1, it.parser.seqbuf.position - 1),
+            FASTQSeqRecord(it.parser.namebuf, seq,
                            FASTQMetadata(it.parser.descbuf, qscores))
 
         empty!(it.parser.seqbuf)

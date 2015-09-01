@@ -104,18 +104,18 @@ export FASTQParser
     }
 
     action count_line {
-        input.state.linenum += 1
+        state.linenum += 1
     }
 
     action anchor { Ragel.@anchor! }
 
     action identifier   { input.namebuf = Ragel.@asciistring_from_anchor! }
     action description  { input.descbuf = Ragel.@asciistring_from_anchor! }
-    action identifier2  { append!(input.name2buf, state.stream.buffer, (Ragel.@upanchor!), p) }
-    action description2 { append!(input.desc2buf, state.stream.buffer, (Ragel.@upanchor!), p) }
-    action letters { append!(input.seqbuf, state.stream.buffer, (Ragel.@upanchor!), p) }
+    action identifier2  { append!(input.name2buf, state.stream.buffer, Ragel.upanchor!(state), p) }
+    action description2 { append!(input.desc2buf, state.stream.buffer, Ragel.upanchor!(state), p) }
+    action letters { append!(input.seqbuf, state.stream.buffer, Ragel.upanchor!(state), p) }
     action qletters {
-        append!(input.qualbuf, state.stream.buffer, (Ragel.@upanchor!), p)
+        append!(input.qualbuf, state.stream.buffer, Ragel.upanchor!(state), p)
         input.qualcount = 0
     }
 
@@ -304,9 +304,9 @@ function advance!(it::FASTQIterator)
             error("Error parsing FASTQ: sequence and quality scores have non-matching identifiers")
         end
 
+        seq = DNASequence(it.parser.seqbuf.buffer, 1, it.parser.seqbuf.position - 1)
         it.nextitem =
-            FASTQSeqRecord(it.parser.namebuf,
-                           DNASequence(it.parser.seqbuf.buffer, 1, it.parser.seqbuf.position - 1),
+            FASTQSeqRecord(it.parser.namebuf, seq,
                            FASTQMetadata(it.parser.descbuf, qscores))
 
         empty!(it.parser.seqbuf)
