@@ -110,6 +110,10 @@ function infer_quality_encoding(data::Vector{Uint8}, start, stop, default)
         else
             error("Character $(convert(Char, c)) is not compatible with any known quality encoding.")
         end
+
+        if count_ones(convert(Uint16, encodings)) <= 0
+            break
+        end
     end
 
     if count_ones(convert(Uint16, encodings)) == 0
@@ -144,17 +148,19 @@ Decode a quality string in place into integer Phred scores.
 function decode_quality_string!(encoding::QualityEncoding, input::Vector{Uint8},
                                 output::Vector{Int8}, start=1,
                                 stop=min(length(output), length(input)))
-    @inbounds begin
-        encoding_num = trailing_zeros(convert(Uint16, encoding)) + 1
-        first, last, startqual = qual_encoding_ranges[encoding_num]
-        i = 1
-        for j in start:stop
-            c = input[j]
-            output[i] = startqual + (c - first)
-            i += 1
-        end
-        return output
+    if length(output) != stop - start + 1
+        resize!(output, stop - start + 1)
     end
+
+    encoding_num = trailing_zeros(convert(Uint16, encoding)) + 1
+    first, last, startqual = qual_encoding_ranges[encoding_num]
+
+    fill!(output, startqual - first)
+    for i in 1:(stop - start + 1)
+        @inbounds output[i] += input[start + i - 1]
+    end
+
+    return output
 end
 
 
@@ -194,6 +200,10 @@ function encode_quality_string!(encoding::QualityEncoding, input::Vector{Int8},
                                 output::Vector{Uint8}, start=1,
                                 stop=min(length(output), length(input)))
     @inbounds begin
+        if length(output) != stop - start + 1
+            resize!(output, stop - start + 1)
+        end
+
         encoding_num = trailing_zeros(convert(Uint16, encoding)) + 1
         first, last, startqual = qual_encoding_ranges[encoding_num]
         for (i, j) in enumerate(start:stop)

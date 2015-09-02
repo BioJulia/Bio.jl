@@ -9,7 +9,7 @@ import Base: convert, complement, show, length, start, next, done, copy,
              # operators
              getindex, setindex!, ==, *, ^, |, &
 
-import Bio: FileFormat
+import Bio: FileFormat, StringField
 
 export Nucleotide, DNANucleotide, RNANucleotide,
        DNA_A, DNA_C, DNA_G, DNA_T, DNA_N,
@@ -37,7 +37,7 @@ include("seqrecord.jl")
 
 
 # Parsing of various file types
-include("fasta.jl")
+#include("fasta.jl")
 include("fastq.jl")
 
 

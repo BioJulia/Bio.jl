@@ -11,21 +11,24 @@ and a `quality` string corresponding to the sequence.
 Quality scores are stored as integer Phred scores.
 """
 type FASTQMetadata
-    description::String
+    description::StringField
     quality::Vector{Int8}
+end
 
-    function FASTQMetadata(description, quality)
-        return new(description, quality)
-    end
 
-    function FASTQ()
-        return new("", Int8[])
-    end
+function FASTQMetadata()
+    return FASTQMetadata(StringField(), Int8[])
 end
 
 
 "A `SeqRecord` for FASTQ sequences"
 typealias FASTQSeqRecord DNASeqRecord{FASTQMetadata}
+
+
+function FASTQSeqRecord()
+    return FASTQSeqRecord(StringField(), DNASequence(mutable=true),
+                          FASTQMetadata())
+end
 
 
 """
@@ -87,7 +90,9 @@ end
 
 module FASTQParserImpl
 
-import Bio.Seq: FASTQSeqRecord, QualityEncoding, EMPTY_QUAL_ENCODING
+using Bio: StringField
+using Bio.Seq: FASTQSeqRecord, QualityEncoding, EMPTY_QUAL_ENCODING,
+               infer_quality_encoding, decode_quality_string!
 import Bio.Ragel
 using BufferedStreams
 using Switch
@@ -103,10 +108,8 @@ type FASTQParser
     state::Ragel.State
     seqbuf::BufferedOutputStream{BufferedStreams.EmptyStreamSource}
     qualbuf::BufferedOutputStream{BufferedStreams.EmptyStreamSource}
-    namebuf::String
-    descbuf::String
-    name2buf::BufferedOutputStream{BufferedStreams.EmptyStreamSource}
-    desc2buf::BufferedOutputStream{BufferedStreams.EmptyStreamSource}
+    name2buf::StringField
+    desc2buf::StringField
     qualcount::Int
     default_qual_encoding::QualityEncoding
 
@@ -119,13 +122,13 @@ type FASTQParser
                 error("Parser must be given a file name in order to memory map.")
             end
             return new(Ragel.State(cs, input, true),
-                       BufferedOutputStream(), BufferedOutputStream(), "", "",
-                       BufferedOutputStream(), BufferedOutputStream(), 0,
+                       BufferedOutputStream(), BufferedOutputStream(),
+                       StringField(), StringField(), 0,
                        default_qual_encoding)
         else
             return new(Ragel.State(cs, input), BufferedOutputStream(),
-                       BufferedOutputStream(), "", "", BufferedOutputStream(),
-                       BufferedOutputStream(), 0, default_qual_encoding)
+                       BufferedOutputStream(), StringField(), StringField(),
+                       0, default_qual_encoding)
         end
     end
 end
@@ -158,8 +161,7 @@ end
 
 Ragel.@generate_read_fuction("fastq", FASTQParser, FASTQSeqRecord,
     begin
-        @inbounds begin
-            if p == pe
+        if p == pe
 	@goto _test_eof
 
 end
@@ -252,7 +254,7 @@ if (length(input.qualbuf) == length(input.seqbuf)
 
 end
 if 1 <= ck
-	@goto st1
+	@goto ctr53
 
 end
 @goto st0
@@ -267,9 +269,35 @@ end
 @label st0
 cs = 0;
 	@goto _out
+@label ctr53
+
+@goto st1
 @label ctr54
-	yield = true;
+	if length(input.seqbuf) != length(input.qualbuf)
+            error("Error parsing FASTQ: sequence and quality scores must be of equal length")
+        end
+
+        # TODO: test name2buf and desc2buf
+
+        # sequence
+        copy!(output.seq, input.seqbuf.buffer, 1, input.seqbuf.position - 1)
+
+        # quality
+        encoding = infer_quality_encoding(input.qualbuf.buffer, 1,
+                                          input.qualbuf.position - 1,
+                                          input.default_qual_encoding)
+        input.default_qual_encoding = encoding
+        decode_quality_string!(encoding, input.qualbuf.buffer,
+                               output.metadata.quality, 1,
+                               input.qualbuf.position - 1)
+
+        empty!(input.qualbuf)
+        empty!(input.seqbuf)
+        empty!(input.name2buf)
+        empty!(input.desc2buf)
+        yield = true;
         	p+= 1; cs = 1; @goto _out
+
 
 
 
@@ -303,7 +331,7 @@ else
 end
 @goto ctr0
 @label ctr0
-	Ragel.@anchor!
+	Ragel.anchor!(state, p)
 @goto st2
 @label st2
 p+= 1;
@@ -339,7 +367,7 @@ elseif ( ( data[1 + p ]) >= 14  )
 end
 @goto st2
 @label ctr3
-	input.namebuf = Ragel.@asciistring_from_anchor!
+	copy!(output.name, state.stream.buffer, Ragel.upanchor!(state), p)
 @goto st3
 @label st3
 p+= 1;
@@ -375,7 +403,7 @@ else
 end
 @goto ctr6
 @label ctr6
-	Ragel.@anchor!
+	Ragel.anchor!(state, p)
 @goto st4
 @label st4
 p+= 1;
@@ -403,12 +431,12 @@ elseif ( ( data[1 + p ]) >= 11  )
 end
 @goto st4
 @label ctr4
-	input.namebuf = Ragel.@asciistring_from_anchor!
+	copy!(output.name, state.stream.buffer, Ragel.upanchor!(state), p)
 	state.linenum += 1
 
 @goto st5
 @label ctr9
-	input.descbuf = Ragel.@asciistring_from_anchor!
+	copy!(output.metadata.description, state.stream.buffer, Ragel.upanchor!(state), p)
 	state.linenum += 1
 
 @goto st5
@@ -514,7 +542,7 @@ else
 end
 @goto ctr15
 @label ctr15
-	Ragel.@anchor!
+	Ragel.anchor!(state, p)
 @goto st9
 @label st9
 p+= 1;
@@ -586,7 +614,7 @@ else
 end
 @goto ctr22
 @label ctr22
-	Ragel.@anchor!
+	Ragel.anchor!(state, p)
 @goto st11
 @label st11
 p+= 1;
@@ -781,7 +809,7 @@ if ( data[1 + p ]) == 10
 end
 @goto st0
 @label ctr29
-	Ragel.@anchor!
+	Ragel.anchor!(state, p)
 	input.qualcount += 1
 
 @goto st14
@@ -820,11 +848,34 @@ end
 end
 @goto st0
 @label ctr55
-	Ragel.@anchor!
+	Ragel.anchor!(state, p)
 	input.qualcount += 1
 
-	yield = true;
+	if length(input.seqbuf) != length(input.qualbuf)
+            error("Error parsing FASTQ: sequence and quality scores must be of equal length")
+        end
+
+        # TODO: test name2buf and desc2buf
+
+        # sequence
+        copy!(output.seq, input.seqbuf.buffer, 1, input.seqbuf.position - 1)
+
+        # quality
+        encoding = infer_quality_encoding(input.qualbuf.buffer, 1,
+                                          input.qualbuf.position - 1,
+                                          input.default_qual_encoding)
+        input.default_qual_encoding = encoding
+        decode_quality_string!(encoding, input.qualbuf.buffer,
+                               output.metadata.quality, 1,
+                               input.qualbuf.position - 1)
+
+        empty!(input.qualbuf)
+        empty!(input.seqbuf)
+        empty!(input.name2buf)
+        empty!(input.desc2buf)
+        yield = true;
         	p+= 1; cs = 15; @goto _out
+
 
 
 
@@ -879,7 +930,7 @@ else
 end
 @goto ctr0
 @label ctr33
-	Ragel.@anchor!
+	Ragel.anchor!(state, p)
 	input.qualcount += 1
 
 @goto st16
@@ -941,7 +992,7 @@ end
 
 @goto st27
 @label ctr34
-	input.namebuf = Ragel.@asciistring_from_anchor!
+	copy!(output.name, state.stream.buffer, Ragel.upanchor!(state), p)
 	state.linenum += 1
 
 	append!(input.qualbuf, state.stream.buffer, Ragel.upanchor!(state), p)
@@ -1200,7 +1251,7 @@ if ( data[1 + p ]) == 10
 end
 @goto st0
 @label ctr58
-	Ragel.@anchor!
+	Ragel.anchor!(state, p)
 	input.qualcount += 1
 
 @goto st18
@@ -1254,7 +1305,7 @@ else
 end
 @goto ctr15
 @label ctr39
-	Ragel.@anchor!
+	Ragel.anchor!(state, p)
 	input.qualcount += 1
 
 @goto st19
@@ -1312,7 +1363,7 @@ elseif ( ( data[1 + p ]) >= 14  )
 end
 @goto st9
 @label ctr13
-	Ragel.@anchor!
+	Ragel.anchor!(state, p)
 @goto st20
 @label st20
 p+= 1;
@@ -1334,7 +1385,7 @@ if 65 <= ( data[1 + p ]) && ( data[1 + p ]) <= 122
 end
 @goto st0
 @label ctr57
-	Ragel.@anchor!
+	Ragel.anchor!(state, p)
 	input.qualcount += 1
 
 @goto st21
@@ -1410,7 +1461,7 @@ end
 end
 @goto st0
 @label ctr35
-	input.namebuf = Ragel.@asciistring_from_anchor!
+	copy!(output.name, state.stream.buffer, Ragel.upanchor!(state), p)
 	append!(input.qualbuf, state.stream.buffer, Ragel.upanchor!(state), p)
         input.qualcount = 0
 
@@ -1446,10 +1497,10 @@ if ( data[1 + p ]) == 10
 end
 @goto st0
 @label ctr5
-	input.namebuf = Ragel.@asciistring_from_anchor!
+	copy!(output.name, state.stream.buffer, Ragel.upanchor!(state), p)
 @goto st24
 @label ctr10
-	input.descbuf = Ragel.@asciistring_from_anchor!
+	copy!(output.metadata.description, state.stream.buffer, Ragel.upanchor!(state), p)
 @goto st24
 @label st24
 p+= 1;
@@ -1526,7 +1577,29 @@ if p == eof
     @case 26
 @case 27
 @case 28
-	yield = true;
+	if length(input.seqbuf) != length(input.qualbuf)
+            error("Error parsing FASTQ: sequence and quality scores must be of equal length")
+        end
+
+        # TODO: test name2buf and desc2buf
+
+        # sequence
+        copy!(output.seq, input.seqbuf.buffer, 1, input.seqbuf.position - 1)
+
+        # quality
+        encoding = infer_quality_encoding(input.qualbuf.buffer, 1,
+                                          input.qualbuf.position - 1,
+                                          input.default_qual_encoding)
+        input.default_qual_encoding = encoding
+        decode_quality_string!(encoding, input.qualbuf.buffer,
+                               output.metadata.quality, 1,
+                               input.qualbuf.position - 1)
+
+        empty!(input.qualbuf)
+        empty!(input.seqbuf)
+        empty!(input.name2buf)
+        empty!(input.desc2buf)
+        yield = true;
         	p+= 1; cs = 0; @goto _out
 
 
@@ -1538,11 +1611,7 @@ end
 
 end
 @label _out
-end
-    end,
-    begin
-        accept_state!(input, output)
-    end)
+end)
 
 end # module FASTQParserImpl
 

@@ -169,7 +169,7 @@ end
 #
 # Args:
 #
-macro generate_read_fuction(machine_name, input_type, output_type, ragel_body, accept_body)
+macro generate_read_fuction(machine_name, input_type, output_type, ragel_body)
     start_state = esc(symbol(string(machine_name, "_start")))
     accept_state = esc(symbol(string(machine_name, "_first_final")))
     error_state = esc(symbol(string(machine_name, "_error")))
@@ -183,11 +183,15 @@ macro generate_read_fuction(machine_name, input_type, output_type, ragel_body, a
     state = esc(:state)
     eof = esc(:eof)
     yield = esc(:yield)
+    output = esc(:output)
+    input = esc(:input)
 
     quote
-        function $(esc(:advance!))(input::$(esc(input_type)), state::State)
-            $(esc(:input)) = input
+        function $(esc(:(Base.read!)))(input::$(esc(input_type)),
+                                     state::State, output::$(esc(output_type)))
             $(state) = state
+            $(input) = input
+            $(output) = output
 
             if $(state).finished
                 return false
@@ -200,7 +204,7 @@ macro generate_read_fuction(machine_name, input_type, output_type, ragel_body, a
             $(yield) = false
 
             # run the parser until all input is consumed or a match is found
-            local $(eof) = $(pe) + 1
+            $(eof) = $(pe) + 1
             @inbounds while true
                 if $(p) == $(pe)
                     $(state).p = $(p)
@@ -250,8 +254,9 @@ macro generate_read_fuction(machine_name, input_type, output_type, ragel_body, a
             return true
         end
 
-        function $(esc(:advance!))(input::$(esc(input_type)))
-            $(esc(:advance!))(input, input.state)
+        function $(esc(:(Base.read!)))(input::$(esc(input_type)), output::$(esc(output_type)))
+            # specialize on input.state
+            $(esc(:read!))(input, input.state, output)
         end
     end
 end

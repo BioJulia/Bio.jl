@@ -54,6 +54,7 @@ const DNA_INVALID = convert(DNANucleotide, 0b1000) # Indicates invalid DNA when 
 
 "Returns Any DNA Nucleotide (DNA_N)"
 nnucleotide(::Type{DNANucleotide}) = DNA_N
+invalid_nucleotide(::Type{DNANucleotide}) = DNA_INVALID
 
 # RNA Nucleotides
 
@@ -77,6 +78,7 @@ const RNA_INVALID = convert(RNANucleotide, 0b1000) # Indicates invalid RNA when 
 
 "Returns Any RNA Nucleotide (RNA_N)"
 nnucleotide(::Type{RNANucleotide}) = RNA_N
+invalid_nucleotide(::Type{RNANucleotide}) = RNA_INVALID
 
 
 # Conversion from Char
@@ -95,13 +97,12 @@ nnucleotide(::Type{RNANucleotide}) = RNA_N
     DNA_INVALID, DNA_INVALID, DNA_INVALID, DNA_T ]
 
 "Convert a Char to a DNANucleotide"
-function convert(::Type{DNANucleotide}, c::Char)
+@inline function convert(::Type{DNANucleotide}, c::Char)
     @inbounds nt = 'A' <= c <= 't' ? char_to_dna[c - 'A' + 1] : DNA_INVALID
-    @assert nt != DNA_INVALID error(" $(c) is not a valid DNA nucleotide")
     return nt
 end
 
-function unsafe_ascii_byte_to_nucleotide(T::Type{DNANucleotide}, c::Uint8)
+@inline function unsafe_ascii_byte_to_nucleotide(T::Type{DNANucleotide}, c::Uint8)
     @inbounds nt = char_to_dna[c - 0x41 + 1]
     return nt
 end
@@ -120,13 +121,12 @@ const char_to_rna = [
     RNA_INVALID, RNA_INVALID, RNA_INVALID, RNA_INVALID, RNA_U ]
 
 "Convert a Char to a RNANucleotide"
-function convert(::Type{RNANucleotide}, c::Char)
+@inline function convert(::Type{RNANucleotide}, c::Char)
     @inbounds nt = 'A' <= c <= 'u' ? char_to_rna[c - 'A' + 1] : RNA_INVALID
-    @assert nt != RNA_INVALID error(" $(c) is not a valid RNA nucleotide")
     return nt
 end
 
-function unsafe_ascii_byte_to_nucleotide(T::Type{RNANucleotide}, c::Uint8)
+@inline function unsafe_ascii_byte_to_nucleotide(T::Type{RNANucleotide}, c::Uint8)
     @inbounds nt = char_to_rna[c - 0x41 + 1]
     return nt
 end
@@ -261,14 +261,18 @@ end
 # This is the body of the NucleotideSequence constructor below. It's separated
 # into a macro so we can generate two versions depending on wether the `unsafe`
 # flag is set.
-macro encode_seq(nt_convert_expr)
+macro encode_seq(nt_convert_expr, strdata, seqdata, ns)
     quote
         @inbounds begin
-            for i in 1:length(data)
+            # we OR all the nucleotides to detect and if 0b1000 is set,
+            # then we know there was an invalid nucleotide.
+            ored_nucs = UInt8(0)
+
+            for i in 1:length(seqdata)
                 shift = 0
                 data_i = UInt64(0)
                 while shift < 64 && j <= stoppos
-                    c = seq[j]
+                    c = strdata[j]
                     j += 1
                     nt = $(nt_convert_expr)
                     if nt == nnucleotide(T)
@@ -277,13 +281,25 @@ macro encode_seq(nt_convert_expr)
                         r = (idx - 1) & 63
                         ns.chunks[d + 1] |= (@compat UInt64(1)) << r
                     else
+                        ored_nucs |= convert(UInt8, nt)
                         data_i |= convert(Uint64, nt) << shift
                     end
 
                     idx += 1
                     shift += 2
                 end
-                data[i] = data_i
+                seqdata[i] = data_i
+            end
+
+            if ored_nucs & 0b1000 != 0
+                # invalid nucleotide: figure out what the first bad character was.
+                for i in startpos:stoppos
+                    c = strdata[j]
+                    nt = $(nt_convert_expr)
+                    if nt == invalid_nucleotide(T)
+                        error(string(c, " is not a valid ", T))
+                    end
+                end
             end
         end
     end
@@ -306,9 +322,9 @@ function NucleotideSequence{T<:Nucleotide}(::Type{T}, seq::Union(String, Vector{
     j = startpos
     idx = 1
     if unsafe
-        @encode_seq unsafe_ascii_byte_to_nucleotide(T, c)
+        @encode_seq(unsafe_ascii_byte_to_nucleotide(T, c), seq, data, ns)
     else
-        @encode_seq convert(T, convert(Char, c))
+        @encode_seq(convert(T, convert(Char, c)), seq, data, ns)
     end
 
     return NucleotideSequence{T}(data, ns, 1:(stoppos - startpos + 1), mutable, false)
@@ -318,6 +334,33 @@ end
 function NucleotideSequence{T<:Nucleotide}(t::Type{T}, seq::Union(String,
                                            Vector{Uint8}); mutable::Bool=false)
     return NucleotideSequence(t, seq, 1, length(seq), mutable=mutable)
+end
+
+
+"""
+Reset the contents of a mutable sequence from a string.
+"""
+function Base.copy!{T}(seq::NucleotideSequence{T}, strdata::Vector{UInt8},
+    startpos::Integer, stoppos::Integer)
+    if !seq.mutable
+        error("Cannot copy! to immutable sequnce. Call `mutable!(seq)` first.")
+    end
+
+    len = seq_data_len(stoppos - startpos + 1)
+    if length(seq.data) < len
+        resize!(seq.data, len)
+        resize!(seq.ns, stoppos - startpos + 1)
+    end
+    fill!(seq.data, 0)
+    fill!(seq.ns, false)
+    seqdata = seq.data
+    ns = seq.ns
+
+    j = startpos
+    idx = 1
+    @encode_seq(convert(T, convert(Char, c)), strdata, seqdata, ns)
+    seq.part = 1:(stoppos - startpos + 1)
+    return seq
 end
 
 

@@ -12,21 +12,24 @@ and a `quality` string corresponding to the sequence.
 Quality scores are stored as integer Phred scores.
 """
 type FASTQMetadata
-    description::String
+    description::StringField
     quality::Vector{Int8}
+end
 
-    function FASTQMetadata(description, quality)
-        return new(description, quality)
-    end
 
-    function FASTQ()
-        return new("", Int8[])
-    end
+function FASTQMetadata()
+    return FASTQMetadata(StringField(), Int8[])
 end
 
 
 "A `SeqRecord` for FASTQ sequences"
 typealias FASTQSeqRecord DNASeqRecord{FASTQMetadata}
+
+
+function FASTQSeqRecord()
+    return FASTQSeqRecord(StringField(), DNASequence(mutable=true),
+                          FASTQMetadata())
+end
 
 
 """
@@ -88,7 +91,9 @@ end
 
 module FASTQParserImpl
 
-import Bio.Seq: FASTQSeqRecord, QualityEncoding, EMPTY_QUAL_ENCODING
+using Bio: StringField
+using Bio.Seq: FASTQSeqRecord, QualityEncoding, EMPTY_QUAL_ENCODING,
+               infer_quality_encoding, decode_quality_string!
 import Bio.Ragel
 using BufferedStreams
 using Switch
@@ -98,19 +103,14 @@ export FASTQParser
 %%{
     machine fastq;
 
-    action yield {
-        yield = true;
-        fbreak;
-    }
-
     action count_line {
         state.linenum += 1
     }
 
-    action anchor { Ragel.@anchor! }
+    action anchor { Ragel.anchor!(state, p) }
 
-    action identifier   { input.namebuf = Ragel.@asciistring_from_anchor! }
-    action description  { input.descbuf = Ragel.@asciistring_from_anchor! }
+    action identifier   { copy!(output.name, state.stream.buffer, Ragel.upanchor!(state), p) }
+    action description  { copy!(output.metadata.description, state.stream.buffer, Ragel.upanchor!(state), p) }
     action identifier2  { append!(input.name2buf, state.stream.buffer, Ragel.upanchor!(state), p) }
     action description2 { append!(input.desc2buf, state.stream.buffer, Ragel.upanchor!(state), p) }
     action letters { append!(input.seqbuf, state.stream.buffer, Ragel.upanchor!(state), p) }
@@ -129,6 +129,36 @@ export FASTQParser
 
     action inc_qual_count {
         input.qualcount += 1
+    }
+
+    action begin_match {
+    }
+
+    action finish_match {
+        if length(input.seqbuf) != length(input.qualbuf)
+            error("Error parsing FASTQ: sequence and quality scores must be of equal length")
+        end
+
+        # TODO: test name2buf and desc2buf
+
+        # sequence
+        copy!(output.seq, input.seqbuf.buffer, 1, input.seqbuf.position - 1)
+
+        # quality
+        encoding = infer_quality_encoding(input.qualbuf.buffer, 1,
+                                          input.qualbuf.position - 1,
+                                          input.default_qual_encoding)
+        input.default_qual_encoding = encoding
+        decode_quality_string!(encoding, input.qualbuf.buffer,
+                               output.metadata.quality, 1,
+                               input.qualbuf.position - 1)
+
+        empty!(input.qualbuf)
+        empty!(input.seqbuf)
+        empty!(input.name2buf)
+        empty!(input.desc2buf)
+        yield = true;
+        fbreak;
     }
 
     newline     = '\r'? '\n'     >count_line;
@@ -152,7 +182,7 @@ export FASTQParser
                   newline+ '+' (identifier2 (hspace+ description2)?)?
                   newline quality newline+;
 
-    main := whitespace* (fastq_entry %yield)*;
+    main := whitespace* (fastq_entry >begin_match %finish_match)*;
 }%%
 
 
@@ -164,10 +194,8 @@ type FASTQParser
     state::Ragel.State
     seqbuf::BufferedOutputStream{BufferedStreams.EmptyStreamSource}
     qualbuf::BufferedOutputStream{BufferedStreams.EmptyStreamSource}
-    namebuf::String
-    descbuf::String
-    name2buf::BufferedOutputStream{BufferedStreams.EmptyStreamSource}
-    desc2buf::BufferedOutputStream{BufferedStreams.EmptyStreamSource}
+    name2buf::StringField
+    desc2buf::StringField
     qualcount::Int
     default_qual_encoding::QualityEncoding
 
@@ -181,13 +209,13 @@ type FASTQParser
                 error("Parser must be given a file name in order to memory map.")
             end
             return new(Ragel.State(cs, input, true),
-                       BufferedOutputStream(), BufferedOutputStream(), "", "",
-                       BufferedOutputStream(), BufferedOutputStream(), 0,
+                       BufferedOutputStream(), BufferedOutputStream(),
+                       StringField(), StringField(), 0,
                        default_qual_encoding)
         else
             return new(Ragel.State(cs, input), BufferedOutputStream(),
-                       BufferedOutputStream(), "", "", BufferedOutputStream(),
-                       BufferedOutputStream(), 0, default_qual_encoding)
+                       BufferedOutputStream(), StringField(), StringField(),
+                       0, default_qual_encoding)
         end
     end
 end
@@ -220,12 +248,7 @@ end
 
 Ragel.@generate_read_fuction("fastq", FASTQParser, FASTQSeqRecord,
     begin
-        @inbounds begin
-            %% write exec;
-        end
-    end,
-    begin
-        accept_state!(input, output)
+        %% write exec;
     end)
 
 end # module FASTQParserImpl
