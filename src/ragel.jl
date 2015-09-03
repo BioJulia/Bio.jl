@@ -1,23 +1,12 @@
 
 module Ragel
 
+using Bio: FileFormat, AbstractParser
 using Compat
 using BufferedStreams
 using Switch
 import Base: push!, pop!, endof, append!, empty!, isempty, length, getindex,
              setindex!, (==), takebuf_string, read!, seek
-
-
-# TODO: Remove this when we are no longer using it
-function Base.(:(==))(a::BufferedOutputStream{EmptyStreamSource},
-                      b::String)
-    if length(a) == length(b)
-        return ccall(:memcmp, Cint, (Ptr{Void}, Ptr{Void}, Csize_t),
-                     a.buffer, b.data, a.position - 1) == 0
-    else
-        return false
-    end
-end
 
 
 # A type keeping track of a ragel-based parser's state.
@@ -37,36 +26,19 @@ type State{T <: BufferedInputStream}
 end
 
 
-function State(cs, data::Vector{Uint8}, memory_map::Bool=false, len::Integer=length(data))
-    if memory_map
-        error("Parser must be given a file name in order to memory map.")
-    end
-    stream = BufferedInputStream(data)
-    return State{typeof(T)}(stream, 0, cs, cs, 1, false)
-end
+"""
+Construct a new ragel parser state.
 
-
-function State(cs, input::IO, memory_map=false)
-    if memory_map
-        error("Parser must be given a file name in order to memory map.")
+### Args
+  * `cs`: initial state
+  * `input`: input stream
+"""
+function State{T <: BufferedInputStream}(cs::Int, input::T)
+    if input.available == 0
+        BufferedStreams.fillbuffer!(input)
     end
-    stream = BufferedInputStream(input)
-    BufferedStreams.fillbuffer!(stream)
-    return State{typeof(stream)}(stream, 0, cs, cs, 1, false)
-end
 
-
-function State(cs, filename::String, memory_map=false)
-    if memory_map
-        input = Mmap.mmap(open(filename), Vector{Uint8}, (filesize(filename),))
-    else
-        input = open(filename)
-    end
-    stream = BufferedInputStream(input)
-    if stream.available == 0
-        BufferedStreams.fillbuffer!(stream)
-    end
-    return State{typeof(stream)}(stream, 0, cs, cs, 1, false)
+    return State{T}(input, 0, cs, cs, 1, false)
 end
 
 
@@ -251,7 +223,7 @@ macro generate_read_fuction(machine_name, input_type, output_type, ragel_body)
             if $(p) >= $(pe)
                 $(state).finished = true
             end
-            return true
+            return $(yield)
         end
 
         function $(esc(:(Base.read!)))(input::$(esc(input_type)), output::$(esc(output_type)))
@@ -259,6 +231,66 @@ macro generate_read_fuction(machine_name, input_type, output_type, ragel_body)
             $(esc(:read!))(input, input.state, output)
         end
     end
+end
+
+
+# Open functions for various sources.
+
+
+function Base.open{T <: FileFormat}(filename::String, ::Type{T}; args...)
+    memory_map = false
+    i = 0
+    for arg in args
+        i += 1
+        if arg[1] == :memory_map
+            memory_map = arg[2]
+            break
+        end
+    end
+    if i > 0
+        splice!(args, i)
+    end
+
+    if memory_map
+        source = Mmap.mmap(open(filename), Vector{Uint8}, (filesize(filename),))
+    else
+        source = open(filename)
+    end
+
+    stream = BufferedInputStream(source)
+    open(stream, T; args...)
+end
+
+
+function Base.open{T <: FileFormat}(source::Union(IO, Vector{UInt8}), ::Type{T}; args...)
+    open(BufferedInputStream(source), T; args...)
+end
+
+
+# Iterators for parsers
+
+
+function Base.start{PT <: AbstractParser}(parser::PT)
+    ET = eltype(PT)
+    nextitem = ET()
+    if read!(parser, nextitem)
+        return Nullable{ET}(nextitem)
+    else
+        return Nullable{ET}()
+    end
+end
+
+
+function Base.next{ET}(parser::AbstractParser, nextitem_::Nullable{ET})
+    nextitem = get(nextitem_)
+    value = copy(nextitem)
+    return (value,
+        read!(parser, nextitem) ? Nullable{ET}(nextitem) : Nullable{ET}())
+end
+
+
+function Base.done(parser::AbstractParser, nextitem::Nullable)
+    return isnull(nextitem)
 end
 
 

@@ -268,18 +268,18 @@ macro encode_seq(nt_convert_expr, strdata, seqdata, ns)
             # then we know there was an invalid nucleotide.
             ored_nucs = UInt8(0)
 
-            for i in 1:length(seqdata)
+            for i in 1:length($(seqdata))
                 shift = 0
                 data_i = UInt64(0)
                 while shift < 64 && j <= stoppos
-                    c = strdata[j]
+                    c = $(strdata)[j]
                     j += 1
                     nt = $(nt_convert_expr)
                     if nt == nnucleotide(T)
                         # manually inlined: ns[i] = true
                         d = (idx - 1) >>> 6
                         r = (idx - 1) & 63
-                        ns.chunks[d + 1] |= (@compat UInt64(1)) << r
+                        $(ns).chunks[d + 1] |= (@compat UInt64(1)) << r
                     else
                         ored_nucs |= convert(UInt8, nt)
                         data_i |= convert(Uint64, nt) << shift
@@ -288,13 +288,13 @@ macro encode_seq(nt_convert_expr, strdata, seqdata, ns)
                     idx += 1
                     shift += 2
                 end
-                seqdata[i] = data_i
+                $(seqdata)[i] = data_i
             end
 
             if ored_nucs & 0b1000 != 0
                 # invalid nucleotide: figure out what the first bad character was.
                 for i in startpos:stoppos
-                    c = strdata[j]
+                    c = $(strdata)[j]
                     nt = $(nt_convert_expr)
                     if nt == invalid_nucleotide(T)
                         error(string(c, " is not a valid ", T))
@@ -341,16 +341,21 @@ end
 Reset the contents of a mutable sequence from a string.
 """
 function Base.copy!{T}(seq::NucleotideSequence{T}, strdata::Vector{UInt8},
-    startpos::Integer, stoppos::Integer)
+                       startpos::Integer, stoppos::Integer)
     if !seq.mutable
         error("Cannot copy! to immutable sequnce. Call `mutable!(seq)` first.")
     end
 
-    len = seq_data_len(stoppos - startpos + 1)
+    n = stoppos - startpos + 1
+    len = seq_data_len(n)
     if length(seq.data) < len
         resize!(seq.data, len)
-        resize!(seq.ns, stoppos - startpos + 1)
     end
+
+    if length(seq.ns) < n
+        resize!(seq.ns, n)
+    end
+
     fill!(seq.data, 0)
     fill!(seq.ns, false)
     seqdata = seq.data
@@ -359,7 +364,7 @@ function Base.copy!{T}(seq::NucleotideSequence{T}, strdata::Vector{UInt8},
     j = startpos
     idx = 1
     @encode_seq(convert(T, convert(Char, c)), strdata, seqdata, ns)
-    seq.part = 1:(stoppos - startpos + 1)
+    seq.part = 1:n
     return seq
 end
 
@@ -747,6 +752,7 @@ function orphan!{T}(seq::NucleotideSequence{T}, reorphan=false)
     seq.ns   = seq.ns[seq.part.start:seq.part.stop]
     seq.part = 1:length(seq.part)
     seq.hasrelatives = false
+
     return seq
 end
 

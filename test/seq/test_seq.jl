@@ -1320,42 +1320,42 @@ end
 
 
 facts("Sequence Parsing") do
-    context("FASTA Parsing") do
-        get_bio_fmt_specimens()
+    #context("FASTA Parsing") do
+        #get_bio_fmt_specimens()
 
-        function check_fasta_parse(filename)
-            # Reading from a stream
-            for seqrec in read(open(filename), FASTA)
-            end
+        #function check_fasta_parse(filename)
+            ## Reading from a stream
+            #for seqrec in read(open(filename), FASTA)
+            #end
 
-            # Reading from a memory mapped file
-            for seqrec in read(filename, FASTA, memory_map=true)
-            end
+            ## Reading from a memory mapped file
+            #for seqrec in read(filename, FASTA, memory_map=true)
+            #end
 
-            return true
-        end
+            #return true
+        #end
 
-        path = Pkg.dir("Bio", "test", "BioFmtSpecimens", "FASTA")
-        for specimen in YAML.load_file(joinpath(path, "index.yml"))
-            tags = specimen["tags"]
-            # currently unsupported features
-            if contains(tags, "gaps") || contains(tags, "comments") || contains(tags, "ambiguity")
-                continue
-            end
-            @fact check_fasta_parse(joinpath(path, specimen["filename"])) --> true
-        end
-    end
+        #path = Pkg.dir("Bio", "test", "BioFmtSpecimens", "FASTA")
+        #for specimen in YAML.load_file(joinpath(path, "index.yml"))
+            #tags = specimen["tags"]
+            ## currently unsupported features
+            #if contains(tags, "gaps") || contains(tags, "comments") || contains(tags, "ambiguity")
+                #continue
+            #end
+            #@fact check_fasta_parse(joinpath(path, specimen["filename"])) --> true
+        #end
+    #end
 
     context("FASTQ Parsing") do
         get_bio_fmt_specimens()
 
         function check_fastq_parse(filename)
             # Reading from a stream
-            for seqrec in read(open(filename), FASTQ)
+            for seqrec in open(filename, FASTQ)
             end
 
             # Reading from a memory mapped file
-            for seqrec in read(filename, FASTQ, memory_map=true)
+            for seqrec in open(filename, FASTQ, memory_map=true)
             end
 
             return true

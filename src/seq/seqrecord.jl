@@ -31,6 +31,11 @@ function Base.getindex(seqrec::SeqRecord, r::UnitRange)
 end
 
 
+function Base.copy{T <: SeqRecord}(seqrec::T)
+    return T(copy(seqrec.name), copy(seqrec.seq), copy(seqrec.metadata))
+end
+
+
 typealias DNASeqRecord{T}       SeqRecord{DNASequence, T}
 typealias RNASeqRecord{T}       SeqRecord{RNASequence, T}
 typealias AminoAcidSeqRecord{T} SeqRecord{AminoAcidSequence, T}
