@@ -97,13 +97,12 @@ end
 
 module FASTQParserImpl
 
-using Bio: StringField, AbstractParser
+import Bio.Ragel
+using Bio: AbstractParser, StringField
 using Bio.Seq: FASTQ, FASTQSeqRecord, QualityEncoding, EMPTY_QUAL_ENCODING,
                infer_quality_encoding, decode_quality_string!
-import Bio.Ragel
 using BufferedStreams
 using Switch
-export FASTQParser
 
 
 %%{
@@ -228,16 +227,16 @@ function Base.eltype(::Type{FASTQParser})
 end
 
 
-Ragel.@generate_read_fuction("fastq", FASTQParser, FASTQSeqRecord,
-    begin
-        %% write exec;
-    end)
-
-
 function Base.open(input::BufferedInputStream, ::Type{FASTQ};
                    quality_encodings::QualityEncoding=EMPTY_QUAL_ENCODING)
     return FASTQParser(input, quality_encodings)
 end
+
+
+Ragel.@generate_read_fuction("fastq", FASTQParser, FASTQSeqRecord,
+    begin
+        %% write exec;
+    end)
 
 
 end # module FASTQParserImpl

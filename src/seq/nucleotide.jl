@@ -181,7 +181,7 @@ end
 # *if* the sequence is not a subsequence and has no subsequences, otherwise it
 # must make a copy of the data.
 #
-type NucleotideSequence{T<:Nucleotide}
+type NucleotideSequence{T<:Nucleotide} <: Sequence
     data::Vector{Uint64} # 2-bit encoded sequence
     ns::BitVector        # 'N' mask
     part::UnitRange{Int} # interval within `data` and `ns` defining the (sub)sequence
@@ -539,7 +539,7 @@ end
 typealias DNASequence NucleotideSequence{DNANucleotide}
 
 "Construct an empty DNA nucleotide sequence"
-DNASequence(; mutable::Bool=false) =
+DNASequence(; mutable::Bool=true) =
     NucleotideSequence(DNANucleotide, mutable=mutable)
 
 "Construct a DNA nucleotide subsequence from another sequence"
@@ -565,7 +565,7 @@ DNASequence(seq::AbstractVector{DNANucleotide}; mutable::Bool=false) =
 typealias RNASequence NucleotideSequence{RNANucleotide}
 
 "Construct an empty RNA nucleotide sequence"
-RNASequence(; mutable::Bool=false) =
+RNASequence(; mutable::Bool=true) =
     NucleotideSequence(RNANucleotide, mutable=mutable)
 
 "Construct a RNA nucleotide subsequence from another sequence"

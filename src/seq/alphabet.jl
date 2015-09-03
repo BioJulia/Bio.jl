@@ -122,7 +122,7 @@ A type T to which the string data can be converted.
 function infer_alphabet(data::Vector{Uint8}, start, stop, default)
     alphabets = ALL_ALPHABETS
     if start > stop
-        error("start must be less than stop")
+        return default
     end
 
     if start < 1 ||  stop > length(data)

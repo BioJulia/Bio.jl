@@ -2,7 +2,7 @@
 """
 A simplistic mutable, utf8 encoded string.
 """
-type StringField <: AbstractString
+type StringField
     data::Vector{UInt8}
     part::UnitRange{Int}
 end
@@ -50,8 +50,18 @@ function Base.convert(::Type{String}, field::StringField)
 end
 
 
+function Base.write(io::IO, field::StringField)
+    write(io, convert(UTF8String, field))
+end
+
+
 function Base.show(io::IO, field::StringField)
-    show(io, convert(UTF8String, field))
+    print(io, convert(UTF8String, field))
+end
+
+
+function Base.writemime(io::IO, T::MIME"text/plain", field::StringField)
+    writemime(io, T, convert(UTF8String, field))
 end
 
 

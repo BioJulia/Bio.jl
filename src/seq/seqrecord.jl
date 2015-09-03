@@ -4,18 +4,23 @@
 `SeqRecord{S, T}` is a type holding a named sequence of type `S`, along with
 some arbitrary metadata of type `T`.
 """
-type SeqRecord{S, T}
+type SeqRecord{S <: Sequence, T}
     name::StringField
     seq::S
     metadata::T
 
-    function SeqRecord(name, seq::S, metadata::T)
+    function SeqRecord(name, seq, metadata)
         return new(name, seq, metadata)
     end
 
     function SeqRecord()
-        return new("", S(), T())
+        return new(StringField(), S(), T())
     end
+end
+
+
+function seqtype{S, T}(::Type{SeqRecord{S, T}})
+    return S
 end
 
 

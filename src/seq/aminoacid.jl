@@ -162,7 +162,7 @@ end
 # Like NucleotideSequence, amino acid sequences are immutable by convention.
 
 "Type representing AminoAcid Sequences"
-type AminoAcidSequence
+type AminoAcidSequence <: Sequence
     data::Vector{AminoAcid}
     part::UnitRange{Int} # interval within `data` defining the (sub)sequence
     mutable::Bool # true if the sequence can be safely mutated
