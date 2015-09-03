@@ -92,7 +92,7 @@ using Switch
     sequence    = whitespace* letters? (whitespace+ letters)*;
     fasta_entry = '>' identifier (hspace+ description)? newline sequence whitespace*;
 
-    main := whitespace* (fasta_entry >begin_match >finish_match)*;
+    main := whitespace* (fasta_entry >begin_match %finish_match)*;
 }%%
 
 
@@ -100,7 +100,7 @@ using Switch
 
 
 "A type encapsulating the current state of a FASTA parser"
-type FASTAParser
+type FASTAParser <: AbstractParser
     state::Ragel.State
     seqbuf::BufferedOutputStream{BufferedStreams.EmptyStreamSource}
     default_alphabet::Alphabet

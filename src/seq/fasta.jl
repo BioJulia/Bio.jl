@@ -55,7 +55,7 @@ const fasta_first_final  = convert(Int , 6)
 const fasta_error  = convert(Int , 0)
 const fasta_en_main  = convert(Int , 6)
 "A type encapsulating the current state of a FASTA parser"
-type FASTAParser
+type FASTAParser <: AbstractParser
     state::Ragel.State
     seqbuf::BufferedOutputStream{BufferedStreams.EmptyStreamSource}
     default_alphabet::Alphabet
@@ -139,6 +139,8 @@ cs = 0;
 	@goto _out
 @label ctr14
 
+@goto st1
+@label ctr17
 	if seqtype(typeof(output)) == Sequence
             alphabet = infer_alphabet(input.seqbuf.buffer, 1,
                                        length(input.seqbuf), input.default_alphabet)
@@ -155,13 +157,13 @@ cs = 0;
         empty!(input.seqbuf)
         yield = true;
         	p+= 1; cs = 1; @goto _out
+
 
 
 
 @goto st1
-@label ctr20
+@label ctr21
 	append!(input.seqbuf, state.stream.buffer, Ragel.upanchor!(state), p)
-
 	if seqtype(typeof(output)) == Sequence
             alphabet = infer_alphabet(input.seqbuf.buffer, 1,
                                        length(input.seqbuf), input.default_alphabet)
@@ -178,6 +180,7 @@ cs = 0;
         empty!(input.seqbuf)
         yield = true;
         	p+= 1; cs = 1; @goto _out
+
 
 
 
@@ -317,10 +320,10 @@ end
 @label ctr11
 	state.linenum += 1
 @goto st7
-@label ctr18
+@label ctr19
 	append!(input.seqbuf, state.stream.buffer, Ragel.upanchor!(state), p)
 @goto st7
-@label ctr19
+@label ctr20
 	append!(input.seqbuf, state.stream.buffer, Ragel.upanchor!(state), p)
 	state.linenum += 1
 @goto st7
@@ -339,7 +342,7 @@ end
 @case 32
 @goto st7
 @case 62
-@goto ctr14
+@goto ctr17
 
 end
 if ( data[1 + p ]) < 14
@@ -377,18 +380,18 @@ end
 @label st_case_8
 @switch ( data[1 + p ])  begin
     @case 9
-@goto ctr18
-@case 10
 @goto ctr19
-@case 32
-@goto ctr18
-@case 62
+@case 10
 @goto ctr20
+@case 32
+@goto ctr19
+@case 62
+@goto ctr21
 
 end
 if ( data[1 + p ]) < 14
 	if 11 <= ( data[1 + p ])
-	@goto ctr18
+	@goto ctr19
 
 end
 
@@ -447,8 +450,49 @@ cs = 5; @goto _test_eof
 @label _test_eof
 if p == eof
 	@switch cs  begin
-    @case 8
+    @case 7
+	if seqtype(typeof(output)) == Sequence
+            alphabet = infer_alphabet(input.seqbuf.buffer, 1,
+                                       length(input.seqbuf), input.default_alphabet)
+            ET = alphabet_type[alphabet]
+            if ET == typeof(output.seq)
+                copy!(output.seq, input.seqbuf.buffer, 1, length(input.seqbuf))
+            else
+                output.seq = ET(input.seqbuf.buffer, 1, length(input.seqbuf))
+            end
+            input.default_alphabet = alphabet
+        else
+            copy!(output.seq, input.seqbuf.buffer, 1, length(input.seqbuf))
+        end
+        empty!(input.seqbuf)
+        yield = true;
+        	p+= 1; cs = 0; @goto _out
+
+
+
+
+	break;
+	@case 8
 	append!(input.seqbuf, state.stream.buffer, Ragel.upanchor!(state), p)
+	if seqtype(typeof(output)) == Sequence
+            alphabet = infer_alphabet(input.seqbuf.buffer, 1,
+                                       length(input.seqbuf), input.default_alphabet)
+            ET = alphabet_type[alphabet]
+            if ET == typeof(output.seq)
+                copy!(output.seq, input.seqbuf.buffer, 1, length(input.seqbuf))
+            else
+                output.seq = ET(input.seqbuf.buffer, 1, length(input.seqbuf))
+            end
+            input.default_alphabet = alphabet
+        else
+            copy!(output.seq, input.seqbuf.buffer, 1, length(input.seqbuf))
+        end
+        empty!(input.seqbuf)
+        yield = true;
+        	p+= 1; cs = 0; @goto _out
+
+
+
 
 	break;
 
