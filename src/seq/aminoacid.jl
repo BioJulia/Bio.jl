@@ -376,6 +376,14 @@ end
 
 start(seq::AminoAcidSequence) = seq.part.start
 next(seq::AminoAcidSequence, i) = (seq.data[i], i+1)
+
+
+function next(seq::AminoAcidSequence, i)
+    aa = seq.data[i]
+    return (aa, i + 1)
+end
+
+
 done(seq::AminoAcidSequence, i) = (i > seq.part.stop)
 
 
