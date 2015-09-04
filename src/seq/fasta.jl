@@ -148,7 +148,8 @@ cs = 0;
             if ET == typeof(output.seq)
                 copy!(output.seq, input.seqbuf.buffer, 1, length(input.seqbuf))
             else
-                output.seq = ET(input.seqbuf.buffer, 1, length(input.seqbuf))
+                output.seq = ET(input.seqbuf.buffer, 1, length(input.seqbuf),
+                                mutable=true)
             end
             input.default_alphabet = alphabet
         else
@@ -171,7 +172,8 @@ cs = 0;
             if ET == typeof(output.seq)
                 copy!(output.seq, input.seqbuf.buffer, 1, length(input.seqbuf))
             else
-                output.seq = ET(input.seqbuf.buffer, 1, length(input.seqbuf))
+                output.seq = ET(input.seqbuf.buffer, 1, length(input.seqbuf),
+                                mutable=true)
             end
             input.default_alphabet = alphabet
         else
@@ -458,7 +460,8 @@ if p == eof
             if ET == typeof(output.seq)
                 copy!(output.seq, input.seqbuf.buffer, 1, length(input.seqbuf))
             else
-                output.seq = ET(input.seqbuf.buffer, 1, length(input.seqbuf))
+                output.seq = ET(input.seqbuf.buffer, 1, length(input.seqbuf),
+                                mutable=true)
             end
             input.default_alphabet = alphabet
         else
@@ -481,7 +484,8 @@ if p == eof
             if ET == typeof(output.seq)
                 copy!(output.seq, input.seqbuf.buffer, 1, length(input.seqbuf))
             else
-                output.seq = ET(input.seqbuf.buffer, 1, length(input.seqbuf))
+                output.seq = ET(input.seqbuf.buffer, 1, length(input.seqbuf),
+                                mutable=true)
             end
             input.default_alphabet = alphabet
         else

@@ -213,6 +213,11 @@ function AminoAcidSequence(seq::Union(Vector{Uint8}, String),
 end
 
 
+function AminoAcidSequence()
+    return AminoAcidSequence(AminoAcid[], 1:0, true, false)
+end
+
+
 "Construct an amino acid sequence by concatenating other sequences"
 function AminoAcidSequence(chunks::AminoAcidSequence...)
     seqlen = 0
@@ -345,6 +350,27 @@ end
 
 function setindex!(seq::AminoAcidSequence, nt::Char, i::Integer)
     setindex!(seq, convert(AminoAcid, nt), i)
+end
+
+
+"""
+Reset the contents of a mutable sequence from a string.
+"""
+function Base.copy!(seq::AminoAcidSequence, strdata::Vector{UInt8},
+                    startpos::Integer, stoppos::Integer)
+    if !seq.mutable
+        error("Cannot copy! to immutable sequnce. Call `mutable!(seq)` first.")
+    end
+
+    n = stoppos - startpos - 1
+    if length(seq.data) < n
+        resize!(seq.data, n)
+    end
+
+    for i in 1:n
+        seq.data[i] = convert(AminoAcid, strdata[startpos + i - 1])
+    end
+    seq.part = 1:n
 end
 
 

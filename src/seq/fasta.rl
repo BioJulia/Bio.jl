@@ -65,7 +65,8 @@ using Switch
             if ET == typeof(output.seq)
                 copy!(output.seq, input.seqbuf.buffer, 1, length(input.seqbuf))
             else
-                output.seq = ET(input.seqbuf.buffer, 1, length(input.seqbuf))
+                output.seq = ET(input.seqbuf.buffer, 1, length(input.seqbuf),
+                                mutable=true)
             end
             input.default_alphabet = alphabet
         else
