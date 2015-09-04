@@ -14,7 +14,7 @@ using Compat
 using IntervalTrees
 import IntervalTrees: first, last
 
-import Bio: FileFormat
+using Bio: FileFormat, StringField
 
 export Strand, Interval, IntervalCollection, IntervalStream,
        STRAND_NA, STRAND_POS, STRAND_NEG, STRAND_BOTH,

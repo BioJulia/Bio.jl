@@ -39,7 +39,7 @@ typealias IntervalCollectionTree{T} IntervalTree{Int64, Interval{T}}
 type IntervalCollection{T} <: IntervalStream{T}
     # Sequence name mapped to IntervalTree, which in turn maps intervals to
     # a list of metadata.
-    trees::Dict{ASCIIString, IntervalCollectionTree{T}}
+    trees::Dict{StringField, IntervalCollectionTree{T}}
 
     # Keep track of the number of stored intervals
     length::Int
@@ -51,7 +51,7 @@ type IntervalCollection{T} <: IntervalStream{T}
     ordered_trees_outdated::Bool
 
     function IntervalCollection()
-        return new(Dict{ASCIIString, IntervalCollectionTree{T}}(), 0,
+        return new(Dict{StringField, IntervalCollectionTree{T}}(), 0,
                    IntervalCollectionTree{T}[], false)
     end
 
@@ -66,7 +66,7 @@ type IntervalCollection{T} <: IntervalStream{T}
         end
 
         n = length(intervals)
-        trees = Dict{ASCIIString, IntervalCollectionTree{T}}()
+        trees = Dict{StringField, IntervalCollectionTree{T}}()
         i = 1
         while i <= n
             j = i

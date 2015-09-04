@@ -47,12 +47,18 @@ end
 
 # Note, just to be clear: this shadows IntervalTrees.Interval
 "A genomic interval specifies interval with some associated metadata"
-immutable Interval{T} <: AbstractInterval{Int64}
-    seqname::ASCIIString
+type Interval{T} <: AbstractInterval{Int64}
+    seqname::StringField
     first::Int64
     last::Int64
     strand::Strand
     metadata::T
+end
+
+
+function Interval{T}(seqname::String, first::Integer, last::Integer,
+                    strand::Strand, metadata::T)
+    return Interval{T}(convert(StringField, seqname), first, last, strand, metadata)
 end
 
 
@@ -146,7 +152,7 @@ ordering.
 
 This is similar to the '--version-sort' option in GNU coreutils sort.
 """
-function alphanum_isless(a::String, b::String)
+function alphanum_isless(a::AbstractString, b::AbstractString)
     i = 1
     j = 1
 
