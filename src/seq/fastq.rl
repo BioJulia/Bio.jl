@@ -114,13 +114,13 @@ using Switch
 
     action anchor { Ragel.anchor!(state, p) }
 
-    action identifier   { copy!(output.name, state.stream.buffer, Ragel.upanchor!(state), p) }
-    action description  { copy!(output.metadata.description, state.stream.buffer, Ragel.upanchor!(state), p) }
-    action identifier2  { copy!(input.name2buf, state.stream.buffer, Ragel.upanchor!(state), p) }
-    action description2 { copy!(input.desc2buf, state.stream.buffer, Ragel.upanchor!(state), p) }
-    action letters { append!(input.seqbuf, state.stream.buffer, Ragel.upanchor!(state), p) }
+    action identifier   { Ragel.@copy_from_anchor!(output.name) }
+    action description  { Ragel.@copy_from_anchor!(output.metadata.description) }
+    action identifier2  { Ragel.@copy_from_anchor!(input.name2buf) }
+    action description2 { Ragel.@copy_from_anchor!(input.desc2buf) }
+    action letters      { Ragel.@append_from_anchor!(input.seqbuf) }
     action qletters {
-        append!(input.qualbuf, state.stream.buffer, Ragel.upanchor!(state), p)
+        Ragel.@append_from_anchor!(input.qualbuf)
         input.qualcount = 0
     }
 
@@ -134,9 +134,6 @@ using Switch
 
     action inc_qual_count {
         input.qualcount += 1
-    }
-
-    action begin_match {
     }
 
     action finish_match {
@@ -177,13 +174,13 @@ using Switch
     hspace      = [ \t\v];
     whitespace  = space | newline;
 
-    identifier  = (any - space)+           >anchor  %identifier;
-    description = ((any - space) [^\r\n]*) >anchor  %description;
+    identifier  = (any - space)+            >anchor  %identifier;
+    description = ((any - space) [^\r\n]*)  >anchor  %description;
 
     identifier2  = (any - space)+           >anchor  %identifier2;
     description2 = ((any - space) [^\r\n]*) >anchor  %description2;
 
-    letters     = [A-z]+                   >anchor  %letters;
+    letters     = [A-z]+                    >anchor  %letters;
     sequence    = letters? (newline+ letters)*;
 
     qletters    = ([!-~] when qlen_lt $inc_qual_count)+   >anchor %qletters;
@@ -194,7 +191,7 @@ using Switch
                   newline+ '+' (identifier2 (hspace+ description2)?)?
                   newline quality newline+;
 
-    main := whitespace* (fastq_entry >begin_match %finish_match)*;
+    main := whitespace* (fastq_entry %finish_match)*;
 }%%
 
 

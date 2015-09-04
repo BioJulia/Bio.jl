@@ -125,7 +125,7 @@ end
 @case 32
 @goto st6
 @case 62
-@goto ctr14
+@goto st1
 
 end
 if 11 <= ( data[1 + p ]) && ( data[1 + p ]) <= 13
@@ -137,9 +137,6 @@ end
 @label st0
 cs = 0;
 	@goto _out
-@label ctr14
-
-@goto st1
 @label ctr17
 	if seqtype(typeof(output)) == Sequence
             alphabet = infer_alphabet(input.seqbuf.buffer, 1,
@@ -161,10 +158,9 @@ cs = 0;
 
 
 
-
 @goto st1
 @label ctr21
-	append!(input.seqbuf, state.stream.buffer, Ragel.upanchor!(state), p)
+	Ragel.@append_from_anchor!(input.seqbuf)
 	if seqtype(typeof(output)) == Sequence
             alphabet = infer_alphabet(input.seqbuf.buffer, 1,
                                        length(input.seqbuf), input.default_alphabet)
@@ -182,7 +178,6 @@ cs = 0;
         empty!(input.seqbuf)
         yield = true;
         	p+= 1; cs = 1; @goto _out
-
 
 
 
@@ -252,7 +247,7 @@ elseif ( ( data[1 + p ]) >= 14  )
 end
 @goto st2
 @label ctr3
-	copy!(output.name, state.stream.buffer, Ragel.upanchor!(state), p)
+	Ragel.@copy_from_anchor!(output.name)
 @goto st3
 @label st3
 p+= 1;
@@ -312,21 +307,21 @@ elseif ( ( data[1 + p ]) >= 11  )
 end
 @goto st4
 @label ctr4
-	copy!(output.name, state.stream.buffer, Ragel.upanchor!(state), p)
+	Ragel.@copy_from_anchor!(output.name)
 	state.linenum += 1
 @goto st7
 @label ctr9
-	copy!(output.metadata.description, state.stream.buffer, Ragel.upanchor!(state), p)
+	Ragel.@copy_from_anchor!(output.metadata.description)
 	state.linenum += 1
 @goto st7
 @label ctr11
 	state.linenum += 1
 @goto st7
 @label ctr19
-	append!(input.seqbuf, state.stream.buffer, Ragel.upanchor!(state), p)
+	Ragel.@append_from_anchor!(input.seqbuf)
 @goto st7
 @label ctr20
-	append!(input.seqbuf, state.stream.buffer, Ragel.upanchor!(state), p)
+	Ragel.@append_from_anchor!(input.seqbuf)
 	state.linenum += 1
 @goto st7
 @label st7
@@ -415,10 +410,10 @@ else
 end
 @goto st8
 @label ctr5
-	copy!(output.name, state.stream.buffer, Ragel.upanchor!(state), p)
+	Ragel.@copy_from_anchor!(output.name)
 @goto st5
 @label ctr10
-	copy!(output.metadata.description, state.stream.buffer, Ragel.upanchor!(state), p)
+	Ragel.@copy_from_anchor!(output.metadata.description)
 @goto st5
 @label st5
 p+= 1;
@@ -476,7 +471,7 @@ if p == eof
 
 	break;
 	@case 8
-	append!(input.seqbuf, state.stream.buffer, Ragel.upanchor!(state), p)
+	Ragel.@append_from_anchor!(input.seqbuf)
 	if seqtype(typeof(output)) == Sequence
             alphabet = infer_alphabet(input.seqbuf.buffer, 1,
                                        length(input.seqbuf), input.default_alphabet)

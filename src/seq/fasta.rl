@@ -54,9 +54,6 @@ using Switch
 %%{
     machine fasta;
 
-    action begin_match {
-    }
-
     action finish_match {
         if seqtype(typeof(output)) == Sequence
             alphabet = infer_alphabet(input.seqbuf.buffer, 1,
@@ -79,9 +76,9 @@ using Switch
 
     action count_line  { state.linenum += 1 }
     action mark        { Ragel.anchor!(state, p) }
-    action identifier  { copy!(output.name, state.stream.buffer, Ragel.upanchor!(state), p) }
-    action description { copy!(output.metadata.description, state.stream.buffer, Ragel.upanchor!(state), p) }
-    action letters     { append!(input.seqbuf, state.stream.buffer, Ragel.upanchor!(state), p) }
+    action identifier  { Ragel.@copy_from_anchor!(output.name) }
+    action description { Ragel.@copy_from_anchor!(output.metadata.description) }
+    action letters     { Ragel.@append_from_anchor!(input.seqbuf) }
 
     newline     = '\r'? '\n'     >count_line;
     hspace      = [ \t\v];
@@ -93,7 +90,7 @@ using Switch
     sequence    = whitespace* letters? (whitespace+ letters)*;
     fasta_entry = '>' identifier (hspace+ description)? newline sequence whitespace*;
 
-    main := whitespace* (fasta_entry >begin_match %finish_match)*;
+    main := whitespace* (fasta_entry %finish_match)*;
 }%%
 
 
@@ -134,7 +131,5 @@ Ragel.@generate_read_fuction("fasta", FASTAParser, FASTAAnySeqRecord,
 
 end # module FASTAParserImpl
 
-
-using Bio.Seq.FASTAParserImpl
 
 

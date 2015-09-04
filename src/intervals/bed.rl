@@ -2,41 +2,75 @@
 
 immutable BED <: FileFormat end
 
-"Metadata for BED interval records"
-immutable BEDMetadata
-    name::Nullable{ASCIIString}
-    score::Nullable{Int}
-    thick_first::Nullable{Int}
-    thick_last::Nullable{Int};
-    item_rgb::Nullable{RGB{Float32}};
-    block_count::Nullable{Int}
-    block_sizes::Nullable{Vector{Int}}
-    block_firsts::Nullable{Vector{Int}}
 
-    function BEDMetadata(name=Nullable{ASCIIString}(),
-                         score=Nullable{Int}(),
-                         thick_first=Nullable{Int}(),
-                         thick_last=Nullable{Int}(),
-                         item_rgb=Nullable{Float32}(),
-                         block_count=Nullable{Int}(),
-                         block_sizes=Nullable{Vector{Int}}(),
-                         block_firsts=Nullable{Vector{Int}}())
-        return new(name, score, thick_first, thick_last, item_rgb,
-                   block_count, block_sizes, block_firsts)
-    end
+"""Metadata for BED interval records"""
+type BEDMetadata
+    used_fields::Int # how many of the first n fields are used
+    name::StringField
+    score::Int
+    thick_first::Int
+    thick_last::Int
+    item_rgb::RGB{Float32}
+    block_count::Int
+    block_sizes::Vector{Int}
+    block_firsts::Vector{Int}
+end
+
+
+function BEDMetadata()
+    return BEDMetadata(0, StringField(), 0, 0, 0, RGB{Float32}(0.0, 0.0, 0.0),
+                       0, Int[], Int[])
+end
+
+
+function Base.copy(metadata::BEDMetadata)
+    return BEDMetadata(
+        metadata.used_fields, copy(metadata.name),
+        metadata.score, metadata.thick_first, metadata.thick_last,
+        metadata.item_rgb, metadata.block_count,
+        metadata.block_sizes[1:metadata.block_count],
+        metadata.block_firsts[1:metadata.block_count])
 end
 
 
 function (==)(a::BEDMetadata, b::BEDMetadata)
-    for name in fieldnames(BEDMetadata)
-        aval = getfield(a, name)
-        bval = getfield(b, name)
-        if (isnull(aval) != isnull(bval)) || (!isnull(aval) && (get(aval) != get(bval)))
-            return false
+    if a.used_fields != b.used_fields
+        return false
+    end
+
+    n = a.used_fields
+    ans = (n < 1 || a.name == b.name) &&
+          (n < 2 || a.score == b.score) &&
+          (n < 3 || a.thick_first == b.thick_first) &&
+          (n < 4 || a.thick_last == b.thick_first) &&
+          (n < 5 || a.item_rgb == b.item_rgb) &&
+          (n < 6 || a.block_count == b.block_count)
+    if !ans
+        return false
+    end
+
+    if n >= 7
+        for i in 1:a.block_count
+            if a.block_sizes[i] != b.block_sizes[i]
+                return false
+            end
         end
     end
+
+    if n >= 8
+        for i in 1:a.block_count
+            if a.block_sizes[i] != b.block_sizes[i]
+                return false
+            end
+        end
+    end
+
     return true
 end
+
+# TODO
+#function show(io::IO, metadata::BEDMetadata)
+#end
 
 
 "An `Interval` with associated metadata from a BED file"
@@ -45,77 +79,96 @@ typealias BEDInterval Interval{BEDMetadata}
 
 module BEDParserImpl
 
-import Bio.Intervals: Strand, STRAND_NA, BEDInterval, BEDMetadata
-import Bio.Ragel
-using Switch, Compat, Color
-export BEDParser, takevalue!
+import Bio.Ragel, Bio.Intervals
+using Bio: AbstractParser, StringField
+using Bio.Intervals: Strand, STRAND_NA, BED, BEDInterval, BEDMetadata
+using BufferedStreams, Switch, Compat, Colors
 
 
 %%{
     machine bed;
 
-    action yield {
+    action finish_match {
+        input.block_size_idx = 1
+        input.block_first_idx = 1
+        output.metadata.used_fields = 0
+
         yield = true
         # // fbreak causes will cause the pushmark action for the next seqname
-        # // to be skipped, so we do it here
-        Ragel.@mark!
+        # // to be skipped, so we do it here TODO: Is this still the case????
+        Ragel.anchor!(state, p)
         fbreak;
     }
 
     action count_line { input.state.linenum += 1 }
-    action mark { Ragel.@mark! }
+    action anchor { Ragel.anchor!(state, p) }
+    action optional_field { output.metadata.used_fields += 1 }
 
-    action seqname     { input.seqname      = Ragel.@asciistring_from_mark! }
-    action first       { input.first        = Ragel.@int64_from_mark! }
-    action last        { input.last         = Ragel.@int64_from_mark! }
-    action name        { input.name         = Nullable{ASCIIString}(Ragel.@asciistring_from_mark!) }
-    action score       { input.score        = Ragel.@int64_from_mark! }
-    action strand      { input.strand       = convert(Strand, Ragel.@char) }
-    action thick_first { input.thick_first  = (Ragel.@int64_from_mark!) + 1 }
-    action thick_last  { input.thick_last   = Ragel.@int64_from_mark! }
-    action item_rgb_r  { input.red = input.green = input.blue = (Ragel.@int64_from_mark!) / 255.0 }
-    action item_rgb_g  { input.green        = (Ragel.@int64_from_mark!) / 255.0 }
-    action item_rgb_b  { input.blue         = (Ragel.@int64_from_mark!) / 255.0 }
-    action item_rgb    { input.item_rgb     = RGB{Float32}(input.red, input.green, input.blue ) }
-    action block_count { input.block_count  = Ragel.@int64_from_mark! }
-    action block_size {
-        if isnull(input.block_sizes)
-            input.block_sizes = Array(Int, 0)
+    action seqname     { Ragel.@copy_from_anchor!(output.seqname) }
+    action first       { output.first = 1 + Ragel.@int64_from_anchor! }
+    action last        { output.last = Ragel.@int64_from_anchor! }
+    action name        { Ragel.@copy_from_anchor!(output.metadata.name) }
+    action score       { output.metadata.score = Ragel.@int64_from_anchor! }
+    action strand      { output.strand = convert(Strand, (Ragel.@char)) }
+    action thick_first { output.metadata.thick_first = 1 + Ragel.@int64_from_anchor! }
+    action thick_last  { output.metadata.thick_last = Ragel.@int64_from_anchor!  }
+    action item_rgb_r  { input.red = input.green = input.blue = (Ragel.@int64_from_anchor!) / 255.0 }
+    action item_rgb_g  { input.green = (Ragel.@int64_from_anchor!) / 255.0 }
+    action item_rgb_b  { input.blue = (Ragel.@int64_from_anchor!) / 255.0 }
+    action item_rgb    { output.metadata.item_rgb = RGB{Float32}(input.red, input.green, input.blue) }
+    action block_count {
+        output.metadata.block_count = Ragel.@int64_from_anchor!
+
+        if (output.metadata.block_count > length(output.metadata.block_sizes))
+            resize!(output.metadata.block_sizes, output.metadata.block_count)
         end
-        push!(get(input.block_sizes), (Ragel.@int64_from_mark!))
+
+        if (output.metadata.block_count > length(output.metadata.block_firsts))
+            resize!(output.metadata.block_firsts, output.metadata.block_count)
+        end
     }
-    action block_first {
-        if isnull(input.block_firsts)
-            input.block_firsts = Array(Int, 0)
+
+    action block_size {
+        if input.block_size_idx > length(output.metadata.block_sizes)
+            error("More size blocks encountered than BED block count field suggested.")
         end
-        push!(get(input.block_firsts), (Ragel.@int64_from_mark!) + 1)
+        output.metadata.block_sizes[input.block_size_idx] = Ragel.@int64_from_anchor!
+        input.block_size_idx += 1
+    }
+
+    action block_first {
+        if input.block_first_idx > length(output.metadata.block_firsts)
+            error("More start blocks encountered than BED block count field suggested.")
+        end
+        output.metadata.block_firsts[input.block_first_idx] = Ragel.@int64_from_anchor!
+        input.block_first_idx += 1
     }
 
     newline      = '\r'? '\n'     >count_line;
     hspace       = [ \t\v];
     blankline    = hspace* newline;
 
-    seqname      = [ -~]*   >mark     %seqname;
-    first        = digit+   >mark     %first;
-    last         = digit+   >mark     %last;
-    name         = [ -~]*   >mark     %name;
-    score        = digit+   >mark     %score;
-    strand       = [+\-\.?] >strand;
-    thick_first  = digit+   >mark     %thick_first;
-    thick_last   = digit+   >mark     %thick_last;
+    seqname      = [ -~]*   >anchor     %seqname;
+    first        = digit+   >anchor     %first;
+    last         = digit+   >anchor     %last;
+    name         = [ -~]*   >anchor     %name  %optional_field;
+    score        = digit+   >anchor     %score %optional_field;
+    strand       = [+\-\.?] >strand %optional_field;
+    thick_first  = digit+   >anchor     %thick_first %optional_field;
+    thick_last   = digit+   >anchor     %thick_last  %optional_field;
 
-    item_rgb_r   = digit+   >mark     %item_rgb_r;
-    item_rgb_g   = digit+   >mark     %item_rgb_g;
-    item_rgb_b   = digit+   >mark     %item_rgb_b;
-    item_rgb     = item_rgb_r (hspace* ',' hspace* item_rgb_g hspace* ',' hspace* item_rgb_b)? %item_rgb;
+    item_rgb_r   = digit+   >anchor     %item_rgb_r;
+    item_rgb_g   = digit+   >anchor     %item_rgb_g;
+    item_rgb_b   = digit+   >anchor     %item_rgb_b;
+    item_rgb     = item_rgb_r (hspace* ',' hspace* item_rgb_g hspace* ',' hspace* item_rgb_b)? %item_rgb %optional_field;
 
-    block_count  = digit+   >mark    %block_count;
+    block_count  = digit+   >anchor    %block_count %optional_field;
 
-    block_size   = digit+   >mark    %block_size;
-    block_sizes  = block_size (',' block_size)* ','?;
+    block_size   = digit+   >anchor    %block_size;
+    block_sizes  = block_size (',' block_size)* ','? %optional_field;
 
-    block_first  = digit+   >mark    %block_first;
-    block_firsts = block_first (',' block_first)* ','?;
+    block_first  = digit+   >anchor    %block_first;
+    block_firsts = block_first (',' block_first)* ','? %optional_field;
 
     bed_entry = seqname '\t' first '\t' last (
                     '\t' name ( '\t' score ( '\t' strand ( '\t' thick_first (
@@ -124,88 +177,49 @@ export BEDParser, takevalue!
                     )?
                 newline blankline*;
 
-    main := blankline* (bed_entry %yield)*;
+    main := blankline* (bed_entry %finish_match)*;
 }%%
 
 
 %% write data;
 
 
-type BEDParser
+type BEDParser <: AbstractParser
     state::Ragel.State
 
-    # intermediate values when parsing
-    seqname::ASCIIString
-    first::Int64
-    last::Int64
-    strand::Strand
-
+    # intermediate values used during parsing
     red::Float32
     green::Float32
     blue::Float32
-    name::Nullable{ASCIIString}
-    score::Nullable{Int}
-    thick_first::Nullable{Int}
-    thick_last::Nullable{Int};
-    item_rgb::Nullable{RGB{Float32}};
-    block_count::Nullable{Int}
-    block_sizes::Nullable{Vector{Int}}
-    block_firsts::Nullable{Vector{Int}}
+    block_size_idx::Int
+    block_first_idx::Int
 
-    function BEDParser(input::Union(IO, String, Vector{Uint8}),
-                       memory_map::Bool=false)
+    function BEDParser(input::BufferedInputStream)
         %% write init;
 
-        return new(Ragel.State(cs, input, memory_map),
-                   "", 0, 0, STRAND_NA, 0.0, 0.0, 0.0,
-                   Nullable{ASCIIString}(), Nullable{Int}(), Nullable{Int}(),
-                   Nullable{Int}(), Nullable{RGB{Float32}}(), Nullable{Int}(),
-                   Nullable{Vector{Int}}(), Nullable{Vector{Int}}())
+        return new(Ragel.State(cs, input), 0.0, 0.0, 0.0, 1, 1)
     end
 end
 
 
-function Ragel.ragelstate(parser::BEDParser)
-    return parser.state
+function Intervals.metadatatype(::BEDParser)
+    return BEDMetadata
 end
 
 
-function accept_state!(input::BEDParser, output::BEDInterval)
-    output = input.nextitem
-    input.nextitem = BEDInterval()
+function Base.eltype(::Type{BEDParser})
+    return BEDInterval
 end
 
 
-function takevalue!(input::BEDParser)
-    value = BEDInterval(input.seqname, input.first + 1, input.last, input.strand,
-                        BEDMetadata(input.name, input.score, input.thick_first,
-                                    input.thick_last, input.item_rgb,
-                                    input.block_count, input.block_sizes,
-                                    input.block_firsts))
-    input.strand = STRAND_NA
-    input.name = Nullable{ASCIIString}()
-    input.score = Nullable{Int}()
-    input.thick_first = Nullable{Int}()
-    input.thick_last = Nullable{Int}()
-    input.item_rgb = Nullable{RGB{Float32}}()
-    input.block_count = Nullable{Int}()
-    input.block_sizes = Nullable{Vector{Int}}()
-    input.block_firsts = Nullable{Vector{Int}}()
-
-    return value
+function Base.open(input::BufferedInputStream, ::Type{BED})
+    return BEDParser(input)
 end
 
 
 Ragel.@generate_read_fuction("bed", BEDParser, BEDInterval,
     begin
-        @inbounds begin
-            %% write exec;
-        end
-    end,
-    begin
-        # TODO: If I'm going to do actual destructive parsing, I
-        # need to be able to do some setup here.
-        accept_state!(input, output)
+        %% write exec;
     end)
 
 
@@ -213,80 +227,7 @@ Ragel.@generate_read_fuction("bed", BEDParser, BEDInterval,
 end # module BEDParserImpl
 
 
-# This inexplicably doesn't work, which is why I qualify BEDParser below.
-#using BEDParserImpl
-
-"An iterator over entries in a BED file or stream"
-type BEDIterator <: IntervalStream{BEDMetadata}
-    parser::BEDParserImpl.BEDParser
-    nextitem::Nullable{BEDInterval}
-end
-
-
-"""
-Parse a BED file.
-
-# Arguments
-  * `filename::String`: Path of the BED file.
-  * `memory_map::Bool`: If true, attempt to memory map the file on supported
-    platforms. (Default: `false`)
-
-# Returns
-An iterator over `BEDInterval`s contained in the file.
-"""
-function read(filename::String, ::Type{BED}; memory_map::Bool=false)
-    it = BEDIterator(BEDParserImpl.BEDParser(filename, memory_map),
-                       Nullable{BEDInterval}())
-    return it
-end
-
-
-"""
-Parse a BED file.
-
-# Arguments
-  * `input::IO`: Input stream containing BED data.
-
-# Returns
-An iterator over `BEDInterval`s contained in the file.
-"""
-function read(input::IO, ::Type{BED})
-    return BEDIterator(BEDParserImpl.BEDParser(input), Nullable{BEDInterval}())
-end
-
-
-function read(input::Cmd, ::Type{BED})
-    return BEDIterator(BEDParserImpl.BEDParser(open(input, "r")[1]), Nullable{BEDInterval}())
-end
-
-
-function start(it::BEDIterator)
-    advance!(it)
-    return nothing
-end
-
-
-function advance!(it::BEDIterator)
-    isdone = !BEDParserImpl.advance!(it.parser)
-    if isdone
-        it.nextitem = Nullable{BEDInterval}()
-    else
-        it.nextitem = BEDParserImpl.takevalue!(it.parser)
-    end
-end
-
-
-function next(it::BEDIterator, state::Nothing)
-    item = get(it.nextitem)
-    advance!(it)
-    return item, nothing
-end
-
-
-function done(it::BEDIterator, state::Nothing)
-    return isnull(it.nextitem)
-end
-
+# TODO: Rewrite this stuff
 
 """
 Write a BEDInterval in BED format.

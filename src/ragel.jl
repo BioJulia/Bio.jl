@@ -57,28 +57,8 @@ function ragelstate(x)
 end
 
 
-# Macros for push and popping anchors from within a ragel parser
-# TODO: get rid of this
-macro anchor!()
-    quote
-        $(esc(:state)).stream.anchor = 1 + $(esc(:p))
-    end
-end
-
-
 @inline function anchor!(state, p)
     state.stream.anchor = 1 + p
-end
-
-
-# TODO: get rid of this
-macro upanchor!()
-    quote
-        @assert $(esc(:state)).stream.anchor != 0  "upanchor! called with no anchor set"
-        a = $(esc(:state)).stream.anchor
-        $(esc(:state)).stream.anchor = 0
-        a
-    end
 end
 
 
@@ -87,21 +67,6 @@ end
     anchor = state.stream.anchor
     state.stream.anchor = 0
     return anchor
-end
-
-
-macro spanfrom(firstpos)
-    quote
-        $(esc(:state)).stream.buffer[$(esc(firstpos)):$(esc(:p))]
-    end
-end
-
-
-macro asciistring_from_anchor!()
-    quote
-        firstpos = Ragel.@upanchor!
-        ASCIIString($(esc(:state)).stream.buffer[firstpos:$(esc(:p))])
-    end
 end
 
 
@@ -118,9 +83,28 @@ function parse_int64(buffer, firstpos, lastpos)
 end
 
 
+# Macros that help make common parsing tasks moce succinct
+
+
+macro copy_from_anchor!(dest)
+    quote
+        firstpos = upanchor!($(esc(:state)))
+        copy!($(esc(dest)), $(esc(:state)).stream.buffer, firstpos, $(esc(:p)))
+    end
+end
+
+
+macro append_from_anchor!(dest)
+    quote
+        firstpos = upanchor!($(esc(:state)))
+        append!($(esc(dest)), $(esc(:state)).stream.buffer, firstpos, $(esc(:p)))
+    end
+end
+
+
 macro int64_from_anchor!()
     quote
-        firstpos = @upanchor!
+        firstpos = upanchor!($(esc(:state)))
         parse_int64($(esc(:state)).stream.buffer, firstpos, $(esc(:p)))
     end
 end

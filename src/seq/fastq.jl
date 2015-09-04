@@ -234,7 +234,7 @@ if (length(input.qualbuf) == length(input.seqbuf)
 
 end
 if 1 <= ck
-	@goto ctr53
+	@goto st1
 
 end
 @goto st0
@@ -249,9 +249,6 @@ end
 @label st0
 cs = 0;
 	@goto _out
-@label ctr53
-
-@goto st1
 @label ctr54
 	if length(input.seqbuf) != length(input.qualbuf)
             error("Error parsing FASTQ: sequence and quality scores must be of equal length")
@@ -284,7 +281,6 @@ cs = 0;
         empty!(input.desc2buf)
         yield = true;
         	p+= 1; cs = 1; @goto _out
-
 
 
 
@@ -354,7 +350,7 @@ elseif ( ( data[1 + p ]) >= 14  )
 end
 @goto st2
 @label ctr3
-	copy!(output.name, state.stream.buffer, Ragel.upanchor!(state), p)
+	Ragel.@copy_from_anchor!(output.name)
 @goto st3
 @label st3
 p+= 1;
@@ -418,12 +414,12 @@ elseif ( ( data[1 + p ]) >= 11  )
 end
 @goto st4
 @label ctr4
-	copy!(output.name, state.stream.buffer, Ragel.upanchor!(state), p)
+	Ragel.@copy_from_anchor!(output.name)
 	state.linenum += 1
 
 @goto st5
 @label ctr9
-	copy!(output.metadata.description, state.stream.buffer, Ragel.upanchor!(state), p)
+	Ragel.@copy_from_anchor!(output.metadata.description)
 	state.linenum += 1
 
 @goto st5
@@ -455,7 +451,7 @@ end
 
 @goto st6
 @label ctr43
-	append!(input.seqbuf, state.stream.buffer, Ragel.upanchor!(state), p)
+	Ragel.@append_from_anchor!(input.seqbuf)
 	state.linenum += 1
 
 @goto st6
@@ -481,7 +477,7 @@ if 65 <= ( data[1 + p ]) && ( data[1 + p ]) <= 122
 end
 @goto st0
 @label ctr44
-	append!(input.seqbuf, state.stream.buffer, Ragel.upanchor!(state), p)
+	Ragel.@append_from_anchor!(input.seqbuf)
 @goto st7
 @label st7
 p+= 1;
@@ -565,7 +561,7 @@ elseif ( ( data[1 + p ]) >= 14  )
 end
 @goto st9
 @label ctr19
-	copy!(input.name2buf, state.stream.buffer, Ragel.upanchor!(state), p)
+	Ragel.@copy_from_anchor!(input.name2buf)
 @goto st10
 @label st10
 p+= 1;
@@ -633,12 +629,12 @@ end
 
 @goto st12
 @label ctr20
-	copy!(input.name2buf, state.stream.buffer, Ragel.upanchor!(state), p)
+	Ragel.@copy_from_anchor!(input.name2buf)
 	state.linenum += 1
 
 @goto st12
 @label ctr25
-	copy!(input.desc2buf, state.stream.buffer, Ragel.upanchor!(state), p)
+	Ragel.@copy_from_anchor!(input.desc2buf)
 	state.linenum += 1
 
 @goto st12
@@ -677,7 +673,7 @@ end
 
 @goto st26
 @label ctr30
-	append!(input.qualbuf, state.stream.buffer, Ragel.upanchor!(state), p)
+	Ragel.@append_from_anchor!(input.qualbuf)
         input.qualcount = 0
 
 	state.linenum += 1
@@ -686,15 +682,15 @@ end
 @label ctr38
 	state.linenum += 1
 
-	append!(input.qualbuf, state.stream.buffer, Ragel.upanchor!(state), p)
+	Ragel.@append_from_anchor!(input.qualbuf)
         input.qualcount = 0
 
 @goto st26
 @label ctr40
-	copy!(input.name2buf, state.stream.buffer, Ragel.upanchor!(state), p)
+	Ragel.@copy_from_anchor!(input.name2buf)
 	state.linenum += 1
 
-	append!(input.qualbuf, state.stream.buffer, Ragel.upanchor!(state), p)
+	Ragel.@append_from_anchor!(input.qualbuf)
         input.qualcount = 0
 
 @goto st26
@@ -773,13 +769,13 @@ end
 end
 @goto st0
 @label ctr31
-	append!(input.qualbuf, state.stream.buffer, Ragel.upanchor!(state), p)
+	Ragel.@append_from_anchor!(input.qualbuf)
         input.qualcount = 0
 
 @goto st13
 @label ctr41
-	copy!(input.name2buf, state.stream.buffer, Ragel.upanchor!(state), p)
-	append!(input.qualbuf, state.stream.buffer, Ragel.upanchor!(state), p)
+	Ragel.@copy_from_anchor!(input.name2buf)
+	Ragel.@append_from_anchor!(input.qualbuf)
         input.qualcount = 0
 
 @goto st13
@@ -869,7 +865,6 @@ end
         empty!(input.desc2buf)
         yield = true;
         	p+= 1; cs = 15; @goto _out
-
 
 
 
@@ -986,10 +981,10 @@ end
 
 @goto st27
 @label ctr34
-	copy!(output.name, state.stream.buffer, Ragel.upanchor!(state), p)
+	Ragel.@copy_from_anchor!(output.name)
 	state.linenum += 1
 
-	append!(input.qualbuf, state.stream.buffer, Ragel.upanchor!(state), p)
+	Ragel.@append_from_anchor!(input.qualbuf)
         input.qualcount = 0
 
 @goto st27
@@ -1092,10 +1087,10 @@ end
 
 @goto st28
 @label ctr46
-	append!(input.seqbuf, state.stream.buffer, Ragel.upanchor!(state), p)
+	Ragel.@append_from_anchor!(input.seqbuf)
 	state.linenum += 1
 
-	append!(input.qualbuf, state.stream.buffer, Ragel.upanchor!(state), p)
+	Ragel.@append_from_anchor!(input.qualbuf)
         input.qualcount = 0
 
 @goto st28
@@ -1227,8 +1222,8 @@ end
 end
 @goto st0
 @label ctr47
-	append!(input.seqbuf, state.stream.buffer, Ragel.upanchor!(state), p)
-	append!(input.qualbuf, state.stream.buffer, Ragel.upanchor!(state), p)
+	Ragel.@append_from_anchor!(input.seqbuf)
+	Ragel.@append_from_anchor!(input.qualbuf)
         input.qualcount = 0
 
 @goto st17
@@ -1455,8 +1450,8 @@ end
 end
 @goto st0
 @label ctr35
-	copy!(output.name, state.stream.buffer, Ragel.upanchor!(state), p)
-	append!(input.qualbuf, state.stream.buffer, Ragel.upanchor!(state), p)
+	Ragel.@copy_from_anchor!(output.name)
+	Ragel.@append_from_anchor!(input.qualbuf)
         input.qualcount = 0
 
 @goto st22
@@ -1473,10 +1468,10 @@ if ( data[1 + p ]) == 10
 end
 @goto st0
 @label ctr21
-	copy!(input.name2buf, state.stream.buffer, Ragel.upanchor!(state), p)
+	Ragel.@copy_from_anchor!(input.name2buf)
 @goto st23
 @label ctr26
-	copy!(input.desc2buf, state.stream.buffer, Ragel.upanchor!(state), p)
+	Ragel.@copy_from_anchor!(input.desc2buf)
 @goto st23
 @label st23
 p+= 1;
@@ -1491,10 +1486,10 @@ if ( data[1 + p ]) == 10
 end
 @goto st0
 @label ctr5
-	copy!(output.name, state.stream.buffer, Ragel.upanchor!(state), p)
+	Ragel.@copy_from_anchor!(output.name)
 @goto st24
 @label ctr10
-	copy!(output.metadata.description, state.stream.buffer, Ragel.upanchor!(state), p)
+	Ragel.@copy_from_anchor!(output.metadata.description)
 @goto st24
 @label st24
 p+= 1;

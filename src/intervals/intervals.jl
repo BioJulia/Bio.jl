@@ -9,12 +9,12 @@ import Iterators
 import Zlib
 #using DataStructures
 using Base.Intrinsics
-using Color
+using Colors
 using Compat
 using IntervalTrees
 import IntervalTrees: first, last
 
-using Bio: FileFormat, StringField
+using Bio: FileFormat, StringField, AbstractParser
 
 export Strand, Interval, IntervalCollection, IntervalStream,
        STRAND_NA, STRAND_POS, STRAND_NEG, STRAND_BOTH,
@@ -26,8 +26,7 @@ include("intervalcollection.jl")
 include("intervalstream.jl")
 
 # Parsing file types
-#include("bed.jl")
-
+include("bed.jl")
 # TODO: reorg
 #include("bigbed.jl")
 

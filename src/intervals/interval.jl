@@ -53,6 +53,14 @@ type Interval{T} <: AbstractInterval{Int64}
     last::Int64
     strand::Strand
     metadata::T
+
+    function Interval(seqname, first, last, strand, metadata)
+        return new(seqname, first, last, strand, metadata)
+    end
+
+    function Interval()
+        return new(StringField(), 0, 0, STRAND_NA, T())
+    end
 end
 
 
@@ -65,6 +73,12 @@ end
 function Interval(seqname::String, first::Integer, last::Integer,
                   strand::Strand=STRAND_BOTH)
     return Interval{Nothing}(seqname, first, last, strand, nothing)
+end
+
+
+function Base.copy{T}(interval::Interval{T})
+    return Interval{T}(copy(interval.seqname), interval.first, interval.last,
+                       interval.strand, copy(interval.metadata))
 end
 
 
@@ -214,7 +228,8 @@ Interval{T} objects in sorted order.
 abstract IntervalStream{T}
 
 
-typealias IntervalStreamOrArray{T} Union(Vector{Interval{T}}, IntervalStream{T})
+typealias IntervalStreamOrArray{T} Union(Vector{Interval{T}}, IntervalStream{T},
+                                         AbstractParser)
 
 
 function metadatatype{T}(::IntervalStream{T})
