@@ -575,6 +575,32 @@ facts("Nucleotides") do
                                    for _ in 1:reps]) --> true
                 end
             end
+
+            context("Mutability") do
+                seq = dna"ACGTACGT"
+                @fact ismutable(seq) --> false
+                @fact_throws seq[1] = DNA_C
+
+                seq2 = seq[1:4]
+                @fact ismutable(seq2) --> false
+
+                mutable!(seq)
+                @fact ismutable(seq) --> true
+
+                seq[1] = DNA_C
+                @fact seq[1] --> DNA_C
+                @fact seq2[1] --> DNA_A
+
+                seq[2] = DNA_N
+                @fact seq[2] --> DNA_N
+                @fact seq2[2] --> DNA_C
+
+                seq[2] = DNA_G
+                @fact seq[2] --> DNA_G
+
+                immutable!(seq)
+                @fact_throws seq[1] = DNA_A
+            end
         end
 
         context("SequenceNIterator") do
@@ -1164,6 +1190,24 @@ facts("Aminoacids") do
                 end
                 @fact all(results) --> true
             end
+        end
+
+        context("Mutability") do
+            seq = aa"ARNDCQEGHILKMFPSTWYVX"
+            @fact ismutable(seq) --> false
+            @fact_throws seq[1] = AA_C
+
+            seq2 = seq[1:4]
+            @fact ismutable(seq2) --> false
+
+            mutable!(seq)
+            @fact ismutable(seq) --> true
+            seq[1] = AA_C
+            @fact seq[1] --> AA_C
+            @fact seq2[1] --> AA_A
+
+            immutable!(seq)
+            @fact_throws seq[1] = AA_A
         end
     end
 

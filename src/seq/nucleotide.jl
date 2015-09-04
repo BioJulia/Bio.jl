@@ -654,7 +654,7 @@ function setindex!{T}(seq::NucleotideSequence{T}, nt::T, i::Integer)
     else
         seq.ns[i] = false
         seq.data[d + 1] =
-            (seq.data[d + 1] $ ((@compat UInt64(0b11)) << (2*r))) |
+            (seq.data[d + 1] & ~((@compat UInt64(0b11)) << (2*r))) |
                 (convert(Uint64, nt) << (2*r))
     end
     return nt

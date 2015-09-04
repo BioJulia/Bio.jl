@@ -281,7 +281,9 @@ end
 
 function show(io::IO, seq::AminoAcidSequence)
     len = length(seq)
-    write(io, "$(string(len))aa Sequence:\n ")
+    write(io, "$(string(len))aa ",
+          seq.mutable ? "Mutable " : "",
+          "Sequence:\n ")
 
     const maxcount = 50
     if len > maxcount
@@ -327,6 +329,19 @@ end
 
 
 copy(seq::AminoAcidSequence) = orphan!(AminoAcidSequence(seq.data, seq.part, seq.mutable, false))
+
+
+function setindex!(seq::AminoAcidSequence, nt::AminoAcid, i::Integer)
+    if !seq.mutable
+        error("Cannot mutate an immutable sequence. Call `mutable!(seq)` first.")
+    end
+    seq.data[i] = nt
+end
+
+
+function setindex!(seq::AminoAcidSequence, nt::Char, i::Integer)
+    setindex!(seq, convert(AminoAcid, nt), i)
+end
 
 
 # Mutability/Immutability
