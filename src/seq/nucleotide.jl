@@ -189,7 +189,7 @@ type NucleotideSequence{T<:Nucleotide}
 
     # true if this was constructed as a subsequence of another sequence or if
     # subsequences were constructed from this sequence. When this is true, we
-    # need to copy the data to convert from 
+    # need to copy the data to convert from immutable to mutable
     hasrelatives::Bool
 end
 
