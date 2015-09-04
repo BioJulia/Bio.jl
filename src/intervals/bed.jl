@@ -1552,3 +1552,10 @@ function write_optional_fields(out::IO, interval::BEDInterval, leadingtab::Bool=
     end
 end
 
+
+function IntervalCollection(interval_stream::BEDParserImpl.BEDParser)
+    intervals = collect(BEDInterval, interval_stream)
+    return IntervalCollection{BEDMetadata}(intervals, true)
+end
+
+
