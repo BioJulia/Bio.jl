@@ -314,7 +314,7 @@ else
 end
 @goto ctr0
 @label ctr0
-	Ragel.anchor!(state, p)
+	Ragel.@anchor!
 @goto st2
 @label st2
 p+= 1;
@@ -386,7 +386,7 @@ else
 end
 @goto ctr6
 @label ctr6
-	Ragel.anchor!(state, p)
+	Ragel.@anchor!
 @goto st4
 @label st4
 p+= 1;
@@ -525,7 +525,7 @@ else
 end
 @goto ctr15
 @label ctr15
-	Ragel.anchor!(state, p)
+	Ragel.@anchor!
 @goto st9
 @label st9
 p+= 1;
@@ -597,7 +597,7 @@ else
 end
 @goto ctr22
 @label ctr22
-	Ragel.anchor!(state, p)
+	Ragel.@anchor!
 @goto st11
 @label st11
 p+= 1;
@@ -792,7 +792,7 @@ if ( data[1 + p ]) == 10
 end
 @goto st0
 @label ctr29
-	Ragel.anchor!(state, p)
+	Ragel.@anchor!
 	input.qualcount += 1
 
 @goto st14
@@ -831,7 +831,7 @@ end
 end
 @goto st0
 @label ctr55
-	Ragel.anchor!(state, p)
+	Ragel.@anchor!
 	input.qualcount += 1
 
 	if length(input.seqbuf) != length(input.qualbuf)
@@ -919,7 +919,7 @@ else
 end
 @goto ctr0
 @label ctr33
-	Ragel.anchor!(state, p)
+	Ragel.@anchor!
 	input.qualcount += 1
 
 @goto st16
@@ -1240,7 +1240,7 @@ if ( data[1 + p ]) == 10
 end
 @goto st0
 @label ctr58
-	Ragel.anchor!(state, p)
+	Ragel.@anchor!
 	input.qualcount += 1
 
 @goto st18
@@ -1294,7 +1294,7 @@ else
 end
 @goto ctr15
 @label ctr39
-	Ragel.anchor!(state, p)
+	Ragel.@anchor!
 	input.qualcount += 1
 
 @goto st19
@@ -1352,7 +1352,7 @@ elseif ( ( data[1 + p ]) >= 14  )
 end
 @goto st9
 @label ctr13
-	Ragel.anchor!(state, p)
+	Ragel.@anchor!
 @goto st20
 @label st20
 p+= 1;
@@ -1374,7 +1374,7 @@ if 65 <= ( data[1 + p ]) && ( data[1 + p ]) <= 122
 end
 @goto st0
 @label ctr57
-	Ragel.anchor!(state, p)
+	Ragel.@anchor!
 	input.qualcount += 1
 
 @goto st21

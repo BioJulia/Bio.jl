@@ -19,6 +19,12 @@ function StringField()
     return StringField(UInt8[], 1:0)
 end
 
+
+function StringField(data::Vector{UInt8})
+    return StringField(data, 1:length(data))
+end
+
+
 # From base unicode/utf8.jl
 function Base.endof(s::StringField)
     d = s.data

@@ -86,6 +86,13 @@ end
 # Macros that help make common parsing tasks moce succinct
 
 
+macro anchor!()
+    quote
+        anchor!($(esc(:state)), $(esc(:p)))
+    end
+end
+
+
 macro copy_from_anchor!(dest)
     quote
         firstpos = upanchor!($(esc(:state)))
@@ -106,6 +113,15 @@ macro int64_from_anchor!()
     quote
         firstpos = upanchor!($(esc(:state)))
         parse_int64($(esc(:state)).stream.buffer, firstpos, $(esc(:p)))
+    end
+end
+
+
+macro load_from_anchor!(T)
+    quote
+        firstpos = upanchor!($(esc(:state)))
+        unsafe_load(convert(Ptr{$(T)},
+            pointer($(esc(:state)).stream.buffer, firstpos)))
     end
 end
 

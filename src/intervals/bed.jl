@@ -32,7 +32,7 @@ function Base.copy(metadata::BEDMetadata)
 end
 
 
-function (==)(a::BEDMetadata, b::BEDMetadata)
+function Base.(:(==))(a::BEDMetadata, b::BEDMetadata)
     if a.used_fields != b.used_fields
         return false
     end
@@ -40,15 +40,15 @@ function (==)(a::BEDMetadata, b::BEDMetadata)
     n = a.used_fields
     ans = (n < 1 || a.name == b.name) &&
           (n < 2 || a.score == b.score) &&
-          (n < 3 || a.thick_first == b.thick_first) &&
-          (n < 4 || a.thick_last == b.thick_first) &&
-          (n < 5 || a.item_rgb == b.item_rgb) &&
-          (n < 6 || a.block_count == b.block_count)
+          (n < 4 || a.thick_first == b.thick_first) &&
+          (n < 5 || a.thick_last == b.thick_last) &&
+          (n < 6 || a.item_rgb == b.item_rgb) &&
+          (n < 7 || a.block_count == b.block_count)
     if !ans
         return false
     end
 
-    if n >= 7
+    if n >= 8
         for i in 1:a.block_count
             if a.block_sizes[i] != b.block_sizes[i]
                 return false
@@ -56,7 +56,7 @@ function (==)(a::BEDMetadata, b::BEDMetadata)
         end
     end
 
-    if n >= 8
+    if n >= 9
         for i in 1:a.block_count
             if a.block_sizes[i] != b.block_sizes[i]
                 return false
@@ -249,11 +249,11 @@ end
 cs = 0;
 	@goto _out
 @label ctr83
-	Ragel.@copy_from_anchor!(output.seqname)
+	output.metadata.used_fields = 0; Ragel.@copy_from_anchor!(output.seqname)
 @goto st1
 @label ctr85
 	Ragel.anchor!(state, p)
-	Ragel.@copy_from_anchor!(output.seqname)
+	output.metadata.used_fields = 0; Ragel.@copy_from_anchor!(output.seqname)
 @goto st1
 @label st1
 p+= 1;
@@ -990,7 +990,7 @@ end
 	if input.block_first_idx > length(output.metadata.block_firsts)
             error("More start blocks encountered than BED block count field suggested.")
         end
-        output.metadata.block_firsts[input.block_first_idx] = Ragel.@int64_from_anchor!
+        output.metadata.block_firsts[input.block_first_idx] = 1 + Ragel.@int64_from_anchor!
         input.block_first_idx += 1
 
 	output.metadata.used_fields += 1
@@ -1027,23 +1027,22 @@ if 33 <= ( data[1 + p ]) && ( data[1 + p ]) <= 126
 end
 @goto st0
 @label ctr74
-	Ragel.@copy_from_anchor!(output.seqname)
+	output.metadata.used_fields = 0; Ragel.@copy_from_anchor!(output.seqname)
 @goto st31
 @label ctr88
 	input.block_size_idx = 1
         input.block_first_idx = 1
-        output.metadata.used_fields = 0
 
         yield = true
         # // fbreak causes will cause the pushmark action for the next seqname
-        # // to be skipped, so we do it here TODO: Is this still the case????
-        Ragel.anchor!(state, p)
+        # // to be skipped, so we do it here
+        Ragel.@anchor!
         	p+= 1; cs = 31; @goto _out
 
 
 
 	Ragel.anchor!(state, p)
-	Ragel.@copy_from_anchor!(output.seqname)
+	output.metadata.used_fields = 0; Ragel.@copy_from_anchor!(output.seqname)
 @goto st31
 @label st31
 p+= 1;
@@ -1150,7 +1149,7 @@ end
 	if input.block_first_idx > length(output.metadata.block_firsts)
             error("More start blocks encountered than BED block count field suggested.")
         end
-        output.metadata.block_firsts[input.block_first_idx] = Ragel.@int64_from_anchor!
+        output.metadata.block_firsts[input.block_first_idx] = 1 + Ragel.@int64_from_anchor!
         input.block_first_idx += 1
 
 	output.metadata.used_fields += 1
@@ -1174,12 +1173,11 @@ end
 @label ctr89
 	input.block_size_idx = 1
         input.block_first_idx = 1
-        output.metadata.used_fields = 0
 
         yield = true
         # // fbreak causes will cause the pushmark action for the next seqname
-        # // to be skipped, so we do it here TODO: Is this still the case????
-        Ragel.anchor!(state, p)
+        # // to be skipped, so we do it here
+        Ragel.@anchor!
         	p+= 1; cs = 34; @goto _out
 
 
@@ -1217,12 +1215,11 @@ end
 @label ctr90
 	input.block_size_idx = 1
         input.block_first_idx = 1
-        output.metadata.used_fields = 0
 
         yield = true
         # // fbreak causes will cause the pushmark action for the next seqname
-        # // to be skipped, so we do it here TODO: Is this still the case????
-        Ragel.anchor!(state, p)
+        # // to be skipped, so we do it here
+        Ragel.@anchor!
         	p+= 1; cs = 35; @goto _out
 
 
@@ -1246,7 +1243,7 @@ if 32 <= ( data[1 + p ]) && ( data[1 + p ]) <= 126
 end
 @goto st0
 @label ctr77
-	Ragel.@copy_from_anchor!(output.seqname)
+	output.metadata.used_fields = 0; Ragel.@copy_from_anchor!(output.seqname)
 @goto st36
 @label st36
 p+= 1;
@@ -1264,7 +1261,7 @@ end
 	if input.block_first_idx > length(output.metadata.block_firsts)
             error("More start blocks encountered than BED block count field suggested.")
         end
-        output.metadata.block_firsts[input.block_first_idx] = Ragel.@int64_from_anchor!
+        output.metadata.block_firsts[input.block_first_idx] = 1 + Ragel.@int64_from_anchor!
         input.block_first_idx += 1
 
 @goto st37
@@ -1459,12 +1456,11 @@ if p == eof
     @case 42
 	input.block_size_idx = 1
         input.block_first_idx = 1
-        output.metadata.used_fields = 0
 
         yield = true
         # // fbreak causes will cause the pushmark action for the next seqname
-        # // to be skipped, so we do it here TODO: Is this still the case????
-        Ragel.anchor!(state, p)
+        # // to be skipped, so we do it here
+        Ragel.@anchor!
         	p+= 1; cs = 0; @goto _out
 
 
@@ -1496,43 +1492,43 @@ end
 
 
 function write_optional_fields(out::IO, interval::BEDInterval, leadingtab::Bool=true)
-    if !isnull(interval.metadata.name)
+    if interval.metadata.used_fields >= 1
         if leadingtab
             write(out, '\t')
         end
-        write(out, get(interval.metadata.name))
+        print(out, interval.metadata.name)
     else return end
 
-    if !isnull(interval.metadata.score)
-        print(out, '\t', get(interval.metadata.score))
+    if interval.metadata.used_fields >= 2
+        print(out, '\t', interval.metadata.score)
     else return end
 
-    if interval.strand != STRAND_NA
+    if interval.metadata.used_fields >= 3
         print(out, '\t', interval.strand)
     else return end
 
-    if !isnull(interval.metadata.thick_first)
-        print(out, '\t', get(interval.metadata.thick_first) - 1)
+    if interval.metadata.used_fields >= 4
+        print(out, '\t', interval.metadata.thick_first - 1)
     else return end
 
-    if !isnull(interval.metadata.thick_last)
-        print(out, '\t', get(interval.metadata.thick_last))
+    if interval.metadata.used_fields >= 5
+        print(out, '\t', interval.metadata.thick_last)
     else return end
 
-    if !isnull(interval.metadata.item_rgb)
-        item_rgb = get(interval.metadata.item_rgb)
+    if interval.metadata.used_fields >= 6
+        item_rgb = interval.metadata.item_rgb
         print(out, '\t',
               round(Int, 255 * item_rgb.r), ',',
               round(Int, 255 * item_rgb.g), ',',
               round(Int, 255 * item_rgb.b))
     else return end
 
-    if !isnull(interval.metadata.block_count)
-        print(out, '\t', get(interval.metadata.block_count))
+    if interval.metadata.used_fields >= 7
+        print(out, '\t', interval.metadata.block_count)
     else return end
 
-    if !isnull(interval.metadata.block_sizes)
-        block_sizes = get(interval.metadata.block_sizes)
+    if interval.metadata.used_fields >= 8
+        block_sizes = interval.metadata.block_sizes
         if !isempty(block_sizes)
             print(out, '\t', block_sizes[1])
             for i in 2:length(block_sizes)
@@ -1541,8 +1537,8 @@ function write_optional_fields(out::IO, interval::BEDInterval, leadingtab::Bool=
         end
     else return end
 
-    if !isnull(interval.metadata.block_firsts)
-        block_firsts = get(interval.metadata.block_firsts)
+    if interval.metadata.used_fields >= 9
+        block_firsts = interval.metadata.block_firsts
         if !isempty(block_firsts)
             print(out, '\t', block_firsts[1] - 1)
             for i in 2:length(block_firsts)

@@ -9,6 +9,9 @@
 # described in those tables. They are labeled with the table they correspand to.
 
 
+using Libz, BufferedStreams
+
+
 const BIGBED_MAGIC = 0x8789F2EB
 const BIGWIG_MAGIC = 0x888FFC26
 const BIGBED_BTREE_MAGIC = 0x78CA8C91
@@ -384,8 +387,6 @@ function write(io::IO, node::BigBedRTreeInternalNode)
 end
 
 
-using Bio: BufferedReader
-
 immutable BigBed <: FileFormat end
 immutable BigWig <: FileFormat end
 
@@ -399,16 +400,9 @@ Open a BigBed file for reading.
 Once opened, entries can be read from the file either by iterating over it, or
 by indexing into it with an interval.
 """
-function read(input::Union(IO, String, Vector{Uint8}),
-              ::Type{BigBed}; memory_map::Bool=false)
-    reader = BufferedReader(input, memory_map)
-
-    if isa(input, IO) && !applicable(seek, input)
-        error("BigBed files can only be read from seekable input, such as regular files.")
-    end
-
+function Base.open(stream::BufferedInputStream, ::Type{BigBed})
     # header
-    header = read(reader, BigBedHeader)
+    header = read(stream, BigBedHeader)
     if header.magic != BIGBED_MAGIC
         error("Input is not a valid BigBed file.")
     end
@@ -420,16 +414,16 @@ function read(input::Union(IO, String, Vector{Uint8}),
     # zoom headers
     zoom_headers = Array(BigBedZoomHeader, header.zoom_levels)
     for i in 1:header.zoom_levels
-        zoom_headers[i] = read(reader, BigBedZoomHeader)
+        zoom_headers[i] = read(stream, BigBedZoomHeader)
     end
 
     # autosql
     if header.auto_sql_offset == 0
         autosql = ""
     else
-        seek(reader, header.auto_sql_offset + 1)
+        seek(stream, header.auto_sql_offset)
         autosql_buf = IOBuffer()
-        while (c = read(reader, Uint8)) != 0x00
+        while (c = read(stream, Uint8)) != 0x00
             write(autosql_buf, c)
         end
         # TODO: eventually we should parse this and do something useful with it
@@ -437,28 +431,28 @@ function read(input::Union(IO, String, Vector{Uint8}),
     end
 
     # total summary
-    seek(reader, header.total_summary_offset + 1)
-    summary = read(reader, BigBedTotalSummary)
+    seek(stream, header.total_summary_offset)
+    summary = read(stream, BigBedTotalSummary)
 
     # b-tree header
-    seek(reader, header.chromosome_tree_offset + 1)
-    btree_header = read(reader, BigBedBTreeHeader)
+    seek(stream, header.chromosome_tree_offset)
+    btree_header = read(stream, BigBedBTreeHeader)
     if btree_header.magic != BIGBED_BTREE_MAGIC
         error("BigBed B-Tree magic number was incorrect. File may be corrupt or malformed.")
     end
 
     # data_count
-    seek(reader, header.full_data_offset + 1)
-    data_count = read(reader, Uint32)
+    seek(stream, header.full_data_offset)
+    data_count = read(stream, Uint32)
 
     # r-tree header
-    seek(reader, header.full_index_offset + 1)
-    rtree_header = read(reader, BigBedRTreeHeader)
+    seek(stream, header.full_index_offset)
+    rtree_header = read(stream, BigBedRTreeHeader)
     if rtree_header.magic != BIGBED_RTREE_MAGIC
         error("BigBed R-Tree magic number was incorrect. File may be corrupt or malformed.")
     end
 
-    return BigBedData(reader, header, zoom_headers, autosql, summary,
+    return BigBedData(stream, header, zoom_headers, autosql, summary,
                       btree_header, rtree_header, data_count,
                       BigBedBTreeInternalNode[BigBedBTreeInternalNode(btree_header.key_size)
                                               for _ in 1:btree_header.block_size],
@@ -490,21 +484,21 @@ Return all sequence (name, id, size) tuples in a BigBed B-tree.
 """
 function first_btree_leaf_position(bb::BigBedData)
     # find the first leaf-node in the b-tree
-    offset = bb.header.chromosome_tree_offset + sizeof(BigBedBTreeHeader) + 1
-    seek(bb.reader, offset)
+    offset = bb.header.chromosome_tree_offset + sizeof(BigBedBTreeHeader)
+    seek(bb.stream, offset)
     leafpos = 0
     while true
-        node = read(bb.reader, BigBedBTreeNode)
+        node = read(bb.stream, BigBedBTreeNode)
         if node.isleaf != 0
             leafpos = offset
             break
         else
             for i in 1:bb.btree_header.block_size
-                read!(bb.reader, bb.btree_internal_nodes[i])
+                read!(bb.stream, bb.btree_internal_nodes[i])
                 bb.node_keys[i] = bb.btree_internal_nodes[i].key
             end
-            offset = bb.btree_internal_nodes[1].child_offset + 1
-            seek(bb.reader, offset)
+            offset = bb.btree_internal_nodes[1].child_offset
+            seek(bb.stream, offset)
         end
     end
 
@@ -520,7 +514,7 @@ end
 An iterator over all entries in a BigBed file.
 """
 type BigBedIteratorState
-    seq_names::Vector{ASCIIString}
+    seq_names::Vector{StringField}
     data_count::Int
     data_num::Int
     data_offset::UInt
@@ -533,72 +527,68 @@ end
 function start(bb::BigBedData)
     # read sequence names
     leafpos = first_btree_leaf_position(bb)
-    seq_names = Array(ASCIIString, bb.btree_header.item_count)
+    seq_names = Array(StringField, bb.btree_header.item_count)
     leafnode = BigBedBTreeLeafNode(bb.btree_header.key_size)
-    seek(bb.reader, leafpos)
+    seek(bb.stream, leafpos)
     i = 1
     while i <= bb.btree_header.item_count
-        node = read(bb.reader, BigBedBTreeNode)
+        node = read(bb.stream, BigBedBTreeNode)
         @assert node.isleaf != 0
         for j in 1:node.count
-            read!(bb.reader, leafnode)
+            read!(bb.stream, leafnode)
             p = findfirst(leafnode.key, 0) - 1
             if p == -1
                 p = length(leafnode.key)
             end
-            seq_names[i] = ASCIIString(leafnode.key[1:p])
+            seq_names[i] = StringField(leafnode.key[1:p])
             i += 1
         end
     end
 
     # read the first data block
-    seek(bb.reader, bb.header.full_data_offset + 1)
-    data_count = read(bb.reader, Uint64)
-    zlib_reader = Zlib.Reader(bb.reader)
-    unc_block_size = readbytes!(zlib_reader, bb.uncompressed_data,
+    seek(bb.stream, bb.header.full_data_offset)
+    data_count = read(bb.stream, Uint64)
+    zlib_stream = ZlibInflateInputStream(bb.stream)
+    unc_block_size = readbytes!(zlib_stream, bb.uncompressed_data,
                                length(bb.uncompressed_data))
 
     parser = BigBedDataParserImpl.BigBedDataParser(
-        bb.uncompressed_data, unc_block_size)
-    parser_isdone = !BigBedDataParserImpl.advance!(parser)
+        BufferedInputStream(bb.uncompressed_data, unc_block_size),
+        seq_names=Nullable(seq_names))
 
-    next_interval = BigBedDataParserImpl.takevalue!(
-        parser, seq_names[parser.chrom_id + 1])
+    next_interval = BEDInterval()
+    parser_isdone = read!(parser, next_interval)
 
     return BigBedIteratorState(seq_names, data_count, 1,
-                               zlib_reader.strm.total_in,
+                               getindex(zlib_stream.source.zstream).total_in,
                                parser, parser_isdone, next_interval)
 end
 
 
 function next(bb::BigBedData, state::BigBedIteratorState)
-    value = state.next_interval
+    value = copy(state.next_interval)
 
     state.data_num += 1
     if state.data_num > state.data_count
         return value, state
     end
 
-    state.parser_isdone = !BigBedDataParserImpl.advance!(state.parser)
+    state.parser_isdone = !read!(state.parser, state.next_interval)
 
     if state.parser_isdone
-        seek(bb.reader, bb.header.full_data_offset + state.data_offset + sizeof(UInt64) + 1)
-        zlib_reader = Zlib.Reader(bb.reader)
-        # TODO: calling inflateReset may be a little faster
-        #ret = ccall((:inflateReset, "libz"), Cint, (Ptr{Zlib.z_stream},), &zlib_reader.strm)
+        seek(bb.stream, bb.header.full_data_offset + state.data_offset + sizeof(UInt64))
+        zlib_stream = ZlibInflateInputStream(bb.stream)
 
-        unc_block_size = readbytes!(zlib_reader, bb.uncompressed_data,
+        unc_block_size = readbytes!(zlib_stream, bb.uncompressed_data,
                                     length(bb.uncompressed_data))
         state.parser = BigBedDataParserImpl.BigBedDataParser(
-             bb.uncompressed_data, unc_block_size)
-        state.data_offset += zlib_reader.strm.total_in
+             BufferedInputStream(bb.uncompressed_data, unc_block_size),
+             seq_names=Nullable(state.seq_names))
+        state.data_offset += getindex(zlib_stream.source.zstream).total_in
 
-        state.parser_isdone = !BigBedDataParserImpl.advance!(state.parser)
+        state.parser_isdone = !read!(state.parser, state.next_interval)
         @assert !state.parser_isdone
     end
-
-    state.next_interval = BigBedDataParserImpl.takevalue!(
-        state.parser, state.seq_names[state.parser.chrom_id + 1])
 
     return value, state
 end
@@ -609,7 +599,6 @@ function done(bb::BigBedData, state::BigBedIteratorState)
 end
 
 
-
 """
 An iterator over entries in a BigBed file that intersect a given interval.
 
@@ -618,7 +607,7 @@ Constructed by indexing into `BigBedData` with an interval.
 type BigBedIntersectIterator
     bb::BigBedData
 
-    query_seqname::String
+    query_seqname::StringField
     query_first::Int64
     query_last::Int64
     query_chrom_id::Uint32
@@ -632,7 +621,8 @@ type BigBedIntersectIterator
     block_num::Int
 
     parser::Nullable{BigBedDataParserImpl.BigBedDataParser}
-    nextinterval::Nullable{BEDInterval}
+    nextinterval::BEDInterval
+    done::Bool
 end
 
 
@@ -641,16 +631,16 @@ Find the given seqname in the BigBed file's index and read the corresponding
 sequence id and length
 """
 function lookup_seqname(bb::BigBedData, seqname::String)
-    seek(bb.reader, bb.header.chromosome_tree_offset + sizeof(BigBedBTreeHeader) + 1)
+    seek(bb.stream, bb.header.chromosome_tree_offset + sizeof(BigBedBTreeHeader))
 
     fill!(bb.key, 0)
     copy!(bb.key, seqname)
 
     while true
-        node = read(bb.reader, BigBedBTreeNode)
+        node = read(bb.stream, BigBedBTreeNode)
         if node.isleaf == 0
             for i in 1:bb.btree_header.block_size
-                read!(bb.reader, bb.btree_internal_nodes[i])
+                read!(bb.stream, bb.btree_internal_nodes[i])
                 bb.node_keys[i] = bb.btree_internal_nodes[i].key
             end
             i = searchsortedfirst(bb.node_keys, bb.key, Base.Order.Lt(memisless))
@@ -658,10 +648,10 @@ function lookup_seqname(bb::BigBedData, seqname::String)
                 break
             end
 
-            seek(bb.reader, bb.btree_internal_nodes[i].child_offset + 1)
+            seek(bb.stream, bb.btree_internal_nodes[i].child_offset)
         else
             for i in 1:bb.btree_header.block_size
-                read!(bb.reader, bb.btree_leaf_nodes[i])
+                read!(bb.stream, bb.btree_leaf_nodes[i])
                 bb.node_keys[i] = bb.btree_leaf_nodes[i].key
             end
             i = searchsortedfirst(bb.node_keys, bb.key, Base.Order.Lt(memisless))
@@ -683,29 +673,29 @@ function intersect(bb::BigBedData, query::Interval)
     chrom_id, chrom_size = lookup_seqname(bb, seqname)
 
     # stack of nodes yet to visit
-    root_position = bb.header.full_index_offset + sizeof(BigBedRTreeHeader) + 1
+    root_position = bb.header.full_index_offset + sizeof(BigBedRTreeHeader)
     node_positions = Uint64[root_position]
 
     # stack of data blocks that may contain overlapping intervals
     blocks = (@compat Tuple{Uint64, Uint64})[]
 
-    seek(bb.reader, bb.header.full_index_offset + sizeof(BigBedRTreeHeader) + 1)
+    seek(bb.stream, bb.header.full_index_offset + sizeof(BigBedRTreeHeader))
     while !isempty(node_positions)
         pos = pop!(node_positions)
-        seek(bb.reader, pos)
-        node = read(bb.reader, BigBedRTreeNode)
+        seek(bb.stream, pos)
+        node = read(bb.stream, BigBedRTreeNode)
         if node.isleaf == 0
             for i in 1:node.count
-                internal_node = read(bb.reader, BigBedRTreeInternalNode)
+                internal_node = read(bb.stream, BigBedRTreeInternalNode)
                 if internal_node.start_chrom_ix <= chrom_id <= internal_node.end_chrom_ix &&
                     (chrom_id < internal_node.end_chrom_ix || first <= internal_node.end_base) &&
                     (chrom_id > internal_node.start_chrom_ix || last - 1 >= internal_node.start_base)
-                    push!(node_positions, internal_node.data_offset + 1)
+                    push!(node_positions, internal_node.data_offset)
                 end
             end
         else
             for i in 1:node.count
-                leaf_node = read(bb.reader, BigBedRTreeLeafNode)
+                leaf_node = read(bb.stream, BigBedRTreeLeafNode)
                 if leaf_node.start_chrom_ix <= chrom_id <= leaf_node.end_chrom_ix &&
                     (chrom_id < leaf_node.end_chrom_ix || first <= leaf_node.end_base) &&
                     (chrom_id > leaf_node.start_chrom_ix || last - 1 >= leaf_node.start_base)
@@ -718,29 +708,27 @@ function intersect(bb::BigBedData, query::Interval)
     return BigBedIntersectIterator(bb, seqname, first, last, chrom_id,
                                    chrom_size, blocks, 0,
                                    Nullable{BigBedDataParserImpl.BigBedDataParser}(),
-                                   Nullable{BEDInterval}())
+                                   BEDInterval(), false)
 end
 
 
 function find_next_intersection!(it::BigBedIntersectIterator)
-    it.nextinterval = Nullable{BEDInterval}()
+    it.done = true
     while !isnull(it.parser) || it.block_num < length(it.blocks)
+        it.done = true
         while !isnull(it.parser)
             parser = get(it.parser)
             # Run the parser until we find an intersection
-            isdone = !BigBedDataParserImpl.advance!(parser)
-            if isdone
+            it.done = !read!(parser, it.nextinterval)
+            if it.done
                 it.parser = Nullable{BigBedDataParserImpl.BigBedDataParser}()
                 break
             end
 
-            # Note: (parser.first, parser.last) is 0-based, end-exclusive,
-            # while (it.query_first, it.query_last) is 1-based, end-inclusive.
             if parser.chrom_id == it.query_chrom_id &&
-               parser.first + 1 <= it.query_last &&
-               parser.last >= it.query_first
-                it.nextinterval = BigBedDataParserImpl.takevalue!(
-                    parser, it.query_seqname)
+               it.nextinterval.first <= it.query_last &&
+               it.nextinterval.last >= it.query_first
+                it.done = false
                 return
             end
         end
@@ -750,14 +738,17 @@ function find_next_intersection!(it::BigBedIntersectIterator)
             it.block_num += 1
             block_offset, block_size = it.blocks[it.block_num]
 
-            seek(it.bb.reader, block_offset + 1)
+            seek(it.bb.stream, block_offset)
             @assert block_size <= length(it.bb.uncompressed_data)
-            unc_block_size = readbytes!(Zlib.Reader(it.bb.reader), it.bb.uncompressed_data,
+            unc_block_size = readbytes!(ZlibInflateInputStream(it.bb.stream),
+                                        it.bb.uncompressed_data,
                                         length(it.bb.uncompressed_data))
             it.parser = BigBedDataParserImpl.BigBedDataParser(
-                it.bb.uncompressed_data, unc_block_size)
+                BufferedInputStream(it.bb.uncompressed_data, unc_block_size),
+                assumed_seqname=Nullable(it.query_seqname))
         else
-            break
+            it.done = true
+            return
         end
     end
 end
@@ -765,19 +756,19 @@ end
 
 function start(it::BigBedIntersectIterator)
     find_next_intersection!(it)
-    nothing
+    return nothing
 end
 
 
 function next(it::BigBedIntersectIterator, ::Nothing)
-    value = get(it.nextinterval)
+    value = copy(it.nextinterval)
     find_next_intersection!(it)
     return value, nothing
 end
 
 
 function done(it::BigBedIntersectIterator, ::Nothing)
-    return isnull(it.nextinterval)
+    return it.done
 end
 
 
@@ -793,7 +784,7 @@ end
 
 
 immutable BigBedChromInfo
-    name::ASCIIString   # chromosome name
+    name::StringField   # chromosome name
     id::Uint32          # unique id for chromosome
     size::Uint32        # size of chromosome
     item_count::Uint64  # number of items
@@ -810,7 +801,7 @@ end
 
 function bigbed_chrom_info(intervals::IntervalCollection, chrom_sizes::Dict)
     info = Array(BigBedChromInfo, length(intervals.trees))
-    seqnames = collect(ASCIIString, keys(intervals.trees))
+    seqnames = collect(StringField, keys(intervals.trees))
     sort!(seqnames)
     for (i, seqname) in enumerate(seqnames)
         info[i] = BigBedChromInfo(
@@ -1051,7 +1042,7 @@ function bigbed_write_blocks(out::IO, intervals::IntervalCollection,
             max_block_size = max(max_block_size, length(block))
 
             if compressed
-                writer = Zlib.Writer(out, 6)
+                writer = ZlibDeflateOutputStream(out)
                 write(writer, block)
                 close(writer)
             else
@@ -1120,7 +1111,7 @@ function bigwig_write_blocks{T<:Number}(out::IO, intervals::IntervalCollection{T
                                          0, 0, BIGWIG_DATATYPE_BEDGRAPH, 0, item_ix - 1)
 
             if compressed
-                writer = Zlib.Writer(out, 6)
+                writer = ZlibDeflateOutputStream(out)
                 write(writer, header)
                 for i in 1:item_ix-1
                     write(writer, items[i])
@@ -1169,7 +1160,7 @@ type BigBedRTree
 end
 
 
-function copy(tree::BigBedRTree)
+function Base.copy(tree::BigBedRTree)
     return BigBedRTree(tree.next, tree.children, tree.parent,
                        tree.start_chrom_ix, tree.start_base,
                        tree.end_chrom_ix, tree.end_base,
@@ -1674,7 +1665,7 @@ function bigbed_write_summary_and_index_comp(
     i = 1
     while items_left > 0
         items_in_slot = min(items_per_slot, items_left)
-        writer = Zlib.Writer(out, 6)
+        writer = ZlibDeflateOutputStream(out)
         file_pos = position(out)
         for _ in 1:items_in_slot
             summary = summary_list[sum_ix]
@@ -1722,46 +1713,7 @@ end
 function bed_field_count(intervals::IntervalCollection{BEDMetadata})
     num_fields = 0
     for interval in intervals
-        interval_num_fields = 3
-
-        if !isnull(interval.metadata.name)
-            interval_num_fields += 1
-        else @goto finished end
-
-        if !isnull(interval.metadata.score)
-            interval_num_fields += 1
-        else @goto finished end
-
-        if interval.strand != STRAND_NA
-            interval_num_fields += 1
-        else @goto finished end
-
-        if !isnull(interval.metadata.thick_first)
-            interval_num_fields += 1
-        else @goto finished end
-
-        if !isnull(interval.metadata.thick_last)
-            interval_num_fields += 1
-        else @goto finished end
-
-        if !isnull(interval.metadata.item_rgb)
-            interval_num_fields += 1
-        else @goto finished end
-
-        if !isnull(interval.metadata.block_count)
-            interval_num_fields += 1
-        else @goto finished end
-
-        if !isnull(interval.metadata.block_sizes)
-            interval_num_fields += 1
-        else @goto finished end
-
-        if !isnull(interval.metadata.block_firsts)
-            interval_num_fields += 1
-        else @goto finished end
-
-        @label finished
-
+        interval_num_fields = 3 + interval.metadata.used_fields
         if num_fields == 0 || num_fields > interval_num_fields
             num_fields = interval_num_fields
         end

@@ -112,7 +112,7 @@ using Switch
         state.linenum += 1
     }
 
-    action anchor { Ragel.anchor!(state, p) }
+    action anchor { Ragel.@anchor! }
 
     action identifier   { Ragel.@copy_from_anchor!(output.name) }
     action description  { Ragel.@copy_from_anchor!(output.metadata.description) }

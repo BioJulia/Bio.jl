@@ -75,7 +75,7 @@ using Switch
     }
 
     action count_line  { state.linenum += 1 }
-    action mark        { Ragel.anchor!(state, p) }
+    action mark        { Ragel.@anchor! }
     action identifier  { Ragel.@copy_from_anchor!(output.name) }
     action description { Ragel.@copy_from_anchor!(output.metadata.description) }
     action letters     { Ragel.@append_from_anchor!(input.seqbuf) }

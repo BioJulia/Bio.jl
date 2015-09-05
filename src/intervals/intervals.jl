@@ -6,8 +6,6 @@ import Base: show, isless, push!, shift!, intersect, start, next, done, length,
              reverse!
 
 import Iterators
-import Zlib
-#using DataStructures
 using Base.Intrinsics
 using Colors
 using Compat
@@ -27,7 +25,6 @@ include("intervalstream.jl")
 
 # Parsing file types
 include("bed.jl")
-# TODO: reorg
-#include("bigbed.jl")
+include("bigbed.jl")
 
 end

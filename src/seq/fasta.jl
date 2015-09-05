@@ -211,7 +211,7 @@ else
 end
 @goto ctr0
 @label ctr0
-	Ragel.anchor!(state, p)
+	Ragel.@anchor!
 @goto st2
 @label st2
 p+= 1;
@@ -279,7 +279,7 @@ elseif ( ( data[1 + p ]) >= 12  )
 end
 @goto ctr6
 @label ctr6
-	Ragel.anchor!(state, p)
+	Ragel.@anchor!
 @goto st4
 @label st4
 p+= 1;
@@ -366,7 +366,7 @@ else
 end
 @goto ctr15
 @label ctr15
-	Ragel.anchor!(state, p)
+	Ragel.@anchor!
 @goto st8
 @label st8
 p+= 1;
@@ -504,7 +504,5 @@ end)
 
 end # module FASTAParserImpl
 
-
-using Bio.Seq.FASTAParserImpl
 
 
