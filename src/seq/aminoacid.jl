@@ -307,12 +307,7 @@ copy(seq::AminoAcidSequence) = orphan!(AminoAcidSequence(seq.data, seq.part))
 # -------------------------------------
 
 start(seq::AminoAcidSequence) = seq.part.start
-
-function next(seq::AminoAcidSequence, i)
-    aa = seq.data[i]
-    return (aa, i + 1)
-end
-
+next(seq::AminoAcidSequence, i) = (seq.data[i], i+1)
 done(seq::AminoAcidSequence, i) = (i > seq.part.stop)
 
 
