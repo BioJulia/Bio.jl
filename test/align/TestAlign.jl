@@ -96,7 +96,7 @@ facts("Alignments") do
 
                     cigarLengths = rand(1:MAX_CIGAR_SIZE, numCigar)
                     out = ""
-                    @inbounds for i in 1:MAX_CIGARS_IN_CIGAR_STRING
+                    @inbounds for i in 1:numCigar
                         out *= "$(cigarLengths[i])$(operationChars[i])"
                     end
                     cigars = convert(CIGARS, out)

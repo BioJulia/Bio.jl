@@ -6,6 +6,9 @@
 # Single CIGARs
 # --------------
 
+# Currently REGEX to split 
+const CIGAR_REGEX = r"\d+[\w-=]"
+
 immutable CIGAR
     OP::Operation
     Size::Int
@@ -34,7 +37,7 @@ end
 typealias CIGARS Vector{CIGAR}
 
 function convert(::Type{CIGARS}, str::String)
-    matches = matchall(r"(\d+)(\w)", str)
+    matches = matchall(CIGAR_REGEX, str)
     cigarString = Vector{CIGAR}(length(matches))
     @inbounds for i in 1:length(matches)
         cigarString[i] = CIGAR(matches[i])

@@ -5,7 +5,7 @@
 
 # Anchor definition
 # ------------------
-Docile.@doc """
+@doc """
 A type to store the operation enocded in an alignment (CIGAR Operations).
 Also stores the position in the alignment view of the sequences, and the
 corresponding position in the unaltered source sequence (nucleotide or protein).
@@ -30,7 +30,7 @@ end
 # Basic operators for AlignmentAnchors
 # -------------------------------------
 
-Docile.@doc """
+@doc """
 Print to screen or other IO stream, a formatted description of an
 AlignmentAnchor.
 """ ->
@@ -38,7 +38,7 @@ function show(io::IO, anc::AlignmentAnchor)
   write(io, "Alignment Position: $(anc.alnPos), Source Position: $(anc.srcPos), Operation: $(anc.op)")
 end
 
-Docile.@doc """
+@doc """
 Copy an AlignmentAnchor to a new AlignmentAnchor variable.
 
 Takes only one parameter of AlignmentAnchor type.
@@ -51,49 +51,49 @@ end
 # Basic operators for boolean operations consider
 # positions, not operations
 
-Docile.@doc """
+@doc """
 Check for equity of two AlignmentAnchors.
 """ ->
 function ==(a::AlignmentAnchor, b::AlignmentAnchor)
   return a.alnPos == b.alnPos && a.srcPos == b.srcPos
 end
 
-Docile.@doc """
+@doc """
 Check for inequity of two AlignmentAnchors.
 """ ->
 function !=(a::AlignmentAnchor, b::AlignmentAnchor)
   return !(a == b)
 end
 
-Docile.@doc """
+@doc """
 Check that AlignmentAnchor a, is less than AlignmentAnchor b.
 """ ->
 function <(a::AlignmentAnchor, b::AlignmentAnchor)
   return a.alnPos < b.alnPos || a.srcPos < b.srcPos
 end
 
-Docile.@doc """
+@doc """
 Check that AlignmentAnchor a, is greater than AlignmentAnchor b.
 """ ->
 function >(a::AlignmentAnchor, b::AlignmentAnchor)
   return a.alnPos > b.alnPos || a.srcPos > b.srcPos
 end
 
-Docile.@doc """
+@doc """
 Check that AlignmentAnchor a, is less than or equal to AlignmentAnchor b.
 """ ->
 function <=(a::AlignmentAnchor, b::AlignmentAnchor)
   return a.alnPos <= b.alnPos || a.srcPos < b.srcPos
 end
 
-Docile.@doc """
+@doc """
 Check that AlignmentAnchor a, is greater than or equal to AlignmentAnchor b.
 """ ->
 function >=(a::AlignmentAnchor, b::AlignmentAnchor)
   return a.alnPos >= b.alnPos || a.srcPos > b.srcPos
 end
 
-Docile.@doc """
+@doc """
 Check whether the alignment anchor contains the specified operation.
 """ ->
 function hasOp(anc::AlignmentAnchor, op::Operation)
@@ -134,7 +134,7 @@ the core Julia sorting API efficiently.
 
 # Custom types inheriting from Base.Ordering
 
-Docile.@doc """
+@doc """
 An immutable field-less type, inheriting from Ordering. This is used with
 Julia's sorting API functions to determine how an array of AlignmentAnchors is
 sorted.
@@ -144,7 +144,7 @@ methods functions that compare the srcPos fields of the AlignmentAnchors.
 """ ->
 immutable srcPosOrdering <: Ordering end
 
-Docile.@doc """
+@doc """
 An immutable field-less type, inheriting from Ordering. This is used with
 Julia's sorting API functions to determine how an array of AlignmentAnchors is
 sorted.
@@ -160,7 +160,7 @@ const BY_ALN = alnPosOrdering()
 # Is AlignmentAnchor a, less than AlignmentAnchor b, according to the source
 # sequence co-ordinate.
 
-Docile.@doc """
+@doc """
 Returns true if the srcPos field of AlignmentAnchor a, is less than the srcPos
 field of AlignmentAnchor b.
 """ ->
@@ -168,7 +168,7 @@ function lt(o::srcPosOrdering, a::AlignmentAnchor, b::AlignmentAnchor)
   return a.srcPos < b.srcPos
 end
 
-Docile.@doc """
+@doc """
 Returns true if the alnPos field of AlignmentAnchor a, is less than the alnPos
 field of AlignmentAnchor b.
 """ ->
@@ -176,7 +176,7 @@ function lt(o::alnPosOrdering, a::AlignmentAnchor, b::AlignmentAnchor)
   return a.alnPos < b.alnPos
 end
 
-Docile.@doc """
+@doc """
 Returns true if the srcPos field of AlignmentAnchor a, is less than the Integer
 b.
 """ ->
@@ -184,7 +184,7 @@ function lt(o::srcPosOrdering, a::AlignmentAnchor, b::Int)
   return a.srcPos < b
 end
 
-Docile.@doc """
+@doc """
 Returns true if the alnPos field of AlignmentAnchor a, is less than the Integer
 b.
 """ ->
@@ -192,7 +192,7 @@ function lt(o::alnPosOrdering, a::AlignmentAnchor, b::Int)
   return a.alnPos < b
 end
 
-Docile.@doc """
+@doc """
 Returns true if the srcPos field of Integer a, is less than the srcPos field of
 the AlignmentAnchor b.
 """ ->
@@ -200,7 +200,7 @@ function lt(o::srcPosOrdering, a::Int, b::AlignmentAnchor)
   return a < b.srcPos
 end
 
-Docile.@doc """
+@doc """
 Returns true if the srcPos field of Integer a, is less than the alnPos field of
 the AlignmentAnchor b.
 """ ->
