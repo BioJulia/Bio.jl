@@ -43,12 +43,12 @@ convert{T<:Unsigned}(::Type{T}, op::Operation) = convert(T, convert(Uint8, op))
 =#
 
 for op = [
-  (:OP_GAP, 0), (:OP_MM, 1), (:OP_N, 2), (:OP_MATCH, 3),
-  (:OP_MISMATCH, 4), (:OP_SCLIP, 5), (:OP_HCLIP, 6), (:OP_INSERT, 7),
-  (:OP_DELETE, 8), (:OP_PAD, 9), (:OP_INVALID, 255)
-  ]
+    (:OP_GAP, 0), (:OP_MM, 1), (:OP_N, 2), (:OP_MATCH, 3),
+    (:OP_MISMATCH, 4), (:OP_SCLIP, 5), (:OP_HCLIP, 6), (:OP_INSERT, 7),
+    (:OP_DELETE, 8), (:OP_PAD, 9), (:OP_INVALID, 255)
+    ]
 
-  @eval const $(op[1]) = convert(Operation, Uint8($(op[2])))
+    @eval const $(op[1]) = convert(Operation, Uint8($(op[2])))
 
 end
 
@@ -58,31 +58,31 @@ end
 
 # Lookup table for conversion from Char to Operation
 const char_to_op = [
-  OP_GAP, OP_INVALID, OP_INVALID, OP_INVALID, OP_INVALID,
-  OP_INVALID, OP_INVALID, OP_INVALID, OP_INVALID, OP_INVALID,
-  OP_INVALID, OP_INVALID, OP_INVALID, OP_INVALID, OP_INVALID,
-  OP_INVALID, OP_MATCH, OP_INVALID, OP_INVALID, OP_INVALID,
-  OP_INVALID, OP_INVALID, OP_INVALID, OP_DELETE, OP_INVALID,
-  OP_INVALID, OP_INVALID, OP_HCLIP, OP_INSERT, OP_INVALID,
-  OP_INVALID, OP_INVALID, OP_MM, OP_N, OP_INVALID,
-  OP_PAD, OP_INVALID, OP_INVALID, OP_SCLIP, OP_INVALID,
-  OP_INVALID, OP_INVALID, OP_INVALID, OP_MISMATCH, OP_INVALID,
-  OP_INVALID, OP_INVALID, OP_INVALID, OP_INVALID, OP_INVALID,
-  OP_INVALID, OP_INVALID, OP_INVALID, OP_INVALID, OP_INVALID,
-  OP_DELETE, OP_INVALID, OP_INVALID, OP_INVALID, OP_HCLIP,
-  OP_INSERT, OP_INVALID, OP_INVALID, OP_INVALID, OP_MM,
-  OP_N, OP_INVALID, OP_PAD, OP_INVALID, OP_INVALID,
-  OP_SCLIP, OP_INVALID, OP_INVALID, OP_INVALID, OP_INVALID,
-  OP_MISMATCH
+    OP_GAP, OP_INVALID, OP_INVALID, OP_INVALID, OP_INVALID,
+    OP_INVALID, OP_INVALID, OP_INVALID, OP_INVALID, OP_INVALID,
+    OP_INVALID, OP_INVALID, OP_INVALID, OP_INVALID, OP_INVALID,
+    OP_INVALID, OP_MATCH, OP_INVALID, OP_INVALID, OP_INVALID,
+    OP_INVALID, OP_INVALID, OP_INVALID, OP_DELETE, OP_INVALID,
+    OP_INVALID, OP_INVALID, OP_HCLIP, OP_INSERT, OP_INVALID,
+    OP_INVALID, OP_INVALID, OP_MM, OP_N, OP_INVALID,
+    OP_PAD, OP_INVALID, OP_INVALID, OP_SCLIP, OP_INVALID,
+    OP_INVALID, OP_INVALID, OP_INVALID, OP_MISMATCH, OP_INVALID,
+    OP_INVALID, OP_INVALID, OP_INVALID, OP_INVALID, OP_INVALID,
+    OP_INVALID, OP_INVALID, OP_INVALID, OP_INVALID, OP_INVALID,
+    OP_DELETE, OP_INVALID, OP_INVALID, OP_INVALID, OP_HCLIP,
+    OP_INSERT, OP_INVALID, OP_INVALID, OP_INVALID, OP_MM,
+    OP_N, OP_INVALID, OP_PAD, OP_INVALID, OP_INVALID,
+    OP_SCLIP, OP_INVALID, OP_INVALID, OP_INVALID, OP_INVALID,
+    OP_MISMATCH
 ]
 
 
 function convert(::Type{Operation}, c::Char)
-  @inbounds op = '-' <= c <= 'x' ? char_to_op[c - '-' + 1] : OP_INVALID
-  if op == OP_INVALID
-      error("$(c) is not a valid alignment operation.")
-  end
-  return op
+    @inbounds op = '-' <= c <= 'x' ? char_to_op[c - '-' + 1] : OP_INVALID
+    if op == OP_INVALID
+        error("$(c) is not a valid alignment operation.")
+    end
+    return op
 end
 
 
@@ -92,9 +92,9 @@ end
 const op_to_char = ['-', 'M', 'N', '=', 'X', 'S', 'H', 'I', 'D', 'P']
 
 function convert(::Type{Char}, op::Operation)
-  @assert op != OP_INVALID error("Alignment operation is not valid.")
-  @inbounds ch = op_to_char[convert(Uint8, op) + 1]
-  return ch
+    @assert op != OP_INVALID error("Alignment operation is not valid.")
+    @inbounds ch = op_to_char[convert(Uint8, op) + 1]
+    return ch
 end
 
 function show(io::IO, op::Operation)

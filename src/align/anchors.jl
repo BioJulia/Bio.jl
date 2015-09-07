@@ -18,12 +18,12 @@ Calling the AlignmentAnchor default constructor with default arguments sets both
 integer fields to 0, and the operation field to the global constant OP_INVALID.
 """ ->
 immutable AlignmentAnchor
-  alnPos::Int
-  srcPos::Int
-  op::Operation
-  function AlignmentAnchor(gp::Int = 0, sp::Int = 0, op::Operation = OP_INVALID)
-    return new(gp, sp, op)
-  end
+    alnPos::Int
+    srcPos::Int
+    op::Operation
+    function AlignmentAnchor(gp::Int = 0, sp::Int = 0, op::Operation = OP_INVALID)
+        return new(gp, sp, op)
+    end
 end
 
 
@@ -35,7 +35,7 @@ Print to screen or other IO stream, a formatted description of an
 AlignmentAnchor.
 """ ->
 function show(io::IO, anc::AlignmentAnchor)
-  write(io, "Alignment Position: $(anc.alnPos), Source Position: $(anc.srcPos), Operation: $(anc.op)")
+    write(io, "Alignment Position: $(anc.alnPos), Source Position: $(anc.srcPos), Operation: $(anc.op)")
 end
 
 @doc """
@@ -44,7 +44,7 @@ Copy an AlignmentAnchor to a new AlignmentAnchor variable.
 Takes only one parameter of AlignmentAnchor type.
 """ ->
 function copy(src::AlignmentAnchor)
-  return AlignmentAnchor(src.alnPos, src.srcPos, src.op)
+    return AlignmentAnchor(src.alnPos, src.srcPos, src.op)
 end
 
 
@@ -55,42 +55,42 @@ end
 Check for equity of two AlignmentAnchors.
 """ ->
 function ==(a::AlignmentAnchor, b::AlignmentAnchor)
-  return a.alnPos == b.alnPos && a.srcPos == b.srcPos
+    return a.alnPos == b.alnPos && a.srcPos == b.srcPos
 end
 
 @doc """
 Check for inequity of two AlignmentAnchors.
 """ ->
 function !=(a::AlignmentAnchor, b::AlignmentAnchor)
-  return !(a == b)
+    return !(a == b)
 end
 
 @doc """
 Check that AlignmentAnchor a, is less than AlignmentAnchor b.
 """ ->
 function <(a::AlignmentAnchor, b::AlignmentAnchor)
-  return a.alnPos < b.alnPos || a.srcPos < b.srcPos
+    return a.alnPos < b.alnPos || a.srcPos < b.srcPos
 end
 
 @doc """
 Check that AlignmentAnchor a, is greater than AlignmentAnchor b.
 """ ->
 function >(a::AlignmentAnchor, b::AlignmentAnchor)
-  return a.alnPos > b.alnPos || a.srcPos > b.srcPos
+    return a.alnPos > b.alnPos || a.srcPos > b.srcPos
 end
 
 @doc """
 Check that AlignmentAnchor a, is less than or equal to AlignmentAnchor b.
 """ ->
 function <=(a::AlignmentAnchor, b::AlignmentAnchor)
-  return a.alnPos <= b.alnPos || a.srcPos < b.srcPos
+    return a.alnPos <= b.alnPos || a.srcPos < b.srcPos
 end
 
 @doc """
 Check that AlignmentAnchor a, is greater than or equal to AlignmentAnchor b.
 """ ->
 function >=(a::AlignmentAnchor, b::AlignmentAnchor)
-  return a.alnPos >= b.alnPos || a.srcPos > b.srcPos
+    return a.alnPos >= b.alnPos || a.srcPos > b.srcPos
 end
 
 @doc """
@@ -108,11 +108,11 @@ end
 typealias AlignmentAnchors Vector{AlignmentAnchor}
 
 function show(io::IO, aa::AlignmentAnchors)
-  out::String = ""
-  for i in aa
-    out *= "($(i.srcPos), $(i.alnPos), $(Char(i.op)))"
-  end
-  write(io, out)
+    out::String = ""
+    for i in aa
+        out *= "($(i.srcPos), $(i.alnPos), $(Char(i.op)))"
+    end
+    write(io, out)
 end
 
 
@@ -165,7 +165,7 @@ Returns true if the srcPos field of AlignmentAnchor a, is less than the srcPos
 field of AlignmentAnchor b.
 """ ->
 function lt(o::srcPosOrdering, a::AlignmentAnchor, b::AlignmentAnchor)
-  return a.srcPos < b.srcPos
+    return a.srcPos < b.srcPos
 end
 
 @doc """
@@ -173,7 +173,7 @@ Returns true if the alnPos field of AlignmentAnchor a, is less than the alnPos
 field of AlignmentAnchor b.
 """ ->
 function lt(o::alnPosOrdering, a::AlignmentAnchor, b::AlignmentAnchor)
-  return a.alnPos < b.alnPos
+    return a.alnPos < b.alnPos
 end
 
 @doc """
@@ -181,7 +181,7 @@ Returns true if the srcPos field of AlignmentAnchor a, is less than the Integer
 b.
 """ ->
 function lt(o::srcPosOrdering, a::AlignmentAnchor, b::Int)
-  return a.srcPos < b
+    return a.srcPos < b
 end
 
 @doc """
@@ -189,7 +189,7 @@ Returns true if the alnPos field of AlignmentAnchor a, is less than the Integer
 b.
 """ ->
 function lt(o::alnPosOrdering, a::AlignmentAnchor, b::Int)
-  return a.alnPos < b
+    return a.alnPos < b
 end
 
 @doc """
@@ -197,7 +197,7 @@ Returns true if the srcPos field of Integer a, is less than the srcPos field of
 the AlignmentAnchor b.
 """ ->
 function lt(o::srcPosOrdering, a::Int, b::AlignmentAnchor)
-  return a < b.srcPos
+    return a < b.srcPos
 end
 
 @doc """
@@ -205,7 +205,7 @@ Returns true if the srcPos field of Integer a, is less than the alnPos field of
 the AlignmentAnchor b.
 """ ->
 function lt(o::alnPosOrdering, a::Int, b::AlignmentAnchor)
-  return a < b.alnPos
+    return a < b.alnPos
 end
 
 function upperBoundAnchor(arr::AlignmentAnchors, i::Int, o::alnPosOrdering)
