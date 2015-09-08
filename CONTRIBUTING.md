@@ -73,6 +73,13 @@ considered it must meet the following guidelines.
   "This function foo's something"
   foo(x) = 2*x
   ```
+  
+  * Functions that get or set variables in a type should not be prefixed with 'get' or 'set'. The getter should be named for the variable it sets, and the setter should have the same name as the getter, with the suffix `!`. For exmaple, for the variable `names`:
+  
+  ```julia
+  name(node) # get node name
+  name!(node, "somename") # set node name
+  ```
 
 ## Conduct
 
