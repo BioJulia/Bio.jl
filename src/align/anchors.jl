@@ -49,7 +49,7 @@ end
 
 
 # Basic operators for boolean operations consider
-# positions, not operations
+# positions, not operations.
 
 @doc """
 Check for equity of two AlignmentAnchors.
@@ -216,6 +216,19 @@ function lowerBoundAnchor(arr::AlignmentAnchors, i::Int, o::alnPosOrdering)
     return searchsortedfirst(arr, i, o)
 end
 
+@doc """
+Returns the indicies of the anchors that
+""" ->
+function findPosition(anchors::AlignmentAnchors, position::Int, ordering::alnPosOrdering)
+    loBracket = searchsortedlast(anchors, position, ordering)
+    hiBracket = loBracket + 1
+    # We probably need code here to handle a few edge cases, or have this as an
+    # unsafe function and rely on calling functions to make sure edge cases are
+    # handled.
+    return loBracket, hiBracket
+end
+
+
 
 immutable AlignedSequence
     src # Sequence from Bio.seq.
@@ -223,12 +236,7 @@ immutable AlignedSequence
 end
 
 
-function findPosition(anchors::AlignmentAnchors, position::Int, ordering::alnPosOrdering)
-    loBracket = searchsortedlast(anchors, position, ordering)
-    hiBracket = loBracket + 1
-    # We probably need code here to handle a few edge cases.
-    return loBracket, hiBracket
-end
+
 
 
 function alnToSrc(alignedSeq::AlignedSequence, alnPosition::Int)
