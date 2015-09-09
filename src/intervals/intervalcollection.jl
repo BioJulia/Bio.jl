@@ -95,7 +95,7 @@ end
 function update_ordered_trees!{T}(ic::IntervalCollection{T})
     if ic.ordered_trees_outdated
         ic.ordered_trees = collect(IntervalCollectionTree{T}, values(ic.trees))
-        p = sortperm(collect(String, keys(ic.trees)), lt=alphanum_isless)
+        p = sortperm(collect(AbstractString, keys(ic.trees)), lt=alphanum_isless)
         ic.ordered_trees = ic.ordered_trees[p]
         ic.ordered_trees_outdated = false
     end
@@ -223,7 +223,7 @@ end
 
 "Iterate over pairs of intersecting intervals in two IntervalCollections"
 function intersect{S, T}(a::IntervalCollection{S}, b::IntervalCollection{T})
-    seqnames = collect(String, keys(a.trees) ∩ keys(b.trees))
+    seqnames = collect(AbstractString, keys(a.trees) ∩ keys(b.trees))
     sort!(seqnames, lt=alphanum_isless)
 
     a_trees = IntervalCollectionTree{S}[a.trees[seqname] for seqname in seqnames]
@@ -376,5 +376,3 @@ function done{S, T, TS, TV}(it::IntervalCollectionStreamIterator{S, T, TV},
                             state::IntervalCollectionStreamIteratorState{S, TS, TV})
     return state.intersection.index == 0
 end
-
-

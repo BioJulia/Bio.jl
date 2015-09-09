@@ -56,7 +56,7 @@ immutable Interval{T} <: AbstractInterval{Int64}
 end
 
 
-function Interval(seqname::String, first::Integer, last::Integer,
+function Interval(seqname::AbstractString, first::Integer, last::Integer,
                   strand::Strand=STRAND_BOTH)
     return Interval{Nothing}(seqname, first, last, strand, nothing)
 end
@@ -146,7 +146,7 @@ ordering.
 
 This is similar to the '--version-sort' option in GNU coreutils sort.
 """
-function alphanum_isless(a::String, b::String)
+function alphanum_isless(a::AbstractString, b::AbstractString)
     i = 1
     j = 1
 

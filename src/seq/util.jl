@@ -19,4 +19,4 @@ Copy a Kmer into the user's clipboard.
 
 Useful for pasting a query sequence in web services like BLAST.
 """
-clipboard(x::Kmer) = clipboard(convert(String, x))
+clipboard(x::Kmer) = clipboard(convert(AbstractString, x))

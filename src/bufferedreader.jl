@@ -37,7 +37,7 @@ function BufferedReader(input::IO, memory_map::Bool=false)
                           Array(UInt8, BUFFERED_READER_INITIAL_BUF_SIZE), 0, 0)
 end
 
-function BufferedReader(filename::String, memory_map::Bool=false)
+function BufferedReader(filename::AbstractString, memory_map::Bool=false)
     if memory_map
         data = Mmap.mmap(open(filename), Vector{UInt8}, (filesize(filename),))
         return BufferedReader(Nullable{IO}(), 0, false, data, length(data), 0)

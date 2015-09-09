@@ -399,7 +399,7 @@ Open a BigBed file for reading.
 Once opened, entries can be read from the file either by iterating over it, or
 by indexing into it with an interval.
 """
-function read(input::Union(IO, String, Vector{UInt8}),
+function read(input::Union(IO, AbstractString, Vector{UInt8}),
               ::Type{BigBed}; memory_map::Bool=false)
     reader = BufferedReader(input, memory_map)
 
@@ -618,7 +618,7 @@ Constructed by indexing into `BigBedData` with an interval.
 type BigBedIntersectIterator
     bb::BigBedData
 
-    query_seqname::String
+    query_seqname::AbstractString
     query_first::Int64
     query_last::Int64
     query_chrom_id::UInt32
@@ -640,7 +640,7 @@ end
 Find the given seqname in the BigBed file's index and read the corresponding
 sequence id and length
 """
-function lookup_seqname(bb::BigBedData, seqname::String)
+function lookup_seqname(bb::BigBedData, seqname::AbstractString)
     seek(bb.reader, bb.header.chromosome_tree_offset + sizeof(BigBedBTreeHeader) + 1)
 
     fill!(bb.key, 0)
@@ -932,7 +932,7 @@ end
 
 function bigbed_write_chrom_tree(out::IO, intervals::IntervalCollection,
                                  block_size,
-                                 chrom_sizes::Dict=Dict{String, Int64}())
+                                 chrom_sizes::Dict=Dict{AbstractString, Int64}())
     # See bbiWriteChromInfo in bbiWrite.c
     length(intervals.trees)
     for seqname in keys(intervals.trees)

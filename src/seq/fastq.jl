@@ -11,7 +11,7 @@ and a `quality` string corresponding to the sequence.
 Quality scores are stored as integer Phred scores.
 """
 type FASTQMetadata
-    description::String
+    description::AbstractString
     quality::Vector{Int8}
 
     function FASTQMetadata(description, quality)
@@ -102,19 +102,19 @@ type FASTQParser
     state::Ragel.State
     seqbuf::Ragel.Buffer{UInt8}
     qualbuf::Ragel.Buffer{UInt8}
-    namebuf::String
-    descbuf::String
+    namebuf::AbstractString
+    descbuf::AbstractString
     name2buf::Ragel.Buffer{UInt8}
     desc2buf::Ragel.Buffer{UInt8}
     qualcount::Int
     default_qual_encoding::QualityEncoding
 
-    function FASTQParser(input::Union(IO, String, Vector{UInt8}),
+    function FASTQParser(input::Union(IO, AbstractString, Vector{UInt8}),
                          default_qual_encoding=EMPTY_QUAL_ENCODING;
                          memory_map::Bool=false)
         cs = fastq_start;
 	if memory_map
-            if !isa(input, String)
+            if !isa(input, AbstractString)
                 error("Parser must be given a file name in order to memory map.")
             end
             return new(Ragel.State(cs, input, true),
@@ -1562,7 +1562,7 @@ end
 Parse a FASTQ file.
 
 # Arguments
-  * `filename::String`: Path of the FASTA file.
+  * `filename::AbstractString`: Path of the FASTA file.
   * `qual_encoding::QualityEncoding`: assumed quality score encoding
     (Default: EMPTY_QUAL_ENCODING, i.e. no assumption)
   * `memory_map::Bool`: If true, attempt to memory map the file on supported
@@ -1571,7 +1571,7 @@ Parse a FASTQ file.
 # Returns
 An iterator over `SeqRecord`s contained in the file.
 """
-function read(filename::String, ::Type{FASTQ},
+function read(filename::AbstractString, ::Type{FASTQ},
                    qual_encoding::QualityEncoding=EMPTY_QUAL_ENCODING;
                    memory_map=false)
     return FASTQIterator(FASTQParser(filename, memory_map=memory_map),

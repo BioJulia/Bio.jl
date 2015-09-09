@@ -3,7 +3,7 @@ type BigBedData <: IntervalStream{BEDMetadata}
     reader::BufferedReader
     header::BigBedHeader
     zoom_headers::Vector{BigBedZoomHeader}
-    autosql::String
+    autosql::AbstractString
     summary::BigBedTotalSummary
     btree_header::BigBedBTreeHeader
     rtree_header::BigBedRTreeHeader
@@ -60,7 +60,7 @@ using Color, Switch
         input.last = unsafe_load(convert(Ptr{UInt32}, pointer(state.reader.buffer, m)))
     }
 
-    action name        { input.name         = Nullable{String}(Ragel.@asciistring_from_mark!) }
+    action name        { input.name         = Nullable{AbstractString}(Ragel.@asciistring_from_mark!) }
     action score       { input.score        = Ragel.@int64_from_mark! }
     action strand      { input.strand       = convert(Strand, Ragel.@char) }
     action thick_first { input.thick_first  = (Ragel.@int64_from_mark!) + 1 }
@@ -129,7 +129,7 @@ type BigBedDataParser
     red::Float32
     green::Float32
     blue::Float32
-    name::Nullable{String}
+    name::Nullable{AbstractString}
     score::Nullable{Int}
     thick_first::Nullable{Int}
     thick_last::Nullable{Int};
@@ -143,7 +143,7 @@ type BigBedDataParser
 
         return new(Ragel.State(cs, input, false, len),
                    0, 0, 0, STRAND_NA, 0.0, 0.0, 0.0,
-                   Nullable{String}(), Nullable{Int}(), Nullable{Int}(),
+                   Nullable{AbstractString}(), Nullable{Int}(), Nullable{Int}(),
                    Nullable{Int}(), Nullable{RGB{Float32}}(), Nullable{Int}(),
                    Nullable{Vector{Int}}(), Nullable{Vector{Int}}())
     end

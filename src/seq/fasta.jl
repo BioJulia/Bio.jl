@@ -6,7 +6,7 @@ immutable FASTA <: FileFormat end
 
 "Metadata for FASTA sequence records containing just a `description` field"
 type FASTAMetadata
-    description::String
+    description::AbstractString
 
     function FASTAMetadata(description)
         return new(description)
@@ -56,11 +56,11 @@ type FASTAParser
     namebuf::ASCIIString
     descbuf::ASCIIString
 
-    function FASTAParser(input::Union(IO, String, Vector{UInt8});
+    function FASTAParser(input::Union(IO, AbstractString, Vector{UInt8});
                          memory_map::Bool=false)
         cs = fasta_start;
 	if memory_map
-            if !isa(input, String)
+            if !isa(input, AbstractString)
                 error("Parser must be given a file name in order to memory map.")
             end
             return new(Ragel.State(cs, input, true),
@@ -475,7 +475,7 @@ end
 Parse a FASTA file.
 
 # Arguments
-  * `filename::String`: Path of the FASTA file.
+  * `filename::AbstractString`: Path of the FASTA file.
   * `alphabet::Alphabet`: Assumed alphabet for the sequences contained in the
       file. (Default: `DNA_ALPHABET`)
   * `memory_map::Bool`: If true, attempt to memory map the file on supported
@@ -484,7 +484,7 @@ Parse a FASTA file.
 # Returns
 An iterator over `SeqRecord`s contained in the file.
 """
-function read(filename::String, ::Type{FASTA},
+function read(filename::AbstractString, ::Type{FASTA},
                    alphabet::Alphabet=DNA_ALPHABET; memory_map::Bool=false)
     return FASTAIterator(FASTAParser(filename, memory_map=memory_map),
                          alphabet, false, nothing)

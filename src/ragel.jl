@@ -107,7 +107,7 @@ function (==){T}(a::Buffer{T}, b::Buffer{T})
 end
 
 
-function (==){T}(a::Buffer{T}, b::String)
+function (==){T}(a::Buffer{T}, b::AbstractString)
     if length(a) != length(b)
         return false
     end
@@ -158,7 +158,7 @@ type State
         return new(BufferedReader(input, memory_map), false, 0, cs, cs, 1)
     end
 
-    function State(cs, filename::String, memory_map=false)
+    function State(cs, filename::AbstractString, memory_map=false)
         return new(BufferedReader(filename, memory_map), false, 0,  cs, cs, 1)
     end
 end

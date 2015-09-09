@@ -3,7 +3,7 @@ type BigBedData <: IntervalStream{BEDMetadata}
     reader::BufferedReader
     header::BigBedHeader
     zoom_headers::Vector{BigBedZoomHeader}
-    autosql::String
+    autosql::AbstractString
     summary::BigBedTotalSummary
     btree_header::BigBedBTreeHeader
     rtree_header::BigBedRTreeHeader
@@ -47,7 +47,7 @@ type BigBedDataParser
     red::Float32
     green::Float32
     blue::Float32
-    name::Nullable{String}
+    name::Nullable{AbstractString}
     score::Nullable{Int}
     thick_first::Nullable{Int}
     thick_last::Nullable{Int};
@@ -60,7 +60,7 @@ type BigBedDataParser
         cs = bigbed_start;
 	return new(Ragel.State(cs, input, false, len),
                    0, 0, 0, STRAND_NA, 0.0, 0.0, 0.0,
-                   Nullable{String}(), Nullable{Int}(), Nullable{Int}(),
+                   Nullable{AbstractString}(), Nullable{Int}(), Nullable{Int}(),
                    Nullable{Int}(), Nullable{RGB{Float32}}(), Nullable{Int}(),
                    Nullable{Vector{Int}}(), Nullable{Vector{Int}}())
     end
@@ -328,7 +328,7 @@ cs = 0;
         input.last = unsafe_load(convert(Ptr{UInt32}, pointer(state.reader.buffer, m)))
 
 	Ragel.@mark!
-	input.name         = Nullable{String}(Ragel.@asciistring_from_mark!)
+	input.name         = Nullable{AbstractString}(Ragel.@asciistring_from_mark!)
 @goto st40
 @label ctr16
 	input.score        = Ragel.@int64_from_mark!
@@ -365,7 +365,7 @@ cs = 0;
 
 @goto st40
 @label ctr62
-	input.name         = Nullable{String}(Ragel.@asciistring_from_mark!)
+	input.name         = Nullable{AbstractString}(Ragel.@asciistring_from_mark!)
 @goto st40
 @label st40
 p+= 1;
@@ -380,10 +380,10 @@ end
         input.last = unsafe_load(convert(Ptr{UInt32}, pointer(state.reader.buffer, m)))
 
 	Ragel.@mark!
-	input.name         = Nullable{String}(Ragel.@asciistring_from_mark!)
+	input.name         = Nullable{AbstractString}(Ragel.@asciistring_from_mark!)
 @goto st13
 @label ctr63
-	input.name         = Nullable{String}(Ragel.@asciistring_from_mark!)
+	input.name         = Nullable{AbstractString}(Ragel.@asciistring_from_mark!)
 @goto st13
 @label st13
 p+= 1;

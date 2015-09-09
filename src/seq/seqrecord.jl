@@ -5,7 +5,7 @@
 some arbitrary metadata of type `T`.
 """
 type SeqRecord{S, T}
-    name::String
+    name::AbstractString
     seq::S
     metadata::T
 
