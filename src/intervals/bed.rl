@@ -47,7 +47,9 @@ module BEDParserImpl
 
 import Bio.Intervals: Strand, STRAND_NA, BEDInterval, BEDMetadata
 import Bio.Ragel
-using Switch, Compat, Color
+
+using Switch, Color
+
 export BEDParser, takevalue!
 
 
@@ -152,7 +154,7 @@ type BEDParser
     block_sizes::Nullable{Vector{Int}}
     block_firsts::Nullable{Vector{Int}}
 
-    function BEDParser(input::Union(IO, String, Vector{Uint8}),
+    function BEDParser(input::Union(IO, String, Vector{UInt8}),
                        memory_map::Bool=false)
         %% write init;
 
@@ -354,4 +356,3 @@ function write_optional_fields(out::IO, interval::BEDInterval, leadingtab::Bool=
         end
     end
 end
-

@@ -1,6 +1,5 @@
 module TestSeq
 
-using Compat
 using FactCheck
 using YAML
 using Bio
@@ -110,71 +109,71 @@ end
 
 facts("Nucleotides") do
     context("Conversions") do
-        context("Uint8") do
-            context("DNA conversions from Uint8") do
-                @fact convert(DNANucleotide, @compat UInt8(0)) --> DNA_A
-                @fact convert(DNANucleotide, @compat UInt8(1)) --> DNA_C
-                @fact convert(DNANucleotide, @compat UInt8(2)) --> DNA_G
-                @fact convert(DNANucleotide, @compat UInt8(3)) --> DNA_T
-                @fact convert(DNANucleotide, @compat UInt8(4)) --> DNA_N
+        context("UInt8") do
+            context("DNA conversions from UInt8") do
+                @fact convert(DNANucleotide, UInt8(0)) --> DNA_A
+                @fact convert(DNANucleotide, UInt8(1)) --> DNA_C
+                @fact convert(DNANucleotide, UInt8(2)) --> DNA_G
+                @fact convert(DNANucleotide, UInt8(3)) --> DNA_T
+                @fact convert(DNANucleotide, UInt8(4)) --> DNA_N
             end
 
-            context("RNA conversions from Uint8") do
-                @fact convert(RNANucleotide, @compat UInt8(0)) --> RNA_A
-                @fact convert(RNANucleotide, @compat UInt8(1)) --> RNA_C
-                @fact convert(RNANucleotide, @compat UInt8(2)) --> RNA_G
-                @fact convert(RNANucleotide, @compat UInt8(3)) --> RNA_U
-                @fact convert(RNANucleotide, @compat UInt8(4)) --> RNA_N
+            context("RNA conversions from UInt8") do
+                @fact convert(RNANucleotide, UInt8(0)) --> RNA_A
+                @fact convert(RNANucleotide, UInt8(1)) --> RNA_C
+                @fact convert(RNANucleotide, UInt8(2)) --> RNA_G
+                @fact convert(RNANucleotide, UInt8(3)) --> RNA_U
+                @fact convert(RNANucleotide, UInt8(4)) --> RNA_N
             end
 
-            context("DNA conversions to Uint8") do
-                @fact convert(Uint8, DNA_A) --> @compat UInt8(0)
-                @fact convert(Uint8, DNA_C) --> @compat UInt8(1)
-                @fact convert(Uint8, DNA_G) --> @compat UInt8(2)
-                @fact convert(Uint8, DNA_T) --> @compat UInt8(3)
-                @fact convert(Uint8, DNA_N) --> @compat UInt8(4)
+            context("DNA conversions to UInt8") do
+                @fact convert(UInt8, DNA_A) --> UInt8(0)
+                @fact convert(UInt8, DNA_C) --> UInt8(1)
+                @fact convert(UInt8, DNA_G) --> UInt8(2)
+                @fact convert(UInt8, DNA_T) --> UInt8(3)
+                @fact convert(UInt8, DNA_N) --> UInt8(4)
             end
 
-            context("RNA conversions to Uint8") do
-                @fact convert(Uint8, RNA_A) --> @compat UInt8(0)
-                @fact convert(Uint8, RNA_C) --> @compat UInt8(1)
-                @fact convert(Uint8, RNA_G) --> @compat UInt8(2)
-                @fact convert(Uint8, RNA_U) --> @compat UInt8(3)
-                @fact convert(Uint8, RNA_N) --> @compat UInt8(4)
+            context("RNA conversions to UInt8") do
+                @fact convert(UInt8, RNA_A) --> UInt8(0)
+                @fact convert(UInt8, RNA_C) --> UInt8(1)
+                @fact convert(UInt8, RNA_G) --> UInt8(2)
+                @fact convert(UInt8, RNA_U) --> UInt8(3)
+                @fact convert(UInt8, RNA_N) --> UInt8(4)
             end
         end
 
-        context("Uint64") do
-            context("DNA conversions from Uint64") do
-                @fact convert(DNANucleotide, @compat UInt64(0)) --> DNA_A
-                @fact convert(DNANucleotide, @compat UInt64(1)) --> DNA_C
-                @fact convert(DNANucleotide, @compat UInt64(2)) --> DNA_G
-                @fact convert(DNANucleotide, @compat UInt64(3)) --> DNA_T
-                @fact convert(DNANucleotide, @compat UInt64(4)) --> DNA_N
+        context("UInt64") do
+            context("DNA conversions from UInt64") do
+                @fact convert(DNANucleotide, UInt64(0)) --> DNA_A
+                @fact convert(DNANucleotide, UInt64(1)) --> DNA_C
+                @fact convert(DNANucleotide, UInt64(2)) --> DNA_G
+                @fact convert(DNANucleotide, UInt64(3)) --> DNA_T
+                @fact convert(DNANucleotide, UInt64(4)) --> DNA_N
             end
 
-            context("RNA conversions from Uint64") do
-                @fact convert(RNANucleotide, @compat UInt64(0)) --> RNA_A
-                @fact convert(RNANucleotide, @compat UInt64(1)) --> RNA_C
-                @fact convert(RNANucleotide, @compat UInt64(2)) --> RNA_G
-                @fact convert(RNANucleotide, @compat UInt64(3)) --> RNA_U
-                @fact convert(RNANucleotide, @compat UInt64(4)) --> RNA_N
+            context("RNA conversions from UInt64") do
+                @fact convert(RNANucleotide, UInt64(0)) --> RNA_A
+                @fact convert(RNANucleotide, UInt64(1)) --> RNA_C
+                @fact convert(RNANucleotide, UInt64(2)) --> RNA_G
+                @fact convert(RNANucleotide, UInt64(3)) --> RNA_U
+                @fact convert(RNANucleotide, UInt64(4)) --> RNA_N
             end
 
-            context("DNA conversions to Uint64") do
-                @fact convert(Uint64, DNA_A) --> @compat UInt64(0)
-                @fact convert(Uint64, DNA_C) --> @compat UInt64(1)
-                @fact convert(Uint64, DNA_G) --> @compat UInt64(2)
-                @fact convert(Uint64, DNA_T) --> @compat UInt64(3)
-                @fact convert(Uint64, DNA_N) --> @compat UInt64(4)
+            context("DNA conversions to UInt64") do
+                @fact convert(UInt64, DNA_A) --> UInt64(0)
+                @fact convert(UInt64, DNA_C) --> UInt64(1)
+                @fact convert(UInt64, DNA_G) --> UInt64(2)
+                @fact convert(UInt64, DNA_T) --> UInt64(3)
+                @fact convert(UInt64, DNA_N) --> UInt64(4)
             end
 
-            context("RNA conversions to Uint64") do
-                @fact convert(Uint64, RNA_A) --> @compat UInt64(0)
-                @fact convert(Uint64, RNA_C) --> @compat UInt64(1)
-                @fact convert(Uint64, RNA_G) --> @compat UInt64(2)
-                @fact convert(Uint64, RNA_U) --> @compat UInt64(3)
-                @fact convert(Uint64, RNA_N) --> @compat UInt64(4)
+            context("RNA conversions to UInt64") do
+                @fact convert(UInt64, RNA_A) --> UInt64(0)
+                @fact convert(UInt64, RNA_C) --> UInt64(1)
+                @fact convert(UInt64, RNA_G) --> UInt64(2)
+                @fact convert(UInt64, RNA_U) --> UInt64(3)
+                @fact convert(UInt64, RNA_N) --> UInt64(4)
             end
         end
 
@@ -626,9 +625,9 @@ facts("Nucleotides") do
             reps = 100
             context("Construction and Conversions") do
                 # Check that kmers in strings survive round trip conversion:
-                #   Uint64 → Kmer → Uint64
-                function check_uint64_convertion(T::Type, n::Uint64, len::Int)
-                    return convert(Uint64, convert(Kmer{T, len}, n)) === n
+                #   UInt64 → Kmer → UInt64
+                function check_uint64_convertion(T::Type, n::UInt64, len::Int)
+                    return convert(UInt64, convert(Kmer{T, len}, n)) === n
                 end
 
                 # Check that kmers in strings survive round trip conversion:
@@ -674,10 +673,10 @@ facts("Nucleotides") do
 
 
                 for len in [0, 1, 16, 32]
-                    # Uint64 conversions
-                    @fact all(Bool[check_uint64_convertion(DNANucleotide, rand(Uint64), len)
+                    # UInt64 conversions
+                    @fact all(Bool[check_uint64_convertion(DNANucleotide, rand(UInt64), len)
                               for _ in 1:reps]) --> true
-                    @fact all(Bool[check_uint64_convertion(RNANucleotide, rand(Uint64), len)
+                    @fact all(Bool[check_uint64_convertion(RNANucleotide, rand(UInt64), len)
                               for _ in 1:reps]) --> true
 
                     # String construction
@@ -779,13 +778,13 @@ facts("Nucleotides") do
 
                 context("Inequality") do
                     for len in [1, 10, 32]
-                        @fact isless(convert(DNAKmer{1}, @compat UInt64(0)), convert(DNAKmer{1}, @compat UInt64(1))) --> true
-                        @fact isless(convert(DNAKmer{1}, @compat UInt64(0)), convert(DNAKmer{1}, @compat UInt64(0))) --> false
-                        @fact isless(convert(DNAKmer{1}, @compat UInt64(1)), convert(DNAKmer{1}, @compat UInt64(0))) --> false
+                        @fact isless(convert(DNAKmer{1}, UInt64(0)), convert(DNAKmer{1}, UInt64(1))) --> true
+                        @fact isless(convert(DNAKmer{1}, UInt64(0)), convert(DNAKmer{1}, UInt64(0))) --> false
+                        @fact isless(convert(DNAKmer{1}, UInt64(1)), convert(DNAKmer{1}, UInt64(0))) --> false
 
-                        @fact isless(convert(RNAKmer{1}, @compat UInt64(0)), convert(RNAKmer{1}, @compat UInt64(1))) --> true
-                        @fact isless(convert(RNAKmer{1}, @compat UInt64(0)), convert(RNAKmer{1}, @compat UInt64(0))) --> false
-                        @fact isless(convert(RNAKmer{1}, @compat UInt64(1)), convert(RNAKmer{1}, @compat UInt64(0))) --> false
+                        @fact isless(convert(RNAKmer{1}, UInt64(0)), convert(RNAKmer{1}, UInt64(1))) --> true
+                        @fact isless(convert(RNAKmer{1}, UInt64(0)), convert(RNAKmer{1}, UInt64(0))) --> false
+                        @fact isless(convert(RNAKmer{1}, UInt64(1)), convert(RNAKmer{1}, UInt64(0))) --> false
                     end
                 end
             end
@@ -942,7 +941,7 @@ facts("Nucleotides") do
 
         context("Nucleotide Counting") do
             function string_nucleotide_count(::Type{DNANucleotide}, seq::String)
-                counts = @compat Dict{DNANucleotide, Int}(
+                counts = Dict{DNANucleotide, Int}(
                     DNA_A => 0,
                     DNA_C => 0,
                     DNA_G => 0,
@@ -956,7 +955,7 @@ facts("Nucleotides") do
             end
 
             function string_nucleotide_count(::Type{RNANucleotide}, seq::String)
-                counts = @compat Dict{RNANucleotide, Int}(
+                counts = Dict{RNANucleotide, Int}(
                     RNA_A => 0,
                     RNA_C => 0,
                     RNA_G => 0,
@@ -1027,8 +1026,8 @@ facts("Nucleotides") do
 
         context("Kmer Counting") do
             function string_kmer_count{T <: Nucleotide}(::Type{T}, seq::String, k, step)
-                counts = @compat Dict{Kmer{T, k}, Int}()
-                for x in (@compat UInt64(0)):(@compat UInt64(4^k-1))
+                counts = Dict{Kmer{T, k}, Int}()
+                for x in UInt64(0):UInt64(4^k-1)
                     counts[convert(Kmer{T, k}, x)] = 0
                 end
 
@@ -1046,7 +1045,7 @@ facts("Nucleotides") do
             function check_kmer_count{T <: Nucleotide}(::Type{T}, seq::String, k, step)
                 string_counts = string_kmer_count(T, seq, k, step)
                 kmer_counts = KmerCounts{T, k}(convert(NucleotideSequence{T}, seq), step)
-                for y in (@compat UInt64(0)):(@compat UInt64(4^k-1))
+                for y in UInt64(0):UInt64(4^k-1)
                     x = convert(Kmer{T, k}, y)
                     if string_counts[x] != kmer_counts[x]
                         return false
@@ -1217,7 +1216,7 @@ end
 
 facts("Translation") do
     # crummy string translation to test against
-    standard_genetic_code_dict = @compat Dict{String, Char}(
+    standard_genetic_code_dict = Dict{String, Char}(
         "AAA" => 'K', "AAC" => 'N', "AAG" => 'K', "AAU" => 'N',
         "ACA" => 'T', "ACC" => 'T', "ACG" => 'T', "ACU" => 'T',
         "AGA" => 'R', "AGC" => 'S', "AGG" => 'R', "AGU" => 'S',
@@ -1357,23 +1356,23 @@ facts("Quality scores") do
         end
 
         test_decode(SANGER_QUAL_ENCODING,
-                    Uint8['!', '#', '$', '%', '&', 'I', '~'],
+                    UInt8['!', '#', '$', '%', '&', 'I', '~'],
                     Int8[0, 2, 3, 4, 5, 40, 93])
 
         test_decode(SOLEXA_QUAL_ENCODING,
-                    Uint8[';', 'B', 'C', 'D', 'E', 'h', '~'],
+                    UInt8[';', 'B', 'C', 'D', 'E', 'h', '~'],
                     Int8[-5, 2, 3, 4, 5, 40, 62])
 
         test_decode(ILLUMINA13_QUAL_ENCODING,
-                    Uint8['@', 'B', 'C', 'D', 'E', 'h', '~'],
+                    UInt8['@', 'B', 'C', 'D', 'E', 'h', '~'],
                     Int8[0, 2, 3, 4, 5, 40, 62])
 
         test_decode(ILLUMINA15_QUAL_ENCODING,
-                    Uint8['C', 'D', 'E', 'h', '~'],
+                    UInt8['C', 'D', 'E', 'h', '~'],
                     Int8[3, 4, 5, 40, 62])
 
         test_decode(ILLUMINA18_QUAL_ENCODING,
-                    Uint8['!', '#', '$', '%', '&', 'I', '~'],
+                    UInt8['!', '#', '$', '%', '&', 'I', '~'],
                     Int8[0, 2, 3, 4, 5, 40, 93])
     end
 
@@ -1381,7 +1380,7 @@ facts("Quality scores") do
 
         function test_encode(encoding, values, expected)
             # With start & end
-            result = Array(Uint8, length(expected))
+            result = Array(UInt8, length(expected))
             encode_quality_string!(encoding, values, result, 1,
                                    length(result))
             @fact result --> expected
@@ -1397,23 +1396,23 @@ facts("Quality scores") do
 
         test_encode(SANGER_QUAL_ENCODING,
                     Int8[0, 2, 3, 4, 5, 40, 93],
-                    Uint8['!', '#', '$', '%', '&', 'I', '~'])
+                    UInt8['!', '#', '$', '%', '&', 'I', '~'])
 
         test_encode(SOLEXA_QUAL_ENCODING,
                     Int8[-5, 2, 3, 4, 5, 40, 62],
-                    Uint8[';', 'B', 'C', 'D', 'E', 'h', '~'])
+                    UInt8[';', 'B', 'C', 'D', 'E', 'h', '~'])
 
         test_encode(ILLUMINA13_QUAL_ENCODING,
                     Int8[0, 2, 3, 4, 5, 40, 62],
-                    Uint8['@', 'B', 'C', 'D', 'E', 'h', '~'])
+                    UInt8['@', 'B', 'C', 'D', 'E', 'h', '~'])
 
         test_encode(ILLUMINA15_QUAL_ENCODING,
                     Int8[3, 4, 5, 40, 62],
-                    Uint8['C', 'D', 'E', 'h', '~'])
+                    UInt8['C', 'D', 'E', 'h', '~'])
 
         test_encode(ILLUMINA18_QUAL_ENCODING,
                     Int8[0, 2, 3, 4, 5, 40, 93],
-                    Uint8['!', '#', '$', '%', '&', 'I', '~'])
+                    UInt8['!', '#', '$', '%', '&', 'I', '~'])
     end
 end
 

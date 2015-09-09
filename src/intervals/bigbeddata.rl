@@ -7,14 +7,14 @@ type BigBedData <: IntervalStream{BEDMetadata}
     summary::BigBedTotalSummary
     btree_header::BigBedBTreeHeader
     rtree_header::BigBedRTreeHeader
-    data_count::Uint32
+    data_count::UInt32
 
     # preallocated space for reading and searching the B-tree
     btree_internal_nodes::Vector{BigBedBTreeInternalNode}
     btree_leaf_nodes::Vector{BigBedBTreeLeafNode}
-    key::Vector{Uint8}
-    node_keys::Vector{Vector{Uint8}}
-    uncompressed_data::Vector{Uint8}
+    key::Vector{UInt8}
+    node_keys::Vector{Vector{UInt8}}
+    uncompressed_data::Vector{UInt8}
 end
 
 
@@ -22,7 +22,8 @@ module BigBedDataParserImpl
 
 import Bio.Ragel, Zlib
 import Bio.Intervals: Strand, STRAND_NA, BEDInterval, BEDMetadata
-using Color, Compat, Switch
+
+using Color, Switch
 
 # Parser for data blocks in a BigBed file. This is very similar
 # to the BED parser in bed.rl, with the following exceptions:
@@ -46,17 +47,17 @@ using Color, Compat, Switch
 
     action chrom_id {
         m = Ragel.@unmark!
-        input.chrom_id = unsafe_load(convert(Ptr{Uint32}, pointer(state.reader.buffer, m)))
+        input.chrom_id = unsafe_load(convert(Ptr{UInt32}, pointer(state.reader.buffer, m)))
     }
 
     action first {
         m = Ragel.@unmark!
-        input.first = unsafe_load(convert(Ptr{Uint32}, pointer(state.reader.buffer, m)))
+        input.first = unsafe_load(convert(Ptr{UInt32}, pointer(state.reader.buffer, m)))
     }
 
     action last {
         m = Ragel.@unmark!
-        input.last = unsafe_load(convert(Ptr{Uint32}, pointer(state.reader.buffer, m)))
+        input.last = unsafe_load(convert(Ptr{UInt32}, pointer(state.reader.buffer, m)))
     }
 
     action name        { input.name         = Nullable{String}(Ragel.@asciistring_from_mark!) }
@@ -120,7 +121,7 @@ using Color, Compat, Switch
 type BigBedDataParser
     state::Ragel.State
 
-    chrom_id::Uint32
+    chrom_id::UInt32
     first::Int64
     last::Int64
     strand::Strand
@@ -137,7 +138,7 @@ type BigBedDataParser
     block_sizes::Nullable{Vector{Int}}
     block_firsts::Nullable{Vector{Int}}
 
-    function BigBedDataParser(input::Vector{Uint8}, len::Integer)
+    function BigBedDataParser(input::Vector{UInt8}, len::Integer)
         %%write init;
 
         return new(Ragel.State(cs, input, false, len),
@@ -184,4 +185,3 @@ Ragel.@generate_read_fuction("bigbed", BigBedDataParser, BigBedDataEntry,
 
 
 end # module BigBedDataParserImpl
-

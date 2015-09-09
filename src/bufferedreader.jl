@@ -1,55 +1,49 @@
-
-
 import Base: read, read!, seek, position, eof, nb_available, eof
 
 
 const BUFFERED_READER_INITIAL_BUF_SIZE = 1000000
 
-
 type BufferedReader <: IO
     # Input source. If null, it's assumed that buffer contains
     # all the input.
     input::Nullable{IO}
-    input_position::Uint
+    input_position::UInt
 
     # Should we close input when finished
     input_owned::Bool
 
     # Buffered data.
-    buffer::Vector{Uint8}
+    buffer::Vector{UInt8}
 
     # Position of the last position in buffer that's filled.
-    buffer_end::Uint
+    buffer_end::UInt
 
     # An index into buffer that will be updated and stay valid upon refill.
-    mark::Uint
+    mark::UInt
 end
 
-
-function BufferedReader(data::Vector{Uint8}, memory_map::Bool=false, len=length(data))
+function BufferedReader(data::Vector{UInt8}, memory_map::Bool=false, len=length(data))
     if memory_map
         error("Parser must be given a file name in order to memory map.")
     end
     return BufferedReader(Nullable{IO}(), 0, false, data, len, 0)
 end
 
-
 function BufferedReader(input::IO, memory_map::Bool=false)
     if memory_map
         error("Parser must be given a file name in order to memory map.")
     end
     return BufferedReader(Nullable{IO}(input), 1, false,
-                          Array(Uint8, BUFFERED_READER_INITIAL_BUF_SIZE), 0, 0)
+                          Array(UInt8, BUFFERED_READER_INITIAL_BUF_SIZE), 0, 0)
 end
-
 
 function BufferedReader(filename::String, memory_map::Bool=false)
     if memory_map
-        data = Mmap.mmap(open(filename), Vector{Uint8}, (filesize(filename),))
+        data = Mmap.mmap(open(filename), Vector{UInt8}, (filesize(filename),))
         return BufferedReader(Nullable{IO}(), 0, false, data, length(data), 0)
     else
         return BufferedReader(Nullable{IO}(open(filename)), 1, true,
-                              Array(Uint8, BUFFERED_READER_INITIAL_BUF_SIZE),
+                              Array(UInt8, BUFFERED_READER_INITIAL_BUF_SIZE),
                               0, 0)
     end
 end
@@ -79,11 +73,11 @@ the buffer was entirely refilled and nothing was kept this will be 0.
 """
 function fillbuffer!(reader::BufferedReader)
     if isnull(reader.input)
-        return (@compat Uint(0))
+        return UInt(0)
     end
 
     buflen = length(reader.buffer)
-    keeplen = (@compat Uint(0))
+    keeplen = UInt(0)
     if reader.mark > 0
         keeplen = reader.buffer_end - reader.mark + 1
         if keeplen == buflen
@@ -107,30 +101,26 @@ function fillbuffer!(reader::BufferedReader)
 end
 
 
-
-function readchunk!(source::IO, dest::Vector{Uint8}, dest_start::Integer,
+function readchunk!(source::IO, dest::Vector{UInt8}, dest_start::Integer,
                     dest_stop::Integer)
     i = dest_start
     while i <= dest_stop && !eof(source)
-        @inbounds dest[i] = read(source, Uint8)
+        @inbounds dest[i] = read(source, UInt8)
         i += 1
     end
-    return @compat Uint(i - dest_start)
+    return UInt(i - dest_start)
 end
 
-
-function readchunk!(source::IOStream, dest::Vector{Uint8}, dest_start::Integer,
+function readchunk!(source::IOStream, dest::Vector{UInt8}, dest_start::Integer,
                     dest_stop::Integer)
     len = dest_stop - dest_start  + 1
-    return ccall(:ios_readall, Uint, (Ptr{Void}, Ptr{Void}, Uint), source.ios,
+    return ccall(:ios_readall, UInt, (Ptr{Void}, Ptr{Void}, UInt), source.ios,
                  pointer(dest, dest_start), len)
 end
-
 
 function mark!(reader::BufferedReader, mark::Integer)
     reader.mark = mark
 end
-
 
 function unmark!(reader::BufferedReader)
     mark = reader.mark
@@ -170,12 +160,10 @@ function seek(reader::BufferedReader, pos::Integer)
     end
 end
 
-
 function eof(reader::BufferedReader)
     return reader.mark > reader.buffer_end &&
         (isnull(reader.input) || eof(get(reader.input)))
 end
-
 
 """
 Current position in the stream. 1-based, unlike Base.seek.
@@ -186,8 +174,7 @@ function position(reader::BufferedReader)
     return reader.input_position - (reader.buffer_end - reader.mark)
 end
 
-
-function read(reader::BufferedReader, ::Type{Uint8})
+function read(reader::BufferedReader, ::Type{UInt8})
     if reader.mark == 0
         reader.mark = 1
     end
@@ -206,7 +193,6 @@ function read(reader::BufferedReader, ::Type{Uint8})
     return b
 end
 
-
 function nb_available(reader::BufferedReader)
     if reader.buffer_end >= reader.mark
         return reader.buffer_end - reader.mark + 1
@@ -215,7 +201,6 @@ function nb_available(reader::BufferedReader)
     end
 end
 
-
 function eof(reader::BufferedReader)
     if reader.mark > reader.buffer_end
         return fillbuffer!(reader) == 0
@@ -223,4 +208,3 @@ function eof(reader::BufferedReader)
         return false
     end
 end
-

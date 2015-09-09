@@ -7,14 +7,14 @@ type BigBedData <: IntervalStream{BEDMetadata}
     summary::BigBedTotalSummary
     btree_header::BigBedBTreeHeader
     rtree_header::BigBedRTreeHeader
-    data_count::Uint32
+    data_count::UInt32
 
     # preallocated space for reading and searching the B-tree
     btree_internal_nodes::Vector{BigBedBTreeInternalNode}
     btree_leaf_nodes::Vector{BigBedBTreeLeafNode}
-    key::Vector{Uint8}
-    node_keys::Vector{Vector{Uint8}}
-    uncompressed_data::Vector{Uint8}
+    key::Vector{UInt8}
+    node_keys::Vector{Vector{UInt8}}
+    uncompressed_data::Vector{UInt8}
 end
 
 
@@ -22,7 +22,8 @@ module BigBedDataParserImpl
 
 import Bio.Ragel, Zlib
 import Bio.Intervals: Strand, STRAND_NA, BEDInterval, BEDMetadata
-using Color, Compat, Switch
+
+using Color, Switch
 
 # Parser for data blocks in a BigBed file. This is very similar
 # to the BED parser in bed.rl, with the following exceptions:
@@ -38,7 +39,7 @@ const bigbed_en_main  = convert(Int , 39)
 type BigBedDataParser
     state::Ragel.State
 
-    chrom_id::Uint32
+    chrom_id::UInt32
     first::Int64
     last::Int64
     strand::Strand
@@ -55,7 +56,7 @@ type BigBedDataParser
     block_sizes::Nullable{Vector{Int}}
     block_firsts::Nullable{Vector{Int}}
 
-    function BigBedDataParser(input::Vector{Uint8}, len::Integer)
+    function BigBedDataParser(input::Vector{UInt8}, len::Integer)
         cs = bigbed_start;
 	return new(Ragel.State(cs, input, false, len),
                    0, 0, 0, STRAND_NA, 0.0, 0.0, 0.0,
@@ -233,7 +234,7 @@ end
 @goto ctr3
 @label ctr3
 	m = Ragel.@unmark!
-        input.chrom_id = unsafe_load(convert(Ptr{Uint32}, pointer(state.reader.buffer, m)))
+        input.chrom_id = unsafe_load(convert(Ptr{UInt32}, pointer(state.reader.buffer, m)))
 
 	Ragel.@mark!
 @goto st5
@@ -271,7 +272,7 @@ end
 @goto ctr7
 @label ctr7
 	m = Ragel.@unmark!
-        input.first = unsafe_load(convert(Ptr{Uint32}, pointer(state.reader.buffer, m)))
+        input.first = unsafe_load(convert(Ptr{UInt32}, pointer(state.reader.buffer, m)))
 
 	Ragel.@mark!
 @goto st9
@@ -324,7 +325,7 @@ cs = 0;
 	@goto _out
 @label ctr11
 	m = Ragel.@unmark!
-        input.last = unsafe_load(convert(Ptr{Uint32}, pointer(state.reader.buffer, m)))
+        input.last = unsafe_load(convert(Ptr{UInt32}, pointer(state.reader.buffer, m)))
 
 	Ragel.@mark!
 	input.name         = Nullable{String}(Ragel.@asciistring_from_mark!)
@@ -376,7 +377,7 @@ end
 @goto ctr66
 @label ctr13
 	m = Ragel.@unmark!
-        input.last = unsafe_load(convert(Ptr{Uint32}, pointer(state.reader.buffer, m)))
+        input.last = unsafe_load(convert(Ptr{UInt32}, pointer(state.reader.buffer, m)))
 
 	Ragel.@mark!
 	input.name         = Nullable{String}(Ragel.@asciistring_from_mark!)
@@ -908,7 +909,7 @@ end
 @goto st0
 @label ctr14
 	m = Ragel.@unmark!
-        input.last = unsafe_load(convert(Ptr{Uint32}, pointer(state.reader.buffer, m)))
+        input.last = unsafe_load(convert(Ptr{UInt32}, pointer(state.reader.buffer, m)))
 
 	Ragel.@mark!
 @goto st38
@@ -1036,4 +1037,3 @@ end
 
 
 end # module BigBedDataParserImpl
-

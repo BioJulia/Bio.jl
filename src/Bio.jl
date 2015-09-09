@@ -1,6 +1,6 @@
 module Bio
 
-using Compat, Docile
+using Docile
 using Docile: @doc, @doc_str
 
 abstract FileFormat

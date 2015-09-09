@@ -31,7 +31,7 @@ typealias FASTQSeqRecord DNASeqRecord{FASTQMetadata}
 """
 Show a `FASTQSeqRecord` to `io`, with graphical display of quality scores.
 """
-function Base.show(io::IO, seqrec::FASTQSeqRecord)
+function show(io::IO, seqrec::FASTQSeqRecord)
     write(io, "@", seqrec.name, " ", seqrec.metadata.description, "\n")
     for c in seqrec.seq
         show(io, c)
@@ -63,7 +63,7 @@ end
 """
 Write a `FASTQSeqRecord` to `io`, as a valid FASTQ record.
 """
-function Base.write(io::IO, seqrec::FASTQSeqRecord; offset::Integer=33,
+function write(io::IO, seqrec::FASTQSeqRecord; offset::Integer=33,
                     qualheader::Bool=false)
     write(io, "@", seqrec.name, " ", seqrec.metadata.description, "\n")
 
@@ -100,16 +100,16 @@ const fastq_en_main  = convert(Int , 25)
 "A type encapsulating the current state of a FASTQ parser"
 type FASTQParser
     state::Ragel.State
-    seqbuf::Ragel.Buffer{Uint8}
-    qualbuf::Ragel.Buffer{Uint8}
+    seqbuf::Ragel.Buffer{UInt8}
+    qualbuf::Ragel.Buffer{UInt8}
     namebuf::String
     descbuf::String
-    name2buf::Ragel.Buffer{Uint8}
-    desc2buf::Ragel.Buffer{Uint8}
+    name2buf::Ragel.Buffer{UInt8}
+    desc2buf::Ragel.Buffer{UInt8}
     qualcount::Int
     default_qual_encoding::QualityEncoding
 
-    function FASTQParser(input::Union(IO, String, Vector{Uint8}),
+    function FASTQParser(input::Union(IO, String, Vector{UInt8}),
                          default_qual_encoding=EMPTY_QUAL_ENCODING;
                          memory_map::Bool=false)
         cs = fastq_start;
@@ -118,13 +118,13 @@ type FASTQParser
                 error("Parser must be given a file name in order to memory map.")
             end
             return new(Ragel.State(cs, input, true),
-                       Ragel.Buffer{Uint8}(), Ragel.Buffer{Uint8}(), "", "",
-                       Ragel.Buffer{Uint8}(), Ragel.Buffer{Uint8}(), 0,
+                       Ragel.Buffer{UInt8}(), Ragel.Buffer{UInt8}(), "", "",
+                       Ragel.Buffer{UInt8}(), Ragel.Buffer{UInt8}(), 0,
                        default_qual_encoding)
         else
-            return new(Ragel.State(cs, input), Ragel.Buffer{Uint8}(),
-                       Ragel.Buffer{Uint8}(), "", "", Ragel.Buffer{Uint8}(),
-                       Ragel.Buffer{Uint8}(), 0, default_qual_encoding)
+            return new(Ragel.State(cs, input), Ragel.Buffer{UInt8}(),
+                       Ragel.Buffer{UInt8}(), "", "", Ragel.Buffer{UInt8}(),
+                       Ragel.Buffer{UInt8}(), 0, default_qual_encoding)
         end
     end
 end
@@ -1571,7 +1571,7 @@ Parse a FASTQ file.
 # Returns
 An iterator over `SeqRecord`s contained in the file.
 """
-function Base.read(filename::String, ::Type{FASTQ},
+function read(filename::String, ::Type{FASTQ},
                    qual_encoding::QualityEncoding=EMPTY_QUAL_ENCODING;
                    memory_map=false)
     return FASTQIterator(FASTQParser(filename, memory_map=memory_map),
@@ -1589,13 +1589,13 @@ Parse a FASTQ file.
 # Returns
 An iterator over `SeqRecord`s contained in the file.
 """
-function Base.read(input::IO, ::Type{FASTQ},
+function read(input::IO, ::Type{FASTQ},
                    qual_encoding::QualityEncoding=EMPTY_QUAL_ENCODING)
     return FASTQIterator(FASTQParser(input), qual_encoding, false, nothing)
 end
 
 
-function Base.read(input::Cmd, ::Type{FASTQ},
+function read(input::Cmd, ::Type{FASTQ},
                    qual_encoding::QualityEncoding=EMPTY_QUAL_ENCODING)
     return FASTQIterator(FASTQParser(open(input, "r")[1]), qual_encoding, false, nothing)
 end

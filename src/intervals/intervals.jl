@@ -1,20 +1,16 @@
-
 module Intervals
 
 import Base: show, isless, push!, shift!, intersect, start, next, done, length,
              convert, read, read!, write, getindex, get, isempty, endof, ==,
              reverse!
 
-import Iterators
-import Zlib
-#using DataStructures
-using Base.Intrinsics
-using Color
-using Compat
-using IntervalTrees
-import IntervalTrees: first, last
-
 import Bio: FileFormat
+import IntervalTrees: first, last
+import Iterators, Zlib
+
+#using DataStructures
+using Base.Intrinsics, Color, IntervalTrees
+
 
 export Strand, Interval, IntervalCollection, IntervalStream,
        STRAND_NA, STRAND_POS, STRAND_NEG, STRAND_BOTH,

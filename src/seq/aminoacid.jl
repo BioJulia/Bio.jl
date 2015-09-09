@@ -8,10 +8,10 @@ bitstype 8 AminoAcid
 # Conversion from/to integers
 # ---------------------------
 
-convert(::Type{AminoAcid}, aa::Uint8) = box(AminoAcid, unbox(Uint8, aa))
-convert(::Type{Uint8}, aa::AminoAcid) = box(Uint8, unbox(AminoAcid, aa))
+convert(::Type{AminoAcid}, aa::UInt8) = box(AminoAcid, unbox(UInt8, aa))
+convert(::Type{UInt8}, aa::AminoAcid) = box(UInt8, unbox(AminoAcid, aa))
 convert{T <: Unsigned}(::Type{T}, aa::AminoAcid) = box(T, Base.zext_int(T, unbox(AminoAcid, aa)))
-convert{T <: Unsigned}(::Type{AminoAcid}, aa::T) = convert(AminoAcid, convert(Uint8, aa))
+convert{T <: Unsigned}(::Type{AminoAcid}, aa::T) = convert(AminoAcid, convert(UInt8, aa))
 
 
 # Amino acid encoding definition
@@ -110,7 +110,7 @@ end
 const aa_to_char = [
     'A', 'R', 'N', 'D', 'C', 'Q', 'E', 'G', 'H', 'I',
     'L', 'K', 'M', 'F', 'P', 'S', 'T', 'W', 'Y', 'V', 'X' ]
-convert(::Type{Char}, aa::AminoAcid) = aa_to_char[convert(Uint8, aa) + 1]
+convert(::Type{Char}, aa::AminoAcid) = aa_to_char[convert(UInt8, aa) + 1]
 
 
 # Basic functions
@@ -125,7 +125,7 @@ function show(io::IO, aa::AminoAcid)
 end
 
 # lookup table of 20 standard amino acids
-const threeletter_to_aa = @compat Dict(
+const threeletter_to_aa = Dict(
     "ALA" => AA_A, "ARG" => AA_R, "ASN" => AA_N, "ASP" => AA_D, "CYS" => AA_C,
     "GLN" => AA_Q, "GLU" => AA_E, "GLY" => AA_G, "HIS" => AA_H, "ILE" => AA_I,
     "LEU" => AA_L, "LYS" => AA_K, "MET" => AA_M, "PHE" => AA_F, "PRO" => AA_P,
@@ -183,7 +183,7 @@ end
 
 
 "Construct of a subsequence from another amino acid sequence"
-function AminoAcidSequence(seq::Union(Vector{Uint8}, String),
+function AminoAcidSequence(seq::Union(Vector{UInt8}, String),
                            startpos::Int, endpos::Int, unsafe::Bool=false)
     len = endpos - startpos + 1
     data = Array(AminoAcid, len)
@@ -233,7 +233,7 @@ end
 (^)(chunk::AminoAcidSequence, n::Integer) = repeat(chunk, n::Integer)
 
 
-function AminoAcidSequence(seq::Union(Vector{Uint8}, String))
+function AminoAcidSequence(seq::Union(Vector{UInt8}, String))
     return AminoAcidSequence(seq, 1, length(seq))
 end
 

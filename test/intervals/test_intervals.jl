@@ -97,7 +97,7 @@ function simple_coverage(intervals)
         end
     end
 
-    covintervals = Interval{Uint32}[]
+    covintervals = Interval{UInt32}[]
     for (seqname, arr) in covarrays
         i = j = 1
         while i <= length(arr)
@@ -107,7 +107,7 @@ function simple_coverage(intervals)
                     j += 1
                 end
                 push!(covintervals,
-                      Interval{Uint32}(seqname, i, j - 1, STRAND_BOTH, arr[i]))
+                      Interval{UInt32}(seqname, i, j - 1, STRAND_BOTH, arr[i]))
                 i = j
             else
                 i += 1
