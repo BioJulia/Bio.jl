@@ -1,13 +1,11 @@
 module Seq
 
-using Compat
-using Base.Intrinsics
+using Compat, Base.Intrinsics
 
 import Base: convert, complement, show, length, start, next, done, copy,
              reverse, show, endof, isless, clipboard, parse, repeat,
-             unsafe_copy!, read, read!,
-             # operators
-             getindex, setindex!, ==, *, ^, |, &
+             unsafe_copy!, read, read!, hash, getindex, setindex!,
+             ==, *, ^, |, &
 
 import Bio: FileFormat
 

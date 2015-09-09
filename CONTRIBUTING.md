@@ -18,7 +18,7 @@ considered it must meet the following guidelines.
     contexts, and into separate files based on module.
 
   * Contributions are included if the code has been reviewed by at least two
-    team members who are **not** the author of the proposed contribution, 
+    team members who are **not** the author of the proposed contribution,
     and there is general consensus (or general lack of objections) that it's useful
     and fits with the intended scope of Bio.jl.
 
@@ -50,7 +50,7 @@ considered it must meet the following guidelines.
     ```julia
     module AwesomeFeatures
 
-    using Compat, JSON
+    using IntervalTrees, JSON
 
     include("feature1.jl")
     include("feature2.jl")
@@ -73,9 +73,9 @@ considered it must meet the following guidelines.
   "This function foo's something"
   foo(x) = 2*x
   ```
-  
+
   * Functions that get or set variables in a type should not be prefixed with 'get' or 'set'. The getter should be named for the variable it sets, and the setter should have the same name as the getter, with the suffix `!`. For exmaple, for the variable `names`:
-  
+
   ```julia
   name(node) # get node name
   name!(node, "somename") # set node name

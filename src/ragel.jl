@@ -1,11 +1,10 @@
-
 module Ragel
 
-using Compat
-using Switch
 import Base: push!, pop!, endof, append!, empty!, isempty, length, getindex,
              setindex!, (==), takebuf_string, read!, seek
 import Bio: fillbuffer!
+
+using Switch
 using Bio: BufferedReader
 
 
@@ -108,7 +107,7 @@ function (==){T}(a::Buffer{T}, b::Buffer{T})
 end
 
 
-function (==){T}(a::Buffer{T}, b::String)
+function (==){T}(a::Buffer{T}, b::AbstractString)
     if length(a) != length(b)
         return false
     end
@@ -148,7 +147,7 @@ type State
     # Parser is responsible for updating this
     linenum::Int
 
-    function State(cs, data::Vector{Uint8}, memory_map::Bool=false, len::Integer=length(data))
+    function State(cs, data::Vector{UInt8}, memory_map::Bool=false, len::Integer=length(data))
         return new(BufferedReader(data, memory_map, len), memory_map, 0, cs, cs, 1)
     end
 
@@ -159,7 +158,7 @@ type State
         return new(BufferedReader(input, memory_map), false, 0, cs, cs, 1)
     end
 
-    function State(cs, filename::String, memory_map=false)
+    function State(cs, filename::AbstractString, memory_map=false)
         return new(BufferedReader(filename, memory_map), false, 0,  cs, cs, 1)
     end
 end
@@ -221,9 +220,9 @@ end
 # doesn't check that the characters are digits (we don't need to since this is
 # already checked during parsing).
 function parse_int64(buffer, firstpos, lastpos)
-    x = @compat Int64(0)
+    x = Int64(0)
     for i in firstpos:lastpos
-        x = x * 10 + buffer[i] - (@compat UInt8('0'))
+        x = x * 10 + buffer[i] - UInt8('0')
     end
     return x
 end
@@ -337,4 +336,3 @@ end
 
 
 end # module Ragel
-

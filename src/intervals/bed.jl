@@ -46,7 +46,9 @@ module BEDParserImpl
 
 import Bio.Intervals: Strand, STRAND_NA, BEDInterval, BEDMetadata
 import Bio.Ragel
-using Switch, Compat, Color
+
+using Switch, Color
+
 export BEDParser, takevalue!
 
 
@@ -75,7 +77,7 @@ type BEDParser
     block_sizes::Nullable{Vector{Int}}
     block_firsts::Nullable{Vector{Int}}
 
-    function BEDParser(input::Union(IO, String, Vector{Uint8}),
+    function BEDParser(input::Union(IO, AbstractString, Vector{UInt8}),
                        memory_map::Bool=false)
         cs = bed_start;
 	return new(Ragel.State(cs, input, memory_map),
@@ -1410,14 +1412,14 @@ end
 Parse a BED file.
 
 # Arguments
-  * `filename::String`: Path of the BED file.
+  * `filename::AbstractString`: Path of the BED file.
   * `memory_map::Bool`: If true, attempt to memory map the file on supported
     platforms. (Default: `false`)
 
 # Returns
 An iterator over `BEDInterval`s contained in the file.
 """
-function read(filename::String, ::Type{BED}; memory_map::Bool=false)
+function read(filename::AbstractString, ::Type{BED}; memory_map::Bool=false)
     it = BEDIterator(BEDParserImpl.BEDParser(filename, memory_map),
                        Nullable{BEDInterval}())
     return it
@@ -1537,4 +1539,3 @@ function write_optional_fields(out::IO, interval::BEDInterval, leadingtab::Bool=
         end
     end
 end
-
