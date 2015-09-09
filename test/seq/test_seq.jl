@@ -13,7 +13,7 @@ function random_seq(n::Integer, nts, probs)
     for i in 1:n
         x[i] = nts[searchsorted(cumprobs, rand()).start]
     end
-    return convert(String, x)
+    return convert(AbstractString, x)
 end
 
 
@@ -63,7 +63,7 @@ function random_translatable_rna(n)
     probs = fill(1.0 / length(codons), length(codons))
     cumprobs = cumsum(probs)
     r = rand()
-    x = Array(String, n)
+    x = Array(AbstractString, n)
     for i in 1:n
         x[i] = codons[searchsorted(cumprobs, rand()).start]
     end
@@ -213,7 +213,7 @@ facts("Nucleotides") do
     end
 
     context("Sequences") do
-        function dna_complement(seq::String)
+        function dna_complement(seq::AbstractString)
             seqc = Array(Char, length(seq))
             for (i, c) in enumerate(seq)
                 if c     ==   'A'
@@ -229,10 +229,10 @@ facts("Nucleotides") do
                 end
             end
 
-            return convert(String, seqc)
+            return convert(AbstractString, seqc)
         end
 
-        function rna_complement(seq::String)
+        function rna_complement(seq::AbstractString)
             seqc = Array(Char, length(seq))
             for (i, c) in enumerate(seq)
                 if c == 'A'
@@ -248,31 +248,31 @@ facts("Nucleotides") do
                 end
             end
 
-            return convert(String, seqc)
+            return convert(AbstractString, seqc)
         end
 
         function check_reversal(T, seq)
-            return reverse(seq) == convert(String, reverse(convert(T, seq)))
+            return reverse(seq) == convert(AbstractString, reverse(convert(T, seq)))
         end
 
         function check_dna_complement(T, seq)
             return dna_complement(seq) ==
-                convert(String, complement(convert(T, seq)))
+                convert(AbstractString, complement(convert(T, seq)))
         end
 
         function check_rna_complement(T, seq)
             return rna_complement(seq) ==
-                convert(String, complement(convert(T, seq)))
+                convert(AbstractString, complement(convert(T, seq)))
         end
 
         function check_dna_revcomp(T, seq)
             return reverse(dna_complement(seq)) ==
-                convert(String, reverse_complement(convert(T, seq)))
+                convert(AbstractString, reverse_complement(convert(T, seq)))
         end
 
         function check_rna_revcomp(T, seq)
             return reverse(rna_complement(seq)) ==
-                convert(String, reverse_complement(convert(T, seq)))
+                convert(AbstractString, reverse_complement(convert(T, seq)))
         end
 
         function check_mismatches(T, a, b)
@@ -295,11 +295,11 @@ facts("Nucleotides") do
                     @fact DNASequence() --> NucleotideSequence(DNANucleotide)
                 end
 
-                context("Conversion from/to Strings") do
+                context("Conversion from/to strings") do
                     # Check that sequences in strings survive round trip conversion:
-                    #   String → NucleotideSequence → String
-                    function check_string_construction(T::Type, seq::String)
-                        return convert(String, NucleotideSequence{T}(seq)) == uppercase(seq)
+                    #   string → NucleotideSequence → string
+                    function check_string_construction(T::Type, seq::AbstractString)
+                        return convert(AbstractString, NucleotideSequence{T}(seq)) == uppercase(seq)
                     end
 
                     for len in [0, 1, 10, 32, 1000, 10000, 100000]
@@ -320,7 +320,7 @@ facts("Nucleotides") do
                 end
 
                 context("Construction from nucleotide vectors") do
-                    function check_vector_construction(T::Type, seq::String)
+                    function check_vector_construction(T::Type, seq::AbstractString)
                         xs = T[convert(T, c) for c in seq]
                         return NucleotideSequence{T}(xs) == NucleotideSequence{T}(seq)
                     end
@@ -347,7 +347,7 @@ facts("Nucleotides") do
                         seq = *([DNASequence(chunk)[parts[i]]
                                  for (i, chunk) in enumerate(chunks)]...)
 
-                        return convert(String, seq) == uppercase(str)
+                        return convert(AbstractString, seq) == uppercase(str)
                     end
 
                     @fact all(Bool[check_concatenation(DNANucleotide, rand(1:10)) for _ in 1:100]) --> true
@@ -361,7 +361,7 @@ facts("Nucleotides") do
 
                         str = chunk[start:stop] ^ n
                         seq = DNASequence(chunk)[start:stop] ^ n
-                        return convert(String, seq) == uppercase(str)
+                        return convert(AbstractString, seq) == uppercase(str)
                     end
 
                     @fact all(Bool[check_repetition(DNANucleotide, rand(1:10)) for _ in 1:100]) --> true
@@ -419,7 +419,7 @@ facts("Nucleotides") do
 
             context("Copy") do
                 function check_copy(T, seq)
-                    return convert(String, copy(NucleotideSequence{T}(seq))) == seq
+                    return convert(AbstractString, copy(NucleotideSequence{T}(seq))) == seq
                 end
 
                 for len in [1, 10, 32, 1000, 10000, 100000]
@@ -504,7 +504,7 @@ facts("Nucleotides") do
                     results = Bool[]
                     for _ in 1:reps
                         part = random_interval(1, length(seq))
-                        push!(results, seq[part] == convert(String, dnaseq[part]))
+                        push!(results, seq[part] == convert(AbstractString, dnaseq[part]))
                     end
                     @fact all(results) --> true
                 end
@@ -517,7 +517,7 @@ facts("Nucleotides") do
                     for _ in 1:reps
                         part = random_interval(1, length(seq))
 
-                        push!(results, seq[part] == convert(String, rnaseq[part]))
+                        push!(results, seq[part] == convert(AbstractString, rnaseq[part]))
                     end
                     @fact all(results) --> true
                 end
@@ -631,9 +631,9 @@ facts("Nucleotides") do
                 end
 
                 # Check that kmers in strings survive round trip conversion:
-                #   String → Kmer → String
-                function check_string_construction(T::Type, seq::String)
-                    return convert(String, convert(Kmer{T}, seq)) == uppercase(seq)
+                #   string → Kmer → string
+                function check_string_construction(T::Type, seq::AbstractString)
+                    return convert(AbstractString, convert(Kmer{T}, seq)) == uppercase(seq)
                 end
 
                 # Check that dnakmers can be constructed from a DNASequence
@@ -657,14 +657,14 @@ facts("Nucleotides") do
                 # Check that kmers can be constructed from an array of nucleotides
                 #   Vector{Nucleotide} → Kmer → Vector{Nucleotide}
                 function check_nucarray_kmer{T <: Nucleotide}(seq::Vector{T})
-                    return convert(String, [convert(Char, c) for c in seq]) ==
-                           convert(String, kmer(seq...))
+                    return convert(AbstractString, [convert(Char, c) for c in seq]) ==
+                           convert(AbstractString, kmer(seq...))
                 end
 
                 # Check that kmers in strings survive round trip conversion:
-                #   String → NucleotideSequence → Kmer → NucleotideSequence → String
-                function check_roundabout_construction(T::Type, seq::String)
-                    return convert(String,
+                #   string → NucleotideSequence → Kmer → NucleotideSequence → string
+                function check_roundabout_construction(T::Type, seq::AbstractString)
+                    return convert(AbstractString,
                                convert(NucleotideSequence{T},
                                    convert(Kmer,
                                        convert(NucleotideSequence{T}, seq)))) == uppercase(seq)
@@ -901,8 +901,8 @@ facts("Nucleotides") do
         end
 
         context("EachKmer") do
-            function string_eachkmer(seq::String, k, step=1)
-                kmers = String[]
+            function string_eachkmer(seq::AbstractString, k, step=1)
+                kmers = AbstractString[]
                 i = 1
                 for i in 1:step:length(seq) - k + 1
                     subseq = seq[i:i + k - 1]
@@ -913,8 +913,8 @@ facts("Nucleotides") do
                 return kmers
             end
 
-            function check_eachkmer(T, seq::String, k, step=1)
-                xs = [convert(String, x) for (i, x) in collect(each(Kmer{T, k}, NucleotideSequence{T}(seq), step))]
+            function check_eachkmer(T, seq::AbstractString, k, step=1)
+                xs = [convert(AbstractString, x) for (i, x) in collect(each(Kmer{T, k}, NucleotideSequence{T}(seq), step))]
                 ys = string_eachkmer(seq, k, step)
                 return xs == ys
             end
@@ -940,7 +940,7 @@ facts("Nucleotides") do
         end
 
         context("Nucleotide Counting") do
-            function string_nucleotide_count(::Type{DNANucleotide}, seq::String)
+            function string_nucleotide_count(::Type{DNANucleotide}, seq::AbstractString)
                 counts = Dict{DNANucleotide, Int}(
                     DNA_A => 0,
                     DNA_C => 0,
@@ -954,7 +954,7 @@ facts("Nucleotides") do
                 return counts
             end
 
-            function string_nucleotide_count(::Type{RNANucleotide}, seq::String)
+            function string_nucleotide_count(::Type{RNANucleotide}, seq::AbstractString)
                 counts = Dict{RNANucleotide, Int}(
                     RNA_A => 0,
                     RNA_C => 0,
@@ -968,7 +968,7 @@ facts("Nucleotides") do
                 return counts
             end
 
-            function check_nucleotide_count(::Type{DNANucleotide}, seq::String)
+            function check_nucleotide_count(::Type{DNANucleotide}, seq::AbstractString)
                 string_counts = string_nucleotide_count(DNANucleotide, seq)
                 seq_counts = NucleotideCounts(DNASequence(seq))
                 return string_counts[DNA_A] == seq_counts[DNA_A] &&
@@ -978,7 +978,7 @@ facts("Nucleotides") do
                        string_counts[DNA_N] == seq_counts[DNA_N]
             end
 
-            function check_nucleotide_count(::Type{RNANucleotide}, seq::String)
+            function check_nucleotide_count(::Type{RNANucleotide}, seq::AbstractString)
                 string_counts = string_nucleotide_count(RNANucleotide, seq)
                 seq_counts = NucleotideCounts(RNASequence(seq))
                 return string_counts[RNA_A] == seq_counts[RNA_A] &&
@@ -988,7 +988,7 @@ facts("Nucleotides") do
                        string_counts[RNA_N] == seq_counts[RNA_N]
             end
 
-            function check_kmer_nucleotide_count(::Type{DNANucleotide}, seq::String)
+            function check_kmer_nucleotide_count(::Type{DNANucleotide}, seq::AbstractString)
                 string_counts = string_nucleotide_count(DNANucleotide, seq)
                 kmer_counts = NucleotideCounts(dnakmer(seq))
                 return string_counts[DNA_A] == kmer_counts[DNA_A] &&
@@ -998,7 +998,7 @@ facts("Nucleotides") do
                        string_counts[DNA_N] == kmer_counts[DNA_N]
             end
 
-            function check_kmer_nucleotide_count(::Type{RNANucleotide}, seq::String)
+            function check_kmer_nucleotide_count(::Type{RNANucleotide}, seq::AbstractString)
                 string_counts = string_nucleotide_count(RNANucleotide, seq)
                 kmer_counts = NucleotideCounts(rnakmer(seq))
                 return string_counts[RNA_A] == kmer_counts[RNA_A] &&
@@ -1025,7 +1025,7 @@ facts("Nucleotides") do
         end
 
         context("Kmer Counting") do
-            function string_kmer_count{T <: Nucleotide}(::Type{T}, seq::String, k, step)
+            function string_kmer_count{T <: Nucleotide}(::Type{T}, seq::AbstractString, k, step)
                 counts = Dict{Kmer{T, k}, Int}()
                 for x in UInt64(0):UInt64(4^k-1)
                     counts[convert(Kmer{T, k}, x)] = 0
@@ -1042,7 +1042,7 @@ facts("Nucleotides") do
                 return counts
             end
 
-            function check_kmer_count{T <: Nucleotide}(::Type{T}, seq::String, k, step)
+            function check_kmer_count{T <: Nucleotide}(::Type{T}, seq::AbstractString, k, step)
                 string_counts = string_kmer_count(T, seq, k, step)
                 kmer_counts = KmerCounts{T, k}(convert(NucleotideSequence{T}, seq), step)
                 for y in UInt64(0):UInt64(4^k-1)
@@ -1077,9 +1077,9 @@ facts("Aminoacids") do
             @fact_throws AminoAcidSequence("ATGHLMYZZACAGNM")
 
             # Check that sequences in strings survive round trip conversion:
-            #   String → AminoAcidSequence → String
-            function check_string_construction(seq::String)
-                return convert(String, AminoAcidSequence(seq)) == uppercase(seq)
+            #   string → AminoAcidSequence → string
+            function check_string_construction(seq::AbstractString)
+                return convert(AbstractString, AminoAcidSequence(seq)) == uppercase(seq)
             end
 
             for len in [0, 1, 10, 32, 1000, 10000, 100000]
@@ -1106,7 +1106,7 @@ facts("Aminoacids") do
                 seq = *([AminoAcidSequence(chunk)[parts[i]]
                          for (i, chunk) in enumerate(chunks)]...)
 
-                return convert(String, seq) == uppercase(str)
+                return convert(AbstractString, seq) == uppercase(str)
             end
 
             @fact all(Bool[check_concatenation(rand(1:10)) for _ in 1:100]) --> true
@@ -1135,7 +1135,7 @@ facts("Aminoacids") do
                 str = chunk[start:stop] ^ n
                 seq = AminoAcidSequence(chunk)[start:stop] ^ n
 
-                return convert(String, seq) == uppercase(str)
+                return convert(AbstractString, seq) == uppercase(str)
             end
 
             @fact all(Bool[check_repetition(rand(1:10)) for _ in 1:100]) --> true
@@ -1143,7 +1143,7 @@ facts("Aminoacids") do
 
         context("Copy") do
             function check_copy(seq)
-                return convert(String, copy(AminoAcidSequence(seq))) == uppercase(seq)
+                return convert(AbstractString, copy(AminoAcidSequence(seq))) == uppercase(seq)
             end
 
             for len in [1, 10, 32, 1000, 10000, 100000]
@@ -1159,7 +1159,7 @@ facts("Aminoacids") do
                 results = Bool[]
                 for _ in 1:reps
                     part = random_interval(1, length(seq))
-                    push!(results, seq[part] == convert(String, aaseq[part]))
+                    push!(results, seq[part] == convert(AbstractString, aaseq[part]))
                 end
                 @fact all(results) --> true
             end
@@ -1216,7 +1216,7 @@ end
 
 facts("Translation") do
     # crummy string translation to test against
-    standard_genetic_code_dict = Dict{String, Char}(
+    standard_genetic_code_dict = Dict{AbstractString, Char}(
         "AAA" => 'K', "AAC" => 'N', "AAG" => 'K', "AAU" => 'N',
         "ACA" => 'T', "ACC" => 'T', "ACG" => 'T', "ACU" => 'T',
         "AGA" => 'R', "AGC" => 'S', "AGG" => 'R', "AGU" => 'S',
@@ -1240,17 +1240,17 @@ facts("Translation") do
 
     )
 
-    function string_translate(seq::String)
+    function string_translate(seq::AbstractString)
         @assert length(seq) % 3 == 0
         aaseq = Array(Char, div(length(seq), 3))
         for i in 1:3:length(seq) - 3 + 1
             aaseq[div(i, 3) + 1] = standard_genetic_code_dict[seq[i:i+2]]
         end
-        return convert(String, aaseq)
+        return convert(AbstractString, aaseq)
     end
 
-    function check_translate(seq::String)
-        return string_translate(seq) == convert(String, translate(RNASequence(seq)))
+    function check_translate(seq::AbstractString)
+        return string_translate(seq) == convert(AbstractString, translate(RNASequence(seq)))
     end
 
     reps = 10

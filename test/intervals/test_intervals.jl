@@ -78,14 +78,14 @@ end
 
 
 function simple_coverage(intervals)
-    seqlens = Dict{String, Int}()
+    seqlens = Dict{AbstractString, Int}()
     for interval in intervals
         if get(seqlens, interval.seqname, -1) < interval.last
             seqlens[interval.seqname] = interval.last
         end
     end
 
-    covarrays = Dict{String, Vector{Int}}()
+    covarrays = Dict{AbstractString, Vector{Int}}()
     for (seqname, seqlen) in seqlens
         covarrays[seqname] = zeros(Int, seqlen)
     end
