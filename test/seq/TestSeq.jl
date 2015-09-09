@@ -1141,6 +1141,14 @@ facts("Aminoacids") do
             # Check creation of empty
         end
 
+        context("Conversion") do
+            seq = aa"ARNDCQEGHILKMFPSTWYVX"
+            @fact convert(AminoAcidSequence, [aa for aa in seq]) --> seq
+            @fact convert(Vector{AminoAcid}, seq) --> [aa for aa in seq]
+
+            @fact_throws convert(AminoAcidSequence, [convert(AminoAcid, UInt8(30))])
+        end
+
         context("Concatenation") do
             function check_concatenation(n)
                 chunks = [random_aa(rand(100:300)) for i in 1:n]
