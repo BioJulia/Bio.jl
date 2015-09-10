@@ -320,7 +320,11 @@ getindex(seq::AminoAcidSequence, r::UnitRange) = AminoAcidSequence(seq, r)
 
 
 # Replace a AminoSequence's data with a copy, copying only what's needed.
-function orphan!(seq::AminoAcidSequence, reorphan=true)
+function orphan!(seq::AminoAcidSequence, reorphan=false)
+    if !reorphan && seq.part.start == 1
+        return
+    end
+
     seq.data = seq.data[seq.part]
     seq.part = 1:length(seq.part)
     seq.hasrelatives = false
