@@ -373,7 +373,7 @@ end
 # Mutability/Immutability
 # -----------------------
 
-ismutable(seq::NucleotideSequence) = return seq.mutable
+ismutable(seq::NucleotideSequence) = seq.mutable
 
 
 function mutable!(seq::NucleotideSequence)
@@ -649,11 +649,11 @@ function setindex!{T}(seq::NucleotideSequence{T}, nt::T, i::Integer)
 
     d, r = divrem(i - 1, 32)
     if nt == nnucleotide(T)
-        seq.ns[i] = true
-        seq.data[d + 1] $= (@compat UInt64(0b11)) << (2*r)
+        @inbounds seq.ns[i] = true
+        @inbounds seq.data[d + 1] $= (@compat UInt64(0b11)) << (2*r)
     else
-        seq.ns[i] = false
-        seq.data[d + 1] =
+        @inbounds seq.ns[i] = false
+        @inbounds seq.data[d + 1] =
             (seq.data[d + 1] & ~((@compat UInt64(0b11)) << (2*r))) |
                 (convert(Uint64, nt) << (2*r))
     end
