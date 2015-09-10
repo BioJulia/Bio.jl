@@ -561,8 +561,7 @@ convert{T}(::Type{NucleotideSequence{T}}, seq::NucleotideSequence{T}) = seq
 function convert{T}(::Type{NucleotideSequence{T}}, seq::NucleotideSequence)
     newseq = NucleotideSequence{T}(seq.data, seq.ns, seq.part, seq.mutable, seq.hasrelatives)
     if seq.mutable
-        orphan!(newseq)
-        newseq.mutable = false
+        orphan!(newseq, true)
     end
     return newseq
 end
@@ -678,7 +677,7 @@ setindex!{T}(seq::NucleotideSequence{T}, nt::Char, i::Integer) =
 #
 function orphan!{T}(seq::NucleotideSequence{T}, reorphan=false)
     if !reorphan && seq.part.start == 1
-        return
+        return seq
     end
 
     data   = zeros(Uint64, seq_data_len(length(seq)))

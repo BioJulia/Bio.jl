@@ -600,6 +600,15 @@ facts("Nucleotides") do
 
                 immutable!(seq)
                 @fact_throws seq[1] = DNA_A
+
+                seq = dna"ACGTACGT"
+                mutable!(seq)
+                rnaseq = convert(RNASequence, seq)
+                @fact ismutable(rnaseq) --> true
+                @fact_throws rnaseq[1] = DNA_C
+                rnaseq[1] = RNA_C
+                @fact seq --> dna"ACGTACGT"
+                @fact rnaseq --> rna"CCGUACGU"
             end
         end
 
