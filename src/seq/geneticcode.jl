@@ -223,5 +223,5 @@ function translate(seq::RNASequence, code::GeneticCode=standard_genetic_code,
         aaseq[j] = code[codon]
     end
 
-    return AminoAcidSequence(aaseq, 1:aaseqlen)
+    return AminoAcidSequence(aaseq, 1:aaseqlen, false, false)
 end

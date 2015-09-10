@@ -165,6 +165,12 @@ end
 type AminoAcidSequence
     data::Vector{AminoAcid}
     part::UnitRange{Int} # interval within `data` defining the (sub)sequence
+    mutable::Bool # true if the sequence can be safely mutated
+
+    # true if this was constructed as a subsequence of another sequence or if
+    # subsequences were constructed from this sequence. When this is true, we
+    # need to copy the data to convert from immutable to mutable
+    hasrelatives::Bool
 end
 
 
@@ -172,27 +178,40 @@ end
 # ------------
 
 "Construct a subsequence of another amino acid sequence"
-function AminoAcidSequence(other::AminoAcidSequence, part::UnitRange)
+function AminoAcidSequence(other::AminoAcidSequence, part::UnitRange;
+                           mutable::Bool=false)
     start = other.part.start + part.start - 1
     stop = start + length(part) - 1
     if start < other.part.start || stop > other.part.stop
         error("Invalid subsequence range")
     end
-    return AminoAcidSequence(other.data, part)
+    seq = AminoAcidSequence(other.data, part, mutable, true)
+
+    if other.mutable || mutable
+        orphan!(seq, true)
+    end
+
+    other.hasrelatives = !other.mutable
+    seq.hasrelatives = !mutable
+
+    return seq
 end
 
 
 "Construct of a subsequence from another amino acid sequence"
 function AminoAcidSequence(seq::Union(Vector{Uint8}, String),
-                           startpos::Int, endpos::Int, unsafe::Bool=false)
+                           startpos::Int, endpos::Int, unsafe::Bool=false;
+                           mutable::Bool=false)
+
     len = endpos - startpos + 1
     data = Array(AminoAcid, len)
     for (i, j) in enumerate(startpos:endpos)
         data[i] = convert(AminoAcid, convert(Char, seq[j]))
     end
 
-    return AminoAcidSequence(data, 1:len)
+    return AminoAcidSequence(data, 1:len, mutable, false)
 end
+
 
 "Construct an amino acid sequence by concatenating other sequences"
 function AminoAcidSequence(chunks::AminoAcidSequence...)
@@ -208,7 +227,7 @@ function AminoAcidSequence(chunks::AminoAcidSequence...)
         pos += length(chunk)
     end
 
-    return AminoAcidSequence(data, 1:seqlen)
+    return AminoAcidSequence(data, 1:seqlen, false, false)
 end
 
 
@@ -226,7 +245,7 @@ function repeat(chunk::AminoAcidSequence, n::Integer)
         pos += length(chunk)
     end
 
-    return AminoAcidSequence(data, 1:seqlen)
+    return AminoAcidSequence(data, 1:seqlen, false, false)
 end
 
 
@@ -259,9 +278,12 @@ function ==(a::AminoAcidSequence, b::AminoAcidSequence)
     return true
 end
 
+
 function show(io::IO, seq::AminoAcidSequence)
     len = length(seq)
-    write(io, "$(string(len))aa Sequence:\n ")
+    write(io, "$(string(len))aa ",
+          seq.mutable ? "Mutable " : "",
+          "Sequence:\n ")
 
     const maxcount = 50
     if len > maxcount
@@ -279,8 +301,10 @@ function show(io::IO, seq::AminoAcidSequence)
     end
 end
 
+
 length(seq::AminoAcidSequence) = length(seq.part)
 endof(seq::AminoAcidSequence)  = length(seq)
+
 
 function getindex(seq::AminoAcidSequence, i::Integer)
     if i > length(seq) || i < 1
@@ -290,17 +314,61 @@ function getindex(seq::AminoAcidSequence, i::Integer)
     return seq.data[i]
 end
 
+
 # Construct a subsequence
 getindex(seq::AminoAcidSequence, r::UnitRange) = AminoAcidSequence(seq, r)
 
+
 # Replace a AminoSequence's data with a copy, copying only what's needed.
-function orphan!(seq::AminoAcidSequence, reorphan=true)
+function orphan!(seq::AminoAcidSequence, reorphan=false)
+    if !reorphan && seq.part.start == 1
+        return seq
+    end
+
     seq.data = seq.data[seq.part]
     seq.part = 1:length(seq.part)
+    seq.hasrelatives = false
     return seq
 end
 
-copy(seq::AminoAcidSequence) = orphan!(AminoAcidSequence(seq.data, seq.part))
+
+copy(seq::AminoAcidSequence) = orphan!(AminoAcidSequence(seq.data, seq.part, seq.mutable, false))
+
+
+function setindex!(seq::AminoAcidSequence, nt::AminoAcid, i::Integer)
+    if !seq.mutable
+        error("Cannot mutate an immutable sequence. Call `mutable!(seq)` first.")
+    end
+    seq.data[i] = nt
+end
+
+
+function setindex!(seq::AminoAcidSequence, nt::Char, i::Integer)
+    setindex!(seq, convert(AminoAcid, nt), i)
+end
+
+
+# Mutability/Immutability
+# -----------------------
+
+ismutable(seq::AminoAcidSequence) = return seq.mutable
+
+
+function mutable!(seq::AminoAcidSequence)
+    if !seq.mutable
+        if seq.hasrelatives
+            orphan!(seq, true)
+        end
+        seq.mutable = true
+    end
+    return seq
+end
+
+
+function immutable!(seq::AminoAcidSequence)
+    seq.mutable = false
+    return seq
+end
 
 
 # Iterating through amino acid sequence
