@@ -305,9 +305,9 @@ end
 
 
 """
-`NucleotideSequence(DNANucleotide|RNANucleotide, seq::AbstractString)`
+`NucleotideSequence(DNANucleotide|RNANucleotide, seq::AbstractString, startpos::Int, stoppos::Int)`
 
-Construct a subsequence from the `seq` string
+Construct a nucleotide sequence from the `seq[startpos:stoppos]` string
 """
 function NucleotideSequence{T<:Nucleotide}(::Type{T}, seq::Union(AbstractString, Vector{UInt8}),
                                            startpos::Int, stoppos::Int,
@@ -330,6 +330,11 @@ function NucleotideSequence{T<:Nucleotide}(t::Type{T}, seq::Union(AbstractString
     return NucleotideSequence(t, seq, 1, length(seq), mutable=mutable)
 end
 
+"""
+`NucleotideSequence(seq::AbstractVector{T<:Nucleotide}, startpos::Int, stoppos::Int)`
+
+Construct a nucleotide sequence from the `seq[startpos:stoppos]` vector
+"""
 function NucleotideSequence{T<:Nucleotide}(seq::AbstractVector{T},
                                            startpos::Int, stoppos::Int,
                                            unsafe::Bool=false; mutable::Bool=false)
@@ -543,7 +548,7 @@ DNASequence(; mutable::Bool=true) =
 DNASequence(other::NucleotideSequence, part::UnitRange; mutable::Bool=false) =
     NucleotideSequence(DNANucleotide, other, part, mutable=mutable)
 
-"Construct a DNA nucleotide sequence from a String"
+"Construct a DNA nucleotide sequence from an AbstractString"
 DNASequence(seq::AbstractString; mutable=false) =
     NucleotideSequence(DNANucleotide, seq, mutable=mutable)
 
@@ -568,7 +573,7 @@ RNASequence(; mutable::Bool=true) =
 RNASequence(other::NucleotideSequence, part::UnitRange; mutable::Bool=false) =
     NucleotideSequence(RNANucleotide, other, part, mutable=mutable)
 
-"Construct a RNA nucleotide sequence from a String"
+"Construct a RNA nucleotide sequence from an AbstractString"
 RNASequence(seq::AbstractString; mutable::Bool=false) =
     NucleotideSequence(RNANucleotide, seq, mutable=mutable)
 
@@ -1174,10 +1179,10 @@ convert{T, K}(::Type{NucleotideSequence}, x::Kmer{T, K}) = convert(NucleotideSeq
 
 # From strings
 
-"Construct a DNAKmer to a String"
+"Construct a DNAKmer to an AbstractString"
 dnakmer(seq::AbstractString) = convert(DNAKmer, seq)
 
-"Construct a RNAKmer to a String"
+"Construct a RNAKmer to an AbstractString"
 rnakmer(seq::AbstractString) = convert(RNAKmer, seq)
 
 "Construct a Kmer from a sequence of Nucleotides"
