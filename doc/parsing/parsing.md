@@ -31,7 +31,9 @@ cd colm-0.12.0
 make install
 ```
 
-Then ragel can be installed.
+Then ragel can be installed, if you are on OSX, you will need to install automake first.
+Installation through homebrew is a painless option: `brew install automake`.
+Now you can install ragel.
 
 
 ```sh
