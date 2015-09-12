@@ -18,13 +18,6 @@ type BigBedData <: IntervalStream{BEDMetadata}
 end
 
 
-module BigBedDataParserImpl
-
-import Bio.Ragel
-using Bio: StringField
-using Bio.Intervals: Strand, STRAND_NA, BEDInterval, BEDMetadata
-using Colors, Compat, Switch, BufferedStreams
-
 # Parser for data blocks in a BigBed file. This is very similar
 # to the BED parser in bed.rl, with the following exceptions:
 #
@@ -33,7 +26,7 @@ using Colors, Compat, Switch, BufferedStreams
 #    * BigBed entries are null ('\0') terminated, rather than newline separated.
 #
 %%{
-    machine bigbed;
+    machine _bigbedparser;
 
     action finish_match {
         input.block_size_idx = 1
@@ -162,11 +155,9 @@ type BigBedDataParser
 end
 
 
-Ragel.@generate_read_fuction("bigbed", BigBedDataParser, BEDInterval,
+Ragel.@generate_read_fuction("_bigbedparser", BigBedDataParser, BEDInterval,
     begin
         %%write exec;
     end)
 
-
-end # module BigBedDataParserImpl
 

@@ -3,16 +3,20 @@ module Intervals
 
 import Base: show, isless, push!, shift!, intersect, start, next, done, length,
              convert, read, read!, write, getindex, get, isempty, endof, ==,
-             reverse!
+             reverse!, open, eltype, copy
 
 import Iterators
 using Base.Intrinsics
+using BufferedStreams
 using Colors
 using Compat
 using IntervalTrees
+using Switch
 import IntervalTrees: first, last
 
-using Bio: FileFormat, StringField, AbstractParser
+using Bio: AbstractParser, FileFormat
+using Bio.StringFields
+using Bio.Ragel
 
 export Strand, Interval, IntervalCollection, IntervalStream,
        STRAND_NA, STRAND_POS, STRAND_NEG, STRAND_BOTH,

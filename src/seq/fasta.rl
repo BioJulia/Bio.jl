@@ -16,7 +16,7 @@ function FASTAMetadata()
 end
 
 
-function Base.copy(metadata::FASTAMetadata)
+function copy(metadata::FASTAMetadata)
     return FASTAMetadata(copy(metadata.description))
 end
 
@@ -34,25 +34,14 @@ typealias FASTARNASeqRecord       RNASeqRecord{FASTAMetadata}
 typealias FASTAAminoAcidSeqRecord AminoAcidSeqRecord{FASTAMetadata}
 
 
-function Base.show{S}(io::IO, seqrec::SeqRecord{S, FASTAMetadata})
+function show{S}(io::IO, seqrec::SeqRecord{S, FASTAMetadata})
     write(io, ">", seqrec.name, " ", seqrec.metadata.description, "\n")
     show(io, seqrec.seq)
 end
 
 
-module FASTAParserImpl
-
-import Bio.Ragel
-using Bio: AbstractParser, StringField
-import Bio.Seq
-using Bio.Seq: Alphabet, DNA_ALPHABET, infer_alphabet, alphabet_type,
-               Sequence, FASTA, FASTAMetadata, SeqRecord, FASTASeqRecord, seqtype
-using BufferedStreams
-using Switch
-
-
 %%{
-    machine fasta;
+    machine _fastaparser;
 
     action finish_match {
         if seqtype(typeof(output)) == Sequence
@@ -111,25 +100,22 @@ type FASTAParser <: AbstractParser
 end
 
 
-function Base.eltype(::Type{FASTAParser})
+function eltype(::Type{FASTAParser})
     return FASTASeqRecord
 end
 
 
-function Base.open(input::BufferedInputStream, ::Type{FASTA})
+function open(input::BufferedInputStream, ::Type{FASTA})
     return FASTAParser(input)
 end
 
 
 typealias FASTAAnySeqRecord{S} SeqRecord{S, FASTAMetadata}
 
-Ragel.@generate_read_fuction("fasta", FASTAParser, FASTAAnySeqRecord,
+Ragel.@generate_read_fuction("_fastaparser", FASTAParser, FASTAAnySeqRecord,
     begin
         %% write exec;
     end)
-
-
-end # module FASTAParserImpl
 
 
 

@@ -21,7 +21,7 @@ function FASTQMetadata()
 end
 
 
-function Base.copy(metadata::FASTQMetadata)
+function copy(metadata::FASTQMetadata)
     return FASTQMetadata(copy(metadata.description), copy(metadata.quality))
 end
 
@@ -39,7 +39,7 @@ end
 """
 Show a `FASTQSeqRecord` to `io`, with graphical display of quality scores.
 """
-function Base.show(io::IO, seqrec::FASTQSeqRecord)
+function show(io::IO, seqrec::FASTQSeqRecord)
     write(io, "@", seqrec.name, " ", seqrec.metadata.description, "\n")
     for c in seqrec.seq
         show(io, c)
@@ -72,8 +72,8 @@ end
 """
 Write a `FASTQSeqRecord` to `io`, as a valid FASTQ record.
 """
-function Base.write(io::IO, seqrec::FASTQSeqRecord; offset::Integer=33,
-                    qualheader::Bool=false)
+function write(io::IO, seqrec::FASTQSeqRecord; offset::Integer=33,
+               qualheader::Bool=false)
     write(io, "@", seqrec.name, " ", seqrec.metadata.description, "\n")
 
     for c in seqrec.seq
@@ -94,20 +94,10 @@ function Base.write(io::IO, seqrec::FASTQSeqRecord; offset::Integer=33,
 end
 
 
-module FASTQParserImpl
-
-import Bio.Ragel
-using Bio: AbstractParser, StringField
-using Bio.Seq: FASTQ, FASTQSeqRecord, QualityEncoding, EMPTY_QUAL_ENCODING,
-               infer_quality_encoding, decode_quality_string!
-using BufferedStreams
-using Switch
-
-
-const fastq_start  = convert(Int , 25)
-const fastq_first_final  = convert(Int , 25)
-const fastq_error  = convert(Int , 0)
-const fastq_en_main  = convert(Int , 25)
+const _fastqparser_start  = convert(Int , 25)
+const _fastqparser_first_final  = convert(Int , 25)
+const _fastqparser_error  = convert(Int , 0)
+const _fastqparser_en_main  = convert(Int , 25)
 "A type encapsulating the current state of a FASTQ parser"
 type FASTQParser <: AbstractParser
     state::Ragel.State
@@ -120,7 +110,7 @@ type FASTQParser <: AbstractParser
 
     function FASTQParser(input::BufferedInputStream,
                          quality_encodings::QualityEncoding)
-        cs = fastq_start;
+        cs = _fastqparser_start;
 	return new(Ragel.State(cs, input),
                    BufferedOutputStream(), BufferedOutputStream(),
                    StringField(), StringField(), 0, quality_encodings)
@@ -128,18 +118,18 @@ type FASTQParser <: AbstractParser
 end
 
 
-function Base.eltype(::Type{FASTQParser})
+function eltype(::Type{FASTQParser})
     return FASTQSeqRecord
 end
 
 
-function Base.open(input::BufferedInputStream, ::Type{FASTQ};
+function open(input::BufferedInputStream, ::Type{FASTQ};
                    quality_encodings::QualityEncoding=EMPTY_QUAL_ENCODING)
     return FASTQParser(input, quality_encodings)
 end
 
 
-Ragel.@generate_read_fuction("fastq", FASTQParser, FASTQSeqRecord,
+Ragel.@generate_read_fuction("_fastqparser", FASTQParser, FASTQSeqRecord,
     begin
         if p == pe
 	@goto _test_eof
@@ -1609,7 +1599,5 @@ end
 @label _out
 end)
 
-
-end # module FASTQParserImpl
 
 

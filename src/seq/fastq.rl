@@ -22,7 +22,7 @@ function FASTQMetadata()
 end
 
 
-function Base.copy(metadata::FASTQMetadata)
+function copy(metadata::FASTQMetadata)
     return FASTQMetadata(copy(metadata.description), copy(metadata.quality))
 end
 
@@ -40,7 +40,7 @@ end
 """
 Show a `FASTQSeqRecord` to `io`, with graphical display of quality scores.
 """
-function Base.show(io::IO, seqrec::FASTQSeqRecord)
+function show(io::IO, seqrec::FASTQSeqRecord)
     write(io, "@", seqrec.name, " ", seqrec.metadata.description, "\n")
     for c in seqrec.seq
         show(io, c)
@@ -73,8 +73,8 @@ end
 """
 Write a `FASTQSeqRecord` to `io`, as a valid FASTQ record.
 """
-function Base.write(io::IO, seqrec::FASTQSeqRecord; offset::Integer=33,
-                    qualheader::Bool=false)
+function write(io::IO, seqrec::FASTQSeqRecord; offset::Integer=33,
+               qualheader::Bool=false)
     write(io, "@", seqrec.name, " ", seqrec.metadata.description, "\n")
 
     for c in seqrec.seq
@@ -95,18 +95,8 @@ function Base.write(io::IO, seqrec::FASTQSeqRecord; offset::Integer=33,
 end
 
 
-module FASTQParserImpl
-
-import Bio.Ragel
-using Bio: AbstractParser, StringField
-using Bio.Seq: FASTQ, FASTQSeqRecord, QualityEncoding, EMPTY_QUAL_ENCODING,
-               infer_quality_encoding, decode_quality_string!
-using BufferedStreams
-using Switch
-
-
 %%{
-    machine fastq;
+    machine _fastqparser;
 
     action count_line {
         state.linenum += 1
@@ -219,23 +209,21 @@ type FASTQParser <: AbstractParser
 end
 
 
-function Base.eltype(::Type{FASTQParser})
+function eltype(::Type{FASTQParser})
     return FASTQSeqRecord
 end
 
 
-function Base.open(input::BufferedInputStream, ::Type{FASTQ};
+function open(input::BufferedInputStream, ::Type{FASTQ};
                    quality_encodings::QualityEncoding=EMPTY_QUAL_ENCODING)
     return FASTQParser(input, quality_encodings)
 end
 
 
-Ragel.@generate_read_fuction("fastq", FASTQParser, FASTQSeqRecord,
+Ragel.@generate_read_fuction("_fastqparser", FASTQParser, FASTQSeqRecord,
     begin
         %% write exec;
     end)
 
-
-end # module FASTQParserImpl
 
 

@@ -7,7 +7,7 @@ import BufferedStreams
 abstract AbstractParser
 abstract FileFormat
 
-include("stringfield.jl")
+include("stringfields.jl")
 include("ragel.jl")
 
 include("seq/seq.jl")

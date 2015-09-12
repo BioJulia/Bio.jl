@@ -1,7 +1,24 @@
 
-# Note: What we really want is just a mutable version of SubString{UTF8String},
-# unfortunately there's not a way to make that work, so we need to reimplement
-# a lot of stuff.
+
+module StringFields
+
+export StringField
+
+using BufferedStreams
+
+import Base:
+    ==,
+    convert,
+    copy!,
+    copy,
+    empty!,
+    endof,
+    hash,
+    isempty,
+    isvalid,
+    next,
+    show,
+    writemime
 
 
 """
@@ -26,7 +43,7 @@ end
 
 
 # From base unicode/utf8.jl
-function Base.endof(s::StringField)
+function endof(s::StringField)
     d = s.data
     i = s.part.stop
     i == 0 && return i
@@ -39,14 +56,14 @@ end
 
 
 # From base unicode/utf8.jl
-function Base.isvalid(s::StringField, i::Integer)
+function isvalid(s::StringField, i::Integer)
     return (1 <= i <= endof(s.data)) &&
         !Base.is_valid_continuation(s.data[s.part.start + i - 1])
 end
 
 
 # From base unicode/utf8.jl
-function Base.next(s::StringField, i::Int)
+function next(s::StringField, i::Int)
     d = s.data
     b = d[s.part.start + i - 1]
     if Base.is_valid_continuation(b)
@@ -68,8 +85,8 @@ function Base.next(s::StringField, i::Int)
 end
 
 
-function Base.copy!(field::StringField, data::Vector{Uint8},
-                    start::Integer, stop::Integer)
+function copy!(field::StringField, data::Vector{Uint8},
+               start::Integer, stop::Integer)
     if length(field.data) < length(data)
         resize!(field.data, length(data))
     end
@@ -80,59 +97,59 @@ function Base.copy!(field::StringField, data::Vector{Uint8},
 end
 
 
-function Base.empty!(field::StringField)
+function empty!(field::StringField)
     field.part = 1:0
 end
 
 
-function Base.isempty(field::StringField)
+function isempty(field::StringField)
     return field.part.start > field.part.stop
 end
 
 
-function Base.convert(::Type{StringField}, str::ASCIIString)
+function convert(::Type{StringField}, str::ASCIIString)
     return StringField(copy(str.data), 1:length(str.data))
 end
 
 
-function Base.convert(::Type{StringField}, str::UTF8String)
+function convert(::Type{StringField}, str::UTF8String)
     return StringField(copy(str.data), 1:length(str.data))
 end
 
 
-function Base.convert(::Type{UTF8String}, field::StringField)
+function convert(::Type{UTF8String}, field::StringField)
     return UTF8String(field.data[field.part])
 end
 
 
-function Base.convert(::Type{String}, field::StringField)
+function convert(::Type{String}, field::StringField)
     return convert(UTF8String, field::StringField)
 end
 
 
-function Base.write(io::IO, field::StringField)
+function write(io::IO, field::StringField)
     write(io, convert(UTF8String, field))
 end
 
 
-function Base.show(io::IO, field::StringField)
+function show(io::IO, field::StringField)
     print(io, convert(UTF8String, field))
 end
 
 
-function Base.writemime(io::IO, T::MIME"text/plain", field::StringField)
+function writemime(io::IO, T::MIME"text/plain", field::StringField)
     writemime(io, T, convert(UTF8String, field))
 end
 
 
-function Base.copy(field::StringField)
+function copy(field::StringField)
     data = field.data[field.part]
     return StringField(data, 1:length(data))
 end
 
 
 # From Base.hash over strings in hashing2.jl
-function Base.hash(field::StringField, h::UInt64)
+function hash(field::StringField, h::UInt64)
     h += Base.memhash_seed
     return ccall(Base.memhash, UInt, (Ptr{UInt8}, Csize_t, UInt32),
                  pointer(field.data, field.part.start),
@@ -140,7 +157,7 @@ function Base.hash(field::StringField, h::UInt64)
 end
 
 
-function Base.(:(==))(a::StringField, b::BufferedStreams.BufferedOutputStream)
+function (==)(a::StringField, b::BufferedStreams.BufferedOutputStream)
     if a === b
         return true
     elseif length(a) == length(b)
@@ -149,4 +166,7 @@ function Base.(:(==))(a::StringField, b::BufferedStreams.BufferedOutputStream)
     else
         return false
     end
+end
+
+
 end

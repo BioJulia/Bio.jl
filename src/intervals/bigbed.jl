@@ -400,7 +400,7 @@ Open a BigBed file for reading.
 Once opened, entries can be read from the file either by iterating over it, or
 by indexing into it with an interval.
 """
-function Base.open(stream::BufferedInputStream, ::Type{BigBed})
+function open(stream::BufferedInputStream, ::Type{BigBed})
     # header
     header = read(stream, BigBedHeader)
     if header.magic != BIGBED_MAGIC
@@ -518,7 +518,7 @@ type BigBedIteratorState
     data_count::Int
     data_num::Int
     data_offset::UInt
-    parser::BigBedDataParserImpl.BigBedDataParser
+    parser::BigBedDataParser
     parser_isdone::Bool
     next_interval::Interval{BEDMetadata}
 end
@@ -552,7 +552,7 @@ function start(bb::BigBedData)
     unc_block_size = readbytes!(zlib_stream, bb.uncompressed_data,
                                length(bb.uncompressed_data))
 
-    parser = BigBedDataParserImpl.BigBedDataParser(
+    parser = BigBedDataParser(
         BufferedInputStream(bb.uncompressed_data, unc_block_size),
         seq_names=Nullable(seq_names))
 
@@ -581,7 +581,7 @@ function next(bb::BigBedData, state::BigBedIteratorState)
 
         unc_block_size = readbytes!(zlib_stream, bb.uncompressed_data,
                                     length(bb.uncompressed_data))
-        state.parser = BigBedDataParserImpl.BigBedDataParser(
+        state.parser = BigBedDataParser(
              BufferedInputStream(bb.uncompressed_data, unc_block_size),
              seq_names=Nullable(state.seq_names))
         state.data_offset += getindex(zlib_stream.source.zstream).total_in
@@ -620,7 +620,7 @@ type BigBedIntersectIterator
     # Index of block currently being parsed
     block_num::Int
 
-    parser::Nullable{BigBedDataParserImpl.BigBedDataParser}
+    parser::Nullable{BigBedDataParser}
     nextinterval::BEDInterval
     done::Bool
 end
@@ -707,7 +707,7 @@ function intersect(bb::BigBedData, query::Interval)
 
     return BigBedIntersectIterator(bb, seqname, first, last, chrom_id,
                                    chrom_size, blocks, 0,
-                                   Nullable{BigBedDataParserImpl.BigBedDataParser}(),
+                                   Nullable{BigBedDataParser}(),
                                    BEDInterval(), false)
 end
 
@@ -721,7 +721,7 @@ function find_next_intersection!(it::BigBedIntersectIterator)
             # Run the parser until we find an intersection
             it.done = !read!(parser, it.nextinterval)
             if it.done
-                it.parser = Nullable{BigBedDataParserImpl.BigBedDataParser}()
+                it.parser = Nullable{BigBedDataParser}()
                 break
             end
 
@@ -743,7 +743,7 @@ function find_next_intersection!(it::BigBedIntersectIterator)
             unc_block_size = readbytes!(ZlibInflateInputStream(it.bb.stream),
                                         it.bb.uncompressed_data,
                                         length(it.bb.uncompressed_data))
-            it.parser = BigBedDataParserImpl.BigBedDataParser(
+            it.parser = BigBedDataParser(
                 BufferedInputStream(it.bb.uncompressed_data, unc_block_size),
                 assumed_seqname=Nullable(it.query_seqname))
         else
@@ -1160,7 +1160,7 @@ type BigBedRTree
 end
 
 
-function Base.copy(tree::BigBedRTree)
+function copy(tree::BigBedRTree)
     return BigBedRTree(tree.next, tree.children, tree.parent,
                        tree.start_chrom_ix, tree.start_base,
                        tree.end_chrom_ix, tree.end_base,

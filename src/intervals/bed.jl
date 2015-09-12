@@ -22,7 +22,7 @@ function BEDMetadata()
 end
 
 
-function Base.copy(metadata::BEDMetadata)
+function copy(metadata::BEDMetadata)
     return BEDMetadata(
         metadata.used_fields, copy(metadata.name),
         metadata.score, metadata.thick_first, metadata.thick_last,
@@ -32,7 +32,7 @@ function Base.copy(metadata::BEDMetadata)
 end
 
 
-function Base.(:(==))(a::BEDMetadata, b::BEDMetadata)
+function (==)(a::BEDMetadata, b::BEDMetadata)
     if a.used_fields != b.used_fields
         return false
     end
@@ -76,18 +76,10 @@ end
 typealias BEDInterval Interval{BEDMetadata}
 
 
-module BEDParserImpl
-
-import Bio.Ragel, Bio.Intervals
-using Bio: AbstractParser, StringField
-using Bio.Intervals: Strand, STRAND_NA, BED, BEDInterval, BEDMetadata
-using BufferedStreams, Switch, Compat, Colors
-
-
-const bed_start  = convert(Int , 41)
-const bed_first_final  = convert(Int , 41)
-const bed_error  = convert(Int , 0)
-const bed_en_main  = convert(Int , 41)
+const _bedparser_start  = convert(Int , 41)
+const _bedparser_first_final  = convert(Int , 41)
+const _bedparser_error  = convert(Int , 0)
+const _bedparser_en_main  = convert(Int , 41)
 type BEDParser <: AbstractParser
     state::Ragel.State
 
@@ -99,7 +91,7 @@ type BEDParser <: AbstractParser
     block_first_idx::Int
 
     function BEDParser(input::BufferedInputStream)
-        cs = bed_start;
+        cs = _bedparser_start;
 	return new(Ragel.State(cs, input), 0.0, 0.0, 0.0, 1, 1)
     end
 end
@@ -110,17 +102,17 @@ function Intervals.metadatatype(::BEDParser)
 end
 
 
-function Base.eltype(::Type{BEDParser})
+function eltype(::Type{BEDParser})
     return BEDInterval
 end
 
 
-function Base.open(input::BufferedInputStream, ::Type{BED})
+function open(input::BufferedInputStream, ::Type{BED})
     return BEDParser(input)
 end
 
 
-Ragel.@generate_read_fuction("bed", BEDParser, BEDInterval,
+Ragel.@generate_read_fuction("_bedparser", BEDParser, BEDInterval,
     begin
         if p == pe
 	@goto _test_eof
@@ -1476,9 +1468,6 @@ end)
 
 
 
-end # module BEDParserImpl
-
-
 # TODO: Rewrite this stuff
 
 """
@@ -1549,7 +1538,7 @@ function write_optional_fields(out::IO, interval::BEDInterval, leadingtab::Bool=
 end
 
 
-function IntervalCollection(interval_stream::BEDParserImpl.BEDParser)
+function IntervalCollection(interval_stream::BEDParser)
     intervals = collect(BEDInterval, interval_stream)
     return IntervalCollection{BEDMetadata}(intervals, true)
 end

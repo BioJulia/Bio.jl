@@ -18,13 +18,6 @@ type BigBedData <: IntervalStream{BEDMetadata}
 end
 
 
-module BigBedDataParserImpl
-
-import Bio.Ragel
-using Bio: StringField
-using Bio.Intervals: Strand, STRAND_NA, BEDInterval, BEDMetadata
-using Colors, Compat, Switch, BufferedStreams
-
 # Parser for data blocks in a BigBed file. This is very similar
 # to the BED parser in bed.rl, with the following exceptions:
 #
@@ -32,10 +25,10 @@ using Colors, Compat, Switch, BufferedStreams
 #      chromosome name, start, end.
 #    * BigBed entries are null ('\0') terminated, rather than newline separated.
 #
-const bigbed_start  = convert(Int , 39)
-const bigbed_first_final  = convert(Int , 39)
-const bigbed_error  = convert(Int , 0)
-const bigbed_en_main  = convert(Int , 39)
+const _bigbedparser_start  = convert(Int , 39)
+const _bigbedparser_first_final  = convert(Int , 39)
+const _bigbedparser_error  = convert(Int , 0)
+const _bigbedparser_en_main  = convert(Int , 39)
 typealias StringFieldVector Vector{StringField}
 typealias NullableStringFieldVector Nullable{StringFieldVector}
 typealias NullableStringField Nullable{StringField}
@@ -57,13 +50,13 @@ type BigBedDataParser
                               seq_names::NullableStringFieldVector=NullableStringFieldVector(),
                               assumed_seqname::NullableStringField=NullableStringField())
 
-        cs = bigbed_start;
+        cs = _bigbedparser_start;
 	return new(Ragel.State(cs, input), 0, 0.0, 0.0, 0.0, 1, 1, seq_names, assumed_seqname)
     end
 end
 
 
-Ragel.@generate_read_fuction("bigbed", BigBedDataParser, BEDInterval,
+Ragel.@generate_read_fuction("_bigbedparser", BigBedDataParser, BEDInterval,
     begin
         if p == pe
 	@goto _test_eof
@@ -1045,6 +1038,4 @@ end
 @label _out
 end)
 
-
-end # module BigBedDataParserImpl
 

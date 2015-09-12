@@ -23,7 +23,7 @@ function BEDMetadata()
 end
 
 
-function Base.copy(metadata::BEDMetadata)
+function copy(metadata::BEDMetadata)
     return BEDMetadata(
         metadata.used_fields, copy(metadata.name),
         metadata.score, metadata.thick_first, metadata.thick_last,
@@ -33,7 +33,7 @@ function Base.copy(metadata::BEDMetadata)
 end
 
 
-function Base.(:(==))(a::BEDMetadata, b::BEDMetadata)
+function (==)(a::BEDMetadata, b::BEDMetadata)
     if a.used_fields != b.used_fields
         return false
     end
@@ -77,16 +77,8 @@ end
 typealias BEDInterval Interval{BEDMetadata}
 
 
-module BEDParserImpl
-
-import Bio.Ragel, Bio.Intervals
-using Bio: AbstractParser, StringField
-using Bio.Intervals: Strand, STRAND_NA, BED, BEDInterval, BEDMetadata
-using BufferedStreams, Switch, Compat, Colors
-
-
 %%{
-    machine bed;
+    machine _bedparser;
 
     action finish_match {
         input.block_size_idx = 1
@@ -206,24 +198,21 @@ function Intervals.metadatatype(::BEDParser)
 end
 
 
-function Base.eltype(::Type{BEDParser})
+function eltype(::Type{BEDParser})
     return BEDInterval
 end
 
 
-function Base.open(input::BufferedInputStream, ::Type{BED})
+function open(input::BufferedInputStream, ::Type{BED})
     return BEDParser(input)
 end
 
 
-Ragel.@generate_read_fuction("bed", BEDParser, BEDInterval,
+Ragel.@generate_read_fuction("_bedparser", BEDParser, BEDInterval,
     begin
         %% write exec;
     end)
 
-
-
-end # module BEDParserImpl
 
 
 # TODO: Rewrite this stuff
@@ -296,7 +285,7 @@ function write_optional_fields(out::IO, interval::BEDInterval, leadingtab::Bool=
 end
 
 
-function IntervalCollection(interval_stream::BEDParserImpl.BEDParser)
+function IntervalCollection(interval_stream::BEDParser)
     intervals = collect(BEDInterval, interval_stream)
     return IntervalCollection{BEDMetadata}(intervals, true)
 end
