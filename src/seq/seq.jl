@@ -1,15 +1,20 @@
 module Seq
 
 using Compat
+using BufferedStreams
+using Switch
 using Base.Intrinsics
 
-import Base: convert, complement, show, length, start, next, done, copy,
+import Base: convert, complement, show, length, start, next, done, copy, copy!,
              reverse, show, endof, isless, clipboard, parse, repeat,
-             unsafe_copy!, read, read!,
+             unsafe_copy!, read, read!, open, eltype,
              # operators
              getindex, setindex!, ==, *, ^, |, &
 
-import Bio: FileFormat
+
+using Bio: FileFormat, AbstractParser
+using Bio.StringFields
+using Bio.Ragel
 
 export Nucleotide, DNANucleotide, RNANucleotide,
        DNA_A, DNA_C, DNA_G, DNA_T, DNA_N,
@@ -39,6 +44,14 @@ include("seqrecord.jl")
 # Parsing of various file types
 include("fasta.jl")
 include("fastq.jl")
+
+
+# This is useful for obscure reasons. We use SeqRecord{Sequence} for reading
+# sequence in an undetermined alphabet, but a consequence that we need to be
+# able to construct a `Sequence`.
+function Sequence()
+    return DNASequence()
+end
 
 
 end # module Seq

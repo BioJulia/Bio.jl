@@ -162,7 +162,7 @@ end
 # Like NucleotideSequence, amino acid sequences are immutable by convention.
 
 "Type representing AminoAcid Sequences"
-type AminoAcidSequence
+type AminoAcidSequence <: Sequence
     data::Vector{AminoAcid}
     part::UnitRange{Int} # interval within `data` defining the (sub)sequence
     mutable::Bool # true if the sequence can be safely mutated
@@ -210,6 +210,11 @@ function AminoAcidSequence(seq::Union(Vector{Uint8}, String),
     end
 
     return AminoAcidSequence(data, 1:len, mutable, false)
+end
+
+
+function AminoAcidSequence()
+    return AminoAcidSequence(AminoAcid[], 1:0, true, false)
 end
 
 
@@ -348,6 +353,27 @@ function setindex!(seq::AminoAcidSequence, nt::Char, i::Integer)
 end
 
 
+"""
+Reset the contents of a mutable sequence from a string.
+"""
+function copy!(seq::AminoAcidSequence, strdata::Vector{UInt8},
+               startpos::Integer, stoppos::Integer)
+    if !seq.mutable
+        error("Cannot copy! to immutable sequnce. Call `mutable!(seq)` first.")
+    end
+
+    n = stoppos - startpos - 1
+    if length(seq.data) < n
+        resize!(seq.data, n)
+    end
+
+    for i in 1:n
+        seq.data[i] = convert(AminoAcid, strdata[startpos + i - 1])
+    end
+    seq.part = 1:n
+end
+
+
 # Mutability/Immutability
 # -----------------------
 
@@ -376,6 +402,14 @@ end
 
 start(seq::AminoAcidSequence) = seq.part.start
 next(seq::AminoAcidSequence, i) = (seq.data[i], i+1)
+
+
+function next(seq::AminoAcidSequence, i)
+    aa = seq.data[i]
+    return (aa, i + 1)
+end
+
+
 done(seq::AminoAcidSequence, i) = (i > seq.part.stop)
 
 

@@ -7,20 +7,22 @@ immutable FASTA <: FileFormat end
 
 "Metadata for FASTA sequence records containing just a `description` field"
 type FASTAMetadata
-    description::String
+    description::StringField
+end
 
-    function FASTAMetadata(description)
-        return new(description)
-    end
 
-    function FASTAMetadata()
-        return new("")
-    end
+function FASTAMetadata()
+    return FASTAMetadata(StringField())
+end
+
+
+function copy(metadata::FASTAMetadata)
+    return FASTAMetadata(copy(metadata.description))
 end
 
 
 "FASTASeqRecord{S} is a `SeqRecord` for FASTA sequences of type `S`"
-typealias FASTASeqRecord{S}       SeqRecord{S, FASTAMetadata}
+typealias FASTASeqRecord           SeqRecord{Sequence, FASTAMetadata}
 
 "A `SeqRecord` type for FASTA DNA sequences"
 typealias FASTADNASeqRecord       DNASeqRecord{FASTAMetadata}
@@ -32,33 +34,40 @@ typealias FASTARNASeqRecord       RNASeqRecord{FASTAMetadata}
 typealias FASTAAminoAcidSeqRecord AminoAcidSeqRecord{FASTAMetadata}
 
 
-function Base.show(io::IO, seqrec::FASTASeqRecord)
+function show{S}(io::IO, seqrec::SeqRecord{S, FASTAMetadata})
     write(io, ">", seqrec.name, " ", seqrec.metadata.description, "\n")
     show(io, seqrec.seq)
 end
 
 
-module FASTAParserImpl
-
-import Bio.Seq: FASTASeqRecord
-import Bio.Ragel
-using Switch
-export FASTAParser
-
-
 %%{
-    machine fasta;
+    machine _fastaparser;
 
-    action yield {
+    action finish_match {
+        if seqtype(typeof(output)) == Sequence
+            alphabet = infer_alphabet(input.seqbuf.buffer, 1,
+                                       length(input.seqbuf), input.default_alphabet)
+            ET = alphabet_type[alphabet]
+            if ET == typeof(output.seq)
+                copy!(output.seq, input.seqbuf.buffer, 1, length(input.seqbuf))
+            else
+                output.seq = ET(input.seqbuf.buffer, 1, length(input.seqbuf),
+                                mutable=true)
+            end
+            input.default_alphabet = alphabet
+        else
+            copy!(output.seq, input.seqbuf.buffer, 1, length(input.seqbuf))
+        end
+        empty!(input.seqbuf)
         yield = true;
         fbreak;
     }
 
-    action count_line  { input.state.linenum += 1 }
-    action mark        { Ragel.@mark! }
-    action identifier  { input.namebuf = Ragel.@asciistring_from_mark! }
-    action description { input.descbuf = Ragel.@asciistring_from_mark! }
-    action letters     { append!(input.seqbuf, state.reader.buffer, (Ragel.@unmark!), p) }
+    action count_line  { state.linenum += 1 }
+    action mark        { Ragel.@anchor! }
+    action identifier  { Ragel.@copy_from_anchor!(output.name) }
+    action description { Ragel.@copy_from_anchor!(output.metadata.description) }
+    action letters     { Ragel.@append_from_anchor!(input.seqbuf) }
 
     newline     = '\r'? '\n'     >count_line;
     hspace      = [ \t\v];
@@ -70,7 +79,7 @@ export FASTAParser
     sequence    = whitespace* letters? (whitespace+ letters)*;
     fasta_entry = '>' identifier (hspace+ description)? newline sequence whitespace*;
 
-    main := whitespace* (fasta_entry %yield)*;
+    main := whitespace* (fasta_entry %finish_match)*;
 }%%
 
 
@@ -78,141 +87,35 @@ export FASTAParser
 
 
 "A type encapsulating the current state of a FASTA parser"
-type FASTAParser
+type FASTAParser <: AbstractParser
     state::Ragel.State
-    seqbuf::Ragel.Buffer{UInt8}
-    namebuf::ASCIIString
-    descbuf::ASCIIString
+    seqbuf::BufferedOutputStream{BufferedStreams.EmptyStreamSource}
+    default_alphabet::Alphabet
 
-    function FASTAParser(input::Union(IO, String, Vector{Uint8});
-                         memory_map::Bool=false)
+    function FASTAParser(input::BufferedInputStream)
         %% write init;
 
-        if memory_map
-            if !isa(input, String)
-                error("Parser must be given a file name in order to memory map.")
-            end
-            return new(Ragel.State(cs, input, true),
-                       Ragel.Buffer{Uint8}(), "", "")
-        else
-            return new(Ragel.State(cs, input), Ragel.Buffer{Uint8}(), "", "")
-        end
+        return new(Ragel.State(cs, input), BufferedOutputStream(), DNA_ALPHABET)
     end
 end
 
 
-function Ragel.ragelstate(parser::FASTAParser)
-    return parser.state
+function eltype(::Type{FASTAParser})
+    return FASTASeqRecord
 end
 
 
-function accept_state!{S}(input::FASTAParser, output::FASTASeqRecord{S})
-    output.name = input.namebuf
-    output.metadata.description = input.descbuf
-    output.seq = S(input.seqbuf.data, 1, input.seqbuf.pos - 1)
-
-    input.namebuf = ""
-    input.descbuf = ""
-    empty!(input.seqbuf)
+function open(input::BufferedInputStream, ::Type{FASTA})
+    return FASTAParser(input)
 end
 
 
-Ragel.@generate_read_fuction("fasta", FASTAParser, FASTASeqRecord,
+typealias FASTAAnySeqRecord{S} SeqRecord{S, FASTAMetadata}
+
+Ragel.@generate_read_fuction("_fastaparser", FASTAParser, FASTAAnySeqRecord,
     begin
-        @inbounds begin
-            %% write exec;
-        end
-    end,
-    begin
-        accept_state!(input, output)
+        %% write exec;
     end)
 
-end # module FASTAParserImpl
 
 
-using Bio.Seq.FASTAParserImpl
-
-
-"An iterator over entries in a FASTA file or stream."
-type FASTAIterator
-    parser::FASTAParser
-
-    # A type or function used to construct output sequence types
-    default_alphabet::Alphabet
-    isdone::Bool
-    nextitem
-end
-
-"""
-Parse a FASTA file.
-
-# Arguments
-  * `filename::String`: Path of the FASTA file.
-  * `alphabet::Alphabet`: Assumed alphabet for the sequences contained in the
-      file. (Default: `DNA_ALPHABET`)
-  * `memory_map::Bool`: If true, attempt to memory map the file on supported
-    platforms. (Default: `false`)
-
-# Returns
-An iterator over `SeqRecord`s contained in the file.
-"""
-function Base.read(filename::String, ::Type{FASTA},
-                   alphabet::Alphabet=DNA_ALPHABET; memory_map::Bool=false)
-    return FASTAIterator(FASTAParser(filename, memory_map=memory_map),
-                         alphabet, false, nothing)
-end
-
-
-"""
-Parse a FASTA file.
-
-# Arguments
-  * `input::IO`: Input stream containing FASTA data.
-  * `alphabet::Alphabet`: Assumed alphabet for the sequences contained in the
-      file. (Default: DNA_ALPHABET)
-
-# Returns
-An iterator over `SeqRecord`s contained in the file.
-"""
-function Base.read(input::IO, ::Type{FASTA}, alphabet::Alphabet=DNA_ALPHABET)
-    return FASTAIterator(FASTAParser(input), alphabet, false, nothing)
-end
-
-
-function Base.read(input::Cmd, ::Type{FASTA}, alphabet::Alphabet=DNA_ALPHABET)
-    return FASTAIterator(FASTAParser(open(input, "r")[1]), alphabet, false, nothing)
-end
-
-
-function advance!(it::FASTAIterator)
-    it.isdone = !FASTAParserImpl.advance!(it.parser)
-    if !it.isdone
-        alphabet = infer_alphabet(it.parser.seqbuf.data, 1, it.parser.seqbuf.pos - 1,
-                                  it.default_alphabet)
-        S = alphabet_type[alphabet]
-        it.default_alphabet = alphabet
-        it.nextitem =
-            FASTASeqRecord{S}(it.parser.namebuf,
-                              S(it.parser.seqbuf.data, 1, it.parser.seqbuf.pos - 1, true),
-                              FASTAMetadata(it.parser.descbuf))
-        empty!(it.parser.seqbuf)
-    end
-end
-
-
-function start(it::FASTAIterator)
-    advance!(it)
-    return nothing
-end
-
-
-function next(it::FASTAIterator, state)
-    item = it.nextitem
-    advance!(it)
-    return item, nothing
-end
-
-
-function done(it::FASTAIterator, state)
-    return it.isdone
-end

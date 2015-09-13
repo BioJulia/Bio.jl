@@ -1,144 +1,17 @@
 
 module Ragel
 
+using Bio: FileFormat, AbstractParser
 using Compat
+using BufferedStreams
 using Switch
 import Base: push!, pop!, endof, append!, empty!, isempty, length, getindex,
              setindex!, (==), takebuf_string, read!, seek
-import Bio: fillbuffer!
-using Bio: BufferedReader
 
-
-# A simple buffer type, similar to IOBuffer but faster and with fewer features.
-# It's essentially just a vector that can grow but is never allowed to
-# reallocate to smaller size.
-
-const INITIAL_BUF_SIZE = 1000000
-
-type Buffer{T}
-    data::Vector{T}
-    pos::Int
-
-    function Buffer(initial_size=10000)
-        new(Array(T, initial_size), 1)
-    end
-end
-
-
-function isempty(buf::Buffer)
-    return buf.pos == 1
-end
-
-
-function length(buf::Buffer)
-    return buf.pos - 1
-end
-
-
-function empty!(buf::Buffer)
-    buf.pos = 1
-end
-
-
-function getindex(buf::Buffer, i::Integer)
-    if !(1 <= i < buf.pos)
-        throw(BoundsError())
-    end
-    @inbounds x = buf.data[i]
-    return x
-end
-
-
-function setindex!{T}(buf::Buffer{T}, value::T, i::Integer)
-    if !(1 <= i < buf.pos)
-        throw(BoundsError())
-    end
-    @inbounds buf.data[i] = value
-end
-
-
-function ensureroom!(buf::Buffer, n::Integer)
-    if buf.pos + n > length(buf.data)
-        newsize = max(2 * length(buf.data), buf.pos + n)
-        resize!(buf.data, newsize)
-    end
-end
-
-
-function push!{T}(buf::Buffer{T}, c::T)
-    ensureroom!(buf, 1)
-    @inbounds buf.data[buf.pos] = c
-    buf.pos += 1
-end
-
-
-function pop!(buf::Buffer)
-    if buf.pos == 1
-        throw(BoundsError())
-    end
-    @inbounds c = buf.data[buf.pos - 1]
-    buf.pos -= 1
-    return c
-end
-
-
-function endof(buf::Buffer)
-    return buf.pos - 1
-end
-
-
-function append!{T}(buf::Buffer{T}, source::Vector{T}, start::Integer, stop::Integer)
-    n = stop - start + 1
-    ensureroom!(buf, n)
-    copy!(buf.data, buf.pos, source, start, n)
-    buf.pos += n
-end
-
-
-function (==){T}(a::Buffer{T}, b::Buffer{T})
-    if a.pos != b.pos
-        return false
-    end
-    for i in 1:a.pos-1
-        if a.data[i] != b.data[i]
-            return false
-        end
-    end
-    return true
-end
-
-
-function (==){T}(a::Buffer{T}, b::String)
-    if length(a) != length(b)
-        return false
-    end
-    for (i, u) in enumerate(b)
-        v = a.data[i]
-        if u != v
-            return false
-        end
-    end
-
-    return true
-end
-
-
-function takebuf_string{T}(buf::Buffer{T})
-    s = bytestring(buf.data[1:buf.pos-1])
-    empty!(buf)
-    return s
-end
-
-
-# Nuber of bytes to read at a time
-const RAGEL_PARSER_INITIAL_BUF_SIZE = 1000000
 
 # A type keeping track of a ragel-based parser's state.
-type State
-    reader::BufferedReader
-
-    # true when all input has been parsed
-    finished::Bool
+type State{T <: BufferedInputStream}
+    stream::T
 
     # Internal ragel state:
     p::Int  # index into the input stream (0-based)
@@ -148,27 +21,31 @@ type State
     # Parser is responsible for updating this
     linenum::Int
 
-    function State(cs, data::Vector{Uint8}, memory_map::Bool=false, len::Integer=length(data))
-        return new(BufferedReader(data, memory_map, len), memory_map, 0, cs, cs, 1)
-    end
-
-    function State(cs, input::IO, memory_map=false)
-        if memory_map
-            error("Parser must be given a file name in order to memory map.")
-        end
-        return new(BufferedReader(input, memory_map), false, 0, cs, cs, 1)
-    end
-
-    function State(cs, filename::String, memory_map=false)
-        return new(BufferedReader(filename, memory_map), false, 0,  cs, cs, 1)
-    end
+    # true when all input has been consumed
+    finished::Bool
 end
 
 
-function fillbuffer!(state::State)
-    old_buffer_end = state.reader.buffer_end
-    nb = fillbuffer!(state.reader)
-    state.p = state.p + state.reader.buffer_end - old_buffer_end - nb
+"""
+Construct a new ragel parser state.
+
+### Args
+  * `cs`: initial state
+  * `input`: input stream
+"""
+function State{T <: BufferedInputStream}(cs::Int, input::T)
+    if input.available == 0
+        BufferedStreams.fillbuffer!(input)
+    end
+
+    return State{T}(input, 0, cs, cs, 1, false)
+end
+
+
+function BufferedStreams.fillbuffer!(state::State)
+    old_available = state.stream.available
+    nb = BufferedStreams.fillbuffer!(state.stream)
+    state.p = state.p + state.stream.available - old_available - nb
     return nb
 end
 
@@ -180,39 +57,16 @@ function ragelstate(x)
 end
 
 
-# Macros for push and popping marks from within a ragel parser
-macro mark!()
-    quote
-        $(esc(:state)).reader.mark = 1 + $(esc(:p))
-    end
+@inline function anchor!(state, p)
+    state.stream.anchor = 1 + p
 end
 
-macro unmark!()
-    quote
-        @assert $(esc(:state)).reader.mark != 0  "unmark! called with no mark set"
-        m = $(esc(:state)).reader.mark
-        $(esc(:state)).reader.mark = 0
-        m
-    end
-end
 
-macro position()
-    quote
-        1 + $(esc(:p))
-    end
-end
-
-macro spanfrom(firstpos)
-    quote
-        $(esc(:state)).reader.buffer[$(esc(firstpos)):$(esc(:p))]
-    end
-end
-
-macro asciistring_from_mark!()
-    quote
-        firstpos = Ragel.@unmark!
-        ASCIIString($(esc(:state)).reader.buffer[firstpos:$(esc(:p))])
-    end
+@inline function upanchor!(state)
+    @assert state.stream.anchor != 0  "upanchor! called with no anchor set"
+    anchor = state.stream.anchor
+    state.stream.anchor = 0
+    return anchor
 end
 
 
@@ -229,10 +83,45 @@ function parse_int64(buffer, firstpos, lastpos)
 end
 
 
-macro int64_from_mark!()
+# Macros that help make common parsing tasks moce succinct
+
+
+macro anchor!()
     quote
-        firstpos = @unmark!
-        parse_int64($(esc(:state)).reader.buffer, firstpos, $(esc(:p)))
+        anchor!($(esc(:state)), $(esc(:p)))
+    end
+end
+
+
+macro copy_from_anchor!(dest)
+    quote
+        firstpos = upanchor!($(esc(:state)))
+        copy!($(esc(dest)), $(esc(:state)).stream.buffer, firstpos, $(esc(:p)))
+    end
+end
+
+
+macro append_from_anchor!(dest)
+    quote
+        firstpos = upanchor!($(esc(:state)))
+        append!($(esc(dest)), $(esc(:state)).stream.buffer, firstpos, $(esc(:p)))
+    end
+end
+
+
+macro int64_from_anchor!()
+    quote
+        firstpos = upanchor!($(esc(:state)))
+        parse_int64($(esc(:state)).stream.buffer, firstpos, $(esc(:p)))
+    end
+end
+
+
+macro load_from_anchor!(T)
+    quote
+        firstpos = upanchor!($(esc(:state)))
+        unsafe_load(convert(Ptr{$(T)},
+            pointer($(esc(:state)).stream.buffer, firstpos)))
     end
 end
 
@@ -240,7 +129,7 @@ end
 # return the current character
 macro char()
     quote
-        convert(Char, $(esc(:state)).reader.buffer[$(esc(:p))+1])
+        convert(Char, $(esc(:state)).stream.buffer[$(esc(:p))+1])
     end
 end
 
@@ -252,7 +141,7 @@ end
 #
 # Args:
 #
-macro generate_read_fuction(machine_name, input_type, output_type, ragel_body, accept_body)
+macro generate_read_fuction(machine_name, input_type, output_type, ragel_body)
     start_state = esc(symbol(string(machine_name, "_start")))
     accept_state = esc(symbol(string(machine_name, "_first_final")))
     error_state = esc(symbol(string(machine_name, "_error")))
@@ -266,31 +155,35 @@ macro generate_read_fuction(machine_name, input_type, output_type, ragel_body, a
     state = esc(:state)
     eof = esc(:eof)
     yield = esc(:yield)
+    output = esc(:output)
+    input = esc(:input)
 
     quote
-        function $(esc(:advance!))(input::$(esc(input_type)))
-            local $(esc(:input)) = input
+        function $(esc(:(Base.read!)))(input::$(esc(input_type)),
+                                     state::State, output::$(esc(output_type)))
+            $(state) = state
+            $(input) = input
+            $(output) = output
 
-            $(state) = ragelstate(input)
             if $(state).finished
                 return false
             end
 
             $(p) = $(state).p
-            $(pe) = $(state).reader.buffer_end
+            $(pe) = $(state).stream.available
             $(cs) = $(state).cs
-            $(data) = $(state).reader.buffer
+            $(data) = $(state).stream.buffer
             $(yield) = false
 
             # run the parser until all input is consumed or a match is found
-            local $(eof) = $(pe) + 1
-            while true
+            $(eof) = $(pe) + 1
+            @inbounds while true
                 if $(p) == $(pe)
                     $(state).p = $(p)
-                    $(state).reader.buffer_end = $(pe)
+                    $(state).stream.available = $(pe)
                     nb = fillbuffer!($(state))
                     $(p) = $(state).p
-                    $(pe) = $(state).reader.buffer_end
+                    $(pe) = $(state).stream.available
                     if nb == 0
                         $(eof) = $(pe) # trigger ragel's eof handling
                     else
@@ -307,10 +200,10 @@ macro generate_read_fuction(machine_name, input_type, output_type, ragel_body, a
                 elseif $(yield)
                     if $(p) == $(pe)
                         $(state).p = $(p)
-                        $(state).reader.buffer_end = $(pe)
+                        $(state).stream.available = $(pe)
                         fillbuffer!($(state))
                         $(p) = $(state).p
-                        $(pe) = $(state).reader.buffer_end
+                        $(pe) = $(state).stream.available
                     end
 
                     break
@@ -324,15 +217,80 @@ macro generate_read_fuction(machine_name, input_type, output_type, ragel_body, a
             end
 
             $(state).p = $(p)
-            $(state).reader.buffer_end = $(pe)
+            $(state).stream.available = $(pe)
             $(state).cs = $(cs)
 
             if $(p) >= $(pe)
                 $(state).finished = true
             end
-            return true
+            return $(yield)
+        end
+
+        function $(esc(:(Base.read!)))(input::$(esc(input_type)), output::$(esc(output_type)))
+            # specialize on input.state
+            $(esc(:read!))(input, input.state, output)
         end
     end
+end
+
+
+# Open functions for various sources.
+
+
+function Base.open{T <: FileFormat}(filename::String, ::Type{T}; args...)
+    memory_map = false
+    i = 0
+    for arg in args
+        i += 1
+        if arg[1] == :memory_map
+            memory_map = arg[2]
+            break
+        end
+    end
+    if i > 0
+        splice!(args, i)
+    end
+
+    if memory_map
+        source = Mmap.mmap(open(filename), Vector{Uint8}, (filesize(filename),))
+    else
+        source = open(filename)
+    end
+
+    stream = BufferedInputStream(source)
+    open(stream, T; args...)
+end
+
+
+function Base.open{T <: FileFormat}(source::Union(IO, Vector{UInt8}), ::Type{T}; args...)
+    open(BufferedInputStream(source), T; args...)
+end
+
+
+# Iterators for parsers
+
+
+function Base.start{PT <: AbstractParser}(parser::PT)
+    ET = eltype(PT)
+    nextitem = ET()
+    if read!(parser, nextitem)
+        return Nullable{ET}(nextitem)
+    else
+        return Nullable{ET}()
+    end
+end
+
+
+function Base.next{ET}(parser::AbstractParser, nextitem_::Nullable{ET})
+    nextitem = get(nextitem_)
+    value = copy(nextitem)
+    return (value,
+        read!(parser, nextitem) ? Nullable{ET}(nextitem) : Nullable{ET}())
+end
+
+
+function Base.done(parser::AbstractParser, nextitem::Nullable)
+    return isnull(nextitem)
 end
 
 

@@ -95,13 +95,17 @@ Infer the encoding of a FASTQ quality string.
   * `data`: sequence data in a string
   * `start`: first position to consider in data
   * `stop`: last position to consider in data
+  * `encodings`: valid encodings
   * `default`: if there are multiple compatible encodings, default
     to this one if it's compatible.
 
 # Returns
-A `QualityEncoding`
+A pair of `QualityEncoding`s. The first given the chosen encoding, the second
+giving the set of compatible encodings.
 """
-function infer_quality_encoding(data::Vector{Uint8}, start, stop, default)
+function infer_quality_encoding(data::Vector{Uint8}, start, stop,
+                                encodings::QualityEncoding=ALL_QUAL_ENCODINGS,
+                                default::QualityEncoding=EMPTY_QUAL_ENCODING)
     encodings = ALL_QUAL_ENCODINGS
     @inbounds for i in start:stop
         c = data[i]
@@ -110,20 +114,24 @@ function infer_quality_encoding(data::Vector{Uint8}, start, stop, default)
         else
             error("Character $(convert(Char, c)) is not compatible with any known quality encoding.")
         end
+
+        if count_ones(convert(Uint16, encodings)) <= 0
+            break
+        end
     end
 
     if count_ones(convert(Uint16, encodings)) == 0
         error("String is not compatible with any known sequence type.")
     elseif default != EMPTY_QUAL_ENCODING && (encodings & default) != EMPTY_ALPHABET
-        return default
+        return (default, encodings)
     else
         for encoding in preferred_quality_encodings
             if encoding & encodings != EMPTY_QUAL_ENCODING
-                return encoding
+                return (encoding, encodings)
             end
         end
     end
-    return default
+    return (default, encodings)
 end
 
 
@@ -144,15 +152,19 @@ Decode a quality string in place into integer Phred scores.
 function decode_quality_string!(encoding::QualityEncoding, input::Vector{Uint8},
                                 output::Vector{Int8}, start=1,
                                 stop=min(length(output), length(input)))
-    @inbounds begin
-        encoding_num = trailing_zeros(convert(Uint16, encoding)) + 1
-        first, last, startqual = qual_encoding_ranges[encoding_num]
-        for (i, j) in enumerate(start:stop)
-            c = input[j]
-            output[i] = startqual + (c - first)
-        end
-        return output
+    if length(output) != stop - start + 1
+        resize!(output, stop - start + 1)
     end
+
+    encoding_num = trailing_zeros(convert(Uint16, encoding)) + 1
+    first, last, startqual = qual_encoding_ranges[encoding_num]
+
+    fill!(output, startqual - first)
+    for i in 1:(stop - start + 1)
+        @inbounds output[i] += input[start + i - 1]
+    end
+
+    return output
 end
 
 
@@ -192,6 +204,10 @@ function encode_quality_string!(encoding::QualityEncoding, input::Vector{Int8},
                                 output::Vector{Uint8}, start=1,
                                 stop=min(length(output), length(input)))
     @inbounds begin
+        if length(output) != stop - start + 1
+            resize!(output, stop - start + 1)
+        end
+
         encoding_num = trailing_zeros(convert(Uint16, encoding)) + 1
         first, last, startqual = qual_encoding_ranges[encoding_num]
         for (i, j) in enumerate(start:stop)

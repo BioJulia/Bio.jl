@@ -3,18 +3,20 @@ module Intervals
 
 import Base: show, isless, push!, shift!, intersect, start, next, done, length,
              convert, read, read!, write, getindex, get, isempty, endof, ==,
-             reverse!
+             reverse!, open, eltype, copy
 
 import Iterators
-import Zlib
-#using DataStructures
 using Base.Intrinsics
-using Color
+using BufferedStreams
+using Colors
 using Compat
 using IntervalTrees
+using Switch
 import IntervalTrees: first, last
 
-import Bio: FileFormat
+using Bio: AbstractParser, FileFormat
+using Bio.StringFields
+using Bio.Ragel
 
 export Strand, Interval, IntervalCollection, IntervalStream,
        STRAND_NA, STRAND_POS, STRAND_NEG, STRAND_BOTH,
@@ -27,8 +29,6 @@ include("intervalstream.jl")
 
 # Parsing file types
 include("bed.jl")
-
-# TODO: reorg
 include("bigbed.jl")
 
 end

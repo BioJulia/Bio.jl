@@ -341,15 +341,15 @@ facts("Interval Parsing") do
 
         function check_bed_parse(filename)
             # Reading from a stream
-            for seqrec in read(open(filename), BED)
+            for seqrec in open(open(filename), BED)
             end
 
             # Reading from a memory mapped file
-            for seqrec in read(filename, BED, memory_map=true)
+            for seqrec in open(filename, BED, memory_map=true)
             end
 
             # Reading from a regular file
-            for seqrec in read(filename, BED, memory_map=false)
+            for seqrec in open(filename, BED, memory_map=false)
             end
 
             return true
@@ -374,16 +374,16 @@ facts("Interval Parsing") do
 
         function check_intersection(filename_a, filename_b)
             ic_a = IntervalCollection{BEDMetadata}()
-            for interval in read(filename_a, BED)
+            for interval in open(filename_a, BED)
                 push!(ic_a, interval)
             end
 
             ic_b = IntervalCollection{BEDMetadata}()
-            for interval in read(filename_b, BED)
+            for interval in open(filename_b, BED)
                 push!(ic_b, interval)
             end
 
-            xs = sort(collect(intersect(read(filename_a, BED), read(filename_b, BED))))
+            xs = sort(collect(intersect(open(filename_a, BED), open(filename_b, BED))))
             ys = sort(collect(intersect(ic_a, ic_b)))
 
             return xs == ys
@@ -426,13 +426,13 @@ facts("BigBed") do
 
             # BED → BigBed
             intervals = IntervalCollection(
-                read(open(joinpath(path, specimen["filename"])), BED))
+                open(open(joinpath(path, specimen["filename"])), BED))
             out = IOBuffer()
             write(out, BigBed, intervals)
             bigbed_data = takebuf_array(out)
 
             # BigBed → BED
-            bb = read(bigbed_data, BigBed)
+            bb = open(bigbed_data, BigBed)
             intervals2 = IntervalCollection(bb)
 
             @fact intervals == intervals2 --> true
@@ -444,13 +444,13 @@ facts("BigBed") do
         srand(1234)
         chroms = ["one", "two", "three", "four", "five"]
         intervals = IntervalCollection(
-            [Interval{BEDMetadata}(i.seqname, i.first, i.last, i.strand, BEDMetadata("", 1000))
+            [Interval{BEDMetadata}(i.seqname, i.first, i.last, STRAND_NA, BEDMetadata())
              for i in random_intervals(chroms, 1000000, n)], true)
 
         # convert to bigbed in memory
         out = IOBuffer()
         write(out, BigBed, intervals)
-        bb = read(takebuf_array(out), BigBed)
+        bb = open(takebuf_array(out), BigBed)
 
         # intersection queries
         num_queries = 1000
