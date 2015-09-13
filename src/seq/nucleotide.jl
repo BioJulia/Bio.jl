@@ -1427,7 +1427,7 @@ Any k-mer containing an N will be skipped over.
 A EachKmerIterator constructed with these parameters
 
 ### Examples
-```julia
+```{.julia execute="false"}
 # iterate over codons
 for x in each(DNAKmer{3}, dna"ATCCTANAGNTACT", 3)
     @show x

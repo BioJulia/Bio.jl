@@ -1,3 +1,8 @@
+---
+part: Contributing
+title: Implementing parsers
+order: 1000
+...
 
 This document is an overview of how parsers work in Bio.jl, including how to
 implement new parsers.
@@ -176,6 +181,7 @@ an action to be executed when part of the state machine is transitioned into,
 and the latter when part is transitioned out of. Together they can be used to
 process input fields.
 
+
 ## Parsing in parts
 
 Before we go further, we need to discuss some practical considerations. Parsing
@@ -189,12 +195,48 @@ input streams. This complicates parsing, but most of this complexity is hid in
 the `Bio.Ragel` module, which contains macros that generate code to handle
 buffer refills, and other gory details.
 
-## Capturing input with `@mark!`
+
+## Defining a result type
+
+Parsers in Bio.jl work on mutable entry types, which allows us to perform
+very-efficient parsing by reusing previously allocated space. Defining a BED3
+entry type is straightforward except for one catch: strings in Julia are
+immutable which prevents us from overwriting them when a new entry is read.
+
+To overcome this restriction string fields in parsed types uses a special
+mutable string type called `StringField`. It works similarly to `UTF8String` in
+base but has no immutability guarentees.
+
+```julia
+using Bio.StringFields
+
+type BED3Entry
+    seqname::StringField
+    start::Int64
+    stop::Int64
+end
+```
+
+This type needs to have two functions. A constructor with no parameters to
+allocate an empty entry, and a `copy` function.
+
+```julia
+function BED3Entry()
+    return BED3Entry(StringField(), 1, 0)
+end
+
+
+function copy(entry::BED3Entry)
+    return BED3Entry(copy(entry.seqname), entry.start, entry.stop)
+end
+```
+
+## Capturing input with `@anchor!`
 
 To efficiently parse on buffered stream, `Bio.Ragel` has some tricks to avoid
-making unecessary allocations or copies. These revolve around "marking" the
-start of regions in the input that need to be processed using the `Ragel.@mark!`
-macro. Using `@mark!` saves the current position and informs the input stream
+making unecessary allocations or copies. These revolve around "anchoring" the
+start of regions in the input that need to be processed using the `Ragel.@anchor!`
+macro. Using `@anchor!` saves the current position and informs the input stream
 not to evict that part of the input from the input buffer. If the buffer needs
 to be refilled, it is shifted over but saved.
 
@@ -203,57 +245,91 @@ Let's see how that works by defining a slightly more meaningful action
 
 ```ragel
 %%{
-    action mark {
-        Ragel.@mark
+    action anchor {
+        Ragel.@anchor
     }
 
     action seqname {
-        println("seqname captured: ", (Ragel.@asciistring_from_mark!))
+        Ragel.@copy_from_anchor!(output.seqname)
     }
 
-    seqname = [ -~]* >mark %seqname;
+    seqname = [ -~]* >anchor %seqname;
 }%%
 ```
 
-When we enter FSM state associated with `seqname`, the `mark` action gets
+When we enter FSM state associated with `seqname`, the `anchor` action gets
 executed, internally marking the input stream and guaranteeing that it will stay
-in the buffer. We then use another macro `Ragel.@asciistring_from_mark!` which
-extracts a string directly from the input buffer as an `ASCIIString`, and unsets
-the mark, so that the data is no longer preserved.
+in the buffer. We then use another macro `Ragel.@acopy_from_anchor!` which
+extracts a string directly from the input, replacing the contents of a
+`StringField`, and unsets the anchor, so that the data is no longer preserved.
 
 There are some other handy macros for efficiently processing marked data:
-`Ragel.@int64_from_mark!` will parse an integer from a marked region without
-making an intermediate copy, `Ragel.@unmark!` will unset the mark and return
+`Ragel.@int64_from_anchor!` will parse an integer from a marked region without
+making an intermediate copy, `Ragel.@upanchor!` will unset the anchor and return
 it's position in the input buffer. The matched region of the input buffer can
 extracted as an `UInt8` vector like.
 
 ```ragel
-state.reader.buffer[(Ragel.@unmark!):p]
-````
+state.stream.buffer[(Ragel.@upanchor!):p]
+```
 
-Using `@mark!` has some limitations. Because it causes data to preserved and
+Using `@anchor!` has some limitations. Because it causes data to preserved and
 shifted on buffer refills, it can be slow if the data that it needs to preserved
 is very large. It efficient assuming the buffer is significantly larger than the
 fields being caputured so that shifts are rare. If a very long field needs to be
 captured, another mechanism should be used, like copying the input one character
 at a time to a buffer.
 
+With this understood, we can complete our machine definition
+
+```ragel
+%%{
+    machine bed3;
+
+    action anchor {
+        Ragel.@anchor!
+    }
+
+    action finish_match {
+        # calling anchor is necessary here because fbreak will skip the entry
+        # action for the next state (seqname, in this case)
+        Ragel.@anchor!
+        yield = true;
+        fbreak;
+    }
+
+    action seqname {
+        Ragel.@copy_from_anchor!(output.seqname)
+    }
+
+    action start {
+        # convert from 0-based to 1-based
+        output.start = 1 + Ragel.@int64_from_anchor!
+    }
+
+    action stop {
+        output.stop = Ragel.@int64_from_anchor!
+    }
+
+    seqname = [ -~]*   >anchor   %seqname;
+    start   = digit+   >anchor   %start;
+    stop    = digit+   >anchor   %stop;
+    bed3_entry = seqname '\t' start '\t' stop '\n';
+    main := (bed3_entry %finish_match)*;
+}%%
+```
+
 ## Supporting code
 
-We now know how to define a ragel grammar and associate matching with useful
-actions. Putting this together regquires writing a little supporting code.
+Now that we have a machine definition and a entry type, we must define a parser
+type and write a few supportinf functions.
 
-The code generated by ragel can pollute the namespace with variable definitions
-so it's best to keep everything in a module. By convention these module are
-called `XParserImpl`, where X is the format being parsed. The `write data`
-directive will cause ragel to output definitions for any supporting data.
+First, code generated by ragel needs to reference some special constants
+representing parser states. To define these we use the `write data` ragel
+directive.
 
-```julia
-module BED3ParserImpl
-
+```ragel
 %% write data;
-
-end
 ```
 
 Since most formats are read entry-by-entry, we need a type to keep track of the
@@ -261,23 +337,52 @@ parser state between calls. This type must have a field called `state` of type
 `Ragel.State`. It can contain any other supporting data useful for parsing, such
 as intermediate results.
 
-Next we need to output the actual parsing code. We'll need a few things to do
-this: first we need to define a type that keeps track of the parser state.
-
 ```julia
-type BED3Parser
+import Bio.Ragel
+
+type BED3Parser <: AbstractParser
     state::Ragel.State
 end
 ```
 
-The `Ragel.@generate_read_function` is an ugly looking macro that generates a
-`read` function that is able to deal with progressive parsing on a buffered
-stream. It takes five arguments: a machine name, a type containing the parser
-state, an output type, an expression constituting the body of the parser.
+There are three functions we must define for the parser to be functional:
+`eltype`, `open`, and `read!`. The first two have obvious definitions.
 
-TODO: I'm going to need to refactor this stuff, so I'm going to avoid
-documenting the current state of things in detail. But I need to finish writing
-this.
+```julia
+# return the type that BED3Parser reads to
+function eltype(::Type{BED3Parser})
+    return BED3Entry
+end
+```
+
+Secondly, we need an `open` function. To do this, we define an empty file format
+type used to indicate BED3.
+
+```
+immutable BED3 <: FileFormat end
+
+function open(input::BufferedInputStream, ::Type{BED3})
+    return BED3Parser(input)
+end
+```
+
+`open` needs only be defined over a `BufferedInputStream` to work for file names
+and byte vectors automatically.
+
+Lastly the `read!` function, which to simplify we generate using a macro:
+`Ragel.@generate_read_function`. This takes four parameters: a string giving the
+ragel machine name, the parser type, the entry type, and finally ragel generated
+state machine code. Putting this together, defining our `read!` function looks
+like:
+
+```{.julia execute="false"}
+Ragel.@generate_read_fuction("bed3", BED3Parser, BED3Entry,
+    begin
+        %% write exec;
+    end)
+```
+
+Our parser is ready to use now.
 
 # Optimizing and debugging parsers
 
