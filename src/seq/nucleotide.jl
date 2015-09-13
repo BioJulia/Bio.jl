@@ -307,11 +307,11 @@ end
 
 
 """
-`NucleotideSequence(DNANucleotide|RNANucleotide, seq::String)`
+`NucleotideSequence(DNANucleotide|RNANucleotide, seq::AbstractString)`
 
 Construct a subsequence from the `seq` string
 """
-function NucleotideSequence{T<:Nucleotide}(::Type{T}, seq::Union(String, Vector{UInt8}),
+function NucleotideSequence{T<:Nucleotide}(::Type{T}, seq::Union(AbstractString, Vector{UInt8}),
                                            startpos::Int, stoppos::Int,
                                            unsafe::Bool=false; mutable::Bool=false)
     len = seq_data_len(stoppos - startpos + 1)
@@ -331,7 +331,7 @@ function NucleotideSequence{T<:Nucleotide}(::Type{T}, seq::Union(String, Vector{
 end
 
 
-function NucleotideSequence{T<:Nucleotide}(t::Type{T}, seq::Union(String,
+function NucleotideSequence{T<:Nucleotide}(t::Type{T}, seq::Union(AbstractString,
                                            Vector{UInt8}); mutable::Bool=false)
     return NucleotideSequence(t, seq, 1, length(seq), mutable=mutable)
 end
@@ -547,15 +547,15 @@ DNASequence(other::NucleotideSequence, part::UnitRange; mutable::Bool=false) =
     NucleotideSequence(DNANucleotide, other, part, mutable=mutable)
 
 "Construct a DNA nucleotide sequence from a String"
-DNASequence(seq::String; mutable=false) =
+DNASequence(seq::AbstractString; mutable=false) =
     NucleotideSequence(DNANucleotide, seq, mutable=mutable)
 
 
 "Construct a DNA nucleotide sequence from other sequences"
 DNASequence(chunk1::DNASequence, chunks::DNASequence...) = NucleotideSequence(chunk1, chunks...)
-DNASequence(seq::Union(Vector{UInt8}, String); mutable::Bool=false) =
+DNASequence(seq::Union(Vector{UInt8}, AbstractString); mutable::Bool=false) =
     NucleotideSequence(DNANucleotide, seq, mutable=mutable)
-DNASequence(seq::Union(Vector{UInt8}, String), startpos::Int, endpos::Int, unsafe::Bool=false; mutable::Bool=false) =
+DNASequence(seq::Union(Vector{UInt8}, AbstractString), startpos::Int, endpos::Int, unsafe::Bool=false; mutable::Bool=false) =
     NucleotideSequence(DNANucleotide, seq, startpos, endpos, unsafe, mutable=mutable)
 DNASequence(seq::AbstractVector{DNANucleotide}; mutable::Bool=false) =
     NucleotideSequence(seq, mutable=mutable)
@@ -573,14 +573,14 @@ RNASequence(other::NucleotideSequence, part::UnitRange; mutable::Bool=false) =
     NucleotideSequence(RNANucleotide, other, part, mutable=mutable)
 
 "Construct a RNA nucleotide sequence from a String"
-RNASequence(seq::String; mutable::Bool=false) =
+RNASequence(seq::AbstractString; mutable::Bool=false) =
     NucleotideSequence(RNANucleotide, seq, mutable=mutable)
 
 "Construct a RNA nucleotide sequence from other sequences"
 RNASequence(chunk1::RNASequence, chunks::RNASequence...) = NucleotideSequence(chunk1, chunks...)
-RNASequence(seq::Union(Vector{UInt8}, String); mutable::Bool=false) =
+RNASequence(seq::Union(Vector{UInt8}, AbstractString); mutable::Bool=false) =
     NucleotideSequence(RNANucleotide, seq, mutable=mutable)
-RNASequence(seq::Union(Vector{UInt8}, String), startpos::Int, endpos::Int, unsafe::Bool=false; mutable::Bool=false) =
+RNASequence(seq::Union(Vector{UInt8}, AbstractString), startpos::Int, endpos::Int, unsafe::Bool=false; mutable::Bool=false) =
     NucleotideSequence(RNANucleotide, seq, startpos, endpos, unsafe, mutable=mutable)
 RNASequence(seq::AbstractVector{RNANucleotide}; mutable::Bool=false) =
     NucleotideSequence(seq, mutable=mutable)
@@ -592,13 +592,13 @@ RNASequence(seq::AbstractVector{RNANucleotide}; mutable::Bool=false) =
 # Convert from/to Strings
 
 "Convert a String to a DNASequence"
-convert(::Type{DNASequence}, seq::String) = DNASequence(seq)
+convert(::Type{DNASequence}, seq::AbstractString) = DNASequence(seq)
 
 "Convert a String to a RNASequence"
-convert(::Type{RNASequence}, seq::String) = RNASequence(seq)
+convert(::Type{RNASequence}, seq::AbstractString) = RNASequence(seq)
 
 "Convert a NucleotideSequence to a String"
-convert(::Type{String}, seq::NucleotideSequence) = convert(String, [convert(Char, x) for x in seq])
+convert(::Type{AbstractString}, seq::NucleotideSequence) = convert(AbstractString, [convert(Char, x) for x in seq])
 
 
 # Convert between RNA and DNA
@@ -1141,7 +1141,7 @@ convert{K}(::Type{UInt64}, x::RNAKmer{K})       = box(UInt64, unbox(RNAKmer{K}, 
 # Conversion to/from String
 
 "Convert a String to a Kmer"
-function convert{T, K}(::Type{Kmer{T, K}}, seq::String)
+function convert{T, K}(::Type{Kmer{T, K}}, seq::AbstractString)
     @assert length(seq) <= 32 error("Cannot construct a K-mer longer than 32nt.")
     @assert length(seq) == K error("Cannot construct a $(K)-mer from a string of length $(length(seq))")
 
@@ -1159,10 +1159,10 @@ function convert{T, K}(::Type{Kmer{T, K}}, seq::String)
 end
 
 "Convert a String to a Kmer"
-convert{T}(::Type{Kmer{T}}, seq::String) = convert(Kmer{T, length(seq)}, seq)
+convert{T}(::Type{Kmer{T}}, seq::AbstractString) = convert(Kmer{T, length(seq)}, seq)
 
 "Convert a Kmer to a String"
-convert{T, K}(::Type{String}, seq::Kmer{T, K}) = convert(String, [convert(Char, x) for x in seq])
+convert{T, K}(::Type{AbstractString}, seq::Kmer{T, K}) = convert(AbstractString, [convert(Char, x) for x in seq])
 
 
 # Conversion to/from NucleotideSequence
@@ -1209,10 +1209,10 @@ convert{T, K}(::Type{NucleotideSequence}, x::Kmer{T, K}) = convert(NucleotideSeq
 # From strings
 
 "Construct a DNAKmer to a String"
-dnakmer(seq::String) = convert(DNAKmer, seq)
+dnakmer(seq::AbstractString) = convert(DNAKmer, seq)
 
 "Construct a RNAKmer to a String"
-rnakmer(seq::String) = convert(RNAKmer, seq)
+rnakmer(seq::AbstractString) = convert(RNAKmer, seq)
 
 "Construct a Kmer from a sequence of Nucleotides"
 function kmer{T <: Nucleotide}(nts::T...)
@@ -1648,7 +1648,7 @@ setindex!{T}(counts::NucleotideCounts{T}, c::Integer, nt::T) = setfield!(counts,
 
 # Pad strings so they are right justified when printed
 function format_counts(xs)
-    strings = String[string(x) for x in xs]
+    strings = AbstractString[string(x) for x in xs]
     len = maximum(map(length, strings))
     for i in 1:length(strings)
         strings[i] = string(repeat(" ", len - length(strings[i])), strings[i])
@@ -1725,7 +1725,7 @@ end
 function show{T, K}(io::IO, counts::KmerCounts{T, K})
     println(io, (T == DNANucleotide ? "DNA" : "RNA"), "KmerCounts{", K, "}:")
     for x in UInt64(1):UInt64(4^K)
-        s = convert(String, convert(Kmer{T, K}, x - 1))
+        s = convert(AbstractString, convert(Kmer{T, K}, x - 1))
         println(io, "  ", s, " => ", counts.data[x])
     end
 end

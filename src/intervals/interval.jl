@@ -64,13 +64,13 @@ type Interval{T} <: AbstractInterval{Int64}
 end
 
 
-function Interval{T}(seqname::String, first::Integer, last::Integer,
+function Interval{T}(seqname::AbstractString, first::Integer, last::Integer,
                     strand::Strand, metadata::T)
     return Interval{T}(convert(StringField, seqname), first, last, strand, metadata)
 end
 
 
-function Interval(seqname::String, first::Integer, last::Integer,
+function Interval(seqname::AbstractString, first::Integer, last::Integer,
                   strand::Strand=STRAND_BOTH)
     return Interval{Nothing}(seqname, first, last, strand, nothing)
 end

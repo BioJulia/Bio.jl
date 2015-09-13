@@ -255,7 +255,7 @@ end
 # Open functions for various sources
 # ----------------------------------
 
-function open{T <: FileFormat}(filename::String, ::Type{T}; args...)
+function open{T <: FileFormat}(filename::AbstractString, ::Type{T}; args...)
     memory_map = false
     i = 0
     for arg in args

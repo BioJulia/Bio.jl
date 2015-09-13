@@ -3,7 +3,7 @@ type BigBedData <: IntervalStream{BEDMetadata}
     stream::BufferedInputStream
     header::BigBedHeader
     zoom_headers::Vector{BigBedZoomHeader}
-    autosql::String
+    autosql::AbstractString
     summary::BigBedTotalSummary
     btree_header::BigBedBTreeHeader
     rtree_header::BigBedRTreeHeader

@@ -1,5 +1,4 @@
-
- # Run ragel to regenerate parsers after updating the .rl source file
+# Run ragel to regenerate parsers after updating the .rl source file
 
 parsers=bed.jl bigbeddata.jl
 
@@ -20,4 +19,3 @@ clean:
 
 %.svg: %.dot
 	dot -Tsvg < $< > $@
-

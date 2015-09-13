@@ -132,7 +132,7 @@ const threeletter_to_aa = Dict(
     "SER" => AA_S, "THR" => AA_T, "TRP" => AA_W, "TYR" => AA_Y, "VAL" => AA_V,
 )
 
-function parse(::Type{AminoAcid}, s::String)
+function parse(::Type{AminoAcid}, s::AbstractString)
     s′ = strip(s)
     if length(s′) == 1
         return convert(AminoAcid, s′[1])
@@ -199,7 +199,7 @@ end
 
 
 "Construct of a subsequence from another amino acid sequence"
-function AminoAcidSequence(seq::Union(Vector{UInt8}, String),
+function AminoAcidSequence(seq::Union(Vector{UInt8}, AbstractString),
                            startpos::Int, endpos::Int, unsafe::Bool=false;
                            mutable::Bool=false)
 
@@ -257,15 +257,15 @@ end
 (^)(chunk::AminoAcidSequence, n::Integer) = repeat(chunk, n::Integer)
 
 
-function AminoAcidSequence(seq::Union(Vector{UInt8}, String))
+function AminoAcidSequence(seq::Union(Vector{UInt8}, AbstractString))
     return AminoAcidSequence(seq, 1, length(seq))
 end
 
 
 # Conversion from/to String
 # -------------------------
-convert(::Type{AminoAcidSequence}, seq::String) = AminoAcidSequence(seq)
-convert(::Type{String}, seq::AminoAcidSequence) = convert(String, [convert(Char, x) for x in seq])
+convert(::Type{AminoAcidSequence}, seq::AbstractString) = AminoAcidSequence(seq)
+convert(::Type{AbstractString}, seq::AminoAcidSequence) = convert(AbstractString, [convert(Char, x) for x in seq])
 
 
 # Basic functions

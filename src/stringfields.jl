@@ -120,7 +120,7 @@ function convert(::Type{UTF8String}, field::StringField)
 end
 
 
-function convert(::Type{String}, field::StringField)
+function convert(::Type{AbstractString}, field::StringField)
     return convert(UTF8String, field::StringField)
 end
 
