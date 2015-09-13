@@ -1080,7 +1080,7 @@ facts("Nucleotides") do
             function check_kmer_count{T <: Nucleotide}(::Type{T}, seq::AbstractString, k, step)
                 string_counts = string_kmer_count(T, seq, k, step)
                 kmer_counts = KmerCounts{T, k}(convert(NucleotideSequence{T}, seq), step)
-                for y in UInt64(0)):UInt64(4^k-1)
+                for y in UInt64(0):UInt64(4^k-1)
                     x = convert(Kmer{T, k}, y)
                     if string_counts[x] != kmer_counts[x]
                         return false
