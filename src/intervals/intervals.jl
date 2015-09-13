@@ -1,26 +1,68 @@
-
 module Intervals
 
-import Base: show, isless, push!, shift!, intersect, start, next, done, length,
-             convert, read, read!, write, getindex, get, isempty, endof, ==,
-             reverse!, open, eltype, copy
+export Strand,
+    Interval,
+    IntervalCollection,
+    IntervalStream,
+    STRAND_NA,
+    STRAND_POS,
+    STRAND_NEG,
+    STRAND_BOTH,
+    coverage,
+    isoverlapping,
+    BED,
+    BEDMetadata,
+    BEDInterval,
+    BigBed,
+    BigWig
+
+using Base.Intrinsics,
+    Bio.Ragel,
+    Bio.StringFields,
+    BufferedStreams,
+    IntervalTrees,
+    Switch,
+    Libz,
+    Colors
+
+using Base.Collections:
+    heappush!,
+    heappop!
+
+using Bio:
+    AbstractParser,
+    FileFormat
 
 import Iterators
-using Base.Intrinsics
-using BufferedStreams
-using Colors
-using Compat
-using IntervalTrees
-using Switch
-import IntervalTrees: first, last
 
-using Bio: AbstractParser, FileFormat
-using Bio.StringFields
-using Bio.Ragel
+import Base:
+    show,
+    isless,
+    push!,
+    shift!,
+    intersect,
+    start,
+    next,
+    done,
+    length,
+    convert,
+    read,
+    read!,
+    write,
+    getindex,
+    get,
+    isempty,
+    endof,
+    ==,
+    reverse!,
+    open,
+    eltype,
+    copy
 
-export Strand, Interval, IntervalCollection, IntervalStream,
-       STRAND_NA, STRAND_POS, STRAND_NEG, STRAND_BOTH,
-       coverage, isoverlapping, BED, BEDMetadata, BEDInterval, BigBed, BigWig
+import IntervalTrees:
+    first,
+    last
+
 
 include("interval.jl")
 include("stream_buffer.jl")
@@ -31,4 +73,4 @@ include("intervalstream.jl")
 include("bed.jl")
 include("bigbed.jl")
 
-end
+end # module Intervals

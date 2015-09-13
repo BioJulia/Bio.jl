@@ -1,4 +1,5 @@
-
+# BigBed
+# ------
 
 # The BigBed format is documented in
 #   Kent, W. James, et al. "BigWig and BigBed: # enabling browsing of large
@@ -7,10 +8,6 @@
 # The low level details are documented in a series of tables in the supplement
 # of that paper. The immutable types defined below are exactly the data layout
 # described in those tables. They are labeled with the table they correspand to.
-
-
-using Libz, BufferedStreams
-
 
 const BIGBED_MAGIC = 0x8789F2EB
 const BIGWIG_MAGIC = 0x888FFC26
@@ -23,27 +20,27 @@ const BIGBED_CURRENT_VERSION = 4
 
 # See Supplemental Table 5
 immutable BigBedHeader
-    magic::Uint32
-    version::Uint16
-    zoom_levels::Uint16
-    chromosome_tree_offset::Uint64
-    full_data_offset::Uint64
-    full_index_offset::Uint64
-    field_count::Uint16
-    defined_field_count::Uint16
-    auto_sql_offset::Uint64
-    total_summary_offset::Uint64
-    uncompress_buf_size::Uint32
-    reserved::Uint64
+    magic::UInt32
+    version::UInt16
+    zoom_levels::UInt16
+    chromosome_tree_offset::UInt64
+    full_data_offset::UInt64
+    full_index_offset::UInt64
+    field_count::UInt16
+    defined_field_count::UInt16
+    auto_sql_offset::UInt64
+    total_summary_offset::UInt64
+    uncompress_buf_size::UInt32
+    reserved::UInt64
 end
 
 
 function read(io::IO, ::Type{BigBedHeader})
     return BigBedHeader(
-        read(io, Uint32), read(io, Uint16), read(io, Uint16),
-        read(io, Uint64), read(io, Uint64), read(io, Uint64),
-        read(io, Uint16), read(io, Uint16), read(io, Uint64),
-        read(io, Uint64), read(io, Uint32), read(io, Uint64))
+        read(io, UInt32), read(io, UInt16), read(io, UInt16),
+        read(io, UInt64), read(io, UInt64), read(io, UInt64),
+        read(io, UInt16), read(io, UInt16), read(io, UInt64),
+        read(io, UInt64), read(io, UInt32), read(io, UInt64))
 end
 
 
@@ -65,16 +62,16 @@ end
 
 # See Supplemental Table 6
 immutable BigBedZoomHeader
-    reduction_level::Uint32
-    reserved::Uint32
-    data_offset::Uint64
-    index_offset::Uint64
+    reduction_level::UInt32
+    reserved::UInt32
+    data_offset::UInt64
+    index_offset::UInt64
 end
 
 
 function read(io::IO, ::Type{BigBedZoomHeader})
     return BigBedZoomHeader(
-        read(io, Uint32), read(io, Uint32), read(io, Uint64), read(io, Uint64))
+        read(io, UInt32), read(io, UInt32), read(io, UInt64), read(io, UInt64))
 end
 
 
@@ -88,7 +85,7 @@ end
 
 # Supplemental Table 7
 immutable BigBedTotalSummary
-    bases_covered::Uint64
+    bases_covered::UInt64
     min_val::Float64
     max_val::Float64
     sum_data::Float64
@@ -98,8 +95,8 @@ end
 
 function read(io::IO, ::Type{BigBedTotalSummary})
     return BigBedTotalSummary(
-        read(io, Uint64), read(io, Uint64), read(io, Uint64),
-        read(io, Uint64), read(io, Uint64))
+        read(io, UInt64), read(io, UInt64), read(io, UInt64),
+        read(io, UInt64), read(io, UInt64))
 end
 
 
@@ -114,10 +111,10 @@ end
 
 # Supplemental Table 19
 immutable BigBedZoomData
-    chrom_id::Uint32
-    chrom_start::Uint32
-    chrom_end::Uint32
-    valid_count::Uint32
+    chrom_id::UInt32
+    chrom_start::UInt32
+    chrom_end::UInt32
+    valid_count::UInt32
     min_val::Float32
     max_val::Float32
     sum_data::Float32
@@ -127,7 +124,7 @@ end
 
 function read(io::IO, ::Type{BigBedZoomData})
     return BigBedZoomData(
-        read(io, Uint32), read(io, Uint32), read(io, Uint32), read(io, Uint32),
+        read(io, UInt32), read(io, UInt32), read(io, UInt32), read(io, UInt32),
         read(io, Float32), read(io, Float32), read(Float32), read(Float32))
 end
 
@@ -146,19 +143,19 @@ end
 
 # Supplemental Table 8
 immutable BigBedBTreeHeader
-    magic::Uint32
-    block_size::Uint32
-    key_size::Uint32
-    val_size::Uint32
-    item_count::Uint64
-    reserved::Uint64
+    magic::UInt32
+    block_size::UInt32
+    key_size::UInt32
+    val_size::UInt32
+    item_count::UInt64
+    reserved::UInt64
 end
 
 
 function read(io::IO, ::Type{BigBedBTreeHeader})
     return BigBedBTreeHeader(
-        read(io, Uint32), read(io, Uint32), read(io, Uint32),
-        read(io, Uint32), read(io, Uint64), read(io, Uint64))
+        read(io, UInt32), read(io, UInt32), read(io, UInt32),
+        read(io, UInt32), read(io, UInt64), read(io, UInt64))
 end
 
 
@@ -170,14 +167,14 @@ end
 
 # Supplementary Table 9
 immutable BigBedBTreeNode
-    isleaf::Uint8
-    reserved::Uint8
-    count::Uint16
+    isleaf::UInt8
+    reserved::UInt8
+    count::UInt16
 end
 
 
 function read(io::IO, ::Type{BigBedBTreeNode})
-    return BigBedBTreeNode(read(io, Uint8), read(io, Uint8), read(io, Uint16))
+    return BigBedBTreeNode(read(io, UInt8), read(io, UInt8), read(io, UInt16))
 end
 
 
@@ -190,14 +187,14 @@ end
 
 # Supplemental Table 10
 type BigBedBTreeLeafNode
-    key::Vector{Uint8}
-    chrom_id::Uint32
-    chrom_size::Uint32
+    key::Vector{UInt8}
+    chrom_id::UInt32
+    chrom_size::UInt32
 end
 
 
 function BigBedBTreeLeafNode(keysize::Integer)
-    BigBedBTreeLeafNode(Array(Uint8, keysize), 0, 0)
+    BigBedBTreeLeafNode(Array(UInt8, keysize), 0, 0)
 end
 
 
@@ -206,21 +203,21 @@ function read!(io::IO, node::BigBedBTreeLeafNode)
     if nb < length(node.key)
         error("Unexpected end of input.")
     end
-    node.chrom_id = read(io, Uint32)
-    node.chrom_size = read(io, Uint32)
+    node.chrom_id = read(io, UInt32)
+    node.chrom_size = read(io, UInt32)
     return nb + 8
 end
 
 
 # Supplemental Table 11
 type BigBedBTreeInternalNode
-    key::Vector{Uint8}
-    child_offset::Uint64
+    key::Vector{UInt8}
+    child_offset::UInt64
 end
 
 
 function BigBedBTreeInternalNode(keysize::Integer)
-    BigBedBTreeInternalNode(Array(Uint8, keysize), 0)
+    BigBedBTreeInternalNode(Array(UInt8, keysize), 0)
 end
 
 
@@ -228,26 +225,26 @@ function read!(io::IO, node::BigBedBTreeInternalNode)
     if readbytes!(io, node.key, length(node.key)) < length(node.key)
         error("Unexpected end of input.")
     end
-    node.child_offset = read(io, Uint64)
+    node.child_offset = read(io, UInt64)
 end
 
 
 # Supplemental Table 13
 immutable BigWigSectionHeader
-    chrom_id::Uint32
-    chrom_start::Uint32
-    chrom_end::Uint32
-    item_step::Uint32
-    item_span::Uint32
-    data_type::Uint8
-    reserved::Uint8
-    item_count::Uint16
+    chrom_id::UInt32
+    chrom_start::UInt32
+    chrom_end::UInt32
+    item_step::UInt32
+    item_span::UInt32
+    data_type::UInt8
+    reserved::UInt8
+    item_count::UInt16
 end
 
 
-const BIGWIG_DATATYPE_BEDGRAPH  = @compat UInt8(1)
-const BIGWIG_DATATYPE_VARSTEP   = @compat UInt8(2)
-const BIGWIG_DATATYPE_FIXEDSTEP = @compat UInt8(3)
+const BIGWIG_DATATYPE_BEDGRAPH  = UInt8(1)
+const BIGWIG_DATATYPE_VARSTEP   = UInt8(2)
+const BIGWIG_DATATYPE_FIXEDSTEP = UInt8(3)
 
 
 function write(io::IO, header::BigWigSectionHeader)
@@ -263,8 +260,8 @@ end
 
 
 immutable BedGraphItem
-    chrom_start::Uint32
-    chrom_end::Uint32
+    chrom_start::UInt32
+    chrom_end::UInt32
     val::Float32
 end
 
@@ -278,24 +275,24 @@ end
 
 # Supplemental Table 14
 immutable BigBedRTreeHeader
-    magic::Uint32
-    block_size::Uint32
-    item_count::Uint64
-    start_chrom_ix::Uint32
-    start_base::Uint32
-    end_chrom_ix::Uint32
-    end_base::Uint32
-    end_file_offset::Uint64
-    items_per_slot::Uint32
-    reserved::Uint32
+    magic::UInt32
+    block_size::UInt32
+    item_count::UInt64
+    start_chrom_ix::UInt32
+    start_base::UInt32
+    end_chrom_ix::UInt32
+    end_base::UInt32
+    end_file_offset::UInt64
+    items_per_slot::UInt32
+    reserved::UInt32
 end
 
 
 function read(io::IO, ::Type{BigBedRTreeHeader})
     return BigBedRTreeHeader(
-        read(io, Uint32), read(io, Uint32), read(io, Uint64), read(io, Uint32),
-        read(io, Uint32), read(io, Uint32), read(io, Uint32), read(io, Uint64),
-        read(io, Uint32), read(io, Uint32))
+        read(io, UInt32), read(io, UInt32), read(io, UInt64), read(io, UInt32),
+        read(io, UInt32), read(io, UInt32), read(io, UInt32), read(io, UInt64),
+        read(io, UInt32), read(io, UInt32))
 end
 
 
@@ -315,14 +312,14 @@ end
 
 # Supplemental Table 15
 immutable BigBedRTreeNode
-    isleaf::Uint8
-    reserved::Uint8
-    count::Uint16
+    isleaf::UInt8
+    reserved::UInt8
+    count::UInt16
 end
 
 
 function read(io::IO, ::Type{BigBedRTreeNode})
-    return BigBedRTreeNode(read(io, Uint8), read(io, Uint8), read(io, Uint16))
+    return BigBedRTreeNode(read(io, UInt8), read(io, UInt8), read(io, UInt16))
 end
 
 
@@ -335,19 +332,19 @@ end
 
 # Supplemental Table 16
 immutable BigBedRTreeLeafNode
-    start_chrom_ix::Uint32
-    start_base::Uint32
-    end_chrom_ix::Uint32
-    end_base::Uint32
-    data_offset::Uint64
-    data_size::Uint64
+    start_chrom_ix::UInt32
+    start_base::UInt32
+    end_chrom_ix::UInt32
+    end_base::UInt32
+    data_offset::UInt64
+    data_size::UInt64
 end
 
 
 function read(io::IO, ::Type{BigBedRTreeLeafNode})
     return BigBedRTreeLeafNode(
-        read(io, Uint32), read(io, Uint32), read(io, Uint32), read(io, Uint32),
-        read(io, Uint64), read(io, Uint64))
+        read(io, UInt32), read(io, UInt32), read(io, UInt32), read(io, UInt32),
+        read(io, UInt64), read(io, UInt64))
 end
 
 
@@ -363,18 +360,18 @@ end
 
 # Supplemental Table 17
 immutable BigBedRTreeInternalNode
-    start_chrom_ix::Uint32
-    start_base::Uint32
-    end_chrom_ix::Uint32
-    end_base::Uint32
-    data_offset::Uint64
+    start_chrom_ix::UInt32
+    start_base::UInt32
+    end_chrom_ix::UInt32
+    end_base::UInt32
+    data_offset::UInt64
 end
 
 
 function read(io::IO, ::Type{BigBedRTreeInternalNode})
     return BigBedRTreeInternalNode(
-        read(io, Uint32), read(io, Uint32), read(io, Uint32), read(io, Uint32),
-        read(io, Uint64))
+        read(io, UInt32), read(io, UInt32), read(io, UInt32), read(io, UInt32),
+        read(io, UInt64))
 end
 
 
@@ -423,7 +420,7 @@ function open(stream::BufferedInputStream, ::Type{BigBed})
     else
         seek(stream, header.auto_sql_offset)
         autosql_buf = IOBuffer()
-        while (c = read(stream, Uint8)) != 0x00
+        while (c = read(stream, UInt8)) != 0x00
             write(autosql_buf, c)
         end
         # TODO: eventually we should parse this and do something useful with it
@@ -443,7 +440,7 @@ function open(stream::BufferedInputStream, ::Type{BigBed})
 
     # data_count
     seek(stream, header.full_data_offset)
-    data_count = read(stream, Uint32)
+    data_count = read(stream, UInt32)
 
     # r-tree header
     seek(stream, header.full_index_offset)
@@ -458,13 +455,13 @@ function open(stream::BufferedInputStream, ::Type{BigBed})
                                               for _ in 1:btree_header.block_size],
                       BigBedBTreeLeafNode[BigBedBTreeLeafNode(btree_header.key_size)
                                           for _ in 1:btree_header.block_size],
-                      Array(Uint8, btree_header.key_size),
-                      Array(Vector{Uint8}, btree_header.block_size),
-                      Array(Uint8, header.uncompress_buf_size))
+                      Array(UInt8, btree_header.key_size),
+                      Array(Vector{UInt8}, btree_header.block_size),
+                      Array(UInt8, header.uncompress_buf_size))
 end
 
 
-function memisless(a::Vector{Uint8}, b::Vector{Uint8})
+function memisless(a::Vector{UInt8}, b::Vector{UInt8})
     if length(a) != length(b)
         return length(a) < length(b)
     end
@@ -547,7 +544,7 @@ function start(bb::BigBedData)
 
     # read the first data block
     seek(bb.stream, bb.header.full_data_offset)
-    data_count = read(bb.stream, Uint64)
+    data_count = read(bb.stream, UInt64)
     zlib_stream = ZlibInflateInputStream(bb.stream)
     unc_block_size = readbytes!(zlib_stream, bb.uncompressed_data,
                                length(bb.uncompressed_data))
@@ -610,12 +607,12 @@ type BigBedIntersectIterator
     query_seqname::StringField
     query_first::Int64
     query_last::Int64
-    query_chrom_id::Uint32
-    query_chrom_size::Uint32
+    query_chrom_id::UInt32
+    query_chrom_size::UInt32
 
     # (offset, size) pairs giving the extents of data blocks that may contain
     # (overlapping intervals
-    blocks::Vector{(@compat Tuple{Uint64, Uint64})}
+    blocks::Vector{Tuple{UInt64, UInt64}}
 
     # Index of block currently being parsed
     block_num::Int
@@ -674,10 +671,10 @@ function intersect(bb::BigBedData, query::Interval)
 
     # stack of nodes yet to visit
     root_position = bb.header.full_index_offset + sizeof(BigBedRTreeHeader)
-    node_positions = Uint64[root_position]
+    node_positions = UInt64[root_position]
 
     # stack of data blocks that may contain overlapping intervals
-    blocks = (@compat Tuple{Uint64, Uint64})[]
+    blocks = Tuple{UInt64, UInt64}[]
 
     seek(bb.stream, bb.header.full_index_offset + sizeof(BigBedRTreeHeader))
     while !isempty(node_positions)
@@ -785,17 +782,17 @@ end
 
 immutable BigBedChromInfo
     name::StringField   # chromosome name
-    id::Uint32          # unique id for chromosome
-    size::Uint32        # size of chromosome
-    item_count::Uint64  # number of items
+    id::UInt32          # unique id for chromosome
+    size::UInt32        # size of chromosome
+    item_count::UInt64  # number of items
 end
 
 
 immutable BigBedBounds
-    offset::Uint64
-    chrom_ix::Uint32
-    start::Uint32
-    stop::Uint32
+    offset::UInt64
+    chrom_ix::UInt32
+    start::UInt32
+    stop::UInt32
 end
 
 
@@ -837,7 +834,7 @@ function bigbed_btree_write_index_level(out::IO, block_size,
     # calculate sizes and offsets
     block_header_size = 4
     value_size = 8
-    bytes_in_index_block = block_header_size + block_size * (key_size + sizeof(Uint64))
+    bytes_in_index_block = block_header_size + block_size * (key_size + sizeof(UInt64))
     bytes_in_leaf_block = block_header_size + block_size * (key_size + value_size)
     bytes_in_next_level_block = level == 1 ? bytes_in_leaf_block : bytes_in_index_block
     level_size = node_count * bytes_in_index_block
@@ -861,7 +858,7 @@ function bigbed_btree_write_index_level(out::IO, block_size,
             for k in length(item.name)+1:key_size
                 write(out, 0x00)
             end
-            write(out, convert(Uint64, next_child))
+            write(out, convert(UInt64, next_child))
             next_child += bytes_in_next_level_block
             slots_used += 1
         end
@@ -903,8 +900,8 @@ function bigbed_btree_write_leaf_level(out::IO, block_size,
             for k in length(item.name)+1:key_size
                 write(out, 0x00)
             end
-            write(out, convert(Uint32, item.id))
-            write(out, convert(Uint32, item.size))
+            write(out, convert(UInt32, item.id))
+            write(out, convert(UInt32, item.size))
         end
 
         # pad out any unused bits of last block with zeroes
@@ -1017,9 +1014,9 @@ function bigbed_write_blocks(out::IO, intervals::IntervalCollection,
                 end
                 end_pos = max(end_pos, interval_end)
 
-                write(buf, convert(Uint32, info.id))
-                write(buf, convert(Uint32, interval_start))
-                write(buf, convert(Uint32, interval_end))
+                write(buf, convert(UInt32, info.id))
+                write(buf, convert(UInt32, interval_start))
+                write(buf, convert(UInt32, interval_end))
                 write_optional_fields(buf, interval, false)
                 write(buf, '\0')
 
@@ -1141,12 +1138,12 @@ type BigBedRTree
     next::Nullable{BigBedRTree}
     children::Nullable{BigBedRTree}
     parent::Nullable{BigBedRTree}
-    start_chrom_ix::Uint32
-    start_base::Uint32
-    end_chrom_ix::Uint32
-    end_base::Uint32
-    start_file_offset::Uint64
-    end_file_offset::Uint64
+    start_chrom_ix::UInt32
+    start_base::UInt32
+    end_chrom_ix::UInt32
+    end_base::UInt32
+    start_file_offset::UInt64
+    end_file_offset::UInt64
 
     function BigBedRTree(next, children, parent, start_chrom_ix, start_base,
                          end_chrom_ix, end_base, start_file_offset, end_file_offset)
@@ -1278,7 +1275,7 @@ function write(out::IO, tree::BigBedRTree, block_size, level_count)
     level_sizes = zeros(Int, level_count)
     bigbed_calc_rtree_level_sizes!(level_sizes, Nullable{BigBedRTree}(tree), 1, level_count)
 
-    level_offsets = Array(Uint64, level_count)
+    level_offsets = Array(UInt64, level_count)
 
     index_node_size = sizeof(BigBedRTreeNode) + block_size * sizeof(BigBedRTreeInternalNode)
     leaf_node_size = sizeof(BigBedRTreeNode) + block_size * sizeof(BigBedRTreeLeafNode)
@@ -1505,7 +1502,7 @@ function bigbed_write_reduced_once_return_reduced_twice(
     twice_reduced_list = BigBedZoomData[]
 
     ret_data_start = position(out)
-    write(out, convert(Uint32, initial_reduced_count))
+    write(out, convert(UInt32, initial_reduced_count))
 
     # This gets a little complicated I'm afraid.  The strategy is to:
     #  1) Build up a range tree that represents coverage depth on that chromosome
@@ -1514,7 +1511,7 @@ function bigbed_write_reduced_once_return_reduced_twice(
     #     further reducing.
     #
 
-    valid_count = @compat UInt64(0)
+    valid_count = UInt64(0)
     min_val = 0.0
     max_val = 0.0
     sum_data = 0.0
@@ -1637,7 +1634,7 @@ function bigbed_write_summary_and_index_unc(
         items_per_slot)
     # See: bbiWriteSummaryAndIndexUnc in bbiWrite.c
     count = length(summary_list)
-    write(out, convert(Uint32, count))
+    write(out, convert(UInt32, count))
     bounds_array = Array(BigBedBounds, count)
     for (i, summary) in enumerate(summary_list)
         bounds_array[i] = BigBedBounds(
@@ -1656,7 +1653,7 @@ function bigbed_write_summary_and_index_comp(
         items_per_slot)
     # See: bbiWriteSummaryAndIndexComp in bbiWrite.c
     count = length(summary_list)
-    write(out, convert(Uint32, count))
+    write(out, convert(UInt32, count))
     bounds_array = Array(BigBedBounds, count)
 
     items_left = count
@@ -1795,7 +1792,7 @@ function write_bigbed_bigwig(out::IO, fmt::Union(Type{BigBed}, Type{BigWig}),
     # TODO: The BigBed/BigWig specification differs from Kent's impementation
     # here. The spec says this count is a 32bit int, but the implmentation uses
     # a 64bit int. We follow the implementation for practical reasons.
-    write(out, convert(Uint64, length(intervals)))
+    write(out, convert(UInt64, length(intervals)))
     block_count = bigbed_count_sections_needed(chrom_info, items_per_slot)
     bounds = Array(BigBedBounds, block_count)
 
@@ -1815,9 +1812,9 @@ function write_bigbed_bigwig(out::IO, fmt::Union(Type{BigBed}, Type{BigWig}),
 
     # declare arrays and vars that track the zoom levels we actually output
     zoom_levels = 0
-    zoom_amounts = Array(Uint32, BIGBED_MAX_ZOOM_LEVELS)
-    zoom_data_offsets = Array(Uint64, BIGBED_MAX_ZOOM_LEVELS)
-    zoom_index_offsets = Array(Uint64, BIGBED_MAX_ZOOM_LEVELS)
+    zoom_amounts = Array(UInt32, BIGBED_MAX_ZOOM_LEVELS)
+    zoom_data_offsets = Array(UInt64, BIGBED_MAX_ZOOM_LEVELS)
+    zoom_index_offsets = Array(UInt64, BIGBED_MAX_ZOOM_LEVELS)
     zoom_levels = 0
 
     if ave_span > 0
@@ -1905,7 +1902,5 @@ function write_bigbed_bigwig(out::IO, fmt::Union(Type{BigBed}, Type{BigWig}),
 
     # write end signature
     seekend(out)
-    write(out, convert(Uint32, fmt == BigBed ? BIGBED_MAGIC : BIGWIG_MAGIC))
+    write(out, convert(UInt32, fmt == BigBed ? BIGBED_MAGIC : BIGWIG_MAGIC))
 end
-
-

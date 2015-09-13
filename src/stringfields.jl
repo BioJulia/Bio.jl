@@ -1,5 +1,3 @@
-
-
 module StringFields
 
 export StringField
@@ -85,7 +83,7 @@ function next(s::StringField, i::Int)
 end
 
 
-function copy!(field::StringField, data::Vector{Uint8},
+function copy!(field::StringField, data::Vector{UInt8},
                start::Integer, stop::Integer)
     if length(field.data) < length(data)
         resize!(field.data, length(data))
@@ -169,4 +167,4 @@ function (==)(a::StringField, b::BufferedStreams.BufferedOutputStream)
 end
 
 
-end
+end # module StringFields

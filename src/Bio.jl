@@ -1,16 +1,11 @@
 module Bio
 
-using Compat, Docile
-using Docile: @doc, @doc_str
-import BufferedStreams
-
 abstract AbstractParser
 abstract FileFormat
 
 include("stringfields.jl")
 include("ragel.jl")
-
 include("seq/seq.jl")
 include("intervals/intervals.jl")
 
-end # module
+end # module Bio

@@ -11,8 +11,8 @@ end
 # Basic Functions
 # ---------------
 
-@inline getindex(code::GeneticCode, idx::RNAKmer{3}) = code.tbl[convert(Uint64, idx) + 1]
-setindex!(code::GeneticCode, aa::AminoAcid, idx::RNAKmer{3}) = (code.tbl[convert(Uint64, idx) + 1] = aa)
+@inline getindex(code::GeneticCode, idx::RNAKmer{3}) = code.tbl[convert(UInt64, idx) + 1]
+setindex!(code::GeneticCode, aa::AminoAcid, idx::RNAKmer{3}) = (code.tbl[convert(UInt64, idx) + 1] = aa)
 copy(code::GeneticCode) = GeneticCode(copy(code.tbl))
 length(code::GeneticCode) = 64
 
@@ -20,14 +20,14 @@ length(code::GeneticCode) = 64
 # Iterating through genetic code
 # ------------------------------
 
-start(code::GeneticCode) = @compat uint64(0)
+start(code::GeneticCode) = UInt64(0)
 
-function next(code::GeneticCode, x::Uint64)
+function next(code::GeneticCode, x::UInt64)
     c = convert(Codon, x)
     return ((c, code[c]), (x + 1))
 end
 
-done(code::GeneticCode, x::Uint64) = (x > (@compat uint64(0b111111)))
+done(code::GeneticCode, x::UInt64) = (x > UInt64(0b111111))
 
 
 # Default genetic codes

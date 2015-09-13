@@ -9,46 +9,46 @@ Usually this is just one.
 """
 bitstype 16 Alphabet
 
-function convert(::Type{Alphabet}, nt::Uint16)
-    return box(Alphabet, unbox(Uint16, nt))
+function convert(::Type{Alphabet}, nt::UInt16)
+    return box(Alphabet, unbox(UInt16, nt))
 end
 
 
-function convert(::Type{Uint16}, nt::Alphabet)
-    return box(Uint16, unbox(Alphabet, nt))
+function convert(::Type{UInt16}, nt::Alphabet)
+    return box(UInt16, unbox(Alphabet, nt))
 end
 
 
 function (|)(a::Alphabet, b::Alphabet)
-    return convert(Alphabet, convert(Uint16, a) | convert(Uint16, b))
+    return convert(Alphabet, convert(UInt16, a) | convert(UInt16, b))
 end
 
 
 function (&)(a::Alphabet, b::Alphabet)
-    return convert(Alphabet, convert(Uint16, a) & convert(Uint16, b))
+    return convert(Alphabet, convert(UInt16, a) & convert(UInt16, b))
 end
 
 # for safe module precompilation
 hash(a::Alphabet) = hash(convert(UInt16, a))
 
 "`Alphabet` value indicating no compatible alphabets."
-const EMPTY_ALPHABET = convert(Alphabet, @compat UInt16(0))
+const EMPTY_ALPHABET = convert(Alphabet, UInt16(0))
 
 "DNA alphabet"
-const DNA_ALPHABET   = convert(Alphabet, @compat UInt16(0b0001))
+const DNA_ALPHABET   = convert(Alphabet, UInt16(0b0001))
 
 "RNA alphabet"
-const RNA_ALPHABET   = convert(Alphabet, @compat UInt16(0b0010))
+const RNA_ALPHABET   = convert(Alphabet, UInt16(0b0010))
 
 "amino acid alphabet"
-const AA_ALPHABET    = convert(Alphabet, @compat UInt16(0b0100))
+const AA_ALPHABET    = convert(Alphabet, UInt16(0b0100))
 
 "`Alphabet` value indicating that all known alphabets are compatible"
 const ALL_ALPHABETS =
     DNA_ALPHABET | RNA_ALPHABET | AA_ALPHABET
 
 
-const alphabet_type = @compat Dict{Alphabet, Type}(
+const alphabet_type = Dict{Alphabet, Type}(
     DNA_ALPHABET => DNASequence,
     RNA_ALPHABET => RNASequence,
     AA_ALPHABET  => AminoAcidSequence
@@ -119,7 +119,7 @@ Infer the sequence type by inspecting a string.
 ### Returns
 A type T to which the string data can be converted.
 """
-function infer_alphabet(data::Vector{Uint8}, start, stop, default)
+function infer_alphabet(data::Vector{UInt8}, start, stop, default)
     alphabets = ALL_ALPHABETS
     if start > stop
         return default
@@ -131,14 +131,14 @@ function infer_alphabet(data::Vector{Uint8}, start, stop, default)
 
     @inbounds for i in start:stop
         c = data[i]
-        if (@compat UInt8('A')) <= c <= (@compat UInt8('z'))
-            alphabets &= compatible_alphabets[c - (@compat UInt8('A')) + 1]
+        if UInt8('A') <= c <= UInt8('z')
+            alphabets &= compatible_alphabets[c - UInt8('A') + 1]
         else
             error("Character $(c) is not compatible with any sequence type.")
         end
     end
 
-    if count_ones(convert(Uint16, alphabets)) == 0
+    if count_ones(convert(UInt16, alphabets)) == 0
         error("String is not compatible with any known sequence type.")
     elseif alphabets & default != EMPTY_ALPHABET
         return default

@@ -378,5 +378,3 @@ function done{S, T, TS, TV}(it::IntervalCollectionStreamIterator{S, T, TV},
                             state::IntervalCollectionStreamIteratorState{S, TS, TV})
     return state.intersection.index == 0
 end
-
-
