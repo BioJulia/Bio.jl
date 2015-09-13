@@ -5,7 +5,7 @@ using BufferedStreams
 using Switch
 using Base.Intrinsics
 
-import Base: convert, complement, show, length, start, next, done, copy,
+import Base: convert, complement, show, length, start, next, done, copy, copy!,
              reverse, show, endof, isless, clipboard, parse, repeat,
              unsafe_copy!, read, read!, open, eltype,
              # operators

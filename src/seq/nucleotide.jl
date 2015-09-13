@@ -340,8 +340,8 @@ end
 """
 Reset the contents of a mutable sequence from a string.
 """
-function Base.copy!{T}(seq::NucleotideSequence{T}, strdata::Vector{UInt8},
-                       startpos::Integer, stoppos::Integer)
+function copy!{T}(seq::NucleotideSequence{T}, strdata::Vector{UInt8},
+                  startpos::Integer, stoppos::Integer)
     if !seq.mutable
         error("Cannot copy! to immutable sequnce. Call `mutable!(seq)` first.")
     end

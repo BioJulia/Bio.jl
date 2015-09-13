@@ -9,27 +9,27 @@ Usually this is just one.
 """
 bitstype 16 Alphabet
 
-function Base.convert(::Type{Alphabet}, nt::Uint16)
+function convert(::Type{Alphabet}, nt::Uint16)
     return box(Alphabet, unbox(Uint16, nt))
 end
 
 
-function Base.convert(::Type{Uint16}, nt::Alphabet)
+function convert(::Type{Uint16}, nt::Alphabet)
     return box(Uint16, unbox(Alphabet, nt))
 end
 
 
-function Base.|(a::Alphabet, b::Alphabet)
+function (|)(a::Alphabet, b::Alphabet)
     return convert(Alphabet, convert(Uint16, a) | convert(Uint16, b))
 end
 
 
-function Base.&(a::Alphabet, b::Alphabet)
+function (&)(a::Alphabet, b::Alphabet)
     return convert(Alphabet, convert(Uint16, a) & convert(Uint16, b))
 end
 
 # for safe module precompilation
-Base.hash(a::Alphabet) = hash(convert(UInt16, a))
+hash(a::Alphabet) = hash(convert(UInt16, a))
 
 "`Alphabet` value indicating no compatible alphabets."
 const EMPTY_ALPHABET = convert(Alphabet, @compat UInt16(0))
