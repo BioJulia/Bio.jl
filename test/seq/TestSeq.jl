@@ -212,6 +212,14 @@ facts("Nucleotides") do
         end
     end
 
+    context("Show") do
+        buf = IOBuffer()
+        for nt in [DNA_A, DNA_C, DNA_G, DNA_T, DNA_N]
+            show(buf, nt)
+        end
+        @fact takebuf_string(buf) --> "ACGTN"
+    end
+
     context("Sequences") do
         function dna_complement(seq::AbstractString)
             seqc = Array(Char, length(seq))
