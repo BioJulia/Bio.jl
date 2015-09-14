@@ -1,8 +1,7 @@
 julia 0.4-
 BufferedStreams
 Colors
-Compat
 IntervalTrees
 Iterators
-Switch
 Libz
+Switch

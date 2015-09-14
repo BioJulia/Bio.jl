@@ -1,9 +1,6 @@
-
-using Base.Collections: heappush!, heappop!
-
 # IntervalStreams
 # ---------------
-#
+
 # Often we'd rather avoid reading a large interval dataset into an
 # IntervalCollection. We can still do efficient intersections if we can assume
 # the data is sorted
@@ -196,7 +193,7 @@ end
 
 # Helper function for coverage. Process remaining interval end points after
 # all intervals have been read.
-function coverage_process_lasts_heap!(cov::IntervalCollection{Uint32},
+function coverage_process_lasts_heap!(cov::IntervalCollection{UInt32},
                                       current_coverage, coverage_seqname,
                                       coverage_first, lasts)
     while !isempty(lasts)
@@ -205,7 +202,7 @@ function coverage_process_lasts_heap!(cov::IntervalCollection{Uint32},
             current_coverage -= 1
         else
             @assert pos >= coverage_first
-            push!(cov, Interval{Uint32}(coverage_seqname, coverage_first,
+            push!(cov, Interval{UInt32}(coverage_seqname, coverage_first,
                                         pos, STRAND_BOTH, current_coverage))
             current_coverage -= 1
             coverage_first = pos + 1
@@ -237,7 +234,7 @@ coverage like:
 """
 function coverage(stream::Union(IntervalStreamOrArray, IntervalTree),
                   seqname_isless::Function=isless)
-    cov = IntervalCollection{Uint32}()
+    cov = IntervalCollection{UInt32}()
     lasts = Int64[]
 
     stream_state = start(stream)
@@ -281,7 +278,7 @@ function coverage(stream::Union(IntervalStreamOrArray, IntervalTree),
                 current_coverage -= 1
             else
                 @assert pos >= coverage_first
-                push!(cov, Interval{Uint32}(coverage_seqname, coverage_first,
+                push!(cov, Interval{UInt32}(coverage_seqname, coverage_first,
                                             pos, STRAND_BOTH, current_coverage))
                 current_coverage -= 1
                 coverage_first = pos + 1
@@ -294,7 +291,7 @@ function coverage(stream::Union(IntervalStreamOrArray, IntervalTree),
                 current_coverage += 1
             else
                 if current_coverage > 0
-                    push!(cov, Interval{Uint32}(coverage_seqname, coverage_first,
+                    push!(cov, Interval{UInt32}(coverage_seqname, coverage_first,
                                                 first(interval) - 1, STRAND_BOTH,
                                                 current_coverage))
                 end

@@ -11,23 +11,23 @@ bitstype 8 RNANucleotide <: Nucleotide
 # Conversion from/to integers
 # ---------------------------
 
-"Convert a Uint8 to a DNANucleotide"
-convert(::Type{DNANucleotide}, nt::Uint8) = box(DNANucleotide, unbox(Uint8, nt))
+"Convert a UInt8 to a DNANucleotide"
+convert(::Type{DNANucleotide}, nt::UInt8) = box(DNANucleotide, unbox(UInt8, nt))
 
-"Convert a DNANucleotide to a Uint8"
-convert(::Type{Uint8}, nt::DNANucleotide) = box(Uint8, unbox(DNANucleotide, nt))
+"Convert a DNANucleotide to a UInt8"
+convert(::Type{UInt8}, nt::DNANucleotide) = box(UInt8, unbox(DNANucleotide, nt))
 
-"Convert a Uint8 to a RNANucleotide"
-convert(::Type{RNANucleotide}, nt::Uint8) = box(RNANucleotide, unbox(Uint8, nt))
+"Convert a UInt8 to a RNANucleotide"
+convert(::Type{RNANucleotide}, nt::UInt8) = box(RNANucleotide, unbox(UInt8, nt))
 
-"Convert a RNANucleotide to a Uint8"
-convert(::Type{Uint8}, nt::RNANucleotide) = box(Uint8, unbox(RNANucleotide, nt))
+"Convert a RNANucleotide to a UInt8"
+convert(::Type{UInt8}, nt::RNANucleotide) = box(UInt8, unbox(RNANucleotide, nt))
 
-"Convert a RNANucleotide to a Uint8"
+"Convert a RNANucleotide to a UInt8"
 convert{T<:Unsigned, S<:Nucleotide}(::Type{T}, nt::S) = box(T, Base.zext_int(T, unbox(S, nt)))
 
-"Convert a RNANucleotide to a Uint8"
-convert{T<:Unsigned, S<:Nucleotide}(::Type{S}, nt::T) = convert(S, convert(Uint8, nt))
+"Convert a RNANucleotide to a UInt8"
+convert{T<:Unsigned, S<:Nucleotide}(::Type{S}, nt::T) = convert(S, convert(UInt8, nt))
 
 # Nucleotide encoding definition
 # ------------------------------
@@ -102,7 +102,7 @@ invalid_nucleotide(::Type{RNANucleotide}) = RNA_INVALID
     return nt
 end
 
-@inline function unsafe_ascii_byte_to_nucleotide(T::Type{DNANucleotide}, c::Uint8)
+@inline function unsafe_ascii_byte_to_nucleotide(T::Type{DNANucleotide}, c::UInt8)
     @inbounds nt = char_to_dna[c - 0x41 + 1]
     return nt
 end
@@ -126,7 +126,7 @@ const char_to_rna = [
     return nt
 end
 
-@inline function unsafe_ascii_byte_to_nucleotide(T::Type{RNANucleotide}, c::Uint8)
+@inline function unsafe_ascii_byte_to_nucleotide(T::Type{RNANucleotide}, c::UInt8)
     @inbounds nt = char_to_rna[c - 0x41 + 1]
     return nt
 end
@@ -138,12 +138,12 @@ end
 const dna_to_char = ['A', 'C', 'G', 'T', 'N']
 
 "Convert a DNANucleotide to a Char"
-convert(::Type{Char}, nt::DNANucleotide) = dna_to_char[convert(Uint8, nt) + 1]
+convert(::Type{Char}, nt::DNANucleotide) = dna_to_char[convert(UInt8, nt) + 1]
 
 const rna_to_char = ['A', 'C', 'G', 'U', 'N']
 
 "Convert a RNANucleotide to a Char"
-convert(::Type{Char}, nt::RNANucleotide) = rna_to_char[convert(Uint8, nt) + 1]
+convert(::Type{Char}, nt::RNANucleotide) = rna_to_char[convert(UInt8, nt) + 1]
 
 
 # Basic functions
@@ -166,7 +166,7 @@ end
 
 # A general purpose nucleotide sequence representation
 #
-# Nucleotide sequences are 2-bit encoded and packed into Uint64s. 'N's are
+# Nucleotide sequences are 2-bit encoded and packed into UInt64s. 'N's are
 # represented with an N mask BitArray. If the ns[i] bit is set, then the
 # sequence may have any nucleotide at that position and it must be ignored.
 #
@@ -182,7 +182,7 @@ end
 # must make a copy of the data.
 #
 type NucleotideSequence{T<:Nucleotide} <: Sequence
-    data::Vector{Uint64} # 2-bit encoded sequence
+    data::Vector{UInt64} # 2-bit encoded sequence
     ns::BitVector        # 'N' mask
     part::UnitRange{Int} # interval within `data` and `ns` defining the (sub)sequence
     mutable::Bool        # true if the sequence can be safely mutated
@@ -204,7 +204,7 @@ end
 Construct an empty nucleotide sequence of the given type
 """
 NucleotideSequence{T<:Nucleotide}(::Type{T}; mutable::Bool=false) =
-    NucleotideSequence{T}(zeros(Uint64, 0), BitVector(0), 1:0, mutable, false)
+    NucleotideSequence{T}(zeros(UInt64, 0), BitVector(0), 1:0, mutable, false)
 
 
 """
@@ -251,7 +251,7 @@ function divrem64(n::Integer)
 end
 
 
-# Return the number of Uint64s needed to represent a sequence of length n
+# Return the number of UInt64s needed to represent a sequence of length n
 function seq_data_len(n::Integer)
     d, r = divrem32(n)
     return d + (r > 0 ? 1 : 0)
@@ -279,10 +279,10 @@ macro encode_seq(nt_convert_expr, strdata, seqdata, ns)
                         # manually inlined: ns[i] = true
                         d = (idx - 1) >>> 6
                         r = (idx - 1) & 63
-                        $(ns).chunks[d + 1] |= (@compat UInt64(1)) << r
+                        $(ns).chunks[d + 1] |= UInt64(1) << r
                     else
                         ored_nucs |= convert(UInt8, nt)
-                        data_i |= convert(Uint64, nt) << shift
+                        data_i |= convert(UInt64, nt) << shift
                     end
 
                     idx += 1
@@ -307,15 +307,15 @@ end
 
 
 """
-`NucleotideSequence(DNANucleotide|RNANucleotide, seq::String)`
+`NucleotideSequence(DNANucleotide|RNANucleotide, seq::AbstractString)`
 
 Construct a subsequence from the `seq` string
 """
-function NucleotideSequence{T<:Nucleotide}(::Type{T}, seq::Union(String, Vector{Uint8}),
+function NucleotideSequence{T<:Nucleotide}(::Type{T}, seq::Union(AbstractString, Vector{UInt8}),
                                            startpos::Int, stoppos::Int,
                                            unsafe::Bool=false; mutable::Bool=false)
     len = seq_data_len(stoppos - startpos + 1)
-    data = zeros(Uint64, len)
+    data = zeros(UInt64, len)
     ns = BitArray(stoppos - startpos + 1)
     fill!(ns, false)
 
@@ -331,8 +331,8 @@ function NucleotideSequence{T<:Nucleotide}(::Type{T}, seq::Union(String, Vector{
 end
 
 
-function NucleotideSequence{T<:Nucleotide}(t::Type{T}, seq::Union(String,
-                                           Vector{Uint8}); mutable::Bool=false)
+function NucleotideSequence{T<:Nucleotide}(t::Type{T}, seq::Union(AbstractString,
+                                           Vector{UInt8}); mutable::Bool=false)
     return NucleotideSequence(t, seq, 1, length(seq), mutable=mutable)
 end
 
@@ -381,7 +381,7 @@ function NucleotideSequence{T<:Nucleotide}(chunks::NucleotideSequence{T}...)
     end
 
     datalen = seq_data_len(seqlen)
-    data = zeros(Uint64, datalen)
+    data = zeros(UInt64, datalen)
     ns   = BitArray(seqlen)
     newseq = NucleotideSequence{T}(data, ns, 1:seqlen, false, false)
     fill!(ns, false)
@@ -404,7 +404,7 @@ Construct a NucleotideSequence from an array of nucleotides.
 """
 function NucleotideSequence{T<:Nucleotide}(seq::AbstractVector{T}; mutable::Bool=false)
     len = seq_data_len(length(seq))
-    data = zeros(Uint64, len)
+    data = zeros(UInt64, len)
     ns = BitArray(length(seq))
     fill!(ns, false)
 
@@ -413,7 +413,7 @@ function NucleotideSequence{T<:Nucleotide}(seq::AbstractVector{T}; mutable::Bool
             ns[i] = true
         else
             d, r = divrem32(i - 1)
-            data[d + 1] |= convert(Uint64, nt) << (2*r)
+            data[d + 1] |= convert(UInt64, nt) << (2*r)
         end
     end
 
@@ -452,7 +452,7 @@ function repeat{T<:Nucleotide}(chunk::NucleotideSequence{T}, n::Integer)
     seqlen = n * length(chunk)
 
     datalen = seq_data_len(seqlen)
-    data = zeros(Uint64, datalen)
+    data = zeros(UInt64, datalen)
     ns   = BitArray(seqlen)
     newseq = NucleotideSequence{T}(data, ns, 1:seqlen, false, false)
     fill!(ns, false)
@@ -547,15 +547,15 @@ DNASequence(other::NucleotideSequence, part::UnitRange; mutable::Bool=false) =
     NucleotideSequence(DNANucleotide, other, part, mutable=mutable)
 
 "Construct a DNA nucleotide sequence from a String"
-DNASequence(seq::String; mutable=false) =
+DNASequence(seq::AbstractString; mutable=false) =
     NucleotideSequence(DNANucleotide, seq, mutable=mutable)
 
 
 "Construct a DNA nucleotide sequence from other sequences"
 DNASequence(chunk1::DNASequence, chunks::DNASequence...) = NucleotideSequence(chunk1, chunks...)
-DNASequence(seq::Union(Vector{Uint8}, String); mutable::Bool=false) =
+DNASequence(seq::Union(Vector{UInt8}, AbstractString); mutable::Bool=false) =
     NucleotideSequence(DNANucleotide, seq, mutable=mutable)
-DNASequence(seq::Union(Vector{Uint8}, String), startpos::Int, endpos::Int, unsafe::Bool=false; mutable::Bool=false) =
+DNASequence(seq::Union(Vector{UInt8}, AbstractString), startpos::Int, endpos::Int, unsafe::Bool=false; mutable::Bool=false) =
     NucleotideSequence(DNANucleotide, seq, startpos, endpos, unsafe, mutable=mutable)
 DNASequence(seq::AbstractVector{DNANucleotide}; mutable::Bool=false) =
     NucleotideSequence(seq, mutable=mutable)
@@ -573,14 +573,14 @@ RNASequence(other::NucleotideSequence, part::UnitRange; mutable::Bool=false) =
     NucleotideSequence(RNANucleotide, other, part, mutable=mutable)
 
 "Construct a RNA nucleotide sequence from a String"
-RNASequence(seq::String; mutable::Bool=false) =
+RNASequence(seq::AbstractString; mutable::Bool=false) =
     NucleotideSequence(RNANucleotide, seq, mutable=mutable)
 
 "Construct a RNA nucleotide sequence from other sequences"
 RNASequence(chunk1::RNASequence, chunks::RNASequence...) = NucleotideSequence(chunk1, chunks...)
-RNASequence(seq::Union(Vector{Uint8}, String); mutable::Bool=false) =
+RNASequence(seq::Union(Vector{UInt8}, AbstractString); mutable::Bool=false) =
     NucleotideSequence(RNANucleotide, seq, mutable=mutable)
-RNASequence(seq::Union(Vector{Uint8}, String), startpos::Int, endpos::Int, unsafe::Bool=false; mutable::Bool=false) =
+RNASequence(seq::Union(Vector{UInt8}, AbstractString), startpos::Int, endpos::Int, unsafe::Bool=false; mutable::Bool=false) =
     NucleotideSequence(RNANucleotide, seq, startpos, endpos, unsafe, mutable=mutable)
 RNASequence(seq::AbstractVector{RNANucleotide}; mutable::Bool=false) =
     NucleotideSequence(seq, mutable=mutable)
@@ -592,13 +592,13 @@ RNASequence(seq::AbstractVector{RNANucleotide}; mutable::Bool=false) =
 # Convert from/to Strings
 
 "Convert a String to a DNASequence"
-convert(::Type{DNASequence}, seq::String) = DNASequence(seq)
+convert(::Type{DNASequence}, seq::AbstractString) = DNASequence(seq)
 
 "Convert a String to a RNASequence"
-convert(::Type{RNASequence}, seq::String) = RNASequence(seq)
+convert(::Type{RNASequence}, seq::AbstractString) = RNASequence(seq)
 
 "Convert a NucleotideSequence to a String"
-convert(::Type{String}, seq::NucleotideSequence) = convert(String, [convert(Char, x) for x in seq])
+convert(::Type{AbstractString}, seq::NucleotideSequence) = convert(AbstractString, [convert(Char, x) for x in seq])
 
 
 # Convert between RNA and DNA
@@ -667,9 +667,9 @@ function =={T}(a::NucleotideSequence{T}, b::NucleotideSequence{T})
 end
 
 # Get the nucleotide at position i, ignoring the N mask.
-@inline function getnuc(T::Type, data::Vector{Uint64}, i::Integer)
+@inline function getnuc(T::Type, data::Vector{UInt64}, i::Integer)
     d, r = divrem32(i - 1)
-    return convert(T, convert(Uint8, (data[d + 1] >>> (2*r)) & 0b11))
+    return convert(T, convert(UInt8, (data[d + 1] >>> (2*r)) & 0b11))
 end
 
 function getindex{T}(seq::NucleotideSequence{T}, i::Integer)
@@ -699,12 +699,12 @@ function setindex!{T}(seq::NucleotideSequence{T}, nt::T, i::Integer)
     d, r = divrem(i - 1, 32)
     if nt == nnucleotide(T)
         @inbounds seq.ns[i] = true
-        @inbounds seq.data[d + 1] $= (@compat UInt64(0b11)) << (2*r)
+        @inbounds seq.data[d + 1] $= UInt64(0b11) << (2*r)
     else
         @inbounds seq.ns[i] = false
         @inbounds seq.data[d + 1] =
-            (seq.data[d + 1] & ~((@compat UInt64(0b11)) << (2*r))) |
-                (convert(Uint64, nt) << (2*r))
+            (seq.data[d + 1] & ~(UInt64(0b11) << (2*r))) |
+                (convert(UInt64, nt) << (2*r))
     end
     return nt
 end
@@ -730,7 +730,7 @@ function orphan!{T}(seq::NucleotideSequence{T}, reorphan=false)
         return seq
     end
 
-    data   = zeros(Uint64, seq_data_len(length(seq)))
+    data   = zeros(UInt64, seq_data_len(length(seq)))
     d0, r0 = divrem32(seq.part.start - 1)
 
     h = 64 - 2*r0
@@ -780,7 +780,7 @@ end
         value = nnucleotide(T)
     else
         d, r = divrem32(i - 1)
-        @inbounds value = convert(T, ((seq.data[d + 1] >>> (2 * r)) & 0b11) % Uint8)
+        @inbounds value = convert(T, ((seq.data[d + 1] >>> (2 * r)) & 0b11) % UInt8)
     end
 
     return value, (i + 1, npos)
@@ -825,8 +825,8 @@ The nucleotide complement of the sequence `seq`
 """
 complement(seq::NucleotideSequence) = unsafe_complement!(copy(seq))
 
-# Nucleotide reverse. Reverse a kmer stored in a Uint64.
-function nucrev(x::Uint64)
+# Nucleotide reverse. Reverse a kmer stored in a UInt64.
+function nucrev(x::UInt64)
      x = (x & 0x3333333333333333) <<  2 | (x & 0xCCCCCCCCCCCCCCCC) >>>  2
      x = (x & 0x0F0F0F0F0F0F0F0F) <<  4 | (x & 0xF0F0F0F0F0F0F0F0) >>>  4
      x = (x & 0x00FF00FF00FF00FF) <<  8 | (x & 0xFF00FF00FF00FF00) >>>  8
@@ -850,7 +850,7 @@ function reverse{T}(seq::NucleotideSequence{T})
     k = (2 * length(seq) + 63) % 64 + 1
     h = 64 - k
 
-    data = zeros(Uint64, length(seq.data))
+    data = zeros(UInt64, length(seq.data))
     j = length(data)
     i = 1
     @inbounds while true
@@ -971,12 +971,12 @@ end
 # -----------------
 
 "Mismatch count between two kmers"
-function nucmismatches(x::Uint64, y::Uint64)
+function nucmismatches(x::UInt64, y::UInt64)
     xyxor = x $ y
     return count_ones((xyxor & 0x5555555555555555) | ((xyxor & 0xAAAAAAAAAAAAAAAA) >>> 1))
 end
 
-"Mask of the first `k` bits of a Uint64"
+"Mask of the first `k` bits of a UInt64"
 function makemask(k::Integer)
     return 0xffffffffffffffff >> (64 - k)
 end
@@ -1123,35 +1123,35 @@ typealias Codon RNAKmer{3}
 # Conversion
 # ----------
 
-# Conversion to/from Uint64
+# Conversion to/from UInt64
 
-"Convert a Uint64 to a DNAKmer"
-convert{K}(::Type{DNAKmer{K}}, x::Uint64) = box(DNAKmer{K}, unbox(Uint64, x))
+"Convert a UInt64 to a DNAKmer"
+convert{K}(::Type{DNAKmer{K}}, x::UInt64) = box(DNAKmer{K}, unbox(UInt64, x))
 
-"Convert a Uint64 to a RNAKmer"
-convert{K}(::Type{RNAKmer{K}}, x::Uint64) = box(RNAKmer{K}, unbox(Uint64, x))
+"Convert a UInt64 to a RNAKmer"
+convert{K}(::Type{RNAKmer{K}}, x::UInt64) = box(RNAKmer{K}, unbox(UInt64, x))
 
-"Convert a DNAKmer to a Uint64"
-convert{K}(::Type{Uint64}, x::DNAKmer{K})       = box(Uint64, unbox(DNAKmer{K}, x))
+"Convert a DNAKmer to a UInt64"
+convert{K}(::Type{UInt64}, x::DNAKmer{K})       = box(UInt64, unbox(DNAKmer{K}, x))
 
-"Convert a RNAKmer to a Uint64"
-convert{K}(::Type{Uint64}, x::RNAKmer{K})       = box(Uint64, unbox(RNAKmer{K}, x))
+"Convert a RNAKmer to a UInt64"
+convert{K}(::Type{UInt64}, x::RNAKmer{K})       = box(UInt64, unbox(RNAKmer{K}, x))
 
 
 # Conversion to/from String
 
 "Convert a String to a Kmer"
-function convert{T, K}(::Type{Kmer{T, K}}, seq::String)
+function convert{T, K}(::Type{Kmer{T, K}}, seq::AbstractString)
     @assert length(seq) <= 32 error("Cannot construct a K-mer longer than 32nt.")
     @assert length(seq) == K error("Cannot construct a $(K)-mer from a string of length $(length(seq))")
 
-    x     = @compat UInt64(0)
+    x     = UInt64(0)
     shift = 0
     for (i, c) in enumerate(seq)
         nt = convert(T, c)
         @assert nt != nnucleotide(T) error("A K-mer may not contain an N in its sequence")
 
-        x |= convert(Uint64, nt) << shift
+        x |= convert(UInt64, nt) << shift
         shift += 2
     end
 
@@ -1159,10 +1159,10 @@ function convert{T, K}(::Type{Kmer{T, K}}, seq::String)
 end
 
 "Convert a String to a Kmer"
-convert{T}(::Type{Kmer{T}}, seq::String) = convert(Kmer{T, length(seq)}, seq)
+convert{T}(::Type{Kmer{T}}, seq::AbstractString) = convert(Kmer{T, length(seq)}, seq)
 
 "Convert a Kmer to a String"
-convert{T, K}(::Type{String}, seq::Kmer{T, K}) = convert(String, [convert(Char, x) for x in seq])
+convert{T, K}(::Type{AbstractString}, seq::Kmer{T, K}) = convert(AbstractString, [convert(Char, x) for x in seq])
 
 
 # Conversion to/from NucleotideSequence
@@ -1172,13 +1172,13 @@ function convert{T, K}(::Type{Kmer{T, K}}, seq::NucleotideSequence{T})
     @assert length(seq) <= 32 error("Cannot construct a K-mer longer than 32nt.")
     @assert length(seq) == K error("Cannot construct a $(K)-mer from a NucleotideSequence of length $(length(seq))")
 
-    x     = @compat UInt64(0)
+    x     = UInt64(0)
     shift = 0
     for (i, nt) in enumerate(seq)
         if nt == nnucleotide(T)
             error("A K-mer may not contain an N in its sequence")
         end
-        x |= convert(Uint64, nt) << shift
+        x |= convert(UInt64, nt) << shift
         shift += 2
     end
     return convert(Kmer{T, K}, x)
@@ -1194,7 +1194,7 @@ convert{T}(::Type{Kmer{T}}, seq::NucleotideSequence{T}) = convert(Kmer{T, length
 function convert{T, K}(::Type{NucleotideSequence{T}}, x::Kmer{T, K})
     ns = BitVector(K)
     fill!(ns, false)
-    return NucleotideSequence{T}([convert(Uint64, x)], ns, 1:K, false, false)
+    return NucleotideSequence{T}([convert(UInt64, x)], ns, 1:K, false, false)
 end
 
 "Convert a Kmer to a NucleotideSequence"
@@ -1209,10 +1209,10 @@ convert{T, K}(::Type{NucleotideSequence}, x::Kmer{T, K}) = convert(NucleotideSeq
 # From strings
 
 "Construct a DNAKmer to a String"
-dnakmer(seq::String) = convert(DNAKmer, seq)
+dnakmer(seq::AbstractString) = convert(DNAKmer, seq)
 
 "Construct a RNAKmer to a String"
-rnakmer(seq::String) = convert(RNAKmer, seq)
+rnakmer(seq::AbstractString) = convert(RNAKmer, seq)
 
 "Construct a Kmer from a sequence of Nucleotides"
 function kmer{T <: Nucleotide}(nts::T...)
@@ -1221,13 +1221,13 @@ function kmer{T <: Nucleotide}(nts::T...)
         error(string("Cannot construct a K-mer longer than 32nt."))
     end
 
-    x = @compat UInt64(0)
+    x = UInt64(0)
     shift = 0
     for (i, nt) in enumerate(nts)
         if nt == nnucleotide(T)
             error("A Kmer may not contain an N in its sequence")
         end
-        x |= convert(Uint64, nt) << shift
+        x |= convert(UInt64, nt) << shift
         shift += 2
     end
     return convert(Kmer{T, K}, x)
@@ -1286,7 +1286,7 @@ function getindex{T, K}(x::Kmer{T, K}, i::Integer)
     if i < 1 || i > K
         throw(BoundsError())
     end
-    return convert(T, (convert(Uint64, x) >>> (2*(i-1))) & 0b11)
+    return convert(T, (convert(UInt64, x) >>> (2*(i-1))) & 0b11)
 end
 
 
@@ -1306,7 +1306,7 @@ function show{K}(io::IO, x::RNAKmer{K})
 end
 
 
-isless{T, K}(x::Kmer{T, K}, y::Kmer{T, K}) = convert(Uint64, x) < convert(Uint64, y)
+isless{T, K}(x::Kmer{T, K}, y::Kmer{T, K}) = convert(UInt64, x) < convert(UInt64, y)
 
 length{T, K}(x::Kmer{T, K}) = K
 
@@ -1314,7 +1314,7 @@ length{T, K}(x::Kmer{T, K}) = K
 start(x::Kmer) = 1
 
 function next{T, K}(x::Kmer{T, K}, i::Int)
-    nt = convert(T, (convert(Uint64, x) >>> (2*(i-1))) & 0b11)
+    nt = convert(T, (convert(UInt64, x) >>> (2*(i-1))) & 0b11)
     return (nt, i + 1)
 end
 
@@ -1331,7 +1331,7 @@ The Kmer complement of `kmer`
 """
 function complement{T, K}(x::Kmer{T, K})
     return convert(Kmer{T, K},
-        (~convert(Uint64, x)) & (0xffffffffffffffff >>> (2 * (32 - K))))
+        (~convert(UInt64, x)) & (0xffffffffffffffff >>> (2 * (32 - K))))
 end
 
 """
@@ -1339,7 +1339,7 @@ end
 
 Reversed copy of `kmer`
 """
-reverse{T, K}(x::Kmer{T, K}) = convert(Kmer{T, K}, nucrev(convert(Uint64, x)) >>> (2 * (32 - K)))
+reverse{T, K}(x::Kmer{T, K}) = convert(Kmer{T, K}, nucrev(convert(UInt64, x)) >>> (2 * (32 - K)))
 
 """
 `reverse_complement(kmer::Kmer)`
@@ -1360,7 +1360,7 @@ Return the number of mismatches between `x` and `y`.
 # Returns
 The number of mismatches
 """
-mismatches{T, K}(x::Kmer{T, K}, y::Kmer{T, K}) = nucmismatches(convert(Uint64, x), convert(Uint64, y))
+mismatches{T, K}(x::Kmer{T, K}, y::Kmer{T, K}) = nucmismatches(convert(UInt64, x), convert(UInt64, y))
 
 """
 `canonical(x::Kmer)`
@@ -1390,11 +1390,11 @@ immutable KmerNeighborIterator{T, K}
 end
 
 
-start(it::KmerNeighborIterator) = @compat UInt64(0)
+start(it::KmerNeighborIterator) = UInt64(0)
 done(it::KmerNeighborIterator, i) = i == 4
 length(::KmerNeighborIterator) = 4
 next{T, K}(it::KmerNeighborIterator{T, K}, i) =
-    convert(Kmer{T, K}, (convert(Uint64, it.x) >>> 2) | (i << (2 * K - 2))), i + 1
+    convert(Kmer{T, K}, (convert(UInt64, it.x) >>> 2) | (i << (2 * K - 2))), i + 1
 
 
 # EachKmerIterator and EachKmerIteratorState
@@ -1410,7 +1410,7 @@ end
 immutable EachKmerIteratorState{T, K}
     i::Int
     npos::Int
-    x::Uint64
+    x::UInt64
 end
 
 # Maybe this function should replace the default constructor.
@@ -1501,7 +1501,7 @@ end
 @inline function start{T, K}(it::EachKmerIterator{T, K})
     i = it.seq.part.start
     npos = nextone(it.seq.ns, i)
-    state = EachKmerIteratorState{T, K}(i - 1, npos, @compat UInt64(0))
+    state = EachKmerIteratorState{T, K}(i - 1, npos, UInt64(0))
     if i <= it.seq.part.stop
         return nextkmer(it, state, K)
     else
@@ -1528,11 +1528,11 @@ end
 # ======================
 
 type NucleotideCounts{T <: Nucleotide}
-    a::Uint
-    c::Uint
-    g::Uint
-    t::Uint # also hold 'U' count when T == RNANucleotide
-    n::Uint
+    a::UInt
+    c::UInt
+    g::UInt
+    t::UInt # also hold 'U' count when T == RNANucleotide
+    n::UInt
 
     function NucleotideCounts()
         new(0, 0, 0, 0, 0)
@@ -1550,14 +1550,14 @@ typealias RNANucleotideCounts NucleotideCounts{RNANucleotide}
 # Constructors
 # ------------
 
-# Count A, C, T/U, G respectively in a kmer stored in a Uint64
-function count_a(x::Uint64)
+# Count A, C, T/U, G respectively in a kmer stored in a UInt64
+function count_a(x::UInt64)
     xinv = ~x
     return count_ones(((xinv >>> 1) & xinv) & 0x5555555555555555)
 end
-count_c(x::Uint64) = count_ones((((~x) >>> 1) & x) & 0x5555555555555555)
-count_g(x::Uint64) = count_ones(((x >>> 1) & (~x)) & 0x5555555555555555)
-count_t(x::Uint64) = count_ones((x    & (x >>> 1)) & 0x5555555555555555)
+count_c(x::UInt64) = count_ones((((~x) >>> 1) & x) & 0x5555555555555555)
+count_g(x::UInt64) = count_ones(((x >>> 1) & (~x)) & 0x5555555555555555)
+count_t(x::UInt64) = count_ones((x    & (x >>> 1)) & 0x5555555555555555)
 
 """
 `NucleotideCounts(seq::NucleotideSequence)`
@@ -1629,7 +1629,7 @@ end
 Constructs a NucleotideCounts object from a Kmer `seq`.
 """
 function NucleotideCounts{T,K}(seq::Kmer{T, K})
-    x         = convert(Uint64, seq)
+    x         = convert(UInt64, seq)
     counts    = NucleotideCounts{T}()
     counts.a += count_a(x) - 32 + K # Take leading zeros into account
     counts.c += count_c(x)
@@ -1643,12 +1643,12 @@ end
 # Basic Functions
 # ---------------
 
-getindex{T}(counts::NucleotideCounts{T}, nt::T) = getfield(counts, (@compat Int(convert(Uint, nt) + 1)))
-setindex!{T}(counts::NucleotideCounts{T}, c::Integer, nt::T) = setfield!(counts, (@compat Int(convert(Uint, nt) + 1)), c)
+getindex{T}(counts::NucleotideCounts{T}, nt::T) = getfield(counts, Int(convert(UInt, nt) + 1))
+setindex!{T}(counts::NucleotideCounts{T}, c::Integer, nt::T) = setfield!(counts, Int(convert(UInt, nt) + 1), c)
 
 # Pad strings so they are right justified when printed
 function format_counts(xs)
-    strings = String[string(x) for x in xs]
+    strings = AbstractString[string(x) for x in xs]
     len = maximum(map(length, strings))
     for i in 1:length(strings)
         strings[i] = string(repeat(" ", len - length(strings[i])), strings[i])
@@ -1697,16 +1697,16 @@ end
 Count ocurrences of short (<= 32) k-mers in a sequence.
 
 # Arguments:
-  * 'seq`: A NucleotideSequence
+  * `seq`: A NucleotideSequence
   * `step`: K-mers counted are separated by this many nucleotides (deafult: 1)
 """
 immutable KmerCounts{T, K}
-    data::Vector{Uint32}
+    data::Vector{UInt32}
 
     function KmerCounts(seq::NucleotideSequence{T}, step::Integer=1)
-        data = zeros(Uint32, 4^K)
+        data = zeros(UInt32, 4^K)
         @inbounds for (_, x) in each(Kmer{T, K}, seq, step)
-            data[convert(Uint64, x) + 1] += 1
+            data[convert(UInt64, x) + 1] += 1
         end
         return new(data)
     end
@@ -1717,17 +1717,15 @@ typealias RNAKmerCounts{K} KmerCounts{DNANucleotide, K}
 
 
 function getindex{T, K}(counts::KmerCounts{T, K}, x::Kmer{T, K})
-    @inbounds c = counts.data[convert(Uint64, x) + 1]
+    @inbounds c = counts.data[convert(UInt64, x) + 1]
     return c
 end
 
 
 function show{T, K}(io::IO, counts::KmerCounts{T, K})
     println(io, (T == DNANucleotide ? "DNA" : "RNA"), "KmerCounts{", K, "}:")
-    for x in (@compat UInt64(1)):(@compat UInt64(4^K))
-        s = convert(String, convert(Kmer{T, K}, x - 1))
+    for x in UInt64(1):UInt64(4^K)
+        s = convert(AbstractString, convert(Kmer{T, K}, x - 1))
         println(io, "  ", s, " => ", counts.data[x])
     end
 end
-
-

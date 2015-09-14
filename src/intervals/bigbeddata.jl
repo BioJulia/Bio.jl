@@ -3,18 +3,18 @@ type BigBedData <: IntervalStream{BEDMetadata}
     stream::BufferedInputStream
     header::BigBedHeader
     zoom_headers::Vector{BigBedZoomHeader}
-    autosql::String
+    autosql::AbstractString
     summary::BigBedTotalSummary
     btree_header::BigBedBTreeHeader
     rtree_header::BigBedRTreeHeader
-    data_count::Uint32
+    data_count::UInt32
 
     # preallocated space for reading and searching the B-tree
     btree_internal_nodes::Vector{BigBedBTreeInternalNode}
     btree_leaf_nodes::Vector{BigBedBTreeLeafNode}
-    key::Vector{Uint8}
-    node_keys::Vector{Vector{Uint8}}
-    uncompressed_data::Vector{Uint8}
+    key::Vector{UInt8}
+    node_keys::Vector{Vector{UInt8}}
+    uncompressed_data::Vector{UInt8}
 end
 
 
@@ -1037,5 +1037,3 @@ end
 end
 @label _out
 end)
-
-

@@ -1,10 +1,10 @@
 module TestIntervals
 
-using FactCheck
-using Distributions
-using Bio
-using Bio.Intervals
-using YAML
+using FactCheck,
+    Bio.Intervals,
+    Distributions,
+    YAML
+
 import ..get_bio_fmt_specimens
 
 
@@ -78,14 +78,14 @@ end
 
 
 function simple_coverage(intervals)
-    seqlens = Dict{String, Int}()
+    seqlens = Dict{AbstractString, Int}()
     for interval in intervals
         if get(seqlens, interval.seqname, -1) < interval.last
             seqlens[interval.seqname] = interval.last
         end
     end
 
-    covarrays = Dict{String, Vector{Int}}()
+    covarrays = Dict{AbstractString, Vector{Int}}()
     for (seqname, seqlen) in seqlens
         covarrays[seqname] = zeros(Int, seqlen)
     end
@@ -97,7 +97,7 @@ function simple_coverage(intervals)
         end
     end
 
-    covintervals = Interval{Uint32}[]
+    covintervals = Interval{UInt32}[]
     for (seqname, arr) in covarrays
         i = j = 1
         while i <= length(arr)
@@ -107,7 +107,7 @@ function simple_coverage(intervals)
                     j += 1
                 end
                 push!(covintervals,
-                      Interval{Uint32}(seqname, i, j - 1, STRAND_BOTH, arr[i]))
+                      Interval{UInt32}(seqname, i, j - 1, STRAND_BOTH, arr[i]))
                 i = j
             else
                 i += 1

@@ -1,12 +1,30 @@
-
 module Ragel
 
-using Bio: FileFormat, AbstractParser
-using Compat
-using BufferedStreams
-using Switch
-import Base: push!, pop!, endof, append!, empty!, isempty, length, getindex,
-             setindex!, (==), takebuf_string, read!, seek
+using BufferedStreams,
+    Switch
+
+using Bio:
+    FileFormat,
+    AbstractParser
+
+import Base:
+    push!,
+    pop!,
+    endof,
+    append!,
+    empty!,
+    isempty,
+    length,
+    getindex,
+    setindex!,
+    (==),
+    takebuf_string,
+    read!,
+    seek,
+    open,
+    start,
+    next,
+    done
 
 
 # A type keeping track of a ragel-based parser's state.
@@ -75,9 +93,9 @@ end
 # doesn't check that the characters are digits (we don't need to since this is
 # already checked during parsing).
 function parse_int64(buffer, firstpos, lastpos)
-    x = @compat Int64(0)
+    x = Int64(0)
     for i in firstpos:lastpos
-        x = x * 10 + buffer[i] - (@compat UInt8('0'))
+        x = x * 10 + buffer[i] - UInt8('0')
     end
     return x
 end
@@ -234,10 +252,10 @@ macro generate_read_fuction(machine_name, input_type, output_type, ragel_body)
 end
 
 
-# Open functions for various sources.
+# Open functions for various sources
+# ----------------------------------
 
-
-function Base.open{T <: FileFormat}(filename::String, ::Type{T}; args...)
+function open{T <: FileFormat}(filename::AbstractString, ::Type{T}; args...)
     memory_map = false
     i = 0
     for arg in args
@@ -252,7 +270,7 @@ function Base.open{T <: FileFormat}(filename::String, ::Type{T}; args...)
     end
 
     if memory_map
-        source = Mmap.mmap(open(filename), Vector{Uint8}, (filesize(filename),))
+        source = Mmap.mmap(open(filename), Vector{UInt8}, (filesize(filename),))
     else
         source = open(filename)
     end
@@ -262,15 +280,15 @@ function Base.open{T <: FileFormat}(filename::String, ::Type{T}; args...)
 end
 
 
-function Base.open{T <: FileFormat}(source::Union(IO, Vector{UInt8}), ::Type{T}; args...)
+function open{T <: FileFormat}(source::Union(IO, Vector{UInt8}), ::Type{T}; args...)
     open(BufferedInputStream(source), T; args...)
 end
 
 
 # Iterators for parsers
+# ---------------------
 
-
-function Base.start{PT <: AbstractParser}(parser::PT)
+function start{PT <: AbstractParser}(parser::PT)
     ET = eltype(PT)
     nextitem = ET()
     if read!(parser, nextitem)
@@ -281,7 +299,7 @@ function Base.start{PT <: AbstractParser}(parser::PT)
 end
 
 
-function Base.next{ET}(parser::AbstractParser, nextitem_::Nullable{ET})
+function next{ET}(parser::AbstractParser, nextitem_::Nullable{ET})
     nextitem = get(nextitem_)
     value = copy(nextitem)
     return (value,
@@ -289,10 +307,9 @@ function Base.next{ET}(parser::AbstractParser, nextitem_::Nullable{ET})
 end
 
 
-function Base.done(parser::AbstractParser, nextitem::Nullable)
+function done(parser::AbstractParser, nextitem::Nullable)
     return isnull(nextitem)
 end
 
 
 end # module Ragel
-

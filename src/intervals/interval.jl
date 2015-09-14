@@ -3,8 +3,8 @@
 # ---------------------------------
 bitstype 8 Strand
 
-convert(::Type{Strand}, strand::Uint8) = box(Strand, unbox(Uint8, strand))
-convert(::Type{Uint8}, strand::Strand) = box(Uint8, unbox(Strand, strand))
+convert(::Type{Strand}, strand::UInt8) = box(Strand, unbox(UInt8, strand))
+convert(::Type{UInt8}, strand::Strand) = box(UInt8, unbox(Strand, strand))
 
 
 const STRAND_NA   = convert(Strand, 0b000)
@@ -27,7 +27,7 @@ function show(io::IO, strand::Strand)
 end
 
 
-isless(a::Strand, b::Strand) = convert(Uint8, a) < convert(Uint8, b)
+isless(a::Strand, b::Strand) = convert(UInt8, a) < convert(UInt8, b)
 
 
 function convert(::Type{Strand}, strand::Char)
@@ -64,19 +64,19 @@ type Interval{T} <: AbstractInterval{Int64}
 end
 
 
-function Interval{T}(seqname::String, first::Integer, last::Integer,
+function Interval{T}(seqname::AbstractString, first::Integer, last::Integer,
                     strand::Strand, metadata::T)
     return Interval{T}(convert(StringField, seqname), first, last, strand, metadata)
 end
 
 
-function Interval(seqname::String, first::Integer, last::Integer,
+function Interval(seqname::AbstractString, first::Integer, last::Integer,
                   strand::Strand=STRAND_BOTH)
     return Interval{Nothing}(seqname, first, last, strand, nothing)
 end
 
 
-function Base.copy{T}(interval::Interval{T})
+function copy{T}(interval::Interval{T})
     return Interval{T}(copy(interval.seqname), interval.first, interval.last,
                        interval.strand, copy(interval.metadata))
 end
