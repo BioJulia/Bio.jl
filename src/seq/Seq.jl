@@ -101,6 +101,7 @@ import Base:
     unsafe_copy!,
     read,
     read!,
+    write,
     open,
     eltype,
     getindex,
