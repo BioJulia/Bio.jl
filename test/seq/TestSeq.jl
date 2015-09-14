@@ -202,7 +202,7 @@ facts("Nucleotides") do
                 @fact convert(Char, DNA_N) --> 'N'
             end
 
-            context("DNA conversions to Char") do
+            context("RNA conversions to Char") do
                 @fact convert(Char, RNA_A) --> 'A'
                 @fact convert(Char, RNA_C) --> 'C'
                 @fact convert(Char, RNA_G) --> 'G'
@@ -212,12 +212,20 @@ facts("Nucleotides") do
         end
     end
 
-    context("Show") do
+    context("Show DNA") do
         buf = IOBuffer()
         for nt in [DNA_A, DNA_C, DNA_G, DNA_T, DNA_N]
             show(buf, nt)
         end
         @fact takebuf_string(buf) --> "ACGTN"
+    end
+    
+    context("Show RNA") do
+        buf = IOBuffer()
+        for nt in [RNA_A, RNA_C, RNA_G, RNA_U, RNA_N]
+            show(buf, nt)
+        end
+        @fact takebuf_string(buf) --> "ACGUN"
     end
 
     context("Sequences") do
