@@ -9,6 +9,10 @@ Bio.jl
 
 Bioinformatics and Computational Biology infrastructure for [Julia](http://julialang.org)
 
+## Documentation
+
+[Read the manual here.](http://biojulia.github.io/Bio.jl/)
+
 ## Running tests
 
 `julia test/runtests.jl`
