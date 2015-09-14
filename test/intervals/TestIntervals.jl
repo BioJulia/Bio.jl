@@ -341,18 +341,31 @@ facts("Interval Parsing") do
 
         function check_bed_parse(filename)
             # Reading from a stream
-            for seqrec in open(open(filename), BED)
+            for interval in open(open(filename), BED)
             end
 
             # Reading from a memory mapped file
-            for seqrec in open(filename, BED, memory_map=true)
+            for interval in open(filename, BED, memory_map=true)
             end
 
             # Reading from a regular file
-            for seqrec in open(filename, BED, memory_map=false)
+            for interval in open(filename, BED, memory_map=false)
             end
 
-            return true
+            # Check round trip
+            output = IOBuffer()
+            expected_entries = Any[]
+            for interval in open(filename, BED)
+                write(output, interval)
+                push!(expected_entries, interval)
+            end
+
+            read_entries = Any[]
+            for interval in open(takebuf_array(output), BED)
+                push!(read_entries, interval)
+            end
+
+            return expected_entries == read_entries
         end
 
         path = Pkg.dir("Bio", "test", "BioFmtSpecimens", "BED")
