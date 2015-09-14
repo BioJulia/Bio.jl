@@ -21,6 +21,11 @@ function FASTQMetadata()
 end
 
 
+function (==)(a::FASTQMetadata, b::FASTQMetadata)
+    return a.description == b.description && a.quality == b.quality
+end
+
+
 function copy(metadata::FASTQMetadata)
     return FASTQMetadata(copy(metadata.description), copy(metadata.quality))
 end
@@ -72,23 +77,40 @@ end
 """
 Write a `FASTQSeqRecord` to `io`, as a valid FASTQ record.
 """
-function write(io::IO, seqrec::FASTQSeqRecord; offset::Integer=33,
+function write(io::IO, seqrec::FASTQSeqRecord; offset::Integer=-1,
                qualheader::Bool=false)
-    write(io, "@", seqrec.name, " ", seqrec.metadata.description, "\n")
+
+    # choose offset automatically
+    if offset < 0
+        if !isempty(seqrec.metadata.quality) && minimum(seqrec.metadata.quality) < 0
+            offset = 64 # solexa quality offset
+        else
+            offset = 33  # sanger
+        end
+    end
+
+    write(io, "@", seqrec.name)
+    if !isempty(seqrec.metadata.description)
+        write(io, " ", seqrec.metadata.description)
+    end
+    write(io, "\n")
 
     for c in seqrec.seq
         show(io, c)
     end
     write(io, "\n")
 
+    write(io, "+")
     if qualheader
-        write(io, "+", seqrec.name, " ", seqrec.metadata.description, "\n")
-    else
-        write(io, "+\n")
+        write(io, seqrec.name)
+        if !isempty(seqrec.metadata.description)
+            write(io, " ", seqrec.metadata.description)
+        end
     end
+    write(io, "\n")
 
     for q in seqrec.metadata.quality
-        write(io, char(q + offset))
+        write(io, Char(q + offset))
     end
     write(io, "\n")
 end

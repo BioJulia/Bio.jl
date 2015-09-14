@@ -1383,7 +1383,20 @@ facts("Sequence Parsing") do
             for seqrec in open(filename, FASTQ, memory_map=true)
             end
 
-            return true
+            # Check round trip
+            output = IOBuffer()
+            expected_entries = Any[]
+            for seqrec in open(filename, FASTQ)
+                write(output, seqrec)
+                push!(expected_entries, seqrec)
+            end
+
+            read_entries = Any[]
+            for seqrec in open(takebuf_array(output), FASTQ)
+                push!(read_entries, seqrec)
+            end
+
+            return expected_entries == read_entries
         end
 
         path = Pkg.dir("Bio", "test", "BioFmtSpecimens", "FASTQ")
