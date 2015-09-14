@@ -41,7 +41,7 @@ end
 
 
 "Writes a FASTASeqRecord to an IO-stream (and obeys FASTAs max character constraint)"
-function Base.write(io::IO, seqrec::FASTASeqRecord)
+function Base.write{T}(io::IO, seqrec::SeqRecord{T, FASTAMetadata})
     header = strip(string(">", seqrec.name, " ", seqrec.metadata.description))
     write(io, header, "\n")
     maxchars = 79

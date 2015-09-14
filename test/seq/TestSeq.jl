@@ -1386,8 +1386,6 @@ facts("Sequence Parsing") do
     end
 end
 
-<<<<<<< 6081c32c52479f1f54e87da631c85e2eb6312e53:test/seq/TestSeq.jl
-<<<<<<< d0c8881f1edebf8ff6a9d44e3d3884343b2d6dca:test/seq/TestSeq.jl
 facts("Quality scores") do
     using Bio.Seq: encode_quality_string!,
                    encode_quality_string,
