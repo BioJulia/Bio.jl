@@ -338,6 +338,7 @@ parser state between calls. This type must have a field called `state` of type
 as intermediate results.
 
 ```julia
+using Bio: AbstractParser
 import Bio.Ragel
 
 type BED3Parser <: AbstractParser
