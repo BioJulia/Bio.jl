@@ -1354,13 +1354,13 @@ reverse_complement{T, K}(x::Kmer{T, K}) = complement(reverse(x))
 Return the number of mismatches between `x` and `y`.
 
 ### Arguments
-* `x`: first sequence to compare
-* `y`: second sequence to compare
+* `a`: first sequence to compare
+* `b`: second sequence to compare
 
-# Returns
+### Returns
 The number of mismatches
 """
-mismatches{T, K}(x::Kmer{T, K}, y::Kmer{T, K}) = nucmismatches(convert(UInt64, x), convert(UInt64, y))
+mismatches{T, K}(a::Kmer{T, K}, b::Kmer{T, K}) = nucmismatches(convert(UInt64, a), convert(UInt64, b))
 
 """
 Canonical k-mer of `x`
