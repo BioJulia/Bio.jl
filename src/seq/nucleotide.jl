@@ -989,12 +989,12 @@ Return the number of mismatches between `a` and `b`.
 If `a` and `b` are of differing lengths, only the first `min(length(a), length(b))`
 nucleotides are compared.
 
-# Arguments
-* `a`: first sequence to compare
-* `b`: second sequence to compare
-* `nmatches`: if true, N matches anything, if false, N matches only itself (false)
+### Arguments
+  * `a`: first sequence to compare
+  * `b`: second sequence to compare
+  * `nmatches`: if true, N matches anything, if false, N matches only itself (false)
 
-# Returns
+### Returns
 The number of mismatches
 """
 function mismatches{T}(a::NucleotideSequence{T}, b::NucleotideSequence{T},
@@ -1353,18 +1353,16 @@ reverse_complement{T, K}(x::Kmer{T, K}) = complement(reverse(x))
 
 Return the number of mismatches between `x` and `y`.
 
-# Arguments
-* `x`: first sequence to compare
-* `y`: second sequence to compare
+### Arguments
+* `a`: first sequence to compare
+* `b`: second sequence to compare
 
-# Returns
+### Returns
 The number of mismatches
 """
-mismatches{T, K}(x::Kmer{T, K}, y::Kmer{T, K}) = nucmismatches(convert(UInt64, x), convert(UInt64, y))
+mismatches{T, K}(a::Kmer{T, K}, b::Kmer{T, K}) = nucmismatches(convert(UInt64, a), convert(UInt64, b))
 
 """
-`canonical(x::Kmer)`
-
 Canonical k-mer of `x`
 
 A canonical k-mer is the numerical lesser of a k-mer and its reverse complement.
@@ -1378,7 +1376,7 @@ end
 
 
 """
-Iterate through k-mers neighboring on a de Bruijn graph.
+Iterate through k-mers neighboring `x` on a de Bruijn graph.
 """
 function neighbors{T, K}(x::Kmer{T, K})
     return KmerNeighborIterator{T, K}(x)
@@ -1416,21 +1414,27 @@ end
 # Maybe this function should replace the default constructor.
 # Is the (unsafe) default constructor used throughout our code?
 """
-`eachkmer(seq::NucleotideSequence, k, [step=1])`
+Initialize an iterator over all k-mers in a sequence.
 
-Construct a EachKmerIterator from a NucleotideSequence `seq` of size `k` and, optionally, a `step` value.
+Any k-mer containing an N will be skipped over.
 
-Differently from the default EachKmerIterator constructor, this function checks the validity of the arguments before construction.
+### Arguments
+  * `t`: Kmer type to enumerate.
+  * `seq`: A NucleotideSequence
+  * `step`: number of positions between iterated k-mers (default: 1)
 
-# Arguments
-* `seq`: A NucleotideSequence
-* `k`: The size of each Kmer
-* `step`: Number of steps
-
-# Returns
+### Returns
 A EachKmerIterator constructed with these parameters
+
+### Examples
+```{.julia execute="false"}
+# iterate over codons
+for x in each(DNAKmer{3}, dna"ATCCTANAGNTACT", 3)
+    @show x
+end
+```
 """
-function each{T, K}(::Type{Kmer{T, K}}, seq::NucleotideSequence{T}, step::Integer=1)
+function each{T, K}(t::Type{Kmer{T, K}}, seq::NucleotideSequence{T}, step::Integer=1)
     @assert K >= 0 "K must be ≥ 0 in EachKmer"
     @assert K <= 32 "K must be ≤ 32 in EachKmer"
     @assert step >= 1 "step must be ≥ 1"
@@ -1696,8 +1700,11 @@ end
 """
 Count ocurrences of short (<= 32) k-mers in a sequence.
 
-# Arguments:
-  * `seq`: A NucleotideSequence
+This method uses a dense table to store counts, requiring O(4^k) memory, so is
+not recommended for large k-mer sizes.
+
+### Arguments:
+  * 'seq`: A NucleotideSequence
   * `step`: K-mers counted are separated by this many nucleotides (deafult: 1)
 """
 immutable KmerCounts{T, K}

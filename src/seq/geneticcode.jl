@@ -184,7 +184,18 @@ function translate_ambiguous_codon(code::GeneticCode, u::RNANucleotide,
 end
 
 
-"Convert an RNASequence to an AminoAcidSequence"
+"""
+Convert an `RNASequence` to an `AminoAcidSequence`.
+
+### Arguments
+  * `seq`: RNA sequence to translate.
+  * `code`: Genetic code to use (default is the standard genetic code).
+  * `allow_ambiguous_codons`: True if ambiguous codons should be allowed and
+      translated to `AA_X`. If false, they will throw an error. (default is true)
+
+### Returns
+A translated `AminoAcidSequence`
+"""
 function translate(seq::RNASequence, code::GeneticCode=standard_genetic_code,
                    allow_ambiguous_codons::Bool=false)
     aaseqlen, r = divrem(length(seq), 3)

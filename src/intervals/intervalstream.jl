@@ -214,21 +214,21 @@ end
 """
 Compute the coverage of a collection of intervals.
 
-# Args
+### Arguments
   * `intervals`: any IntervalStream
 
-# Returns
+### Returns
 An IntervalCollection that contains run-length encoded coverage data.
 
 E.g. for intervals like
-```
+```{execute="false"}
     [------]     [------------]
        [---------------]
 ```
 
 this function would return a new set of disjoint intervals with annotated
 coverage like:
-```
+```{execute="false"}
     [1][-2-][-1-][--2--][--1--]
 ```
 """
