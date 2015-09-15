@@ -129,7 +129,10 @@ end
 # Maybe if we read a bunch of things at once?
 function Base.read!(parser::BAMParser, align::BAMAlignment)
     stream = parser.stream
+    n = 0
     while !eof(stream)
+        n += 1
+        #block_size = read(stream, Int32)
         anchor!(stream)
         seekforward(stream, 4)
         block_size = unsafe_load_type(stream.buffer, upanchor!(stream), Int32)
@@ -138,6 +141,7 @@ function Base.read!(parser::BAMParser, align::BAMAlignment)
         seekforward(stream, block_size)
         p = upanchor!(stream)
     end
+    @show n
 
     return false
 end

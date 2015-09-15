@@ -26,9 +26,11 @@ immutable BGZFSource{T <: IO}
 
     # space to read the next compressed block
     compressed_block::Vector{UInt8}
+    compressed_block_ptr::Ptr{UInt8}
 
     # space to decompress the block
     decompressed_block::Vector{UInt8}
+    decompressed_block_ptr::Ptr{UInt8}
 
     # number of bytes available in decompressed_block
     bytes_available::Base.RefValue{Int}
@@ -42,9 +44,13 @@ end
 
 
 function BGZFSource(input::IO)
-    zstream = Libz.init_inflate_zstream(true)
-    return BGZFSource(input, zstream, Array(UInt8, BGZF_MAX_BLOCK_SIZE),
-                      Array(UInt8, BGZF_MAX_BLOCK_SIZE), Ref(0), Ref(0), Ref(false))
+    zstream = Libz.init_inflate_zstream(false)
+    compressed_block = Array(UInt8, BGZF_MAX_BLOCK_SIZE)
+    decompressed_block = Array(UInt8, BGZF_MAX_BLOCK_SIZE)
+    return BGZFSource(input, zstream,
+                      compressed_block, pointer(compressed_block),
+                      decompressed_block, pointer(decompressed_block),
+                      Ref(0), Ref(0), Ref(false))
 end
 
 
@@ -56,7 +62,10 @@ end
 """
 Read the next compressed BGZF block into `output`.
 """
-@inline function read_bgzf_block!(input::IO, output::Vector{UInt8})
+function read_bgzf_block!(source::BGZFSource)
+    input = source.input
+    output = source.compressed_block
+
     # read header up to xlen
     p = 1
     id1 = output[p] = read(input, UInt8); p += 1
@@ -78,9 +87,7 @@ Read the next compressed BGZF block into `output`.
     end
 
     # read extra subfields
-    nb = readbytes!(
-        input, pointer_to_array(pointer(output, p), (length(output) - p + 1,)),
-        xlen)
+    nb = readbytes!(input, output, p, p + xlen - 1)
     if nb != xlen
         throw(MalformedBGZFData)
     end
@@ -89,9 +96,7 @@ Read the next compressed BGZF block into `output`.
 
     # read the rest of the bgzf block
     remaining_block_size = bsize - xlen - 11
-    nb = readbytes!(
-        input, pointer_to_array(pointer(output, p), (length(output) - p + 1,)),
-        remaining_block_size)
+    nb = readbytes!(input, output, p, p + remaining_block_size - 1)
     p += nb
     if nb != remaining_block_size
         throw(MalformedBGZFData)
@@ -108,12 +113,12 @@ end
 Decompress the next BGZF block into source.decompressed_block.
 """
 function decompress_block(source::BGZFSource)
-    bsize, isize = read_bgzf_block!(source.input, source.compressed_block)
+    bsize, isize = read_bgzf_block!(source)
 
     zstream = getindex(source.zstream)
-    zstream.next_out = pointer(source.decompressed_block)
+    zstream.next_out = source.decompressed_block_ptr
     zstream.avail_out = isize
-    zstream.next_in = pointer(source.compressed_block)
+    zstream.next_in = source.compressed_block_ptr
     zstream.avail_in = bsize
 
     ret = ccall((:inflate, Libz._zlib), Cint, (Ptr{Libz.ZStream}, Cint),
