@@ -85,11 +85,11 @@ end
 
 function copy!(field::StringField, data::Vector{UInt8},
                start::Integer, stop::Integer)
-    if length(field.data) < length(data)
+    n = stop - start + 1
+    if length(field.data) < n
         resize!(field.data, length(data))
     end
-    n = stop - start + 1
-    copy!(field.data, 1, data, start, n)
+    unsafe_copy!(field.data, 1, data, start, n)
     field.part = 1:n
     return n
 end
@@ -102,6 +102,10 @@ end
 
 function isempty(field::StringField)
     return field.part.start > field.part.stop
+end
+
+function convert(::Type{StringField}, str::StringField)
+    return str
 end
 
 
