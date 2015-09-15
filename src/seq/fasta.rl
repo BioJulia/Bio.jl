@@ -16,6 +16,11 @@ function FASTAMetadata()
 end
 
 
+function (==)(a::FASTAMetadata, b::FASTAMetadata)
+    return a.description == b.description
+end
+
+
 function copy(metadata::FASTAMetadata)
     return FASTAMetadata(copy(metadata.description))
 end
@@ -42,8 +47,11 @@ end
 
 "Writes a FASTASeqRecord to an IO-stream (and obeys FASTAs max character constraint)"
 function Base.write{T}(io::IO, seqrec::SeqRecord{T, FASTAMetadata})
-    header = strip(string(">", seqrec.name, " ", seqrec.metadata.description))
-    write(io, header, "\n")
+    write(io, ">", seqrec.name)
+    if !isempty(seqrec.metadata.description)
+        write(io, " ", seqrec.metadata.description)
+    end
+    write(io, "\n")
     maxchars = 79
     counter = 1
     len = length(seqrec.seq)

@@ -36,6 +36,11 @@ function getindex(seqrec::SeqRecord, r::UnitRange)
 end
 
 
+function (==){T <: SeqRecord}(a::T, b::T)
+    return a.name == b.name && a.seq == b.seq && a.metadata == b.metadata
+end
+
+
 function copy{T <: SeqRecord}(seqrec::T)
     return T(copy(seqrec.name), copy(seqrec.seq), copy(seqrec.metadata))
 end

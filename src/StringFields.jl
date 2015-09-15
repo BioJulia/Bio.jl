@@ -155,6 +155,13 @@ function hash(field::StringField, h::UInt64)
 end
 
 
+function (==)(a::StringField, b::StringField)
+    return length(a) == length(b) &&
+        ccall(:memcmp, Cint, (Ptr{Void}, Ptr{Void}, Csize_t),
+              pointer(a.data, a.part.start), pointer(b.data, b.part.start), length(a)) == 0
+end
+
+
 function (==)(a::StringField, b::BufferedStreams.BufferedOutputStream)
     if a === b
         return true

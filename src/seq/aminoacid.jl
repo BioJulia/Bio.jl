@@ -337,7 +337,7 @@ function orphan!(seq::AminoAcidSequence, reorphan=false)
 end
 
 
-copy(seq::AminoAcidSequence) = orphan!(AminoAcidSequence(seq.data, seq.part, seq.mutable, false))
+copy(seq::AminoAcidSequence) = orphan!(AminoAcidSequence(seq.data, seq.part, seq.mutable, false), true)
 
 
 function setindex!(seq::AminoAcidSequence, nt::AminoAcid, i::Integer)
@@ -362,13 +362,13 @@ function copy!(seq::AminoAcidSequence, strdata::Vector{UInt8},
         error("Cannot copy! to immutable sequnce. Call `mutable!(seq)` first.")
     end
 
-    n = stoppos - startpos - 1
+    n = stoppos - startpos + 1
     if length(seq.data) < n
         resize!(seq.data, n)
     end
 
     for i in 1:n
-        seq.data[i] = convert(AminoAcid, strdata[startpos + i - 1])
+        seq.data[i] = convert(AminoAcid, Char(strdata[startpos + i - 1]))
     end
     seq.part = 1:n
 end

@@ -1347,17 +1347,35 @@ facts("Sequence Parsing") do
             for seqrec in open(filename, FASTA, memory_map=true)
             end
 
-            return true
+            # Check round trip
+            output = IOBuffer()
+            expected_entries = Any[]
+            for seqrec in open(filename, FASTA)
+                write(output, seqrec)
+                push!(expected_entries, seqrec)
+            end
+
+            read_entries = Any[]
+            for seqrec in open(takebuf_array(output), FASTA)
+                push!(read_entries, seqrec)
+            end
+
+            return expected_entries == read_entries
         end
 
         path = Pkg.dir("Bio", "test", "BioFmtSpecimens", "FASTA")
         for specimen in YAML.load_file(joinpath(path, "index.yml"))
             tags = specimen["tags"]
+            valid = get(specimen, "valid", true)
             # currently unsupported features
             if contains(tags, "gaps") || contains(tags, "comments") || contains(tags, "ambiguity")
                 continue
             end
-            @fact check_fasta_parse(joinpath(path, specimen["filename"])) --> true
+            if valid
+                @fact check_fasta_parse(joinpath(path, specimen["filename"])) --> true
+            else
+                @fact_throws check_fasta_parse(joinpath(path, specimen["filename"]))
+            end
         end
     end
 
@@ -1373,7 +1391,20 @@ facts("Sequence Parsing") do
             for seqrec in open(filename, FASTQ, memory_map=true)
             end
 
-            return true
+            # Check round trip
+            output = IOBuffer()
+            expected_entries = Any[]
+            for seqrec in open(filename, FASTQ)
+                write(output, seqrec)
+                push!(expected_entries, seqrec)
+            end
+
+            read_entries = Any[]
+            for seqrec in open(takebuf_array(output), FASTQ)
+                push!(read_entries, seqrec)
+            end
+
+            return expected_entries == read_entries
         end
 
         path = Pkg.dir("Bio", "test", "BioFmtSpecimens", "FASTQ")
