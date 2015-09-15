@@ -64,48 +64,44 @@ Read the next compressed BGZF block into `output`.
 """
 function read_bgzf_block!(source::BGZFSource)
     input = source.input
-    output = source.compressed_block
 
     # read header up to xlen
-    p = 1
-    id1 = output[p] = read(input, UInt8); p += 1
-    id2 = output[p] = read(input, UInt8); p += 1
-    cm  = output[p] = read(input, UInt8); p += 1
-    flg = output[p] = read(input, UInt8); p += 1
+    id1 = read(input, UInt8)
+    id2 = read(input, UInt8)
+    cm  = read(input, UInt8)
+    flg = read(input, UInt8)
 
     if id1 != 0x1f || id2 != 0x8b || cm != 0x08 || flg != 0x04
         throw(MalformedBGZFData)
     end
 
-    for _ in 1:8
-        output[p] = read(input, UInt8); p += 1
-    end
-
-    xlen = (Int(output[p - 1]) << 8) | Int(output[p - 2])
+    seekforward(input, 6)
+    xlen = Int(read(input, UInt16))
     if xlen < 6
         throw(MalformedBGZFData)
     end
 
     # read extra subfields
-    nb = readbytes!(input, output, p, p + xlen - 1)
+    nb = seekforward(input, 4)
+    bsize = Int(read(input, UInt16))
+    nb += 2
+    nb += seekforward(input, xlen - 6)
     if nb != xlen
         throw(MalformedBGZFData)
     end
-    bsize = (Int(output[p + 5]) << 8 | Int(output[p + 4]))
-    p += xlen
 
     # read the rest of the bgzf block
+    output = source.compressed_block
     remaining_block_size = bsize - xlen - 11
-    nb = readbytes!(input, output, p, p + remaining_block_size - 1)
-    p += nb
+    nb = readbytes!(input, output, remaining_block_size)
     if nb != remaining_block_size
         throw(MalformedBGZFData)
     end
 
     # size of uncompressed (input) data
-    isize = (Int(output[p - 1]) << 24) | (Int(output[p - 2]) << 16) |
-            (Int(output[p - 3]) << 8) | (Int(output[p - 4]))
-    return bsize + 1, isize
+    isize = (Int(output[nb]) << 24) | (Int(output[nb - 1]) << 16) |
+            (Int(output[nb - 2]) << 8) | (Int(output[nb - 3]))
+    return remaining_block_size - 8, isize
 end
 
 
