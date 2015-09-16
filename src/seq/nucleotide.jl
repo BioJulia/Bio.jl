@@ -11,23 +11,13 @@ bitstype 8 RNANucleotide <: Nucleotide
 # Conversion from/to integers
 # ---------------------------
 
-"Convert a UInt8 to a DNANucleotide"
 convert(::Type{DNANucleotide}, nt::UInt8) = box(DNANucleotide, unbox(UInt8, nt))
-
-"Convert a DNANucleotide to a UInt8"
-convert(::Type{UInt8}, nt::DNANucleotide) = box(UInt8, unbox(DNANucleotide, nt))
-
-"Convert a UInt8 to a RNANucleotide"
 convert(::Type{RNANucleotide}, nt::UInt8) = box(RNANucleotide, unbox(UInt8, nt))
-
-"Convert a RNANucleotide to a UInt8"
+convert(::Type{UInt8}, nt::DNANucleotide) = box(UInt8, unbox(DNANucleotide, nt))
 convert(::Type{UInt8}, nt::RNANucleotide) = box(UInt8, unbox(RNANucleotide, nt))
-
-"Convert a RNANucleotide to a UInt8"
 convert{T<:Unsigned, S<:Nucleotide}(::Type{T}, nt::S) = box(T, Base.zext_int(T, unbox(S, nt)))
-
-"Convert a RNANucleotide to a UInt8"
 convert{T<:Unsigned, S<:Nucleotide}(::Type{S}, nt::T) = convert(S, convert(UInt8, nt))
+
 
 # Nucleotide encoding definition
 # ------------------------------
@@ -56,6 +46,10 @@ const DNA_INVALID = convert(DNANucleotide, 0b1000) # Indicates invalid DNA when 
 nnucleotide(::Type{DNANucleotide}) = DNA_N
 invalid_nucleotide(::Type{DNANucleotide}) = DNA_INVALID
 
+function isvalid(nt::DNANucleotide)
+    return convert(UInt8, nt) ≤ convert(UInt8, DNA_N)
+end
+
 # RNA Nucleotides
 
 "RNA Adenine"
@@ -80,6 +74,10 @@ const RNA_INVALID = convert(RNANucleotide, 0b1000) # Indicates invalid RNA when 
 nnucleotide(::Type{RNANucleotide}) = RNA_N
 invalid_nucleotide(::Type{RNANucleotide}) = RNA_INVALID
 
+function isvalid(nt::RNANucleotide)
+    return convert(UInt8, nt) ≤ convert(UInt8, RNA_N)
+end
+
 
 # Conversion from Char
 # --------------------
@@ -96,7 +94,6 @@ invalid_nucleotide(::Type{RNANucleotide}) = RNA_INVALID
     DNA_INVALID, DNA_INVALID, DNA_INVALID, DNA_N,       DNA_INVALID, DNA_INVALID,
     DNA_INVALID, DNA_INVALID, DNA_INVALID, DNA_T ]
 
-"Convert a Char to a DNANucleotide"
 @inline function convert(::Type{DNANucleotide}, c::Char)
     @inbounds nt = 'A' <= c <= 't' ? char_to_dna[c - 'A' + 1] : DNA_INVALID
     return nt
@@ -120,7 +117,6 @@ const char_to_rna = [
     RNA_INVALID, RNA_INVALID, RNA_INVALID, RNA_N,       RNA_INVALID, RNA_INVALID,
     RNA_INVALID, RNA_INVALID, RNA_INVALID, RNA_INVALID, RNA_U ]
 
-"Convert a Char to a RNANucleotide"
 @inline function convert(::Type{RNANucleotide}, c::Char)
     @inbounds nt = 'A' <= c <= 'u' ? char_to_rna[c - 'A' + 1] : RNA_INVALID
     return nt
@@ -137,28 +133,31 @@ end
 
 const dna_to_char = ['A', 'C', 'G', 'T', 'N']
 
-"Convert a DNANucleotide to a Char"
 convert(::Type{Char}, nt::DNANucleotide) = dna_to_char[convert(UInt8, nt) + 1]
 
 const rna_to_char = ['A', 'C', 'G', 'U', 'N']
 
-"Convert a RNANucleotide to a Char"
 convert(::Type{Char}, nt::RNANucleotide) = rna_to_char[convert(UInt8, nt) + 1]
 
 
 # Basic functions
 # ---------------
 
-function show{T<:Nucleotide}(io::IO, nt::T)
-    if nt == DNA_INVALID
+function show(io::IO, nt::DNANucleotide)
+    if !isvalid(nt)
         write(io, "Invalid DNA Nucleotide")
-    elseif nt == RNA_INVALID
-        write(io, "Invalid RNA Nucleotide")
     else
         write(io, convert(Char, nt))
     end
 end
 
+function show(io::IO, nt::RNANucleotide)
+    if !isvalid(nt)
+        write(io, "Invalid RNA Nucleotide")
+    else
+        write(io, convert(Char, nt))
+    end
+end
 
 
 # Nucleotide Sequence
@@ -194,7 +193,6 @@ type NucleotideSequence{T<:Nucleotide} <: Sequence
 end
 
 
-
 # Constructors
 # ------------
 
@@ -212,7 +210,6 @@ NucleotideSequence{T<:Nucleotide}(::Type{T}; mutable::Bool=false) =
 
 Construct a subsequence of the given type from another nucleotide sequence
 """
-# Construct a subsequence of another nucleotide sequence
 function NucleotideSequence{T<:Nucleotide}(::Type{T}, other::NucleotideSequence,
                                            part::UnitRange; mutable::Bool=false)
     start = other.part.start + part.start - 1
@@ -253,8 +250,7 @@ end
 
 # Return the number of UInt64s needed to represent a sequence of length n
 function seq_data_len(n::Integer)
-    d, r = divrem32(n)
-    return d + (r > 0 ? 1 : 0)
+    return cld(n, 32)
 end
 
 
@@ -263,6 +259,8 @@ end
 # flag is set.
 macro encode_seq(nt_convert_expr, strdata, seqdata, ns)
     quote
+        j = startpos
+        idx = 1
         @inbounds begin
             # we OR all the nucleotides to detect and if 0b1000 is set,
             # then we know there was an invalid nucleotide.
@@ -273,7 +271,6 @@ macro encode_seq(nt_convert_expr, strdata, seqdata, ns)
                 data_i = UInt64(0)
                 while shift < 64 && j <= stoppos
                     c = $(strdata)[j]
-                    j += 1
                     nt = $(nt_convert_expr)
                     if nt == nnucleotide(T)
                         # manually inlined: ns[i] = true
@@ -285,6 +282,7 @@ macro encode_seq(nt_convert_expr, strdata, seqdata, ns)
                         data_i |= convert(UInt64, nt) << shift
                     end
 
+                    j += 1
                     idx += 1
                     shift += 2
                 end
@@ -307,33 +305,54 @@ end
 
 
 """
-`NucleotideSequence(DNANucleotide|RNANucleotide, seq::AbstractString)`
+`NucleotideSequence(DNANucleotide|RNANucleotide, seq::AbstractString, startpos::Int, stoppos::Int)`
 
-Construct a subsequence from the `seq` string
+Construct a nucleotide sequence from the `seq[startpos:stoppos]` string
 """
-function NucleotideSequence{T<:Nucleotide}(::Type{T}, seq::Union(AbstractString, Vector{UInt8}),
+function NucleotideSequence{T<:Nucleotide}(::Type{T}, seq::Union{AbstractString, Vector{UInt8}},
                                            startpos::Int, stoppos::Int,
                                            unsafe::Bool=false; mutable::Bool=false)
-    len = seq_data_len(stoppos - startpos + 1)
-    data = zeros(UInt64, len)
-    ns = BitArray(stoppos - startpos + 1)
-    fill!(ns, false)
+    len = stoppos - startpos + 1
+    data = zeros(UInt64, seq_data_len(len))
+    ns = falses(len)
 
-    j = startpos
-    idx = 1
     if unsafe
         @encode_seq(unsafe_ascii_byte_to_nucleotide(T, c), seq, data, ns)
     else
         @encode_seq(convert(T, convert(Char, c)), seq, data, ns)
     end
 
-    return NucleotideSequence{T}(data, ns, 1:(stoppos - startpos + 1), mutable, false)
+    return NucleotideSequence{T}(data, ns, 1:len, mutable, false)
 end
 
-
-function NucleotideSequence{T<:Nucleotide}(t::Type{T}, seq::Union(AbstractString,
-                                           Vector{UInt8}); mutable::Bool=false)
+function NucleotideSequence{T<:Nucleotide}(t::Type{T}, seq::Union{AbstractString, Vector{UInt8}}; mutable::Bool=false)
     return NucleotideSequence(t, seq, 1, length(seq), mutable=mutable)
+end
+
+"""
+`NucleotideSequence(seq::AbstractVector{T<:Nucleotide}, startpos::Int, stoppos::Int)`
+
+Construct a nucleotide sequence from the `seq[startpos:stoppos]` vector
+"""
+function NucleotideSequence{T<:Nucleotide}(seq::AbstractVector{T},
+                                           startpos::Int, stoppos::Int,
+                                           unsafe::Bool=false; mutable::Bool=false)
+    len = stoppos - startpos + 1
+    data = zeros(UInt64, seq_data_len(len))
+    ns = falses(len)
+
+    if unsafe
+        @encode_seq(c, seq, data, ns)
+    else
+        @encode_seq(begin
+            if !isvalid(c)
+                error("the sequence includes a valid nucleotide at $j")
+            end
+            c
+        end, seq, data, ns)
+    end
+
+    return NucleotideSequence{T}(data, ns, 1:len, mutable, false)
 end
 
 
@@ -358,13 +377,10 @@ function copy!{T}(seq::NucleotideSequence{T}, strdata::Vector{UInt8},
 
     fill!(seq.data, 0)
     fill!(seq.ns, false)
-    seqdata = seq.data
-    ns = seq.ns
-
-    j = startpos
-    idx = 1
-    @encode_seq(convert(T, convert(Char, c)), strdata, seqdata, ns)
     seq.part = 1:n
+
+    @encode_seq(convert(T, convert(Char, c)), strdata, seq.data, seq.ns)
+
     return seq
 end
 
@@ -382,9 +398,8 @@ function NucleotideSequence{T<:Nucleotide}(chunks::NucleotideSequence{T}...)
 
     datalen = seq_data_len(seqlen)
     data = zeros(UInt64, datalen)
-    ns   = BitArray(seqlen)
+    ns   = falses(seqlen)
     newseq = NucleotideSequence{T}(data, ns, 1:seqlen, false, false)
-    fill!(ns, false)
 
     pos = 1
     for chunk in chunks
@@ -403,22 +418,9 @@ end
 Construct a NucleotideSequence from an array of nucleotides.
 """
 function NucleotideSequence{T<:Nucleotide}(seq::AbstractVector{T}; mutable::Bool=false)
-    len = seq_data_len(length(seq))
-    data = zeros(UInt64, len)
-    ns = BitArray(length(seq))
-    fill!(ns, false)
-
-    for (i, nt) in enumerate(seq)
-        if nt == nnucleotide(T)
-            ns[i] = true
-        else
-            d, r = divrem32(i - 1)
-            data[d + 1] |= convert(UInt64, nt) << (2*r)
-        end
-    end
-
-    return NucleotideSequence{T}(data, ns, 1:length(seq), mutable, false)
+    return NucleotideSequence(seq, 1, endof(seq), mutable=mutable)
 end
+
 
 # Mutability/Immutability
 # -----------------------
@@ -453,9 +455,8 @@ function repeat{T<:Nucleotide}(chunk::NucleotideSequence{T}, n::Integer)
 
     datalen = seq_data_len(seqlen)
     data = zeros(UInt64, datalen)
-    ns   = BitArray(seqlen)
+    ns   = falses(seqlen)
     newseq = NucleotideSequence{T}(data, ns, 1:seqlen, false, false)
-    fill!(ns, false)
 
     pos = 1
     for i in 1:n
@@ -546,16 +547,15 @@ DNASequence(; mutable::Bool=true) =
 DNASequence(other::NucleotideSequence, part::UnitRange; mutable::Bool=false) =
     NucleotideSequence(DNANucleotide, other, part, mutable=mutable)
 
-"Construct a DNA nucleotide sequence from a String"
+"Construct a DNA nucleotide sequence from an AbstractString"
 DNASequence(seq::AbstractString; mutable=false) =
     NucleotideSequence(DNANucleotide, seq, mutable=mutable)
 
-
 "Construct a DNA nucleotide sequence from other sequences"
 DNASequence(chunk1::DNASequence, chunks::DNASequence...) = NucleotideSequence(chunk1, chunks...)
-DNASequence(seq::Union(Vector{UInt8}, AbstractString); mutable::Bool=false) =
+DNASequence(seq::Union{Vector{UInt8}, AbstractString}; mutable::Bool=false) =
     NucleotideSequence(DNANucleotide, seq, mutable=mutable)
-DNASequence(seq::Union(Vector{UInt8}, AbstractString), startpos::Int, endpos::Int, unsafe::Bool=false; mutable::Bool=false) =
+DNASequence(seq::Union{Vector{UInt8}, AbstractString}, startpos::Int, endpos::Int, unsafe::Bool=false; mutable::Bool=false) =
     NucleotideSequence(DNANucleotide, seq, startpos, endpos, unsafe, mutable=mutable)
 DNASequence(seq::AbstractVector{DNANucleotide}; mutable::Bool=false) =
     NucleotideSequence(seq, mutable=mutable)
@@ -572,15 +572,15 @@ RNASequence(; mutable::Bool=true) =
 RNASequence(other::NucleotideSequence, part::UnitRange; mutable::Bool=false) =
     NucleotideSequence(RNANucleotide, other, part, mutable=mutable)
 
-"Construct a RNA nucleotide sequence from a String"
+"Construct a RNA nucleotide sequence from an AbstractString"
 RNASequence(seq::AbstractString; mutable::Bool=false) =
     NucleotideSequence(RNANucleotide, seq, mutable=mutable)
 
 "Construct a RNA nucleotide sequence from other sequences"
 RNASequence(chunk1::RNASequence, chunks::RNASequence...) = NucleotideSequence(chunk1, chunks...)
-RNASequence(seq::Union(Vector{UInt8}, AbstractString); mutable::Bool=false) =
+RNASequence(seq::Union{Vector{UInt8}, AbstractString}; mutable::Bool=false) =
     NucleotideSequence(RNANucleotide, seq, mutable=mutable)
-RNASequence(seq::Union(Vector{UInt8}, AbstractString), startpos::Int, endpos::Int, unsafe::Bool=false; mutable::Bool=false) =
+RNASequence(seq::Union{Vector{UInt8}, AbstractString}, startpos::Int, endpos::Int, unsafe::Bool=false; mutable::Bool=false) =
     NucleotideSequence(RNANucleotide, seq, startpos, endpos, unsafe, mutable=mutable)
 RNASequence(seq::AbstractVector{RNANucleotide}; mutable::Bool=false) =
     NucleotideSequence(seq, mutable=mutable)
@@ -589,25 +589,17 @@ RNASequence(seq::AbstractVector{RNANucleotide}; mutable::Bool=false) =
 # Conversion
 # ----------
 
+# Convert from/to vectors of nucleotides
+convert{T<:Nucleotide}(::Type{NucleotideSequence},    seq::AbstractVector{T}) = NucleotideSequence(seq, 1, endof(seq))
+convert{T<:Nucleotide}(::Type{NucleotideSequence{T}}, seq::AbstractVector{T}) = NucleotideSequence(seq, 1, endof(seq))
+convert{T<:Nucleotide}(::Type{Vector{T}}, seq::NucleotideSequence{T}) = [x for x in seq]
+
 # Convert from/to Strings
-
-"Convert a String to a DNASequence"
 convert(::Type{DNASequence}, seq::AbstractString) = DNASequence(seq)
-
-"Convert a String to a RNASequence"
 convert(::Type{RNASequence}, seq::AbstractString) = RNASequence(seq)
-
-"Convert a NucleotideSequence to a String"
-convert(::Type{AbstractString}, seq::NucleotideSequence) = convert(AbstractString, [convert(Char, x) for x in seq])
-
+convert(::Type{AbstractString}, seq::NucleotideSequence) = convert(ASCIIString, [convert(Char, x) for x in seq])
 
 # Convert between RNA and DNA
-
-
-convert{T}(::Type{NucleotideSequence{T}}, seq::NucleotideSequence{T}) = seq
-
-
-"Convert a DNASequence to a RNASequence and vice versa"
 function convert{T}(::Type{NucleotideSequence{T}}, seq::NucleotideSequence)
     newseq = NucleotideSequence{T}(seq.data, seq.ns, seq.part, seq.mutable, seq.hasrelatives)
     if seq.mutable
@@ -711,7 +703,6 @@ end
 
 setindex!{T}(seq::NucleotideSequence{T}, nt::Char, i::Integer) =
     setindex!(seq, convert(T, nt), i)
-
 
 
 # Replace a NucleotideSequence's data with a copy, copying only what's needed.
@@ -1125,22 +1116,14 @@ typealias Codon RNAKmer{3}
 
 # Conversion to/from UInt64
 
-"Convert a UInt64 to a DNAKmer"
 convert{K}(::Type{DNAKmer{K}}, x::UInt64) = box(DNAKmer{K}, unbox(UInt64, x))
-
-"Convert a UInt64 to a RNAKmer"
 convert{K}(::Type{RNAKmer{K}}, x::UInt64) = box(RNAKmer{K}, unbox(UInt64, x))
-
-"Convert a DNAKmer to a UInt64"
-convert{K}(::Type{UInt64}, x::DNAKmer{K})       = box(UInt64, unbox(DNAKmer{K}, x))
-
-"Convert a RNAKmer to a UInt64"
-convert{K}(::Type{UInt64}, x::RNAKmer{K})       = box(UInt64, unbox(RNAKmer{K}, x))
+convert{K}(::Type{UInt64}, x::DNAKmer{K}) = box(UInt64, unbox(DNAKmer{K}, x))
+convert{K}(::Type{UInt64}, x::RNAKmer{K}) = box(UInt64, unbox(RNAKmer{K}, x))
 
 
 # Conversion to/from String
 
-"Convert a String to a Kmer"
 function convert{T, K}(::Type{Kmer{T, K}}, seq::AbstractString)
     @assert length(seq) <= 32 error("Cannot construct a K-mer longer than 32nt.")
     @assert length(seq) == K error("Cannot construct a $(K)-mer from a string of length $(length(seq))")
@@ -1158,12 +1141,8 @@ function convert{T, K}(::Type{Kmer{T, K}}, seq::AbstractString)
     return convert(Kmer{T, K}, x)
 end
 
-"Convert a String to a Kmer"
 convert{T}(::Type{Kmer{T}}, seq::AbstractString) = convert(Kmer{T, length(seq)}, seq)
-
-"Convert a Kmer to a String"
 convert{T, K}(::Type{AbstractString}, seq::Kmer{T, K}) = convert(AbstractString, [convert(Char, x) for x in seq])
-
 
 # Conversion to/from NucleotideSequence
 
@@ -1184,23 +1163,14 @@ function convert{T, K}(::Type{Kmer{T, K}}, seq::NucleotideSequence{T})
     return convert(Kmer{T, K}, x)
 end
 
-"Convert a NucleotideSequence to a Kmer"
-convert{T}(::Type{Kmer}, seq::NucleotideSequence{T})    = convert(Kmer{T, length(seq)}, seq)
-
-"Convert a NucleotideSequence to a Kmer"
+convert{T}(::Type{Kmer},    seq::NucleotideSequence{T}) = convert(Kmer{T, length(seq)}, seq)
 convert{T}(::Type{Kmer{T}}, seq::NucleotideSequence{T}) = convert(Kmer{T, length(seq)}, seq)
 
-"Convert a Kmer to a NucleotideSequence"
 function convert{T, K}(::Type{NucleotideSequence{T}}, x::Kmer{T, K})
-    ns = BitVector(K)
-    fill!(ns, false)
+    ns = falses(K)
     return NucleotideSequence{T}([convert(UInt64, x)], ns, 1:K, false, false)
 end
-
-"Convert a Kmer to a NucleotideSequence"
 convert{T, K}(::Type{NucleotideSequence}, x::Kmer{T, K}) = convert(NucleotideSequence{T}, x)
-
-
 
 
 # Constructors
@@ -1208,10 +1178,10 @@ convert{T, K}(::Type{NucleotideSequence}, x::Kmer{T, K}) = convert(NucleotideSeq
 
 # From strings
 
-"Construct a DNAKmer to a String"
+"Construct a DNAKmer to an AbstractString"
 dnakmer(seq::AbstractString) = convert(DNAKmer, seq)
 
-"Construct a RNAKmer to a String"
+"Construct a RNAKmer to an AbstractString"
 rnakmer(seq::AbstractString) = convert(RNAKmer, seq)
 
 "Construct a Kmer from a sequence of Nucleotides"

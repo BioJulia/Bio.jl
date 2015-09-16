@@ -280,7 +280,7 @@ function open{T <: FileFormat}(filename::AbstractString, ::Type{T}; args...)
 end
 
 
-function open{T <: FileFormat}(source::Union(IO, Vector{UInt8}), ::Type{T}; args...)
+function open{T <: FileFormat}(source::Union{IO, Vector{UInt8}}, ::Type{T}; args...)
     open(BufferedInputStream(source), T; args...)
 end
 

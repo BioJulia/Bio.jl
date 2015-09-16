@@ -85,6 +85,11 @@ const AA_X = convert(AminoAcid, 0x14)
 const AA_INVALID = convert(AminoAcid, 0x15) # Used during conversion from strings
 
 
+function isvalid(aa::AminoAcid)
+    return convert(UInt8, aa) ≤ convert(UInt8, AA_X)
+end
+
+
 # Conversion from/to Char
 # -----------------------
 
@@ -199,7 +204,7 @@ end
 
 
 "Construct of a subsequence from another amino acid sequence"
-function AminoAcidSequence(seq::Union(Vector{UInt8}, AbstractString),
+function AminoAcidSequence(seq::Union{Vector{UInt8}, AbstractString},
                            startpos::Int, endpos::Int, unsafe::Bool=false;
                            mutable::Bool=false)
 
@@ -212,11 +217,24 @@ function AminoAcidSequence(seq::Union(Vector{UInt8}, AbstractString),
     return AminoAcidSequence(data, 1:len, mutable, false)
 end
 
-
 function AminoAcidSequence()
     return AminoAcidSequence(AminoAcid[], 1:0, true, false)
 end
 
+function AminoAcidSequence(seq::AbstractVector{AminoAcid},
+                           startpos::Int, endpos::Int, unsafe::Bool=false;
+                           mutable::Bool=false)
+    len = endpos - startpos + 1
+    data = Vector{AminoAcid}(len)
+    for (i, j) in enumerate(startpos:endpos)
+        aa = seq[j]
+        if !unsafe && !isvalid(aa)
+            error("the sequence includes an invalid amino acid at $j")
+        end
+        data[i] = aa
+    end
+    return AminoAcidSequence(data, 1:len, mutable, false)
+end
 
 "Construct an amino acid sequence by concatenating other sequences"
 function AminoAcidSequence(chunks::AminoAcidSequence...)
@@ -257,14 +275,15 @@ end
 (^)(chunk::AminoAcidSequence, n::Integer) = repeat(chunk, n::Integer)
 
 
-function AminoAcidSequence(seq::Union(Vector{UInt8}, AbstractString))
-    return AminoAcidSequence(seq, 1, length(seq))
-end
+# Conversion
+# ----------
 
+# Conversion from/to a byte sequence
+convert(::Type{AminoAcidSequence}, seq::AbstractVector{AminoAcid}) = AminoAcidSequence(seq, 1, endof(seq))
+convert(::Type{Vector{AminoAcid}}, seq::AminoAcidSequence) = [convert(AminoAcid, x) for x in seq]
 
 # Conversion from/to String
-# -------------------------
-convert(::Type{AminoAcidSequence}, seq::AbstractString) = AminoAcidSequence(seq)
+convert(::Type{AminoAcidSequence}, seq::AbstractString) = AminoAcidSequence(seq, 1, endof(seq))
 convert(::Type{AbstractString}, seq::AminoAcidSequence) = convert(AbstractString, [convert(Char, x) for x in seq])
 
 
