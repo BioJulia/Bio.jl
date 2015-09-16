@@ -309,7 +309,7 @@ end
 
 Construct a nucleotide sequence from the `seq[startpos:stoppos]` string
 """
-function NucleotideSequence{T<:Nucleotide}(::Type{T}, seq::Union(AbstractString, Vector{UInt8}),
+function NucleotideSequence{T<:Nucleotide}(::Type{T}, seq::Union{AbstractString, Vector{UInt8}},
                                            startpos::Int, stoppos::Int,
                                            unsafe::Bool=false; mutable::Bool=false)
     len = stoppos - startpos + 1
@@ -325,8 +325,7 @@ function NucleotideSequence{T<:Nucleotide}(::Type{T}, seq::Union(AbstractString,
     return NucleotideSequence{T}(data, ns, 1:len, mutable, false)
 end
 
-function NucleotideSequence{T<:Nucleotide}(t::Type{T}, seq::Union(AbstractString,
-                                           Vector{UInt8}); mutable::Bool=false)
+function NucleotideSequence{T<:Nucleotide}(t::Type{T}, seq::Union{AbstractString, Vector{UInt8}}; mutable::Bool=false)
     return NucleotideSequence(t, seq, 1, length(seq), mutable=mutable)
 end
 
@@ -554,9 +553,9 @@ DNASequence(seq::AbstractString; mutable=false) =
 
 "Construct a DNA nucleotide sequence from other sequences"
 DNASequence(chunk1::DNASequence, chunks::DNASequence...) = NucleotideSequence(chunk1, chunks...)
-DNASequence(seq::Union(Vector{UInt8}, AbstractString); mutable::Bool=false) =
+DNASequence(seq::Union{Vector{UInt8}, AbstractString}; mutable::Bool=false) =
     NucleotideSequence(DNANucleotide, seq, mutable=mutable)
-DNASequence(seq::Union(Vector{UInt8}, AbstractString), startpos::Int, endpos::Int, unsafe::Bool=false; mutable::Bool=false) =
+DNASequence(seq::Union{Vector{UInt8}, AbstractString}, startpos::Int, endpos::Int, unsafe::Bool=false; mutable::Bool=false) =
     NucleotideSequence(DNANucleotide, seq, startpos, endpos, unsafe, mutable=mutable)
 DNASequence(seq::AbstractVector{DNANucleotide}; mutable::Bool=false) =
     NucleotideSequence(seq, mutable=mutable)
@@ -579,9 +578,9 @@ RNASequence(seq::AbstractString; mutable::Bool=false) =
 
 "Construct a RNA nucleotide sequence from other sequences"
 RNASequence(chunk1::RNASequence, chunks::RNASequence...) = NucleotideSequence(chunk1, chunks...)
-RNASequence(seq::Union(Vector{UInt8}, AbstractString); mutable::Bool=false) =
+RNASequence(seq::Union{Vector{UInt8}, AbstractString}; mutable::Bool=false) =
     NucleotideSequence(RNANucleotide, seq, mutable=mutable)
-RNASequence(seq::Union(Vector{UInt8}, AbstractString), startpos::Int, endpos::Int, unsafe::Bool=false; mutable::Bool=false) =
+RNASequence(seq::Union{Vector{UInt8}, AbstractString}, startpos::Int, endpos::Int, unsafe::Bool=false; mutable::Bool=false) =
     NucleotideSequence(RNANucleotide, seq, startpos, endpos, unsafe, mutable=mutable)
 RNASequence(seq::AbstractVector{RNANucleotide}; mutable::Bool=false) =
     NucleotideSequence(seq, mutable=mutable)

@@ -204,7 +204,7 @@ end
 
 
 "Construct of a subsequence from another amino acid sequence"
-function AminoAcidSequence(seq::Union(Vector{UInt8}, AbstractString),
+function AminoAcidSequence(seq::Union{Vector{UInt8}, AbstractString},
                            startpos::Int, endpos::Int, unsafe::Bool=false;
                            mutable::Bool=false)
 

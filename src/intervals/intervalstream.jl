@@ -232,7 +232,7 @@ coverage like:
     [1][-2-][-1-][--2--][--1--]
 ```
 """
-function coverage(stream::Union(IntervalStreamOrArray, IntervalTree),
+function coverage(stream::Union{IntervalStreamOrArray, IntervalTree},
                   seqname_isless::Function=isless)
     cov = IntervalCollection{UInt32}()
     lasts = Int64[]

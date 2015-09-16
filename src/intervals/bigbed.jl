@@ -1734,7 +1734,7 @@ end
 
 
 # Unified write function for bigwig and bigbed
-function write_bigbed_bigwig(out::IO, fmt::Union(Type{BigBed}, Type{BigWig}),
+function write_bigbed_bigwig(out::IO, fmt::Union{Type{BigBed}, Type{BigWig}},
                              intervals::IntervalCollection,
                              block_size::Int=256, items_per_slot::Int=512,
                              compressed::Bool=true)
