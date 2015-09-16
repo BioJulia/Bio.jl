@@ -395,9 +395,8 @@ function NucleotideSequence{T<:Nucleotide}(chunks::NucleotideSequence{T}...)
 
     datalen = seq_data_len(seqlen)
     data = zeros(UInt64, datalen)
-    ns   = BitArray(seqlen)
+    ns   = falses(seqlen)
     newseq = NucleotideSequence{T}(data, ns, 1:seqlen, false, false)
-    fill!(ns, false)
 
     pos = 1
     for chunk in chunks
@@ -453,9 +452,8 @@ function repeat{T<:Nucleotide}(chunk::NucleotideSequence{T}, n::Integer)
 
     datalen = seq_data_len(seqlen)
     data = zeros(UInt64, datalen)
-    ns   = BitArray(seqlen)
+    ns   = falses(seqlen)
     newseq = NucleotideSequence{T}(data, ns, 1:seqlen, false, false)
-    fill!(ns, false)
 
     pos = 1
     for i in 1:n
