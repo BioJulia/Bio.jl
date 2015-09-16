@@ -250,8 +250,7 @@ end
 
 # Return the number of UInt64s needed to represent a sequence of length n
 function seq_data_len(n::Integer)
-    d, r = divrem32(n)
-    return d + (r > 0 ? 1 : 0)
+    return cld(n, 32)
 end
 
 
