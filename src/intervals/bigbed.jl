@@ -627,7 +627,7 @@ end
 Find the given seqname in the BigBed file's index and read the corresponding
 sequence id and length
 """
-function lookup_seqname(bb::BigBedData, seqname::String)
+function lookup_seqname(bb::BigBedData, seqname::AbstractString)
     seek(bb.stream, bb.header.chromosome_tree_offset + sizeof(BigBedBTreeHeader))
 
     fill!(bb.key, 0)
@@ -757,14 +757,14 @@ function start(it::BigBedIntersectIterator)
 end
 
 
-function next(it::BigBedIntersectIterator, ::Nothing)
+function next(it::BigBedIntersectIterator, ::Void)
     value = copy(it.nextinterval)
     find_next_intersection!(it)
     return value, nothing
 end
 
 
-function done(it::BigBedIntersectIterator, ::Nothing)
+function done(it::BigBedIntersectIterator, ::Void)
     return it.done
 end
 
@@ -920,7 +920,7 @@ end
 
 function bigbed_write_chrom_tree(out::IO, intervals::IntervalCollection,
                                  block_size,
-                                 chrom_sizes::Dict=Dict{String, Int64}())
+                                 chrom_sizes::Dict=Dict{AbstractString, Int64}())
     # See bbiWriteChromInfo in bbiWrite.c
     length(intervals.trees)
     for seqname in keys(intervals.trees)
