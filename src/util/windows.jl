@@ -1,4 +1,10 @@
-# Iterate through every window of size K in vec
+
+import Base:
+    start,
+    next,
+    done
+
+
 immutable EachWindowIterator{T}
     vec::Vector{T}
     K::Int
@@ -19,11 +25,11 @@ function eachwindow{T}(K::Integer, vec::Vector{T}, step::Integer=1)
     return EachWindowIterator{T}(vec, K, step)
 end
 
-@inline function start{T}(it::EachWindowIterator{T})
-    i = 1
-    npos = length(it.vec) - it.K + it.step
-    return i
+
+@inline function start(it::EachWindowIterator)
+    return 1
 end
+
 
 @inline function next{T}(it::EachWindowIterator{T}, state::Integer)
     i = state
