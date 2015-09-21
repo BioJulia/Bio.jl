@@ -110,7 +110,8 @@ export
     DNAAlphabet,
     RNAAlphabet,
     AminoAcidAlphabet,
-    CharAlphabet
+    CharAlphabet,
+    trim!
 
 using BufferedStreams,
     Base.Intrinsics,
