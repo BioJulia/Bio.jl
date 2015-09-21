@@ -1,9 +1,4 @@
-
-import Base:
-    start,
-    next,
-    done
-
+# Iterate through every window of size K in vec
 
 immutable EachWindowIterator{T}
     vec::Vector{T}
