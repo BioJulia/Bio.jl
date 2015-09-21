@@ -6,6 +6,7 @@ abstract FileFormat
 include("StringFields.jl")
 include("Ragel.jl")
 include("seq/Seq.jl")
+include("util/Util.jl")
 include("intervals/Intervals.jl")
 
 end # module Bio
