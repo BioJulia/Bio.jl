@@ -1,9 +1,4 @@
-import Base:
-    start,
-    next,
-    done
-
-# Iterate through every window in type
+# Iterate through every window of size K in vec
 immutable EachWindowIterator{T}
     vec::Vector{T}
     K::Int
@@ -32,8 +27,8 @@ end
 
 function next{T}(it::EachWindowIterator{T}, state::Integer)
     i = state
-    value = sub(it.vec, i:i+it.K - 1)
-    return value, i + it.step
+    window = sub(it.vec, i:i+it.K - 1)
+    return window, i + it.step
 end
 
 function done{T}(it::EachWindowIterator{T}, state::Integer)
