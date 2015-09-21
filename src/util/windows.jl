@@ -19,18 +19,18 @@ function eachwindow{T}(K::Integer, vec::Vector{T}, step::Integer=1)
     return EachWindowIterator{T}(vec, K, step)
 end
 
-function start{T}(it::EachWindowIterator{T})
+@inline function start{T}(it::EachWindowIterator{T})
     i = 1
     npos = length(it.vec) - it.K + it.step
     return i
 end
 
-function next{T}(it::EachWindowIterator{T}, state::Integer)
+@inline function next{T}(it::EachWindowIterator{T}, state::Integer)
     i = state
     window = sub(it.vec, i:i+it.K - 1)
     return window, i + it.step
 end
 
-function done{T}(it::EachWindowIterator{T}, state::Integer)
+@inline function done{T}(it::EachWindowIterator{T}, state::Integer)
     return state > it.npos
 end
