@@ -25,7 +25,6 @@ end
     return 1
 end
 
-
 @inline function next{T}(it::EachWindowIterator{T}, state::Integer)
     i = state
     window = sub(it.vec, i:i+it.K - 1)
