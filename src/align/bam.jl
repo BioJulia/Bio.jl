@@ -92,7 +92,7 @@ function sequence(bam::BAMAlignment)
     seq_length = bam.seq_length
     seqdata = zeros(UInt64, Seq.seq_data_len(seq_length))
     ns = falses(Int(seq_length))
-    recode_bam_sequence!(bam.data.data, bam.seq_position, bam.seq_length, seqdata, ns)
+    recode_bam_sequence!(bam.data.data, Int(bam.seq_position), Int(bam.seq_length), seqdata, ns)
     return DNASequence(seqdata, ns, 1:seq_length, false, false)
 end
 
@@ -108,22 +108,22 @@ function sequence!(bam::BAMAlignment, seq::DNASequence)
     end
 
     if length(seq.ns) < bam.seq_length
-        resize!(seq.ns, n)
+        resize!(seq.ns, bam.seq_length)
     end
 
     fill!(seq.data, 0)
     fill!(seq.ns, false)
     seq.part = 1:bam.seq_length
 
-    recode_bam_sequence!(bam.data.data, bam.seq_position, bam.seq_length, seq.data, seq.ns)
+    recode_bam_sequence!(bam.data.data, Int(bam.seq_position), Int(bam.seq_length), seq.data, seq.ns)
 
     return seq
 end
 
 
 # Recode a BAM sequence from 4-bit to 2-bit.
-function recode_bam_sequence!(input::Vector{UInt8}, seq_position::Integer,
-                              seq_length::Integer, seqdata::Vector{UInt64}, ns::BitVector)
+function recode_bam_sequence!(input::Vector{UInt8}, seq_position::Int,
+                              seq_length::Int, seqdata::Vector{UInt64}, ns::BitVector)
     len = Seq.seq_data_len(seq_length)
     ored_nucs = UInt8(0)
     j = seq_position
@@ -345,8 +345,8 @@ function Base.read!(parser::BAMParser, alignment::BAMAlignment)
     # extract fields
     ptr = pointer(stream.buffer, p)
     fields = unsafe_load(convert(Ptr{BAMEntryHead}, ptr))
-    if 0 <= fields.refid < length(parser.refs)
-        @inbounds alignment.seqname = parser.refs[fields.refid + 1][1]
+    @inbounds if 0 <= fields.refid < length(parser.refs)
+        alignment.seqname = parser.refs[fields.refid + 1][1]
     else
         empty!(alignment.seqname)
     end
@@ -358,8 +358,8 @@ function Base.read!(parser::BAMParser, alignment::BAMAlignment)
     n_cigar_op = fields.flag_nc & 0xff
     alignment.flag = fields.flag_nc >> 16
 
-    if 0 <= fields.next_refid < length(parser.refs)
-        @inbounds alignment.next_seqname = parser.refs[fields.next_refid + 1][1]
+    @inbounds if 0 <= fields.next_refid < length(parser.refs)
+        alignment.next_seqname = parser.refs[fields.next_refid + 1][1]
     else
         empty!(alignment.next_seqname)
     end
