@@ -72,7 +72,7 @@ end
 
 function Interval(seqname::AbstractString, first::Integer, last::Integer,
                   strand::Strand=STRAND_BOTH)
-    return Interval{Nothing}(seqname, first, last, strand, nothing)
+    return Interval{Void}(seqname, first, last, strand, nothing)
 end
 
 

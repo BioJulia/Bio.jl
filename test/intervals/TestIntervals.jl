@@ -259,8 +259,8 @@ facts("IntervalStream") do
 
         # Interesction edge cases: skipping over whole sequences
         typealias SimpleIntersectIterator
-            Intervals.IntervalStreamIntersectIterator{Nothing, Nothing,
-                Vector{Interval{Nothing}}, Vector{Interval{Nothing}}}
+            Intervals.IntervalStreamIntersectIterator{Void, Void,
+                Vector{Interval{Void}}, Vector{Interval{Void}}}
 
         it = SimpleIntersectIterator(
             [Interval("a", 1, 100, STRAND_POS, nothing), Interval("c", 1, 100, STRAND_POS, nothing)],
