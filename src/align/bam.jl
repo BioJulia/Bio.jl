@@ -11,13 +11,7 @@ using IntervalTrees
 
 immutable BAM <: FileFormat end
 
-# OK, let's really think about how we want to represent BAM.
-#
-# Maybe I should just store the second half of the BAM file in one StringField
-# buffer, then manifest the other fields as needed. Should they be cached?
 
-# TODO: This is a temporary type. We should find a more general alignment
-# representation
 type BAMAlignment <: AbstractInterval{Int64}
     seqname::StringField
     position::Int64
@@ -55,7 +49,7 @@ Return a `StringField` containing the read name. This becomes invalidated if
 the `BAMAlignment` is overwritten.
 """
 function readname(bam::BAMAlignment)
-    bam.data[1:bam.cigar_position-1]
+    bam.data[1:bam.cigar_position-2] # '-2' because this is stored null-terminated
 end
 
 
@@ -74,6 +68,7 @@ end
 
 const bam4bit_to_char = [
     '=', 'A', 'C', 'M', 'G', 'R', 'S', 'V', 'T', 'W', 'Y', 'H', 'K', 'D', 'B', 'N' ]
+
 
 const bam4bit_to_dna = [
     DNA_INVALID, DNA_A,       DNA_C,       DNA_INVALID,
@@ -228,17 +223,132 @@ end
 
 # Return all auxillary data
 function auxiliary(bam::BAMAlignment)
-    # TODO
+    aux = Dict{Tuple{Char, Char}, Any}()
+    data = bam.data.data
+    p = Int(bam.aux_position)
+    while p <= bam.data.part.stop
+        tag = (Char(data[p]), Char(data[p + 1]))
+        p += 2
+        if data[p] == 'B'
+            typ = Vector{auxtype[data[p+1]]}
+            p += 2
+        else
+            typ = auxtype[data[p]]
+            p += 1
+        end
+        p, value = getauxdata(data, p, typ)
+        aux[tag] = value
+    end
+
+    return aux
 end
+
+
+const auxtype = Dict{Char, Type}(
+    'A' => Char,
+    'c' => Int8,
+    'C' => UInt8,
+    's' => Int16,
+    'S' => UInt16,
+    'i' => Int32,
+    'I' => UInt32,
+    'f' => Float32,
+    'd' => Float64,
+    'Z' => ASCIIString
+)
 
 
 # Return a specific tag
 function auxillary(bam::BAMAlignment, t1::Char, t2::Char)
-    # TODO
+    data = bam.data.data
+    p = Int(bam.aux_position)
+
+    while p <= bam.data.part.stop && (data[p] != t1 || data[p + 1] != t2)
+        p = next_tag_position(data, p)
+    end
+
+    if p > bam.data.part.stop
+        throw(KeyError(string(t1, t2)))
+    else
+        p += 2
+        if data[p] == 'B'
+            typ = Vector{auxtype[data[p+1]]}
+            p += 2
+        else
+            typ = auxtype[data[p]]
+            p += 1
+        end
+        p, value = getauxdata(data, p, typ)
+        return value
+    end
 end
 
 
-function auxillary(bam::BAMAlignment, tag::AbstractString)
+function getauxdata{T}(data::Vector{UInt8}, p::Int, ::Type{T})
+    return (Int(p + sizeof(T)), unsafe_load(Ptr{T}(pointer(data, p))))
+end
+
+
+function getauxdata(data::Vector{UInt8}, p::Int, ::Type{Char})
+    return (p + 1, Char(unsafe_load(pointer(data, p))))
+end
+
+
+function getauxdata{T}(data::Vector{UInt8}, p::Int, ::Type{Vector{T}})
+    n = unsafe_load(Ptr{Int32}(pointer(data, p)))
+    p += 4
+    xs = Array(T, n)
+    unsafe_copy!(pointer(xs), Ptr{T}(pointer(data, p)), n)
+    return (Int(p + n * sizeof(T)), xs)
+end
+
+
+function getauxdata(data::Vector{UInt8}, p::Int, ::Type{ASCIIString})
+    dataptr = pointer(data, p)
+    endptr = ccall(:memchr, Ptr{Void}, (Ptr{Void}, Cint, Csize_t),
+                   dataptr, '\0', length(data) - p + 1)
+    q = p + (endptr - dataptr) - 1
+    return (Int(q + 2), ASCIIString(data[p:q]))
+end
+
+
+function next_tag_position(data::Vector{UInt8}, p::Int)
+    typ = data[p + 2]
+    p += 3
+    if typ == 'A'
+        p += 1
+    elseif typ == 'c' || typ == 'C'
+        p += 1
+    elseif typ == 's' || typ == 'S'
+        p += 2
+    elseif typ == 'i' || typ == 'I'
+        p += 4
+    elseif typ == 'f'
+        p += 4
+    elseif typ == 'd'
+        p += 8
+    elseif typ == 'Z' || typ == 'H'
+        while data[p] != '\0'
+            p += 1
+        end
+        p += 1
+    elseif typ == 'B'
+        eltyp = data[p]
+        elsize = eltyp == 'c' || eltyp == 'C' ? 1 :
+                 eltyp == 's' || eltyp == 'S' ? 2 :
+                 eltyp == 'i' || eltye == 'I' || eltyp == 'f' ? 4 :
+                 error(string("Unrecognized auxiliary type ", eltyp))
+        p += 1
+        n = unsafe_load(Ptr{Int32}(pointer(data, p)))
+        p += elsize * n
+    else
+        error(string("Unrecognized auxiliary type ", typ))
+    end
+    return p
+end
+
+
+function auxiliary(bam::BAMAlignment, tag::AbstractString)
     if length(tag) != 2
         error("BAM auxillary data tags must be of length 2")
     end
@@ -352,11 +462,11 @@ function Base.read!(parser::BAMParser, alignment::BAMAlignment)
     end
 
     alignment.position = fields.pos + 1 # make 1-based
-    l_read_name = fields.bin_mq_nl & 0xff
-    alignment.mapq = (fields.bin_mq_nl >> 8) & 0xff
-    alignment.bin = (fields.bin_mq_nl >> 16) & 0xffff
-    n_cigar_op = fields.flag_nc & 0xff
-    alignment.flag = fields.flag_nc >> 16
+    l_read_name        = fields.bin_mq_nl & 0xff
+    alignment.mapq     = (fields.bin_mq_nl >> 8) & 0xff
+    alignment.bin      = (fields.bin_mq_nl >> 16) & 0xffff
+    n_cigar_op         = fields.flag_nc & 0xff
+    alignment.flag     = fields.flag_nc >> 16
 
     @inbounds if 0 <= fields.next_refid < length(parser.refs)
         alignment.next_seqname = parser.refs[fields.next_refid + 1][1]
@@ -371,10 +481,10 @@ function Base.read!(parser::BAMParser, alignment::BAMAlignment)
     copy!(alignment.data, stream.buffer, p, stream.position - 1)
 
     alignment.cigar_position = l_read_name + 1
-    alignment.seq_position = alignment.cigar_position + n_cigar_op * sizeof(Int32)
-    alignment.seq_length = fields.l_seq
-    alignment.qual_position = alignment.seq_position + div(fields.l_seq + 1, 2)
-    alignment.aux_position = alignment.qual_position + fields.l_seq
+    alignment.seq_position   = alignment.cigar_position + n_cigar_op * sizeof(Int32)
+    alignment.seq_length     = fields.l_seq
+    alignment.qual_position  = alignment.seq_position + div(fields.l_seq + 1, 2)
+    alignment.aux_position   = alignment.qual_position + fields.l_seq
 
     return true
 end
