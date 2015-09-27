@@ -105,7 +105,7 @@ end
     sequence    = whitespace* letters? (whitespace+ letters)*;
     fasta_entry = '>' identifier (hspace+ description)? newline sequence whitespace*;
 
-    main := whitespace* (fasta_entry %finish_match)*;
+    main := whitespace* (fasta_entry %finish_match)**;
 }%%
 
 

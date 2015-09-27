@@ -21,7 +21,6 @@ using Base.Intrinsics,
     Bio.StringFields,
     BufferedStreams,
     IntervalTrees,
-    Switch,
     Libz,
     Colors
 
