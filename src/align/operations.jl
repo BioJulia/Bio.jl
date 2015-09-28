@@ -11,11 +11,11 @@ bitstype 8 Operation
 # Conversion to and from integers
 # -------------------------------
 
-convert(::Type{Operation}, num::Uint8) = box(Operation, unbox(Uint8, num))
-convert(::Type{Uint8}, op::Operation) = box(Uint8, unbox(Operation, op))
+convert(::Type{Operation}, num::UInt8) = box(Operation, unbox(UInt8, num))
+convert(::Type{UInt8}, op::Operation) = box(UInt8, unbox(Operation, op))
 
-convert{T<:Unsigned}(::Type{Operation}, unint::T) = convert(Operation, convert(Uint8, unint))
-convert{T<:Unsigned}(::Type{T}, op::Operation) = convert(T, convert(Uint8, op))
+convert{T<:Unsigned}(::Type{Operation}, unint::T) = convert(Operation, convert(UInt8, unint))
+convert{T<:Unsigned}(::Type{T}, op::Operation) = convert(T, convert(UInt8, op))
 
 
 # Operation encoding definitions
@@ -48,7 +48,7 @@ for op = [
     (:OP_DELETE, 8), (:OP_PAD, 9), (:OP_INVALID, 255)
     ]
 
-    @eval const $(op[1]) = convert(Operation, Uint8($(op[2])))
+    @eval const $(op[1]) = convert(Operation, UInt8($(op[2])))
 
 end
 
@@ -93,7 +93,7 @@ const op_to_char = ['-', 'M', 'N', '=', 'X', 'S', 'H', 'I', 'D', 'P']
 
 function convert(::Type{Char}, op::Operation)
     @assert op != OP_INVALID error("Alignment operation is not valid.")
-    @inbounds ch = op_to_char[convert(Uint8, op) + 1]
+    @inbounds ch = op_to_char[convert(UInt8, op) + 1]
     return ch
 end
 

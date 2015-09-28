@@ -5,7 +5,7 @@
 
 # Anchor definition
 # ------------------
-@doc """
+"""
 A type to store the operation enocded in an alignment (CIGAR Operations).
 Also stores the position in the alignment view of the sequences, and the
 corresponding position in the unaltered source sequence (nucleotide or protein).
@@ -16,10 +16,10 @@ into Bio.Align namespace as a series of global constants.
 
 Calling the AlignmentAnchor default constructor with default arguments sets both
 integer fields to 0, and the operation field to the global constant OP_INVALID.
-""" ->
+"""
 immutable AlignmentAnchor
-    alnPos::Int
-    srcPos::Int
+    alnpos::Int
+    srcpos::Int
     op::Operation
     function AlignmentAnchor(gp::Int = 0, sp::Int = 0, op::Operation = OP_INVALID)
         return new(gp, sp, op)
@@ -30,73 +30,81 @@ end
 # Basic operators for AlignmentAnchors
 # -------------------------------------
 
-@doc """
+"""
 Print to screen or other IO stream, a formatted description of an
 AlignmentAnchor.
-""" ->
+"""
 function show(io::IO, anc::AlignmentAnchor)
-    write(io, "Alignment Position: $(anc.alnPos), Source Position: $(anc.srcPos), Operation: $(anc.op)")
+    write(io, "Alignment Position: $(anc.alnpos), Source Position: $(anc.srcpos), Operation: $(anc.op)")
 end
 
-@doc """
+
+"""
 Copy an AlignmentAnchor to a new AlignmentAnchor variable.
 
 Takes only one parameter of AlignmentAnchor type.
-""" ->
+"""
 function copy(src::AlignmentAnchor)
-    return AlignmentAnchor(src.alnPos, src.srcPos, src.op)
+    return AlignmentAnchor(src.alnpos, src.srcpos, src.op)
 end
 
 
 # Basic operators for boolean operations consider
 # positions, not operations.
 
-@doc """
+
+"""
 Check for equity of two AlignmentAnchors.
-""" ->
+"""
 function ==(a::AlignmentAnchor, b::AlignmentAnchor)
-    return a.alnPos == b.alnPos && a.srcPos == b.srcPos
+    return a.alnpos == b.alnpos && a.srcpos == b.srcpos
 end
 
-@doc """
+
+"""
 Check for inequity of two AlignmentAnchors.
-""" ->
+"""
 function !=(a::AlignmentAnchor, b::AlignmentAnchor)
     return !(a == b)
 end
 
-@doc """
+
+"""
 Check that AlignmentAnchor a, is less than AlignmentAnchor b.
-""" ->
+"""
 function <(a::AlignmentAnchor, b::AlignmentAnchor)
-    return a.alnPos < b.alnPos || a.srcPos < b.srcPos
+    return a.alnpos < b.alnpos || a.srcpos < b.srcpos
 end
 
-@doc """
+
+"""
 Check that AlignmentAnchor a, is greater than AlignmentAnchor b.
-""" ->
+"""
 function >(a::AlignmentAnchor, b::AlignmentAnchor)
-    return a.alnPos > b.alnPos || a.srcPos > b.srcPos
+    return a.alnpos > b.alnpos || a.srcpos > b.srcpos
 end
 
-@doc """
+
+"""
 Check that AlignmentAnchor a, is less than or equal to AlignmentAnchor b.
-""" ->
+"""
 function <=(a::AlignmentAnchor, b::AlignmentAnchor)
-    return a.alnPos <= b.alnPos || a.srcPos < b.srcPos
+    return a.alnpos <= b.alnpos || a.srcpos < b.srcpos
 end
 
-@doc """
+
+"""
 Check that AlignmentAnchor a, is greater than or equal to AlignmentAnchor b.
-""" ->
+"""
 function >=(a::AlignmentAnchor, b::AlignmentAnchor)
-    return a.alnPos >= b.alnPos || a.srcPos > b.srcPos
+    return a.alnpos >= b.alnpos || a.srcpos > b.srcpos
 end
 
-@doc """
+
+"""
 Check whether the alignment anchor contains the specified operation.
-""" ->
-function hasOp(anc::AlignmentAnchor, op::Operation)
+"""
+function hasop(anc::AlignmentAnchor, op::Operation)
     return anc.op == op
 end
 
@@ -108,9 +116,9 @@ end
 typealias AlignmentAnchors Vector{AlignmentAnchor}
 
 function show(io::IO, aa::AlignmentAnchors)
-    out::String = ""
+    out = ""
     for i in aa
-        out *= "($(i.srcPos), $(i.alnPos), $(Char(i.op)))"
+        out *= "($(i.srcpos), $(i.alnpos), $(Char(i.op)))"
     end
     write(io, out)
 end
@@ -134,100 +142,103 @@ the core Julia sorting API efficiently.
 
 # Custom types inheriting from Base.Ordering
 
-@doc """
+"""
 An immutable field-less type, inheriting from Ordering. This is used with
 Julia's sorting API functions to determine how an array of AlignmentAnchors is
 sorted.
 
 Specifically, it specifies that the sorting API functions use less-than
-methods functions that compare the srcPos fields of the AlignmentAnchors.
-""" ->
-immutable srcPosOrdering <: Ordering end
+methods functions that compare the srcpos fields of the AlignmentAnchors.
+"""
+immutable SrcPosOrdering <: Ordering end
 
-@doc """
+"""
 An immutable field-less type, inheriting from Ordering. This is used with
 Julia's sorting API functions to determine how an array of AlignmentAnchors is
 sorted.
 
 Specifically, it specifies that the sorting API functions use less-than
-methods functions that compare the alnPos fields of the AlignmentAnchors.
-""" ->
-immutable alnPosOrdering <: Ordering end
+methods functions that compare the alnpos fields of the AlignmentAnchors.
+"""
+immutable AlnPosOrdering <: Ordering end
 
-const BY_SRC = srcPosOrdering()
-const BY_ALN = alnPosOrdering()
+const BY_SRC = SrcPosOrdering()
+const BY_ALN = AlnPosOrdering()
 
 # Is AlignmentAnchor a, less than AlignmentAnchor b, according to the source
 # sequence co-ordinate.
 
-@doc """
-Returns true if the srcPos field of AlignmentAnchor a, is less than the srcPos
+
+"""
+Returns true if the srcpos field of AlignmentAnchor a, is less than the srcpos
 field of AlignmentAnchor b.
-""" ->
-function lt(o::srcPosOrdering, a::AlignmentAnchor, b::AlignmentAnchor)
-    return a.srcPos < b.srcPos
+"""
+function lt(o::SrcPosOrdering, a::AlignmentAnchor, b::AlignmentAnchor)
+    return a.srcpos < b.srcpos
 end
 
-@doc """
-Returns true if the alnPos field of AlignmentAnchor a, is less than the alnPos
+"""
+Returns true if the alnpos field of AlignmentAnchor a, is less than the alnpos
 field of AlignmentAnchor b.
-""" ->
-function lt(o::alnPosOrdering, a::AlignmentAnchor, b::AlignmentAnchor)
-    return a.alnPos < b.alnPos
+"""
+function lt(o::AlnPosOrdering, a::AlignmentAnchor, b::AlignmentAnchor)
+    return a.alnpos < b.alnpos
 end
 
-@doc """
-Returns true if the srcPos field of AlignmentAnchor a, is less than the Integer
+"""
+Returns true if the srcpos field of AlignmentAnchor a, is less than the Integer
 b.
-""" ->
-function lt(o::srcPosOrdering, a::AlignmentAnchor, b::Int)
-    return a.srcPos < b
+"""
+function lt(o::SrcPosOrdering, a::AlignmentAnchor, b::Int)
+    return a.srcpos < b
 end
 
-@doc """
-Returns true if the alnPos field of AlignmentAnchor a, is less than the Integer
+
+"""
+Returns true if the alnpos field of AlignmentAnchor a, is less than the Integer
 b.
-""" ->
-function lt(o::alnPosOrdering, a::AlignmentAnchor, b::Int)
-    return a.alnPos < b
+"""
+function lt(o::AlnPosOrdering, a::AlignmentAnchor, b::Int)
+    return a.alnpos < b
 end
 
-@doc """
-Returns true if the srcPos field of Integer a, is less than the srcPos field of
+
+"""
+Returns true if the srcpos field of Integer a, is less than the srcpos field of
 the AlignmentAnchor b.
-""" ->
-function lt(o::srcPosOrdering, a::Int, b::AlignmentAnchor)
-    return a < b.srcPos
+"""
+function lt(o::SrcPosOrdering, a::Int, b::AlignmentAnchor)
+    return a < b.srcpos
 end
 
-@doc """
-Returns true if the srcPos field of Integer a, is less than the alnPos field of
+"""
+Returns true if the srcpos field of Integer a, is less than the alnpos field of
 the AlignmentAnchor b.
-""" ->
-function lt(o::alnPosOrdering, a::Int, b::AlignmentAnchor)
-    return a < b.alnPos
+"""
+function lt(o::AlnPosOrdering, a::Int, b::AlignmentAnchor)
+    return a < b.alnpos
 end
 
-function upperBoundAnchor(arr::AlignmentAnchors, i::Int, o::alnPosOrdering)
+function upper_bound_anchor(arr::AlignmentAnchors, i::Int, o::AlnPosOrdering)
     return searchsortedlast(arr, i, o) + 1
 end
 
-function lowerBoundAnchor(arr::AlignmentAnchors, i::Int, o::alnPosOrdering)
+function lower_bound_anchor(arr::AlignmentAnchors, i::Int, o::AlnPosOrdering)
     return searchsortedfirst(arr, i, o)
 end
 
-@doc """
+
+"""
 Returns the indicies of the anchors that
-""" ->
-function findPosition(anchors::AlignmentAnchors, position::Int, ordering::alnPosOrdering)
-    loBracket = searchsortedlast(anchors, position, ordering)
-    hiBracket = loBracket + 1
+"""
+function findposition(anchors::AlignmentAnchors, position::Int, ordering::AlnPosOrdering)
+    lobracket = searchsortedlast(anchors, position, ordering)
+    hibracket = lobracket + 1
     # We probably need code here to handle a few edge cases, or have this as an
     # unsafe function and rely on calling functions to make sure edge cases are
     # handled.
-    return loBracket, hiBracket
+    return lobracket, hibracket
 end
-
 
 
 immutable AlignedSequence
@@ -236,24 +247,21 @@ immutable AlignedSequence
 end
 
 
-
-
-
-function alnToSrc(alignedSeq::AlignedSequence, alnPosition::Int)
-    lowIdx, highIdx = findPosition(alignedSeq, alnPosition, BY_ALN)
-    highAnchor = alignedSeq.anchors[highIdx]
-    lowAnchor = alignedSeq.anchors[lowIdx]
-    sourceDistance = hiAnc.srcPos - loAnc.srcPos
-    alignDistance = alnPosition - loAnc.alnPos
-    if srcDist > alnDist
-        sourcePosition = loAnc.srcPos + alnDist
+function alntosrc(aligned_seq::AlignedSequence, alnposition::Int)
+    lowidx, highidx = findposition(aligned_seq, alnposition, BY_ALN)
+    high_anchor = aligned_seq.anchors[highidx]
+    low_anchor = aligned_seq.anchors[lowidx]
+    source_distance = high_anchor.srcpos - low_anchor.srcpos
+    align_distance = alnposition - low_anchor.alnpos
+    if source_distance > align_distance
+        source_position = low_anchor.srcpos + align_distance
     else
-        sourcePosition = hiAnc.srcPos
+        source_position = high_anchor.srcpos
     end
-    return sourcePosition
+    return source_position
 end
 
 
-function srcToAln(alignedSeq::AlignedSequence, alnPosition::Int)
-    lowIdx, highIdx = findPosition(alignedSeq, alnPosition, BY_SRC)
+function srctoaln(aligned_seq::AlignedSequence, alnposition::Int)
+    lowidx, highidx = findposition(aligned_seq, alnposition, BY_SRC)
 end

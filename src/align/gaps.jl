@@ -8,75 +8,80 @@ type ArrayGaps <: Gaps
     # An array with alternating source/gap character counts. The array always starts with
     # source, so if the first 5 bases are a gap, then the array would start [0, 5, ...]
     array::Vector{Int}
-    sourceEndPos::Int
-    sourceUnclippedEndPos::Int
+    source_end_pos::Int
+    source_unclipped_end_pos::Int
     clip::UnitRange{Int}
 
-    function ArrayGaps(source, array = Int[], sourceEndPos = 0, sourceUnclippedEndPos = 0, clipBeginPos = 0, clipEndPos = 0)
+    function ArrayGaps(source, array = Int[], source_end_pos = 0, source_unclipped_end_pos = 0, clip_beign_pos = 0, clip_end_pos = 0)
         x = new()
         x.source = source
         x.array = array
-        x.sourceEndPos = sourceEndPos
-        x.sourceUnclippedEndPos = sourceUnclippedEndPos
-        x.clip = clipBeginPos:clipEndPos
+        x.source_end_pos = source_end_pos
+        x.source_unclipped_end_pos = source_unclipped_end_pos
+        x.clip = clip_beign_pos:clip_end_pos
         return x
     end
 end
 
-function unclippedLength(x::ArrayGaps)
-    return x.sourceEndPos + x.sourceUnclippedEndPos
+
+function unclipped_length(x::ArrayGaps)
+    return x.source_end_pos + x.source_unclipped_end_pos
 end
 
-function clearGaps!(x::ArrayGaps)
+
+function clear_gaps!(x::ArrayGaps)
 
 end
 
-function clearClipping!(x::ArrayGaps)
-    x.sourceEndPos = length(x.source)
-    x.sourceUnclippedEndPos
+
+function clear_clipping!(x::ArrayGaps)
+    x.source_end_pos = length(x.source)
+    x.source_unclipped_end_pos
     x.clip = 0:length(x.source)
 end
 
-function viewPosition(x::ArrayGaps, position::Int)
+
+function view_position(x::ArrayGaps, position::Int)
     viewposition = sourceposition = position - x.clip.start
-    nextBlock = start(x.array)
-    currentBlockSize, nextBlock = next(x.array, nextBlock)
+    next_block = start(x.array)
+    current_block_size, next_block = next(x.array, next_block)
     while true
-        if done(x.array, nextBlock)
+        if done(x.array, next_block)
             return viewposition
         end
-        viewposition += currentBlockSize
-        currentBlockSize, nextBlock = next(x.array, nextBlock)
-        if sourceposition < currentBlockSize
+        viewposition += current_block_size
+        current_block_size, next_block = next(x.array, next_block)
+        if sourceposition < current_block_size
             return viewposition
         end
-        sourceposition -= currentBlockSize
-        currentBlockSize, nextBlock = next(x.array, nextBlock)
+        sourceposition -= current_block_size
+        current_block_size, next_block = next(x.array, next_block)
     end
 end
 
-function sourcePosition(x::ArrayGaps, position::Int)
+
+function source_position(x::ArrayGaps, position::Int)
     # Initialise iteration through the data array.
-    nextBlock = start(x.array)
-    currentBlockSize, nextBlock = next(x.array, nextBlock)
+    next_block = start(x.array)
+    current_block_size, next_block = next(x.array, next_block)
     # Initialise variables representing the remaining distance from the source position.
     # And the distance covered across the source position.
     remaining = position
     covered = x.clip.start
     while true
-        if done(x.array, nextBlock)
+        if done(x.array, next_block)
             return covered
         end
-        if remaining <= currentBlockSize
+        if remaining <= current_block_size
             return covered
         end
-        remaining -= currentBlockSize
-        currentBlockSize, nextBlock = next(x.array, nextBlock)
-        if remaining <= currentBlockSize
+        remaining -= current_block_size
+        current_block_size, next_block = next(x.array, next_block)
+        if remaining <= current_block_size
             return covered + remaining
         end
-        covered += currentBlockSize
-        remaining -= currentBlockSize
-        currentBlockSize, nextBlock = next(x.array, nextBlock)
+        covered += current_block_size
+        remaining -= current_block_size
+        current_block_size, next_block = next(x.array, next_block)
     end
 end

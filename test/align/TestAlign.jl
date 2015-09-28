@@ -78,7 +78,7 @@ facts("Alignments") do
             context("To Strings from CIGAR") do
                 # Check that CIGAR operations are successfully converted to Strings.
                 @inbounds for i in 1:length(OPS_UNIQUE)
-                    @fact String(CIGAR(OPS_UNIQUE[i], cigarSize[i])) --> "$(cigarSize[i])$(OPS_UNIQUE[i])"
+                    @fact AbstractString(CIGAR(OPS_UNIQUE[i], cigarSize[i])) --> "$(cigarSize[i])$(OPS_UNIQUE[i])"
                 end
             end
         end
