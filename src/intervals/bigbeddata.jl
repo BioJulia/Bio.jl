@@ -25,14 +25,14 @@ end
 #      chromosome name, start, end.
 #    * BigBed entries are null ('\0') terminated, rather than newline separated.
 #
-_bigbedparser_start  = 39
-_bigbedparser_first_final  = 39
-_bigbedparser_error  = 0
-_bigbedparser_en_main  = 39
-__bigbedparser_nfa_targs = Int8[ 0, 0 ,  ]
-__bigbedparser_nfa_offsets = Int8[ 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 ,  ]
-__bigbedparser_nfa_push_actions = Int8[ 0, 0 ,  ]
-__bigbedparser_nfa_pop_trans = Int8[ 0, 0 ,  ]
+const _bigbedparser_start  = 39
+const _bigbedparser_first_final  = 39
+const _bigbedparser_error  = 0
+const _bigbedparser_en_main  = 39
+const __bigbedparser_nfa_targs = Int8[ 0, 0 ,  ]
+const __bigbedparser_nfa_offsets = Int8[ 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 ,  ]
+const __bigbedparser_nfa_push_actions = Int8[ 0, 0 ,  ]
+const __bigbedparser_nfa_pop_trans = Int8[ 0, 0 ,  ]
 typealias StringFieldVector Vector{StringField}
 typealias NullableStringFieldVector Nullable{StringFieldVector}
 typealias NullableStringField Nullable{StringField}

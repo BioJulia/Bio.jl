@@ -76,14 +76,14 @@ end
 typealias BEDInterval Interval{BEDMetadata}
 
 
-_bedparser_start  = 41
-_bedparser_first_final  = 41
-_bedparser_error  = 0
-_bedparser_en_main  = 41
-__bedparser_nfa_targs = Int8[ 0, 0 ,  ]
-__bedparser_nfa_offsets = Int8[ 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 ,  ]
-__bedparser_nfa_push_actions = Int8[ 0, 0 ,  ]
-__bedparser_nfa_pop_trans = Int8[ 0, 0 ,  ]
+const _bedparser_start  = 41
+const _bedparser_first_final  = 41
+const _bedparser_error  = 0
+const _bedparser_en_main  = 41
+const __bedparser_nfa_targs = Int8[ 0, 0 ,  ]
+const __bedparser_nfa_offsets = Int8[ 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 ,  ]
+const __bedparser_nfa_push_actions = Int8[ 0, 0 ,  ]
+const __bedparser_nfa_pop_trans = Int8[ 0, 0 ,  ]
 type BEDParser <: AbstractParser
 state::Ragel.State
 

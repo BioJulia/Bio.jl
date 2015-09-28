@@ -65,14 +65,14 @@ write(io, "\n")
 end
 
 
-_fastaparser_start  = 6
-_fastaparser_first_final  = 6
-_fastaparser_error  = 0
-_fastaparser_en_main  = 6
-__fastaparser_nfa_targs = Int8[ 0, 0 ,  ]
-__fastaparser_nfa_offsets = Int8[ 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 ,  ]
-__fastaparser_nfa_push_actions = Int8[ 0, 0 ,  ]
-__fastaparser_nfa_pop_trans = Int8[ 0, 0 ,  ]
+const _fastaparser_start  = 6
+const _fastaparser_first_final  = 6
+const _fastaparser_error  = 0
+const _fastaparser_en_main  = 6
+const __fastaparser_nfa_targs = Int8[ 0, 0 ,  ]
+const __fastaparser_nfa_offsets = Int8[ 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 ,  ]
+const __fastaparser_nfa_push_actions = Int8[ 0, 0 ,  ]
+const __fastaparser_nfa_pop_trans = Int8[ 0, 0 ,  ]
 "A type encapsulating the current state of a FASTA parser"
 	type FASTAParser <: AbstractParser
 	state::Ragel.State

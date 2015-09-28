@@ -116,14 +116,14 @@ end
 	end
 
 
-_fastqparser_start  = 18
-_fastqparser_first_final  = 18
-_fastqparser_error  = 0
-_fastqparser_en_main  = 18
-__fastqparser_nfa_targs = Int8[ 0, 0 ,  ]
-__fastqparser_nfa_offsets = Int8[ 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 ,  ]
-__fastqparser_nfa_push_actions = Int8[ 0, 0 ,  ]
-__fastqparser_nfa_pop_trans = Int8[ 0, 0 ,  ]
+const _fastqparser_start  = 18
+const _fastqparser_first_final  = 18
+const _fastqparser_error  = 0
+const _fastqparser_en_main  = 18
+const __fastqparser_nfa_targs = Int8[ 0, 0 ,  ]
+const __fastqparser_nfa_offsets = Int8[ 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 ,  ]
+const __fastqparser_nfa_push_actions = Int8[ 0, 0 ,  ]
+const __fastqparser_nfa_pop_trans = Int8[ 0, 0 ,  ]
 "A type encapsulating the current state of a FASTQ parser"
 type FASTQParser <: AbstractParser
 state::Ragel.State
