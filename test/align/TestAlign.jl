@@ -14,16 +14,13 @@ const MAX_CIGARS_IN_CIGAR_STRING = 50
 
 const NUMBER_OF_RANDOM_CIGAR_STRINGS = 10
 
-const ALLOWED_CHARS = ['-', '=', 'M', 'm', 'N', 'n', 'X', 'x', 'S', 's', 'H',
-                       'h', 'I', 'i', 'D', 'd', 'P', 'p']
+const ALLOWED_CHARS = Align.op_to_char
 
-const CHARS_FROM_OPS = ['-', '=', 'M', 'N', 'X', 'S', 'H', 'I', 'D', 'P']
+const CHARS_FROM_OPS = Align.op_to_char
 
-const OPS_TWICE = [OP_GAP, OP_MATCH, OP_MM, OP_MM, OP_N, OP_N, OP_MISMATCH,
-              OP_MISMATCH, OP_SCLIP, OP_SCLIP, OP_HCLIP, OP_HCLIP, OP_INSERT,
-              OP_INSERT, OP_DELETE, OP_DELETE, OP_PAD, OP_PAD]
-
-const OPS_UNIQUE = unique(OPS_TWICE)
+const OPS_UNIQUE = [OP_MATCH, OP_INSERT, OP_DELETE, OP_SKIP, OP_SOFT_CLIP,
+                    OP_HARD_CLIP, OP_PAD, OP_SEQ_MATCH, OP_SEQ_MISMATCH,
+                    OP_BACK]
 
 # Need some random CIGAR sizes for some tests.
 const cigarSize = abs(rand(1:MAX_CIGAR_SIZE, length(OPS_UNIQUE)))
@@ -42,8 +39,8 @@ end
 facts("Alignments") do
     context("Operations") do
         context("Constructors and Conversions") do
-            @inbounds for i in 1:length(OPS_TWICE)
-                @fact Operation(OPS_TWICE[i]) --> OPS_TWICE[i]
+            @inbounds for i in 1:length(OPS_UNIQUE)
+                @fact Operation(OPS_UNIQUE[i]) --> OPS_UNIQUE[i]
             end
             @inbounds for i in 1:length(OPS_UNIQUE)
                 @fact Char(eval(OPS_UNIQUE[i])) --> CHARS_FROM_OPS[i]

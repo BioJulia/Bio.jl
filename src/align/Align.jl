@@ -34,17 +34,17 @@ export Operation,
     hasop,
     AlignmentAnchors,
     AlignedSequence,
-    OP_GAP,
-    OP_N,
-    OP_MM,
-    OP_PAD,
     OP_MATCH,
-    OP_SCLIP,
-    OP_MISMATCH,
-    OP_HCLIP,
-    OP_DELETE,
     OP_INSERT,
-    OP_INVALID
+    OP_DELETE,
+    OP_SKIP,
+    OP_SOFT_CLIP,
+    OP_HARD_CLIP,
+    OP_PAD,
+    OP_SEQ_MATCH,
+    OP_SEQ_MISMATCH,
+    OP_BACK
+
 
 include("operations.jl")
 include("cigar.jl")
