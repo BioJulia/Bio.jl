@@ -105,6 +105,7 @@ import Base:
     eltype,
     getindex,
     setindex!,
+    hash,
     ==,
     *,
     ^,
