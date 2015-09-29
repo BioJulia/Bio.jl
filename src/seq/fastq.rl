@@ -203,7 +203,7 @@ end
                   newline+ '+' (identifier2 (hspace+ description2)?)?
                   newline quality newline+;
 
-    main := whitespace* (fastq_entry %finish_match)*;
+    main := whitespace* (fastq_entry %finish_match)**;
 }%%
 
 

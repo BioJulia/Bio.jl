@@ -72,7 +72,6 @@ export Nucleotide,
     Alphabet
 
 using BufferedStreams,
-    Switch,
     Base.Intrinsics,
     Bio.StringFields,
     Bio.Ragel

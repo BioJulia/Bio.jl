@@ -1,7 +1,6 @@
 module Ragel
 
-using BufferedStreams,
-    Switch
+using BufferedStreams
 
 using Bio:
     FileFormat,

@@ -4,30 +4,30 @@
 immutable FASTQ <: FileFormat end
 
 
-"""
-Metadata for FASTQ sequence records containing a `description` field,
-and a `quality` string corresponding to the sequence.
+	"""
+	Metadata for FASTQ sequence records containing a `description` field,
+	and a `quality` string corresponding to the sequence.
 
-Quality scores are stored as integer Phred scores.
-"""
-type FASTQMetadata
-    description::StringField
-    quality::Vector{Int8}
+	Quality scores are stored as integer Phred scores.
+	"""
+	type FASTQMetadata
+	description::StringField
+	quality::Vector{	Int8}
 end
 
 
-function FASTQMetadata()
-    return FASTQMetadata(StringField(), Int8[])
+	function 	FASTQMetadata()
+	return FASTQMetadata(StringField(), Int8[])
 end
 
 
 function (==)(a::FASTQMetadata, b::FASTQMetadata)
-    return a.description == b.description && a.quality == b.quality
+	return a.description == b.description && a.quality == b.quality
 end
 
 
 function copy(metadata::FASTQMetadata)
-    return FASTQMetadata(copy(metadata.description), copy(metadata.quality))
+	return FASTQMetadata(copy(metadata.description), copy(metadata.quality))
 end
 
 
@@ -36,8 +36,8 @@ typealias FASTQSeqRecord DNASeqRecord{FASTQMetadata}
 
 
 function FASTQSeqRecord()
-    return FASTQSeqRecord(StringField(), DNASequence(mutable=true),
-                          FASTQMetadata())
+	return FASTQSeqRecord(StringField(), DNASequence(mutable=true),
+	FASTQMetadata())
 end
 
 
@@ -45,1580 +45,1118 @@ end
 Show a `FASTQSeqRecord` to `io`, with graphical display of quality scores.
 """
 function show(io::IO, seqrec::FASTQSeqRecord)
-    write(io, "@", seqrec.name, " ", seqrec.metadata.description, "\n")
-    for c in seqrec.seq
-        show(io, c)
-    end
-    write(io, '\n')
-    # print quality scores as a unicode bar chart
-    for q in seqrec.metadata.quality
-        if q <= 0
-            write(io, '▁')
-        elseif q <= 6
-            write(io, '▂')
-        elseif q <= 12
-            write(io, '▃')
-        elseif q <= 18
-            write(io, '▄')
-        elseif q <= 24
-            write(io, '▅')
-        elseif q <= 30
-            write(io, '▆')
-        elseif q <= 36
-            write(io, '▇')
-        else
-            write(io, '█')
-        end
-    end
-    write(io, '\n')
+	write(io, "@", seqrec.name, " ", seqrec.metadata.description, "\n")
+	for c in seqrec.seq
+	show(io, c)
 end
+write(io, '\n')
+# print quality scores as a unicode bar chart
+for q in seqrec.metadata.quality
+if q <= 0
+	write(io, '▁')
+elseif q <= 6
+	write(io, '▂')
+elseif q <= 12
+	write(io, '▃')
+elseif q <= 18
+	write(io, '▄')
+elseif q <= 24
+	write(io, '▅')
+elseif q <= 30
+	write(io, '▆')
+elseif q <= 36
+	write(io, '▇')
+else
+	write(io, '█')
+end
+end
+	write(io, '\n')
+	end
 
 
 """
 Write a `FASTQSeqRecord` to `io`, as a valid FASTQ record.
 """
 function write(io::IO, seqrec::FASTQSeqRecord; offset::Integer=-1,
-               qualheader::Bool=false)
+	qualheader::Bool=false)
 
-    # choose offset automatically
-    if offset < 0
-        if !isempty(seqrec.metadata.quality) && minimum(seqrec.metadata.quality) < 0
-            offset = 64 # solexa quality offset
-        else
-            offset = 33  # sanger
-        end
-    end
-
-    write(io, "@", seqrec.name)
-    if !isempty(seqrec.metadata.description)
-        write(io, " ", seqrec.metadata.description)
-    end
-    write(io, "\n")
-
-    for c in seqrec.seq
-        show(io, c)
-    end
-    write(io, "\n")
-
-    write(io, "+")
-    if qualheader
-        write(io, seqrec.name)
-        if !isempty(seqrec.metadata.description)
-            write(io, " ", seqrec.metadata.description)
-        end
-    end
-    write(io, "\n")
-
-    for q in seqrec.metadata.quality
-        write(io, Char(q + offset))
-    end
-    write(io, "\n")
+	# choose offset automatically
+	if 	offset < 0
+	if !isempty(seqrec.metadata.quality) && minimum(seqrec.metadata.quality) < 0
+		offset = 64 # solexa quality offset
+	else
+		offset = 33  # sanger
+	end
 end
 
+write(io, "@", seqrec.name)
+if !isempty(seqrec.metadata.description)
+	write(io, " ", seqrec.metadata.description)
+end
+write(io, "\n")
 
-const _fastqparser_start  = convert(Int , 25)
-const _fastqparser_first_final  = convert(Int , 25)
-const _fastqparser_error  = convert(Int , 0)
-const _fastqparser_en_main  = convert(Int , 25)
+for c in seqrec.seq
+show(io, c)
+end
+	write(io, "\n")
+
+	write(io, "+")
+	if 	qualheader
+	write(io, seqrec.name)
+	if !isempty(seqrec.metadata.description)
+		write(io, " ", seqrec.metadata.description)
+	end
+end
+write(io, "\n")
+
+for q in seqrec.metadata.quality
+write(io, Char(q + offset))
+end
+	write(io, "\n")
+	end
+
+
+const _fastqparser_start  = 18
+const _fastqparser_first_final  = 18
+const _fastqparser_error  = 0
+const _fastqparser_en_main  = 18
+const __fastqparser_nfa_targs = Int8[ 0, 0 ,  ]
+const __fastqparser_nfa_offsets = Int8[ 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 ,  ]
+const __fastqparser_nfa_push_actions = Int8[ 0, 0 ,  ]
+const __fastqparser_nfa_pop_trans = Int8[ 0, 0 ,  ]
 "A type encapsulating the current state of a FASTQ parser"
 type FASTQParser <: AbstractParser
-    state::Ragel.State
-    seqbuf::BufferedOutputStream{BufferedStreams.EmptyStreamSource}
-    qualbuf::BufferedOutputStream{BufferedStreams.EmptyStreamSource}
-    name2buf::StringField
-    desc2buf::StringField
-    qualcount::Int
-    quality_encodings::QualityEncoding
+state::Ragel.State
+seqbuf::BufferedOutputStream{BufferedStreams.EmptyStreamSource}
+qualbuf::BufferedOutputStream{BufferedStreams.EmptyStreamSource}
+name2buf::StringField
+desc2buf::StringField
+qualcount::Int
+quality_encodings::QualityEncoding
 
-    function FASTQParser(input::BufferedInputStream,
-                         quality_encodings::QualityEncoding)
-        cs = _fastqparser_start;
-	return new(Ragel.State(cs, input),
-                   BufferedOutputStream(), BufferedOutputStream(),
-                   StringField(), StringField(), 0, quality_encodings)
-    end
+function FASTQParser(input::BufferedInputStream,
+	quality_encodings::QualityEncoding)
+begin
+	cs = convert( Int , _fastqparser_start );
+
+end
+return new(Ragel.State(cs, input),
+BufferedOutputStream(), BufferedOutputStream(),
+StringField(), StringField(), 0, quality_encodings)
+end
 end
 
 
 function eltype(::Type{FASTQParser})
-    return FASTQSeqRecord
+return FASTQSeqRecord
 end
 
 
 function open(input::BufferedInputStream, ::Type{FASTQ};
-                   quality_encodings::QualityEncoding=EMPTY_QUAL_ENCODING)
-    return FASTQParser(input, quality_encodings)
+quality_encodings::QualityEncoding=EMPTY_QUAL_ENCODING)
+return FASTQParser(input, quality_encodings)
 end
 
 
 Ragel.@generate_read_fuction("_fastqparser", FASTQParser, FASTQSeqRecord,
-    begin
-        if p == pe
-	@goto _test_eof
+begin
+begin
+if ( p == pe  )
+@goto _test_eof
 
 end
-@switch cs  begin
-    @case 25
-@goto st_case_25
-@case 0
-@goto st_case_0
-@case 1
-@goto st_case_1
-@case 2
-@goto st_case_2
-@case 3
-@goto st_case_3
-@case 4
-@goto st_case_4
-@case 5
-@goto st_case_5
-@case 6
-@goto st_case_6
-@case 7
-@goto st_case_7
-@case 8
-@goto st_case_8
-@case 9
-@goto st_case_9
-@case 10
-@goto st_case_10
-@case 11
-@goto st_case_11
-@case 12
-@goto st_case_12
-@case 26
-@goto st_case_26
-@case 13
-@goto st_case_13
-@case 14
-@goto st_case_14
-@case 15
-@goto st_case_15
-@case 16
-@goto st_case_16
-@case 27
-@goto st_case_27
-@case 28
-@goto st_case_28
-@case 17
-@goto st_case_17
-@case 18
+if ( cs  == 18 )
 @goto st_case_18
-@case 19
+elseif ( cs  == 0 )
+@goto st_case_0
+elseif ( cs  == 1 )
+@goto st_case_1
+elseif ( cs  == 2 )
+@goto st_case_2
+elseif ( cs  == 3 )
+@goto st_case_3
+elseif ( cs  == 4 )
+@goto st_case_4
+elseif ( cs  == 5 )
+@goto st_case_5
+elseif ( cs  == 6 )
+@goto st_case_6
+elseif ( cs  == 7 )
+@goto st_case_7
+elseif ( cs  == 8 )
+@goto st_case_8
+elseif ( cs  == 9 )
+@goto st_case_9
+elseif ( cs  == 10 )
+@goto st_case_10
+elseif ( cs  == 11 )
+@goto st_case_11
+elseif ( cs  == 12 )
+@goto st_case_12
+elseif ( cs  == 19 )
 @goto st_case_19
-@case 20
-@goto st_case_20
-@case 21
-@goto st_case_21
-@case 22
-@goto st_case_22
-@case 23
-@goto st_case_23
-@case 24
-@goto st_case_24
-
+elseif ( cs  == 13 )
+@goto st_case_13
+elseif ( cs  == 14 )
+@goto st_case_14
+elseif ( cs  == 15 )
+@goto st_case_15
+elseif ( cs  == 16 )
+@goto st_case_16
+elseif ( cs  == 17 )
+@goto st_case_17
 end
 @goto st_out
-@label ctr52
-	state.linenum += 1
-
-@goto st25
-@label st25
-p+= 1;
-	if p == pe
-	@goto _test_eof25
-
+@label ctr39
+begin
+state.linenum += 1
 end
-@label st_case_25
-@switch ( data[1 + p ])  begin
-    @case 9
-@goto st25
-@case 10
-@goto ctr52
-@case 32
-@goto st25
-@case 64
-ck  = convert(Int , 0)
-
-if (length(input.qualbuf) == length(input.seqbuf)
-    )
-	ck += 1;
-
-end
-if 1 <= ck
-	@goto st1
-
-end
-@goto st0
-
-end
-if 11 <= ( data[1 + p ]) && ( data[1 + p ]) <= 13
-	@goto st25
-
-end
-@goto st0
-@label st_case_0
-@label st0
-cs = 0;
-	@goto _out
-@label ctr54
-	if length(input.seqbuf) != length(input.qualbuf)
-            error("Error parsing FASTQ: sequence and quality scores must be of equal length")
-        end
-
-        # if a name and s description are repeated (i.e. old-fashioned fastq)
-        # make sure they match.
-        if (!isempty(input.name2buf) && input.name2buf != output.name) ||
-           (!isempty(input.desc2buf) && input.desc2buf != output.metadata.description)
-            error("Error parsing FASTQ: sequence and quality scores have non-matching identifiers")
-        end
-
-        # sequence
-        copy!(output.seq, input.seqbuf.buffer, 1, input.seqbuf.position - 1)
-
-        # quality
-        encoding, input.quality_encodings =
-            infer_quality_encoding(input.qualbuf.buffer, 1,
-                                   input.qualbuf.position - 1,
-                                   input.quality_encodings)
-
-        decode_quality_string!(encoding, input.qualbuf.buffer,
-                               output.metadata.quality, 1,
-                               input.qualbuf.position - 1)
-
-        # reset temporaries for the next run
-        empty!(input.qualbuf)
-        empty!(input.seqbuf)
-        empty!(input.name2buf)
-        empty!(input.desc2buf)
-        yield = true;
-        	p+= 1; cs = 1; @goto _out
-
-
-
-@goto st1
-@label st1
-p+= 1;
-	if p == pe
-	@goto _test_eof1
-
-end
-@label st_case_1
-if ( data[1 + p ]) == 32
-	@goto st0
-
-end
-if ( data[1 + p ]) < 14
-	if 9 <= ( data[1 + p ])
-	@goto st0
-
-end
-
-elseif ( ( data[1 + p ]) > 31  )
-	if 33 <= ( data[1 + p ])
-	@goto ctr0
-
-end
-
-else
-	@goto ctr0
-
-end
-@goto ctr0
-@label ctr0
-	Ragel.@anchor!
-@goto st2
-@label st2
-p+= 1;
-	if p == pe
-	@goto _test_eof2
-
-end
-@label st_case_2
-@switch ( data[1 + p ])  begin
-    @case 9
-@goto ctr3
-@case 10
-@goto ctr4
-@case 11
-@goto ctr3
-@case 12
-@goto st0
-@case 13
-@goto ctr5
-@case 32
-@goto ctr3
-
-end
-if ( data[1 + p ]) > 31
-	if 33 <= ( data[1 + p ])
-	@goto st2
-
-end
-
-elseif ( ( data[1 + p ]) >= 14  )
-	@goto st2
-
-end
-@goto st2
-@label ctr3
-	Ragel.@copy_from_anchor!(output.name)
-@goto st3
-@label st3
-p+= 1;
-	if p == pe
-	@goto _test_eof3
-
-end
-@label st_case_3
-@switch ( data[1 + p ])  begin
-    @case 9
-@goto st3
-@case 11
-@goto st3
-@case 32
-@goto st3
-
-end
-if ( data[1 + p ]) < 14
-	if 10 <= ( data[1 + p ])
-	@goto st0
-
-end
-
-elseif ( ( data[1 + p ]) > 31  )
-	if 33 <= ( data[1 + p ])
-	@goto ctr6
-
-end
-
-else
-	@goto ctr6
-
-end
-@goto ctr6
-@label ctr6
-	Ragel.@anchor!
-@goto st4
-@label st4
-p+= 1;
-	if p == pe
-	@goto _test_eof4
-
-end
-@label st_case_4
-@switch ( data[1 + p ])  begin
-    @case 10
-@goto ctr9
-@case 13
-@goto ctr10
-
-end
-if ( data[1 + p ]) > 12
-	if 14 <= ( data[1 + p ])
-	@goto st4
-
-end
-
-elseif ( ( data[1 + p ]) >= 11  )
-	@goto st4
-
-end
-@goto st4
-@label ctr4
-	Ragel.@copy_from_anchor!(output.name)
-	state.linenum += 1
-
-@goto st5
-@label ctr9
-	Ragel.@copy_from_anchor!(output.metadata.description)
-	state.linenum += 1
-
-@goto st5
-@label ctr50
-	state.linenum += 1
-
-@goto st5
-@label st5
-p+= 1;
-	if p == pe
-	@goto _test_eof5
-
-end
-@label st_case_5
-@switch ( data[1 + p ])  begin
-    @case 10
-@goto ctr11
-@case 13
-@goto st7
-
-end
-if 65 <= ( data[1 + p ]) && ( data[1 + p ]) <= 122
-	@goto ctr13
-
-end
-@goto st0
-@label ctr11
-	state.linenum += 1
-
-@goto st6
-@label ctr43
-	Ragel.@append_from_anchor!(input.seqbuf)
-	state.linenum += 1
-
-@goto st6
-@label st6
-p+= 1;
-	if p == pe
-	@goto _test_eof6
-
-end
-@label st_case_6
-@switch ( data[1 + p ])  begin
-    @case 10
-@goto ctr11
-@case 13
-@goto st7
-@case 43
-@goto st8
-
-end
-if 65 <= ( data[1 + p ]) && ( data[1 + p ]) <= 122
-	@goto ctr13
-
-end
-@goto st0
-@label ctr44
-	Ragel.@append_from_anchor!(input.seqbuf)
-@goto st7
-@label st7
-p+= 1;
-	if p == pe
-	@goto _test_eof7
-
-end
-@label st_case_7
-if ( data[1 + p ]) == 10
-	@goto ctr11
-
-end
-@goto st0
-@label st8
-p+= 1;
-	if p == pe
-	@goto _test_eof8
-
-end
-@label st_case_8
-@switch ( data[1 + p ])  begin
-    @case 10
-@goto ctr16
-@case 13
-@goto st23
-@case 32
-@goto st0
-
-end
-if ( data[1 + p ]) < 14
-	if 9 <= ( data[1 + p ]) && ( data[1 + p ]) <= 12
-	@goto st0
-
-end
-
-elseif ( ( data[1 + p ]) > 31  )
-	if 33 <= ( data[1 + p ])
-	@goto ctr15
-
-end
-
-else
-	@goto ctr15
-
-end
-@goto ctr15
-@label ctr15
-	Ragel.@anchor!
-@goto st9
-@label st9
-p+= 1;
-	if p == pe
-	@goto _test_eof9
-
-end
-@label st_case_9
-@switch ( data[1 + p ])  begin
-    @case 9
-@goto ctr19
-@case 10
-@goto ctr20
-@case 11
-@goto ctr19
-@case 12
-@goto st0
-@case 13
-@goto ctr21
-@case 32
-@goto ctr19
-
-end
-if ( data[1 + p ]) > 31
-	if 33 <= ( data[1 + p ])
-	@goto st9
-
-end
-
-elseif ( ( data[1 + p ]) >= 14  )
-	@goto st9
-
-end
-@goto st9
-@label ctr19
-	Ragel.@copy_from_anchor!(input.name2buf)
-@goto st10
-@label st10
-p+= 1;
-	if p == pe
-	@goto _test_eof10
-
-end
-@label st_case_10
-@switch ( data[1 + p ])  begin
-    @case 9
-@goto st10
-@case 11
-@goto st10
-@case 32
-@goto st10
-
-end
-if ( data[1 + p ]) < 14
-	if 10 <= ( data[1 + p ])
-	@goto st0
-
-end
-
-elseif ( ( data[1 + p ]) > 31  )
-	if 33 <= ( data[1 + p ])
-	@goto ctr22
-
-end
-
-else
-	@goto ctr22
-
-end
-@goto ctr22
-@label ctr22
-	Ragel.@anchor!
-@goto st11
-@label st11
-p+= 1;
-	if p == pe
-	@goto _test_eof11
-
-end
-@label st_case_11
-@switch ( data[1 + p ])  begin
-    @case 10
-@goto ctr25
-@case 13
-@goto ctr26
-
-end
-if ( data[1 + p ]) > 12
-	if 14 <= ( data[1 + p ])
-	@goto st11
-
-end
-
-elseif ( ( data[1 + p ]) >= 11  )
-	@goto st11
-
-end
-@goto st11
-@label ctr16
-	state.linenum += 1
-
-@goto st12
-@label ctr20
-	Ragel.@copy_from_anchor!(input.name2buf)
-	state.linenum += 1
-
-@goto st12
-@label ctr25
-	Ragel.@copy_from_anchor!(input.desc2buf)
-	state.linenum += 1
-
-@goto st12
-@label st12
-p+= 1;
-	if p == pe
-	@goto _test_eof12
-
-end
-@label st_case_12
-@switch ( data[1 + p ])  begin
-    @case 10
-@goto ctr27
-@case 13
-@goto st13
-
-end
-if 33 <= ( data[1 + p ]) && ( data[1 + p ]) <= 126
-	ck  = convert(Int , 0)
-
-if (length(input.qualbuf) + input.qualcount < length(input.seqbuf)
-    )
-	ck += 1;
-
-end
-if 1 <= ck
-	@goto ctr29
-
-end
-@goto st0
-
-end
-@goto st0
-@label ctr27
-	state.linenum += 1
-
-@goto st26
-@label ctr30
-	Ragel.@append_from_anchor!(input.qualbuf)
-        input.qualcount = 0
-
-	state.linenum += 1
-
-@goto st26
-@label ctr38
-	state.linenum += 1
-
-	Ragel.@append_from_anchor!(input.qualbuf)
-        input.qualcount = 0
-
-@goto st26
-@label ctr40
-	Ragel.@copy_from_anchor!(input.name2buf)
-	state.linenum += 1
-
-	Ragel.@append_from_anchor!(input.qualbuf)
-        input.qualcount = 0
-
-@goto st26
-@label st26
-p+= 1;
-	if p == pe
-	@goto _test_eof26
-
-end
-@label st_case_26
-@switch ( data[1 + p ])  begin
-    @case 10
-@goto ctr27
-@case 13
-@goto st13
-@case 64
-ck  = convert(Int , 0)
-
-if (length(input.qualbuf) + input.qualcount < length(input.seqbuf)
-    )
-	ck += 1;
-
-end
-if (length(input.qualbuf) == length(input.seqbuf)
-    )
-	ck += 2;
-
-end
-if ck < 2
-	if 1 <= ck
-	@goto ctr29
-
-end
-
-elseif ( ck > 2  )
-	@goto ctr55
-
-else
-	@goto ctr54
-
-end
-@goto st0
-
-end
-if ( data[1 + p ]) > 63
-	if 65 <= ( data[1 + p ]) && ( data[1 + p ]) <= 126
-	ck  = convert(Int , 0)
-
-if (length(input.qualbuf) + input.qualcount < length(input.seqbuf)
-    )
-	ck += 1;
-
-end
-if 1 <= ck
-	@goto ctr29
-
-end
-@goto st0
-
-end
-
-elseif ( ( data[1 + p ]) >= 33  )
-	ck  = convert(Int , 0)
-
-if (length(input.qualbuf) + input.qualcount < length(input.seqbuf)
-    )
-	ck += 1;
-
-end
-if 1 <= ck
-	@goto ctr29
-
-end
-@goto st0
-
-end
-@goto st0
-@label ctr31
-	Ragel.@append_from_anchor!(input.qualbuf)
-        input.qualcount = 0
-
-@goto st13
-@label ctr41
-	Ragel.@copy_from_anchor!(input.name2buf)
-	Ragel.@append_from_anchor!(input.qualbuf)
-        input.qualcount = 0
-
-@goto st13
-@label st13
-p+= 1;
-	if p == pe
-	@goto _test_eof13
-
-end
-@label st_case_13
-if ( data[1 + p ]) == 10
-	@goto ctr27
-
-end
-@goto st0
-@label ctr29
-	Ragel.@anchor!
-	input.qualcount += 1
-
-@goto st14
-@label ctr32
-	input.qualcount += 1
-
-@goto st14
-@label st14
-p+= 1;
-	if p == pe
-	@goto _test_eof14
-
-end
-@label st_case_14
-@switch ( data[1 + p ])  begin
-    @case 10
-@goto ctr30
-@case 13
-@goto ctr31
-
-end
-if 33 <= ( data[1 + p ]) && ( data[1 + p ]) <= 126
-	ck  = convert(Int , 0)
-
-if (length(input.qualbuf) + input.qualcount < length(input.seqbuf)
-    )
-	ck += 1;
-
-end
-if 1 <= ck
-	@goto ctr32
-
-end
-@goto st0
-
-end
-@goto st0
-@label ctr55
-	Ragel.@anchor!
-	input.qualcount += 1
-
-	if length(input.seqbuf) != length(input.qualbuf)
-            error("Error parsing FASTQ: sequence and quality scores must be of equal length")
-        end
-
-        # if a name and s description are repeated (i.e. old-fashioned fastq)
-        # make sure they match.
-        if (!isempty(input.name2buf) && input.name2buf != output.name) ||
-           (!isempty(input.desc2buf) && input.desc2buf != output.metadata.description)
-            error("Error parsing FASTQ: sequence and quality scores have non-matching identifiers")
-        end
-
-        # sequence
-        copy!(output.seq, input.seqbuf.buffer, 1, input.seqbuf.position - 1)
-
-        # quality
-        encoding, input.quality_encodings =
-            infer_quality_encoding(input.qualbuf.buffer, 1,
-                                   input.qualbuf.position - 1,
-                                   input.quality_encodings)
-
-        decode_quality_string!(encoding, input.qualbuf.buffer,
-                               output.metadata.quality, 1,
-                               input.qualbuf.position - 1)
-
-        # reset temporaries for the next run
-        empty!(input.qualbuf)
-        empty!(input.seqbuf)
-        empty!(input.name2buf)
-        empty!(input.desc2buf)
-        yield = true;
-        	p+= 1; cs = 15; @goto _out
-
-
-
-@goto st15
-@label st15
-p+= 1;
-	if p == pe
-	@goto _test_eof15
-
-end
-@label st_case_15
-@switch ( data[1 + p ])  begin
-    @case 10
-@goto ctr30
-@case 13
-@goto ctr31
-@case 32
-@goto st0
-@case 127
-@goto ctr0
-
-end
-if ( data[1 + p ]) < 14
-	if 9 <= ( data[1 + p ]) && ( data[1 + p ]) <= 12
-	@goto st0
-
-end
-
-elseif ( ( data[1 + p ]) > 31  )
-	if 33 <= ( data[1 + p ]) && ( data[1 + p ]) <= 126
-	ck  = convert(Int , 0)
-
-if (length(input.qualbuf) + input.qualcount < length(input.seqbuf)
-    )
-	ck += 1;
-
-end
-if ck > 0
-	@goto ctr33
-
-else
-	@goto ctr0
-
-end
-@goto st0
-
-end
-
-else
-	@goto ctr0
-
-end
-@goto ctr0
-@label ctr33
-	Ragel.@anchor!
-	input.qualcount += 1
-
-@goto st16
-@label ctr36
-	input.qualcount += 1
-
-@goto st16
-@label st16
-p+= 1;
-	if p == pe
-	@goto _test_eof16
-
-end
-@label st_case_16
-@switch ( data[1 + p ])  begin
-    @case 9
-@goto ctr3
-@case 10
-@goto ctr34
-@case 11
-@goto ctr3
-@case 12
-@goto st0
-@case 13
-@goto ctr35
-@case 32
-@goto ctr3
-@case 127
-@goto st2
-
-end
-if ( data[1 + p ]) > 31
-	if 33 <= ( data[1 + p ]) && ( data[1 + p ]) <= 126
-	ck  = convert(Int , 0)
-
-if (length(input.qualbuf) + input.qualcount < length(input.seqbuf)
-    )
-	ck += 1;
-
-end
-if ck > 0
-	@goto ctr36
-
-else
-	@goto st2
-
-end
-@goto st0
-
-end
-
-elseif ( ( data[1 + p ]) >= 14  )
-	@goto st2
-
-end
-@goto st2
-@label ctr49
-	state.linenum += 1
-
-@goto st27
-@label ctr34
-	Ragel.@copy_from_anchor!(output.name)
-	state.linenum += 1
-
-	Ragel.@append_from_anchor!(input.qualbuf)
-        input.qualcount = 0
-
-@goto st27
-@label st27
-p+= 1;
-	if p == pe
-	@goto _test_eof27
-
-end
-@label st_case_27
-@switch ( data[1 + p ])  begin
-    @case 10
-@goto ctr37
-@case 13
-@goto st17
-@case 64
-ck  = convert(Int , 0)
-
-if (length(input.qualbuf) + input.qualcount < length(input.seqbuf)
-    )
-	ck += 1;
-
-end
-if (length(input.qualbuf) == length(input.seqbuf)
-    )
-	ck += 2;
-
-end
-if ck < 2
-	if 1 <= ck
-	@goto ctr29
-
-end
-
-elseif ( ck > 2  )
-	@goto ctr55
-
-else
-	@goto ctr54
-
-end
-@goto st0
-
-end
-if ( data[1 + p ]) < 65
-	if 33 <= ( data[1 + p ]) && ( data[1 + p ]) <= 63
-	ck  = convert(Int , 0)
-
-if (length(input.qualbuf) + input.qualcount < length(input.seqbuf)
-    )
-	ck += 1;
-
-end
-if 1 <= ck
-	@goto ctr29
-
-end
-@goto st0
-
-end
-
-elseif ( ( data[1 + p ]) > 122  )
-	if ( data[1 + p ]) <= 126
-	ck  = convert(Int , 0)
-
-if (length(input.qualbuf) + input.qualcount < length(input.seqbuf)
-    )
-	ck += 1;
-
-end
-if 1 <= ck
-	@goto ctr29
-
-end
-@goto st0
-
-end
-
-else
-	ck  = convert(Int , 0)
-
-if (length(input.qualbuf) + input.qualcount < length(input.seqbuf)
-    )
-	ck += 1;
-
-end
-if ck > 0
-	@goto ctr57
-
-else
-	@goto ctr13
-
-end
-@goto st0
-
-end
-@goto st0
-@label ctr37
-	state.linenum += 1
-
-@goto st28
-@label ctr46
-	Ragel.@append_from_anchor!(input.seqbuf)
-	state.linenum += 1
-
-	Ragel.@append_from_anchor!(input.qualbuf)
-        input.qualcount = 0
-
-@goto st28
-@label st28
-p+= 1;
-	if p == pe
-	@goto _test_eof28
-
-end
-@label st_case_28
-@switch ( data[1 + p ])  begin
-    @case 10
-@goto ctr37
-@case 13
-@goto st17
-@case 43
-ck  = convert(Int , 0)
-
-if (length(input.qualbuf) + input.qualcount < length(input.seqbuf)
-    )
-	ck += 1;
-
-end
-if ck > 0
-	@goto ctr58
-
-else
-	@goto st8
-
-end
-@goto st0
-@case 64
-ck  = convert(Int , 0)
-
-if (length(input.qualbuf) + input.qualcount < length(input.seqbuf)
-    )
-	ck += 1;
-
-end
-if (length(input.qualbuf) == length(input.seqbuf)
-    )
-	ck += 2;
-
-end
-if ck < 2
-	if 1 <= ck
-	@goto ctr29
-
-end
-
-elseif ( ck > 2  )
-	@goto ctr55
-
-else
-	@goto ctr54
-
-end
-@goto st0
-
-end
-if ( data[1 + p ]) < 44
-	if 33 <= ( data[1 + p ]) && ( data[1 + p ]) <= 42
-	ck  = convert(Int , 0)
-
-if (length(input.qualbuf) + input.qualcount < length(input.seqbuf)
-    )
-	ck += 1;
-
-end
-if 1 <= ck
-	@goto ctr29
-
-end
-@goto st0
-
-end
-
-elseif ( ( data[1 + p ]) > 63  )
-	if ( data[1 + p ]) > 122
-	if ( data[1 + p ]) <= 126
-	ck  = convert(Int , 0)
-
-if (length(input.qualbuf) + input.qualcount < length(input.seqbuf)
-    )
-	ck += 1;
-
-end
-if 1 <= ck
-	@goto ctr29
-
-end
-@goto st0
-
-end
-
-elseif ( ( data[1 + p ]) >= 65  )
-	ck  = convert(Int , 0)
-
-if (length(input.qualbuf) + input.qualcount < length(input.seqbuf)
-    )
-	ck += 1;
-
-end
-if ck > 0
-	@goto ctr57
-
-else
-	@goto ctr13
-
-end
-@goto st0
-
-end
-
-else
-	ck  = convert(Int , 0)
-
-if (length(input.qualbuf) + input.qualcount < length(input.seqbuf)
-    )
-	ck += 1;
-
-end
-if 1 <= ck
-	@goto ctr29
-
-end
-@goto st0
-
-end
-@goto st0
-@label ctr47
-	Ragel.@append_from_anchor!(input.seqbuf)
-	Ragel.@append_from_anchor!(input.qualbuf)
-        input.qualcount = 0
-
-@goto st17
-@label st17
-p+= 1;
-	if p == pe
-	@goto _test_eof17
-
-end
-@label st_case_17
-if ( data[1 + p ]) == 10
-	@goto ctr37
-
-end
-@goto st0
-@label ctr58
-	Ragel.@anchor!
-	input.qualcount += 1
-
 @goto st18
 @label st18
 p+= 1;
-	if p == pe
-	@goto _test_eof18
+if ( p == pe  )
+@goto _test_eof18
 
 end
 @label st_case_18
-@switch ( data[1 + p ])  begin
-    @case 10
-@goto ctr38
-@case 13
-@goto ctr31
-@case 32
-@goto st0
-@case 127
-@goto ctr15
+if ( (data[1+(p )]) == 10 )
+begin
+@goto ctr39
 
 end
-if ( data[1 + p ]) < 14
-	if 9 <= ( data[1 + p ]) && ( data[1 + p ]) <= 12
-	@goto st0
+elseif ( (data[1+(p )]) == 32 )
+begin
+@goto st18
 
 end
-
-elseif ( ( data[1 + p ]) > 31  )
-	if 33 <= ( data[1 + p ]) && ( data[1 + p ]) <= 126
-	ck  = convert(Int , 0)
-
-if (length(input.qualbuf) + input.qualcount < length(input.seqbuf)
-    )
-	ck += 1;
+elseif ( (data[1+(p )]) == 64 )
+begin
+ck = 0;
+if ( (length(input.qualbuf) == length(input.seqbuf)) )
+ck += 1;
 
 end
-if ck > 0
-	@goto ctr39
+if ( 1 <= ck  )
+begin
+@goto st1
 
-else
-	@goto ctr15
+end
 
 end
 @goto st0
 
 end
-
-else
-	@goto ctr15
+end
+if ( 9 <= (data[1+(p )])&& (data[1+(p )])<= 13  )
+begin
+@goto st18
 
 end
-@goto ctr15
-@label ctr39
-	Ragel.@anchor!
-	input.qualcount += 1
 
+end
+begin
+@goto st0
+
+end
+@label st_case_0
+@label st0
+cs = 0;
+@goto _out
+@label ctr41
+begin
+if length(input.seqbuf) != length(input.qualbuf)
+error("Error parsing FASTQ: sequence and quality scores must be of equal length")
+end
+
+# if a name and s description are repeated (i.e. old-fashioned fastq)
+# make sure they match.
+if (!isempty(input.name2buf) && input.name2buf != output.name) ||
+(!isempty(input.desc2buf) && input.desc2buf != output.metadata.description)
+error("Error parsing FASTQ: sequence and quality scores have non-matching identifiers")
+end
+
+# sequence
+copy!(output.seq, input.seqbuf.buffer, 1, input.seqbuf.position - 1)
+
+# quality
+encoding, input.quality_encodings =
+infer_quality_encoding(input.qualbuf.buffer, 1,
+input.qualbuf.position - 1,
+input.quality_encodings)
+
+decode_quality_string!(encoding, input.qualbuf.buffer,
+output.metadata.quality, 1,
+input.qualbuf.position - 1)
+
+# reset temporaries for the next run
+empty!(input.qualbuf)
+empty!(input.seqbuf)
+empty!(input.name2buf)
+empty!(input.desc2buf)
+yield = true;
+begin
+p+= 1;
+cs = 1;
+@goto _out
+
+end
+
+end
+@goto st1
+@label st1
+p+= 1;
+if ( p == pe  )
+@goto _test_eof1
+
+end
+@label st_case_1
+if ( (data[1+(p )])== 32  )
+begin
+@goto st0
+
+end
+
+end
+if ( 9 <= (data[1+(p )])&& (data[1+(p )])<= 13  )
+begin
+@goto st0
+
+end
+
+end
+begin
+@goto ctr0
+
+end
+@label ctr0
+begin
+Ragel.@anchor!
+end
+@goto st2
+@label st2
+p+= 1;
+if ( p == pe  )
+@goto _test_eof2
+
+end
+@label st_case_2
+if ( (data[1+(p )]) == 10 )
+begin
+@goto ctr4
+
+end
+elseif ( (data[1+(p )]) == 12 )
+begin
+@goto st0
+
+end
+elseif ( (data[1+(p )]) == 13 )
+begin
+@goto ctr5
+
+end
+elseif ( (data[1+(p )]) == 32 )
+begin
+@goto ctr3
+
+end
+end
+if ( 9 <= (data[1+(p )])&& (data[1+(p )])<= 11  )
+begin
+@goto ctr3
+
+end
+
+end
+begin
+@goto st2
+
+end
+@label ctr3
+begin
+Ragel.@copy_from_anchor!(output.name)
+end
+@goto st3
+@label st3
+p+= 1;
+if ( p == pe  )
+@goto _test_eof3
+
+end
+@label st_case_3
+if ( (data[1+(p )]) == 10 )
+begin
+@goto st0
+
+end
+elseif ( (data[1+(p )]) == 32 )
+begin
+@goto st3
+
+end
+end
+if ( (data[1+(p )])> 11  )
+begin
+if ( (data[1+(p )])<= 13  )
+begin
+@goto st0
+
+end
+
+end
+
+end
+
+elseif ( (data[1+(p )])>= 9  )
+begin
+@goto st3
+
+end
+
+end
+begin
+@goto ctr6
+
+end
+@label ctr6
+begin
+Ragel.@anchor!
+end
+@goto st4
+@label st4
+p+= 1;
+if ( p == pe  )
+@goto _test_eof4
+
+end
+@label st_case_4
+if ( (data[1+(p )]) == 10 )
+begin
+@goto ctr9
+
+end
+elseif ( (data[1+(p )]) == 13 )
+begin
+@goto ctr10
+
+end
+end
+begin
+@goto st4
+
+end
+@label ctr4
+begin
+Ragel.@copy_from_anchor!(output.name)
+end
+begin
+state.linenum += 1
+end
+@goto st5
+@label ctr9
+begin
+Ragel.@copy_from_anchor!(output.metadata.description)
+end
+begin
+state.linenum += 1
+end
+@goto st5
+@label ctr37
+begin
+state.linenum += 1
+end
+@goto st5
+@label st5
+p+= 1;
+if ( p == pe  )
+@goto _test_eof5
+
+end
+@label st_case_5
+if ( (data[1+(p )]) == 10 )
+begin
+@goto ctr11
+
+end
+elseif ( (data[1+(p )]) == 13 )
+begin
+@goto st7
+
+end
+end
+if ( 65 <= (data[1+(p )])&& (data[1+(p )])<= 122  )
+begin
+@goto ctr13
+
+end
+
+end
+begin
+@goto st0
+
+end
+@label ctr11
+begin
+state.linenum += 1
+end
+@goto st6
+@label ctr34
+begin
+Ragel.@append_from_anchor!(input.seqbuf)
+end
+begin
+state.linenum += 1
+end
+@goto st6
+@label st6
+p+= 1;
+if ( p == pe  )
+@goto _test_eof6
+
+end
+@label st_case_6
+if ( (data[1+(p )]) == 10 )
+begin
+@goto ctr11
+
+end
+elseif ( (data[1+(p )]) == 13 )
+begin
+@goto st7
+
+end
+elseif ( (data[1+(p )]) == 43 )
+begin
+@goto st8
+
+end
+end
+if ( 65 <= (data[1+(p )])&& (data[1+(p )])<= 122  )
+begin
+@goto ctr13
+
+end
+
+end
+begin
+@goto st0
+
+end
+@label ctr35
+begin
+Ragel.@append_from_anchor!(input.seqbuf)
+end
+@goto st7
+@label st7
+p+= 1;
+if ( p == pe  )
+@goto _test_eof7
+
+end
+@label st_case_7
+if ( (data[1+(p )])== 10  )
+begin
+@goto ctr11
+
+end
+
+end
+begin
+@goto st0
+
+end
+@label st8
+p+= 1;
+if ( p == pe  )
+@goto _test_eof8
+
+end
+@label st_case_8
+if ( (data[1+(p )]) == 10 )
+begin
+@goto ctr16
+
+end
+elseif ( (data[1+(p )]) == 13 )
+begin
+@goto st15
+
+end
+elseif ( (data[1+(p )]) == 32 )
+begin
+@goto st0
+
+end
+end
+if ( 9 <= (data[1+(p )])&& (data[1+(p )])<= 12  )
+begin
+@goto st0
+
+end
+
+end
+begin
+@goto ctr15
+
+end
+@label ctr15
+begin
+Ragel.@anchor!
+end
+@goto st9
+@label st9
+p+= 1;
+if ( p == pe  )
+@goto _test_eof9
+
+end
+@label st_case_9
+if ( (data[1+(p )]) == 10 )
+begin
+@goto ctr20
+
+end
+elseif ( (data[1+(p )]) == 12 )
+begin
+@goto st0
+
+end
+elseif ( (data[1+(p )]) == 13 )
+begin
+@goto ctr21
+
+end
+elseif ( (data[1+(p )]) == 32 )
+begin
+@goto ctr19
+
+end
+end
+if ( 9 <= (data[1+(p )])&& (data[1+(p )])<= 11  )
+begin
+@goto ctr19
+
+end
+
+end
+begin
+@goto st9
+
+end
+@label ctr19
+begin
+Ragel.@copy_from_anchor!(input.name2buf)
+end
+@goto st10
+@label st10
+p+= 1;
+if ( p == pe  )
+@goto _test_eof10
+
+end
+@label st_case_10
+if ( (data[1+(p )]) == 10 )
+begin
+@goto st0
+
+end
+elseif ( (data[1+(p )]) == 32 )
+begin
+@goto st10
+
+end
+end
+if ( (data[1+(p )])> 11  )
+begin
+if ( (data[1+(p )])<= 13  )
+begin
+@goto st0
+
+end
+
+end
+
+end
+
+elseif ( (data[1+(p )])>= 9  )
+begin
+@goto st10
+
+end
+
+end
+begin
+@goto ctr22
+
+end
+@label ctr22
+begin
+Ragel.@anchor!
+end
+@goto st11
+@label st11
+p+= 1;
+if ( p == pe  )
+@goto _test_eof11
+
+end
+@label st_case_11
+if ( (data[1+(p )]) == 10 )
+begin
+@goto ctr25
+
+end
+elseif ( (data[1+(p )]) == 13 )
+begin
+@goto ctr26
+
+end
+end
+begin
+@goto st11
+
+end
+@label ctr16
+begin
+state.linenum += 1
+end
+@goto st12
+@label ctr20
+begin
+Ragel.@copy_from_anchor!(input.name2buf)
+end
+begin
+state.linenum += 1
+end
+@goto st12
+@label ctr25
+begin
+Ragel.@copy_from_anchor!(input.desc2buf)
+end
+begin
+state.linenum += 1
+end
+@goto st12
+@label st12
+p+= 1;
+if ( p == pe  )
+@goto _test_eof12
+
+end
+@label st_case_12
+if ( (data[1+(p )]) == 10 )
+begin
+@goto ctr27
+
+end
+elseif ( (data[1+(p )]) == 13 )
+begin
+@goto st13
+
+end
+end
+if ( 33 <= (data[1+(p )])&& (data[1+(p )])<= 126  )
+begin
+ck = 0;
+if ( (length(input.qualbuf) + input.qualcount < length(input.seqbuf)) )
+ck += 1;
+
+end
+if ( 1 <= ck  )
+begin
+@goto ctr29
+
+end
+
+end
+@goto st0
+
+end
+
+end
+begin
+@goto st0
+
+end
+@label ctr27
+begin
+state.linenum += 1
+end
 @goto st19
-@label ctr42
-	input.qualcount += 1
-
+@label ctr31
+begin
+Ragel.@append_from_anchor!(input.qualbuf)
+input.qualcount = 0
+end
+begin
+state.linenum += 1
+end
 @goto st19
 @label st19
 p+= 1;
-	if p == pe
-	@goto _test_eof19
+if ( p == pe  )
+@goto _test_eof19
 
 end
 @label st_case_19
-@switch ( data[1 + p ])  begin
-    @case 9
-@goto ctr19
-@case 10
-@goto ctr40
-@case 11
-@goto ctr19
-@case 12
-@goto st0
-@case 13
+if ( (data[1+(p )]) == 10 )
+begin
+@goto ctr27
+
+end
+elseif ( (data[1+(p )]) == 13 )
+begin
+@goto st13
+
+end
+elseif ( (data[1+(p )]) == 64 )
+begin
+ck = 0;
+if ( (length(input.qualbuf) + input.qualcount < length(input.seqbuf)) )
+ck += 1;
+
+end
+if ( (length(input.qualbuf) == length(input.seqbuf)) )
+ck += 2;
+
+end
+if ( ck < 2  )
+begin
+if ( 1 <= ck  )
+begin
+@goto ctr29
+
+end
+
+end
+
+end
+
+elseif ( ck > 2  )
+begin
+@goto ctr29
+
+end
+
+else
+begin
 @goto ctr41
-@case 32
-@goto ctr19
-@case 127
-@goto st9
 
 end
-if ( data[1 + p ]) > 31
-	if 33 <= ( data[1 + p ]) && ( data[1 + p ]) <= 126
-	ck  = convert(Int , 0)
-
-if (length(input.qualbuf) + input.qualcount < length(input.seqbuf)
-    )
-	ck += 1;
 
 end
-if ck > 0
-	@goto ctr42
+@goto st0
 
-else
-	@goto st9
+end
+end
+if ( 33 <= (data[1+(p )])&& (data[1+(p )])<= 126  )
+begin
+ck = 0;
+if ( (length(input.qualbuf) + input.qualcount < length(input.seqbuf)) )
+ck += 1;
+
+end
+if ( 1 <= ck  )
+begin
+@goto ctr29
+
+end
 
 end
 @goto st0
 
 end
 
-elseif ( ( data[1 + p ]) >= 14  )
-	@goto st9
+end
+begin
+@goto st0
 
 end
-@goto st9
-@label ctr13
-	Ragel.@anchor!
-@goto st20
-@label st20
+@label ctr32
+begin
+Ragel.@append_from_anchor!(input.qualbuf)
+input.qualcount = 0
+end
+@goto st13
+@label st13
 p+= 1;
-	if p == pe
-	@goto _test_eof20
+if ( p == pe  )
+@goto _test_eof13
 
 end
-@label st_case_20
-@switch ( data[1 + p ])  begin
-    @case 10
-@goto ctr43
-@case 13
-@goto ctr44
+@label st_case_13
+if ( (data[1+(p )])== 10  )
+begin
+@goto ctr27
 
 end
-if 65 <= ( data[1 + p ]) && ( data[1 + p ]) <= 122
-	@goto st20
 
 end
+begin
 @goto st0
-@label ctr57
-	Ragel.@anchor!
-	input.qualcount += 1
 
-@goto st21
-@label ctr48
-	input.qualcount += 1
-
-@goto st21
-@label st21
+end
+@label ctr29
+begin
+Ragel.@anchor!
+end
+begin
+input.qualcount += 1
+end
+@goto st14
+@label ctr33
+begin
+input.qualcount += 1
+end
+@goto st14
+@label st14
 p+= 1;
-	if p == pe
-	@goto _test_eof21
+if ( p == pe  )
+@goto _test_eof14
 
 end
-@label st_case_21
-@switch ( data[1 + p ])  begin
-    @case 10
-@goto ctr46
-@case 13
-@goto ctr47
+@label st_case_14
+if ( (data[1+(p )]) == 10 )
+begin
+@goto ctr31
 
 end
-if ( data[1 + p ]) < 65
-	if 33 <= ( data[1 + p ])
-	ck  = convert(Int , 0)
-
-if (length(input.qualbuf) + input.qualcount < length(input.seqbuf)
-    )
-	ck += 1;
+elseif ( (data[1+(p )]) == 13 )
+begin
+@goto ctr32
 
 end
-if 1 <= ck
-	@goto ctr32
+end
+if ( 33 <= (data[1+(p )])&& (data[1+(p )])<= 126  )
+begin
+ck = 0;
+if ( (length(input.qualbuf) + input.qualcount < length(input.seqbuf)) )
+ck += 1;
 
 end
-@goto st0
+if ( 1 <= ck  )
+begin
+@goto ctr33
 
 end
-
-elseif ( ( data[1 + p ]) > 122  )
-	if ( data[1 + p ]) <= 126
-	ck  = convert(Int , 0)
-
-if (length(input.qualbuf) + input.qualcount < length(input.seqbuf)
-    )
-	ck += 1;
-
-end
-if 1 <= ck
-	@goto ctr32
 
 end
 @goto st0
 
 end
 
-else
-	ck  = convert(Int , 0)
-
-if (length(input.qualbuf) + input.qualcount < length(input.seqbuf)
-    )
-	ck += 1;
-
 end
-if ck > 0
-	@goto ctr48
-
-else
-	@goto st20
-
-end
+begin
 @goto st0
 
 end
-@goto st0
-@label ctr35
-	Ragel.@copy_from_anchor!(output.name)
-	Ragel.@append_from_anchor!(input.qualbuf)
-        input.qualcount = 0
-
-@goto st22
-@label st22
-p+= 1;
-	if p == pe
-	@goto _test_eof22
-
-end
-@label st_case_22
-if ( data[1 + p ]) == 10
-	@goto ctr49
-
-end
-@goto st0
 @label ctr21
-	Ragel.@copy_from_anchor!(input.name2buf)
-@goto st23
+begin
+Ragel.@copy_from_anchor!(input.name2buf)
+end
+@goto st15
 @label ctr26
-	Ragel.@copy_from_anchor!(input.desc2buf)
-@goto st23
-@label st23
+begin
+Ragel.@copy_from_anchor!(input.desc2buf)
+end
+@goto st15
+@label st15
 p+= 1;
-	if p == pe
-	@goto _test_eof23
+if ( p == pe  )
+@goto _test_eof15
 
 end
-@label st_case_23
-if ( data[1 + p ]) == 10
-	@goto ctr16
+@label st_case_15
+if ( (data[1+(p )])== 10  )
+begin
+@goto ctr16
 
 end
+
+end
+begin
 @goto st0
+
+end
+@label ctr13
+begin
+Ragel.@anchor!
+end
+@goto st16
+@label st16
+p+= 1;
+if ( p == pe  )
+@goto _test_eof16
+
+end
+@label st_case_16
+if ( (data[1+(p )]) == 10 )
+begin
+@goto ctr34
+
+end
+elseif ( (data[1+(p )]) == 13 )
+begin
+@goto ctr35
+
+end
+end
+if ( 65 <= (data[1+(p )])&& (data[1+(p )])<= 122  )
+begin
+@goto st16
+
+end
+
+end
+begin
+@goto st0
+
+end
 @label ctr5
-	Ragel.@copy_from_anchor!(output.name)
-@goto st24
+begin
+Ragel.@copy_from_anchor!(output.name)
+end
+@goto st17
 @label ctr10
-	Ragel.@copy_from_anchor!(output.metadata.description)
-@goto st24
-@label st24
+begin
+Ragel.@copy_from_anchor!(output.metadata.description)
+end
+@goto st17
+@label st17
 p+= 1;
-	if p == pe
-	@goto _test_eof24
+if ( p == pe  )
+@goto _test_eof17
 
 end
-@label st_case_24
-if ( data[1 + p ]) == 10
-	@goto ctr50
+@label st_case_17
+if ( (data[1+(p )])== 10  )
+begin
+@goto ctr37
 
 end
+
+end
+begin
 @goto st0
+
+end
 @label st_out
-@label _test_eof25
-cs = 25; @goto _test_eof
-@label _test_eof1
-cs = 1; @goto _test_eof
-@label _test_eof2
-cs = 2; @goto _test_eof
-@label _test_eof3
-cs = 3; @goto _test_eof
-@label _test_eof4
-cs = 4; @goto _test_eof
-@label _test_eof5
-cs = 5; @goto _test_eof
-@label _test_eof6
-cs = 6; @goto _test_eof
-@label _test_eof7
-cs = 7; @goto _test_eof
-@label _test_eof8
-cs = 8; @goto _test_eof
-@label _test_eof9
-cs = 9; @goto _test_eof
-@label _test_eof10
-cs = 10; @goto _test_eof
-@label _test_eof11
-cs = 11; @goto _test_eof
-@label _test_eof12
-cs = 12; @goto _test_eof
-@label _test_eof26
-cs = 26; @goto _test_eof
-@label _test_eof13
-cs = 13; @goto _test_eof
-@label _test_eof14
-cs = 14; @goto _test_eof
-@label _test_eof15
-cs = 15; @goto _test_eof
-@label _test_eof16
-cs = 16; @goto _test_eof
-@label _test_eof27
-cs = 27; @goto _test_eof
-@label _test_eof28
-cs = 28; @goto _test_eof
-@label _test_eof17
-cs = 17; @goto _test_eof
 @label _test_eof18
-cs = 18; @goto _test_eof
+cs = 18;
+@goto _test_eof
+@label _test_eof1
+cs = 1;
+@goto _test_eof
+@label _test_eof2
+cs = 2;
+@goto _test_eof
+@label _test_eof3
+cs = 3;
+@goto _test_eof
+@label _test_eof4
+cs = 4;
+@goto _test_eof
+@label _test_eof5
+cs = 5;
+@goto _test_eof
+@label _test_eof6
+cs = 6;
+@goto _test_eof
+@label _test_eof7
+cs = 7;
+@goto _test_eof
+@label _test_eof8
+cs = 8;
+@goto _test_eof
+@label _test_eof9
+cs = 9;
+@goto _test_eof
+@label _test_eof10
+cs = 10;
+@goto _test_eof
+@label _test_eof11
+cs = 11;
+@goto _test_eof
+@label _test_eof12
+cs = 12;
+@goto _test_eof
 @label _test_eof19
-cs = 19; @goto _test_eof
-@label _test_eof20
-cs = 20; @goto _test_eof
-@label _test_eof21
-cs = 21; @goto _test_eof
-@label _test_eof22
-cs = 22; @goto _test_eof
-@label _test_eof23
-cs = 23; @goto _test_eof
-@label _test_eof24
-cs = 24; @goto _test_eof
+cs = 19;
+@goto _test_eof
+@label _test_eof13
+cs = 13;
+@goto _test_eof
+@label _test_eof14
+cs = 14;
+@goto _test_eof
+@label _test_eof15
+cs = 15;
+@goto _test_eof
+@label _test_eof16
+cs = 16;
+@goto _test_eof
+@label _test_eof17
+cs = 17;
+@goto _test_eof
 @label _test_eof
-if p == eof
-	@switch cs  begin
-    @case 26
-@case 27
-@case 28
-	if length(input.seqbuf) != length(input.qualbuf)
-            error("Error parsing FASTQ: sequence and quality scores must be of equal length")
-        end
+begin
 
-        # if a name and s description are repeated (i.e. old-fashioned fastq)
-        # make sure they match.
-        if (!isempty(input.name2buf) && input.name2buf != output.name) ||
-           (!isempty(input.desc2buf) && input.desc2buf != output.metadata.description)
-            error("Error parsing FASTQ: sequence and quality scores have non-matching identifiers")
-        end
+end
+if ( p == eof  )
+begin
+if ( cs  == 19 )
+begin
+if length(input.seqbuf) != length(input.qualbuf)
+error("Error parsing FASTQ: sequence and quality scores must be of equal length")
+end
 
-        # sequence
-        copy!(output.seq, input.seqbuf.buffer, 1, input.seqbuf.position - 1)
+# if a name and s description are repeated (i.e. old-fashioned fastq)
+# make sure they match.
+if (!isempty(input.name2buf) && input.name2buf != output.name) ||
+(!isempty(input.desc2buf) && input.desc2buf != output.metadata.description)
+error("Error parsing FASTQ: sequence and quality scores have non-matching identifiers")
+end
 
-        # quality
-        encoding, input.quality_encodings =
-            infer_quality_encoding(input.qualbuf.buffer, 1,
-                                   input.qualbuf.position - 1,
-                                   input.quality_encodings)
+# sequence
+copy!(output.seq, input.seqbuf.buffer, 1, input.seqbuf.position - 1)
 
-        decode_quality_string!(encoding, input.qualbuf.buffer,
-                               output.metadata.quality, 1,
-                               input.qualbuf.position - 1)
+# quality
+encoding, input.quality_encodings =
+infer_quality_encoding(input.qualbuf.buffer, 1,
+input.qualbuf.position - 1,
+input.quality_encodings)
 
-        # reset temporaries for the next run
-        empty!(input.qualbuf)
-        empty!(input.seqbuf)
-        empty!(input.name2buf)
-        empty!(input.desc2buf)
-        yield = true;
-        	p+= 1; cs = 0; @goto _out
+decode_quality_string!(encoding, input.qualbuf.buffer,
+output.metadata.quality, 1,
+input.qualbuf.position - 1)
 
+# reset temporaries for the next run
+empty!(input.qualbuf)
+empty!(input.seqbuf)
+empty!(input.name2buf)
+empty!(input.desc2buf)
+yield = true;
+begin
+p+= 1;
+cs = 0;
+@goto _out
 
+end
 
+end
 
-	break;
+break;
+end
 
 end
 
 end
 @label _out
+begin
+
+end
+
+end
 end)
 
 

@@ -2,1468 +2,2283 @@
 immutable BED <: FileFormat end
 
 
-"""Metadata for BED interval records"""
-type BEDMetadata
-    used_fields::Int # how many of the first n fields are used
-    name::StringField
-    score::Int
-    thick_first::Int
-    thick_last::Int
-    item_rgb::RGB{Float32}
-    block_count::Int
-    block_sizes::Vector{Int}
-    block_firsts::Vector{Int}
+	"""Metadata for BED interval records"""
+	type BEDMetadata
+	used_fields::Int # how many of the first n fields are used
+	name::StringField
+	score::Int
+	thick_first::Int
+	thick_last::Int
+	item_rgb::RGB{	Float32}
+block_count::Int
+block_sizes::Vector{Int}
+block_firsts::Vector{Int}
 end
 
 
-function BEDMetadata()
-    return BEDMetadata(0, StringField(), 0, 0, 0, RGB{Float32}(0.0, 0.0, 0.0),
-                       0, Int[], Int[])
+	function 	BEDMetadata()
+	return BEDMetadata(0, StringField(), 0, 0, 0, RGB{Float32}(0.0, 0.0, 0.0),
+	0, Int[], Int[])
 end
 
 
 function copy(metadata::BEDMetadata)
-    return BEDMetadata(
-        metadata.used_fields, copy(metadata.name),
-        metadata.score, metadata.thick_first, metadata.thick_last,
-        metadata.item_rgb, metadata.block_count,
-        metadata.block_sizes[1:metadata.block_count],
-        metadata.block_firsts[1:metadata.block_count])
+	return BEDMetadata(
+	metadata.used_fields, copy(metadata.name),
+	metadata.score, metadata.thick_first, metadata.thick_last,
+	metadata.item_rgb, metadata.block_count,
+	metadata.block_sizes[1:metadata.block_count],
+	metadata.block_firsts[1:metadata.block_count])
 end
 
 
 function (==)(a::BEDMetadata, b::BEDMetadata)
-    if a.used_fields != b.used_fields
-        return false
-    end
+	if a.used_fields != b.used_fields
+		return false
+	end
 
-    n = a.used_fields
-    ans = (n < 1 || a.name == b.name) &&
-          (n < 2 || a.score == b.score) &&
-          (n < 4 || a.thick_first == b.thick_first) &&
-          (n < 5 || a.thick_last == b.thick_last) &&
-          (n < 6 || a.item_rgb == b.item_rgb) &&
-          (n < 7 || a.block_count == b.block_count)
-    if !ans
-        return false
-    end
+	n = a.used_fields
+	ans = (n < 1 || a.name == b.name) &&
+	(n < 2 || a.score == b.score) &&
+	(n < 4 || a.thick_first == b.thick_first) &&
+	(n < 5 || a.thick_last == b.thick_last) &&
+	(n < 6 || a.item_rgb == b.item_rgb) &&
+	(n < 7 || a.block_count == b.block_count)
+	if !ans
+		return false
+	end
 
-    if n >= 8
-        for i in 1:a.block_count
-            if a.block_sizes[i] != b.block_sizes[i]
-                return false
-            end
-        end
-    end
-
-    if n >= 9
-        for i in 1:a.block_count
-            if a.block_sizes[i] != b.block_sizes[i]
-                return false
-            end
-        end
-    end
-
-    return true
+	if n >= 8
+		for i in 1:a.block_count
+		if a.block_sizes[i] != b.block_sizes[i]
+			return false
+		end
+	end
 end
+
+if n >= 9
+	for i in 1:a.block_count
+	if a.block_sizes[i] != b.block_sizes[i]
+		return false
+	end
+end
+end
+
+	return true
+	end
 
 # TODO
 #function show(io::IO, metadata::BEDMetadata)
-#end
+	#end
 
 
 "An `Interval` with associated metadata from a BED file"
 typealias BEDInterval Interval{BEDMetadata}
 
 
-const _bedparser_start  = convert(Int , 41)
-const _bedparser_first_final  = convert(Int , 41)
-const _bedparser_error  = convert(Int , 0)
-const _bedparser_en_main  = convert(Int , 41)
+const _bedparser_start  = 41
+const _bedparser_first_final  = 41
+const _bedparser_error  = 0
+const _bedparser_en_main  = 41
+const __bedparser_nfa_targs = Int8[ 0, 0 ,  ]
+const __bedparser_nfa_offsets = Int8[ 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 ,  ]
+const __bedparser_nfa_push_actions = Int8[ 0, 0 ,  ]
+const __bedparser_nfa_pop_trans = Int8[ 0, 0 ,  ]
 type BEDParser <: AbstractParser
-    state::Ragel.State
+state::Ragel.State
 
-    # intermediate values used during parsing
-    red::Float32
-    green::Float32
-    blue::Float32
-    block_size_idx::Int
-    block_first_idx::Int
+# intermediate values used during parsing
+red::Float32
+green::Float32
+blue::Float32
+block_size_idx::Int
+block_first_idx::Int
 
-    function BEDParser(input::BufferedInputStream)
-        cs = _bedparser_start;
-	return new(Ragel.State(cs, input), 0.0, 0.0, 0.0, 1, 1)
-    end
+function BEDParser(input::BufferedInputStream)
+begin
+	cs = convert( Int , _bedparser_start );
+
+end
+return new(Ragel.State(cs, input), 0.0, 0.0, 0.0, 1, 1)
+end
 end
 
 
 function Intervals.metadatatype(::BEDParser)
-    return BEDMetadata
+return BEDMetadata
 end
 
 
 function eltype(::Type{BEDParser})
-    return BEDInterval
+return BEDInterval
 end
 
 
 function open(input::BufferedInputStream, ::Type{BED})
-    return BEDParser(input)
+return BEDParser(input)
 end
 
 
 Ragel.@generate_read_fuction("_bedparser", BEDParser, BEDInterval,
-    begin
-        if p == pe
-	@goto _test_eof
+begin
+begin
+if ( p == pe  )
+@goto _test_eof
 
 end
-@switch cs  begin
-    @case 41
+if ( cs  == 41 )
 @goto st_case_41
-@case 0
+elseif ( cs  == 0 )
 @goto st_case_0
-@case 1
+elseif ( cs  == 1 )
 @goto st_case_1
-@case 2
+elseif ( cs  == 2 )
 @goto st_case_2
-@case 3
+elseif ( cs  == 3 )
 @goto st_case_3
-@case 4
+elseif ( cs  == 4 )
 @goto st_case_4
-@case 5
+elseif ( cs  == 5 )
 @goto st_case_5
-@case 6
+elseif ( cs  == 6 )
 @goto st_case_6
-@case 7
+elseif ( cs  == 7 )
 @goto st_case_7
-@case 8
+elseif ( cs  == 8 )
 @goto st_case_8
-@case 9
+elseif ( cs  == 9 )
 @goto st_case_9
-@case 10
+elseif ( cs  == 10 )
 @goto st_case_10
-@case 11
+elseif ( cs  == 11 )
 @goto st_case_11
-@case 12
+elseif ( cs  == 12 )
 @goto st_case_12
-@case 13
+elseif ( cs  == 13 )
 @goto st_case_13
-@case 14
+elseif ( cs  == 14 )
 @goto st_case_14
-@case 15
+elseif ( cs  == 15 )
 @goto st_case_15
-@case 16
+elseif ( cs  == 16 )
 @goto st_case_16
-@case 17
+elseif ( cs  == 17 )
 @goto st_case_17
-@case 18
+elseif ( cs  == 18 )
 @goto st_case_18
-@case 19
+elseif ( cs  == 19 )
 @goto st_case_19
-@case 20
+elseif ( cs  == 20 )
 @goto st_case_20
-@case 21
+elseif ( cs  == 21 )
 @goto st_case_21
-@case 22
+elseif ( cs  == 22 )
 @goto st_case_22
-@case 23
+elseif ( cs  == 23 )
 @goto st_case_23
-@case 24
+elseif ( cs  == 24 )
 @goto st_case_24
-@case 25
+elseif ( cs  == 25 )
 @goto st_case_25
-@case 26
+elseif ( cs  == 26 )
 @goto st_case_26
-@case 27
+elseif ( cs  == 27 )
 @goto st_case_27
-@case 28
+elseif ( cs  == 28 )
 @goto st_case_28
-@case 29
+elseif ( cs  == 29 )
 @goto st_case_29
-@case 30
+elseif ( cs  == 30 )
 @goto st_case_30
-@case 42
+elseif ( cs  == 42 )
 @goto st_case_42
-@case 31
+elseif ( cs  == 31 )
 @goto st_case_31
-@case 32
+elseif ( cs  == 32 )
 @goto st_case_32
-@case 33
+elseif ( cs  == 33 )
 @goto st_case_33
-@case 34
+elseif ( cs  == 34 )
 @goto st_case_34
-@case 35
+elseif ( cs  == 35 )
 @goto st_case_35
-@case 36
+elseif ( cs  == 36 )
 @goto st_case_36
-@case 37
+elseif ( cs  == 37 )
 @goto st_case_37
-@case 38
+elseif ( cs  == 38 )
 @goto st_case_38
-@case 39
+elseif ( cs  == 39 )
 @goto st_case_39
-@case 40
+elseif ( cs  == 40 )
 @goto st_case_40
-
 end
 @goto st_out
 @label ctr2
-	input.state.linenum += 1
+begin
+input.state.linenum += 1
+end
 @goto st41
 @label st41
 p+= 1;
-	if p == pe
-	@goto _test_eof41
+if ( p == pe  )
+@goto _test_eof41
 
 end
 @label st_case_41
-@switch ( data[1 + p ])  begin
-    @case 9
+if ( (data[1+(p )]) == 9 )
+begin
 @goto ctr85
-@case 10
+
+end
+elseif ( (data[1+(p )]) == 10 )
+begin
 @goto ctr2
-@case 11
+
+end
+elseif ( (data[1+(p )]) == 11 )
+begin
 @goto st2
-@case 13
+
+end
+elseif ( (data[1+(p )]) == 13 )
+begin
 @goto st3
-@case 32
+
+end
+elseif ( (data[1+(p )]) == 32 )
+begin
 @goto ctr86
 
 end
-if 33 <= ( data[1 + p ]) && ( data[1 + p ]) <= 126
-	@goto ctr87
+end
+if ( 33 <= (data[1+(p )])&& (data[1+(p )])<= 126  )
+begin
+@goto ctr87
 
 end
+
+end
+begin
 @goto st0
+
+end
 @label st_case_0
 @label st0
 cs = 0;
-	@goto _out
+@goto _out
 @label ctr83
-	output.metadata.used_fields = 0; Ragel.@copy_from_anchor!(output.seqname)
+begin
+output.metadata.used_fields = 0; Ragel.@copy_from_anchor!(output.seqname)
+end
 @goto st1
 @label ctr85
-	Ragel.anchor!(state, p)
-	output.metadata.used_fields = 0; Ragel.@copy_from_anchor!(output.seqname)
+begin
+Ragel.anchor!(state, p)
+end
+begin
+output.metadata.used_fields = 0; Ragel.@copy_from_anchor!(output.seqname)
+end
 @goto st1
 @label st1
 p+= 1;
-	if p == pe
-	@goto _test_eof1
+if ( p == pe  )
+@goto _test_eof1
 
 end
 @label st_case_1
-@switch ( data[1 + p ])  begin
-    @case 9
-@goto st2
-@case 10
+if ( (data[1+(p )]) == 10 )
+begin
 @goto ctr2
-@case 11
-@goto st2
-@case 13
+
+end
+elseif ( (data[1+(p )]) == 13 )
+begin
 @goto st3
-@case 32
+
+end
+elseif ( (data[1+(p )]) == 32 )
+begin
 @goto st2
 
 end
-if 48 <= ( data[1 + p ]) && ( data[1 + p ]) <= 57
-	@goto ctr4
+end
+if ( (data[1+(p )])> 11  )
+begin
+if ( 48 <= (data[1+(p )])&& (data[1+(p )])<= 57  )
+begin
+@goto ctr4
 
 end
+
+end
+
+end
+
+elseif ( (data[1+(p )])>= 9  )
+begin
+@goto st2
+
+end
+
+end
+begin
 @goto st0
+
+end
 @label st2
 p+= 1;
-	if p == pe
-	@goto _test_eof2
+if ( p == pe  )
+@goto _test_eof2
 
 end
 @label st_case_2
-@switch ( data[1 + p ])  begin
-    @case 9
-@goto st2
-@case 10
+if ( (data[1+(p )]) == 10 )
+begin
 @goto ctr2
-@case 11
-@goto st2
-@case 13
+
+end
+elseif ( (data[1+(p )]) == 13 )
+begin
 @goto st3
-@case 32
+
+end
+elseif ( (data[1+(p )]) == 32 )
+begin
 @goto st2
 
 end
+end
+if ( 9 <= (data[1+(p )])&& (data[1+(p )])<= 11  )
+begin
+@goto st2
+
+end
+
+end
+begin
 @goto st0
+
+end
 @label st3
 p+= 1;
-	if p == pe
-	@goto _test_eof3
+if ( p == pe  )
+@goto _test_eof3
 
 end
 @label st_case_3
-if ( data[1 + p ]) == 10
-	@goto ctr2
+if ( (data[1+(p )])== 10  )
+begin
+@goto ctr2
 
 end
+
+end
+begin
 @goto st0
+
+end
 @label ctr4
-	Ragel.anchor!(state, p)
+begin
+Ragel.anchor!(state, p)
+end
 @goto st4
 @label st4
 p+= 1;
-	if p == pe
-	@goto _test_eof4
+if ( p == pe  )
+@goto _test_eof4
 
 end
 @label st_case_4
-if ( data[1 + p ]) == 9
-	@goto ctr5
+if ( (data[1+(p )])== 9  )
+begin
+@goto ctr5
 
 end
-if 48 <= ( data[1 + p ]) && ( data[1 + p ]) <= 57
-	@goto st4
 
 end
+if ( 48 <= (data[1+(p )])&& (data[1+(p )])<= 57  )
+begin
+@goto st4
+
+end
+
+end
+begin
 @goto st0
+
+end
 @label ctr5
-	output.first = 1 + Ragel.@int64_from_anchor!
+begin
+output.first = 1 + Ragel.@int64_from_anchor!
+end
 @goto st5
 @label st5
 p+= 1;
-	if p == pe
-	@goto _test_eof5
+if ( p == pe  )
+@goto _test_eof5
 
 end
 @label st_case_5
-if 48 <= ( data[1 + p ]) && ( data[1 + p ]) <= 57
-	@goto ctr7
+if ( 48 <= (data[1+(p )])&& (data[1+(p )])<= 57  )
+begin
+@goto ctr7
 
 end
+
+end
+begin
 @goto st0
+
+end
 @label ctr7
-	Ragel.anchor!(state, p)
+begin
+Ragel.anchor!(state, p)
+end
 @goto st6
 @label st6
 p+= 1;
-	if p == pe
-	@goto _test_eof6
+if ( p == pe  )
+@goto _test_eof6
 
 end
 @label st_case_6
-@switch ( data[1 + p ])  begin
-    @case 9
+if ( (data[1+(p )]) == 9 )
+begin
 @goto ctr8
-@case 10
+
+end
+elseif ( (data[1+(p )]) == 10 )
+begin
 @goto ctr9
-@case 13
+
+end
+elseif ( (data[1+(p )]) == 13 )
+begin
 @goto ctr10
 
 end
-if 48 <= ( data[1 + p ]) && ( data[1 + p ]) <= 57
-	@goto st6
+end
+if ( 48 <= (data[1+(p )])&& (data[1+(p )])<= 57  )
+begin
+@goto st6
 
 end
+
+end
+begin
 @goto st0
+
+end
 @label ctr8
-	output.last = Ragel.@int64_from_anchor!
+begin
+output.last = Ragel.@int64_from_anchor!
+end
 @goto st7
 @label st7
 p+= 1;
-	if p == pe
-	@goto _test_eof7
+if ( p == pe  )
+@goto _test_eof7
 
 end
 @label st_case_7
-@switch ( data[1 + p ])  begin
-    @case 9
+if ( (data[1+(p )]) == 9 )
+begin
 @goto ctr12
-@case 10
+
+end
+elseif ( (data[1+(p )]) == 10 )
+begin
 @goto ctr13
-@case 13
+
+end
+elseif ( (data[1+(p )]) == 13 )
+begin
 @goto ctr14
 
 end
-if 32 <= ( data[1 + p ]) && ( data[1 + p ]) <= 126
-	@goto ctr15
+end
+if ( 32 <= (data[1+(p )])&& (data[1+(p )])<= 126  )
+begin
+@goto ctr15
 
 end
+
+end
+begin
 @goto st0
+
+end
 @label ctr12
-	Ragel.anchor!(state, p)
-	Ragel.@copy_from_anchor!(output.metadata.name)
-	output.metadata.used_fields += 1
+begin
+Ragel.anchor!(state, p)
+end
+begin
+Ragel.@copy_from_anchor!(output.metadata.name)
+end
+begin
+output.metadata.used_fields += 1
+end
 @goto st8
 @label ctr79
-	Ragel.@copy_from_anchor!(output.metadata.name)
-	output.metadata.used_fields += 1
+begin
+Ragel.@copy_from_anchor!(output.metadata.name)
+end
+begin
+output.metadata.used_fields += 1
+end
 @goto st8
 @label st8
 p+= 1;
-	if p == pe
-	@goto _test_eof8
+if ( p == pe  )
+@goto _test_eof8
 
 end
 @label st_case_8
-if 48 <= ( data[1 + p ]) && ( data[1 + p ]) <= 57
-	@goto ctr16
+if ( 48 <= (data[1+(p )])&& (data[1+(p )])<= 57  )
+begin
+@goto ctr16
 
 end
+
+end
+begin
 @goto st0
+
+end
 @label ctr16
-	Ragel.anchor!(state, p)
+begin
+Ragel.anchor!(state, p)
+end
 @goto st9
 @label st9
 p+= 1;
-	if p == pe
-	@goto _test_eof9
+if ( p == pe  )
+@goto _test_eof9
 
 end
 @label st_case_9
-@switch ( data[1 + p ])  begin
-    @case 9
+if ( (data[1+(p )]) == 9 )
+begin
 @goto ctr17
-@case 10
+
+end
+elseif ( (data[1+(p )]) == 10 )
+begin
 @goto ctr18
-@case 13
+
+end
+elseif ( (data[1+(p )]) == 13 )
+begin
 @goto ctr19
 
 end
-if 48 <= ( data[1 + p ]) && ( data[1 + p ]) <= 57
-	@goto st9
+end
+if ( 48 <= (data[1+(p )])&& (data[1+(p )])<= 57  )
+begin
+@goto st9
 
 end
+
+end
+begin
 @goto st0
+
+end
 @label ctr17
-	output.metadata.score = Ragel.@int64_from_anchor!
-	output.metadata.used_fields += 1
+begin
+output.metadata.score = Ragel.@int64_from_anchor!
+end
+begin
+output.metadata.used_fields += 1
+end
 @goto st10
 @label st10
 p+= 1;
-	if p == pe
-	@goto _test_eof10
+if ( p == pe  )
+@goto _test_eof10
 
 end
 @label st_case_10
-@switch ( data[1 + p ])  begin
-    @case 43
-@goto ctr21
-@case 63
+if ( (data[1+(p )]) == 43 )
+begin
 @goto ctr21
 
 end
-if 45 <= ( data[1 + p ]) && ( data[1 + p ]) <= 46
-	@goto ctr21
+elseif ( (data[1+(p )]) == 63 )
+begin
+@goto ctr21
 
 end
+end
+if ( 45 <= (data[1+(p )])&& (data[1+(p )])<= 46  )
+begin
+@goto ctr21
+
+end
+
+end
+begin
 @goto st0
+
+end
 @label ctr21
-	output.strand = convert(Strand, (Ragel.@char))
+begin
+output.strand = convert(Strand, (Ragel.@char))
+end
 @goto st11
 @label st11
 p+= 1;
-	if p == pe
-	@goto _test_eof11
+if ( p == pe  )
+@goto _test_eof11
 
 end
 @label st_case_11
-@switch ( data[1 + p ])  begin
-    @case 9
+if ( (data[1+(p )]) == 9 )
+begin
 @goto ctr22
-@case 10
+
+end
+elseif ( (data[1+(p )]) == 10 )
+begin
 @goto ctr23
-@case 13
+
+end
+elseif ( (data[1+(p )]) == 13 )
+begin
 @goto ctr24
 
 end
+end
+begin
 @goto st0
+
+end
 @label ctr22
-	output.metadata.used_fields += 1
+begin
+output.metadata.used_fields += 1
+end
 @goto st12
 @label st12
 p+= 1;
-	if p == pe
-	@goto _test_eof12
+if ( p == pe  )
+@goto _test_eof12
 
 end
 @label st_case_12
-if 48 <= ( data[1 + p ]) && ( data[1 + p ]) <= 57
-	@goto ctr25
+if ( 48 <= (data[1+(p )])&& (data[1+(p )])<= 57  )
+begin
+@goto ctr25
 
 end
+
+end
+begin
 @goto st0
+
+end
 @label ctr25
-	Ragel.anchor!(state, p)
+begin
+Ragel.anchor!(state, p)
+end
 @goto st13
 @label st13
 p+= 1;
-	if p == pe
-	@goto _test_eof13
+if ( p == pe  )
+@goto _test_eof13
 
 end
 @label st_case_13
-@switch ( data[1 + p ])  begin
-    @case 9
+if ( (data[1+(p )]) == 9 )
+begin
 @goto ctr26
-@case 10
+
+end
+elseif ( (data[1+(p )]) == 10 )
+begin
 @goto ctr27
-@case 13
+
+end
+elseif ( (data[1+(p )]) == 13 )
+begin
 @goto ctr28
 
 end
-if 48 <= ( data[1 + p ]) && ( data[1 + p ]) <= 57
-	@goto st13
+end
+if ( 48 <= (data[1+(p )])&& (data[1+(p )])<= 57  )
+begin
+@goto st13
 
 end
+
+end
+begin
 @goto st0
+
+end
 @label ctr26
-	output.metadata.thick_first = 1 + Ragel.@int64_from_anchor!
-	output.metadata.used_fields += 1
+begin
+output.metadata.thick_first = 1 + Ragel.@int64_from_anchor!
+end
+begin
+output.metadata.used_fields += 1
+end
 @goto st14
 @label st14
 p+= 1;
-	if p == pe
-	@goto _test_eof14
+if ( p == pe  )
+@goto _test_eof14
 
 end
 @label st_case_14
-if 48 <= ( data[1 + p ]) && ( data[1 + p ]) <= 57
-	@goto ctr30
+if ( 48 <= (data[1+(p )])&& (data[1+(p )])<= 57  )
+begin
+@goto ctr30
 
 end
+
+end
+begin
 @goto st0
+
+end
 @label ctr30
-	Ragel.anchor!(state, p)
+begin
+Ragel.anchor!(state, p)
+end
 @goto st15
 @label st15
 p+= 1;
-	if p == pe
-	@goto _test_eof15
+if ( p == pe  )
+@goto _test_eof15
 
 end
 @label st_case_15
-@switch ( data[1 + p ])  begin
-    @case 9
+if ( (data[1+(p )]) == 9 )
+begin
 @goto ctr31
-@case 10
+
+end
+elseif ( (data[1+(p )]) == 10 )
+begin
 @goto ctr32
-@case 13
+
+end
+elseif ( (data[1+(p )]) == 13 )
+begin
 @goto ctr33
 
 end
-if 48 <= ( data[1 + p ]) && ( data[1 + p ]) <= 57
-	@goto st15
+end
+if ( 48 <= (data[1+(p )])&& (data[1+(p )])<= 57  )
+begin
+@goto st15
 
 end
+
+end
+begin
 @goto st0
+
+end
 @label ctr31
-	output.metadata.thick_last = Ragel.@int64_from_anchor!
-	output.metadata.used_fields += 1
+begin
+output.metadata.thick_last = Ragel.@int64_from_anchor!
+end
+begin
+output.metadata.used_fields += 1
+end
 @goto st16
 @label st16
 p+= 1;
-	if p == pe
-	@goto _test_eof16
+if ( p == pe  )
+@goto _test_eof16
 
 end
 @label st_case_16
-if 48 <= ( data[1 + p ]) && ( data[1 + p ]) <= 57
-	@goto ctr35
+if ( 48 <= (data[1+(p )])&& (data[1+(p )])<= 57  )
+begin
+@goto ctr35
 
 end
+
+end
+begin
 @goto st0
+
+end
 @label ctr35
-	Ragel.anchor!(state, p)
+begin
+Ragel.anchor!(state, p)
+end
 @goto st17
 @label st17
 p+= 1;
-	if p == pe
-	@goto _test_eof17
+if ( p == pe  )
+@goto _test_eof17
 
 end
 @label st_case_17
-@switch ( data[1 + p ])  begin
-    @case 9
+if ( (data[1+(p )]) == 9 )
+begin
 @goto ctr36
-@case 10
+
+end
+elseif ( (data[1+(p )]) == 10 )
+begin
 @goto ctr37
-@case 11
+
+end
+elseif ( (data[1+(p )]) == 11 )
+begin
 @goto ctr38
-@case 13
+
+end
+elseif ( (data[1+(p )]) == 13 )
+begin
 @goto ctr39
-@case 32
+
+end
+elseif ( (data[1+(p )]) == 32 )
+begin
 @goto ctr38
-@case 44
+
+end
+elseif ( (data[1+(p )]) == 44 )
+begin
 @goto ctr40
 
 end
-if 48 <= ( data[1 + p ]) && ( data[1 + p ]) <= 57
-	@goto st17
+end
+if ( 48 <= (data[1+(p )])&& (data[1+(p )])<= 57  )
+begin
+@goto st17
 
 end
+
+end
+begin
 @goto st0
+
+end
 @label ctr36
-	input.red = input.green = input.blue = (Ragel.@int64_from_anchor!) / 255.0
-	output.metadata.item_rgb = RGB{Float32}(input.red, input.green, input.blue)
-	output.metadata.used_fields += 1
+begin
+input.red = input.green = input.blue = (Ragel.@int64_from_anchor!) / 255.0
+end
+begin
+output.metadata.item_rgb = RGB{Float32}(input.red, input.green, input.blue)
+end
+begin
+output.metadata.used_fields += 1
+end
 @goto st18
 @label st18
 p+= 1;
-	if p == pe
-	@goto _test_eof18
+if ( p == pe  )
+@goto _test_eof18
 
 end
 @label st_case_18
-@switch ( data[1 + p ])  begin
-    @case 9
+if ( (data[1+(p )]) == 9 )
+begin
 @goto st19
-@case 11
+
+end
+elseif ( (data[1+(p )]) == 11 )
+begin
 @goto st19
-@case 32
+
+end
+elseif ( (data[1+(p )]) == 32 )
+begin
 @goto st19
-@case 44
+
+end
+elseif ( (data[1+(p )]) == 44 )
+begin
 @goto st20
 
 end
-if 48 <= ( data[1 + p ]) && ( data[1 + p ]) <= 57
-	@goto ctr44
+end
+if ( 48 <= (data[1+(p )])&& (data[1+(p )])<= 57  )
+begin
+@goto ctr44
 
 end
+
+end
+begin
 @goto st0
+
+end
 @label ctr38
-	input.red = input.green = input.blue = (Ragel.@int64_from_anchor!) / 255.0
+begin
+input.red = input.green = input.blue = (Ragel.@int64_from_anchor!) / 255.0
+end
 @goto st19
 @label st19
 p+= 1;
-	if p == pe
-	@goto _test_eof19
+if ( p == pe  )
+@goto _test_eof19
 
 end
 @label st_case_19
-@switch ( data[1 + p ])  begin
-    @case 9
+if ( (data[1+(p )]) == 9 )
+begin
 @goto st19
-@case 11
+
+end
+elseif ( (data[1+(p )]) == 11 )
+begin
 @goto st19
-@case 32
+
+end
+elseif ( (data[1+(p )]) == 32 )
+begin
 @goto st19
-@case 44
+
+end
+elseif ( (data[1+(p )]) == 44 )
+begin
 @goto st20
 
 end
+end
+begin
 @goto st0
+
+end
 @label ctr40
-	input.red = input.green = input.blue = (Ragel.@int64_from_anchor!) / 255.0
+begin
+input.red = input.green = input.blue = (Ragel.@int64_from_anchor!) / 255.0
+end
 @goto st20
 @label st20
 p+= 1;
-	if p == pe
-	@goto _test_eof20
+if ( p == pe  )
+@goto _test_eof20
 
 end
 @label st_case_20
-@switch ( data[1 + p ])  begin
-    @case 9
-@goto st20
-@case 11
-@goto st20
-@case 32
+if ( (data[1+(p )]) == 9 )
+begin
 @goto st20
 
 end
-if 48 <= ( data[1 + p ]) && ( data[1 + p ]) <= 57
-	@goto ctr45
+elseif ( (data[1+(p )]) == 11 )
+begin
+@goto st20
 
 end
+elseif ( (data[1+(p )]) == 32 )
+begin
+@goto st20
+
+end
+end
+if ( 48 <= (data[1+(p )])&& (data[1+(p )])<= 57  )
+begin
+@goto ctr45
+
+end
+
+end
+begin
 @goto st0
+
+end
 @label ctr45
-	Ragel.anchor!(state, p)
+begin
+Ragel.anchor!(state, p)
+end
 @goto st21
 @label st21
 p+= 1;
-	if p == pe
-	@goto _test_eof21
+if ( p == pe  )
+@goto _test_eof21
 
 end
 @label st_case_21
-@switch ( data[1 + p ])  begin
-    @case 9
+if ( (data[1+(p )]) == 9 )
+begin
 @goto ctr46
-@case 11
+
+end
+elseif ( (data[1+(p )]) == 11 )
+begin
 @goto ctr46
-@case 32
+
+end
+elseif ( (data[1+(p )]) == 32 )
+begin
 @goto ctr46
-@case 44
+
+end
+elseif ( (data[1+(p )]) == 44 )
+begin
 @goto ctr47
 
 end
-if 48 <= ( data[1 + p ]) && ( data[1 + p ]) <= 57
-	@goto st21
+end
+if ( 48 <= (data[1+(p )])&& (data[1+(p )])<= 57  )
+begin
+@goto st21
 
 end
+
+end
+begin
 @goto st0
+
+end
 @label ctr46
-	input.green = (Ragel.@int64_from_anchor!) / 255.0
+begin
+input.green = (Ragel.@int64_from_anchor!) / 255.0
+end
 @goto st22
 @label st22
 p+= 1;
-	if p == pe
-	@goto _test_eof22
+if ( p == pe  )
+@goto _test_eof22
 
 end
 @label st_case_22
-@switch ( data[1 + p ])  begin
-    @case 9
+if ( (data[1+(p )]) == 9 )
+begin
 @goto st22
-@case 11
+
+end
+elseif ( (data[1+(p )]) == 11 )
+begin
 @goto st22
-@case 32
+
+end
+elseif ( (data[1+(p )]) == 32 )
+begin
 @goto st22
-@case 44
+
+end
+elseif ( (data[1+(p )]) == 44 )
+begin
 @goto st23
 
 end
+end
+begin
 @goto st0
+
+end
 @label ctr47
-	input.green = (Ragel.@int64_from_anchor!) / 255.0
+begin
+input.green = (Ragel.@int64_from_anchor!) / 255.0
+end
 @goto st23
 @label st23
 p+= 1;
-	if p == pe
-	@goto _test_eof23
+if ( p == pe  )
+@goto _test_eof23
 
 end
 @label st_case_23
-@switch ( data[1 + p ])  begin
-    @case 9
-@goto st23
-@case 11
-@goto st23
-@case 32
+if ( (data[1+(p )]) == 9 )
+begin
 @goto st23
 
 end
-if 48 <= ( data[1 + p ]) && ( data[1 + p ]) <= 57
-	@goto ctr51
+elseif ( (data[1+(p )]) == 11 )
+begin
+@goto st23
 
 end
+elseif ( (data[1+(p )]) == 32 )
+begin
+@goto st23
+
+end
+end
+if ( 48 <= (data[1+(p )])&& (data[1+(p )])<= 57  )
+begin
+@goto ctr51
+
+end
+
+end
+begin
 @goto st0
+
+end
 @label ctr51
-	Ragel.anchor!(state, p)
+begin
+Ragel.anchor!(state, p)
+end
 @goto st24
 @label st24
 p+= 1;
-	if p == pe
-	@goto _test_eof24
+if ( p == pe  )
+@goto _test_eof24
 
 end
 @label st_case_24
-@switch ( data[1 + p ])  begin
-    @case 9
+if ( (data[1+(p )]) == 9 )
+begin
 @goto ctr52
-@case 10
+
+end
+elseif ( (data[1+(p )]) == 10 )
+begin
 @goto ctr53
-@case 13
+
+end
+elseif ( (data[1+(p )]) == 13 )
+begin
 @goto ctr54
 
 end
-if 48 <= ( data[1 + p ]) && ( data[1 + p ]) <= 57
-	@goto st24
+end
+if ( 48 <= (data[1+(p )])&& (data[1+(p )])<= 57  )
+begin
+@goto st24
 
 end
+
+end
+begin
 @goto st0
+
+end
 @label ctr52
-	input.blue = (Ragel.@int64_from_anchor!) / 255.0
-	output.metadata.item_rgb = RGB{Float32}(input.red, input.green, input.blue)
-	output.metadata.used_fields += 1
+begin
+input.blue = (Ragel.@int64_from_anchor!) / 255.0
+end
+begin
+output.metadata.item_rgb = RGB{Float32}(input.red, input.green, input.blue)
+end
+begin
+output.metadata.used_fields += 1
+end
 @goto st25
 @label st25
 p+= 1;
-	if p == pe
-	@goto _test_eof25
+if ( p == pe  )
+@goto _test_eof25
 
 end
 @label st_case_25
-if 48 <= ( data[1 + p ]) && ( data[1 + p ]) <= 57
-	@goto ctr44
+if ( 48 <= (data[1+(p )])&& (data[1+(p )])<= 57  )
+begin
+@goto ctr44
 
 end
+
+end
+begin
 @goto st0
+
+end
 @label ctr44
-	Ragel.anchor!(state, p)
+begin
+Ragel.anchor!(state, p)
+end
 @goto st26
 @label st26
 p+= 1;
-	if p == pe
-	@goto _test_eof26
+if ( p == pe  )
+@goto _test_eof26
 
 end
 @label st_case_26
-@switch ( data[1 + p ])  begin
-    @case 9
+if ( (data[1+(p )]) == 9 )
+begin
 @goto ctr56
-@case 10
+
+end
+elseif ( (data[1+(p )]) == 10 )
+begin
 @goto ctr57
-@case 13
+
+end
+elseif ( (data[1+(p )]) == 13 )
+begin
 @goto ctr58
 
 end
-if 48 <= ( data[1 + p ]) && ( data[1 + p ]) <= 57
-	@goto st26
+end
+if ( 48 <= (data[1+(p )])&& (data[1+(p )])<= 57  )
+begin
+@goto st26
 
 end
+
+end
+begin
 @goto st0
+
+end
 @label ctr56
-	output.metadata.block_count = Ragel.@int64_from_anchor!
+begin
+output.metadata.block_count = Ragel.@int64_from_anchor!
 
-        if (output.metadata.block_count > length(output.metadata.block_sizes))
-            resize!(output.metadata.block_sizes, output.metadata.block_count)
-        end
+if (output.metadata.block_count > length(output.metadata.block_sizes))
+resize!(output.metadata.block_sizes, output.metadata.block_count)
+end
 
-        if (output.metadata.block_count > length(output.metadata.block_firsts))
-            resize!(output.metadata.block_firsts, output.metadata.block_count)
-        end
-
-	output.metadata.used_fields += 1
+if (output.metadata.block_count > length(output.metadata.block_firsts))
+resize!(output.metadata.block_firsts, output.metadata.block_count)
+end
+end
+begin
+output.metadata.used_fields += 1
+end
 @goto st27
 @label st27
 p+= 1;
-	if p == pe
-	@goto _test_eof27
+if ( p == pe  )
+@goto _test_eof27
 
 end
 @label st_case_27
-if 48 <= ( data[1 + p ]) && ( data[1 + p ]) <= 57
-	@goto ctr60
+if ( 48 <= (data[1+(p )])&& (data[1+(p )])<= 57  )
+begin
+@goto ctr60
 
 end
+
+end
+begin
 @goto st0
+
+end
 @label ctr60
-	Ragel.anchor!(state, p)
+begin
+Ragel.anchor!(state, p)
+end
 @goto st28
 @label st28
 p+= 1;
-	if p == pe
-	@goto _test_eof28
+if ( p == pe  )
+@goto _test_eof28
 
 end
 @label st_case_28
-@switch ( data[1 + p ])  begin
-    @case 9
+if ( (data[1+(p )]) == 9 )
+begin
 @goto ctr61
-@case 10
+
+end
+elseif ( (data[1+(p )]) == 10 )
+begin
 @goto ctr62
-@case 13
+
+end
+elseif ( (data[1+(p )]) == 13 )
+begin
 @goto ctr63
-@case 44
+
+end
+elseif ( (data[1+(p )]) == 44 )
+begin
 @goto ctr64
 
 end
-if 48 <= ( data[1 + p ]) && ( data[1 + p ]) <= 57
-	@goto st28
+end
+if ( 48 <= (data[1+(p )])&& (data[1+(p )])<= 57  )
+begin
+@goto st28
 
 end
+
+end
+begin
 @goto st0
+
+end
 @label ctr78
-	output.metadata.used_fields += 1
+begin
+output.metadata.used_fields += 1
+end
 @goto st29
 @label ctr61
-	if input.block_size_idx > length(output.metadata.block_sizes)
-            error("More size blocks encountered than BED block count field suggested.")
-        end
-        output.metadata.block_sizes[input.block_size_idx] = Ragel.@int64_from_anchor!
-        input.block_size_idx += 1
-
-	output.metadata.used_fields += 1
+begin
+if input.block_size_idx > length(output.metadata.block_sizes)
+error("More size blocks encountered than BED block count field suggested.")
+end
+output.metadata.block_sizes[input.block_size_idx] = Ragel.@int64_from_anchor!
+input.block_size_idx += 1
+end
+begin
+output.metadata.used_fields += 1
+end
 @goto st29
 @label st29
 p+= 1;
-	if p == pe
-	@goto _test_eof29
+if ( p == pe  )
+@goto _test_eof29
 
 end
 @label st_case_29
-if 48 <= ( data[1 + p ]) && ( data[1 + p ]) <= 57
-	@goto ctr66
+if ( 48 <= (data[1+(p )])&& (data[1+(p )])<= 57  )
+begin
+@goto ctr66
 
 end
+
+end
+begin
 @goto st0
+
+end
 @label ctr66
-	Ragel.anchor!(state, p)
+begin
+Ragel.anchor!(state, p)
+end
 @goto st30
 @label st30
 p+= 1;
-	if p == pe
-	@goto _test_eof30
+if ( p == pe  )
+@goto _test_eof30
 
 end
 @label st_case_30
-@switch ( data[1 + p ])  begin
-    @case 10
+if ( (data[1+(p )]) == 10 )
+begin
 @goto ctr67
-@case 13
+
+end
+elseif ( (data[1+(p )]) == 13 )
+begin
 @goto ctr68
-@case 44
+
+end
+elseif ( (data[1+(p )]) == 44 )
+begin
 @goto ctr69
 
 end
-if 48 <= ( data[1 + p ]) && ( data[1 + p ]) <= 57
-	@goto st30
+end
+if ( 48 <= (data[1+(p )])&& (data[1+(p )])<= 57  )
+begin
+@goto st30
 
 end
+
+end
+begin
 @goto st0
+
+end
 @label ctr72
-	input.state.linenum += 1
+begin
+input.state.linenum += 1
+end
 @goto st42
 @label ctr9
-	output.last = Ragel.@int64_from_anchor!
-	input.state.linenum += 1
+begin
+output.last = Ragel.@int64_from_anchor!
+end
+begin
+input.state.linenum += 1
+end
 @goto st42
 @label ctr13
-	Ragel.anchor!(state, p)
-	Ragel.@copy_from_anchor!(output.metadata.name)
-	output.metadata.used_fields += 1
-	input.state.linenum += 1
+begin
+Ragel.anchor!(state, p)
+end
+begin
+Ragel.@copy_from_anchor!(output.metadata.name)
+end
+begin
+output.metadata.used_fields += 1
+end
+begin
+input.state.linenum += 1
+end
 @goto st42
 @label ctr18
-	output.metadata.score = Ragel.@int64_from_anchor!
-	output.metadata.used_fields += 1
-	input.state.linenum += 1
+begin
+output.metadata.score = Ragel.@int64_from_anchor!
+end
+begin
+output.metadata.used_fields += 1
+end
+begin
+input.state.linenum += 1
+end
 @goto st42
 @label ctr23
-	output.metadata.used_fields += 1
-	input.state.linenum += 1
+begin
+output.metadata.used_fields += 1
+end
+begin
+input.state.linenum += 1
+end
 @goto st42
 @label ctr27
-	output.metadata.thick_first = 1 + Ragel.@int64_from_anchor!
-	output.metadata.used_fields += 1
-	input.state.linenum += 1
+begin
+output.metadata.thick_first = 1 + Ragel.@int64_from_anchor!
+end
+begin
+output.metadata.used_fields += 1
+end
+begin
+input.state.linenum += 1
+end
 @goto st42
 @label ctr32
-	output.metadata.thick_last = Ragel.@int64_from_anchor!
-	output.metadata.used_fields += 1
-	input.state.linenum += 1
+begin
+output.metadata.thick_last = Ragel.@int64_from_anchor!
+end
+begin
+output.metadata.used_fields += 1
+end
+begin
+input.state.linenum += 1
+end
 @goto st42
 @label ctr37
-	input.red = input.green = input.blue = (Ragel.@int64_from_anchor!) / 255.0
-	output.metadata.item_rgb = RGB{Float32}(input.red, input.green, input.blue)
-	output.metadata.used_fields += 1
-	input.state.linenum += 1
+begin
+input.red = input.green = input.blue = (Ragel.@int64_from_anchor!) / 255.0
+end
+begin
+output.metadata.item_rgb = RGB{Float32}(input.red, input.green, input.blue)
+end
+begin
+output.metadata.used_fields += 1
+end
+begin
+input.state.linenum += 1
+end
 @goto st42
 @label ctr53
-	input.blue = (Ragel.@int64_from_anchor!) / 255.0
-	output.metadata.item_rgb = RGB{Float32}(input.red, input.green, input.blue)
-	output.metadata.used_fields += 1
-	input.state.linenum += 1
+begin
+input.blue = (Ragel.@int64_from_anchor!) / 255.0
+end
+begin
+output.metadata.item_rgb = RGB{Float32}(input.red, input.green, input.blue)
+end
+begin
+output.metadata.used_fields += 1
+end
+begin
+input.state.linenum += 1
+end
 @goto st42
 @label ctr57
-	output.metadata.block_count = Ragel.@int64_from_anchor!
+begin
+output.metadata.block_count = Ragel.@int64_from_anchor!
 
-        if (output.metadata.block_count > length(output.metadata.block_sizes))
-            resize!(output.metadata.block_sizes, output.metadata.block_count)
-        end
+if (output.metadata.block_count > length(output.metadata.block_sizes))
+resize!(output.metadata.block_sizes, output.metadata.block_count)
+end
 
-        if (output.metadata.block_count > length(output.metadata.block_firsts))
-            resize!(output.metadata.block_firsts, output.metadata.block_count)
-        end
-
-	output.metadata.used_fields += 1
-	input.state.linenum += 1
+if (output.metadata.block_count > length(output.metadata.block_firsts))
+resize!(output.metadata.block_firsts, output.metadata.block_count)
+end
+end
+begin
+output.metadata.used_fields += 1
+end
+begin
+input.state.linenum += 1
+end
 @goto st42
 @label ctr62
-	if input.block_size_idx > length(output.metadata.block_sizes)
-            error("More size blocks encountered than BED block count field suggested.")
-        end
-        output.metadata.block_sizes[input.block_size_idx] = Ragel.@int64_from_anchor!
-        input.block_size_idx += 1
-
-	output.metadata.used_fields += 1
-	input.state.linenum += 1
+begin
+if input.block_size_idx > length(output.metadata.block_sizes)
+error("More size blocks encountered than BED block count field suggested.")
+end
+output.metadata.block_sizes[input.block_size_idx] = Ragel.@int64_from_anchor!
+input.block_size_idx += 1
+end
+begin
+output.metadata.used_fields += 1
+end
+begin
+input.state.linenum += 1
+end
 @goto st42
 @label ctr67
-	if input.block_first_idx > length(output.metadata.block_firsts)
-            error("More start blocks encountered than BED block count field suggested.")
-        end
-        output.metadata.block_firsts[input.block_first_idx] = 1 + Ragel.@int64_from_anchor!
-        input.block_first_idx += 1
-
-	output.metadata.used_fields += 1
-	input.state.linenum += 1
+begin
+if input.block_first_idx > length(output.metadata.block_firsts)
+error("More start blocks encountered than BED block count field suggested.")
+end
+output.metadata.block_firsts[input.block_first_idx] = 1 + Ragel.@int64_from_anchor!
+input.block_first_idx += 1
+end
+begin
+output.metadata.used_fields += 1
+end
+begin
+input.state.linenum += 1
+end
 @goto st42
 @label ctr80
-	Ragel.@copy_from_anchor!(output.metadata.name)
-	output.metadata.used_fields += 1
-	input.state.linenum += 1
+begin
+Ragel.@copy_from_anchor!(output.metadata.name)
+end
+begin
+output.metadata.used_fields += 1
+end
+begin
+input.state.linenum += 1
+end
 @goto st42
 @label st42
 p+= 1;
-	if p == pe
-	@goto _test_eof42
+if ( p == pe  )
+@goto _test_eof42
 
 end
 @label st_case_42
-@switch ( data[1 + p ])  begin
-    @case 9
+if ( (data[1+(p )]) == 9 )
+begin
 @goto ctr88
-@case 10
+
+end
+elseif ( (data[1+(p )]) == 10 )
+begin
 @goto ctr72
-@case 11
+
+end
+elseif ( (data[1+(p )]) == 11 )
+begin
 @goto st32
-@case 13
+
+end
+elseif ( (data[1+(p )]) == 13 )
+begin
 @goto st33
-@case 32
+
+end
+elseif ( (data[1+(p )]) == 32 )
+begin
 @goto ctr89
 
 end
-if 33 <= ( data[1 + p ]) && ( data[1 + p ]) <= 126
-	@goto ctr90
+end
+if ( 33 <= (data[1+(p )])&& (data[1+(p )])<= 126  )
+begin
+@goto ctr90
 
 end
+
+end
+begin
 @goto st0
+
+end
 @label ctr74
-	output.metadata.used_fields = 0; Ragel.@copy_from_anchor!(output.seqname)
+begin
+output.metadata.used_fields = 0; Ragel.@copy_from_anchor!(output.seqname)
+end
 @goto st31
 @label ctr88
-	input.block_size_idx = 1
-        input.block_first_idx = 1
+begin
+input.block_size_idx = 1
+input.block_first_idx = 1
 
-        yield = true
-        # // fbreak causes will cause the pushmark action for the next seqname
-        # // to be skipped, so we do it here
-        Ragel.@anchor!
-        	p+= 1; cs = 31; @goto _out
+yield = true
+# // fbreak causes will cause the pushmark action for the next seqname
+# // to be skipped, so we do it here
+Ragel.@anchor!
+begin
+p+= 1;
+cs = 31;
+@goto _out
 
+end
 
-
-	Ragel.anchor!(state, p)
-	output.metadata.used_fields = 0; Ragel.@copy_from_anchor!(output.seqname)
+end
+begin
+Ragel.anchor!(state, p)
+end
+begin
+output.metadata.used_fields = 0; Ragel.@copy_from_anchor!(output.seqname)
+end
 @goto st31
 @label st31
 p+= 1;
-	if p == pe
-	@goto _test_eof31
+if ( p == pe  )
+@goto _test_eof31
 
 end
 @label st_case_31
-@switch ( data[1 + p ])  begin
-    @case 9
-@goto st32
-@case 10
+if ( (data[1+(p )]) == 10 )
+begin
 @goto ctr72
-@case 11
-@goto st32
-@case 13
+
+end
+elseif ( (data[1+(p )]) == 13 )
+begin
 @goto st33
-@case 32
+
+end
+elseif ( (data[1+(p )]) == 32 )
+begin
 @goto st32
 
 end
-if 48 <= ( data[1 + p ]) && ( data[1 + p ]) <= 57
-	@goto ctr4
+end
+if ( (data[1+(p )])> 11  )
+begin
+if ( 48 <= (data[1+(p )])&& (data[1+(p )])<= 57  )
+begin
+@goto ctr4
 
 end
+
+end
+
+end
+
+elseif ( (data[1+(p )])>= 9  )
+begin
+@goto st32
+
+end
+
+end
+begin
 @goto st0
+
+end
 @label st32
 p+= 1;
-	if p == pe
-	@goto _test_eof32
+if ( p == pe  )
+@goto _test_eof32
 
 end
 @label st_case_32
-@switch ( data[1 + p ])  begin
-    @case 9
-@goto st32
-@case 10
+if ( (data[1+(p )]) == 10 )
+begin
 @goto ctr72
-@case 11
-@goto st32
-@case 13
+
+end
+elseif ( (data[1+(p )]) == 13 )
+begin
 @goto st33
-@case 32
+
+end
+elseif ( (data[1+(p )]) == 32 )
+begin
 @goto st32
 
 end
+end
+if ( 9 <= (data[1+(p )])&& (data[1+(p )])<= 11  )
+begin
+@goto st32
+
+end
+
+end
+begin
 @goto st0
+
+end
 @label ctr10
-	output.last = Ragel.@int64_from_anchor!
+begin
+output.last = Ragel.@int64_from_anchor!
+end
 @goto st33
 @label ctr14
-	Ragel.anchor!(state, p)
-	Ragel.@copy_from_anchor!(output.metadata.name)
-	output.metadata.used_fields += 1
+begin
+Ragel.anchor!(state, p)
+end
+begin
+Ragel.@copy_from_anchor!(output.metadata.name)
+end
+begin
+output.metadata.used_fields += 1
+end
 @goto st33
 @label ctr19
-	output.metadata.score = Ragel.@int64_from_anchor!
-	output.metadata.used_fields += 1
+begin
+output.metadata.score = Ragel.@int64_from_anchor!
+end
+begin
+output.metadata.used_fields += 1
+end
 @goto st33
 @label ctr24
-	output.metadata.used_fields += 1
+begin
+output.metadata.used_fields += 1
+end
 @goto st33
 @label ctr28
-	output.metadata.thick_first = 1 + Ragel.@int64_from_anchor!
-	output.metadata.used_fields += 1
+begin
+output.metadata.thick_first = 1 + Ragel.@int64_from_anchor!
+end
+begin
+output.metadata.used_fields += 1
+end
 @goto st33
 @label ctr33
-	output.metadata.thick_last = Ragel.@int64_from_anchor!
-	output.metadata.used_fields += 1
+begin
+output.metadata.thick_last = Ragel.@int64_from_anchor!
+end
+begin
+output.metadata.used_fields += 1
+end
 @goto st33
 @label ctr39
-	input.red = input.green = input.blue = (Ragel.@int64_from_anchor!) / 255.0
-	output.metadata.item_rgb = RGB{Float32}(input.red, input.green, input.blue)
-	output.metadata.used_fields += 1
+begin
+input.red = input.green = input.blue = (Ragel.@int64_from_anchor!) / 255.0
+end
+begin
+output.metadata.item_rgb = RGB{Float32}(input.red, input.green, input.blue)
+end
+begin
+output.metadata.used_fields += 1
+end
 @goto st33
 @label ctr54
-	input.blue = (Ragel.@int64_from_anchor!) / 255.0
-	output.metadata.item_rgb = RGB{Float32}(input.red, input.green, input.blue)
-	output.metadata.used_fields += 1
+begin
+input.blue = (Ragel.@int64_from_anchor!) / 255.0
+end
+begin
+output.metadata.item_rgb = RGB{Float32}(input.red, input.green, input.blue)
+end
+begin
+output.metadata.used_fields += 1
+end
 @goto st33
 @label ctr58
-	output.metadata.block_count = Ragel.@int64_from_anchor!
+begin
+output.metadata.block_count = Ragel.@int64_from_anchor!
 
-        if (output.metadata.block_count > length(output.metadata.block_sizes))
-            resize!(output.metadata.block_sizes, output.metadata.block_count)
-        end
+if (output.metadata.block_count > length(output.metadata.block_sizes))
+resize!(output.metadata.block_sizes, output.metadata.block_count)
+end
 
-        if (output.metadata.block_count > length(output.metadata.block_firsts))
-            resize!(output.metadata.block_firsts, output.metadata.block_count)
-        end
-
-	output.metadata.used_fields += 1
+if (output.metadata.block_count > length(output.metadata.block_firsts))
+resize!(output.metadata.block_firsts, output.metadata.block_count)
+end
+end
+begin
+output.metadata.used_fields += 1
+end
 @goto st33
 @label ctr63
-	if input.block_size_idx > length(output.metadata.block_sizes)
-            error("More size blocks encountered than BED block count field suggested.")
-        end
-        output.metadata.block_sizes[input.block_size_idx] = Ragel.@int64_from_anchor!
-        input.block_size_idx += 1
-
-	output.metadata.used_fields += 1
+begin
+if input.block_size_idx > length(output.metadata.block_sizes)
+error("More size blocks encountered than BED block count field suggested.")
+end
+output.metadata.block_sizes[input.block_size_idx] = Ragel.@int64_from_anchor!
+input.block_size_idx += 1
+end
+begin
+output.metadata.used_fields += 1
+end
 @goto st33
 @label ctr68
-	if input.block_first_idx > length(output.metadata.block_firsts)
-            error("More start blocks encountered than BED block count field suggested.")
-        end
-        output.metadata.block_firsts[input.block_first_idx] = 1 + Ragel.@int64_from_anchor!
-        input.block_first_idx += 1
-
-	output.metadata.used_fields += 1
+begin
+if input.block_first_idx > length(output.metadata.block_firsts)
+error("More start blocks encountered than BED block count field suggested.")
+end
+output.metadata.block_firsts[input.block_first_idx] = 1 + Ragel.@int64_from_anchor!
+input.block_first_idx += 1
+end
+begin
+output.metadata.used_fields += 1
+end
 @goto st33
 @label ctr81
-	Ragel.@copy_from_anchor!(output.metadata.name)
-	output.metadata.used_fields += 1
+begin
+Ragel.@copy_from_anchor!(output.metadata.name)
+end
+begin
+output.metadata.used_fields += 1
+end
 @goto st33
 @label st33
 p+= 1;
-	if p == pe
-	@goto _test_eof33
+if ( p == pe  )
+@goto _test_eof33
 
 end
 @label st_case_33
-if ( data[1 + p ]) == 10
-	@goto ctr72
+if ( (data[1+(p )])== 10  )
+begin
+@goto ctr72
 
 end
+
+end
+begin
 @goto st0
+
+end
 @label ctr89
-	input.block_size_idx = 1
-        input.block_first_idx = 1
+begin
+input.block_size_idx = 1
+input.block_first_idx = 1
 
-        yield = true
-        # // fbreak causes will cause the pushmark action for the next seqname
-        # // to be skipped, so we do it here
-        Ragel.@anchor!
-        	p+= 1; cs = 34; @goto _out
+yield = true
+# // fbreak causes will cause the pushmark action for the next seqname
+# // to be skipped, so we do it here
+Ragel.@anchor!
+begin
+p+= 1;
+cs = 34;
+@goto _out
 
+end
 
-
-	Ragel.anchor!(state, p)
+end
+begin
+Ragel.anchor!(state, p)
+end
 @goto st34
 @label st34
 p+= 1;
-	if p == pe
-	@goto _test_eof34
+if ( p == pe  )
+@goto _test_eof34
 
 end
 @label st_case_34
-@switch ( data[1 + p ])  begin
-    @case 9
+if ( (data[1+(p )]) == 9 )
+begin
 @goto ctr74
-@case 10
+
+end
+elseif ( (data[1+(p )]) == 10 )
+begin
 @goto ctr72
-@case 11
+
+end
+elseif ( (data[1+(p )]) == 11 )
+begin
 @goto st32
-@case 13
+
+end
+elseif ( (data[1+(p )]) == 13 )
+begin
 @goto st33
-@case 32
+
+end
+elseif ( (data[1+(p )]) == 32 )
+begin
 @goto st34
 
 end
-if 33 <= ( data[1 + p ]) && ( data[1 + p ]) <= 126
-	@goto st35
+end
+if ( 33 <= (data[1+(p )])&& (data[1+(p )])<= 126  )
+begin
+@goto st35
 
 end
+
+end
+begin
 @goto st0
+
+end
 @label ctr87
-	Ragel.anchor!(state, p)
+begin
+Ragel.anchor!(state, p)
+end
 @goto st35
 @label ctr90
-	input.block_size_idx = 1
-        input.block_first_idx = 1
+begin
+input.block_size_idx = 1
+input.block_first_idx = 1
 
-        yield = true
-        # // fbreak causes will cause the pushmark action for the next seqname
-        # // to be skipped, so we do it here
-        Ragel.@anchor!
-        	p+= 1; cs = 35; @goto _out
+yield = true
+# // fbreak causes will cause the pushmark action for the next seqname
+# // to be skipped, so we do it here
+Ragel.@anchor!
+begin
+p+= 1;
+cs = 35;
+@goto _out
 
+end
 
-
-	Ragel.anchor!(state, p)
+end
+begin
+Ragel.anchor!(state, p)
+end
 @goto st35
 @label st35
 p+= 1;
-	if p == pe
-	@goto _test_eof35
+if ( p == pe  )
+@goto _test_eof35
 
 end
 @label st_case_35
-if ( data[1 + p ]) == 9
-	@goto ctr77
+if ( (data[1+(p )])== 9  )
+begin
+@goto ctr77
 
 end
-if 32 <= ( data[1 + p ]) && ( data[1 + p ]) <= 126
-	@goto st35
 
 end
+if ( 32 <= (data[1+(p )])&& (data[1+(p )])<= 126  )
+begin
+@goto st35
+
+end
+
+end
+begin
 @goto st0
+
+end
 @label ctr77
-	output.metadata.used_fields = 0; Ragel.@copy_from_anchor!(output.seqname)
+begin
+output.metadata.used_fields = 0; Ragel.@copy_from_anchor!(output.seqname)
+end
 @goto st36
 @label st36
 p+= 1;
-	if p == pe
-	@goto _test_eof36
+if ( p == pe  )
+@goto _test_eof36
 
 end
 @label st_case_36
-if 48 <= ( data[1 + p ]) && ( data[1 + p ]) <= 57
-	@goto ctr4
+if ( 48 <= (data[1+(p )])&& (data[1+(p )])<= 57  )
+begin
+@goto ctr4
 
 end
-@goto st0
-@label ctr69
-	if input.block_first_idx > length(output.metadata.block_firsts)
-            error("More start blocks encountered than BED block count field suggested.")
-        end
-        output.metadata.block_firsts[input.block_first_idx] = 1 + Ragel.@int64_from_anchor!
-        input.block_first_idx += 1
 
+end
+begin
+@goto st0
+
+end
+@label ctr69
+begin
+if input.block_first_idx > length(output.metadata.block_firsts)
+error("More start blocks encountered than BED block count field suggested.")
+end
+output.metadata.block_firsts[input.block_first_idx] = 1 + Ragel.@int64_from_anchor!
+input.block_first_idx += 1
+end
 @goto st37
 @label st37
 p+= 1;
-	if p == pe
-	@goto _test_eof37
+if ( p == pe  )
+@goto _test_eof37
 
 end
 @label st_case_37
-@switch ( data[1 + p ])  begin
-    @case 10
+if ( (data[1+(p )]) == 10 )
+begin
 @goto ctr23
-@case 13
+
+end
+elseif ( (data[1+(p )]) == 13 )
+begin
 @goto ctr24
 
 end
-if 48 <= ( data[1 + p ]) && ( data[1 + p ]) <= 57
-	@goto ctr66
+end
+if ( 48 <= (data[1+(p )])&& (data[1+(p )])<= 57  )
+begin
+@goto ctr66
 
 end
-@goto st0
-@label ctr64
-	if input.block_size_idx > length(output.metadata.block_sizes)
-            error("More size blocks encountered than BED block count field suggested.")
-        end
-        output.metadata.block_sizes[input.block_size_idx] = Ragel.@int64_from_anchor!
-        input.block_size_idx += 1
 
+end
+begin
+@goto st0
+
+end
+@label ctr64
+begin
+if input.block_size_idx > length(output.metadata.block_sizes)
+error("More size blocks encountered than BED block count field suggested.")
+end
+output.metadata.block_sizes[input.block_size_idx] = Ragel.@int64_from_anchor!
+input.block_size_idx += 1
+end
 @goto st38
 @label st38
 p+= 1;
-	if p == pe
-	@goto _test_eof38
+if ( p == pe  )
+@goto _test_eof38
 
 end
 @label st_case_38
-@switch ( data[1 + p ])  begin
-    @case 9
+if ( (data[1+(p )]) == 9 )
+begin
 @goto ctr78
-@case 10
+
+end
+elseif ( (data[1+(p )]) == 10 )
+begin
 @goto ctr23
-@case 13
+
+end
+elseif ( (data[1+(p )]) == 13 )
+begin
 @goto ctr24
 
 end
-if 48 <= ( data[1 + p ]) && ( data[1 + p ]) <= 57
-	@goto ctr60
+end
+if ( 48 <= (data[1+(p )])&& (data[1+(p )])<= 57  )
+begin
+@goto ctr60
 
 end
+
+end
+begin
 @goto st0
+
+end
 @label ctr15
-	Ragel.anchor!(state, p)
+begin
+Ragel.anchor!(state, p)
+end
 @goto st39
 @label st39
 p+= 1;
-	if p == pe
-	@goto _test_eof39
+if ( p == pe  )
+@goto _test_eof39
 
 end
 @label st_case_39
-@switch ( data[1 + p ])  begin
-    @case 9
+if ( (data[1+(p )]) == 9 )
+begin
 @goto ctr79
-@case 10
+
+end
+elseif ( (data[1+(p )]) == 10 )
+begin
 @goto ctr80
-@case 13
+
+end
+elseif ( (data[1+(p )]) == 13 )
+begin
 @goto ctr81
 
 end
-if 32 <= ( data[1 + p ]) && ( data[1 + p ]) <= 126
-	@goto st39
+end
+if ( 32 <= (data[1+(p )])&& (data[1+(p )])<= 126  )
+begin
+@goto st39
 
 end
+
+end
+begin
 @goto st0
+
+end
 @label ctr86
-	Ragel.anchor!(state, p)
+begin
+Ragel.anchor!(state, p)
+end
 @goto st40
 @label st40
 p+= 1;
-	if p == pe
-	@goto _test_eof40
+if ( p == pe  )
+@goto _test_eof40
 
 end
 @label st_case_40
-@switch ( data[1 + p ])  begin
-    @case 9
+if ( (data[1+(p )]) == 9 )
+begin
 @goto ctr83
-@case 10
+
+end
+elseif ( (data[1+(p )]) == 10 )
+begin
 @goto ctr2
-@case 11
+
+end
+elseif ( (data[1+(p )]) == 11 )
+begin
 @goto st2
-@case 13
+
+end
+elseif ( (data[1+(p )]) == 13 )
+begin
 @goto st3
-@case 32
+
+end
+elseif ( (data[1+(p )]) == 32 )
+begin
 @goto st40
 
 end
-if 33 <= ( data[1 + p ]) && ( data[1 + p ]) <= 126
-	@goto st35
+end
+if ( 33 <= (data[1+(p )])&& (data[1+(p )])<= 126  )
+begin
+@goto st35
 
 end
+
+end
+begin
 @goto st0
+
+end
 @label st_out
 @label _test_eof41
-cs = 41; @goto _test_eof
+cs = 41;
+@goto _test_eof
 @label _test_eof1
-cs = 1; @goto _test_eof
+cs = 1;
+@goto _test_eof
 @label _test_eof2
-cs = 2; @goto _test_eof
+cs = 2;
+@goto _test_eof
 @label _test_eof3
-cs = 3; @goto _test_eof
+cs = 3;
+@goto _test_eof
 @label _test_eof4
-cs = 4; @goto _test_eof
+cs = 4;
+@goto _test_eof
 @label _test_eof5
-cs = 5; @goto _test_eof
+cs = 5;
+@goto _test_eof
 @label _test_eof6
-cs = 6; @goto _test_eof
+cs = 6;
+@goto _test_eof
 @label _test_eof7
-cs = 7; @goto _test_eof
+cs = 7;
+@goto _test_eof
 @label _test_eof8
-cs = 8; @goto _test_eof
+cs = 8;
+@goto _test_eof
 @label _test_eof9
-cs = 9; @goto _test_eof
+cs = 9;
+@goto _test_eof
 @label _test_eof10
-cs = 10; @goto _test_eof
+cs = 10;
+@goto _test_eof
 @label _test_eof11
-cs = 11; @goto _test_eof
+cs = 11;
+@goto _test_eof
 @label _test_eof12
-cs = 12; @goto _test_eof
+cs = 12;
+@goto _test_eof
 @label _test_eof13
-cs = 13; @goto _test_eof
+cs = 13;
+@goto _test_eof
 @label _test_eof14
-cs = 14; @goto _test_eof
+cs = 14;
+@goto _test_eof
 @label _test_eof15
-cs = 15; @goto _test_eof
+cs = 15;
+@goto _test_eof
 @label _test_eof16
-cs = 16; @goto _test_eof
+cs = 16;
+@goto _test_eof
 @label _test_eof17
-cs = 17; @goto _test_eof
+cs = 17;
+@goto _test_eof
 @label _test_eof18
-cs = 18; @goto _test_eof
+cs = 18;
+@goto _test_eof
 @label _test_eof19
-cs = 19; @goto _test_eof
+cs = 19;
+@goto _test_eof
 @label _test_eof20
-cs = 20; @goto _test_eof
+cs = 20;
+@goto _test_eof
 @label _test_eof21
-cs = 21; @goto _test_eof
+cs = 21;
+@goto _test_eof
 @label _test_eof22
-cs = 22; @goto _test_eof
+cs = 22;
+@goto _test_eof
 @label _test_eof23
-cs = 23; @goto _test_eof
+cs = 23;
+@goto _test_eof
 @label _test_eof24
-cs = 24; @goto _test_eof
+cs = 24;
+@goto _test_eof
 @label _test_eof25
-cs = 25; @goto _test_eof
+cs = 25;
+@goto _test_eof
 @label _test_eof26
-cs = 26; @goto _test_eof
+cs = 26;
+@goto _test_eof
 @label _test_eof27
-cs = 27; @goto _test_eof
+cs = 27;
+@goto _test_eof
 @label _test_eof28
-cs = 28; @goto _test_eof
+cs = 28;
+@goto _test_eof
 @label _test_eof29
-cs = 29; @goto _test_eof
+cs = 29;
+@goto _test_eof
 @label _test_eof30
-cs = 30; @goto _test_eof
+cs = 30;
+@goto _test_eof
 @label _test_eof42
-cs = 42; @goto _test_eof
+cs = 42;
+@goto _test_eof
 @label _test_eof31
-cs = 31; @goto _test_eof
+cs = 31;
+@goto _test_eof
 @label _test_eof32
-cs = 32; @goto _test_eof
+cs = 32;
+@goto _test_eof
 @label _test_eof33
-cs = 33; @goto _test_eof
+cs = 33;
+@goto _test_eof
 @label _test_eof34
-cs = 34; @goto _test_eof
+cs = 34;
+@goto _test_eof
 @label _test_eof35
-cs = 35; @goto _test_eof
+cs = 35;
+@goto _test_eof
 @label _test_eof36
-cs = 36; @goto _test_eof
+cs = 36;
+@goto _test_eof
 @label _test_eof37
-cs = 37; @goto _test_eof
+cs = 37;
+@goto _test_eof
 @label _test_eof38
-cs = 38; @goto _test_eof
+cs = 38;
+@goto _test_eof
 @label _test_eof39
-cs = 39; @goto _test_eof
+cs = 39;
+@goto _test_eof
 @label _test_eof40
-cs = 40; @goto _test_eof
+cs = 40;
+@goto _test_eof
 @label _test_eof
-if p == eof
-	@switch cs  begin
-    @case 42
-	input.block_size_idx = 1
-        input.block_first_idx = 1
+begin
 
-        yield = true
-        # // fbreak causes will cause the pushmark action for the next seqname
-        # // to be skipped, so we do it here
-        Ragel.@anchor!
-        	p+= 1; cs = 0; @goto _out
+end
+if ( p == eof  )
+begin
+if ( cs  == 42 )
+begin
+input.block_size_idx = 1
+input.block_first_idx = 1
 
+yield = true
+# // fbreak causes will cause the pushmark action for the next seqname
+# // to be skipped, so we do it here
+Ragel.@anchor!
+begin
+p+= 1;
+cs = 0;
+@goto _out
 
+end
 
+end
 
-	break;
+break;
+end
 
 end
 
 end
 @label _out
+begin
+
+end
+
+end
 end)
 
 
@@ -1474,73 +2289,73 @@ end)
 Write a BEDInterval in BED format.
 """
 function write(out::IO, interval::BEDInterval)
-    print(out, interval.seqname, '\t', interval.first - 1, '\t', interval.last)
-    write_optional_fields(out, interval)
-    write(out, '\n')
+print(out, interval.seqname, '\t', interval.first - 1, '\t', interval.last)
+write_optional_fields(out, interval)
+write(out, '\n')
 end
 
 
 function write_optional_fields(out::IO, interval::BEDInterval, leadingtab::Bool=true)
-    if interval.metadata.used_fields >= 1
-        if leadingtab
-            write(out, '\t')
-        end
-        print(out, interval.metadata.name)
-    else return end
+if interval.metadata.used_fields >= 1
+if leadingtab
+write(out, '\t')
+end
+print(out, interval.metadata.name)
+else return end
 
-    if interval.metadata.used_fields >= 2
-        print(out, '\t', interval.metadata.score)
-    else return end
+if interval.metadata.used_fields >= 2
+print(out, '\t', interval.metadata.score)
+else return end
 
-    if interval.metadata.used_fields >= 3
-        print(out, '\t', interval.strand)
-    else return end
+if interval.metadata.used_fields >= 3
+print(out, '\t', interval.strand)
+else return end
 
-    if interval.metadata.used_fields >= 4
-        print(out, '\t', interval.metadata.thick_first - 1)
-    else return end
+if interval.metadata.used_fields >= 4
+print(out, '\t', interval.metadata.thick_first - 1)
+else return end
 
-    if interval.metadata.used_fields >= 5
-        print(out, '\t', interval.metadata.thick_last)
-    else return end
+if interval.metadata.used_fields >= 5
+print(out, '\t', interval.metadata.thick_last)
+else return end
 
-    if interval.metadata.used_fields >= 6
-        item_rgb = interval.metadata.item_rgb
-        print(out, '\t',
-              round(Int, 255 * item_rgb.r), ',',
-              round(Int, 255 * item_rgb.g), ',',
-              round(Int, 255 * item_rgb.b))
-    else return end
+if interval.metadata.used_fields >= 6
+item_rgb = interval.metadata.item_rgb
+print(out, '\t',
+round(Int, 255 * item_rgb.r), ',',
+round(Int, 255 * item_rgb.g), ',',
+round(Int, 255 * item_rgb.b))
+else return end
 
-    if interval.metadata.used_fields >= 7
-        print(out, '\t', interval.metadata.block_count)
-    else return end
+if interval.metadata.used_fields >= 7
+print(out, '\t', interval.metadata.block_count)
+else return end
 
-    if interval.metadata.used_fields >= 8
-        block_sizes = interval.metadata.block_sizes
-        if !isempty(block_sizes)
-            print(out, '\t', block_sizes[1])
-            for i in 2:length(block_sizes)
-                print(out, ',', block_sizes[i])
-            end
-        end
-    else return end
+if interval.metadata.used_fields >= 8
+block_sizes = interval.metadata.block_sizes
+if !isempty(block_sizes)
+print(out, '\t', block_sizes[1])
+for i in 2:length(block_sizes)
+print(out, ',', block_sizes[i])
+end
+end
+else return end
 
-    if interval.metadata.used_fields >= 9
-        block_firsts = interval.metadata.block_firsts
-        if !isempty(block_firsts)
-            print(out, '\t', block_firsts[1] - 1)
-            for i in 2:length(block_firsts)
-                print(out, ',', block_firsts[i] - 1)
-            end
-        end
-    end
+if interval.metadata.used_fields >= 9
+block_firsts = interval.metadata.block_firsts
+if !isempty(block_firsts)
+print(out, '\t', block_firsts[1] - 1)
+for i in 2:length(block_firsts)
+print(out, ',', block_firsts[i] - 1)
+end
+end
+end
 end
 
 
 function IntervalCollection(interval_stream::BEDParser)
-    intervals = collect(BEDInterval, interval_stream)
-    return IntervalCollection{BEDMetadata}(intervals, true)
+intervals = collect(BEDInterval, interval_stream)
+return IntervalCollection{BEDMetadata}(intervals, true)
 end
 
 
