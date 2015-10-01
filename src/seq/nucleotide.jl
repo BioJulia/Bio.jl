@@ -362,7 +362,7 @@ Reset the contents of a mutable sequence from a string.
 function copy!{T}(seq::NucleotideSequence{T}, strdata::Vector{UInt8},
                   startpos::Integer, stoppos::Integer)
     if !seq.mutable
-        error("Cannot copy! to immutable sequnce. Call `mutable!(seq)` first.")
+        error("Cannot copy! to immutable sequence. Call `mutable!(seq)` first.")
     end
 
     n = stoppos - startpos + 1

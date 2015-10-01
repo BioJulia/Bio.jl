@@ -255,32 +255,26 @@ end
 # ----------------------------------
 
 function open{T <: FileFormat}(filename::AbstractString, ::Type{T}; args...)
-    memory_map = false
-    i = 0
-    for arg in args
-        i += 1
-        if arg[1] == :memory_map
-            memory_map = arg[2]
-            break
-        end
-    end
-    if i > 0
-        splice!(args, i)
-    end
-
-    if memory_map
-        source = Mmap.mmap(open(filename), Vector{UInt8}, (filesize(filename),))
-    else
-        source = open(filename)
-    end
-
+    source = open(filename)
     stream = BufferedInputStream(source)
     open(stream, T; args...)
 end
 
 
+function open{T <: FileFormat}(filename::AbstractString, ::Type{T})
+    source = open(filename)
+    stream = BufferedInputStream(source)
+    open(stream, T)
+end
+
+
 function open{T <: FileFormat}(source::Union{IO, Vector{UInt8}}, ::Type{T}; args...)
     open(BufferedInputStream(source), T; args...)
+end
+
+
+function open{T <: FileFormat}(source::Union(IO, Vector{UInt8}), ::Type{T})
+    open(BufferedInputStream(source), T)
 end
 
 

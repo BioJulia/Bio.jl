@@ -11,6 +11,7 @@ import Base:
     copy,
     empty!,
     endof,
+    getindex,
     hash,
     isempty,
     isvalid,
@@ -83,13 +84,13 @@ function next(s::StringField, i::Int)
 end
 
 
-function copy!(field::StringField, data::Vector{UInt8},
-               start::Integer, stop::Integer)
-    if length(field.data) < length(data)
-        resize!(field.data, length(data))
-    end
+@inline function copy!(field::StringField, data::Vector{UInt8},
+                       start::Integer, stop::Integer)
     n = stop - start + 1
-    copy!(field.data, 1, data, start, n)
+    if length(field.data) < n
+        resize!(field.data, n)
+    end
+    unsafe_copy!(field.data, 1, data, start, n)
     field.part = 1:n
     return n
 end
@@ -102,6 +103,10 @@ end
 
 function isempty(field::StringField)
     return field.part.start > field.part.stop
+end
+
+function convert(::Type{StringField}, str::StringField)
+    return str
 end
 
 
@@ -171,6 +176,15 @@ function (==)(a::StringField, b::BufferedStreams.BufferedOutputStream)
     else
         return false
     end
+end
+
+
+function getindex(field::StringField, r::UnitRange{Int})
+    r = (field.part.start + r.start - 1):(field.part.start + r.stop - 1)
+    if r.stop > field.part.stop
+        throw(BoundsError)
+    end
+    return StringField(field.data, r)
 end
 
 
