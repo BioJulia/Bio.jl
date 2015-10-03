@@ -9,13 +9,13 @@ const fourthField = ["Pugh", "Barney McGrew", "Cuthbert", "Dibble", "Grub"]
 
 facts("Annotations") do
     context("Construction") do
-        firstConstructorTest = Annotations(tuple(firstField, secondField), Tuple{:a, :b})
-        secondConstructorTest = Annotations(tuple(firstField, secondField, fourthField), Tuple{:a, :b, :c})
-        @fact typeof(firstConstructorTest) --> Annotations{Tuple{Array{Float64, 1}, Array{Bool, 1}}, Tuple{:a, :b}}
+        firstConstructorTest = AnnotationContainer(tuple(firstField, secondField), Tuple{:a, :b})
+        secondConstructorTest = AnnotationContainer(tuple(firstField, secondField, fourthField), Tuple{:a, :b, :c})
+        @fact typeof(firstConstructorTest) --> AnnotationContainer{Tuple{Array{Float64, 1}, Array{Bool, 1}}, Tuple{:a, :b}}
         @fact @annotations(:a = firstField, :b = secondField) --> firstConstructorTest
-        @fact typeof(secondConstructorTest) --> Annotations{Tuple{Array{Float64, 1}, Array{Bool, 1}, Array{ASCIIString, 1}}, Tuple{:a, :b, :c}}
+        @fact typeof(secondConstructorTest) --> AnnotationContainer{Tuple{Array{Float64, 1}, Array{Bool, 1}, Array{ASCIIString, 1}}, Tuple{:a, :b, :c}}
         @fact @annotations(:a = firstField, :b = secondField, :c = fourthField) --> secondConstructorTest
-        @fact Annotations(firstConstructorTest, thirdField, Field{:c}) --> @annotations(:a = firstField, :b = secondField, :c = thirdField)
+        @fact AnnotationContainer(firstConstructorTest, thirdField, Field{:c}) --> @annotations(:a = firstField, :b = secondField, :c = thirdField)
     end
 
     context("Fetching Values") do
