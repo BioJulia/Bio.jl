@@ -1,8 +1,6 @@
-# Annotations
-# ===========
 module Annotations
 
-export Annotations,
+export AnnotationContainer,
     NoAnnotations,
     Field,
     @annotations
@@ -11,6 +9,9 @@ using Base.Intrinsics
 
 import Base.getindex
 
+
+# Annotations
+# ===========
 
 abstract AbstractAnnotation
 
@@ -24,7 +25,7 @@ Because the type of a tuple is a tuple of the types, we can exploit this to get
 some type stability and predictability for a flexible data structure in which
 types may not be known in advance.
 """
-immutable Annotations{D <: Tuple, L <: Tuple} <: AbstractAnnotation
+immutable AnnotationContainer{D <: Tuple, L <: Tuple} <: AbstractAnnotation
     "Stores a tuple of variables of any type.
     The type of this field then is a tuple of the types."
     data::D
@@ -47,9 +48,9 @@ parameters{T}(::Type{T}) = T.parameters
 # think it hurts to move the labels checking to compile-time, given the type
 # info is available at that point.
 """
-Annotations(data, labels::Type{L})
+AnnotationContainer(data, labels::Type{L})
 
-Construct an Annotations container.
+Construct an container of annotations.
 
 **Parameters:**
 
@@ -65,20 +66,20 @@ Construct an Annotations container.
     For example: Tuple{:a, :b} for an Annotations object containing two variables.
     The two variables are assigned to fields :a and :b, or rather Field{:a} and Field{:b}.
 """
-@generated function Annotations{D <: Tuple, L <: Tuple}(data::D, labels::Type{L})
+@generated function AnnotationContainer{D <: Tuple, L <: Tuple}(data::D, labels::Type{L})
     lparams = parameters(L)
     if length(unique(lparams)) < length(lparams)
         return :(error("Trying to give more than one field the same label."))
     else
-        return :(Annotations{D, L}(data, labels))
+        return :(AnnotationContainer{D, L}(data, labels))
     end
 end
 
 "Calling Annotations() without any arguments generates a NoAnnotations object."
-Annotations() = NoAnnotations()
+AnnotationContainer() = NoAnnotations()
 
-"Generated function outer constructor for extending annotations in a functional programming manner."
-@generated function Annotations{D, L, A, a}(annotations::Annotations{D, L}, addition::A, ::Type{Field{a}})
+"Generated function outer constructor for extending AnnotationContainer in a functional programming manner."
+@generated function AnnotationContainer{D, L, A, a}(annotations::AnnotationContainer{D, L}, addition::A, ::Type{Field{a}})
     L2 = Tuple{parameters(L)..., a}
     D2 = Tuple{parameters(D)..., A}
     return :(Annotations{$D2, $L2}(tuple(annotations.data..., addition), $L2))
@@ -92,17 +93,17 @@ end
 macro annotations(kwargs...)
     labels = map(i -> i.args[1], kwargs)
     data = Expr(:tuple, map(i -> i.args[2], kwargs)...)
-    return :(Annotations($data, Tuple{$(labels...)}))
+    return :(AnnotationContainer($data, Tuple{$(labels...)}))
 end
 
 
-"Get any variable from an annotation variable field, whilst achieving type stability."
-@generated function getindex{D, L, a}(annotation::Annotations{D, L}, ::Type{Field{a}})
+"Get any variable from an annotation container variable field, whilst achieving type stability."
+@generated function getindex{D, L, a}(annotation::AnnotationContainer{D, L}, ::Type{Field{a}})
     index = findfirst(parameters(L), a)
     return :(annotation.data[$index])
 end
 
-"Get any variable from an annotation variable field, whilst achieving type stability."
-getindex{a}(annotations::Annotations, i, ann::Type{a}) = annotations[field][i]
+"Get any variable from an annotation container variable field, whilst achieving type stability."
+getindex{D, L, a}(annotations::AnnotationContainer{D, L}, i, ann::Type{a}) = annotations[field][i]
 
 end
