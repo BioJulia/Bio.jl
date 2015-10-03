@@ -81,19 +81,20 @@ AnnotationContainer() = NoAnnotations()
 "Generated function outer constructor for extending AnnotationContainer in a functional programming manner."
 @generated function AnnotationContainer{D, L, A, a}(annotations::AnnotationContainer{D, L}, addition::A, ::Type{Field{a}})
     L2 = Tuple{parameters(L)..., a}
+    println(L2)
     D2 = Tuple{parameters(D)..., A}
+    println(D2)
     return :(Annotations{$D2, $L2}(tuple(annotations.data..., addition), $L2))
 end
-
 
 
 # Type stable construction is made much more easy with a macro:
 
 "annotations Macro, allows easy construction of Annotations objects by providing a list of keyword-value pairs."
-macro annotations(kwargs...)
+macro annots(kwargs...)
     labels = map(i -> i.args[1], kwargs)
     data = Expr(:tuple, map(i -> i.args[2], kwargs)...)
-    return :(AnnotationContainer($data, Tuple{$(labels...)}))
+    :(AnnotationContainer($data, Tuple{$(labels...)}))
 end
 
 

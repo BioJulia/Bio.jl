@@ -2,21 +2,21 @@ module TestAnnotations
 
 using FactCheck, Bio.Annotations
 
-const firstField = collect(1.0:5.0)
-const secondField = [false, true, false, true, true]
-const thirdField = collect(1:5)
-const fourthField = ["Pugh", "Barney McGrew", "Cuthbert", "Dibble", "Grub"]
+firstField() = collect(1.0:5.0)
+secondField() = [false, true, false, true, true]
+thirdField() = collect(1:5)
+fourthField() = ["Pugh", "Barney McGrew", "Cuthbert", "Dibble", "Grub"]
 
-const firstConstructorTest = AnnotationContainer(tuple(firstField, secondField), Tuple{:a, :b})
-const secondConstructorTest = AnnotationContainer(tuple(firstField, secondField, fourthField), Tuple{:a, :b, :c})
+firstConstructorTest() = AnnotationContainer(tuple(firstField(), secondField()), Tuple{:a, :b})
+secondConstructorTest() = AnnotationContainer(tuple(firstField(), secondField(), fourthField()), Tuple{:a, :b, :c})
 
 facts("Annotations") do
     context("Construction") do
-        @fact typeof(firstConstructorTest) --> AnnotationContainer{Tuple{Array{Float64, 1}, Array{Bool, 1}}, Tuple{:a, :b}}
-        @fact @annotations(:a = firstField, :b = secondField) --> firstConstructorTest
-        @fact typeof(secondConstructorTest) --> AnnotationContainer{Tuple{Array{Float64, 1}, Array{Bool, 1}, Array{ASCIIString, 1}}, Tuple{:a, :b, :c}}
-        @fact @annotations(:a = firstField, :b = secondField, :c = fourthField) --> secondConstructorTest
-        @fact AnnotationContainer(firstConstructorTest, thirdField, Field{:c}) --> @annotations(:a = firstField, :b = secondField, :c = thirdField)
+        @fact typeof(firstConstructorTest()) --> AnnotationContainer{Tuple{Array{Float64, 1}, Array{Bool, 1}}, Tuple{:a, :b}}
+        @fact @annots(:a = firstField(), :b = secondField()) --> firstConstructorTest()
+        @fact typeof(secondConstructorTest()) --> AnnotationContainer{Tuple{Array{Float64, 1}, Array{Bool, 1}, Array{ASCIIString, 1}}, Tuple{:a, :b, :c}}
+        @fact @annots(:a = firstField(), :b = secondField(), :c = fourthField()) --> secondConstructorTest()
+        @fact AnnotationContainer(firstConstructorTest(), thirdField(), Field{:c}) --> @annots(:a = firstField(), :b = secondField(), :c = thirdField())
     end
 
     context("Fetching Values") do
