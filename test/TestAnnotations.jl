@@ -1,6 +1,6 @@
 module TestAnnotations
 
-using FactCheck, Bio
+using FactCheck, Bio.Annotations
 
 const firstField = collect(1.0:5.0)
 const secondField = [false, true, false, true, true]

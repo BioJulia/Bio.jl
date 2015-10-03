@@ -1,5 +1,16 @@
 # Annotations
 # ===========
+module Annotations
+
+export Annotations,
+    NoAnnotations,
+    Field,
+    @annotations
+
+using Base.Intrinsics
+
+import Base.getindex
+
 
 abstract AbstractAnnotation
 
@@ -86,10 +97,12 @@ end
 
 
 "Get any variable from an annotation variable field, whilst achieving type stability."
-@generated function Base.getindex{D, L, a}(annotation::Annotations{D, L}, ::Type{Field{a}})
+@generated function getindex{D, L, a}(annotation::Annotations{D, L}, ::Type{Field{a}})
     index = findfirst(parameters(L), a)
     return :(annotation.data[$index])
 end
 
 "Get any variable from an annotation variable field, whilst achieving type stability."
-Base.getindex{a}(annotations::Annotations, i, ann::Type{a}) = annotations[field][i]
+getindex{a}(annotations::Annotations, i, ann::Type{a}) = annotations[field][i]
+
+end
