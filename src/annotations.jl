@@ -84,13 +84,6 @@ macro annotations(kwargs...)
     return :(Annotations($data, Tuple{$(labels...)}))
 end
 
-#=
-macro extend(ann, kwargs...)
-
-    return :()
-end
-=#
-
 
 "Get any variable from an annotation variable field, whilst achieving type stability."
 @generated function Base.getindex{D, L, a}(annotation::Annotations{D, L}, ::Type{Field{a}})
