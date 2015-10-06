@@ -47,7 +47,6 @@ export Operation,
 
 
 include("operations.jl")
-include("cigar.jl")
 include("anchors.jl")
 
 end
