@@ -134,9 +134,19 @@ facts("Alignments") do
             @fact_throws Alignment(anchors)
         end
 
+        # cigar string round-trip
+        for _ in 1:100
+            #path = random_alignment(rand(1000:10000), rand(1000:10000))
+            path = random_alignment(rand(40:80), rand(40:80))
+            anchors = anchors_from_path(path)
+            aln = Alignment(anchors)
+            cig = cigar(aln)
+            @fact Alignment(cig, aln.anchors[1].seqpos + 1,
+                            aln.anchors[1].refpos + 1) --> aln
+        end
+
         # TODO:
         #   - coordinate conversion tests
-        #   - cigar string round trip tests
     end
 end
 

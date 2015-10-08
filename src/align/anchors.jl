@@ -28,7 +28,7 @@ Print to screen or other IO stream, a formatted description of an
 AlignmentAnchor.
 """
 function show(io::IO, anc::AlignmentAnchor)
-    print(io, "AlignmentAnchor(", anc.seqpos, ", ", anc.refpos, ", '", anc.op, "')")
+    print(io, "AlignmentAnchor(", anc.refpos, ", ", anc.seqpos, ", '", anc.op, "')")
 end
 
 
@@ -97,8 +97,46 @@ immutable Alignment
 end
 
 
-function Alignment(refpos::Int, cigar::AbstractString)
-    # TODO: conversion from start position and cigar string
+"""
+Construct an `Alignment`
+"""
+function Alignment(cigar::AbstractString, seqpos::Int=1, refpos::Int=1)
+    # path starts prior to the first aligned position pair
+    seqpos -= 1
+    refpos -= 1
+
+    n = 0
+    anchors = AlignmentAnchor[AlignmentAnchor(seqpos, refpos, OP_START)]
+    for c in cigar
+        if isdigit(c)
+            n = n * 10 + convert(Int, c - '0')
+        else
+            if n == 0
+                error("CIGAR operations must be prefixed by a positive integer.")
+            end
+            op = Operation(c)
+            if ismatchop(op)
+                seqpos += n
+                refpos += n
+            elseif isinsertop(op)
+                seqpos += n
+            elseif isdeleteop(op)
+                refpos += n
+            else
+                error("The $(op) CIGAR operation is not yet supported.")
+            end
+
+            push!(anchors, AlignmentAnchor(seqpos, refpos, op))
+            n = 0
+        end
+    end
+
+    return Alignment(anchors)
+end
+
+
+function ==(a::Alignment, b::Alignment)
+    return a.anchors == b.anchors && a.firstref == b.firstref && a.lastref == b.lastref
 end
 
 
@@ -330,8 +368,22 @@ function show(io::IO, alnseq::AlignedSequence)
 end
 
 
-function cigar(anchors::Vector{AlignmentAnchor})
-    # TODO: encode an alignment as a cigar string
+"""
+Output a CIGAR string encoding of an `Alignment`. This is not entirely lossless as
+it discards the alignments start positions.
+"""
+function cigar(aln::Alignment)
+    anchors = aln.anchors
+    out = IOBuffer()
+    seqpos = anchors[1].seqpos
+    refpos = anchors[1].refpos
+
+    for i in 2:length(anchors)
+        n = max(anchors[i].seqpos - anchors[i-1].seqpos,
+                anchors[i].refpos - anchors[i-1].refpos)
+        print(out, n, Char(anchors[i].op))
+    end
+    return takebuf_string(out)
 end
 
 
