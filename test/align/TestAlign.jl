@@ -39,6 +39,11 @@ end
 ## Test procedure.
 
 facts("Alignments") do
+    context("CIGAR Strings") do
+
+    end
+
+
     context("Operations") do
         context("Constructors and Conversions") do
             @inbounds for i in 1:length(OPS_TWICE)

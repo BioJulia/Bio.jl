@@ -2,53 +2,36 @@
 # CIGARs and CIGAR Strings
 # =========================
 
+# A CIGAR String I think should be a lightweight intermediate between the CIGAR
+# string read in from file, and the full representation of an alignment this module
+# provides.
 
-# Single CIGARs
-# --------------
+# CIGAR Strings
+# -------------
 
-# Currently REGEX to split 
-const CIGAR_REGEX = r"\d+[\w-=]"
+const CIGAR_Regex = r"^(\d+[MN=XSHIDP])+$"
 
-immutable CIGAR
-    OP::Operation
-    Size::Int
+immutable CIGARString{T <: AbstractString}
+    String::T
 end
 
-function CIGAR(op::Char, size::Int)
-    return CIGAR(Operation(op), size)
-end
-
-function convert(::Type{CIGAR}, str::String)
-    return CIGAR(str[end], parse(Int, str[1:end-1]))
-end
-
-function convert(::Type{String}, cigar::CIGAR)
-    return string(cigar.Size, Char(cigar.OP))
-end
-
-function show(io::IO, cigar::CIGAR)
-    write(io, convert(String, cigar))
-end
-
-
-# CIGARS or CIGAR Strings
-# ------------------------
-
-typealias CIGARS Vector{CIGAR}
-
-function convert(::Type{CIGARS}, str::String)
-    matches = matchall(CIGAR_REGEX, str)
-    cigarString = Vector{CIGAR}(length(matches))
-    @inbounds for i in 1:length(matches)
-        cigarString[i] = CIGAR(matches[i])
+function CIGARString{T <: AbstractString}(str::T)
+    if ismatch(CIGAR_Regex, str)
+        error("Input string does not conform to CIGAR format.")
     end
-    return cigarString
+    return CIGARString{T}(str)
 end
+
+# Regex string to enforce CIGAR format, and split strings.
 
 macro cigar_str(str)
-    return CIGARS(str)
+    return CIGARString(str)
 end
 
+
+
+
+#=
 function convert(::Type{String}, cigarString::CIGARS)
     outString = ""
     for cigar in cigarString
@@ -84,3 +67,4 @@ function viewPosition(x::CIGARS, position::Int)
         end
     end
 end
+=#

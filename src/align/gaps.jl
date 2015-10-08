@@ -3,8 +3,8 @@ abstract Gaps
 # ArrayGaps are for more efficient operations with when row-wise access is more
 # desirable and inserting / extending gaps is desired.
 
-type ArrayGaps <: Gaps
-    source
+type ArrayGaps{S <: Bio.Seq.Sequence} <: Gaps
+    source::S
     # An array with alternating source/gap character counts. The array always starts with
     # source, so if the first 5 bases are a gap, then the array would start [0, 5, ...]
     array::Vector{Int}
@@ -22,8 +22,6 @@ type ArrayGaps <: Gaps
         return x
     end
 end
-
-
 
 function unclippedLength(x::ArrayGaps)
     return x.sourceEndPos + x.sourceUnclippedEndPos

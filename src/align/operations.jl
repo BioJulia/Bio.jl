@@ -2,20 +2,19 @@
 # Alignment operations
 # =====================
 
-
-# Single operations are encoded in one byte each
-# ----------------------------------------------
-bitstype 8 Operation
+# Operation types are encoded in one byte each
+# ---------------------------------------------
+bitstype 8 OpKind
 
 
 # Conversion to and from integers
 # -------------------------------
 
-convert(::Type{Operation}, num::Uint8) = box(Operation, unbox(Uint8, num))
-convert(::Type{Uint8}, op::Operation) = box(Uint8, unbox(Operation, op))
+convert(::Type{OpKind}, num::Uint8) = box(OpKind, unbox(Uint8, num))
+convert(::Type{Uint8}, op::OpKind) = box(Uint8, unbox(OpKind, op))
 
-convert{T<:Unsigned}(::Type{Operation}, unint::T) = convert(Operation, convert(Uint8, unint))
-convert{T<:Unsigned}(::Type{T}, op::Operation) = convert(T, convert(Uint8, op))
+convert{T<:Unsigned}(::Type{OpKind}, unint::T) = convert(OpKind, convert(Uint8, unint))
+convert{T<:Unsigned}(::Type{T}, op::OpKind) = convert(T, convert(Uint8, op))
 
 
 # Operation encoding definitions
@@ -48,16 +47,16 @@ for op = [
     (:OP_DELETE, 8), (:OP_PAD, 9), (:OP_INVALID, 255)
     ]
 
-    @eval const $(op[1]) = convert(Operation, Uint8($(op[2])))
+    @eval const $(op[1]) = convert(OpKind, Uint8($(op[2])))
 
 end
 
 
-# Conversion from characters to operations
-# ----------------------------------------
+# Conversion from characters to operation type
+# ---------------------------------------------
 
 # Lookup table for conversion from Char to Operation
-const char_to_op = [
+const char_to_op_kind = [
     OP_GAP, OP_INVALID, OP_INVALID, OP_INVALID, OP_INVALID,
     OP_INVALID, OP_INVALID, OP_INVALID, OP_INVALID, OP_INVALID,
     OP_INVALID, OP_INVALID, OP_INVALID, OP_INVALID, OP_INVALID,
@@ -76,9 +75,8 @@ const char_to_op = [
     OP_MISMATCH
 ]
 
-
-function convert(::Type{Operation}, c::Char)
-    @inbounds op = '-' <= c <= 'x' ? char_to_op[c - '-' + 1] : OP_INVALID
+function convert(::Type{OpKind}, c::Char)
+    @inbounds op = '-' <= c <= 'x' ? char_to_op_kind[c - '-' + 1] : OP_INVALID
     if op == OP_INVALID
         error("$(c) is not a valid alignment operation.")
     end
@@ -86,17 +84,41 @@ function convert(::Type{Operation}, c::Char)
 end
 
 
-# Conversion from characters to operations
-# ----------------------------------------
+# Conversion from characters to operation type
+# ---------------------------------------------
 
-const op_to_char = ['-', 'M', 'N', '=', 'X', 'S', 'H', 'I', 'D', 'P']
+const op_kind_to_char = ['-', 'M', 'N', '=', 'X', 'S', 'H', 'I', 'D', 'P']
 
-function convert(::Type{Char}, op::Operation)
+function convert(::Type{Char}, op::OpKind)
     @assert op != OP_INVALID error("Alignment operation is not valid.")
-    @inbounds ch = op_to_char[convert(Uint8, op) + 1]
+    @inbounds ch = op_kind_to_char[convert(Uint8, op) + 1]
     return ch
 end
 
-function show(io::IO, op::Operation)
+function show(io::IO, op::OpKind)
     write(io, convert(Char, op))
+end
+
+
+immutable Operation
+    Sort::OpKind
+    Size::Int
+end
+
+function Operation(kind::Char, size::Int)
+    return Operation(OpKind(kind), size)
+end
+
+copy(x::Operation) = Operation(x.Sort, x.Size)
+
+function convert(::Type{Operation}, str::String)
+    return Operation(str[end], parse(Int, str[1:end-1]))
+end
+
+function convert(::Type{String}, operation::Operation)
+    return string(operation.Size, Char(operation.Sort))
+end
+
+function show(io::IO, operation::Operation)
+    write(io, convert(String, operation))
 end

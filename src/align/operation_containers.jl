@@ -1,12 +1,74 @@
+# ===============================
+# Alignment Operation Containers
+# ===============================
+
+abstract OperationContainer
+
+# ================
+# Operation Array
+# ================
+
+immutable OperationArray <: OperationContainer
+    operations::Vector{Operation}
+end
+
+# View position and source position currently don't take into account clipping.
+
+function viewposition(x::OperationArray, position::Int)
+    viewposition = sourceposition = position # - x.clip.star
+    # Currently this code does not pay attention to clipping.
+    nextBlock = start(x.array)
+    currentBlockSize, nextBlock = next(x.array, nextBlock)
+    while true
+        if done(x.array, nextBlock)
+            return viewposition
+        end
+        viewposition += currentBlockSize
+        currentBlockSize, nextBlock = next(x.array, nextBlock)
+        if sourceposition < currentBlockSize
+            return viewposition
+        end
+        sourceposition -= currentBlockSize
+        currentBlockSize, nextBlock = next(x.array, nextBlock)
+    end
+end
+
+function sourceposition(x::OperationArray, position::Int)
+    nextBlock = start(x.array)
+    currentBlockSize, nextBlock = next(x.array, nextBlock)
+    remaining = position
+    covered = x.clip.start
+    while true
+        if done(x.array, nextBlock)
+            return covered
+        end
+        if remaining <= currentBlockSize
+            return covered
+        end
+        remaining -= currentBlockSize
+        currentBlockSize, nextBlock = next(x.array, nextBlock)
+        if remaining <= currentBlockSize
+            return covered + remaining
+        end
+        covered += currentBlockSize
+        remaining -= currentBlockSize
+        currentBlockSize, nextBlock = next(x.array, nextBlock)
+    end
+end
+
+
+
+
+
 # =================
-# AlignmentAnchors
+# Operation Anchors
 # =================
 
 
 # Anchor definition
 # ------------------
 @doc """
-A type to store the operation enocded in an alignment (CIGAR Operations).
+A type to store the operation enocded in an alignment.
 Also stores the position in the alignment view of the sequences, and the
 corresponding position in the unaltered source sequence (nucleotide or protein).
 
@@ -17,13 +79,10 @@ into Bio.Align namespace as a series of global constants.
 Calling the AlignmentAnchor default constructor with default arguments sets both
 integer fields to 0, and the operation field to the global constant OP_INVALID.
 """ ->
-immutable AlignmentAnchor
+immutable OperationAnchor
     alnPos::Int
     srcPos::Int
     op::Operation
-    function AlignmentAnchor(gp::Int = 0, sp::Int = 0, op::Operation = OP_INVALID)
-        return new(gp, sp, op)
-    end
 end
 
 
@@ -32,19 +91,19 @@ end
 
 @doc """
 Print to screen or other IO stream, a formatted description of an
-AlignmentAnchor.
+OperationAnchor.
 """ ->
-function show(io::IO, anc::AlignmentAnchor)
+function show(io::IO, anc::OperationAnchor)
     write(io, "Alignment Position: $(anc.alnPos), Source Position: $(anc.srcPos), Operation: $(anc.op)")
 end
 
 @doc """
-Copy an AlignmentAnchor to a new AlignmentAnchor variable.
+Copy an OperationAnchor to a new OperationAnchor variable.
 
-Takes only one parameter of AlignmentAnchor type.
+Takes only one parameter of OperationAnchor type.
 """ ->
-function copy(src::AlignmentAnchor)
-    return AlignmentAnchor(src.alnPos, src.srcPos, src.op)
+function copy(src::OperationAnchor)
+    return OperationAnchor(src.alnPos, src.srcPos, copy(src.op))
 end
 
 
@@ -54,51 +113,54 @@ end
 @doc """
 Check for equity of two AlignmentAnchors.
 """ ->
-function ==(a::AlignmentAnchor, b::AlignmentAnchor)
+function ==(a::OperationAnchor, b::OperationAnchor)
     return a.alnPos == b.alnPos && a.srcPos == b.srcPos
 end
 
 @doc """
-Check for inequity of two AlignmentAnchors.
+Check for inequity of two OperationAnchors.
 """ ->
-function !=(a::AlignmentAnchor, b::AlignmentAnchor)
+function !=(a::OperationAnchor, b::OperationAnchor)
     return !(a == b)
 end
 
 @doc """
-Check that AlignmentAnchor a, is less than AlignmentAnchor b.
+Check that OperationAnchor a, is less than OperationAnchor b.
 """ ->
-function <(a::AlignmentAnchor, b::AlignmentAnchor)
+function <(a::OperationAnchor, b::OperationAnchor)
     return a.alnPos < b.alnPos || a.srcPos < b.srcPos
 end
 
 @doc """
-Check that AlignmentAnchor a, is greater than AlignmentAnchor b.
+Check that OperationAnchor a, is greater than OperationAnchor b.
 """ ->
-function >(a::AlignmentAnchor, b::AlignmentAnchor)
+function >(a::OperationAnchor, b::OperationAnchor)
     return a.alnPos > b.alnPos || a.srcPos > b.srcPos
 end
 
 @doc """
-Check that AlignmentAnchor a, is less than or equal to AlignmentAnchor b.
+Check that OperationAnchor a, is less than or equal to OperationAnchor b.
 """ ->
-function <=(a::AlignmentAnchor, b::AlignmentAnchor)
+function <=(a::OperationAnchor, b::OperationAnchor)
     return a.alnPos <= b.alnPos || a.srcPos < b.srcPos
 end
 
 @doc """
-Check that AlignmentAnchor a, is greater than or equal to AlignmentAnchor b.
+Check that OperationAnchor a, is greater than or equal to OperationAnchor b.
 """ ->
-function >=(a::AlignmentAnchor, b::AlignmentAnchor)
+function >=(a::OperationAnchor, b::OperationAnchor)
     return a.alnPos >= b.alnPos || a.srcPos > b.srcPos
 end
 
 @doc """
 Check whether the alignment anchor contains the specified operation.
 """ ->
-function hasOp(anc::AlignmentAnchor, op::Operation)
+function hasOp(anc::OperationAnchor, op::Operation)
     return anc.op == op
 end
+
+
+
 
 
 
@@ -227,16 +289,6 @@ function findPosition(anchors::AlignmentAnchors, position::Int, ordering::alnPos
     # handled.
     return loBracket, hiBracket
 end
-
-
-
-immutable AlignedSequence
-    src # Sequence from Bio.seq.
-    anchors::AlignmentAnchors
-end
-
-
-
 
 
 function alnToSrc(alignedSeq::AlignedSequence, alnPosition::Int)
