@@ -1,7 +1,3 @@
-# =================
-# AlignmentAnchors
-# =================
-
 
 # Anchor definition
 # ------------------
@@ -18,12 +14,9 @@ Calling the AlignmentAnchor default constructor with default arguments sets both
 integer fields to 0, and the operation field to the global constant OP_INVALID.
 """
 immutable AlignmentAnchor
-    alnpos::Int
-    srcpos::Int
+    seqpos::Int
+    refpos::Int
     op::Operation
-    function AlignmentAnchor(gp::Int = 0, sp::Int = 0, op::Operation = OP_INVALID)
-        return new(gp, sp, op)
-    end
 end
 
 
@@ -35,92 +28,116 @@ Print to screen or other IO stream, a formatted description of an
 AlignmentAnchor.
 """
 function show(io::IO, anc::AlignmentAnchor)
-    write(io, "Alignment Position: $(anc.alnpos), Source Position: $(anc.srcpos), Operation: $(anc.op)")
+    print(io, "AlignmentAnchor(", anc.seqpos, ", ", anc.refpos, ", '", anc.op, "')")
 end
 
 
-"""
-Copy an AlignmentAnchor to a new AlignmentAnchor variable.
+# Alignment
+# ---------
 
-Takes only one parameter of AlignmentAnchor type.
-"""
-function copy(src::AlignmentAnchor)
-    return AlignmentAnchor(src.alnpos, src.srcpos, src.op)
-end
+immutable Alignment
+    anchors::Vector{AlignmentAnchor}
+    firstref::Int
+    lastref::Int
 
+    function Alignment(anchors::Vector{AlignmentAnchor}, check::Bool=true)
+        # optionally check coherence of the anchors
+        if check
+            # empty alignments are valid, representing an unaligned sequence
+            if !isempty(anchors)
+                if anchors[1].op != OP_START
+                    error("Alignments must begin with on OP_START anchor.")
+                end
 
-# Basic operators for boolean operations consider
-# positions, not operations.
+                for i in 2:length(anchors)
+                    if anchors[i].refpos < anchors[i-1].refpos ||
+                       anchors[i].seqpos < anchors[i-1].seqpos
+                        error("Alignment anchors must be sorted.")
+                    end
 
+                    op = anchors[i].op
+                    # reference skip/delete operations
+                    if isdeleteop(op)
+                        if anchors[i].seqpos != anchors[i-1].seqpos
+                            error("Invalid anchor positions for reference deletion.")
+                        end
+                    # reference insertion operations
+                    elseif isinsertop(op)
+                        if anchors[i].refpos != anchors[i-1].refpos
+                            error("Invalid anchor positions for reference insertion.")
+                        end
+                    # match operations
+                    elseif ismatchop(op)
+                        if anchors[i].refpos - anchors[i-1].refpos !=
+                           anchors[i].seqpos - anchors[i-1].seqpos
+                            error("Invalid anchor positions for match operation.")
+                        end
+                    end
+                end
+            end
+        end
 
-"""
-Check for equity of two AlignmentAnchors.
-"""
-function ==(a::AlignmentAnchor, b::AlignmentAnchor)
-    return a.alnpos == b.alnpos && a.srcpos == b.srcpos
-end
+        # compute first and last aligned reference positions
+        firstref = 0
+        for i in 1:length(anchors)
+            if ismatchop(anchors[i].op)
+                firstref = anchors[i-1].refpos
+            end
+        end
 
+        lastref = 0
+        for i in length(anchors):-1:1
+            if ismatchop(anchors[i].op)
+                lastref = anchors[i].refpos
+            end
+        end
 
-"""
-Check for inequity of two AlignmentAnchors.
-"""
-function !=(a::AlignmentAnchor, b::AlignmentAnchor)
-    return !(a == b)
-end
-
-
-"""
-Check that AlignmentAnchor a, is less than AlignmentAnchor b.
-"""
-function <(a::AlignmentAnchor, b::AlignmentAnchor)
-    return a.alnpos < b.alnpos || a.srcpos < b.srcpos
-end
-
-
-"""
-Check that AlignmentAnchor a, is greater than AlignmentAnchor b.
-"""
-function >(a::AlignmentAnchor, b::AlignmentAnchor)
-    return a.alnpos > b.alnpos || a.srcpos > b.srcpos
-end
-
-
-"""
-Check that AlignmentAnchor a, is less than or equal to AlignmentAnchor b.
-"""
-function <=(a::AlignmentAnchor, b::AlignmentAnchor)
-    return a.alnpos <= b.alnpos || a.srcpos < b.srcpos
-end
-
-
-"""
-Check that AlignmentAnchor a, is greater than or equal to AlignmentAnchor b.
-"""
-function >=(a::AlignmentAnchor, b::AlignmentAnchor)
-    return a.alnpos >= b.alnpos || a.srcpos > b.srcpos
-end
-
-
-"""
-Check whether the alignment anchor contains the specified operation.
-"""
-function hasop(anc::AlignmentAnchor, op::Operation)
-    return anc.op == op
-end
-
-
-
-# AlignmentAnchors Definition
-# ----------------------------
-
-typealias AlignmentAnchors Vector{AlignmentAnchor}
-
-function show(io::IO, aa::AlignmentAnchors)
-    out = ""
-    for i in aa
-        out *= "($(i.srcpos), $(i.alnpos), $(Char(i.op)))"
+        return new(anchors, firstref, lastref)
     end
-    write(io, out)
+end
+
+
+function Alignment(refpos::Int, cigar::AbstractString)
+    # TODO: conversion from start position and cigar string
+end
+
+
+function show(io::IO, aln::Alignment)
+    # print a representation of the reference sequence
+    anchors = aln.anchors
+    for i in 2:length(anchors)
+        if ismatchop(anchors[i].op)
+            for _ in anchors[i-1].refpos+1:anchors[i].refpos
+                write(io, '.')
+            end
+        elseif isinsertop(anchors[i].op)
+            for _ in anchors[i-1].seqpos+1:anchors[i].seqpos
+                write(io, '-')
+            end
+        elseif isdeleteop(anchors[i].op)
+            for _ in anchors[i-1].refpos+1:anchors[i].refpos
+                write(io, '.')
+            end
+        end
+    end
+    write(io, '\n')
+
+    # print a representation of the aligned sequence
+    for i in 2:length(anchors)
+        if ismatchop(anchors[i].op)
+            for i in anchors[i-1].seqpos+1:anchors[i].seqpos
+                write(io, '.')
+            end
+        elseif isinsertop(anchors[i].op)
+            for i in anchors[i-1].seqpos+1:anchors[i].seqpos
+                write(io, '.')
+            end
+        elseif isdeleteop(anchors[i].op)
+            for _ in anchors[i-1].refpos+1:anchors[i].refpos
+                write(io, '-')
+            end
+        end
+    end
 end
 
 
@@ -219,11 +236,11 @@ function lt(o::AlnPosOrdering, a::Int, b::AlignmentAnchor)
     return a < b.alnpos
 end
 
-function upper_bound_anchor(arr::AlignmentAnchors, i::Int, o::AlnPosOrdering)
+function upper_bound_anchor(arr::Vector{AlignmentAnchor}, i::Int, o::AlnPosOrdering)
     return searchsortedlast(arr, i, o) + 1
 end
 
-function lower_bound_anchor(arr::AlignmentAnchors, i::Int, o::AlnPosOrdering)
+function lower_bound_anchor(arr::Vector{AlignmentAnchor}, i::Int, o::AlnPosOrdering)
     return searchsortedfirst(arr, i, o)
 end
 
@@ -231,7 +248,7 @@ end
 """
 Returns the indicies of the anchors that
 """
-function findposition(anchors::AlignmentAnchors, position::Int, ordering::AlnPosOrdering)
+function findposition(anchors::Vector{AlignmentAnchor}, position::Int, ordering::AlnPosOrdering)
     lobracket = searchsortedlast(anchors, position, ordering)
     hibracket = lobracket + 1
     # We probably need code here to handle a few edge cases, or have this as an
@@ -241,9 +258,80 @@ function findposition(anchors::AlignmentAnchors, position::Int, ordering::AlnPos
 end
 
 
-immutable AlignedSequence
-    src # Sequence from Bio.seq.
-    anchors::AlignmentAnchors
+immutable AlignedSequence{S <: Sequence}
+    seq::S
+    aln::Alignment
+end
+
+
+function AlignedSequence{S <: Sequence}(seq::S, aln::Alignment)
+    return AlignedSequence{S}(seq, aln)
+end
+
+
+function AlignedSequence{S <: Sequence}(seq::S, anchors::Vector{AlignmentAnchor},
+                                        check::Bool=true)
+    return AlignedSequence(seq, Alignment(anchors, check))
+end
+
+
+"""
+First position in the reference sequence.
+"""
+function first(alnseq::AlignedSequence)
+    return alnseq.aln.firstref
+end
+
+
+"""
+Last position in the reference sequence.
+"""
+function last(alnseq::AlignedSequence)
+    return alnseq.aln.lastref
+end
+
+
+# simple letters and dashes representation of an alignment
+function show(io::IO, alnseq::AlignedSequence)
+    # print a representation of the reference sequence
+    anchors = alnseq.aln.anchors
+    for i in 2:length(anchors)
+        if ismatchop(anchors[i].op)
+            for _ in anchors[i-1].refpos+1:anchors[i].refpos
+                write(io, '.')
+            end
+        elseif isinsertop(anchors[i].op)
+            for _ in anchors[i-1].seqpos+1:anchors[i].seqpos
+                write(io, '-')
+            end
+        elseif isdeleteop(anchors[i].op)
+            for _ in anchors[i-1].refpos+1:anchors[i].refpos
+                write(io, '.')
+            end
+        end
+    end
+    write(io, '\n')
+
+    for i in 2:length(anchors)
+        if ismatchop(anchors[i].op)
+            for i in anchors[i-1].seqpos+1:anchors[i].seqpos
+                print(io, alnseq.seq[i])
+            end
+        elseif isinsertop(anchors[i].op)
+            for i in anchors[i-1].seqpos+1:anchors[i].seqpos
+                print(io, alnseq.seq[i])
+            end
+        elseif isdeleteop(anchors[i].op)
+            for _ in anchors[i-1].refpos+1:anchors[i].refpos
+                write(io, '-')
+            end
+        end
+    end
+end
+
+
+function cigar(anchors::Vector{AlignmentAnchor})
+    # TODO: encode an alignment as a cigar string
 end
 
 

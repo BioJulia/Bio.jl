@@ -31,7 +31,23 @@ const OP_PAD          = convert(Operation, 0x06) # P
 const OP_SEQ_MATCH    = convert(Operation, 0x07) # =
 const OP_SEQ_MISMATCH = convert(Operation, 0x08) # X
 const OP_BACK         = convert(Operation, 0x09) # B
+const OP_START        = convert(Operation, 0x0a) # 0 (non-standard)
 const OP_INVALID      = convert(Operation, 0xff)
+
+
+# classify operations
+function ismatchop(op::Operation)
+    return op == OP_MATCH || op == OP_SEQ_MATCH || op == OP_SEQ_MISMATCH
+end
+
+
+function isinsertop(op::Operation)
+    return op == OP_INSERT || op == OP_SOFT_CLIP || op == OP_HARD_CLIP
+end
+
+function isdeleteop(op::Operation)
+    return op == OP_DELETE || op == OP_SKIP
+end
 
 
 # Conversion from characters to operations
@@ -50,6 +66,9 @@ const char_to_op = [
 
 function convert(::Type{Operation}, c::Char)
     @inbounds op = '=' <= c <= 'X' ? char_to_op[c - '=' + 1] : OP_INVALID
+    if op == OP_INVALID
+        error("Invalid alignment operation '$c'")
+    end
     return op
 end
 
@@ -57,12 +76,11 @@ end
 # Conversion from characters to operations
 # ----------------------------------------
 
-const op_to_char = ['M', 'I', 'D', 'N', 'S', 'H', 'P', '=', 'X', 'B']
+const op_to_char = ['M', 'I', 'D', 'N', 'S', 'H', 'P', '=', 'X', 'B', '0']
 
 function convert(::Type{Char}, op::Operation)
     @assert op != OP_INVALID error("Alignment operation is not valid.")
-    @inbounds ch = op_to_char[convert(UInt8, op) + 1]
-    return ch
+    return op_to_char[convert(UInt8, op) + 1]
 end
 
 function show(io::IO, op::Operation)

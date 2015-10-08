@@ -2,6 +2,7 @@ module Align
 
 using Base.Intrinsics
 using Base.Order: Ordering
+using Bio.Seq
 
 import Base: convert,
     getindex,
@@ -23,7 +24,6 @@ import Base: convert,
     *
 
 import Base.Order: lt
-
 import Base.Multimedia: MIME, writemime
 
 export Operation,
@@ -32,8 +32,11 @@ export Operation,
     @cigar_str,
     AlignmentAnchor,
     hasop,
-    AlignmentAnchors,
+    Alignment,
     AlignedSequence,
+    ismatchop,
+    isinsertop,
+    isdeleteop,
     OP_MATCH,
     OP_INSERT,
     OP_DELETE,
@@ -43,7 +46,8 @@ export Operation,
     OP_PAD,
     OP_SEQ_MATCH,
     OP_SEQ_MISMATCH,
-    OP_BACK
+    OP_BACK,
+    OP_START
 
 
 include("operations.jl")

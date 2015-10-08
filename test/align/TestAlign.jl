@@ -4,112 +4,139 @@ using FactCheck
 using Bio
 using Bio.Align
 
-## Constants and Parameters used for defining and running the tests.
 
-const MAX_CIGAR_SIZE = 100000
+# Generate a random valid alignment of a sequence of length n against a sequence
+# of length m. If `glob` is true, generate a global alignment, if false, a local
+# alignment.
+function random_alignment(m, n, glob=true)
+    match_ops = [OP_MATCH, OP_SEQ_MATCH, OP_SEQ_MISMATCH]
+    insert_ops = [OP_INSERT, OP_SOFT_CLIP, OP_HARD_CLIP]
+    delete_ops = [OP_DELETE, OP_SKIP]
+    ops = vcat(match_ops, insert_ops, delete_ops)
 
-const NUMBER_OF_RANDOM_CIGAR = 10
+    # This is just a random walk on a m-by-n matrix, where steps are either
+    # (+1,0), (0,+1), (+1,+1). To make somewhat more realistic alignments, it's
+    # biased towards going in the same direction. Local alignments have a random
+    # start and end time, global alignments always start at (0,0) and end at
+    # (m,n).
 
-const MAX_CIGARS_IN_CIGAR_STRING = 50
+    # probability of choosing the same direction as the last step
+    straight_pr = 0.9
 
-const NUMBER_OF_RANDOM_CIGAR_STRINGS = 10
+    op = OP_MATCH
+    if glob
+        i = 0
+        j = 0
+        i_end = m
+        j_end = n
+    else
+        i = rand(1:m-1)
+        j = rand(1:n-1)
+        i_end = rand(i+1:m)
+        j_end = rand(j+1:n)
+    end
 
-const ALLOWED_CHARS = Align.op_to_char
+    path = AlignmentAnchor[AlignmentAnchor(i, j, OP_START)]
+    while (glob && i < i_end && j < j_end) || (!glob && (i < i_end || j < j_end))
+        straight = rand() < straight_pr
 
-const CHARS_FROM_OPS = Align.op_to_char
+        if i == i_end
+            if !straight
+                op = rand(delete_ops)
+            end
+            j += 1
+        elseif j == j_end
+            if !straight
+                op = rand(inset_ops)
+            end
+            i += 1
+        else
+            if !straight
+                op = rand(ops)
+            end
 
-const OPS_UNIQUE = [OP_MATCH, OP_INSERT, OP_DELETE, OP_SKIP, OP_SOFT_CLIP,
-                    OP_HARD_CLIP, OP_PAD, OP_SEQ_MATCH, OP_SEQ_MISMATCH,
-                    OP_BACK]
+            if isdeleteop(op)
+                j += 1
+            elseif isinsertop(op)
+                i += 1
+            else
+                i += 1
+                j += 1
+            end
+        end
+        push!(path, AlignmentAnchor(i, j, op))
+    end
 
-# Need some random CIGAR sizes for some tests.
-const cigarSize = abs(rand(1:MAX_CIGAR_SIZE, length(OPS_UNIQUE)))
-
-strings = ["$(cigarSize[i])$(CHARS_FROM_OPS[i])" for i in 1:length(cigarSize)]
-
-## Functions used for tests.
-
-function cigarsMatch(cigar::CIGAR, op::Operation, size::Int)
-    cigar.OP == op && cigar.Size == size
+    return path
 end
 
 
-## Test procedure.
+# Make an Alignment from a path returned by random_alignment. Converting from
+# path to Alignment is just done by removing redundant nodes from the path.
+function anchors_from_path(path)
+    anchors = AlignmentAnchor[]
+    for k in 1:length(path)
+        if k == length(path) || path[k].op != path[k+1].op
+            push!(anchors, path[k])
+        end
+    end
+    return anchors
+end
+
 
 facts("Alignments") do
     context("Operations") do
         context("Constructors and Conversions") do
-            @inbounds for i in 1:length(OPS_UNIQUE)
-                @fact Operation(OPS_UNIQUE[i]) --> OPS_UNIQUE[i]
-            end
-            @inbounds for i in 1:length(OPS_UNIQUE)
-                @fact Char(eval(OPS_UNIQUE[i])) --> CHARS_FROM_OPS[i]
-            end
-        end
-
-    end
-
-    context("Single CIGARs") do
-        context("Constructors and Conversions") do
-            context("From Operation and Size") do
-                # Check GICARs are correctly constructed from an Operation and Size argument.
-                @inbounds for i in 1:length(OPS_UNIQUE)
-                    @fact cigarsMatch(CIGAR(OPS_UNIQUE[i], cigarSize[i]), OPS_UNIQUE[i], cigarSize[i]) --> true
+            ops = Set(Align.char_to_op)
+            for op in ops
+                if op != Align.OP_INVALID
+                    @fact Operation(Char(op)) --> op
                 end
             end
-
-            context("From Character and Size") do
-                # Check CIGARs are correctly constructed from a character and size argument.
-                @inbounds for i in 1:length(CHARS_FROM_OPS)
-                    @fact cigarsMatch(CIGAR(CHARS_FROM_OPS[i], cigarSize[i]), OPS_UNIQUE[i], cigarSize[i]) --> true
-                end
-            end
-
-            context("From Strings") do
-                # Check Strings are successfully converted to CIGAR.
-                @inbounds for i in 1:length(strings)
-                    @fact cigarsMatch(CIGAR(strings[i]), OPS_UNIQUE[i], cigarSize[i]) --> true
-                end
-            end
-
-            context("To Strings from CIGAR") do
-                # Check that CIGAR operations are successfully converted to Strings.
-                @inbounds for i in 1:length(OPS_UNIQUE)
-                    @fact AbstractString(CIGAR(OPS_UNIQUE[i], cigarSize[i])) --> "$(cigarSize[i])$(OPS_UNIQUE[i])"
-                end
-            end
+            @fact_throws Char(Align.OP_INVALID)
+            @fact_throws Operation('m')
+            @fact_throws Operation('7')
+            @fact_throws Operation('A')
+            @fact_throws Operation('\n')
         end
     end
 
-    context("CIGARS") do
-        context("Constructors and Conversions") do
-            context("From String to CIGARS") do
-                for i in 1:NUMBER_OF_RANDOM_CIGAR_STRINGS
-                    numCigar = rand(1:MAX_CIGARS_IN_CIGAR_STRING)
-
-                    # These two lines assume that conversion between Operations
-                    # and characters works as tested in earlier contexts.
-                    operationChars = rand(ALLOWED_CHARS, numCigar)
-                    operationOPS = [Operation(i) for i in operationChars]
-
-                    cigarLengths = rand(1:MAX_CIGAR_SIZE, numCigar)
-                    out = ""
-                    @inbounds for i in 1:numCigar
-                        out *= "$(cigarLengths[i])$(operationChars[i])"
-                    end
-                    cigars = convert(CIGARS, out)
-                    @fact length(cigars) --> numCigar
-                    for i in 1:numCigar
-                        @fact cigars[i].OP --> operationOPS[i]
-                        @fact cigars[i].Size --> cigarLengths[i]
-                    end
-                end
-            end
+    context("Alignment") do
+        # test bad alignment anchors by swapping nodes in paths
+        for _ in 1:100
+            path = random_alignment(rand(1000:10000), rand(1000:10000))
+            anchors = anchors_from_path(path)
+            n = length(anchors)
+            n < 3 && continue
+            i = rand(2:n-1)
+            j = rand(i+1:n)
+            anchors[i], anchors[j] = anchors[j], anchors[i]
+            @fact_throws Alignment(anchors)
         end
-    end
 
-    context("AlignmentAnchor") do
+        # test bad alignment anchors by swapping operations
+        for _ in 1:100
+            path = random_alignment(rand(1000:10000), rand(1000:10000))
+            anchors = anchors_from_path(path)
+            n = length(anchors)
+            n < 3 && continue
+            i = rand(2:n-1)
+            j = rand(i+1:n)
+            u = anchors[i]
+            v = anchors[j]
+            if (ismatchop(u.op) && ismatchop(v.op)) ||
+               (isinsertop(u.op) && isinsertop(v.op)) ||
+               (isdeleteop(u.op) && isdeleteop(v.op))
+                continue
+            end
+            anchors[i] = AlignmentAnchor(u.seqpos, u.refpos, v.op)
+            anchors[j] = AlignmentAnchor(v.seqpos, v.refpos, u.op)
+            @fact_throws Alignment(anchors)
+        end
 
+        # TODO:
+        #   - coordinate conversion tests
+        #   - cigar string round trip tests
     end
 end
 
