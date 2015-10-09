@@ -136,8 +136,7 @@ facts("Alignments") do
 
         # cigar string round-trip
         for _ in 1:100
-            #path = random_alignment(rand(1000:10000), rand(1000:10000))
-            path = random_alignment(rand(40:80), rand(40:80))
+            path = random_alignment(rand(1000:10000), rand(1000:10000))
             anchors = anchors_from_path(path)
             aln = Alignment(anchors)
             cig = cigar(aln)
