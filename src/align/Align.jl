@@ -55,4 +55,9 @@ export Operation,
 include("operations.jl")
 include("anchors.jl")
 
+include("types.jl")
+include("submat.jl")
+include("models.jl")
+include("pairwise/pairalign.jl")
+
 end
