@@ -49,6 +49,10 @@ immutable Alignment
                     end
 
                     op = anchors[i].op
+                    if convert(UInt8, op) > convert(UInt8, OP_MAX_VALID)
+                        error("Anchor at index $(i) has an invalid operation.")
+                    end
+
                     # reference skip/delete operations
                     if isdeleteop(op)
                         if anchors[i].seqpos != anchors[i-1].seqpos
@@ -139,7 +143,7 @@ function show(io::IO, aln::Alignment)
     for i in 2:length(anchors)
         if ismatchop(anchors[i].op)
             for _ in anchors[i-1].refpos+1:anchors[i].refpos
-                write(io, '.')
+                write(io, '·')
             end
         elseif isinsertop(anchors[i].op)
             for _ in anchors[i-1].seqpos+1:anchors[i].seqpos
@@ -147,7 +151,7 @@ function show(io::IO, aln::Alignment)
             end
         elseif isdeleteop(anchors[i].op)
             for _ in anchors[i-1].refpos+1:anchors[i].refpos
-                write(io, '.')
+                write(io, '·')
             end
         end
     end
@@ -157,11 +161,11 @@ function show(io::IO, aln::Alignment)
     for i in 2:length(anchors)
         if ismatchop(anchors[i].op)
             for i in anchors[i-1].seqpos+1:anchors[i].seqpos
-                write(io, '.')
+                write(io, '·')
             end
         elseif isinsertop(anchors[i].op)
             for i in anchors[i-1].seqpos+1:anchors[i].seqpos
-                write(io, '.')
+                write(io, '·')
             end
         elseif isdeleteop(anchors[i].op)
             for _ in anchors[i-1].refpos+1:anchors[i].refpos
@@ -172,19 +176,19 @@ function show(io::IO, aln::Alignment)
 end
 
 
-immutable AlignedSequence{S <: Sequence}
+immutable AlignedSequence{S}
     seq::S
     aln::Alignment
 end
 
 
-function AlignedSequence{S <: Sequence}(seq::S, aln::Alignment)
+function AlignedSequence{S}(seq::S, aln::Alignment)
     return AlignedSequence{S}(seq, aln)
 end
 
 
-function AlignedSequence{S <: Sequence}(seq::S, anchors::Vector{AlignmentAnchor},
-                                        check::Bool=true)
+function AlignedSequence{S}(seq::S, anchors::Vector{AlignmentAnchor},
+                            check::Bool=true)
     return AlignedSequence(seq, Alignment(anchors, check))
 end
 
@@ -212,7 +216,7 @@ function show(io::IO, alnseq::AlignedSequence)
     for i in 2:length(anchors)
         if ismatchop(anchors[i].op)
             for _ in anchors[i-1].refpos+1:anchors[i].refpos
-                write(io, '.')
+                write(io, '·')
             end
         elseif isinsertop(anchors[i].op)
             for _ in anchors[i-1].seqpos+1:anchors[i].seqpos
@@ -220,7 +224,7 @@ function show(io::IO, alnseq::AlignedSequence)
             end
         elseif isdeleteop(anchors[i].op)
             for _ in anchors[i-1].refpos+1:anchors[i].refpos
-                write(io, '.')
+                write(io, '·')
             end
         end
     end

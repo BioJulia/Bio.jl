@@ -34,6 +34,8 @@ const OP_BACK         = convert(Operation, 0x09) # B
 const OP_START        = convert(Operation, 0x0a) # 0 (non-standard)
 const OP_INVALID      = convert(Operation, 0xff)
 
+const OP_MAX_VALID = OP_START
+
 
 # classify operations
 function ismatchop(op::Operation)

@@ -102,6 +102,11 @@ facts("Alignments") do
     end
 
     context("Alignment") do
+        # alignments with nonsense operations
+        @fact_throws Alignment(AlignmentAnchor[
+            Operation(0, 0, OP_START),
+            Operation(100, 100, convert(Operation, 0xfa))])
+
         # test bad alignment anchors by swapping nodes in paths
         for _ in 1:100
             path = random_alignment(rand(1000:10000), rand(1000:10000))

@@ -31,9 +31,6 @@ import Base.Order: lt
 import Base.Multimedia: MIME, writemime
 
 export Operation,
-    CIGAR,
-    CIGARS,
-    @cigar_str,
     AlignmentAnchor,
     hasop,
     Alignment,
