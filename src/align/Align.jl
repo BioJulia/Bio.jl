@@ -23,6 +23,10 @@ import Base: convert,
     >=,
     *
 
+import IntervalTrees:
+    first,
+    last
+
 import Base.Order: lt
 import Base.Multimedia: MIME, writemime
 

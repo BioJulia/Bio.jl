@@ -9,9 +9,6 @@ corresponding position in the unaltered source sequence (nucleotide or protein).
 It stores the position values as Int types and the alignment operation is stored
 as a type `Operation`, these are defined in the file `operations.jl` and loaded
 into Bio.Align namespace as a series of global constants.
-
-Calling the AlignmentAnchor default constructor with default arguments sets both
-integer fields to 0, and the operation field to the global constant OP_INVALID.
 """
 immutable AlignmentAnchor
     seqpos::Int
@@ -23,10 +20,6 @@ end
 # Basic operators for AlignmentAnchors
 # -------------------------------------
 
-"""
-Print to screen or other IO stream, a formatted description of an
-AlignmentAnchor.
-"""
 function show(io::IO, anc::AlignmentAnchor)
     print(io, "AlignmentAnchor(", anc.refpos, ", ", anc.seqpos, ", '", anc.op, "')")
 end
