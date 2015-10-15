@@ -180,4 +180,311 @@ facts("Alignments") do
     end
 end
 
+# remove gaps
+macro g_str(s)
+    replace(s, r"-", "")
+end
+
+facts("PairwiseAlignment") do
+    context("GlobalAlignment") do
+        mismatch_score = -6
+        gap_open_penalty = 5
+        gap_extend_penalty = 3
+        submat = DichotomousSubstitutionMatrix(0, mismatch_score)
+        affinegap = AffineGapScoreModel(submat, gap_open_penalty, gap_extend_penalty)
+
+        context("empty sequences") do
+            a = ""
+            b = ""
+            aln = pairalign(GlobalAlignment(), a, b, affinegap)
+            @fact aln.score --> 0
+        end
+
+        context("complete match") do
+            a = "ACGT"
+            b = "ACGT"
+            aln = pairalign(GlobalAlignment(), a, b, affinegap)
+            @fact aln.score --> 0
+        end
+
+        context("mismatch") do
+            a = "ACGT"
+            b = "AGGT"
+            aln = pairalign(GlobalAlignment(), a, b, affinegap)
+            @fact aln.score --> mismatch_score
+
+            a = "ACGT"
+            b = "AGGA"
+            aln = pairalign(GlobalAlignment(), a, b, affinegap)
+            @fact aln.score --> 2mismatch_score
+        end
+
+        context("insertion") do
+            a = "ACGTT"
+            b = "ACGT"
+            aln = pairalign(GlobalAlignment(), a, b, affinegap)
+            @fact aln.score --> -(gap_open_penalty + gap_extend_penalty)
+
+            a = "ACGTTT"
+            b = "ACGT"
+            aln = pairalign(GlobalAlignment(), a, b, affinegap)
+            @fact aln.score --> -(gap_open_penalty + 2gap_extend_penalty)
+
+            a = "ACCGT"
+            b = "ACGT"
+            aln = pairalign(GlobalAlignment(), a, b, affinegap)
+            @fact aln.score --> -(gap_open_penalty + gap_extend_penalty)
+
+            a = "ACCCGT"
+            b = "ACGT"
+            aln = pairalign(GlobalAlignment(), a, b, affinegap)
+            @fact aln.score --> -(gap_open_penalty + 2gap_extend_penalty)
+        end
+
+        context("deletion") do
+            a = "ACGT"
+            b = "ACG"
+            aln = pairalign(GlobalAlignment(), a, b, affinegap)
+            @fact aln.score --> -(gap_open_penalty + gap_extend_penalty)
+
+            a = "ACGT"
+            b = "AC"
+            aln = pairalign(GlobalAlignment(), a, b, affinegap)
+            @fact aln.score --> -(gap_open_penalty + 2gap_extend_penalty)
+
+            a = "AGT"
+            b = "ACGT"
+            aln = pairalign(GlobalAlignment(), a, b, affinegap)
+            @fact aln.score --> -(gap_open_penalty + gap_extend_penalty)
+
+            a = "AT"
+            b = "ACGT"
+            aln = pairalign(GlobalAlignment(), a, b, affinegap)
+            @fact aln.score --> -(gap_open_penalty + 2gap_extend_penalty)
+        end
+    end
+
+    context("SemiGlobalAlignment") do
+        mismatch_score = -6
+        gap_open_penalty = 5
+        gap_extend_penalty = 3
+        submat = DichotomousSubstitutionMatrix(0, mismatch_score)
+        affinegap = AffineGapScoreModel(submat, gap_open_penalty, gap_extend_penalty)
+
+        context("compleme match") do
+            a = "ACGT"
+            b = "ACGT"
+            aln = pairalign(SemiGlobalAlignment(), a, b, affinegap)
+            @fact aln.score --> 0
+        end
+
+        context("partial match") do
+            a =   "ACTT"
+            b = "TTACGTAGT"
+            aln = pairalign(SemiGlobalAlignment(), a, b, affinegap)
+            @fact aln.score --> mismatch_score
+
+            a =  g"AC-TTG"
+            b = "TTACGTTGT"
+            aln = pairalign(SemiGlobalAlignment(), a, b, affinegap)
+            @fact aln.score --> -(gap_open_penalty + gap_extend_penalty)
+        end
+    end
+
+    context("LocalAlignment") do
+        context("zero matching score") do
+            mismatch_score = -6
+            gap_open_penalty = 5
+            gap_extend_penalty = 3
+            submat = DichotomousSubstitutionMatrix(0, mismatch_score)
+            affinegap = AffineGapScoreModel(submat, gap_open_penalty, gap_extend_penalty)
+
+            context("empty sequences") do
+                a = ""
+                b = ""
+                aln = pairalign(LocalAlignment(), a, b, affinegap)
+                @fact aln.score --> 0
+            end
+
+            context("complete match") do
+                a = "ACGT"
+                b = "ACGT"
+                aln = pairalign(LocalAlignment(), a, b, affinegap)
+                @fact aln.score --> 0
+            end
+
+            context("partial match") do
+                a = "ACGT"
+                b = "AGGT"
+                aln = pairalign(LocalAlignment(), a, b, affinegap)
+                @fact aln.score --> 0
+
+                a =  "ACGT"
+                b = "AACGTTT"
+                aln = pairalign(LocalAlignment(), a, b, affinegap)
+                @fact aln.score --> 0
+            end
+
+            context("no match") do
+                a = "AA"
+                b = "TTTT"
+                aln = pairalign(LocalAlignment(), a, b, affinegap)
+                @fact aln.score --> 0
+            end
+        end
+
+        context("positive matching score") do
+            match_score = 5
+            mismatch_score = -6
+            gap_open_penalty = 5
+            gap_extend_penalty = 3
+            submat = DichotomousSubstitutionMatrix(match_score, mismatch_score)
+            affinegap = AffineGapScoreModel(submat, gap_open_penalty, gap_extend_penalty)
+
+            context("complete match") do
+                a = "ACGT"
+                b = "ACGT"
+                aln = pairalign(LocalAlignment(), a, b, affinegap)
+                @fact aln.score --> 4match_score
+            end
+
+            context("partial match") do
+                a = "ACGT"
+                b = "AGGT"
+                aln = pairalign(LocalAlignment(), a, b, affinegap)
+                @fact aln.score --> 2match_score
+
+                a =  "ACGT"
+                b = "AACGTTT"
+                aln = pairalign(LocalAlignment(), a, b, affinegap)
+                @fact aln.score --> 4match_score
+
+                a =  g"AC-GT"
+                b = "AAACTGTTT"
+                aln = pairalign(LocalAlignment(), a, b, affinegap)
+                @fact aln.score --> 4match_score - (gap_open_penalty + gap_extend_penalty)
+            end
+
+            context("no match") do
+                a = "AA"
+                b = "TTTT"
+                aln = pairalign(LocalAlignment(), a, b, affinegap)
+                @fact aln.score --> 0
+            end
+        end
+    end
+
+    context("EditDistance") do
+        mismatch = 1
+        submat = DichotomousSubstitutionMatrix(0, mismatch)
+        insertion = 1
+        deletion = 2
+        cost = CostModel(submat, insertion, deletion)
+
+        context("empty sequences") do
+            a = ""
+            b = ""
+            aln = pairalign(EditDistance(), a, b, cost)
+            @fact aln.score --> 0
+        end
+
+        context("complete match") do
+            a = "ACGT"
+            b = "ACGT"
+            aln = pairalign(EditDistance(), a, b, cost)
+            @fact aln.score --> 0
+        end
+
+        context("mismatch") do
+            a = "AGGT"
+            b = "ACGT"
+            aln = pairalign(EditDistance(), a, b, cost)
+            @fact aln.score --> mismatch
+
+            a = "AGGT"
+            b = "ACGA"
+            aln = pairalign(EditDistance(), a, b, cost)
+            @fact aln.score --> 2mismatch
+        end
+
+        context("insertion") do
+            a =  "ACGTT"
+            b = g"ACGT-"
+            aln = pairalign(EditDistance(), a, b, cost)
+            @fact aln.score --> insertion
+
+            a =  "ACGTT"
+            b = g"-CGT-"
+            aln = pairalign(EditDistance(), a, b, cost)
+            @fact aln.score --> 2insertion
+        end
+
+        context("deletion") do
+            a = g"AC-T"
+            b =  "ACGT"
+            aln = pairalign(EditDistance(), a, b, cost)
+            @fact aln.score --> deletion
+
+            a = g"C-T"
+            b = "ACGT"
+            aln = pairalign(EditDistance(), a, b, cost)
+            @fact aln.score --> 2deletion
+        end
+    end
+
+    context("LevenshteinDistance") do
+        context("empty sequences") do
+            a = ""
+            b = ""
+            aln = pairalign(LevenshteinDistance(), a, b)
+            @fact aln.score --> 0
+        end
+
+        context("complete match") do
+            a = "ACGT"
+            b = "ACGT"
+            aln = pairalign(LevenshteinDistance(), a, b)
+            @fact aln.score --> 0
+        end
+    end
+
+    context("HammingDistance") do
+        context("empty sequences") do
+            a = ""
+            b = ""
+            aln = pairalign(HammingDistance(), a, b)
+            @fact aln.score --> 0
+        end
+
+        context("complete match") do
+            a = "ACGT"
+            b = "ACGT"
+            aln = pairalign(HammingDistance(), a, b)
+            @fact aln.score --> 0
+        end
+
+        context("mismatch") do
+            a = "ACGT"
+            b = "AGGT"
+            aln = pairalign(HammingDistance(), a, b)
+            @fact aln.score --> 1
+
+            a = "ACGT"
+            b = "AGGA"
+            aln = pairalign(HammingDistance(), a, b)
+            @fact aln.score --> 2
+        end
+
+        context("indel") do
+            a = "ACGT"
+            b = "ACG"
+            @fact_throws pairalign(HammingDistance(), a, b)
+
+            a = "ACG"
+            b = "ACGT"
+            @fact_throws pairalign(HammingDistance(), a, b)
+        end
+    end
+end
+
 end # TestAlign
