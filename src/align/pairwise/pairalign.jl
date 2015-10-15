@@ -5,15 +5,15 @@
 include("result.jl")
 include("algorithms/common.jl")
 include("algorithms/affinegap_global_align.jl")
+include("algorithms/affinegap_banded_global_align.jl")
 
 
 function pairalign{S1,S2}(::GlobalAlignment, a::S1, b::S2, score::AffineGapScoreModel;
                           score_only::Bool=false,
-                          banded::Bool=false, lower::Int=0, upper::Int=0
-                          )
+                          banded::Bool=false, lower::Int=0, upper::Int=0)
     submat = score.submat
-    gap_open_penalty = score.gap_open_penalty
-    gap_extend_penalty = score.gap_extend_penalty
+    gop = score.gap_open_penalty
+    gep = score.gap_extend_penalty
     if banded
         L = lower
         U = upper
@@ -24,19 +24,19 @@ function pairalign{S1,S2}(::GlobalAlignment, a::S1, b::S2, score::AffineGapScore
             error("the ending position is not included in the band")
         end
         if score_only
-            score, _ = affinegap_banded_global_align(a, b, L, U, submat, gap_open_penalty, gap_extend_penalty)
-            return AlignmentResult(S1, S2, score)
+            score, _ = affinegap_banded_global_align(a, b, L, U, submat, gop, gep)
+            return PairwiseAlignment{S1,S2}(score)
         else
-            score, trace = affinegap_banded_global_align(a, b, L, U, submat, gap_open_penalty, gap_extend_penalty)
-            a′, b′ = affinegap_banded_global_traceback(a, b, L, U, trace, (length(a), length(b)))
-            return AlignmentResult(score, a′, b′)
+            score, trace = affinegap_banded_global_align(a, b, L, U, submat, gop, gep)
+            a′ = affinegap_banded_global_traceback(a, b, U, trace, (length(a), length(b)))
+            return PairwiseAlignment(score, a′, b)
         end
     else
         if score_only
-            score, _ = affinegap_global_align(a, b, submat, gap_open_penalty, gap_extend_penalty)
-            return AlignmentResult(S1, S2, score)
+            score, _ = affinegap_global_align(a, b, submat, gop, gep)
+            return PairwiseAlignment{S1,S2}(score)
         else
-            score, trace = affinegap_global_align(a, b, submat, gap_open_penalty, gap_extend_penalty)
+            score, trace = affinegap_global_align(a, b, submat, gop, gep)
             a′ = affinegap_global_traceback(a, b, trace, (length(a), length(b)))
             return PairwiseAlignment(score, a′, b)
         end

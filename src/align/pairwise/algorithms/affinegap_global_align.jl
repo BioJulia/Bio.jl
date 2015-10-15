@@ -56,8 +56,7 @@ end
 function affinegap_global_traceback(a, b, trace, endpos)
     anchors = Vector{AlignmentAnchor}()
     i, j = endpos
-    anchor_point = (i, j)
-    op = OP_INVALID
+    @start_traceback
     while i ≥ 1 && j ≥ 1
         t = trace[i+1,j+1]
         if t & TRACE_MATCH > 0
@@ -75,9 +74,6 @@ function affinegap_global_traceback(a, b, trace, endpos)
     end
     while j ≥ 1 @delete end
     while i ≥ 1 @insert end
-    push!(anchors, AlignmentAnchor(anchor_point[1], anchor_point[2], op))
-    push!(anchors, AlignmentAnchor(i, j, OP_START))
-    reverse!(anchors)
-    pop!(anchors)  # remove OP_INVALID
+    @finish_traceback
     return AlignedSequence(a, anchors)
 end
