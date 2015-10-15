@@ -8,6 +8,7 @@ include("algorithms/affinegap_global_align.jl")
 include("algorithms/affinegap_banded_global_align.jl")
 include("algorithms/affinegap_local_align.jl")
 include("algorithms/affinegap_semiglobal_align.jl")
+include("algorithms/edit_distance.jl")
 
 
 function pairalign{S1,S2}(::GlobalAlignment, a::S1, b::S2, score::AffineGapScoreModel;
@@ -73,4 +74,29 @@ function pairalign{S1,S2}(::SemiGlobalAlignment, a::S1, b::S2, score::AffineGapS
         a′ = affinegap_semiglobal_traceback(a, b, trace, best_endpos)
         return PairwiseAlignment(score, a′, b)
     end
+end
+
+function pairalign{S1,S2}(::EditDistance, a::S1, b::S2, cost::CostModel;
+                          distance_only::Bool=false)
+    submat = cost.submat
+    ins = cost.insertion_cost
+    del = cost.deletion_cost
+    if distance_only
+        distance, _, _ = edit_distance(a, b, submat, ins, del)
+        return PairwiseAlignment{S1,S2}(distance)
+    else
+        distance, trace, endpos = edit_distance(a, b, submat, ins, del)
+        a′ = edit_traceback(a, b, trace, endpos)
+        return PairwiseAlignment(distance, a′, b)
+    end
+end
+
+function pairalign{S1,S2}(::LevenshteinDistance, a::S1, b::S2;
+                          distance_only::Bool=false)
+    unitcost = CostModel(
+        UnitSubstitutionCost{Int}(),
+        insertion_cost=1,
+        deletion_cost=1
+    )
+    return pairalign(EditDistance(), a, b, unitcost, distance_only=distance_only)
 end
