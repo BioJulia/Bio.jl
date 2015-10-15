@@ -9,6 +9,7 @@ include("algorithms/affinegap_banded_global_align.jl")
 include("algorithms/affinegap_local_align.jl")
 include("algorithms/affinegap_semiglobal_align.jl")
 include("algorithms/edit_distance.jl")
+include("algorithms/hamming_distance.jl")
 
 
 function pairalign{S1,S2}(::GlobalAlignment, a::S1, b::S2, score::AffineGapScoreModel;
@@ -99,4 +100,16 @@ function pairalign{S1,S2}(::LevenshteinDistance, a::S1, b::S2;
         deletion_cost=1
     )
     return pairalign(EditDistance(), a, b, unitcost, distance_only=distance_only)
+end
+
+function pairalign{S1,S2}(::HammingDistance, a::S1, b::S2;
+                          distance_only::Bool=false)
+    if distance_only
+        distance, _ = hamming_distance(Int, a, b)
+        return PairwiseAlignment{S1,S2}(distance)
+    else
+        distance, anchors = hamming_distance(Int, a, b)
+        a′ = AlignedSequence(a, anchors)
+        return PairwiseAlignment(distance, a′, b)
+    end
 end
