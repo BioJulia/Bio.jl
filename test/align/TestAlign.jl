@@ -180,10 +180,6 @@ facts("Alignments") do
     end
 end
 
-# remove gaps
-macro g_str(s)
-    replace(s, r"-", "")
-end
 
 # generate test cases from two aligned sequences
 function alnscore{S,T}(::Type{S}, affinegap::AffineGapScoreModel{T}, alnstr::ASCIIString)
