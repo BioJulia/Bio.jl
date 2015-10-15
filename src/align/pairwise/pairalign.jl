@@ -7,6 +7,7 @@ include("algorithms/common.jl")
 include("algorithms/affinegap_global_align.jl")
 include("algorithms/affinegap_banded_global_align.jl")
 include("algorithms/affinegap_local_align.jl")
+include("algorithms/affinegap_semiglobal_align.jl")
 
 
 function pairalign{S1,S2}(::GlobalAlignment, a::S1, b::S2, score::AffineGapScoreModel;
@@ -59,3 +60,17 @@ function pairalign{S1,S2}(::LocalAlignment, a::S1, b::S2, score::AffineGapScoreM
     end
 end
 
+function pairalign{S1,S2}(::SemiGlobalAlignment, a::S1, b::S2, score::AffineGapScoreModel;
+                          score_only::Bool=false)
+    submat = score.submat
+    gop = score.gap_open_penalty
+    gep = score.gap_extend_penalty
+    if score_only
+        score, _, _ = affinegap_semiglobal_align(a, b, submat, gop, gep)
+        return PairwiseAlignment{S1,S2}(score)
+    else
+        score, trace, best_endpos = affinegap_semiglobal_align(a, b, submat, gop, gep)
+        a′ = affinegap_semiglobal_traceback(a, b, trace, best_endpos)
+        return PairwiseAlignment(score, a′, b)
+    end
+end
