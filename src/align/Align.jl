@@ -51,6 +51,27 @@ export Operation,
     OP_BACK,
     OP_START
 
+export
+    # alignment types
+    GlobalAlignment,
+    LocalAlignment,
+    SemiGlobalAlignment,
+    EditDistance,
+    HammingDistance,
+    LevenshteinDistance,
+    # substitution matrices
+    AbstractSubstitutionMatrix,
+    SubstitutionMatrix,
+    DichotomousSubstitutionMatrix,
+    BLOSUM62,
+    # alignment models
+    AbstractScoreModel,
+    AffineGapScoreModel,
+    AbstractCostModel,
+    CostModel,
+    # pairwise alignment
+    pairalign
+
 
 include("operations.jl")
 include("anchors.jl")

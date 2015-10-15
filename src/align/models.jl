@@ -50,9 +50,6 @@ end
 # Cost Models
 # -----------
 
-immutable UnitSubstitutionCost{T} <: AbstractSubstitutionMatrix{T} end
-Base.getindex{T}(::UnitSubstitutionCost{T}, x, y) = ifelse(x == y, T(0), T(1))
-
 """
 Supertype of cost model.
 

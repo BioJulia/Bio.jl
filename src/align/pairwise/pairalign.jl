@@ -9,8 +9,7 @@ include("algorithms/affinegap_global_align.jl")
 
 function pairalign{S1,S2}(::GlobalAlignment, a::S1, b::S2, score::AffineGapScoreModel;
                           score_only::Bool=false,
-                          banded::Bool=false, lower::Int=0, upper::Int=0,
-                          #low_memory::Bool=score_only,
+                          banded::Bool=false, lower::Int=0, upper::Int=0
                           )
     submat = score.submat
     gap_open_penalty = score.gap_open_penalty
@@ -42,6 +41,5 @@ function pairalign{S1,S2}(::GlobalAlignment, a::S1, b::S2, score::AffineGapScore
             return PairwiseAlignment(score, a′, b)
         end
     end
-    error("not implemented")
 end
 

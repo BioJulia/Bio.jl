@@ -38,13 +38,19 @@ immutable DichotomousSubstitutionMatrix{T} <: AbstractSubstitutionMatrix{T}
     mismatching_score::T
 end
 
-function Base.getindex(submat::DichotomousSubstitutionMatrix, x, y)
+@inline function Base.getindex(submat::DichotomousSubstitutionMatrix, x, y)
     return ifelse(
         x == y,
         submat.matching_score,
         submat.mismatching_score
     )
 end
+
+immutable UnitSubstitutionCost{T} <: AbstractSubstitutionMatrix{T} end
+Base.getindex{T}(::UnitSubstitutionCost{T}, x, y) = ifelse(x == y, T(0), T(1))
+
+
+# Utils for loading substitution matrices from files
 
 function load_submat(name)
     submatfile = Pkg.dir("Bio", "src", "align", "data", "submat", name)
@@ -88,4 +94,5 @@ function parse_ncbi_submat(filepath)
     return submat
 end
 
+# predefined substitution matrices
 const BLOSUM62 = load_submat("BLOSUM62")
