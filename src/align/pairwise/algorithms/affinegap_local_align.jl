@@ -70,11 +70,16 @@ function affine_local_traceback(a, b, trace, endpos)
                 @mismatch
             end
         elseif t & TRACE_DELETE > 0
-            @delete
+            while trace[i+1,j+1] & TRACE_DELETE > 0
+                @delete
+            end
         elseif t & TRACE_INSERT > 0
-            @insert
+            while trace[i+1,j+1] & TRACE_INSERT > 0
+                @insert
+            end
+        else
+            error("failed to trace back")
         end
-        error("failed to trace back")
     end
     @finish_traceback
     return AlignedSequence(a, anchors)

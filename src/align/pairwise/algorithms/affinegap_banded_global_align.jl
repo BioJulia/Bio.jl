@@ -79,7 +79,7 @@ function affinegap_banded_global_traceback(a, b, U, trace, endpos)
     anchors = Vector{AlignmentAnchor}()
     i, j = endpos
     @start_traceback
-    while i ≥ 1 && j ≥ 1
+    while i ≥ 1 || j ≥ 1
         t = trace[i-j+U+1,j+1]
         if t & TRACE_MATCH > 0
             if a[i] == b[j]
@@ -88,14 +88,17 @@ function affinegap_banded_global_traceback(a, b, U, trace, endpos)
                 @mismatch
             end
         elseif t & TRACE_DELETE > 0
-            @delete
+            while trace[i-j+U+1,j+1] & TRACE_DELETE > 0
+                @delete
+            end
         elseif t & TRACE_INSERT > 0
-            @insert
+            while trace[i-j+U+1,j+1] & TRACE_INSERT > 0
+                @insert
+            end
+        else
+            error("failed to trace back")
         end
-        error("failed to trace back")
     end
-    while j ≥ 1 @delete end
-    while i ≥ 1 @insert end
     @finish_traceback
     return AlignedSequence(a, anchors)
 end

@@ -49,7 +49,6 @@ macro match()
         @anchor OP_SEQ_MATCH
         i -= 1
         j -= 1
-        continue
     end
 end
 
@@ -58,7 +57,6 @@ macro mismatch()
         @anchor OP_SEQ_MISMATCH
         i -= 1
         j -= 1
-        continue
     end
 end
 
@@ -66,7 +64,6 @@ macro insert()
     quote
         @anchor OP_INSERT
         i -= 1
-        continue
     end
 end
 
@@ -74,6 +71,5 @@ macro delete()
     quote
         @anchor OP_DELETE
         j -= 1
-        continue
     end
 end

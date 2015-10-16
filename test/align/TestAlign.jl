@@ -222,7 +222,9 @@ function alnscore{S,T}(::Type{S}, affinegap::AffineGapScoreModel{T}, alnstr::ASC
             gap_extending_b = false
         end
     end
-    return S(replace(a, r"\s|-", "")), S(replace(b, r"\s|-", "")), score
+    sa = S(replace(a, r"\s|-", ""))
+    sb = S(replace(b, r"\s|-", ""))
+    return sa, sb, score, string(a[start:stop], '\n', b[start:stop])
 end
 
 function alnscore{T}(affinegap::AffineGapScoreModel{T}, alnstr::ASCIIString)
@@ -252,6 +254,16 @@ function alndistance{T}(cost::CostModel{T}, alnstr::ASCIIString)
     return alndistance(ASCIIString, cost, alnstr)
 end
 
+function alignedpair(aln)
+    pair = get(aln.seqpair)
+    anchors = pair.first.aln.anchors
+    buf = IOBuffer()
+    Bio.Align.show_seq(buf, pair.first, anchors)
+    println(buf)
+    Bio.Align.show_ref(buf, pair.second, anchors)
+    return bytestring(buf)
+end
+
 facts("PairwiseAlignment") do
     context("GlobalAlignment") do
         match = 0
@@ -262,9 +274,10 @@ facts("PairwiseAlignment") do
         affinegap = AffineGapScoreModel(submat, -gap_open, -gap_extend)
 
         function testaln(alnstr)
-            a, b, score = alnscore(affinegap, alnstr)
+            a, b, score, alnpair = alnscore(affinegap, alnstr)
             aln = pairalign(GlobalAlignment(), a, b, affinegap)
             @fact aln.score --> score
+            @fact alignedpair(aln) --> alnpair
             aln = pairalign(GlobalAlignment(), a, b, affinegap, score_only=true)
             @fact aln.score --> score
         end
@@ -296,22 +309,22 @@ facts("PairwiseAlignment") do
         context("insertion") do
             testaln("""
             ACGTT
-            ACGT-
+            ACG-T
             """)
 
             testaln("""
             ACGTTT
-            ACGT--
+            ACG--T
             """)
 
             testaln("""
             ACCGT
-            AC-GT
+            A-CGT
             """)
 
             testaln("""
             ACCCGT
-            AC--GT
+            A--CGT
             """)
 
             testaln("""
@@ -327,27 +340,27 @@ facts("PairwiseAlignment") do
 
         context("deletion") do
             testaln("""
-            ACGT-
+            ACG-T
             ACGTT
             """)
 
             testaln("""
-            ACGT-
+            ACG-T
             ACGTT
             """)
 
             testaln("""
-            ACGT--
+            ACG--T
             ACGTTT
             """)
 
             testaln("""
-            AC-GT
+            A-CGT
             ACCGT
             """)
 
             testaln("""
-            AC--GT
+            A--CGT
             ACCCGT
             """)
 
@@ -371,9 +384,10 @@ facts("PairwiseAlignment") do
         affinegap = AffineGapScoreModel(submat, gap_open_penalty, gap_extend_penalty)
 
         function testaln(alnstr)
-            a, b, score = alnscore(affinegap, alnstr)
+            a, b, score, alnpair = alnscore(affinegap, alnstr)
             aln = pairalign(SemiGlobalAlignment(), a, b, affinegap)
             @fact aln.score --> score
+            @fact alignedpair(aln) --> alnpair
             aln = pairalign(SemiGlobalAlignment(), a, b, affinegap, score_only=true)
             @fact aln.score --> score
         end
@@ -412,9 +426,10 @@ facts("PairwiseAlignment") do
             affinegap = AffineGapScoreModel(submat, gap_open_penalty, gap_extend_penalty)
 
             function testaln(alnstr)
-                a, b, score = alnscore(affinegap, alnstr)
+                a, b, score, alnpair = alnscore(affinegap, alnstr)
                 aln = pairalign(LocalAlignment(), a, b, affinegap)
                 @fact aln.score --> score
+                @fact alignedpair(aln) --> alnpair
                 aln = pairalign(LocalAlignment(), a, b, affinegap, score_only=true)
                 @fact aln.score --> score
             end
@@ -439,15 +454,9 @@ facts("PairwiseAlignment") do
                 """)
 
                 testaln("""
-                 ACGT  
+                   ACGT
                 AACGTTT
-                 ^^^^
-                """)
-
-                testaln("""
-                 ACGT  
-                AACGTTT
-                 ^^^^
+                      ^
                 """)
             end
 
@@ -468,9 +477,10 @@ facts("PairwiseAlignment") do
             affinegap = AffineGapScoreModel(submat, gap_open_penalty, gap_extend_penalty)
 
             function testaln(alnstr)
-                a, b, score = alnscore(affinegap, alnstr)
+                a, b, score, alnpair = alnscore(affinegap, alnstr)
                 aln = pairalign(LocalAlignment(), a, b, affinegap)
                 @fact aln.score --> score
+                @fact alignedpair(aln) --> alnpair
                 aln = pairalign(LocalAlignment(), a, b, affinegap, score_only=true)
                 @fact aln.score --> score
             end
@@ -522,6 +532,7 @@ facts("PairwiseAlignment") do
             a, b, dist = alndistance(cost, alnstr)
             aln = pairalign(EditDistance(), a, b, cost)
             @fact aln.score --> dist
+            @fact alignedpair(aln) --> chomp(alnstr)
             aln = pairalign(EditDistance(), a, b, cost, distance_only=true)
             @fact aln.score --> dist
         end
@@ -553,12 +564,12 @@ facts("PairwiseAlignment") do
         context("insertion") do
             testaln("""
             ACGTT
-            ACGT-
+            ACG-T
             """)
 
             testaln("""
             ACGTT
-            -CGT-
+            -CG-T
             """)
         end
 
@@ -595,6 +606,7 @@ facts("PairwiseAlignment") do
             dist = sum([x != y for (x, y) in zip(a, b)])
             aln = pairalign(HammingDistance(), a, b)
             @fact aln.score --> dist
+            @fact alignedpair(aln) --> chomp(alnstr)
             aln = pairalign(HammingDistance(), a, b, distance_only=true)
             @fact aln.score --> dist
         end
