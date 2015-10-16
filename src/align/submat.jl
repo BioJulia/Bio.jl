@@ -6,7 +6,7 @@ Supertype of substitution matrix.
 
 The required method:
 
-    * `Base.getindex(submat, x, y) = <substitution score/cost from x to y>`
+* `Base.getindex(submat, x, y) = <substitution score/cost from x to y>`
 """
 abstract AbstractSubstitutionMatrix{T<:Real}
 
@@ -58,19 +58,23 @@ function load_submat(name)
 end
 
 function parse_ncbi_submat(filepath)
-    n = 24
-    submat = SubstitutionMatrix(Array{Int}(n, n))
+    ncols = 24
+    submat = SubstitutionMatrix(Array{Int}(ncols, ncols))
     fill!(submat, 0)
     open(filepath) do io
         # column => one-letter amino acid
         header = Char[]
+        # column width (inferred from the header line)
+        w = 0
         for line in eachline(io)
             if startswith(line, "#")
                 continue
             elseif isempty(header)
-                for col in 1:n
-                    char = line[3col+1]
-                    @assert char != ' '
+                # header line
+                w = div(length(line) - 2, ncols)
+                for col in 1:ncols
+                    char = line[w*col+1]
+                    @assert isalpha(char) || char == '*'
                     push!(header, char)
                 end
             else
@@ -79,13 +83,13 @@ function parse_ncbi_submat(filepath)
                     # these amino acid code are not supported by Bio.Seq
                     continue
                 end
-                for col in 1:n
+                for col in 1:ncols
                     b = header[col]
                     if b in ('B', 'Z', '*')
                         # these amino acid code are not supported by Bio.Seq
                         continue
                     end
-                    score = parse(Int, line[3col-1:3col+1])
+                    score = parse(Int, line[w*col-1:w*col+1])
                     submat[convert(AminoAcid, a), convert(AminoAcid, b)] = score
                 end
             end
@@ -95,4 +99,11 @@ function parse_ncbi_submat(filepath)
 end
 
 # predefined substitution matrices
+const PAM30  = load_submat("PAM30")
+const PAM70  = load_submat("PAM70")
+const PAM250 = load_submat("PAM250")
+const BLOSUM45 = load_submat("BLOSUM45")
+const BLOSUM50 = load_submat("BLOSUM50")
 const BLOSUM62 = load_submat("BLOSUM62")
+const BLOSUM80 = load_submat("BLOSUM80")
+const BLOSUM90 = load_submat("BLOSUM90")
