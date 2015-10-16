@@ -374,6 +374,32 @@ facts("PairwiseAlignment") do
             AAACGT
             """)
         end
+
+        context("banded") do
+            a, b, score, alnpair = alnscore(affinegap, """
+            ACGT
+            ACGT
+            """)
+            aln = pairalign(GlobalAlignment(), a, b, affinegap, banded=true)
+            @fact aln.score --> score
+            @fact alignedpair(aln) --> alnpair
+
+            a, b, score, alnpair = alnscore(affinegap, """
+            ACGT
+            AGGT
+            """)
+            aln = pairalign(GlobalAlignment(), a, b, affinegap, banded=true)
+            @fact aln.score --> score
+            @fact alignedpair(aln) --> alnpair
+
+            a, b, score, alnpair = alnscore(affinegap, """
+            ACG--T
+            ACGAAT
+            """)
+            aln = pairalign(GlobalAlignment(), a, b, affinegap, banded=true, lower=2, upper=2)
+            @fact aln.score --> score
+            @fact alignedpair(aln) --> alnpair
+        end
     end
 
     context("SemiGlobalAlignment") do

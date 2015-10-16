@@ -46,6 +46,11 @@ function AffineGapScoreModel{T}(submat::AbstractMatrix{T};
     return AffineGapScoreModel(SubstitutionMatrix(submat), gap_open_penalty, gap_extend_penalty)
 end
 
+function Base.call{T}(::Type{AffineGapScoreModel}; match::T=T(0), mismatch::T=T(0), gap_open::T=T(0), gap_extend::T=T(0))
+    submat = DichotomousSubstitutionMatrix(match, mismatch)
+    return AffineGapScoreModel{T}(submat, -gap_open, -gap_extend)
+end
+
 
 # Cost Models
 # -----------
@@ -91,4 +96,9 @@ function CostModel{T}(submat::AbstractMatrix{T};
         error("both insertion_cost and deletion_cost should be set")
     end
     return CostModel(SubstitutionMatrix(submat), insertion_cost, deletion_cost)
+end
+
+function Base.call{T}(::Type{CostModel}; match::T=T(0), mismatch::T=T(0), insertion::T=T(0), deletion::T=T(0))
+    submat = DichotomousSubstitutionMatrix(match, mismatch)
+    return CostModel{T}(submat, insertion, deletion)
 end
