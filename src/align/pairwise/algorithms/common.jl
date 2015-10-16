@@ -45,35 +45,35 @@ macro anchor(ex)
 end
 
 macro match()
-    esc(quote
+    quote
         @anchor OP_SEQ_MATCH
         i -= 1
         j -= 1
         continue
-    end)
+    end
 end
 
 macro mismatch()
-    esc(quote
+    quote
         @anchor OP_SEQ_MISMATCH
         i -= 1
         j -= 1
         continue
-    end)
+    end
 end
 
 macro insert()
-    esc(quote
+    quote
         @anchor OP_INSERT
         i -= 1
         continue
-    end)
+    end
 end
 
 macro delete()
-    esc(quote
+    quote
         @anchor OP_DELETE
         j -= 1
         continue
-    end)
+    end
 end

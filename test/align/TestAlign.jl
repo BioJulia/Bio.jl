@@ -185,7 +185,6 @@ end
 function alnscore{S,T}(::Type{S}, affinegap::AffineGapScoreModel{T}, alnstr::ASCIIString)
     gap_open = -affinegap.gap_open_penalty
     gap_extend = -affinegap.gap_extend_penalty
-    #a, b, _ = split(alnstr, '\n', limit=3)
     lines = split(chomp(alnstr), '\n')
     a, b = lines[1:2]
     m = length(a)
