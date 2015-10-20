@@ -266,12 +266,12 @@ end
 
 facts("PairwiseAlignment") do
     context("GlobalAlignment") do
-        match = 0
-        mismatch = -6
-        gap_open = -5
-        gap_extend = -3
-        submat = DichotomousSubstitutionMatrix(match, mismatch)
-        affinegap = AffineGapScoreModel(submat, -gap_open, -gap_extend)
+        affinegap = AffineGapScoreModel(
+            match=0,
+            mismatch=-6,
+            gap_open=-5,
+            gap_extend=-3
+        )
 
         function testaln(alnstr)
             a, b, score, alnpair = alnscore(affinegap, alnstr)
@@ -403,11 +403,12 @@ facts("PairwiseAlignment") do
     end
 
     context("SemiGlobalAlignment") do
-        mismatch_score = -6
-        gap_open_penalty = 5
-        gap_extend_penalty = 3
-        submat = DichotomousSubstitutionMatrix(0, mismatch_score)
-        affinegap = AffineGapScoreModel(submat, gap_open_penalty, gap_extend_penalty)
+        affinegap = AffineGapScoreModel(
+            match=0,
+            mismatch=-6,
+            gap_open=-5,
+            gap_extend=-3
+        )
 
         function testaln(alnstr)
             a, b, score, alnpair = alnscore(affinegap, alnstr)
@@ -445,11 +446,12 @@ facts("PairwiseAlignment") do
 
     context("LocalAlignment") do
         context("zero matching score") do
-            mismatch_score = -6
-            gap_open_penalty = 5
-            gap_extend_penalty = 3
-            submat = DichotomousSubstitutionMatrix(0, mismatch_score)
-            affinegap = AffineGapScoreModel(submat, gap_open_penalty, gap_extend_penalty)
+            affinegap = AffineGapScoreModel(
+                match=0,
+                mismatch=-6,
+                gap_open=-5,
+                gap_extend=-3
+            )
 
             function testaln(alnstr)
                 a, b, score, alnpair = alnscore(affinegap, alnstr)
@@ -495,12 +497,12 @@ facts("PairwiseAlignment") do
         end
 
         context("positive matching score") do
-            match_score = 5
-            mismatch_score = -6
-            gap_open_penalty = 5
-            gap_extend_penalty = 3
-            submat = DichotomousSubstitutionMatrix(match_score, mismatch_score)
-            affinegap = AffineGapScoreModel(submat, gap_open_penalty, gap_extend_penalty)
+            affinegap = AffineGapScoreModel(
+                match=5,
+                mismatch=-6,
+                gap_open=-5,
+                gap_extend=-3
+            )
 
             function testaln(alnstr)
                 a, b, score, alnpair = alnscore(affinegap, alnstr)
