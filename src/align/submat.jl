@@ -18,6 +18,9 @@ type SubstitutionMatrix{T} <: AbstractSubstitutionMatrix{T}
     submat::Matrix{T}
 end
 
+Base.convert(::Type{Matrix}, submat::SubstitutionMatrix) = submat.submat
+Base.convert{T}(::Type{Matrix{T}}, submat::SubstitutionMatrix{T}) = submat.submat
+
 @inline function Base.getindex(submat::SubstitutionMatrix, x, y)
     return submat.submat[convert(UInt8, x)+1,convert(UInt8, y)+1]
 end
