@@ -18,6 +18,15 @@ end
 
 # TODO: add useful queries
 
+function score(aln::PairwiseAlignment)
+    return aln.score
+end
+
+function alignment(aln::PairwiseAlignment)
+    pair = get(aln.seqpair)
+    return pair.first.aln
+end
+
 function Base.show{T,S1,S2}(io::IO, aln::PairwiseAlignment{T,S1,S2})
     print(io, "PairwiseAlignment{", T, ",", S1, ",", S2, "}:", '\n')
     print(io, "  score: ", aln.score)

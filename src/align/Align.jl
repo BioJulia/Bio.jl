@@ -77,7 +77,10 @@ export
     AbstractCostModel,
     CostModel,
     # pairwise alignment
-    pairalign
+    PairwiseAlignment,
+    pairalign,
+    score,
+    alignment
 
 
 include("operations.jl")

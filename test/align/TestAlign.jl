@@ -265,6 +265,19 @@ function alignedpair(aln)
 end
 
 facts("PairwiseAlignment") do
+    context("Alignment") do
+        anchors = [
+            AlignmentAnchor(0, 0, OP_START),
+            AlignmentAnchor(3, 3, OP_SEQ_MATCH)
+        ]
+        seq = AlignedSequence("ACG", anchors)
+        ref = "ACG"
+        aln = PairwiseAlignment(3, seq, ref)
+        @fact isa(aln, PairwiseAlignment) --> true
+        @fact isa(alignment(aln), Alignment) --> true
+        @fact score(aln) --> 3
+    end
+
     context("GlobalAlignment") do
         affinegap = AffineGapScoreModel(
             match=0,
