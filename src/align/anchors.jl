@@ -21,7 +21,7 @@ end
 # -------------------------------------
 
 function show(io::IO, anc::AlignmentAnchor)
-    print(io, "AlignmentAnchor(", anc.refpos, ", ", anc.seqpos, ", '", anc.op, "')")
+    print(io, "AlignmentAnchor(", anc.seqpos, ", ", anc.refpos, ", '", anc.op, "')")
 end
 
 

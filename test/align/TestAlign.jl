@@ -148,6 +148,9 @@ facts("Alignments") do
             @fact Alignment(cig, aln.anchors[1].seqpos + 1,
                             aln.anchors[1].refpos + 1) --> aln
         end
+
+        anchor = AlignmentAnchor(1, 2, OP_MATCH)
+        @fact string(anchor) --> "AlignmentAnchor(1, 2, 'M')"
     end
 end
 
