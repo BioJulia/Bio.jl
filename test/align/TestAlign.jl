@@ -154,6 +154,29 @@ facts("Alignments") do
                             aln.anchors[1].refpos + 1) --> aln
         end
     end
+
+    context("AlignedSequence") do
+        #               0   4        9  12 15     19
+        #               |   |        |  |  |      |
+        #     query:     TGGC----ATCATTTAACG---CAAG
+        # reference: AGGGTGGCATTTATCAG---ACGTTTCGAGAC
+        #               |   |   |    |     |  |   |
+        #               4   8   12   17    20 23  27
+        anchors = [
+            AlignmentAnchor(0, 4, OP_START),
+            AlignmentAnchor(4, 8, OP_MATCH),
+            AlignmentAnchor(4, 12, OP_DELETE),
+            AlignmentAnchor(9, 17, OP_MATCH),
+            AlignmentAnchor(12, 17, OP_INSERT),
+            AlignmentAnchor(15, 20, OP_MATCH),
+            AlignmentAnchor(15, 23, OP_DELETE),
+            AlignmentAnchor(19, 27, OP_MATCH)
+        ]
+        query = "TGGCATCATTTAACGCAAG"
+        alnseq = AlignedSequence(query, anchors)
+        @fact Bio.Align.first(alnseq) --> 5
+        @fact Bio.Align.last(alnseq) --> 27
+    end
 end
 
 end # TestAlign

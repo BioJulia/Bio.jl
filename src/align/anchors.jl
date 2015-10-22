@@ -78,7 +78,8 @@ immutable Alignment
         firstref = 0
         for i in 1:length(anchors)
             if ismatchop(anchors[i].op)
-                firstref = anchors[i-1].refpos
+                firstref = anchors[i-1].refpos + 1
+                break
             end
         end
 
@@ -86,6 +87,7 @@ immutable Alignment
         for i in length(anchors):-1:1
             if ismatchop(anchors[i].op)
                 lastref = anchors[i].refpos
+                break
             end
         end
 
