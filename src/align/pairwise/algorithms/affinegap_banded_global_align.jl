@@ -1,6 +1,11 @@
 # Run dynamic programming only within a band.
 # Formally, a[i] and b[j] can be matched only if -L ≤ j - i ≤ U.
-function affinegap_banded_global_align{T}(a, b, L::Int, U::Int, submat::AbstractSubstitutionMatrix{T}, gap_open_penalty::T, gap_extend_penalty::T)
+function affinegap_banded_global_align{T}(
+        a, b,
+        L::Int, U::Int,
+        submat::AbstractSubstitutionMatrix{T},
+        gap_open_penalty::T,
+        gap_extend_penalty::T)
     m = length(a)
     n = length(b)
     go = gap_open_penalty
