@@ -27,8 +27,8 @@ end
 
 macro finish_traceback()
     quote
-        push!(anchors, AlignmentAnchor(anchor_point[1], anchor_point[2], op))
-        push!(anchors, AlignmentAnchor(i, j, OP_START))
+        push!(anchors, AlignmentAnchor(anchor_point, op))
+        push!(anchors, AlignmentAnchor((i, j), OP_START))
         reverse!(anchors)
         pop!(anchors)  # remove OP_INVALID
     end
@@ -37,39 +37,19 @@ end
 macro anchor(ex)
     esc(quote
         if op != $ex
-            push!(anchors, AlignmentAnchor(anchor_point[1], anchor_point[2], op))
+            push!(anchors, AlignmentAnchor(anchor_point, op))
             op = $ex
             anchor_point = (i, j)
         end
+        if ismatchop(op)
+            i -= 1
+            j -= 1
+        elseif isinsertop(op)
+            i -= 1
+        elseif isdeleteop(op)
+            j -= 1
+        else
+            @assert false
+        end
     end)
-end
-
-macro match()
-    quote
-        @anchor OP_SEQ_MATCH
-        i -= 1
-        j -= 1
-    end
-end
-
-macro mismatch()
-    quote
-        @anchor OP_SEQ_MISMATCH
-        i -= 1
-        j -= 1
-    end
-end
-
-macro insert()
-    quote
-        @anchor OP_INSERT
-        i -= 1
-    end
-end
-
-macro delete()
-    quote
-        @anchor OP_DELETE
-        j -= 1
-    end
 end

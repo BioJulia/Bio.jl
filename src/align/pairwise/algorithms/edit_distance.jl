@@ -38,14 +38,14 @@ function edit_traceback(a, b, trace, endpos)
         t = trace[i+1,j+1]
         if t & TRACE_MATCH > 0
             if a[i] == b[j]
-                @match
+                @anchor OP_SEQ_MATCH
             else
-                @mismatch
+                @anchor OP_SEQ_MISMATCH
             end
         elseif t & TRACE_DELETE > 0
-            @delete
+            @anchor OP_DELETE
         elseif t & TRACE_INSERT > 0
-            @insert
+            @anchor OP_INSERT
         else
             error("failed to trace back")
         end

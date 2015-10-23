@@ -16,6 +16,10 @@ immutable AlignmentAnchor
     op::Operation
 end
 
+function AlignmentAnchor(pos::Tuple{Int,Int}, op)
+    return AlignmentAnchor(pos[1], pos[2], op)
+end
+
 
 # Basic operators for AlignmentAnchors
 # -------------------------------------
