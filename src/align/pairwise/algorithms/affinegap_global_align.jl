@@ -1,4 +1,8 @@
-function affinegap_global_align{T}(a, b, submat::AbstractSubstitutionMatrix{T}, gap_open_penalty::T, gap_extend_penalty::T)
+function affinegap_global_align{T}(
+        a, b,
+        submat::AbstractSubstitutionMatrix{T},
+        gap_open_penalty::T,
+        gap_extend_penalty::T)
     m = length(a)
     n = length(b)
     go = gap_open_penalty
