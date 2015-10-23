@@ -4,32 +4,35 @@
 typealias PairedSequences{S1,S2} Pair{AlignedSequence{S1},S2}
 
 type PairwiseAlignment{T,S1,S2}
-    score::T
+    # alignment score/distance
+    value::T
+    isscore::Bool
+    # sequence and reference pair
     seqpair::Nullable{PairedSequences{S1,S2}}
 end
 
-function Base.call{S1,S2}(::Type{PairwiseAlignment{S1,S2}}, score)
-    return PairwiseAlignment(score, Nullable{PairedSequences{S1,S2}}())
+function PairwiseAlignment(value, isscore, seq, ref)
+    return PairwiseAlignment(value, isscore, Nullable(seq => ref))
 end
 
-function PairwiseAlignment(score, seq, ref)
-    return PairwiseAlignment(score, Nullable(seq => ref))
+function Base.call{S1,S2}(::Type{PairwiseAlignment{S1,S2}}, value, isscore)
+    return PairwiseAlignment(value, isscore, Nullable{PairedSequences{S1,S2}}())
 end
 
 # TODO: add useful queries
 
-function score(aln::PairwiseAlignment)
-    return aln.score
-end
-
-function alignment(aln::PairwiseAlignment)
-    pair = get(aln.seqpair)
-    return pair.first.aln
-end
+# accessors
+score(aln::PairwiseAlignment) = aln.value
+distance(aln::PairwiseAlignment) = aln.value
+alignment(aln::PairwiseAlignment) = get(aln.seqpair).first.aln
 
 function Base.show{T,S1,S2}(io::IO, aln::PairwiseAlignment{T,S1,S2})
     print(io, "PairwiseAlignment{", T, ",", S1, ",", S2, "}:", '\n')
-    print(io, "  score: ", aln.score)
+    if aln.isscore
+        print(io, "  score: ", aln.value)
+    else
+        print(io, "  distance: ", aln.value)
+    end
     if !isnull(aln.seqpair)
         pair = get(aln.seqpair)
         seq = pair.first

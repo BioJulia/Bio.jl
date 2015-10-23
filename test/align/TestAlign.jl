@@ -272,7 +272,7 @@ facts("PairwiseAlignment") do
         ]
         seq = AlignedSequence("ACG", anchors)
         ref = "ACG"
-        aln = PairwiseAlignment(3, seq, ref)
+        aln = PairwiseAlignment(3, true, seq, ref)
         @fact isa(aln, PairwiseAlignment) --> true
         @fact isa(alignment(aln), Alignment) --> true
         @fact score(aln) --> 3
@@ -287,17 +287,17 @@ facts("PairwiseAlignment") do
         )
 
         function testaln(alnstr)
-            a, b, score, alnpair = alnscore(affinegap, alnstr)
+            a, b, s, alnpair = alnscore(affinegap, alnstr)
             aln = pairalign(GlobalAlignment(), a, b, affinegap)
-            @fact aln.score --> score
+            @fact score(aln) --> s
             @fact alignedpair(aln) --> alnpair
             aln = pairalign(GlobalAlignment(), a, b, affinegap, score_only=true)
-            @fact aln.score --> score
+            @fact score(aln) --> s
         end
 
         context("empty sequences") do
             aln = pairalign(GlobalAlignment(), "", "", affinegap)
-            @fact aln.score --> 0
+            @fact score(aln) --> 0
         end
 
         context("complete match") do
@@ -389,28 +389,28 @@ facts("PairwiseAlignment") do
         end
 
         context("banded") do
-            a, b, score, alnpair = alnscore(affinegap, """
+            a, b, s, alnpair = alnscore(affinegap, """
             ACGT
             ACGT
             """)
             aln = pairalign(GlobalAlignment(), a, b, affinegap, banded=true)
-            @fact aln.score --> score
+            @fact score(aln) --> s
             @fact alignedpair(aln) --> alnpair
 
-            a, b, score, alnpair = alnscore(affinegap, """
+            a, b, s, alnpair = alnscore(affinegap, """
             ACGT
             AGGT
             """)
             aln = pairalign(GlobalAlignment(), a, b, affinegap, banded=true)
-            @fact aln.score --> score
+            @fact score(aln) --> s
             @fact alignedpair(aln) --> alnpair
 
-            a, b, score, alnpair = alnscore(affinegap, """
+            a, b, s, alnpair = alnscore(affinegap, """
             ACG--T
             ACGAAT
             """)
             aln = pairalign(GlobalAlignment(), a, b, affinegap, banded=true, lower=2, upper=2)
-            @fact aln.score --> score
+            @fact score(aln) --> s
             @fact alignedpair(aln) --> alnpair
         end
     end
@@ -424,12 +424,12 @@ facts("PairwiseAlignment") do
         )
 
         function testaln(alnstr)
-            a, b, score, alnpair = alnscore(affinegap, alnstr)
+            a, b, s, alnpair = alnscore(affinegap, alnstr)
             aln = pairalign(SemiGlobalAlignment(), a, b, affinegap)
-            @fact aln.score --> score
+            @fact score(aln) --> s
             @fact alignedpair(aln) --> alnpair
             aln = pairalign(SemiGlobalAlignment(), a, b, affinegap, score_only=true)
-            @fact aln.score --> score
+            @fact score(aln) --> s
         end
 
         context("complete match") do
@@ -467,17 +467,17 @@ facts("PairwiseAlignment") do
             )
 
             function testaln(alnstr)
-                a, b, score, alnpair = alnscore(affinegap, alnstr)
+                a, b, s, alnpair = alnscore(affinegap, alnstr)
                 aln = pairalign(LocalAlignment(), a, b, affinegap)
-                @fact aln.score --> score
+                @fact score(aln) --> s
                 @fact alignedpair(aln) --> alnpair
                 aln = pairalign(LocalAlignment(), a, b, affinegap, score_only=true)
-                @fact aln.score --> score
+                @fact score(aln) --> s
             end
 
             context("empty sequences") do
                 aln = pairalign(LocalAlignment(), "", "", affinegap)
-                @fact aln.score --> 0
+                @fact score(aln) --> 0
             end
 
             context("complete match") do
@@ -505,7 +505,7 @@ facts("PairwiseAlignment") do
                 a = "AA"
                 b = "TTTT"
                 aln = pairalign(LocalAlignment(), a, b, affinegap)
-                @fact aln.score --> 0
+                @fact score(aln) --> 0
             end
         end
 
@@ -518,12 +518,12 @@ facts("PairwiseAlignment") do
             )
 
             function testaln(alnstr)
-                a, b, score, alnpair = alnscore(affinegap, alnstr)
+                a, b, s, alnpair = alnscore(affinegap, alnstr)
                 aln = pairalign(LocalAlignment(), a, b, affinegap)
-                @fact aln.score --> score
+                @fact score(aln) --> s
                 @fact alignedpair(aln) --> alnpair
                 aln = pairalign(LocalAlignment(), a, b, affinegap, score_only=true)
-                @fact aln.score --> score
+                @fact score(aln) --> s
             end
 
             context("complete match") do
@@ -557,7 +557,7 @@ facts("PairwiseAlignment") do
                 a = "AA"
                 b = "TTTT"
                 aln = pairalign(LocalAlignment(), a, b, affinegap)
-                @fact aln.score --> 0
+                @fact score(aln) --> 0
             end
         end
     end
@@ -572,15 +572,15 @@ facts("PairwiseAlignment") do
         function testaln(alnstr)
             a, b, dist = alndistance(cost, alnstr)
             aln = pairalign(EditDistance(), a, b, cost)
-            @fact aln.score --> dist
+            @fact distance(aln) --> dist
             @fact alignedpair(aln) --> chomp(alnstr)
             aln = pairalign(EditDistance(), a, b, cost, distance_only=true)
-            @fact aln.score --> dist
+            @fact distance(aln) --> dist
         end
 
         context("empty sequences") do
             aln = pairalign(EditDistance(), "", "", cost)
-            @fact aln.score --> 0
+            @fact distance(aln) --> 0
         end
 
         context("complete match") do
@@ -630,14 +630,14 @@ facts("PairwiseAlignment") do
     context("LevenshteinDistance") do
         context("empty sequences") do
             aln = pairalign(LevenshteinDistance(), "", "")
-            @fact aln.score --> 0
+            @fact distance(aln) --> 0
         end
 
         context("complete match") do
             a = "ACGT"
             b = "ACGT"
             aln = pairalign(LevenshteinDistance(), a, b)
-            @fact aln.score --> 0
+            @fact distance(aln) --> 0
         end
     end
 
@@ -646,15 +646,15 @@ facts("PairwiseAlignment") do
             a, b = split(chomp(alnstr), '\n')
             dist = sum([x != y for (x, y) in zip(a, b)])
             aln = pairalign(HammingDistance(), a, b)
-            @fact aln.score --> dist
+            @fact distance(aln) --> dist
             @fact alignedpair(aln) --> chomp(alnstr)
             aln = pairalign(HammingDistance(), a, b, distance_only=true)
-            @fact aln.score --> dist
+            @fact distance(aln) --> dist
         end
 
         context("empty sequences") do
             aln = pairalign(HammingDistance(), "", "")
-            @fact aln.score --> 0
+            @fact distance(aln) --> 0
         end
 
         context("complete match") do

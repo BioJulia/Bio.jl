@@ -96,27 +96,26 @@ type CostModel{T} <: AbstractCostModel{T}
     submat::AbstractSubstitutionMatrix{T}
     insertion_cost::T
     deletion_cost::T
+
+    function CostModel(submat, insertion_cost, deletion_cost)
+        @assert insertion_cost ≥ 0 "insertion_cost should be non-negative"
+        @assert deletion_cost ≥ 0 " deletion_cost should be non-negative"
+        return new(submat, insertion_cost, deletion_cost)
+    end
 end
 
-function CostModel{T}(submat::AbstractSubstitutionMatrix{T},
-                      insertion_cost, deletion_cost)
-    return CostModel{T}(submat, insertion_cost, deletion_cost)
+function CostModel{T}(submat::AbstractSubstitutionMatrix{T}, insertion, deletion)
+    return CostModel{T}(submat, insertion, deletion)
 end
 
 function CostModel{T}(submat::AbstractSubstitutionMatrix{T};
-                      insertion_cost=nothing, deletion_cost=nothing)
-    if insertion_cost === nothing || deletion_cost === nothing
-        error("both insertion_cost and deletion_cost should be set")
-    end
-    return CostModel(submat, insertion_cost, deletion_cost)
+                      insertion=T(0), deletion=T(0))
+    return CostModel(submat, insertion, deletion)
 end
 
 function CostModel{T}(submat::AbstractMatrix{T};
-                      insertion_cost=nothing, deletion_cost=nothing)
-    if insertion_cost === nothing || deletion_cost === nothing
-        error("both insertion_cost and deletion_cost should be set")
-    end
-    return CostModel(SubstitutionMatrix(submat), insertion_cost, deletion_cost)
+                      insertion=T(0), deletion=T(0))
+    return CostModel(SubstitutionMatrix(submat), insertion, deletion)
 end
 
 function Base.call{T}(::Type{CostModel}; match::T=T(0), mismatch::T=T(0), insertion::T=T(0), deletion::T=T(0))

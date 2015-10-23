@@ -80,6 +80,7 @@ export
     PairwiseAlignment,
     pairalign,
     score,
+    distance,
     alignment
 
 

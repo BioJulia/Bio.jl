@@ -29,20 +29,20 @@ function pairalign{S1,S2}(::GlobalAlignment, a::S1, b::S2, score::AffineGapScore
         end
         if score_only
             score, _ = affinegap_banded_global_align(a, b, L, U, submat, gop, gep)
-            return PairwiseAlignment{S1,S2}(score)
+            return PairwiseAlignment{S1,S2}(score, true)
         else
             score, trace = affinegap_banded_global_align(a, b, L, U, submat, gop, gep)
             a′ = affinegap_banded_global_traceback(a, b, U, trace, (length(a), length(b)))
-            return PairwiseAlignment(score, a′, b)
+            return PairwiseAlignment(score, true, a′, b)
         end
     else
         if score_only
             score, _ = affinegap_global_align(a, b, submat, gop, gep)
-            return PairwiseAlignment{S1,S2}(score)
+            return PairwiseAlignment{S1,S2}(score, true)
         else
             score, trace = affinegap_global_align(a, b, submat, gop, gep)
             a′ = affinegap_global_traceback(a, b, trace, (length(a), length(b)))
-            return PairwiseAlignment(score, a′, b)
+            return PairwiseAlignment(score, true, a′, b)
         end
     end
 end
@@ -54,11 +54,11 @@ function pairalign{S1,S2}(::LocalAlignment, a::S1, b::S2, score::AffineGapScoreM
     gep = score.gap_extend_penalty
     if score_only
         score, _, _ = affinegap_local_align(a, b, submat, gop, gep)
-        return PairwiseAlignment{S1,S2}(score)
+        return PairwiseAlignment{S1,S2}(score, true)
     else
         score, trace, best_endpos = affinegap_local_align(a, b, submat, gop, gep)
         a′ = affine_local_traceback(a, b, trace, best_endpos)
-        return PairwiseAlignment(score, a′, b)
+        return PairwiseAlignment(score, true, a′, b)
     end
 end
 
@@ -69,11 +69,11 @@ function pairalign{S1,S2}(::SemiGlobalAlignment, a::S1, b::S2, score::AffineGapS
     gep = score.gap_extend_penalty
     if score_only
         score, _, _ = affinegap_semiglobal_align(a, b, submat, gop, gep)
-        return PairwiseAlignment{S1,S2}(score)
+        return PairwiseAlignment{S1,S2}(score, true)
     else
         score, trace, best_endpos = affinegap_semiglobal_align(a, b, submat, gop, gep)
         a′ = affinegap_semiglobal_traceback(a, b, trace, best_endpos)
-        return PairwiseAlignment(score, a′, b)
+        return PairwiseAlignment(score, true, a′, b)
     end
 end
 
@@ -84,11 +84,11 @@ function pairalign{S1,S2}(::EditDistance, a::S1, b::S2, cost::CostModel;
     del = cost.deletion_cost
     if distance_only
         distance, _, _ = edit_distance(a, b, submat, ins, del)
-        return PairwiseAlignment{S1,S2}(distance)
+        return PairwiseAlignment{S1,S2}(distance, false)
     else
         distance, trace, endpos = edit_distance(a, b, submat, ins, del)
         a′ = edit_traceback(a, b, trace, endpos)
-        return PairwiseAlignment(distance, a′, b)
+        return PairwiseAlignment(distance, false, a′, b)
     end
 end
 
@@ -96,8 +96,8 @@ function pairalign{S1,S2}(::LevenshteinDistance, a::S1, b::S2;
                           distance_only::Bool=false)
     unitcost = CostModel(
         UnitSubstitutionCost{Int}(),
-        insertion_cost=1,
-        deletion_cost=1
+        insertion=1,
+        deletion=1
     )
     return pairalign(EditDistance(), a, b, unitcost, distance_only=distance_only)
 end
@@ -106,10 +106,10 @@ function pairalign{S1,S2}(::HammingDistance, a::S1, b::S2;
                           distance_only::Bool=false)
     if distance_only
         distance, _ = hamming_distance(Int, a, b)
-        return PairwiseAlignment{S1,S2}(distance)
+        return PairwiseAlignment{S1,S2}(distance, false)
     else
         distance, anchors = hamming_distance(Int, a, b)
         a′ = AlignedSequence(a, anchors)
-        return PairwiseAlignment(distance, a′, b)
+        return PairwiseAlignment(distance, true, a′, b)
     end
 end
