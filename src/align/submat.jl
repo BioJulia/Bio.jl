@@ -15,21 +15,21 @@ abstract AbstractSubstitutionMatrix{T<:Real}
 Substitution matrix.
 """
 type SubstitutionMatrix{T} <: AbstractSubstitutionMatrix{T}
-    submat::Matrix{T}
+    data::Matrix{T}
 end
 
-Base.convert(::Type{Matrix}, submat::SubstitutionMatrix) = submat.submat
-Base.convert{T}(::Type{Matrix{T}}, submat::SubstitutionMatrix{T}) = submat.submat
+Base.convert(::Type{Matrix}, submat::SubstitutionMatrix) = submat.data
+Base.convert{T}(::Type{Matrix{T}}, submat::SubstitutionMatrix{T}) = submat.data
 
 @inline function Base.getindex(submat::SubstitutionMatrix, x, y)
-    return submat.submat[convert(UInt8, x)+1,convert(UInt8, y)+1]
+    return submat.data[convert(UInt8, x)+1,convert(UInt8, y)+1]
 end
 function Base.setindex!(submat::SubstitutionMatrix, v, x, y)
-    submat.submat[convert(UInt8, x)+1,convert(UInt8, y)+1] = v
+    submat.data[convert(UInt8, x)+1,convert(UInt8, y)+1] = v
     return submat
 end
 function Base.fill!(submat::SubstitutionMatrix, v)
-    return fill!(submat.submat, v)
+    return fill!(submat.data, v)
 end
 
 
