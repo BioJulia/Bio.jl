@@ -22,13 +22,14 @@ function affinegap_local_align{T}(
         best_score = T(0)
         best_endpos = (0, 0)
         for j in 1:n
+            b_j = b[j]
             h_diag = H[1]
             H[1] = T(0)
             f = H[1] - goe
             trace[1,j+1] = TRACE_NONE
             for i in 1:m
                 e = E[i]
-                h = h_diag + submat[a[i],b[j]]
+                h = h_diag + submat[a[i],b_j]
                 best = max(T(0), e, f, h)
                 # trace
                 t = TRACE_NONE

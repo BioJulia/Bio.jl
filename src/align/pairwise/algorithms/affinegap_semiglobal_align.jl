@@ -1,5 +1,9 @@
 # global-local alignment
-function affinegap_semiglobal_align{T}(a, b, submat::AbstractSubstitutionMatrix{T}, gap_open_penalty::T, gap_extend_penalty::T)
+function affinegap_semiglobal_align{T}(
+        a, b,
+        submat::AbstractSubstitutionMatrix{T},
+        gap_open_penalty::T,
+        gap_extend_penalty::T)
     m = length(a)
     n = length(b)
     go = gap_open_penalty
@@ -14,38 +18,29 @@ function affinegap_semiglobal_align{T}(a, b, submat::AbstractSubstitutionMatrix{
         trace[1,1] = TRACE_NONE
         for i in 1:m
             H[i+1] = affinegap_score(i, go, ge)
+            E[i] = H[i+1] - goe
             trace[i+1,1] = TRACE_INSERT
         end
         best_score = H[m+1]
         best_score_column = 0
         for j in 1:n
+            b_j = b[j]
             h_diag = H[1]
             H[1] = T(0)
+            f = H[1] - goe
             trace[1,j+1] = TRACE_NONE
-            # any value goes well since this will be set in the first iteration
-            F = T(0)
             for i in 1:m
-                # gap in the sequence A (deletion)
-                e = H[i+1] - goe
-                if j > 1
-                    e = max(e, E[i] - ge)
-                end
-                # gap in the sequence B (insertion)
-                f = H[i] - goe
-                if i > 1
-                    f = max(f, F - ge)
-                end
-                # match
-                h = h_diag + submat[a[i],b[j]]
-                # find the best score and its trace
+                e = E[i]
+                h = h_diag + submat[a[i],b_j]
                 best = max(e, f, h)
+                # trace
                 t = TRACE_NONE
                 e == best && (t |= TRACE_DELETE)
                 f == best && (t |= TRACE_INSERT)
                 h == best && (t |= TRACE_MATCH)
                 # update
-                E[i] = e
-                F = f
+                E[i] = max(e - ge, h - goe)
+                f    = max(f - ge, h - goe)
                 h_diag = H[i+1]
                 H[i+1] = best
                 trace[i+1,j+1] = t
