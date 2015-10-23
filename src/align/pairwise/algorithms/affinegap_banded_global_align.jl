@@ -26,46 +26,36 @@ function affinegap_banded_global_align{T}(a, b, L::Int, U::Int, submat::Abstract
         H[0-0+U+1] = T(0)
         trace[0-0+U+1,0+1] = TRACE_NONE
         for i in 1:L
-            # j = 0
             H[i-0+U+1] = affinegap_score(i, go, ge)
+            E[i-1+U+1] = H[i-0+U+1] - goe
             trace[i-0+U+1,0+1] = TRACE_INSERT
         end
-        # add gap_extend_penalty to avoid overflow for integers
+        # NOTE: gap_extend_penalty is added in order to avoid overflow for integers
         minimum = typemin(T) + ge
         for j in 1:n
+            b_j = b[j]
             if j ≤ U
-                # i = 0
                 H[0-j+U+1] = affinegap_score(j, go, ge)
+                f = H[0-j+U+1] - goe
                 trace[0-j+U+1,j+1] = TRACE_DELETE
+            else
+                f = minimum
             end
-            F = T(0)
             # vertical bounds along the j-th column
             lo = max(1, j - U)
             hi = min(m, j + L)
             for i in lo:hi
-                # gap in the sequence A
-                if j == 1 || i == j + L
-                    e = minimum
-                else
-                    e = max(H[i-(j-1)+U+1] - goe, E[i-(j-1)+U+1] - ge)
-                end
-                # gap in the sequence B
-                if i == 1 || j == i + U
-                    f = minimum
-                else
-                    f = max(H[(i-1)-j+U+1] - goe, F - ge)
-                end
-                # match
-                h = H[i-j+U+1] + submat[a[i],b[j]]
-                # find the best score and its trace
+                e = ifelse(i == hi, minimum, E[i-j+U+1])
+                h = H[i-j+U+1] + submat[a[i],b_j]
                 best = max(e, f, h)
+                # trace
                 t = TRACE_NONE
                 e == best && (t |= TRACE_DELETE)
                 f == best && (t |= TRACE_INSERT)
                 h == best && (t |= TRACE_MATCH)
                 # update
-                E[i-j+U+1] = e
-                F = f
+                E[i-(j+1)+U+1] = max(e - ge, h - goe)
+                f              = max(f - ge, h - goe)
                 H[i-j+U+1] = best
                 trace[i-j+U+1,j+1] = t
             end
