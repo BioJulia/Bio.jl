@@ -95,7 +95,7 @@ end
 function pairalign{S1,S2}(::LevenshteinDistance, a::S1, b::S2;
                           distance_only::Bool=false)
     unitcost = CostModel(
-        UnitSubstitutionCost{Int}(),
+        DichotomousSubstitutionMatrix{Int}(0, 1),
         insertion=1,
         deletion=1
     )
