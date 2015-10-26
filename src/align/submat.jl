@@ -63,6 +63,9 @@ function Base.fill!(submat::SubstitutionMatrix, v)
     return fill!(submat.data, v)
 end
 
+Base.minimum(submat::SubstitutionMatrix) = minimum(submat.data)
+Base.maximum(submat::SubstitutionMatrix) = maximum(submat.data)
+
 function Base.show(io::IO, submat::SubstitutionMatrix)
     alphabet = get(submat.alphabet, UInt8)
     sz = size(submat.data, 1)
