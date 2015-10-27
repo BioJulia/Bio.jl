@@ -182,7 +182,7 @@ end
 
 
 # generate test cases from two aligned sequences
-function alnscore{S,T}(::Type{S}, affinegap::AffineGapScoreModel{T}, alnstr::ASCIIString)
+function alnscore{S,T}(::Type{S}, affinegap::AffineGapScoreModel{T}, alnstr::ASCIIString, clip::Bool)
     gap_open = -affinegap.gap_open_penalty
     gap_extend = -affinegap.gap_extend_penalty
     lines = split(chomp(alnstr), '\n')
@@ -224,11 +224,11 @@ function alnscore{S,T}(::Type{S}, affinegap::AffineGapScoreModel{T}, alnstr::ASC
     end
     sa = S(replace(a, r"\s|-", ""))
     sb = S(replace(b, r"\s|-", ""))
-    return sa, sb, score, string(a[start:stop], '\n', b[start:stop])
+    return sa, sb, score, clip ? string(a[start:stop], '\n', b[start:stop]) : string(a, '\n', b)
 end
 
-function alnscore{T}(affinegap::AffineGapScoreModel{T}, alnstr::ASCIIString)
-    return alnscore(ASCIIString, affinegap, alnstr)
+function alnscore{T}(affinegap::AffineGapScoreModel{T}, alnstr::ASCIIString; clip=true)
+    return alnscore(ASCIIString, affinegap, alnstr, clip)
 end
 
 function alndistance{S,T}(::Type{S}, cost::CostModel{T}, alnstr::ASCIIString)
@@ -322,68 +322,68 @@ facts("PairwiseAlignment") do
         context("insertion") do
             testaln("""
             ACGTT
-            ACG-T
+            ACGT-
             """)
 
             testaln("""
             ACGTTT
-            ACG--T
+            ACGT--
             """)
 
             testaln("""
             ACCGT
-            A-CGT
+            AC-GT
             """)
 
             testaln("""
             ACCCGT
-            A--CGT
+            AC--GT
             """)
 
             testaln("""
             AACGT
-            -ACGT
+            A-CGT
             """)
 
             testaln("""
             AAACGT
-            --ACGT
+            A--CGT
             """)
         end
 
         context("deletion") do
             testaln("""
-            ACG-T
+            ACGT-
             ACGTT
             """)
 
             testaln("""
-            ACG-T
+            ACGT-
             ACGTT
             """)
 
             testaln("""
-            ACG--T
+            ACGT--
             ACGTTT
             """)
 
             testaln("""
-            A-CGT
+            AC-GT
             ACCGT
             """)
 
             testaln("""
-            A--CGT
+            AC--GT
             ACCCGT
             """)
 
             testaln("""
-            -ACGT
+            A-CGT
             AACGT
             """)
 
             testaln("""
-            --ACGT
+            A--CGT
             AAACGT
             """)
         end
@@ -409,7 +409,7 @@ facts("PairwiseAlignment") do
             ACG--T
             ACGAAT
             """)
-            aln = pairalign(GlobalAlignment(), a, b, affinegap, banded=true, lower=2, upper=2)
+            aln = pairalign(GlobalAlignment(), a, b, affinegap, banded=true, lower_offset=0, upper_offset=0)
             @fact score(aln) --> s
             @fact alignedpair(aln) --> alnpair
         end
@@ -424,7 +424,7 @@ facts("PairwiseAlignment") do
         )
 
         function testaln(alnstr)
-            a, b, s, alnpair = alnscore(affinegap, alnstr)
+            a, b, s, alnpair = alnscore(affinegap, alnstr, clip=false)
             aln = pairalign(SemiGlobalAlignment(), a, b, affinegap)
             @fact score(aln) --> s
             @fact alignedpair(aln) --> alnpair
@@ -441,18 +441,21 @@ facts("PairwiseAlignment") do
 
         context("partial match") do
             testaln("""
-              ACTT   
+            --ACTT---
             TTACGTAGT
+              ^^^^
             """)
 
             testaln("""
-              AC-TTG 
+            --AC-TTG-
             TTACGTTGT
+              ^^^^^^
             """)
 
             testaln("""
-              ACTAGT   
+            --ACTAGT---
             TTAC--GTTGT
+              ^^^^^^
             """)
         end
     end

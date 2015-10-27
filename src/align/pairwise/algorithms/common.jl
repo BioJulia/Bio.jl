@@ -10,10 +10,12 @@ end
 typealias Trace UInt8
 
 # trace bitmap
-const TRACE_NONE   = 0b0000
-const TRACE_MATCH  = 0b0001
-const TRACE_DELETE = 0b0010
-const TRACE_INSERT = 0b0100
+const TRACE_NONE   = 0b00000
+const TRACE_MATCH  = 0b00001
+const TRACE_DELETE = 0b00010
+const TRACE_INSERT = 0b00100
+const TRACE_EXTDEL = 0b01000
+const TRACE_EXTINS = 0b10000
 
 
 # utils for tracing back
