@@ -91,7 +91,7 @@ end
 # Type stable construction is made much more easy with a macro:
 
 "annotations Macro, allows easy construction of Annotations objects by providing a list of keyword-value pairs."
-macro annots(kwargs...)
+macro annotations(kwargs...)
     labels = map(i -> i.args[1], kwargs)
     data = Expr(:tuple, map(i -> i.args[2], kwargs)...)
     :(AnnotationContainer($data, Tuple{$(labels...)}))
