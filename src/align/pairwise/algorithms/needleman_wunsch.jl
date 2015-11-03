@@ -26,42 +26,37 @@ function ensureroom!(nw::NeedlemanWunsch, m, n)
     return nw
 end
 
-macro update(i, j, b_j)
-    quote
-        i = $(esc(i))
-        j = $(esc(j))
+# Generate a code block that updates the current score and trace.
+macro update()
+    esc(quote
         e = E[i]
-        g = h_diag + submat[a[i],$(esc(b_j))]
+        g = h_diag + submat[a[i],b_j]
         h = max(e, f, g)
-        $(esc(:h_diag)) = H[i+1]
+        h_diag = H[i+1]
         H[i+1] = h
         t = trace[i+1,j+1] | ft
         e == h && (t |= TRACE_DELETE)
         f == h && (t |= TRACE_INSERT)
         g == h && (t |= TRACE_MATCH)
         trace[i+1,j+1] = t
-    end
+    end)
 end
 
-macro update_nextcol(i, gap_init, gap_extend)
-    quote
-        i = $(esc(i))
-        e = E[i]
-        h = H[i+1]
-        e′ = e + $(esc(gap_extend))
-        e = max(e′, h + $(esc(gap_init)))
+macro update_nextcol(gap_init, gap_extend)
+    esc(quote
+        e′ = e + $gap_extend
+        e = max(e′, h + $gap_init)
         E[i] = e
         et = TRACE_NONE
         e == e′ && (et |= TRACE_EXTDEL)
         trace[i+1,j+2] = et
-    end
+    end)
 end
 
-macro update_nextrow(i, gap_init, gap_extend)
+macro update_nextrow(gap_init, gap_extend)
     esc(quote
-        h = H[$(i)+1]
-        f′ = f + $(gap_extend)
-        f = max(f′, h + $(gap_init))
+        f′ = f + $gap_extend
+        f = max(f′, h + $gap_init)
         ft = TRACE_NONE
         f == f′ && (ft |= TRACE_EXTINS)
     end)
@@ -126,16 +121,12 @@ function run!{T}(
         return start_gap_open_b + start_gap_extend_b * m
     else
         # initialize the first column of H, E, and trace
-        for i in 1:m-1
+        @inbounds for i in 1:m
             H[i+1] = start_gap_open_b + start_gap_extend_b * i
-            E[i] = H[i+1] + middle_gap_init_a
+            E[i] = H[i+1] + (i == m ? end_gap_init_a : middle_gap_init_a)
             trace[i+1,1] = TRACE_INSERT
             trace[i+1,2] = TRACE_NONE
         end
-        H[m+1] = start_gap_open_b + start_gap_extend_b * m
-        E[m] = H[m+1] + end_gap_init_a
-        trace[m+1,1] = TRACE_INSERT
-        trace[m+1,2] = TRACE_NONE
 
         # run dynamic programming column by column (except the last column)
         @inbounds for j in 1:n-1
@@ -147,30 +138,34 @@ function run!{T}(
             trace[1,j+1] = TRACE_DELETE
             # inner loop along the sequence a
             for i in 1:m-1
-                @update i j b_j
-                @update_nextcol i middle_gap_init_a middle_gap_extend_a
-                @update_nextrow i middle_gap_init_b middle_gap_extend_b
+                @update
+                @update_nextcol middle_gap_init_a middle_gap_extend_a
+                @update_nextrow middle_gap_init_b middle_gap_extend_b
             end
             # fill the final row
-            @update m j b_j
-            @update_nextcol m end_gap_init_a end_gap_extend_a
+            let i = m
+                @update
+                @update_nextcol end_gap_init_a end_gap_extend_a
+            end
         end
 
         # fill the last column
-        let
-            b_n = b[n]
+        let j = n
+            b_j = b[j]
             h_diag = H[1]
-            H[1] = start_gap_open_a + start_gap_extend_a * n
+            H[1] = start_gap_open_a + start_gap_extend_a * j
             f = H[1] + end_gap_init_b
             ft = TRACE_NONE
-            trace[1,n+1] = TRACE_DELETE
+            trace[1,j+1] = TRACE_DELETE
             # inner loop along the sequence a
             @inbounds for i in 1:m-1
-                @update i n b_n
-                @update_nextrow i end_gap_init_b end_gap_extend_b
+                @update
+                @update_nextrow end_gap_init_b end_gap_extend_b
             end
             # finally, fill the last element of the DP matrices
-            @update m n b_n
+            let i = m
+                @update
+            end
         end
 
         return H[m+1]
