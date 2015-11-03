@@ -66,7 +66,7 @@ const preferred_sequence_alphabets = [
 # of alphabets that character is compatible with.
 const compatible_alphabets = [
     # A                                          B
-      DNA_ALPHABET | RNA_ALPHABET | AA_ALPHABET, EMPTY_ALPHABET,
+      DNA_ALPHABET | RNA_ALPHABET | AA_ALPHABET, AA_ALPHABET,
     # C                                          D
       DNA_ALPHABET | RNA_ALPHABET | AA_ALPHABET, AA_ALPHABET,
     # E            F            G
@@ -80,7 +80,7 @@ const compatible_alphabets = [
     # T                           U             V            W
       DNA_ALPHABET | AA_ALPHABET, RNA_ALPHABET, AA_ALPHABET, AA_ALPHABET,
     # X            Y            Z
-      AA_ALPHABET, AA_ALPHABET, EMPTY_ALPHABET,
+      AA_ALPHABET, AA_ALPHABET, AA_ALPHABET,
 
     # [               \               ]               ^
       EMPTY_ALPHABET, EMPTY_ALPHABET, EMPTY_ALPHABET, EMPTY_ALPHABET,
@@ -88,7 +88,7 @@ const compatible_alphabets = [
       EMPTY_ALPHABET, EMPTY_ALPHABET,
 
     # a                                          b
-      DNA_ALPHABET | RNA_ALPHABET | AA_ALPHABET, EMPTY_ALPHABET,
+      DNA_ALPHABET | RNA_ALPHABET | AA_ALPHABET, AA_ALPHABET,
     # c                                          d
       DNA_ALPHABET | RNA_ALPHABET | AA_ALPHABET, AA_ALPHABET,
     # e            f            g
@@ -102,7 +102,7 @@ const compatible_alphabets = [
     # t                           u             v            w
       DNA_ALPHABET | AA_ALPHABET, RNA_ALPHABET, AA_ALPHABET, AA_ALPHABET,
     # x            y            z
-      AA_ALPHABET, AA_ALPHABET, EMPTY_ALPHABET
+      AA_ALPHABET, AA_ALPHABET, AA_ALPHABET
 ]
 
 

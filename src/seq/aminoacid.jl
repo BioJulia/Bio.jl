@@ -78,11 +78,17 @@ const AA_Y = convert(AminoAcid, 0x12)
 "Valine"
 const AA_V = convert(AminoAcid, 0x13)
 
+"Aspartic Acid or Asparagine"
+const AA_B = convert(AminoAcid, 0x14)
+
+"Glutamine or Glutamic Acid"
+const AA_Z = convert(AminoAcid, 0x15)
+
 "Unspecified or Unknown Amino Acid"
-const AA_X = convert(AminoAcid, 0x14)
+const AA_X = convert(AminoAcid, 0x16)
 
 "Invalid Amino Acid"
-const AA_INVALID = convert(AminoAcid, 0x15) # Used during conversion from strings
+const AA_INVALID = convert(AminoAcid, 0x17) # Used during conversion from strings
 
 
 function isvalid(aa::AminoAcid)
@@ -93,18 +99,18 @@ end
 # Conversion from/to Char
 # -----------------------
 
-# lookup table for characters in 'A':'y'
+# lookup table for characters in 'A':'z'
 const char_to_aa = [
-    AA_A,       AA_INVALID, AA_C,       AA_D,       AA_E,       AA_F,
+    AA_A,       AA_B,       AA_C,       AA_D,       AA_E,       AA_F,
     AA_G,       AA_H,       AA_I,       AA_INVALID, AA_K,       AA_L,
     AA_M,       AA_N,       AA_INVALID, AA_P,       AA_Q,       AA_R,
     AA_S,       AA_T,       AA_INVALID, AA_V,       AA_W,       AA_X,
-    AA_Y,       AA_INVALID, AA_INVALID, AA_INVALID, AA_INVALID, AA_INVALID,
-    AA_INVALID, AA_INVALID, AA_A,       AA_INVALID, AA_C,       AA_D,
+    AA_Y,       AA_Z,       AA_INVALID, AA_INVALID, AA_INVALID, AA_INVALID,
+    AA_INVALID, AA_INVALID, AA_A,       AA_B,       AA_C,       AA_D,
     AA_E,       AA_F,       AA_G,       AA_H,       AA_I,       AA_INVALID,
     AA_K,       AA_L,       AA_M,       AA_N,       AA_INVALID, AA_P,
     AA_Q,       AA_R,       AA_S,       AA_T,       AA_INVALID, AA_V,
-    AA_W,       AA_X,       AA_Y ]
+    AA_W,       AA_X,       AA_Y,       AA_Z]
 
 function convert(::Type{AminoAcid}, c::Char)
     @inbounds aa = 'A' <= c <= 'y' ? char_to_aa[c - 'A' + 1] : AA_INVALID
@@ -114,7 +120,8 @@ end
 
 const aa_to_char = [
     'A', 'R', 'N', 'D', 'C', 'Q', 'E', 'G', 'H', 'I',
-    'L', 'K', 'M', 'F', 'P', 'S', 'T', 'W', 'Y', 'V', 'X' ]
+    'L', 'K', 'M', 'F', 'P', 'S', 'T', 'W', 'Y', 'V',
+    'B', 'Z', 'X' ]
 convert(::Type{Char}, aa::AminoAcid) = aa_to_char[convert(UInt8, aa) + 1]
 
 
@@ -135,6 +142,7 @@ const threeletter_to_aa = Dict(
     "GLN" => AA_Q, "GLU" => AA_E, "GLY" => AA_G, "HIS" => AA_H, "ILE" => AA_I,
     "LEU" => AA_L, "LYS" => AA_K, "MET" => AA_M, "PHE" => AA_F, "PRO" => AA_P,
     "SER" => AA_S, "THR" => AA_T, "TRP" => AA_W, "TYR" => AA_Y, "VAL" => AA_V,
+    "ASX" => AA_B, "GLX" => AA_Z,
 )
 
 function parse(::Type{AminoAcid}, s::AbstractString)
