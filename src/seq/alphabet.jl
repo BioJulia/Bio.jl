@@ -71,8 +71,8 @@ const compatible_alphabets = [
       DNA_ALPHABET | RNA_ALPHABET | AA_ALPHABET, AA_ALPHABET,
     # E            F            G
       AA_ALPHABET, AA_ALPHABET, DNA_ALPHABET | RNA_ALPHABET | AA_ALPHABET,
-    # H            I            J               K            L
-      AA_ALPHABET, AA_ALPHABET, EMPTY_ALPHABET, AA_ALPHABET, AA_ALPHABET,
+    # H            I            J            K            L
+      AA_ALPHABET, AA_ALPHABET, AA_ALPHABET, AA_ALPHABET, AA_ALPHABET,
     # M            N                                          O
       AA_ALPHABET, DNA_ALPHABET | RNA_ALPHABET | AA_ALPHABET, AA_ALPHABET,
     # P            Q            R            S
@@ -93,8 +93,8 @@ const compatible_alphabets = [
       DNA_ALPHABET | RNA_ALPHABET | AA_ALPHABET, AA_ALPHABET,
     # e            f            g
       AA_ALPHABET, AA_ALPHABET, DNA_ALPHABET | RNA_ALPHABET | AA_ALPHABET,
-    # h            i            j               k            l
-      AA_ALPHABET, AA_ALPHABET, EMPTY_ALPHABET, AA_ALPHABET, AA_ALPHABET,
+    # h            i            j            k            l
+      AA_ALPHABET, AA_ALPHABET, AA_ALPHABET, AA_ALPHABET, AA_ALPHABET,
     # m            n                                          o
       AA_ALPHABET, DNA_ALPHABET | RNA_ALPHABET | AA_ALPHABET, AA_ALPHABET,
     # p            q            r            s

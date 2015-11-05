@@ -1142,7 +1142,7 @@ facts("Aminoacids") do
         end
 
         context("Conversion") do
-            seq = aa"ARNDCQEGHILKMFPSTWYVOUBZX"
+            seq = aa"ARNDCQEGHILKMFPSTWYVOUBZJX"
             @fact convert(AminoAcidSequence, [aa for aa in seq]) --> seq
             @fact convert(Vector{AminoAcid}, seq) --> [aa for aa in seq]
 
@@ -1278,8 +1278,9 @@ facts("Aminoacids") do
                 ("U", "SEC", AA_U),
                 ("B", "ASX", AA_B),
                 ("Z", "GLX", AA_Z),
+                ("J", "XLE", AA_J),
             ]
-            @fact length(aas) --> 24
+            @fact length(aas) --> 25
             for (one, three, aa) in aas
                 @fact parse(AminoAcid, one) --> aa
                 @fact parse(AminoAcid, three) --> aa
