@@ -94,18 +94,18 @@ Cost model.
 Fields:
 
     * `submat`: a substitution matrix
-    * `insertion_cost`: a cost of inserting a character into the first sequence
-    * `deletion_cost`: a cost of deleting a character from the first sequence
+    * `insertion`: a cost of inserting a character into the first sequence
+    * `deletion`: a cost of deleting a character from the first sequence
 """
 type CostModel{T} <: AbstractCostModel{T}
     submat::AbstractSubstitutionMatrix{T}
-    insertion_cost::T
-    deletion_cost::T
+    insertion::T
+    deletion::T
 
-    function CostModel(submat, insertion_cost, deletion_cost)
-        @assert insertion_cost ≥ 0 "insertion_cost should be non-negative"
-        @assert deletion_cost ≥ 0 " deletion_cost should be non-negative"
-        return new(submat, insertion_cost, deletion_cost)
+    function CostModel(submat, insertion, deletion)
+        @assert insertion ≥ 0 "insertion should be non-negative"
+        @assert deletion ≥ 0 " deletion should be non-negative"
+        return new(submat, insertion, deletion)
     end
 end
 
@@ -113,17 +113,36 @@ function CostModel{T}(submat::AbstractSubstitutionMatrix{T}, insertion, deletion
     return CostModel{T}(submat, insertion, deletion)
 end
 
-function CostModel{T}(submat::AbstractSubstitutionMatrix{T};
-                      insertion=T(0), deletion=T(0))
+function CostModel{T}(submat::AbstractSubstitutionMatrix{T}; indels...)
+    indels = Dict(indels)
+    if haskey(indels, :insertion)
+        insertion = indels[:insertion]
+    else
+        error("insertion should be passed")
+    end
+    if haskey(indels, :deletion)
+        deletion = indels[:deletion]
+    else
+        error("deletion should be passed")
+    end
     return CostModel(submat, insertion, deletion)
 end
 
-function CostModel{T}(submat::AbstractMatrix{T};
-                      insertion=T(0), deletion=T(0))
+function CostModel{T}(submat::AbstractMatrix{T}, insertion, deletion)
     return CostModel(SubstitutionMatrix(submat), insertion, deletion)
 end
 
-function Base.call{T}(::Type{CostModel}; match::T=T(0), mismatch::T=T(0), insertion::T=T(0), deletion::T=T(0))
+function CostModel{T}(submat::AbstractMatrix{T}; indels...)
+    return CostModel(SubstitutionMatrix(submat); indels...)
+end
+
+function Base.call(::Type{CostModel}; costs...)
+    costs = Dict(costs)
+    match = costs[:match]
+    mismatch = costs[:mismatch]
+    insertion = costs[:insertion]
+    deletion = costs[:deletion]
+    match, mismatch, insertion, deletion = promote(match, mismatch, insertion, deletion)
     submat = DichotomousSubstitutionMatrix(match, mismatch)
-    return CostModel{T}(submat, insertion, deletion)
+    return CostModel(submat, insertion, deletion)
 end

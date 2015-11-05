@@ -94,7 +94,7 @@ end
 
 function pairalign{S1,S2}(::EditDistance, a::S1, b::S2, cost::CostModel;
                           distance_only::Bool=false)
-    dist, trace, endpos = edit_distance(a, b, cost.submat, cost.insertion_cost, cost.deletion_cost)
+    dist, trace, endpos = edit_distance(a, b, cost.submat, cost.insertion, cost.deletion)
     if distance_only
         return PairwiseAlignment{S1,S2}(dist, false)
     else

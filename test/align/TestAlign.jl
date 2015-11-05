@@ -240,9 +240,9 @@ function alndistance{S,T}(::Type{S}, cost::CostModel{T}, alnstr::ASCIIString)
     dist = T(0)
     for i in 1:m
         if a[i] == '-'
-            dist += cost.deletion_cost
+            dist += cost.deletion
         elseif b[i] == '-'
-            dist += cost.insertion_cost
+            dist += cost.insertion
         else
             dist += cost.submat[a[i],b[i]]
         end
@@ -294,6 +294,26 @@ facts("PairwiseAlignment") do
         @fact affinegap.gap_open --> -5
         @fact affinegap.gap_extend --> -2
         @fact typeof(affinegap) --> AffineGapScoreModel{Int}
+    end
+
+    context("CostModel") do
+        submat = [
+            0 3 3 3;
+            3 0 3 3;
+            3 3 0 3;
+            3 3 3 0;
+        ]
+        for cost in [CostModel(submat, 5, 6),
+                     CostModel(submat, insertion=5, deletion=6)]
+            @fact cost.insertion --> 5
+            @fact cost.deletion --> 6
+            @fact typeof(cost) --> CostModel{Int}
+        end
+
+        cost = CostModel(match=0, mismatch=3, insertion=5, deletion=6)
+        @fact cost.insertion --> 5
+        @fact cost.deletion --> 6
+        @fact typeof(cost) --> CostModel{Int}
     end
 
     context("Alignment") do
