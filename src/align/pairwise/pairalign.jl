@@ -63,6 +63,25 @@ function pairalign{S1,S2,T}(::SemiGlobalAlignment, a::S1, b::S2, score::AffineGa
     end
 end
 
+function pairalign{S1,S2,T}(::OverlapAlignment, a::S1, b::S2, score::AffineGapScoreModel{T};
+                            score_only::Bool=false)
+    m = length(a)
+    n = length(b)
+    nw = NeedlemanWunsch{T}(m, n)
+    gap_open = -score.gap_open_penalty
+    gap_extend = -score.gap_extend_penalty
+    score = run!(nw, a, b, score.submat,
+        T(0), T(0), gap_open, gap_extend, T(0), T(0),
+        T(0), T(0), gap_open, gap_extend, T(0), T(0),
+    )
+    if score_only
+        return PairwiseAlignment{S1,S2}(score, true)
+    else
+        a′ = traceback(nw, a, b, (m, n))
+        return PairwiseAlignment(score, true, a′, b)
+    end
+end
+
 function pairalign{S1,S2,T}(::LocalAlignment, a::S1, b::S2, score::AffineGapScoreModel{T};
                           score_only::Bool=false)
     sw = SmithWaterman{T}(length(a), length(b))

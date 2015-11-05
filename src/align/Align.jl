@@ -54,8 +54,9 @@ export Operation,
 export
     # alignment types
     GlobalAlignment,
-    LocalAlignment,
     SemiGlobalAlignment,
+    OverlapAlignment,
+    LocalAlignment,
     EditDistance,
     HammingDistance,
     LevenshteinDistance,

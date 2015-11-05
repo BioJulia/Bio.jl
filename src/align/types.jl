@@ -3,8 +3,9 @@
 
 # alignment
 immutable GlobalAlignment end
-immutable LocalAlignment end
 immutable SemiGlobalAlignment end
+immutable OverlapAlignment end
+immutable LocalAlignment end
 
 # distances
 immutable EditDistance end

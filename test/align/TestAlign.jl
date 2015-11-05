@@ -460,6 +460,57 @@ facts("PairwiseAlignment") do
         end
     end
 
+    context("OverlapAlignment") do
+        affinegap = AffineGapScoreModel(
+            match=3,
+            mismatch=-6,
+            gap_open=-5,
+            gap_extend=-3
+        )
+
+        function testaln(alnstr)
+            a, b, s, alnpair = alnscore(affinegap, alnstr, clip=false)
+            aln = pairalign(OverlapAlignment(), a, b, affinegap)
+            @fact score(aln) --> s
+            @fact alignedpair(aln) --> alnpair
+            aln = pairalign(OverlapAlignment(), a, b, affinegap, score_only=true)
+            @fact score(aln) --> s
+        end
+
+        context("complete match") do
+            testaln("""
+            ACGT
+            ACGT
+            """)
+        end
+
+        context("partial match") do
+            testaln("""
+            ---ACGGTGATTAT
+            GATACGGTGA----
+               ^^^^^^^
+            """)
+
+            testaln("""
+            ---AACGT-GATTAT
+            GATAACGGAGA----
+               ^^^^^^^^
+            """)
+
+            testaln("""
+            GATACGGTGA----
+            ---ACGGTGATTAT
+               ^^^^^^^
+            """)
+
+            testaln("""
+            GATAACGGAGA----
+            ---AACGT-GATTAT
+               ^^^^^^^^
+            """)
+        end
+    end
+
     context("LocalAlignment") do
         context("zero matching score") do
             affinegap = AffineGapScoreModel(
