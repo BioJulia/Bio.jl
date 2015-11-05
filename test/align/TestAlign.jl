@@ -183,8 +183,8 @@ end
 
 # generate test cases from two aligned sequences
 function alnscore{S,T}(::Type{S}, affinegap::AffineGapScoreModel{T}, alnstr::ASCIIString, clip::Bool)
-    gap_open = -affinegap.gap_open_penalty
-    gap_extend = -affinegap.gap_extend_penalty
+    gap_open = affinegap.gap_open
+    gap_extend = affinegap.gap_extend
     lines = split(chomp(alnstr), '\n')
     a, b = lines[1:2]
     m = length(a)
@@ -265,6 +265,37 @@ function alignedpair(aln)
 end
 
 facts("PairwiseAlignment") do
+    context("AffineGapScoreModel") do
+        # predefined substitution matrix
+        for affinegap in [AffineGapScoreModel(BLOSUM62, -10, -1),
+                          AffineGapScoreModel(BLOSUM62, gap_open=-10, gap_extend=-1),
+                          AffineGapScoreModel(BLOSUM62, gap_open_penalty=10, gap_extend_penalty=1)]
+            @fact affinegap.gap_open --> -10
+            @fact affinegap.gap_extend --> -1
+            @fact typeof(affinegap) --> AffineGapScoreModel{Int}
+        end
+
+        # matrix
+        submat = Float64[
+             1 -1 -1 -1;
+            -1  1 -1 -1;
+            -1 -1  1 -1;
+            -1 -1 -1  1;
+        ]
+        for affinegap in [AffineGapScoreModel(submat, -3, -1),
+                          AffineGapScoreModel(submat, gap_open=-3, gap_extend=-1),
+                          AffineGapScoreModel(submat, gap_open_penalty=3, gap_extend_penalty=1)]
+            @fact affinegap.gap_open --> -3
+            @fact affinegap.gap_extend --> -1
+            @fact typeof(affinegap) --> AffineGapScoreModel{Float64}
+        end
+
+        affinegap = AffineGapScoreModel(match=3, mismatch=-3, gap_open=-5, gap_extend=-2)
+        @fact affinegap.gap_open --> -5
+        @fact affinegap.gap_extend --> -2
+        @fact typeof(affinegap) --> AffineGapScoreModel{Int}
+    end
+
     context("Alignment") do
         anchors = [
             AlignmentAnchor(0, 0, OP_START),

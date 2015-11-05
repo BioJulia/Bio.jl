@@ -15,61 +15,66 @@ The gap penalty of length `k` is `gap_open_penalty + gap_extend_penalty * k`.
 
 Fields:
 
-    * `submat`: a substitution matrix
-    * `gap_open_penalty`: a penalty of opening a new gap
-    * `gap_extend_penalty`: a penalty of extending a gap
+    * `submat`: substitution matrix
+    * `gap_open`: score of opening a new gap
+    * `gap_extend`: score of extending a gap
 """
 type AffineGapScoreModel{T} <: AbstractScoreModel{T}
     submat::AbstractSubstitutionMatrix{T}
-    gap_open_penalty::T
-    gap_extend_penalty::T
+    gap_open::T
+    gap_extend::T
 
-    function AffineGapScoreModel(submat::AbstractSubstitutionMatrix{T}, gap_open_penalty::T, gap_extend_penalty::T)
-        @assert gap_open_penalty ≥ 0 "gap_open_penalty should be non-negative"
-        @assert gap_extend_penalty ≥ 0 "gap_extend_penalty should be non-negative"
-        return new(submat, gap_open_penalty, gap_extend_penalty)
+    function AffineGapScoreModel(submat::AbstractSubstitutionMatrix{T}, gap_open::T, gap_extend::T)
+        @assert gap_open ≤ 0 "gap_open should be non-positive"
+        @assert gap_extend ≤ 0 "gap_extend should be non-positive"
+        return new(submat, gap_open, gap_extend)
     end
 end
 
-# default scores (TODO: rationale)
-const default_match_score = 1
-const default_mismatch_score = -3
-const default_gap_open_penalty = 4
-const default_gap_extend_penalty = 2
-
-function AffineGapScoreModel{T}(submat::AbstractSubstitutionMatrix{T},
-                                gap_open_penalty=default_gap_open_penalty,
-                                gap_extend_penalty=default_gap_extend_penalty)
-    return AffineGapScoreModel{T}(submat, T(gap_open_penalty), T(gap_extend_penalty))
+function AffineGapScoreModel{T}(submat::AbstractSubstitutionMatrix{T}, gap_open, gap_extend)
+    return AffineGapScoreModel{T}(submat, T(gap_open), T(gap_extend))
 end
 
-function AffineGapScoreModel{T}(submat::AbstractSubstitutionMatrix{T};
-                                gap_open_penalty=default_gap_open_penalty,
-                                gap_extend_penalty=default_gap_extend_penalty)
-    return AffineGapScoreModel(submat, gap_open_penalty, gap_extend_penalty)
+function AffineGapScoreModel{T}(submat::AbstractSubstitutionMatrix{T}; gaps...)
+    gaps = Dict(gaps)
+
+    if haskey(gaps, :gap_open)
+        gap_open = gaps[:gap_open]
+    elseif haskey(gaps, :gap_open_penalty)
+        gap_open = -gaps[:gap_open_penalty]
+    else
+        error("gap_open or gap_open_penalty argument should be passed")
+    end
+
+    if haskey(gaps, :gap_extend)
+        gap_extend = gaps[:gap_extend]
+    elseif haskey(gaps, :gap_extend_penalty)
+        gap_extend = -gaps[:gap_extend_penalty]
+    else
+        error("gap_extend or gap_extend_penalty argument should be passed")
+    end
+
+    return AffineGapScoreModel(submat, T(gap_open), T(gap_extend))
 end
 
-function AffineGapScoreModel{T}(submat::AbstractMatrix{T},
-                                gap_open_penalty=default_gap_open_penalty,
-                                gap_extend_penalty=default_gap_extend_penalty)
-    return AffineGapScoreModel(SubstitutionMatrix(submat), gap_open_penalty, gap_extend_penalty)
+function AffineGapScoreModel{T}(submat::AbstractMatrix{T}, gap_open, gap_extend)
+    return AffineGapScoreModel(SubstitutionMatrix(submat), gap_open, gap_extend)
 end
 
-function AffineGapScoreModel{T}(submat::AbstractMatrix{T};
-                                gap_open_penalty=default_gap_open_penalty,
-                                gap_extend_penalty=default_gap_extend_penalty)
-    return AffineGapScoreModel(SubstitutionMatrix(submat), gap_open_penalty, gap_extend_penalty)
+function AffineGapScoreModel{T}(submat::AbstractMatrix{T}; gaps...)
+    return AffineGapScoreModel(SubstitutionMatrix(submat); gaps...)
 end
 
 # easy interface
-function Base.call(::Type{AffineGapScoreModel};
-                   match=default_match_score,
-                   mismatch=default_mismatch_score,
-                   gap_open=-default_gap_open_penalty,
-                   gap_extend=-default_gap_extend_penalty)
+function Base.call(::Type{AffineGapScoreModel}; scores...)
+    scores = Dict(scores)
+    match = scores[:match]
+    mismatch = scores[:mismatch]
+    gap_open = scores[:gap_open]
+    gap_extend = scores[:gap_extend]
     match, mismatch, gap_open, gap_extend = promote(match, mismatch, gap_open, gap_extend)
     submat = DichotomousSubstitutionMatrix(match, mismatch)
-    return AffineGapScoreModel(submat, -gap_open, -gap_extend)
+    return AffineGapScoreModel(submat, gap_open, gap_extend)
 end
 
 

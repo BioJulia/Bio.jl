@@ -25,7 +25,7 @@ function pairalign{S1,S2,T}(::GlobalAlignment, a::S1, b::S2, score::AffineGapSco
             U = n - m + upper_offset
         end
         bnw = BandedNeedlemanWunsch{T}(m, n, L, U)
-        score = run!(bnw, a, b, score.submat, -score.gap_open_penalty, -score.gap_extend_penalty)
+        score = run!(bnw, a, b, score.submat, score.gap_open, score.gap_extend)
         if score_only
             return PairwiseAlignment{S1,S2}(score, true)
         else
@@ -34,7 +34,7 @@ function pairalign{S1,S2,T}(::GlobalAlignment, a::S1, b::S2, score::AffineGapSco
         end
     else
         nw = NeedlemanWunsch{T}(m, n)
-        score = run!(nw, a, b, score.submat, -score.gap_open_penalty, -score.gap_extend_penalty)
+        score = run!(nw, a, b, score.submat, score.gap_open, score.gap_extend)
         if score_only
             return PairwiseAlignment{S1,S2}(score, true)
         else
@@ -49,8 +49,8 @@ function pairalign{S1,S2,T}(::SemiGlobalAlignment, a::S1, b::S2, score::AffineGa
     m = length(a)
     n = length(b)
     nw = NeedlemanWunsch{T}(m, n)
-    gap_open = -score.gap_open_penalty
-    gap_extend = -score.gap_extend_penalty
+    gap_open = score.gap_open
+    gap_extend = score.gap_extend
     score = run!(nw, a, b, score.submat,
         T(0), T(0), gap_open, gap_extend, T(0), T(0),
         gap_open, gap_extend, gap_open, gap_extend, gap_open, gap_extend,
@@ -68,11 +68,9 @@ function pairalign{S1,S2,T}(::OverlapAlignment, a::S1, b::S2, score::AffineGapSc
     m = length(a)
     n = length(b)
     nw = NeedlemanWunsch{T}(m, n)
-    gap_open = -score.gap_open_penalty
-    gap_extend = -score.gap_extend_penalty
     score = run!(nw, a, b, score.submat,
-        T(0), T(0), gap_open, gap_extend, T(0), T(0),
-        T(0), T(0), gap_open, gap_extend, T(0), T(0),
+        T(0), T(0), score.gap_open, score.gap_extend, T(0), T(0),
+        T(0), T(0), score.gap_open, score.gap_extend, T(0), T(0),
     )
     if score_only
         return PairwiseAlignment{S1,S2}(score, true)
@@ -85,7 +83,7 @@ end
 function pairalign{S1,S2,T}(::LocalAlignment, a::S1, b::S2, score::AffineGapScoreModel{T};
                           score_only::Bool=false)
     sw = SmithWaterman{T}(length(a), length(b))
-    score, endpos = run!(sw, a, b, score.submat, -score.gap_open_penalty, -score.gap_extend_penalty)
+    score, endpos = run!(sw, a, b, score.submat, score.gap_open, score.gap_extend)
     if score_only
         return PairwiseAlignment{S1,S2}(score, true)
     else
