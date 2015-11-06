@@ -1274,13 +1274,14 @@ facts("Aminoacids") do
                 ("W", "TRP", AA_W),
                 ("Y", "TYR", AA_Y),
                 ("V", "VAL", AA_V),
+                ("B", "ASX", AA_B),
+                ("J", "XLE", AA_J),
+                ("Z", "GLX", AA_Z),
+                ("X", "XAA", AA_X),
                 ("O", "PYL", AA_O),
                 ("U", "SEC", AA_U),
-                ("B", "ASX", AA_B),
-                ("Z", "GLX", AA_Z),
-                ("J", "XLE", AA_J),
             ]
-            @fact length(aas) --> 25
+            @fact length(aas) --> 26
             for (one, three, aa) in aas
                 @fact parse(AminoAcid, one) --> aa
                 @fact parse(AminoAcid, three) --> aa

@@ -80,30 +80,30 @@ const AA_Y = convert(AminoAcid, 0x12)
 "Valine"
 const AA_V = convert(AminoAcid, 0x13)
 
-"Pyrrolysine"
-const AA_O = convert(AminoAcid, 0x14)
+"Aspartic Acid or Asparagine"  # ambiguous
+const AA_B = convert(AminoAcid, 0x14)
 
-"Selenocysteine"
-const AA_U = convert(AminoAcid, 0x15)
+"Leucine or Isoleucine"  # ambiguous
+const AA_J = convert(AminoAcid, 0x15)
 
-"Aspartic Acid or Asparagine"
-const AA_B = convert(AminoAcid, 0x16)
+"Glutamine or Glutamic Acid"  # ambiguous
+const AA_Z = convert(AminoAcid, 0x16)
 
-"Glutamine or Glutamic Acid"
-const AA_Z = convert(AminoAcid, 0x17)
+"Unspecified or Unknown Amino Acid"  # ambiguous
+const AA_X = convert(AminoAcid, 0x17)
 
-"Leucine or Isoleucine"
-const AA_J = convert(AminoAcid, 0x18)
+"Pyrrolysine"  # non-standard
+const AA_O = convert(AminoAcid, 0x18)
 
-"Unspecified or Unknown Amino Acid"
-const AA_X = convert(AminoAcid, 0x19)
+"Selenocysteine"  # non-standard
+const AA_U = convert(AminoAcid, 0x19)
 
 "Invalid Amino Acid"
 const AA_INVALID = convert(AminoAcid, 0x1a) # Used during conversion from strings
 
 
 function isvalid(aa::AminoAcid)
-    return convert(UInt8, aa) ≤ convert(UInt8, AA_X)
+    return convert(UInt8, aa) < convert(UInt8, AA_INVALID)
 end
 
 
@@ -131,8 +131,9 @@ end
 
 const aa_to_char = [
     'A', 'R', 'N', 'D', 'C', 'Q', 'E', 'G', 'H', 'I',
-    'L', 'K', 'M', 'F', 'P', 'S', 'T', 'W', 'Y', 'V', 'O', 'U',
-    'B', 'Z', 'J', 'X' ]
+    'L', 'K', 'M', 'F', 'P', 'S', 'T', 'W', 'Y', 'V',
+    'B', 'J', 'Z', 'X',
+    'O', 'U', ]
 convert(::Type{Char}, aa::AminoAcid) = aa_to_char[convert(UInt8, aa) + 1]
 
 
@@ -152,8 +153,9 @@ const threeletter_to_aa = Dict(
     "ALA" => AA_A, "ARG" => AA_R, "ASN" => AA_N, "ASP" => AA_D, "CYS" => AA_C,
     "GLN" => AA_Q, "GLU" => AA_E, "GLY" => AA_G, "HIS" => AA_H, "ILE" => AA_I,
     "LEU" => AA_L, "LYS" => AA_K, "MET" => AA_M, "PHE" => AA_F, "PRO" => AA_P,
-    "SER" => AA_S, "THR" => AA_T, "TRP" => AA_W, "TYR" => AA_Y, "VAL" => AA_V, "PYL" => AA_O, "SEC" => AA_U,
-    "ASX" => AA_B, "GLX" => AA_Z, "XLE" => AA_J,
+    "SER" => AA_S, "THR" => AA_T, "TRP" => AA_W, "TYR" => AA_Y, "VAL" => AA_V,
+    "ASX" => AA_B, "XLE" => AA_J, "GLX" => AA_Z, "XAA" => AA_X,
+    "PYL" => AA_O, "SEC" => AA_U,
 )
 
 function parse(::Type{AminoAcid}, s::AbstractString)
