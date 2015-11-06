@@ -2,6 +2,7 @@ module TestAlign
 
 using FactCheck
 using Bio
+using Bio.Seq
 using Bio.Align
 using TestFunctions
 
@@ -265,6 +266,35 @@ function alignedpair(aln)
 end
 
 facts("PairwiseAlignment") do
+    context("SubstitutionMatrix") do
+        # defined
+        @fact BLOSUM62[AA_A,AA_R] --> -1
+        @fact BLOSUM62[AA_R,AA_A] --> -1
+        @fact BLOSUM62[AA_R,AA_R] -->  5
+        @fact typeof(BLOSUM62[AA_A,AA_R]) --> Int
+        # undefined
+        @fact BLOSUM62[AA_O,AA_R] -->  0
+        @fact BLOSUM62[AA_R,AA_O] -->  0
+        @fact haskey(BLOSUM62, AA_R) --> true
+        @fact haskey(BLOSUM62, AA_O) --> false
+
+        mat = Int[
+            +2 -3 -3 -3  0;
+            -3 +2 -3 -3  0;
+            -3 -3 +2 -3  0;
+            -3 -3 -3 +2  0;
+             0  0  0  0  0;
+        ]
+        defined = BitVector([1, 1, 1, 1, 0])
+        match = 0
+        mismatch = -1
+        submat = SubstitutionMatrix{Int}(mat, defined, match, mismatch)
+        @fact submat[DNA_A,DNA_A] --> +2
+        @fact submat[DNA_N,DNA_N] -->  0
+        @fact submat[DNA_N,DNA_A] --> -1
+        @fact submat[DNA_A,DNA_N] --> -1
+    end
+
     context("AffineGapScoreModel") do
         # predefined substitution matrix
         for affinegap in [AffineGapScoreModel(BLOSUM62, -10, -1),

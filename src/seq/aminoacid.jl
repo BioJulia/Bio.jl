@@ -116,6 +116,14 @@ const AA_INVALID = convert(AminoAcid, 0x1a) # Used during conversion from string
 isvalid(aa::AminoAcid) = aa ≤ AA_U
 alphabet(::Type{AminoAcid}) = AA_A:AA_U
 
+alphabet(::Type{AminoAcid}) = AA_A:AA_U
+
+Base.isless(x::AminoAcid, y::AminoAcid) = isless(UInt8(x), UInt8(y))
+Base.(:-)(x::AminoAcid, y::AminoAcid) = Int(UInt8(x)) - Int(UInt8(y))
+Base.(:-)(x::AminoAcid, y::Integer) = reinterpret(AminoAcid, Int8(UInt8(x)) - Int8(UInt8(y)))
+Base.(:+)(x::AminoAcid, y::Integer) = reinterpret(AminoAcid, Int8(UInt8(x)) + Int8(y))
+Base.(:+)(x::Integer, y::AminoAcid) = y + x
+
 
 # Conversion from/to Char
 # -----------------------
@@ -209,6 +217,8 @@ type AminoAcidSequence <: Sequence
     hasrelatives::Bool
 end
 
+
+Base.eltype(::AminoAcidSequence) = AminoAcid
 
 # Constructors
 # ------------

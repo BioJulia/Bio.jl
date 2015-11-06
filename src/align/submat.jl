@@ -12,7 +12,7 @@ abstract AbstractSubstitutionMatrix{T<:Real}
 
 function show_submat(io::IO, submat::AbstractSubstitutionMatrix, alphabet, sz)
     alphabets = [string(alphabet(UInt8(x))) for x in 0:sz-1]
-    mat = [string(submat[x,y]) for x in 0:sz-1, y in 0:sz-1]
+    mat = [haskey(submat, x, y) ? string(submat[x,y]) : "NA" for x in 0:sz-1, y in 0:sz-1]
     # add rows
     mat = hcat(alphabets, mat)
     # add columns
@@ -20,11 +20,9 @@ function show_submat(io::IO, submat::AbstractSubstitutionMatrix, alphabet, sz)
     width = [maximum([length(mat[i,j]) + 1 for j in 1:sz+1]) for i in 1:sz+1]
     println(io, typeof(submat), ":")
     for i in 1:sz+1
-        print(io, "  ")  # indent
+        print(io, " ")  # indent
         for j in 1:sz+1
-            el = mat[i,j]
-            # right aligned
-            print(io, " " ^ (width[j] - length(el)), el)
+            print(io, lpad(mat[i,j], width[j]))
         end
         println(io)
     end
@@ -34,33 +32,60 @@ end
 """
 Substitution matrix.
 """
-type SubstitutionMatrix{T} <: AbstractSubstitutionMatrix{T}
+immutable SubstitutionMatrix{T} <: AbstractSubstitutionMatrix{T}
+    # square substitution matrix
     data::Matrix{T}
+    # a character is defined or not
+    defined::BitVector
+    # matching/mismatching score for undefined characters
+    match::T
+    mismatch::T
+    # alphabet type (e.g. AminoAcid)
     alphabet::Nullable{DataType}
+
+    function SubstitutionMatrix(data, defined, match, mismatch, alphabet=Nullable())
+        sz = size(data, 1)
+        @assert sz == size(data, 2)
+        @assert sz == length(defined)
+
+        # fill undefined cells with match/mismatch
+        undefined = ~defined
+        i = 0
+        while (i = findnext(undefined, i + 1)) > 0
+            for j in 1:sz
+                score = i == j ? match : mismatch
+                data[i,j] = data[j,i] = score
+            end
+        end
+
+        return new(data, defined, match, mismatch, alphabet)
+    end
 end
 
 function Base.convert{T}(::Type{SubstitutionMatrix}, submat::AbstractMatrix{T})
-    return SubstitutionMatrix{T}(submat, Nullable())
+    sz = size(submat, 1)
+    return SubstitutionMatrix{T}(submat, trues(sz), 0, 0, Nullable())
 end
 
-function SubstitutionMatrix{T}(submat::AbstractMatrix{T}, alphabet::DataType)
-    return SubstitutionMatrix{T}(submat, Nullable(alphabet))
+function SubstitutionMatrix{T}(submat::AbstractMatrix{T};
+                               defined::BitVector=trues(size(submat, 1)),
+                               match=T(0), mismatch=T(0), alphabet=Nullable())
+    return SubstitutionMatrix{T}(submat, defined, match, mismatch, alphabet)
 end
 
 Base.convert(::Type{Matrix}, submat::SubstitutionMatrix) = submat.data
 Base.convert{T}(::Type{Matrix{T}}, submat::SubstitutionMatrix{T}) = submat.data
 
 @inline function Base.getindex(submat::SubstitutionMatrix, x, y)
-    return submat.data[convert(UInt8, x)+1,convert(UInt8, y)+1]
+    return submat.data[UInt8(x)+1,UInt8(y)+1]
 end
 
-function Base.setindex!(submat::SubstitutionMatrix, v, x, y)
-    submat.data[convert(UInt8, x)+1,convert(UInt8, y)+1] = v
-    return submat
+function Base.haskey(submat::SubstitutionMatrix, x)
+    return submat.defined[UInt8(x)+1]
 end
 
-function Base.fill!(submat::SubstitutionMatrix, v)
-    return fill!(submat.data, v)
+function Base.haskey(submat::SubstitutionMatrix, x, y)
+    return haskey(submat, x) && haskey(submat, y)
 end
 
 Base.minimum(submat::SubstitutionMatrix) = minimum(submat.data)
@@ -68,8 +93,8 @@ Base.maximum(submat::SubstitutionMatrix) = maximum(submat.data)
 
 function Base.show(io::IO, submat::SubstitutionMatrix)
     alphabet = get(submat.alphabet, UInt8)
-    sz = size(submat.data, 1)
-    show_submat(io, submat, alphabet, sz)
+    show_submat(io, submat, alphabet, size(submat.data, 1))
+    println(io, "* NA: match = ", submat.match, ", mismatch = ", submat.mismatch)
 end
 
 
@@ -113,22 +138,19 @@ function load_submat(name)
 end
 
 function parse_ncbi_submat(filepath)
-    ncols = 24
-    # these amino acid code are not supported by Bio.Seq
-    unsupported_aa = ('B', 'Z', '*')
-    sz = ncols - length(unsupported_aa)
-    submat = SubstitutionMatrix(Array{Int}(sz, sz), AminoAcid)
-    fill!(submat, 0)
+    d = Dict{Tuple{Char,Char},Int}()
+    # column => one-letter amino acid
+    header = Char[]
     open(filepath) do io
-        # column => one-letter amino acid
-        header = Char[]
         # column width (inferred from the header line)
         w = 0
+        local ncols::Int
         for line in eachline(io)
             if startswith(line, "#")
                 continue
             elseif isempty(header)
                 # header line
+                ncols = length(matchall(r"[A-Z*]", line))
                 w = div(length(line) - 2, ncols)
                 for col in 1:ncols
                     char = line[w*col+1]
@@ -137,21 +159,33 @@ function parse_ncbi_submat(filepath)
                 end
             else
                 a = line[1]
-                if a in unsupported_aa
-                    continue
-                end
                 for col in 1:ncols
                     b = header[col]
-                    if b in unsupported_aa
-                        continue
-                    end
-                    score = parse(Int, line[w*col-1:w*col+1])
-                    submat[convert(AminoAcid, a), convert(AminoAcid, b)] = score
+                    d[(a, b)] = parse(Int, line[w*col-1:w*col+1])
                 end
             end
         end
     end
-    return submat
+    # create the substitution matrix
+    aas = alphabet(AminoAcid)
+    n_aas = length(aas)
+    defined = falses(n_aas)
+    for char in header
+        if char != '*'
+            defined[UInt8(AminoAcid(char))+1] = true
+        end
+    end
+    submat = Matrix{Int}(n_aas, n_aas)
+    for (i, x) in enumerate(aas), (j, y) in enumerate(aas)
+        submat[i,j] = get(d, (Char(x), Char(y)), 0)
+    end
+    return SubstitutionMatrix(
+        submat,
+        defined=defined,
+        match=0,
+        mismatch=0,
+        alphabet=AminoAcid
+    )
 end
 
 # predefined substitution matrices
