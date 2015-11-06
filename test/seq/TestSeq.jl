@@ -1381,7 +1381,7 @@ facts("Sequence Parsing") do
             tags = specimen["tags"]
             valid = get(specimen, "valid", true)
             # currently unsupported features
-            if contains(tags, "gaps") || contains(tags, "comments") || contains(tags, "ambiguity")
+            if contains(tags, "gaps") || contains(tags, "comments") || (contains(tags, "ambiguity") && !contains(tags, "protein"))
                 continue
             end
             if valid
