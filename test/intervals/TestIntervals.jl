@@ -3,10 +3,8 @@ module TestIntervals
 using FactCheck,
     Bio.Intervals,
     Distributions,
-    YAML
-
-import ..get_bio_fmt_specimens
-
+    YAML,
+    TestFunctions
 
 # Test that an array of intervals is well ordered
 function Intervals.isordered{I <: Interval}(intervals::Vector{I})
@@ -358,6 +356,8 @@ facts("Interval Parsing") do
     context("BED Parsing") do
         get_bio_fmt_specimens()
 
+        println("DONE THE GET SPECIMENS!")
+
         function check_bed_parse(filename)
             # Reading from a stream
             for interval in open(open(filename), BED)
@@ -387,8 +387,13 @@ facts("Interval Parsing") do
             return expected_entries == read_entries
         end
 
+        println("DONE FUNCTION LOADING!")
+
         path = Pkg.dir("Bio", "test", "BioFmtSpecimens", "BED")
         for specimen in YAML.load_file(joinpath(path, "index.yml"))
+
+            println("NOW ON $specimen")
+
             valid = get(specimen, "valid", true)
             if valid
                 @fact check_bed_parse(joinpath(path, specimen["filename"])) --> true

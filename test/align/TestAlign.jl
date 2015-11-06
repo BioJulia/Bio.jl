@@ -3,6 +3,7 @@ module TestAlign
 using FactCheck
 using Bio
 using Bio.Align
+using TestFunctions
 
 
 # Generate a random valid alignment of a sequence of length n against a sequence

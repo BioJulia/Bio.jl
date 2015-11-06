@@ -2,9 +2,9 @@ module TestSeq
 
 using FactCheck,
     Bio.Seq,
-    YAML
-
-import ..get_bio_fmt_specimens
+    YAML,
+    TestFunctions
+    
 
 # Return a random DNA/RNA sequence of the given length
 function random_seq(n::Integer, nts, probs)
@@ -14,16 +14,6 @@ function random_seq(n::Integer, nts, probs)
         x[i] = nts[searchsorted(cumprobs, rand()).start]
     end
     return convert(AbstractString, x)
-end
-
-
-function random_array(n::Integer, elements, probs)
-    cumprobs = cumsum(probs)
-    x = Array(eltype(elements), n)
-    for i in 1:n
-        x[i] = elements[searchsorted(cumprobs, rand()).start]
-    end
-    return x
 end
 
 
@@ -259,7 +249,7 @@ facts("Nucleotides") do
         end
         @fact takebuf_string(buf) --> "ACGTN"
     end
-    
+
     context("Show RNA") do
         buf = IOBuffer()
         for nt in [RNA_A, RNA_C, RNA_G, RNA_U, RNA_N]

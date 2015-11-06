@@ -3,9 +3,11 @@ module Util
 import Base:
     start,
     next,
-    done
+    done,
+    show
 
-export eachwindow
+export eachwindow,
+    EachWindowIterator
 
 include("windows.jl")
 
