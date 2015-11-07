@@ -1125,7 +1125,7 @@ facts("Aminoacids") do
         reps = 10
         context("Construction") do
             # Non-aa characters should throw
-            @fact_throws AminoAcidSequence("ATGHLMYZZACAGNM")
+            @fact_throws AminoAcidSequence("ATGHLMY@ZACAGNM")
 
             # Check that sequences in strings survive round trip conversion:
             #   String → AminoAcidSequence → String
@@ -1142,7 +1142,7 @@ facts("Aminoacids") do
         end
 
         context("Conversion") do
-            seq = aa"ARNDCQEGHILKMFPSTWYVX"
+            seq = aa"ARNDCQEGHILKMFPSTWYVOUBZJX"
             @fact convert(AminoAcidSequence, [aa for aa in seq]) --> seq
             @fact convert(Vector{AminoAcid}, seq) --> [aa for aa in seq]
 
@@ -1274,8 +1274,14 @@ facts("Aminoacids") do
                 ("W", "TRP", AA_W),
                 ("Y", "TYR", AA_Y),
                 ("V", "VAL", AA_V),
+                ("B", "ASX", AA_B),
+                ("J", "XLE", AA_J),
+                ("Z", "GLX", AA_Z),
+                ("X", "XAA", AA_X),
+                ("O", "PYL", AA_O),
+                ("U", "SEC", AA_U),
             ]
-            @fact length(aas) --> 20
+            @fact length(aas) --> 26
             for (one, three, aa) in aas
                 @fact parse(AminoAcid, one) --> aa
                 @fact parse(AminoAcid, three) --> aa
@@ -1376,7 +1382,7 @@ facts("Sequence Parsing") do
             tags = specimen["tags"]
             valid = get(specimen, "valid", true)
             # currently unsupported features
-            if contains(tags, "gaps") || contains(tags, "comments") || contains(tags, "ambiguity")
+            if contains(tags, "gaps") || contains(tags, "comments") || (contains(tags, "ambiguity") && !contains(tags, "protein"))
                 continue
             end
             if valid
