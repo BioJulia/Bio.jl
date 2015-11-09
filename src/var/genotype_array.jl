@@ -4,8 +4,7 @@
 # Behaves like a named array, and wraps a PooledDataArray.
 # Allows subsetting by Loci names, and by individual names.
 
-# Data is a sparse array containing allele counts.
-# AllelesPerLocus tells how many alleles are at each locus.
+# CountData is a sparse array containing allele counts.
 # LocusFactor describes which columns of the matrix, are for each locus.
 # LocusAlleleNames has the names of the alleles for each locus.
 
