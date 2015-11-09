@@ -9,19 +9,18 @@
 # LocusFactor describes which columns of the matrix, are for each locus.
 # LocusAlleleNames has the names of the alleles for each locus.
 
-type GenotypeArray{S <: AbstractString, P, N}
+type GenotypeArray{S <: AbstractString, N}
     CountData::PooledDataArray{Int, N}
 
     Individuals::Vector{S}
     LocusFactor::PooledDataArray{S}
     LocusAlleleNames::Dict{S, Vector{S}}
-    Population::PooledDataArray{P}
 end
 
 # GenotypeVector has only one row - one individual.
-typealias GenotypeVector{S} GenotypeArray{S, P, 1}
+typealias GenotypeVector{S} GenotypeArray{S, 1}
 # GenotypeMatrix has multiple rows - multiple individuals.
-typealias GenotypeMatrix{S} GenotypeArray{S, P, 2}
+typealias GenotypeMatrix{S} GenotypeArray{S, 2}
 
 
 
