@@ -118,6 +118,23 @@ function simple_coverage(intervals)
     return covintervals
 end
 
+facts("Interval") do
+    context("Constructor") do
+        i = Interval("chr1", 10, 20)
+        @fact i.seqname --> "chr1"
+        @fact first(i) --> 10
+        @fact last(i) --> 20
+        @fact i.strand --> STRAND_BOTH
+
+        i1 = Interval("chr1", 10, 20, '+')
+        i2 = Interval("chr1", 10, 20, STRAND_POS)
+        @fact i1 == i2 --> true
+
+        i1 = Interval("chr2", 5692667, 5701385, '+',        "SOX11")
+        i2 = Interval("chr2", 5692667, 5701385, STRAND_POS, "SOX11")
+        @fact i1 == i2 --> true
+    end
+end
 
 facts("IntervalCollection") do
 

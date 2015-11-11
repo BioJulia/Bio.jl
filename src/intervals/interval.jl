@@ -65,13 +65,13 @@ end
 
 
 function Interval{T}(seqname::AbstractString, first::Integer, last::Integer,
-                    strand::Strand, metadata::T)
+                    strand::Union{Strand,Char}, metadata::T)
     return Interval{T}(convert(StringField, seqname), first, last, strand, metadata)
 end
 
 
 function Interval(seqname::AbstractString, first::Integer, last::Integer,
-                  strand::Strand=STRAND_BOTH)
+                  strand::Union{Strand,Char}=STRAND_BOTH)
     return Interval{Void}(seqname, first, last, strand, nothing)
 end
 
