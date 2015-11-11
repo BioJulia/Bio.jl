@@ -124,7 +124,7 @@ facts("Interval") do
         @fact i.seqname --> "chr1"
         @fact first(i) --> 10
         @fact last(i) --> 20
-        @fact i.strand --> STRAND_BOTH
+        @fact strand(i) --> STRAND_BOTH
 
         i1 = Interval("chr1", 10, 20, '+')
         i2 = Interval("chr1", 10, 20, STRAND_POS)

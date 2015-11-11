@@ -92,6 +92,11 @@ function last(i::Interval)
 end
 
 
+function strand(i::Interval)
+    return i.strand
+end
+
+
 function isless{T}(a::Interval{T}, b::Interval{T},
                    seqname_isless::Function=alphanum_isless)
     if a.seqname != b.seqname
