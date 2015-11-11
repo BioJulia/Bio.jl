@@ -210,6 +210,46 @@ facts("Nucleotides") do
                 @fact convert(Char, RNA_N) --> 'N'
             end
         end
+
+        context("Other numeric types") do
+            @fact convert(Int, DNA_A) --> 0
+            @fact convert(Int, DNA_C) --> 1
+            @fact convert(Int, DNA_G) --> 2
+            @fact convert(Int, DNA_T) --> 3
+            @fact convert(Int, DNA_N) --> 4
+            @fact convert(DNANucleotide, 0) --> DNA_A
+            @fact convert(DNANucleotide, 1) --> DNA_C
+            @fact convert(DNANucleotide, 2) --> DNA_G
+            @fact convert(DNANucleotide, 3) --> DNA_T
+            @fact convert(DNANucleotide, 4) --> DNA_N
+
+            @fact convert(Int, RNA_A) --> 0
+            @fact convert(Int, RNA_C) --> 1
+            @fact convert(Int, RNA_G) --> 2
+            @fact convert(Int, RNA_U) --> 3
+            @fact convert(Int, RNA_N) --> 4
+            @fact convert(RNANucleotide, 0) --> RNA_A
+            @fact convert(RNANucleotide, 1) --> RNA_C
+            @fact convert(RNANucleotide, 2) --> RNA_G
+            @fact convert(RNANucleotide, 3) --> RNA_U
+            @fact convert(RNANucleotide, 4) --> RNA_N
+        end
+    end
+
+    context("Arithmetic and Order") do
+        @fact DNA_A + 1 --> DNA_C
+        @fact DNA_N - 1 --> DNA_T
+        @fact DNA_N - DNA_C --> 3
+        @fact RNA_A + 1 --> RNA_C
+        @fact RNA_N - 1 --> RNA_U
+        @fact RNA_N - RNA_C --> 3
+        @fact DNA_A < DNA_C < DNA_G < DNA_T < DNA_N --> true
+        @fact RNA_A < RNA_C < RNA_G < RNA_U < RNA_N --> true
+        @fact DNA_A > DNA_G --> false
+        @fact RNA_A > RNA_G --> false
+
+        @fact collect(alphabet(DNANucleotide)) --> [DNA_A, DNA_C, DNA_G, DNA_T, DNA_N]
+        @fact collect(alphabet(RNANucleotide)) --> [RNA_A, RNA_C, RNA_G, RNA_U, RNA_N]
     end
 
     context("Show DNA") do
@@ -1127,6 +1167,21 @@ facts("Nucleotides") do
 end
 
 facts("Aminoacids") do
+    context("Arithmetic and Order") do
+        @fact AA_A + 1 --> AA_R
+        @fact AA_R + 1 --> AA_N
+        @fact AA_R - 1 --> AA_A
+        @fact AA_D - AA_A -->  3
+        @fact AA_A - AA_D --> -3
+        @fact AA_A < AA_R < AA_N < AA_Z < AA_X < AA_O < AA_U --> true
+        @fact AA_J < AA_B --> false
+
+        @fact length(alphabet(AminoAcid)) --> 26
+        @fact AA_A in alphabet(AminoAcid) --> true
+        @fact AA_I in alphabet(AminoAcid) --> true
+        @fact AA_U in alphabet(AminoAcid) --> true
+    end
+
     context("AminoAcid Sequences") do
         reps = 10
         context("Construction") do

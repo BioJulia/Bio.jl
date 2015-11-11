@@ -15,8 +15,20 @@ convert(::Type{DNANucleotide}, nt::UInt8) = box(DNANucleotide, unbox(UInt8, nt))
 convert(::Type{RNANucleotide}, nt::UInt8) = box(RNANucleotide, unbox(UInt8, nt))
 convert(::Type{UInt8}, nt::DNANucleotide) = box(UInt8, unbox(DNANucleotide, nt))
 convert(::Type{UInt8}, nt::RNANucleotide) = box(UInt8, unbox(RNANucleotide, nt))
-convert{T<:Unsigned, S<:Nucleotide}(::Type{T}, nt::S) = box(T, Base.zext_int(T, unbox(S, nt)))
-convert{T<:Unsigned, S<:Nucleotide}(::Type{S}, nt::T) = convert(S, convert(UInt8, nt))
+convert{T<:Number,S<:Nucleotide}(::Type{T}, nt::S) = convert(T, UInt8(nt))
+convert{T<:Number,S<:Nucleotide}(::Type{S}, nt::T) = convert(S, UInt8(nt))
+
+
+# Arithmetic and Order
+# --------------------
+
+# These methods are necessary when deriving some algorithims
+# like iteration, sort, comparison, and so on.
+Base.(:-){N<:Nucleotide}(x::N, y::N) = Int(x) - Int(y)
+Base.(:-){N<:Nucleotide}(x::N, y::Integer) = reinterpret(N, UInt8(x) - UInt8(y))
+Base.(:+){N<:Nucleotide}(x::N, y::Integer) = reinterpret(N, UInt8(x) + UInt8(y))
+Base.(:+){N<:Nucleotide}(x::Integer, y::N) = y + x
+Base.isless{N<:Nucleotide}(x::N, y::N) = isless(UInt8(x), UInt8(y))
 
 
 # Nucleotide encoding definition
@@ -46,9 +58,8 @@ const DNA_INVALID = convert(DNANucleotide, 0b1000) # Indicates invalid DNA when 
 nnucleotide(::Type{DNANucleotide}) = DNA_N
 invalid_nucleotide(::Type{DNANucleotide}) = DNA_INVALID
 
-function isvalid(nt::DNANucleotide)
-    return convert(UInt8, nt) ≤ convert(UInt8, DNA_N)
-end
+isvalid(nt::DNANucleotide) = nt ≤ DNA_N
+alphabet(::Type{DNANucleotide}) = DNA_A:DNA_N
 
 # RNA Nucleotides
 
@@ -74,9 +85,8 @@ const RNA_INVALID = convert(RNANucleotide, 0b1000) # Indicates invalid RNA when 
 nnucleotide(::Type{RNANucleotide}) = RNA_N
 invalid_nucleotide(::Type{RNANucleotide}) = RNA_INVALID
 
-function isvalid(nt::RNANucleotide)
-    return convert(UInt8, nt) ≤ convert(UInt8, RNA_N)
-end
+isvalid(nt::RNANucleotide) = nt ≤ RNA_N
+alphabet(::Type{RNANucleotide}) = RNA_A:RNA_N
 
 
 # Conversion from Char

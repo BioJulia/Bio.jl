@@ -1,7 +1,6 @@
 # K-mer
 # =====
 
-
 # A Kmer is a sequence <= 32nt, without any 'N's, packed in a single 64 bit value.
 #
 # While NucleotideSequence is an efficient general-purpose sequence
@@ -78,8 +77,6 @@ convert{T, K}(::Type{NucleotideSequence}, x::Kmer{T, K}) = convert(NucleotideSeq
 
 # Constructors
 # ------------
-
-# From strings
 
 "Construct a DNAKmer to an AbstractString"
 dnakmer(seq::AbstractString) = convert(DNAKmer, seq)
