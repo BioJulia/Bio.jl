@@ -1,4 +1,4 @@
-Bio.jl
+<p align="center"><img src="https://raw.githubusercontent.com/BioJulia/assets/master/branding/bio.jl.png" width="50%" alt="Bio.jl" /></p>
 ========
 [![Build Status](https://travis-ci.org/BioJulia/Bio.jl.svg?branch=master)](https://travis-ci.org/BioJulia/Bio.jl)
 [![Coverage Status](https://img.shields.io/coveralls/BioJulia/Bio.jl.svg)](https://coveralls.io/r/BioJulia/Bio.jl)
