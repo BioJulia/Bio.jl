@@ -121,6 +121,8 @@ macro update_nextrow(gap_init, gap_extend)
     end)
 end
 
+islowerbound(i, j, L) = j == i - L
+
 function run!{T}(
         nw::BandedNeedlemanWunsch{T},
         a, b,
@@ -189,9 +191,6 @@ function run!{T}(
             trace[i-1+U+1,1+1] = TRACE_NONE
         end
 
-        # NOTE: this may impose a (small) memory allocation
-        islowerbound(i, j) = j == i - L
-
         # run dynamic programming column by column (except the last column)
         @inbounds for j in 1:n-1
             b_j = b[j]
@@ -204,7 +203,7 @@ function run!{T}(
                 if lo == 0
                     h = H[i-j+U+1] = start_gap_open_a + start_gap_extend_a * j
                     trace[i-j+U+1,j+1] = TRACE_DELETE
-                elseif islowerbound(i, j)
+                elseif islowerbound(i, j, L)
                     @update g
                 else
                     @update e g
@@ -222,7 +221,7 @@ function run!{T}(
             if hi > lo
                 let i = hi
                     et = TRACE_NONE
-                    if islowerbound(i, j)
+                    if islowerbound(i, j, L)
                         @update f g
                         @update_nextcol (i == m ? end_gap_init_a : middle_gap_init_a)
                     else
@@ -245,7 +244,7 @@ function run!{T}(
                 if lo == 0
                     h = H[i-j+U+1] = start_gap_open_a + start_gap_extend_a * j
                     trace[i-j+U+1,j+1] = TRACE_DELETE
-                elseif islowerbound(i, j)
+                elseif islowerbound(i, j, L)
                     @update g
                 else
                     @update e g
@@ -260,7 +259,7 @@ function run!{T}(
 
             if hi > lo
                 let i = hi
-                    if islowerbound(i, j)
+                    if islowerbound(i, j, L)
                         @update f g
                     else
                         @update e f g
