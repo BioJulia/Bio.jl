@@ -81,6 +81,10 @@ function copy{T}(interval::Interval{T})
                        interval.strand, copy(interval.metadata))
 end
 
+function seqname(i::Interval)
+    return i.seqname
+end
+
 
 function first(i::Interval)
     return i.first

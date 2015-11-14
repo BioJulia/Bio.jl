@@ -121,7 +121,7 @@ end
 facts("Interval") do
     context("Constructor") do
         i = Interval("chr1", 10, 20)
-        @fact i.seqname --> "chr1"
+        @fact seqname(i) --> "chr1"
         @fact first(i) --> 10
         @fact last(i) --> 20
         @fact strand(i) --> STRAND_BOTH
