@@ -128,6 +128,9 @@ function Sequence()
 end
 
 include("nucleotide.jl")
+include("kmer.jl")
+include("eachkmer.jl")
+include("kmercounts.jl")
 include("aminoacid.jl")
 include("geneticcode.jl")
 include("util.jl")

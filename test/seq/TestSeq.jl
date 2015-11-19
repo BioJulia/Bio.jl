@@ -725,9 +725,9 @@ facts("Nucleotides") do
 
                 for len in [0, 1, 16, 32]
                     # UInt64 conversions
-                    @fact all(Bool[check_uint64_convertion(DNANucleotide, rand(UInt64), len)
+                    @fact all(Bool[check_uint64_convertion(DNANucleotide, rand(UInt64(0):UInt64(UInt64(1) << 2len - 1)), len)
                               for _ in 1:reps]) --> true
-                    @fact all(Bool[check_uint64_convertion(RNANucleotide, rand(UInt64), len)
+                    @fact all(Bool[check_uint64_convertion(RNANucleotide, rand(UInt64(0):UInt64(UInt64(1) << 2len - 1)), len)
                               for _ in 1:reps]) --> true
 
                     # String construction
@@ -952,7 +952,7 @@ facts("Nucleotides") do
         end
 
         context("EachKmer") do
-            function string_eachkmer(seq::AbstractString, k, step=1)
+            function string_eachkmer(seq::AbstractString, k, step)
                 kmers = AbstractString[]
                 i = 1
                 for i in 1:step:length(seq) - k + 1
@@ -964,28 +964,23 @@ facts("Nucleotides") do
                 return kmers
             end
 
-            function check_eachkmer(T, seq::AbstractString, k, step=1)
+            function check_eachkmer(T, seq::AbstractString, k, step)
                 xs = [convert(AbstractString, x) for (i, x) in collect(each(Kmer{T, k}, NucleotideSequence{T}(seq), step))]
-                ys = string_eachkmer(seq, k, step)
-                return xs == ys
+                ys = [convert(AbstractString, x) for (i, x) in collect(eachkmer(NucleotideSequence{T}(seq), k, step))]
+                zs = string_eachkmer(seq, k, step)
+                return xs == ys == zs
             end
 
             reps = 10
             len = 10000
 
-            for k in [1, 3, 16, 32]
-                @fact all(Bool[check_eachkmer(DNANucleotide, random_dna(len), k) for _ in 1:reps]) --> true
-                @fact all(Bool[check_eachkmer(RNANucleotide, random_rna(len), k) for _ in 1:reps]) --> true
-            end
-
-            for k in [1, 3, 16, 32]
-                @fact all(Bool[check_eachkmer(DNANucleotide, random_dna(len), k, 3) for _ in 1:reps]) --> true
-                @fact all(Bool[check_eachkmer(RNANucleotide, random_rna(len), k, 3) for _ in 1:reps]) --> true
+            for k in [0, 1, 3, 16, 32], step in 1:3
+                @fact all(Bool[check_eachkmer(DNANucleotide, random_dna(len), k, step) for _ in 1:reps]) --> true
+                @fact all(Bool[check_eachkmer(RNANucleotide, random_rna(len), k, step) for _ in 1:reps]) --> true
             end
 
             @fact isempty(collect(each(DNAKmer{1}, dna""))) --> true
             @fact isempty(collect(each(DNAKmer{1}, dna"NNNNNNNNNN"))) --> true
-            @fact isempty(collect(each(DNAKmer{0}, dna"ACGT"))) --> true
             @fact_throws each(DNAKmer{-1}, dna"ACGT")
             @fact_throws each(DNAKmer{33}, dna"ACGT")
         end

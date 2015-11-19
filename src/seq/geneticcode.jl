@@ -35,14 +35,30 @@ done(code::GeneticCode, x::UInt64) = (x > UInt64(0b111111))
 # All of these taken from:
 # http://www.ncbi.nlm.nih.gov/Taxonomy/taxonomyhome.html/index.cgi?chapter=tgencodes#SG1
 
+function parse_genetic_codes(s)
+    aas, _, base1, base2, base3 = split(chomp(s), '\n')
+    codes = GeneticCode(Vector{AminoAcid}(4^3))
+    @assert length(aas) == 73
+    for i in 10:73
+        # TODO: may need to add the stop codon to the amino acids
+        aa = aas[i] != '*' ? AminoAcid(aas[i]) : AA_INVALID
+        b1 = DNANucleotide(base1[i])
+        b2 = DNANucleotide(base2[i])
+        b3 = DNANucleotide(base3[i])
+        codon = Codon(kmer(b1, b2, b3))
+        codes[codon] = aa
+    end
+    return codes
+end
+
 # Standard Code
-const standard_genetic_code = GeneticCode([
-    AA_K, AA_Q, AA_E, AA_INVALID, AA_T, AA_P, AA_A, AA_S, AA_R, AA_R, AA_G,
-    AA_INVALID, AA_I, AA_L, AA_V, AA_L, AA_N, AA_H, AA_D, AA_Y, AA_T, AA_P,
-    AA_A, AA_S, AA_S, AA_R, AA_G, AA_C, AA_I, AA_L, AA_V, AA_F, AA_K, AA_Q,
-    AA_E, AA_INVALID, AA_T, AA_P, AA_A, AA_S, AA_R, AA_R, AA_G, AA_W, AA_M,
-    AA_L, AA_V, AA_L, AA_N, AA_H, AA_D, AA_Y, AA_T, AA_P, AA_A, AA_S, AA_S,
-    AA_R, AA_G, AA_C, AA_I, AA_L, AA_V, AA_F ])
+const standard_genetic_code = parse_genetic_codes("""
+  AAs  = FFLLSSSSYY**CC*WLLLLPPPPHHQQRRRRIIIMTTTTNNKKSSRRVVVVAAAADDEEGGGG
+Starts = ---M---------------M---------------M----------------------------
+Base1  = TTTTTTTTTTTTTTTTCCCCCCCCCCCCCCCCAAAAAAAAAAAAAAAAGGGGGGGGGGGGGGGG
+Base2  = TTTTCCCCAAAAGGGGTTTTCCCCAAAAGGGGTTTTCCCCAAAAGGGGTTTTCCCCAAAAGGGG
+Base3  = TCAGTCAGTCAGTCAGTCAGTCAGTCAGTCAGTCAGTCAGTCAGTCAGTCAGTCAGTCAGTCAG
+""")
 
 # Vertebrate mithocondrial genetic code
 const vertebrate_mitochondrial_genetic_code = copy(standard_genetic_code)
