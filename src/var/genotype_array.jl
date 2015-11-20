@@ -9,12 +9,21 @@
 # LocusAlleleNames has the names of the alleles for each locus.
 
 type GenotypeArray{S <: AbstractString, N}
-    CountData::PooledDataArray{Int, N}
+    CountData::PooledDataArray{Int, UInt8, N}
 
     Individuals::Vector{S}
     LocusFactor::PooledDataArray{S}
     LocusAlleleNames::Dict{S, Vector{S}}
+
+    range::UnitRange{Int}
+    mutable::Bool
+    hasrelatives::Bool
 end
+
+function GenotypeArray()
+
+end
+
 
 # GenotypeVector has only one row - one individual.
 typealias GenotypeVector{S} GenotypeArray{S, 1}
@@ -22,6 +31,13 @@ typealias GenotypeVector{S} GenotypeArray{S, 1}
 typealias GenotypeMatrix{S} GenotypeArray{S, 2}
 
 
+function Base.getindex{T <: Integer}(arr::GenotypeArray, i::T)
+    return arr.CountData[i]
+end
+
+function Base.getindex(arr::GenotypeArray, row::Colon)
+
+end
 
 
 
