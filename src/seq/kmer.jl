@@ -132,10 +132,11 @@ function =={T, K}(a::NucleotideSequence{T}, b::Kmer{T, K})
     return true
 end
 
-
 function =={T, K}(a::Kmer{T, K}, b::NucleotideSequence{T})
     return b == a
 end
+
+Base.hash(x::Kmer, h::UInt) = hash(UInt64(x), h)
 
 function getindex{T, K}(x::Kmer{T, K}, i::Integer)
     if i < 1 || i > K

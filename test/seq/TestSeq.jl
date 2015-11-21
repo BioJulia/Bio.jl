@@ -838,6 +838,17 @@ facts("Nucleotides") do
                         @fact isless(convert(RNAKmer{1}, UInt64(1)), convert(RNAKmer{1}, UInt64(0))) --> false
                     end
                 end
+
+                context("Hash") do
+                    kmers = map(dnakmer, ["AAAA", "AACT", "ACGT", "TGCA"])
+                    for x in kmers, y in kmers
+                        @fact x == y --> hash(x) == hash(y)
+                    end
+                    kmers = map(rnakmer, ["AAAA", "AACU", "ACGU", "UGCA"])
+                    for x in kmers, y in kmers
+                        @fact x == y --> hash(x) == hash(y)
+                    end
+                end
             end
 
             context("Length") do
