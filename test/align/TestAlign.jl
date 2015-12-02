@@ -165,10 +165,10 @@ facts("Alignments") do
         #               |   |   |    |     |  |   |
         #               4   8   12   17    20 23  27
         anchors = [
-            AlignmentAnchor(0, 4, OP_START),
-            AlignmentAnchor(4, 8, OP_MATCH),
-            AlignmentAnchor(4, 12, OP_DELETE),
-            AlignmentAnchor(9, 17, OP_MATCH),
+            AlignmentAnchor( 0,  4, OP_START),
+            AlignmentAnchor( 4,  8, OP_MATCH),
+            AlignmentAnchor( 4, 12, OP_DELETE),
+            AlignmentAnchor( 9, 17, OP_MATCH),
             AlignmentAnchor(12, 17, OP_INSERT),
             AlignmentAnchor(15, 20, OP_MATCH),
             AlignmentAnchor(15, 23, OP_DELETE),
@@ -176,8 +176,20 @@ facts("Alignments") do
         ]
         query = "TGGCATCATTTAACGCAAG"
         alnseq = AlignedSequence(query, anchors)
-        @fact Bio.Align.first(alnseq) --> 5
-        @fact Bio.Align.last(alnseq) --> 27
+        @fact Bio.Align.first(alnseq) -->  5
+        @fact Bio.Align.last(alnseq)  --> 27
+        # OP_MATCH
+        for (seqpos, refpos) in [(1, 5), (2, 6), (4, 8), (13, 18), (19, 27)]
+            @fact seq2ref(seqpos, alnseq) --> (refpos, OP_MATCH)
+            @fact ref2seq(refpos, alnseq) --> (seqpos, OP_MATCH)
+        end
+        # OP_INSERT
+        @fact seq2ref(10, alnseq) --> (17, OP_INSERT)
+        @fact seq2ref(11, alnseq) --> (17, OP_INSERT)
+        # OP_DELETE
+        @fact ref2seq( 9, alnseq) --> ( 4, OP_DELETE)
+        @fact ref2seq(10, alnseq) --> ( 4, OP_DELETE)
+        @fact ref2seq(23, alnseq) --> (15, OP_DELETE)
     end
 end
 

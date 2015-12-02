@@ -1,4 +1,3 @@
-
 # Anchor definition
 # ------------------
 """
@@ -181,6 +180,75 @@ function show(io::IO, aln::Alignment)
     end
 end
 
+# find the index of the first anchor that satisfies `i ≤ pos`
+@generated function findanchor{isseq}(aln::Alignment, i::Integer, ::Type{Val{isseq}})
+    pos = isseq ? :seqpos : :refpos
+    quote
+        anchors = aln.anchors
+        lo = 1
+        hi = endof(anchors)
+        if !(anchors[lo].$pos < i ≤ anchors[hi].$pos)
+            return 0
+        end
+        # binary search
+        while hi - lo > 4
+            m = div(lo + hi, 2)
+            if anchors[m].$pos < i
+                lo = m
+            else
+                hi = m
+            end
+            # invariant
+            @assert anchors[lo].$pos < i ≤ anchors[hi].$pos
+        end
+        # linear search
+        for j in lo+1:hi
+            if i ≤ aln.anchors[j].$pos
+                return j
+            end
+        end
+        # do not reach here
+        @assert false
+        return 0
+    end
+end
+
+"""
+    seq2ref(i, aln)
+
+Map a position from sequence to reference.
+"""
+function seq2ref(i::Integer, aln::Alignment)
+    idx = findanchor(aln, i, Val{true})
+    if idx == 0
+        throw(ArgumentError("invalid sequence position: $i"))
+    end
+    anchor = aln.anchors[idx]
+    refpos = anchor.refpos
+    if ismatchop(anchor.op)
+        refpos += i - anchor.seqpos
+    end
+    return refpos, anchor.op
+end
+
+"""
+    ref2seq(i, aln)
+
+Map a position from reference to sequence.
+"""
+function ref2seq(i::Integer, aln::Alignment)
+    idx = findanchor(aln, i, Val{false})
+    if idx == 0
+        throw(ArgumentError("invalid reference position: $i"))
+    end
+    anchor = aln.anchors[idx]
+    seqpos = anchor.seqpos
+    if ismatchop(anchor.op)
+        seqpos += i - anchor.refpos
+    end
+    return seqpos, anchor.op
+end
+
 
 immutable AlignedSequence{S}
     seq::S
@@ -214,6 +282,13 @@ function last(alnseq::AlignedSequence)
     return alnseq.aln.lastref
 end
 
+function seq2ref(i::Integer, alnseq::AlignedSequence)
+    return seq2ref(i, alnseq.aln)
+end
+
+function ref2seq(i::Integer, alnseq::AlignedSequence)
+    return ref2seq(i, alnseq.aln)
+end
 
 # simple letters and dashes representation of an alignment
 function show(io::IO, alnseq::AlignedSequence)
