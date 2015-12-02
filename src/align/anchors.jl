@@ -191,18 +191,18 @@ end
             return 0
         end
         # binary search
-        while hi - lo > 4
-            m = div(lo + hi, 2)
+        @inbounds while hi - lo > 2
+            m = (lo + hi) >> 1
             if anchors[m].$pos < i
                 lo = m
-            else
+            else  # i ≤ anchors[m].$pos
                 hi = m
             end
-            # invariant
-            @assert anchors[lo].$pos < i ≤ anchors[hi].$pos
+            # invariant (activate this for debugging)
+            #@assert anchors[lo].$pos < i ≤ anchors[hi].$pos
         end
         # linear search
-        for j in lo+1:hi
+        @inbounds for j in lo+1:hi
             if i ≤ aln.anchors[j].$pos
                 return j
             end
