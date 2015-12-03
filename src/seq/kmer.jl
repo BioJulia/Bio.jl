@@ -1,7 +1,6 @@
 # K-mer
 # =====
 
-
 # A Kmer is a sequence <= 32nt, without any 'N's, packed in a single 64 bit value.
 #
 # While NucleotideSequence is an efficient general-purpose sequence
@@ -79,8 +78,6 @@ convert{T, K}(::Type{NucleotideSequence}, x::Kmer{T, K}) = convert(NucleotideSeq
 # Constructors
 # ------------
 
-# From strings
-
 "Construct a DNAKmer to an AbstractString"
 dnakmer(seq::AbstractString) = convert(DNAKmer, seq)
 
@@ -156,7 +153,10 @@ function show{T,K}(io::IO, x::Kmer{T,K})
     end
 end
 
-isless{T, K}(x::Kmer{T, K}, y::Kmer{T, K}) = isless(UInt64(x), UInt64(y))
+Base.(:-){T,K}(x::Kmer{T,K}, y::Integer)   = Kmer{T,K}(UInt64(x) - reinterpret(UInt64, y))
+Base.(:+){T,K}(x::Kmer{T,K}, y::Integer)   = Kmer{T,K}(UInt64(x) + reinterpret(UInt64, y))
+Base.(:+){T,K}(x::Integer,   y::Kmer{T,K}) = y + x
+Base.isless{T,K}(x::Kmer{T,K}, y::Kmer{T,K}) = isless(UInt64(x), UInt64(y))
 
 length{T, K}(x::Kmer{T, K}) = K
 endof(x::Kmer) = length(x)
@@ -192,9 +192,9 @@ Reversed complement of `kmer`
 reverse_complement{T, K}(x::Kmer{T, K}) = complement(reverse(x))
 
 """
-`mismatches(x::Kmer, y::Kmer)`
+`mismatches(a::Kmer, b::Kmer)`
 
-Return the number of mismatches between `x` and `y`.
+Return the number of mismatches between `a` and `b`.
 
 ### Arguments
 * `a`: first sequence to compare

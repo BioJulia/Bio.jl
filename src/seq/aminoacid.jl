@@ -10,8 +10,20 @@ bitstype 8 AminoAcid
 
 convert(::Type{AminoAcid}, aa::UInt8) = box(AminoAcid, unbox(UInt8, aa))
 convert(::Type{UInt8}, aa::AminoAcid) = box(UInt8, unbox(AminoAcid, aa))
-convert{T <: Unsigned}(::Type{T}, aa::AminoAcid) = box(T, Base.zext_int(T, unbox(AminoAcid, aa)))
-convert{T <: Unsigned}(::Type{AminoAcid}, aa::T) = convert(AminoAcid, convert(UInt8, aa))
+convert{T<:Number}(::Type{T}, aa::AminoAcid) = convert(T, UInt8(aa))
+convert{T<:Number}(::Type{AminoAcid}, aa::T) = convert(AminoAcid, UInt8(aa))
+
+
+# Arithmetic and Order
+# --------------------
+
+# These methods are necessary when deriving some algorithims
+# like iteration, sort, comparison, and so on.
+Base.(:-)(x::AminoAcid, y::AminoAcid) = Int(x) - Int(y)
+Base.(:-)(x::AminoAcid, y::Integer) = reinterpret(AminoAcid, UInt8(x) - UInt8(y))
+Base.(:+)(x::AminoAcid, y::Integer) = reinterpret(AminoAcid, UInt8(x) + UInt8(y))
+Base.(:+)(x::Integer, y::AminoAcid) = y + x
+Base.isless(x::AminoAcid, y::AminoAcid) = isless(UInt8(x), UInt8(y))
 
 
 # Amino acid encoding definition
@@ -101,10 +113,8 @@ const AA_U = convert(AminoAcid, 0x19)
 "Invalid Amino Acid"
 const AA_INVALID = convert(AminoAcid, 0x1a) # Used during conversion from strings
 
-
-function isvalid(aa::AminoAcid)
-    return convert(UInt8, aa) < convert(UInt8, AA_INVALID)
-end
+isvalid(aa::AminoAcid) = aa ≤ AA_U
+alphabet(::Type{AminoAcid}) = AA_A:AA_U
 
 
 # Conversion from/to Char
