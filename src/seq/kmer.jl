@@ -153,7 +153,10 @@ function show{T,K}(io::IO, x::Kmer{T,K})
     end
 end
 
-isless{T, K}(x::Kmer{T, K}, y::Kmer{T, K}) = isless(UInt64(x), UInt64(y))
+Base.(:-){T,K}(x::Kmer{T,K}, y::Integer)   = Kmer{T,K}(UInt64(x) - reinterpret(UInt64, y))
+Base.(:+){T,K}(x::Kmer{T,K}, y::Integer)   = Kmer{T,K}(UInt64(x) + reinterpret(UInt64, y))
+Base.(:+){T,K}(x::Integer,   y::Kmer{T,K}) = y + x
+Base.isless{T,K}(x::Kmer{T,K}, y::Kmer{T,K}) = isless(UInt64(x), UInt64(y))
 
 length{T, K}(x::Kmer{T, K}) = K
 endof(x::Kmer) = length(x)

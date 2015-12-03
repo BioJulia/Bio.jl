@@ -898,6 +898,29 @@ facts("Nucleotides") do
                 end
             end
 
+            context("Arithmetic") do
+                x = dnakmer("AA")
+                @fact x - 1 == x + (-1) == dnakmer("TT") --> true
+                @fact x + 1 == x - (-1) == dnakmer("AC") --> true
+
+                x = dnakmer("TT")
+                @fact x - 1 == x + (-1) == dnakmer("TG") --> true
+                @fact x + 1 == x - (-1) == dnakmer("AA") --> true
+
+                base = dnakmer("AAA")
+                offset = 0
+                nucs = "ACGT"
+                for a in nucs, b in nucs, c in nucs
+                    @fact base + offset == dnakmer(string(a, b, c)) --> true
+                    offset += 1
+                end
+            end
+
+            context("Order") do
+                @fact dnakmer("AA") < dnakmer("AC") < dnakmer("AG") < dnakmer("AT") < dnakmer("CA") --> true
+                @fact rnakmer("AA") < rnakmer("AC") < rnakmer("AG") < rnakmer("AU") < rnakmer("CA") --> true
+            end
+
             context("Access and Iterations") do
                 dna_kmer = dnakmer("ACTG")
                 rna_kmer = rnakmer("ACUG")
