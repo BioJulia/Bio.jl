@@ -189,9 +189,9 @@ Reversed complement of `kmer`
 reverse_complement{T, K}(x::Kmer{T, K}) = complement(reverse(x))
 
 """
-`mismatches(x::Kmer, y::Kmer)`
+`mismatches(a::Kmer, b::Kmer)`
 
-Return the number of mismatches between `x` and `y`.
+Return the number of mismatches between `a` and `b`.
 
 ### Arguments
 * `a`: first sequence to compare
