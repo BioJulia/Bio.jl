@@ -287,8 +287,11 @@ facts("PairwiseAlignment") do
         # undefined
         @fact BLOSUM62[AA_O,AA_R] -->  0
         @fact BLOSUM62[AA_R,AA_O] -->  0
-        @fact haskey(BLOSUM62, AA_R) --> true
-        @fact haskey(BLOSUM62, AA_O) --> false
+        @fact Bio.Align.is_defined_symbol(BLOSUM62, AA_R) --> true
+        @fact Bio.Align.is_defined_symbol(BLOSUM62, AA_O) --> false
+
+        # no error
+        print(IOBuffer(), BLOSUM62)
 
         mat = Int[
             +2 -3 -3 -3  0;

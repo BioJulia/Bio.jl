@@ -12,7 +12,8 @@ abstract AbstractSubstitutionMatrix{T<:Real}
 
 function show_submat(io::IO, submat::AbstractSubstitutionMatrix, alphabet, sz)
     alphabets = [string(alphabet(UInt8(x))) for x in 0:sz-1]
-    mat = [haskey(submat, x, y) ? string(submat[x,y]) : "NA" for x in 0:sz-1, y in 0:sz-1]
+    # NA: not available
+    mat = [is_defined_symbol(submat, x, y) ? string(submat[x,y]) : "NA" for x in 0:sz-1, y in 0:sz-1]
     # add rows
     mat = hcat(alphabets, mat)
     # add columns
@@ -37,28 +38,27 @@ immutable SubstitutionMatrix{T} <: AbstractSubstitutionMatrix{T}
     data::Matrix{T}
     # a character is defined or not
     defined::BitVector
-    # matching/mismatching score for undefined characters
-    match::T
-    mismatch::T
+    # default matching/mismatching score for undefined characters
+    default_match::T
+    default_mismatch::T
     # alphabet type (e.g. AminoAcid)
     alphabet::Nullable{DataType}
 
-    function SubstitutionMatrix(data, defined, match, mismatch, alphabet=Nullable())
+    function SubstitutionMatrix(data, defined, default_match, default_mismatch, alphabet=Nullable())
         sz = size(data, 1)
         @assert sz == size(data, 2)
         @assert sz == length(defined)
 
-        # fill undefined cells with match/mismatch
+        # fill undefined cells with default match/mismatch
         undefined = ~defined
         i = 0
         while (i = findnext(undefined, i + 1)) > 0
             for j in 1:sz
-                score = i == j ? match : mismatch
-                data[i,j] = data[j,i] = score
+                data[i,j] = data[j,i] = ifelse(i == j, default_match, default_mismatch)
             end
         end
 
-        return new(data, defined, match, mismatch, alphabet)
+        return new(data, defined, default_match, default_mismatch, alphabet)
     end
 end
 
@@ -69,8 +69,10 @@ end
 
 function SubstitutionMatrix{T}(submat::AbstractMatrix{T};
                                defined::BitVector=trues(size(submat, 1)),
-                               match=T(0), mismatch=T(0), alphabet=Nullable())
-    return SubstitutionMatrix{T}(submat, defined, match, mismatch, alphabet)
+                               default_match=T(0),
+                               default_mismatch=T(0),
+                               alphabet=Nullable())
+    return SubstitutionMatrix{T}(submat, defined, default_match, default_mismatch, alphabet)
 end
 
 Base.convert(::Type{Matrix}, submat::SubstitutionMatrix) = submat.data
@@ -80,12 +82,12 @@ Base.convert{T}(::Type{Matrix{T}}, submat::SubstitutionMatrix{T}) = submat.data
     return submat.data[UInt8(x)+1,UInt8(y)+1]
 end
 
-function Base.haskey(submat::SubstitutionMatrix, x)
+function is_defined_symbol(submat::SubstitutionMatrix, x)
     return submat.defined[UInt8(x)+1]
 end
 
-function Base.haskey(submat::SubstitutionMatrix, x, y)
-    return haskey(submat, x) && haskey(submat, y)
+function is_defined_symbol(submat::SubstitutionMatrix, x, y)
+    return is_defined_symbol(submat, x) && is_defined_symbol(submat, y)
 end
 
 Base.minimum(submat::SubstitutionMatrix) = minimum(submat.data)
@@ -94,7 +96,9 @@ Base.maximum(submat::SubstitutionMatrix) = maximum(submat.data)
 function Base.show(io::IO, submat::SubstitutionMatrix)
     alphabet = get(submat.alphabet, UInt8)
     show_submat(io, submat, alphabet, size(submat.data, 1))
-    println(io, "* NA: match = ", submat.match, ", mismatch = ", submat.mismatch)
+    print(io,
+          "  (default: match = ", submat.default_match,
+          ", mismatch = ", submat.default_mismatch, ')')
 end
 
 
@@ -112,11 +116,7 @@ function DichotomousSubstitutionMatrix(match::Real, mismatch::Real)
 end
 
 @inline function Base.getindex(submat::DichotomousSubstitutionMatrix, x, y)
-    return ifelse(
-        x == y,
-        submat.match,
-        submat.mismatch
-    )
+    return ifelse(x == y, submat.match, submat.mismatch)
 end
 
 function Base.show(io::IO, submat::DichotomousSubstitutionMatrix)
@@ -125,8 +125,8 @@ function Base.show(io::IO, submat::DichotomousSubstitutionMatrix)
     w = max(length(match), length(mismatch))
     println(io, typeof(submat), ':')
     # right aligned
-    print(io, "     match = ", " " ^ (w - length(match)), match, '\n')
-    print(io, "  mismatch = ", " " ^ (w - length(mismatch)), mismatch)
+    print(io, "     match = ", lpad(match, w), '\n')
+    print(io, "  mismatch = ", lpad(mismatch, w))
 end
 
 
@@ -182,8 +182,8 @@ function parse_ncbi_submat(filepath)
     return SubstitutionMatrix(
         submat,
         defined=defined,
-        match=0,
-        mismatch=0,
+        default_match=0,
+        default_mismatch=0,
         alphabet=AminoAcid
     )
 end
