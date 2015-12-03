@@ -81,10 +81,12 @@ export
     CostModel,
     # pairwise alignment
     PairwiseAlignment,
+    PairwiseAlignmentResult,
     pairalign,
     score,
     distance,
-    alignment
+    alignment,
+    hasalignment
 
 
 include("operations.jl")

@@ -2,6 +2,7 @@
 # ----------
 
 # include algorithms
+include("alignment.jl")
 include("result.jl")
 include("algorithms/common.jl")
 include("algorithms/needleman_wunsch.jl")
@@ -82,19 +83,19 @@ function pairalign{S1,S2,T}(::GlobalAlignment, a::S1, b::S2, score::AffineGapSco
         bnw = BandedNeedlemanWunsch{T}(m, n, L, U)
         score = run!(bnw, a, b, score.submat, score.gap_open, score.gap_extend)
         if score_only
-            return PairwiseAlignment{S1,S2}(score, true)
+            return PairwiseAlignmentResult{S1,S2}(score, true)
         else
             a′ = traceback(bnw, a, b, (m, n))
-            return PairwiseAlignment(score, true, a′, b)
+            return PairwiseAlignmentResult(score, true, a′, b)
         end
     else
         nw = NeedlemanWunsch{T}(m, n)
         score = run!(nw, a, b, score.submat, score.gap_open, score.gap_extend)
         if score_only
-            return PairwiseAlignment{S1,S2}(score, true)
+            return PairwiseAlignmentResult{S1,S2}(score, true)
         else
             a′ = traceback(nw, a, b, (m, n))
-            return PairwiseAlignment(score, true, a′, b)
+            return PairwiseAlignmentResult(score, true, a′, b)
         end
     end
 end
@@ -111,10 +112,10 @@ function pairalign{S1,S2,T}(::SemiGlobalAlignment, a::S1, b::S2, score::AffineGa
         gap_open, gap_extend, gap_open, gap_extend, gap_open, gap_extend,
     )
     if score_only
-        return PairwiseAlignment{S1,S2}(score, true)
+        return PairwiseAlignmentResult{S1,S2}(score, true)
     else
         a′ = traceback(nw, a, b, (m, n))
-        return PairwiseAlignment(score, true, a′, b)
+        return PairwiseAlignmentResult(score, true, a′, b)
     end
 end
 
@@ -128,10 +129,10 @@ function pairalign{S1,S2,T}(::OverlapAlignment, a::S1, b::S2, score::AffineGapSc
         T(0), T(0), score.gap_open, score.gap_extend, T(0), T(0),
     )
     if score_only
-        return PairwiseAlignment{S1,S2}(score, true)
+        return PairwiseAlignmentResult{S1,S2}(score, true)
     else
         a′ = traceback(nw, a, b, (m, n))
-        return PairwiseAlignment(score, true, a′, b)
+        return PairwiseAlignmentResult(score, true, a′, b)
     end
 end
 
@@ -140,10 +141,10 @@ function pairalign{S1,S2,T}(::LocalAlignment, a::S1, b::S2, score::AffineGapScor
     sw = SmithWaterman{T}(length(a), length(b))
     score, endpos = run!(sw, a, b, score.submat, score.gap_open, score.gap_extend)
     if score_only
-        return PairwiseAlignment{S1,S2}(score, true)
+        return PairwiseAlignmentResult{S1,S2}(score, true)
     else
         a′ = traceback(sw, a, b, endpos)
-        return PairwiseAlignment(score, true, a′, b)
+        return PairwiseAlignmentResult(score, true, a′, b)
     end
 end
 
@@ -151,10 +152,10 @@ function pairalign{S1,S2}(::EditDistance, a::S1, b::S2, cost::CostModel;
                           distance_only::Bool=false)
     dist, trace, endpos = edit_distance(a, b, cost.submat, cost.insertion, cost.deletion)
     if distance_only
-        return PairwiseAlignment{S1,S2}(dist, false)
+        return PairwiseAlignmentResult{S1,S2}(dist, false)
     else
         a′ = edit_traceback(a, b, trace, endpos)
-        return PairwiseAlignment(dist, false, a′, b)
+        return PairwiseAlignmentResult(dist, false, a′, b)
     end
 end
 
@@ -172,9 +173,9 @@ function pairalign{S1,S2}(::HammingDistance, a::S1, b::S2;
                           distance_only::Bool=false)
     dist, anchors = hamming_distance(Int, a, b)
     if distance_only
-        return PairwiseAlignment{S1,S2}(dist, false)
+        return PairwiseAlignmentResult{S1,S2}(dist, false)
     else
         a′ = AlignedSequence(a, anchors)
-        return PairwiseAlignment(dist, true, a′, b)
+        return PairwiseAlignmentResult(dist, true, a′, b)
     end
 end

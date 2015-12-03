@@ -267,13 +267,13 @@ function alndistance{T}(cost::CostModel{T}, alnstr::ASCIIString)
     return alndistance(ASCIIString, cost, alnstr)
 end
 
-function alignedpair(aln)
-    pair = get(aln.seqpair)
-    anchors = pair.first.aln.anchors
+function alignedpair(alnres)
+    a, b = alignment(alnres)
+    anchors = a.aln.anchors
     buf = IOBuffer()
-    Bio.Align.show_seq(buf, pair.first, anchors)
+    Bio.Align.show_seq(buf, a, anchors)
     println(buf)
-    Bio.Align.show_ref(buf, pair.second, anchors)
+    Bio.Align.show_ref(buf, b, anchors)
     return bytestring(buf)
 end
 
@@ -368,10 +368,15 @@ facts("PairwiseAlignment") do
         ]
         seq = AlignedSequence("ACG", anchors)
         ref = "ACG"
-        aln = PairwiseAlignment(3, true, seq, ref)
-        @fact isa(aln, PairwiseAlignment) --> true
-        @fact isa(alignment(aln), Alignment) --> true
-        @fact score(aln) --> 3
+        aln = PairwiseAlignment(seq, ref)
+        a, b = aln
+        @fact a === seq --> true
+        @fact b === ref --> true
+        result = PairwiseAlignmentResult(3, true, seq, ref)
+        @fact isa(result, PairwiseAlignmentResult) --> true
+        @fact isa(alignment(result), PairwiseAlignment) --> true
+        @fact score(result) --> 3
+        @fact hasalignment(result) --> true
     end
 
     context("GlobalAlignment") do
