@@ -6,6 +6,9 @@ import Base:
     done,
     show
 
+import Bio.Seq:
+    Sequence
+
 export eachwindow,
     EachWindowIterator
 

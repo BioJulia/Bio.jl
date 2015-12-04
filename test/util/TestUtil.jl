@@ -41,7 +41,7 @@ facts("Sliding-Windows") do
                 stepsize = rand(1:length(seq))
                 itr = eachwindow(seq, winsize, stepsize)
                 res = collect(itr)
-                @fact length(res) --> itr.nwin
+                @fact length(res) --> size(itr)
                 for win in res
                     @fact length(res) --> winsize
                 end
