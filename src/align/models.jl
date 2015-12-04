@@ -3,21 +3,38 @@
 
 """
 Supertype of score model.
-
-Every score model is a problem of finding the maximum score and its alignment.
 """
 abstract AbstractScoreModel{T<:Real}
 
 """
+    AffineGapScoreModel(submat, gap_open, gap_extend)
+    AffineGapScoreModel(submat, gap_open=, gap_extend=)
+    AffineGapScoreModel(match=, mismatch=, gap_open=, gap_extend=)
+
 Affine gap scoring model.
 
-The gap penalty of length `k` is `gap_open_penalty + gap_extend_penalty * k`.
+This creates an affine gap scroing model object for alignment from a
+substitution matrix (`submat`), a gap opening score (`gap_open`), and a gap
+extending score (`gap_extend`). A consecutive gap of length `k` has a score of
+`gap_open + gap_extend * k`. Note that both of the gap scores should be
+non-positive.  As a shorthand of creating a dichotomous substitution matrix,
+you can write as, for example,
+`AffineGapScoreModel(match=5, mismatch=-3, gap_open=-2, gap_extend=-1)`.
 
-Fields:
+Example
+-------
 
-    * `submat`: substitution matrix
-    * `gap_open`: score of opening a new gap
-    * `gap_extend`: score of extending a gap
+    using Bio.Seq
+    using Bio.Align
+
+    # create an affine gap scoring model from a predefined substitution
+    # matrix and gap opening/extending scores.
+    affinegap = AffineGapScoreModel(BLOSUM62, gap_open=-10, gap_extend=-1)
+
+    # run global alignment between two amino acid sequenecs
+    pairalign(GlobalAlignment(), aa"IDGAAGQQL", aa"IDGATGQL", affinegap)
+
+See also: `SubstitutionMatrix`, `pairalign`, `CostModel`
 """
 type AffineGapScoreModel{T} <: AbstractScoreModel{T}
     submat::AbstractSubstitutionMatrix{T}
@@ -83,19 +100,34 @@ end
 
 """
 Supertype of cost model.
-
-Every cost model is a problem of finding the minimum cost and its alignment.
 """
 abstract AbstractCostModel{T}
 
 """
+    CostModel(submat, insertion, deletion)
+    CostModel(submat, insertion=, deletion=)
+    CostModel(match=, mismatch=, insertion=, deletion=)
+
 Cost model.
 
-Fields:
+This creates a cost model object for alignment from substitution matrix
+(`submat`), an insertion cost (`insertion`), and a deletion cost (`deletion`).
+Note that both of the insertion and deletion costs should be non-negative.  As
+a shorthand of creating a dichotomous substitution matrix, you can write as,
+for example, `CostModel(match=0, mismatch=1, insertion=2, deletion=2)`.
 
-    * `submat`: a substitution matrix
-    * `insertion`: a cost of inserting a character into the first sequence
-    * `deletion`: a cost of deleting a character from the first sequence
+Example
+-------
+
+    using Bio.Align
+
+    # create a cost model from a substitution matrix and indel costs
+    cost = CostModel(ones(128, 128) - eye(128), insertion=.5, deletion=.5)
+
+    # run global alignment to minimize edit distance
+    pairalign(EditDistance(), "intension", "execution", cost)
+
+See also: `SubstitutionMatrix`, `pairalign`, `AffineGapScoreModel`
 """
 type CostModel{T} <: AbstractCostModel{T}
     submat::AbstractSubstitutionMatrix{T}

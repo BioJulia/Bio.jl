@@ -43,7 +43,8 @@ only.  This may enable some algorithms to run faster than calculating full
 alignment result.  Other available `options` are documented for each alignemnt
 type.
 
-**Example**:
+Example
+-------
 
     using Bio.Seq
 
@@ -64,6 +65,7 @@ type.
     # you cannot specify a cost model in LevenshteinDistance
     pairalign(LevenshteinDistance(), dna"AGGTAG", dna"ATTG")
 
+See also: `AffineGapScoreModel`, `CostModel`
 """
 function pairalign end
 
