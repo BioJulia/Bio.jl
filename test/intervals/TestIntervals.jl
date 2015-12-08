@@ -183,7 +183,9 @@ facts("IntervalCollection") do
 
 
     context("Show") do
-        nullout = open("/dev/null", "w")
+        nullstream = @windows ? "NUL" : "/dev/null"
+        nullout = open(nullstream, "w")
+
 
         ic = IntervalCollection{Int}()
         show(nullout, ic)
