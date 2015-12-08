@@ -4,6 +4,7 @@
 [![Build status](https://ci.appveyor.com/api/projects/status/nq4w264346py8esp?svg=true)](https://ci.appveyor.com/project/Ward9250/bio-jl)
 [![Coverage Status](https://img.shields.io/coveralls/BioJulia/Bio.jl.svg)](https://coveralls.io/r/BioJulia/Bio.jl)
 [![codecov.io](http://codecov.io/github/BioJulia/Bio.jl/coverage.svg?branch=master)](http://codecov.io/github/BioJulia/Bio.jl?branch=master)
+
 [![Issues Ready](https://badge.waffle.io/BioJulia/Bio.jl.svg?label=ready&title=Issues%20Ready)](http://waffle.io/BioJulia/Bio.jl)
 [![Issues in Progress](https://badge.waffle.io/BioJulia/Bio.jl.svg?label=WIP&title=Issues%20In%20Progress)](http://waffle.io/BioJulia/Bio.jl)
 [![Gitter](https://badges.gitter.im/BioJulia.png)](https://gitter.im/BioJulia/Bio.jl)
