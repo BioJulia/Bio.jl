@@ -81,6 +81,9 @@ export
     CostModel,
     # pairwise alignment
     PairwiseAlignment,
+    nmatching,
+    nmismatching,
+    naligned,
     PairwiseAlignmentResult,
     pairalign,
     score,

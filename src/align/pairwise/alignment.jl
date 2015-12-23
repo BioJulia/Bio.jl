@@ -13,6 +13,56 @@ Base.start(aln::PairwiseAlignment) = 1
 Base.done(aln::PairwiseAlignment, i) = i > 2
 Base.next(aln::PairwiseAlignment, i) = (i == 1 ? aln.a : aln.b), i + 1
 
+"""
+The number of matching positions.
+"""
+function nmatching(aln::PairwiseAlignment)
+    seq = aln.a
+    anchors = seq.aln.anchors
+    n = 0
+    for i in 2:endof(anchors)
+        op = anchors[i].op
+        if op == OP_SEQ_MATCH
+            n += anchors[i].seqpos - anchors[i-1].seqpos
+        end
+    end
+    return n
+end
+
+"""
+The number of mismatching positions.
+"""
+function nmismatching(aln::PairwiseAlignment)
+    seq = aln.a
+    anchors = seq.aln.anchors
+    n = 0
+    for i in 2:endof(anchors)
+        op = anchors[i].op
+        if ismatchop(op) && op != OP_SEQ_MATCH
+            n += anchors[i].seqpos - anchors[i-1].seqpos
+        end
+    end
+    return n
+end
+
+"""
+The number of aligned positions.
+"""
+function naligned(aln::PairwiseAlignment)
+    seq = aln.a
+    anchors = seq.aln.anchors
+    n = 0
+    for i in 2:endof(anchors)
+        op = anchors[i].op
+        if ismatchop(op) || isinsertop(op)
+            n += anchors[i].seqpos - anchors[i-1].seqpos
+        elseif isdeleteop(op)
+            n += anchors[i].refpos - anchors[i-1].refpos
+        end
+    end
+    return n
+end
+
 function Base.show{S1,S2}(io::IO, aln::PairwiseAlignment{S1,S2})
     println(io, "PairwiseAlignment{", S1, ",", S2, "}:")
     show_pairwise_alignment(io, aln)

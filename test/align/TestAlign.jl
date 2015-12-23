@@ -379,6 +379,29 @@ facts("PairwiseAlignment") do
         @fact hasalignment(result) --> true
     end
 
+    context("nmatching/nmismatching/naligned") do
+        # anchors are derived from an alignment:
+        #   seq: ACG---TGCAGTATTTT
+        #        |     || |||||   
+        #   ref: AAAATTTGAAGTAT---
+        a = dna"ACGTGCAGTATTTT"
+        b = dna"AAAATTTGAAGTAT"
+        anchors = [
+            AlignmentAnchor( 0,  0, '0'),
+            AlignmentAnchor( 1,  1, '='),
+            AlignmentAnchor( 3,  3, 'X'),
+            AlignmentAnchor( 3,  6, 'D'),
+            AlignmentAnchor( 5,  8, '='),
+            AlignmentAnchor( 6,  9, 'X'),
+            AlignmentAnchor(11, 14, '='),
+            AlignmentAnchor(14, 14, 'I')
+        ]
+        aln = PairwiseAlignment(AlignedSequence(a, anchors), b)
+        @fact nmatching(aln) --> 8
+        @fact nmismatching(aln) --> 3
+        @fact naligned(aln) --> 17
+    end
+
     context("GlobalAlignment") do
         affinegap = AffineGapScoreModel(
             match=0,
