@@ -44,8 +44,8 @@ Convienient function for constructing an EachWindowIterator.
 
 Accepts the same arguments as the EachWindowIterator constructor.
 """
-function eachwindow{T <: arrayOrStringOrSeq}(data::T, width::Integer, step::Integer = 1)
-    EachWindowIterator(data, width, step)
+function eachwindow{T <: arrayOrStringOrSeq}(data::T, width::Int, step::Int = 1)
+    EachWindowIterator{T}(data, width, step)
 end
 
 @inline function start(it::EachWindowIterator)
