@@ -379,12 +379,12 @@ facts("PairwiseAlignment") do
         @fact hasalignment(result) --> true
     end
 
-    context("nmatching/nmismatching/naligned") do
+    context("count_<ops>") do
         # anchors are derived from an alignment:
-        #   seq: ACG---TGCAGTATTTT
-        #        |     || |||||   
-        #   ref: AAAATTTGAAGTAT---
-        a = dna"ACGTGCAGTATTTT"
+        #   seq: ACG---TGCAGAATTT
+        #        |     || || ||  
+        #   ref: AAAATTTGAAGTAT--
+        a = dna"ACGTGCAGAATTT"
         b = dna"AAAATTTGAAGTAT"
         anchors = [
             AlignmentAnchor( 0,  0, '0'),
@@ -393,13 +393,17 @@ facts("PairwiseAlignment") do
             AlignmentAnchor( 3,  6, 'D'),
             AlignmentAnchor( 5,  8, '='),
             AlignmentAnchor( 6,  9, 'X'),
+            AlignmentAnchor( 8, 11, '='),
+            AlignmentAnchor( 9, 12, 'X'),
             AlignmentAnchor(11, 14, '='),
-            AlignmentAnchor(14, 14, 'I')
+            AlignmentAnchor(13, 14, 'I')
         ]
         aln = PairwiseAlignment(AlignedSequence(a, anchors), b)
-        @fact nmatching(aln) --> 8
-        @fact nmismatching(aln) --> 3
-        @fact naligned(aln) --> 17
+        @fact count_matches(aln) --> 7
+        @fact count_mismatches(aln) --> 4
+        @fact count_insertions(aln) --> 2
+        @fact count_deletions(aln) --> 3
+        @fact count_aligned(aln) --> 16
     end
 
     context("GlobalAlignment") do

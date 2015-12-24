@@ -14,43 +14,59 @@ Base.done(aln::PairwiseAlignment, i) = i > 2
 Base.next(aln::PairwiseAlignment, i) = (i == 1 ? aln.a : aln.b), i + 1
 
 """
-The number of matching positions.
+    count(aln::PairwiseAlignment, target::Operation)
+
+Count the number of positions where the `target` operation is applied.
 """
-function nmatching(aln::PairwiseAlignment)
-    seq = aln.a
-    anchors = seq.aln.anchors
+function Base.count(aln::PairwiseAlignment, target::Operation)
+    anchors = aln.a.aln.anchors
     n = 0
     for i in 2:endof(anchors)
         op = anchors[i].op
-        if op == OP_SEQ_MATCH
-            n += anchors[i].seqpos - anchors[i-1].seqpos
+        if op == target
+            if ismatchop(op) || isinsertop(op)
+                n += anchors[i].seqpos - anchors[i-1].seqpos
+            elseif isdeleteop(op)
+                n += anchors[i].refpos - anchors[i-1].refpos
+            end
         end
     end
     return n
 end
 
 """
-The number of mismatching positions.
+Count the number of matching positions.
 """
-function nmismatching(aln::PairwiseAlignment)
-    seq = aln.a
-    anchors = seq.aln.anchors
-    n = 0
-    for i in 2:endof(anchors)
-        op = anchors[i].op
-        if ismatchop(op) && op != OP_SEQ_MATCH
-            n += anchors[i].seqpos - anchors[i-1].seqpos
-        end
-    end
-    return n
+function count_matches(aln::PairwiseAlignment)
+    return count(aln, OP_SEQ_MATCH)
 end
 
 """
-The number of aligned positions.
+Count the number of mismatching positions.
 """
-function naligned(aln::PairwiseAlignment)
-    seq = aln.a
-    anchors = seq.aln.anchors
+function count_mismatches(aln::PairwiseAlignment)
+    return count(aln, OP_SEQ_MISMATCH)
+end
+
+"""
+Count the number of inserting positions.
+"""
+function count_insertions(aln::PairwiseAlignment)
+    return count(aln, OP_INSERT)
+end
+
+"""
+Count the number of deleting positions.
+"""
+function count_deletions(aln::PairwiseAlignment)
+    return count(aln, OP_DELETE)
+end
+
+"""
+Count the number of aligned positions.
+"""
+function count_aligned(aln::PairwiseAlignment)
+    anchors = aln.a.aln.anchors
     n = 0
     for i in 2:endof(anchors)
         op = anchors[i].op
