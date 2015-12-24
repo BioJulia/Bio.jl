@@ -6,26 +6,6 @@ using FactCheck,
     TestFunctions
     
 
-# Return a random DNA/RNA sequence of the given length
-function random_seq(n::Integer, nts, probs)
-    cumprobs = cumsum(probs)
-    x = Array(Char, n)
-    for i in 1:n
-        x[i] = nts[searchsorted(cumprobs, rand()).start]
-    end
-    return convert(AbstractString, x)
-end
-
-
-function random_dna(n, probs=[0.24, 0.24, 0.24, 0.24, 0.04])
-    return random_seq(n, ['A', 'C', 'G', 'T', 'N'], probs)
-end
-
-
-function random_rna(n, probs=[0.24, 0.24, 0.24, 0.24, 0.04])
-    return random_seq(n, ['A', 'C', 'G', 'U', 'N'], probs)
-end
-
 const codons = [
         "AAA", "AAC", "AAG", "AAU",
         "ACA", "ACC", "ACG", "ACU",

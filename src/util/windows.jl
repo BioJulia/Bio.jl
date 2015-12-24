@@ -15,7 +15,7 @@ immutable EachWindowIterator{T <: arrayOrStringOrSeq}
     function EachWindowIterator{T}(data::T, width::Int, step::Int = 1)
         @assert width >= 1 "Window width must be ≥ 1."
         @assert step >= 1 "step must be ≥ 1."
-        @assert width < length(data) "The window size cannot be greater than number of data elements."
+        @assert width <= length(data) "The window size cannot be greater than number of data elements."
         return new(data, width, step)
     end
 end

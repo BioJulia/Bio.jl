@@ -12,14 +12,26 @@ facts("Sliding-Windows") do
         context("Sensible values") do
             for i in 1:100
                 n = rand(1:1000)
-                seq = collect(1:n)
-                winsize = rand(1:length(seq))
-                stepsize = rand(1:length(seq))
-                itr = eachwindow(seq, winsize, stepsize)
-                @fact itr --> EachWindowIterator(seq, winsize, stepsize)
-                @fact itr.width --> winsize
-                @fact itr.step --> stepsize
-                @fact itr.data --> seq
+                testarray = collect(1:n)
+                teststring = randstring(n)
+                testseq = random_dna(n)
+                winsize = rand(1:n)
+                stepsize = rand(1:n)
+                arrayitr = eachwindow(testarray, winsize, stepsize)
+                stritr = eachwindow(teststring, winsize, stepsize)
+                seqitr = eachwindow(testseq, winsize, stepsize)
+                @fact arrayitr --> EachWindowIterator(testarray, winsize, stepsize)
+                @fact stritr --> EachWindowIterator(teststring, winsize, stepsize)
+                @fact seqitr --> EachWindowIterator(testseq, winsize, stepsize)
+                @fact arrayitr.width --> winsize
+                @fact stritr.width --> winsize
+                @fact seqitr.width --> winsize
+                @fact arrayitr.step --> stepsize
+                @fact stritr.step --> stepsize
+                @fact seqitr.step --> stepsize
+                @fact arrayitr.data --> testarray
+                @fact stritr.data --> teststring
+                @fact seqitr.data --> testseq
             end
         end
         context("Bad values") do
