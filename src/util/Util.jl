@@ -4,13 +4,16 @@ import Base:
     start,
     next,
     done,
-    show
+    show,
+    size,
+    ==
 
-import Bio.Seq:
+using Bio.Seq:
     Sequence
 
 export eachwindow,
-    EachWindowIterator
+    EachWindowIterator,
+    missed
 
 include("windows.jl")
 

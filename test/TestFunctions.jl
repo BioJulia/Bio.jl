@@ -6,7 +6,8 @@ export get_bio_fmt_specimens,
     random_array,
     random_seq,
     random_dna,
-    random_rna
+    random_rna,
+    random_aa
 
 
 function get_bio_fmt_specimens()
@@ -43,6 +44,13 @@ end
 
 function random_rna(n, probs=[0.24, 0.24, 0.24, 0.24, 0.04])
     return random_seq(n, ['A', 'C', 'G', 'U', 'N'], probs)
+end
+
+function random_aa(len)
+    return random_seq(len,
+        ['A', 'R', 'N', 'D', 'C', 'Q', 'E', 'G', 'H', 'I',
+         'L', 'K', 'M', 'F', 'P', 'S', 'T', 'W', 'Y', 'V', 'X' ],
+        push!(fill(0.049, 20), 0.02))
 end
 
 end

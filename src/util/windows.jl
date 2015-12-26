@@ -4,6 +4,9 @@ arrayOrStringOrSeq = Union{AbstractArray, AbstractString, Sequence}
 
 """
 An iterator which moves across a container, as a sliding window.
+
+Constructor requires the data to move the window across, the width of the
+window, and the step of the window.
 """
 immutable EachWindowIterator{T <: arrayOrStringOrSeq}
     "A reference to the collection to iterate over."
@@ -36,7 +39,16 @@ container are missed if window sizes and step sizes are too large.
 """
 function missed(winitr::EachWindowIterator)
     l = length(winitr.data)
-    return l - StepRange(winitr.width, winitr.step, l)
+    return l - StepRange(winitr.width, winitr.step, l).stop
+end
+
+"""
+A sliding window iterator is considered equal to another
+sliding window iterator if the data is considered equal, and the
+width and step of the iterator is also equivalent.
+"""
+function ==(x::EachWindowIterator, y::EachWindowIterator)
+    return (x.data == y.data) && (x.width == y.width) && (x.step == y.step)
 end
 
 """
@@ -65,7 +77,7 @@ end
 @inline function next{T <: AbstractString}(it::EachWindowIterator{T}, state::Integer)
     i = state
     window = it.data[i:i + it.width - 1]
-    return window
+    return window, i + it.step
 end
 
 @inline function done(it::EachWindowIterator, state::Integer)

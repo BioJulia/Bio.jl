@@ -4,7 +4,7 @@ using FactCheck,
     Bio.Seq,
     YAML,
     TestFunctions
-    
+
 
 const codons = [
         "AAA", "AAC", "AAG", "AAU",
@@ -61,14 +61,6 @@ end
 function random_rna_kmer_nucleotides(len)
     return random_array(len, [RNA_A, RNA_C, RNA_G, RNA_U],
                         [0.25, 0.25, 0.25, 0.25])
-end
-
-
-function random_aa(len)
-    return random_seq(len,
-        ['A', 'R', 'N', 'D', 'C', 'Q', 'E', 'G', 'H', 'I',
-         'L', 'K', 'M', 'F', 'P', 'S', 'T', 'W', 'Y', 'V', 'X' ],
-        push!(fill(0.049, 20), 0.02))
 end
 
 
