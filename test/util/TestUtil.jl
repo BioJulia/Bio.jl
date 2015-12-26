@@ -37,10 +37,14 @@ facts("Sliding-Windows") do
         context("Bad values") do
             for i in 1:100
                 n = rand(1:1000)
-                seq = collect(1:n)
-                winsize = rand(length(seq):length(seq) + rand(1:1000))
-                stepsize = rand(length(seq):length(seq) + rand(1:1000))
-                @fact_throws eachwindow(seq, winsize, stepsize)
+                testarray = collect(1:n)
+                teststring = randstring(n)
+                testseq = random_dna(n)
+                winsize = rand(n:n + rand(1:1000))
+                stepsize = rand(n:n + rand(1:1000))
+                @fact_throws eachwindow(testarray, winsize, stepsize)
+                @fact_throws eachwindow(teststring, winsize, stepsize)
+                @fact_throws eachwindow(testseq, winsize, stepsize)
             end
         end
     end
@@ -48,14 +52,28 @@ facts("Sliding-Windows") do
         context("Number and size of Windows") do
             for i in 1:100
                 n = rand(1:1000)
-                seq = collect(1:n)
-                winsize = rand(1:length(seq))
-                stepsize = rand(1:length(seq))
-                itr = eachwindow(seq, winsize, stepsize)
-                res = collect(itr)
-                @fact length(res) --> size(itr)
-                for win in res
-                    @fact length(res) --> winsize
+                testarray = collect(1:n)
+                teststring = randstring(n)
+                testseq = random_dna(n)
+                winsize = rand(1:n)
+                stepsize = rand(1:n)
+                arrayitr = eachwindow(testarray, winsize, stepsize)
+                stringitr = eachwindow(teststring, winsize, stepsize)
+                seqitr = eachwindow(testseq, winsize, stepsize)
+                arrayres = collect(arrayitr)
+                stringres = collect(stringitr)
+                seqres = collect(seqitr)
+                @fact length(arrayres) --> size(arrayitr)
+                @fact length(stringres) --> size(stringitr)
+                @fact length(seqres) --> size(seqitr)
+                for win in arrayres
+                    @fact length(win) --> winsize
+                end
+                for win in stringres
+                    @fact length(win) --> winsize
+                end
+                for win in seqres
+                    @fact length(win) --> winsize
                 end
             end
         end
