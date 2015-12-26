@@ -58,6 +58,16 @@ end
     return window, i + it.step
 end
 
+# Extra next method to account for fact than strings don't have sub method
+# like arrays and Nucleotide sequences do.
+# The operation is an indexing operation, rather than a "proper"
+# substring or subarray operation.
+@inline function next{T <: AbstractString}(it::EachWindowIterator{T}, state::Integer)
+    i = state
+    window = it.data[i:i + it.width - 1]
+    return window
+end
+
 @inline function done(it::EachWindowIterator, state::Integer)
     return (state + it.width - 1) > length(it.data)
 end

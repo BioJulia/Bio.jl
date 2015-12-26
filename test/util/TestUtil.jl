@@ -14,7 +14,7 @@ facts("Sliding-Windows") do
                 n = rand(1:1000)
                 testarray = collect(1:n)
                 teststring = randstring(n)
-                testseq = random_dna(n)
+                testseq = DNASequence(random_dna(n))
                 winsize = rand(1:n)
                 stepsize = rand(1:n)
                 arrayitr = eachwindow(testarray, winsize, stepsize)
@@ -39,7 +39,7 @@ facts("Sliding-Windows") do
                 n = rand(1:1000)
                 testarray = collect(1:n)
                 teststring = randstring(n)
-                testseq = random_dna(n)
+                testseq = DNASequence(random_dna(n))
                 winsize = rand(n:n + rand(1:1000))
                 stepsize = rand(n:n + rand(1:1000))
                 @fact_throws eachwindow(testarray, winsize, stepsize)
@@ -49,29 +49,33 @@ facts("Sliding-Windows") do
         end
     end
     context("Iteration") do
-        context("Number and size of Windows") do
+        context("Number and size of Windows, and missed elements") do
             for i in 1:100
                 n = rand(1:1000)
                 testarray = collect(1:n)
                 teststring = randstring(n)
-                testseq = random_dna(n)
+                testseq = DNASequence(random_dna(n))
                 winsize = rand(1:n)
                 stepsize = rand(1:n)
                 arrayitr = eachwindow(testarray, winsize, stepsize)
                 stringitr = eachwindow(teststring, winsize, stepsize)
                 seqitr = eachwindow(testseq, winsize, stepsize)
                 arrayres = collect(arrayitr)
-                stringres = collect(stringitr)
+                #stringres = collect(stringitr)
                 seqres = collect(seqitr)
+                expectedMissed = n - StepRange(winsize, stepsize, n)
                 @fact length(arrayres) --> size(arrayitr)
                 @fact length(stringres) --> size(stringitr)
                 @fact length(seqres) --> size(seqitr)
+                @fact missed(arrayres) --> expectedMissed
+                @fact missed(stringres) --> expectedMissed
+                @fact missed(seqres) --> expectedMissed
                 for win in arrayres
                     @fact length(win) --> winsize
                 end
-                for win in stringres
-                    @fact length(win) --> winsize
-                end
+                #for win in stringres
+                #    @fact length(win) --> winsize
+                #end
                 for win in seqres
                     @fact length(win) --> winsize
                 end

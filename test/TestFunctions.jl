@@ -3,7 +3,10 @@ module TestFunctions
 using Bio.Seq
 
 export get_bio_fmt_specimens,
-    random_array
+    random_array,
+    random_seq,
+    random_dna,
+    random_rna
 
 
 function get_bio_fmt_specimens()
