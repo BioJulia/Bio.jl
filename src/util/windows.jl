@@ -1,5 +1,5 @@
 
-arrayOrStringOrSeq = Union{AbstractArray, AbstractString, Sequence}
+typealias ArrayOrStringOrSeq Union{AbstractArray, AbstractString, Sequence}
 
 
 """
