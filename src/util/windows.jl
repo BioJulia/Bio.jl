@@ -8,7 +8,7 @@ An iterator which moves across a container, as a sliding window.
 Constructor requires the data to move the window across, the width of the
 window, and the step of the window.
 """
-immutable EachWindowIterator{T <: arrayOrStringOrSeq}
+immutable EachWindowIterator{T <: ArrayOrStringOrSeq}
     "A reference to the collection to iterate over."
     data::T
     "The width of the sliding window."
@@ -56,7 +56,7 @@ Convienient function for constructing an EachWindowIterator.
 
 Accepts the same arguments as the EachWindowIterator constructor.
 """
-function eachwindow{T <: arrayOrStringOrSeq}(data::T, width::Int, step::Int = 1)
+function eachwindow{T <: ArrayOrStringOrSeq}(data::T, width::Int, step::Int = 1)
     EachWindowIterator{T}(data, width, step)
 end
 

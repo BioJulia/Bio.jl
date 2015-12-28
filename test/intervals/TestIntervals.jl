@@ -181,26 +181,22 @@ facts("IntervalCollection") do
 
 
     context("Show") do
-        nullstream = @windows ? "NUL" : "/dev/null"
-        nullout = open(nullstream, "w")
-
-
         ic = IntervalCollection{Int}()
-        show(nullout, ic)
+        show(DevNull, ic)
 
         push!(ic, Interval{Int}("one", 1, 1000, STRAND_POS, 0))
-        show(nullout, ic)
+        show(DevNull, ic)
 
         intervals = random_intervals(["one", "two", "three"], 1000000, 100)
         for interval in intervals
             push!(ic, interval)
         end
-        show(nullout, ic)
+        show(DevNull, ic)
 
-        show(nullout, STRAND_NA)
-        show(nullout, STRAND_POS)
-        show(nullout, STRAND_NEG)
-        show(nullout, STRAND_BOTH)
+        show(DevNull, STRAND_NA)
+        show(DevNull, STRAND_POS)
+        show(DevNull, STRAND_NEG)
+        show(DevNull, STRAND_BOTH)
     end
 end
 
