@@ -3,10 +3,8 @@ module TestIntervals
 using FactCheck,
     Bio.Intervals,
     Distributions,
-    YAML
-
-import ..get_bio_fmt_specimens
-
+    YAML,
+    TestFunctions
 
 # Test that an array of intervals is well ordered
 function Intervals.isordered{I <: Interval}(intervals::Vector{I})
@@ -183,24 +181,22 @@ facts("IntervalCollection") do
 
 
     context("Show") do
-        nullout = open("/dev/null", "w")
-
         ic = IntervalCollection{Int}()
-        show(nullout, ic)
+        show(DevNull, ic)
 
         push!(ic, Interval{Int}("one", 1, 1000, STRAND_POS, 0))
-        show(nullout, ic)
+        show(DevNull, ic)
 
         intervals = random_intervals(["one", "two", "three"], 1000000, 100)
         for interval in intervals
             push!(ic, interval)
         end
-        show(nullout, ic)
+        show(DevNull, ic)
 
-        show(nullout, STRAND_NA)
-        show(nullout, STRAND_POS)
-        show(nullout, STRAND_NEG)
-        show(nullout, STRAND_BOTH)
+        show(DevNull, STRAND_NA)
+        show(DevNull, STRAND_POS)
+        show(DevNull, STRAND_NEG)
+        show(DevNull, STRAND_BOTH)
     end
 end
 
@@ -356,6 +352,8 @@ facts("Interval Parsing") do
     context("BED Parsing") do
         get_bio_fmt_specimens()
 
+        println("DONE THE GET SPECIMENS!")
+
         function check_bed_parse(filename)
             # Reading from a stream
             for interval in open(open(filename), BED)
@@ -385,8 +383,13 @@ facts("Interval Parsing") do
             return expected_entries == read_entries
         end
 
+        println("DONE FUNCTION LOADING!")
+
         path = Pkg.dir("Bio", "test", "BioFmtSpecimens", "BED")
         for specimen in YAML.load_file(joinpath(path, "index.yml"))
+
+            println("NOW ON $specimen")
+
             valid = get(specimen, "valid", true)
             if valid
                 @fact check_bed_parse(joinpath(path, specimen["filename"])) --> true

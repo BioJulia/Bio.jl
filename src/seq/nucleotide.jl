@@ -689,6 +689,7 @@ end
 # Construct a subesequence
 getindex{T}(seq::NucleotideSequence{T}, r::UnitRange) = NucleotideSequence{T}(seq, r)
 
+sub{T}(seq::NucleotideSequence{T}, r::UnitRange) = NucleotideSequence{T}(seq, r)
 
 function setindex!{T}(seq::NucleotideSequence{T}, nt::T, i::Integer)
     if !seq.mutable

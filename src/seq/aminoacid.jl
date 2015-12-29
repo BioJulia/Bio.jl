@@ -233,6 +233,8 @@ function AminoAcidSequence(other::AminoAcidSequence, part::UnitRange;
     return seq
 end
 
+"Construct a subsequence of another amino acid sequence"
+sub(seq::AminoAcidSequence, r::UnitRange) = AminoAcidSequence(seq, r)
 
 "Construct of a subsequence from another amino acid sequence"
 function AminoAcidSequence(seq::Union{Vector{UInt8}, AbstractString},

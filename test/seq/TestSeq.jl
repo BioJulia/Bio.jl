@@ -2,39 +2,9 @@ module TestSeq
 
 using FactCheck,
     Bio.Seq,
-    YAML
+    YAML,
+    TestFunctions
 
-import ..get_bio_fmt_specimens
-
-# Return a random DNA/RNA sequence of the given length
-function random_seq(n::Integer, nts, probs)
-    cumprobs = cumsum(probs)
-    x = Array(Char, n)
-    for i in 1:n
-        x[i] = nts[searchsorted(cumprobs, rand()).start]
-    end
-    return convert(AbstractString, x)
-end
-
-
-function random_array(n::Integer, elements, probs)
-    cumprobs = cumsum(probs)
-    x = Array(eltype(elements), n)
-    for i in 1:n
-        x[i] = elements[searchsorted(cumprobs, rand()).start]
-    end
-    return x
-end
-
-
-function random_dna(n, probs=[0.24, 0.24, 0.24, 0.24, 0.04])
-    return random_seq(n, ['A', 'C', 'G', 'T', 'N'], probs)
-end
-
-
-function random_rna(n, probs=[0.24, 0.24, 0.24, 0.24, 0.04])
-    return random_seq(n, ['A', 'C', 'G', 'U', 'N'], probs)
-end
 
 const codons = [
         "AAA", "AAC", "AAG", "AAU",
@@ -91,14 +61,6 @@ end
 function random_rna_kmer_nucleotides(len)
     return random_array(len, [RNA_A, RNA_C, RNA_G, RNA_U],
                         [0.25, 0.25, 0.25, 0.25])
-end
-
-
-function random_aa(len)
-    return random_seq(len,
-        ['A', 'R', 'N', 'D', 'C', 'Q', 'E', 'G', 'H', 'I',
-         'L', 'K', 'M', 'F', 'P', 'S', 'T', 'W', 'Y', 'V', 'X' ],
-        push!(fill(0.049, 20), 0.02))
 end
 
 
@@ -259,7 +221,7 @@ facts("Nucleotides") do
         end
         @fact takebuf_string(buf) --> "ACGTN"
     end
-    
+
     context("Show RNA") do
         buf = IOBuffer()
         for nt in [RNA_A, RNA_C, RNA_G, RNA_U, RNA_N]
