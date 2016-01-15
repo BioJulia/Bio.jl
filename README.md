@@ -15,21 +15,18 @@ Code Quality: [![Build Status](https://travis-ci.org/BioJulia/Bio.jl.svg?branch=
 [![codecov.io](http://codecov.io/github/BioJulia/Bio.jl/coverage.svg?branch=master)](http://codecov.io/github/BioJulia/Bio.jl?branch=master)
 
 
-
-
-
-## Documentation
+### Documentation
 
 [Read the reference manual here.](http://biojulia.github.io/Bio.jl/)
 
-## Running tests
+### Running tests
 
 `julia test/runtests.jl`
 
-## Contributing
+### Contributing
 
 If you'd like to contribute, please [join the discussion group](https://groups.google.com/forum/#!forum/biojulia-dev), or drop by our [Gitter chat room](https://gitter.im/BioJulia/Bio.jl).
 
-## Roadmap
+### Roadmap
 
 Our roadmap is on the wiki: https://github.com/BioJulia/Bio.jl/wiki/roadmap.
