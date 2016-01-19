@@ -29,7 +29,7 @@ function (&)(a::Alphabet, b::Alphabet)
 end
 
 # for safe module precompilation
-hash(a::Alphabet) = hash(convert(UInt16, a))
+Base.hash(a::Alphabet) = hash(convert(UInt16, a))
 
 "`Alphabet` value indicating no compatible alphabets."
 const EMPTY_ALPHABET = convert(Alphabet, UInt16(0))

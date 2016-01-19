@@ -36,12 +36,10 @@ const OP_INVALID      = convert(Operation, 0xff)
 
 const OP_MAX_VALID = OP_START
 
-
 # classify operations
 function ismatchop(op::Operation)
     return op == OP_MATCH || op == OP_SEQ_MATCH || op == OP_SEQ_MISMATCH
 end
-
 
 function isinsertop(op::Operation)
     return op == OP_INSERT || op == OP_SOFT_CLIP || op == OP_HARD_CLIP
@@ -67,7 +65,8 @@ const char_to_op = [
 
 
 function convert(::Type{Operation}, c::Char)
-    @inbounds op = '=' <= c <= 'X' ? char_to_op[c - '=' + 1] : OP_INVALID
+    @inbounds op = '=' <= c <= 'X' ? char_to_op[c - '=' + 1] :
+                          c == '0' ? OP_START                : OP_INVALID
     if op == OP_INVALID
         error("Invalid alignment operation '$c'")
     end
