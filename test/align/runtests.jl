@@ -1,6 +1,12 @@
 module TestAlign
 
-using FactCheck
+if VERSION >= v"0.5-"
+    using Base.Test
+else
+    using BaseTestNext
+    const Test = BaseTestNext
+end
+
 using Bio
 using Bio.Seq
 using Bio.Align
@@ -86,31 +92,31 @@ function anchors_from_path(path)
 end
 
 
-facts("Alignments") do
-    context("Operations") do
-        context("Constructors and Conversions") do
+@testset "Alignments" begin
+    @testset "Operations" begin
+        @testset "Constructors and Conversions" begin
             ops = Set(Align.char_to_op)
             for op in ops
                 if op != Align.OP_INVALID
-                    @fact Operation(Char(op)) --> op
+                    @test Operation(Char(op)) == op
                 end
             end
-            @fact_throws Char(Align.OP_INVALID)
-            @fact_throws Operation('m')
-            @fact_throws Operation('7')
-            @fact_throws Operation('A')
-            @fact_throws Operation('\n')
+            @test_throws Exception Char(Align.OP_INVALID)
+            @test_throws Exception Operation('m')
+            @test_throws Exception Operation('7')
+            @test_throws Exception Operation('A')
+            @test_throws Exception Operation('\n')
         end
     end
 
-    context("AlignmentAnchor") do
+    @testset "AlignmentAnchor" begin
         anchor = AlignmentAnchor(1, 2, OP_MATCH)
-        @fact string(anchor) --> "AlignmentAnchor(1, 2, 'M')"
+        @test string(anchor) == "AlignmentAnchor(1, 2, 'M')"
     end
 
-    context("Alignment") do
+    @testset "Alignment" begin
         # alignments with nonsense operations
-        @fact_throws Alignment(AlignmentAnchor[
+        @test_throws Exception Alignment(AlignmentAnchor[
             Operation(0, 0, OP_START),
             Operation(100, 100, convert(Operation, 0xfa))])
 
@@ -123,7 +129,7 @@ facts("Alignments") do
             i = rand(2:n-1)
             j = rand(i+1:n)
             anchors[i], anchors[j] = anchors[j], anchors[i]
-            @fact_throws Alignment(anchors)
+            @test_throws Exception Alignment(anchors)
         end
 
         # test bad alignment anchors by swapping operations
@@ -143,7 +149,7 @@ facts("Alignments") do
             end
             anchors[i] = AlignmentAnchor(u.seqpos, u.refpos, v.op)
             anchors[j] = AlignmentAnchor(v.seqpos, v.refpos, u.op)
-            @fact_throws Alignment(anchors)
+            @test_throws Exception Alignment(anchors)
         end
 
         # cigar string round-trip
@@ -152,12 +158,12 @@ facts("Alignments") do
             anchors = anchors_from_path(path)
             aln = Alignment(anchors)
             cig = cigar(aln)
-            @fact Alignment(cig, aln.anchors[1].seqpos + 1,
-                            aln.anchors[1].refpos + 1) --> aln
+            @test Alignment(cig, aln.anchors[1].seqpos + 1,
+                            aln.anchors[1].refpos + 1) == aln
         end
     end
 
-    context("AlignedSequence") do
+    @testset "AlignedSequence" begin
         #               0   4        9  12 15     19
         #               |   |        |  |  |      |
         #     query:     TGGC----ATCATTTAACG---CAAG
@@ -176,20 +182,20 @@ facts("Alignments") do
         ]
         query = "TGGCATCATTTAACGCAAG"
         alnseq = AlignedSequence(query, anchors)
-        @fact Bio.Align.first(alnseq) -->  5
-        @fact Bio.Align.last(alnseq)  --> 27
+        @test Bio.Align.first(alnseq) ==  5
+        @test Bio.Align.last(alnseq)  == 27
         # OP_MATCH
         for (seqpos, refpos) in [(1, 5), (2, 6), (4, 8), (13, 18), (19, 27)]
-            @fact seq2ref(seqpos, alnseq) --> (refpos, OP_MATCH)
-            @fact ref2seq(refpos, alnseq) --> (seqpos, OP_MATCH)
+            @test seq2ref(seqpos, alnseq) == (refpos, OP_MATCH)
+            @test ref2seq(refpos, alnseq) == (seqpos, OP_MATCH)
         end
         # OP_INSERT
-        @fact seq2ref(10, alnseq) --> (17, OP_INSERT)
-        @fact seq2ref(11, alnseq) --> (17, OP_INSERT)
+        @test seq2ref(10, alnseq) == (17, OP_INSERT)
+        @test seq2ref(11, alnseq) == (17, OP_INSERT)
         # OP_DELETE
-        @fact ref2seq( 9, alnseq) --> ( 4, OP_DELETE)
-        @fact ref2seq(10, alnseq) --> ( 4, OP_DELETE)
-        @fact ref2seq(23, alnseq) --> (15, OP_DELETE)
+        @test ref2seq( 9, alnseq) == ( 4, OP_DELETE)
+        @test ref2seq(10, alnseq) == ( 4, OP_DELETE)
+        @test ref2seq(23, alnseq) == (15, OP_DELETE)
     end
 end
 
@@ -277,18 +283,18 @@ function alignedpair(alnres)
     return bytestring(buf)
 end
 
-facts("PairwiseAlignment") do
-    context("SubstitutionMatrix") do
+@testset "PairwiseAlignment" begin
+    @testset "SubstitutionMatrix" begin
         # defined
-        @fact BLOSUM62[AA_A,AA_R] --> -1
-        @fact BLOSUM62[AA_R,AA_A] --> -1
-        @fact BLOSUM62[AA_R,AA_R] -->  5
-        @fact typeof(BLOSUM62[AA_A,AA_R]) --> Int
+        @test BLOSUM62[AA_A,AA_R] == -1
+        @test BLOSUM62[AA_R,AA_A] == -1
+        @test BLOSUM62[AA_R,AA_R] ==  5
+        @test typeof(BLOSUM62[AA_A,AA_R]) == Int
         # undefined
-        @fact BLOSUM62[AA_O,AA_R] -->  0
-        @fact BLOSUM62[AA_R,AA_O] -->  0
-        @fact Bio.Align.is_defined_symbol(BLOSUM62, AA_R) --> true
-        @fact Bio.Align.is_defined_symbol(BLOSUM62, AA_O) --> false
+        @test BLOSUM62[AA_O,AA_R] ==  0
+        @test BLOSUM62[AA_R,AA_O] ==  0
+        @test Bio.Align.is_defined_symbol(BLOSUM62, AA_R) == true
+        @test Bio.Align.is_defined_symbol(BLOSUM62, AA_O) == false
 
         # no error
         print(IOBuffer(), BLOSUM62)
@@ -304,20 +310,20 @@ facts("PairwiseAlignment") do
         match = 0
         mismatch = -1
         submat = SubstitutionMatrix{Int}(mat, defined, match, mismatch)
-        @fact submat[DNA_A,DNA_A] --> +2
-        @fact submat[DNA_N,DNA_N] -->  0
-        @fact submat[DNA_N,DNA_A] --> -1
-        @fact submat[DNA_A,DNA_N] --> -1
+        @test submat[DNA_A,DNA_A] == +2
+        @test submat[DNA_N,DNA_N] ==  0
+        @test submat[DNA_N,DNA_A] == -1
+        @test submat[DNA_A,DNA_N] == -1
     end
 
-    context("AffineGapScoreModel") do
+    @testset "AffineGapScoreModel" begin
         # predefined substitution matrix
         for affinegap in [AffineGapScoreModel(BLOSUM62, -10, -1),
                           AffineGapScoreModel(BLOSUM62, gap_open=-10, gap_extend=-1),
                           AffineGapScoreModel(BLOSUM62, gap_open_penalty=10, gap_extend_penalty=1)]
-            @fact affinegap.gap_open --> -10
-            @fact affinegap.gap_extend --> -1
-            @fact typeof(affinegap) --> AffineGapScoreModel{Int}
+            @test affinegap.gap_open == -10
+            @test affinegap.gap_extend == -1
+            @test typeof(affinegap) == AffineGapScoreModel{Int}
         end
 
         # matrix
@@ -330,18 +336,18 @@ facts("PairwiseAlignment") do
         for affinegap in [AffineGapScoreModel(submat, -3, -1),
                           AffineGapScoreModel(submat, gap_open=-3, gap_extend=-1),
                           AffineGapScoreModel(submat, gap_open_penalty=3, gap_extend_penalty=1)]
-            @fact affinegap.gap_open --> -3
-            @fact affinegap.gap_extend --> -1
-            @fact typeof(affinegap) --> AffineGapScoreModel{Float64}
+            @test affinegap.gap_open == -3
+            @test affinegap.gap_extend == -1
+            @test typeof(affinegap) == AffineGapScoreModel{Float64}
         end
 
         affinegap = AffineGapScoreModel(match=3, mismatch=-3, gap_open=-5, gap_extend=-2)
-        @fact affinegap.gap_open --> -5
-        @fact affinegap.gap_extend --> -2
-        @fact typeof(affinegap) --> AffineGapScoreModel{Int}
+        @test affinegap.gap_open == -5
+        @test affinegap.gap_extend == -2
+        @test typeof(affinegap) == AffineGapScoreModel{Int}
     end
 
-    context("CostModel") do
+    @testset "CostModel" begin
         submat = [
             0 3 3 3;
             3 0 3 3;
@@ -350,18 +356,18 @@ facts("PairwiseAlignment") do
         ]
         for cost in [CostModel(submat, 5, 6),
                      CostModel(submat, insertion=5, deletion=6)]
-            @fact cost.insertion --> 5
-            @fact cost.deletion --> 6
-            @fact typeof(cost) --> CostModel{Int}
+            @test cost.insertion == 5
+            @test cost.deletion == 6
+            @test typeof(cost) == CostModel{Int}
         end
 
         cost = CostModel(match=0, mismatch=3, insertion=5, deletion=6)
-        @fact cost.insertion --> 5
-        @fact cost.deletion --> 6
-        @fact typeof(cost) --> CostModel{Int}
+        @test cost.insertion == 5
+        @test cost.deletion == 6
+        @test typeof(cost) == CostModel{Int}
     end
 
-    context("Alignment") do
+    @testset "Alignment" begin
         anchors = [
             AlignmentAnchor(0, 0, OP_START),
             AlignmentAnchor(3, 3, OP_SEQ_MATCH)
@@ -370,16 +376,16 @@ facts("PairwiseAlignment") do
         ref = "ACG"
         aln = PairwiseAlignment(seq, ref)
         a, b = aln
-        @fact a === seq --> true
-        @fact b === ref --> true
+        @test a === seq
+        @test b === ref
         result = PairwiseAlignmentResult(3, true, seq, ref)
-        @fact isa(result, PairwiseAlignmentResult) --> true
-        @fact isa(alignment(result), PairwiseAlignment) --> true
-        @fact score(result) --> 3
-        @fact hasalignment(result) --> true
+        @test isa(result, PairwiseAlignmentResult) == true
+        @test isa(alignment(result), PairwiseAlignment) == true
+        @test score(result) == 3
+        @test hasalignment(result) == true
     end
 
-    context("count_<ops>") do
+    @testset "count_<ops>" begin
         # anchors are derived from an alignment:
         #   seq: ACG---TGCAGAATTT
         #        |     || || ||  
@@ -399,14 +405,14 @@ facts("PairwiseAlignment") do
             AlignmentAnchor(13, 14, 'I')
         ]
         aln = PairwiseAlignment(AlignedSequence(a, anchors), b)
-        @fact count_matches(aln) --> 7
-        @fact count_mismatches(aln) --> 4
-        @fact count_insertions(aln) --> 2
-        @fact count_deletions(aln) --> 3
-        @fact count_aligned(aln) --> 16
+        @test count_matches(aln) == 7
+        @test count_mismatches(aln) == 4
+        @test count_insertions(aln) == 2
+        @test count_deletions(aln) == 3
+        @test count_aligned(aln) == 16
     end
 
-    context("GlobalAlignment") do
+    @testset "GlobalAlignment" begin
         affinegap = AffineGapScoreModel(
             match=0,
             mismatch=-6,
@@ -417,25 +423,25 @@ facts("PairwiseAlignment") do
         function testaln(alnstr)
             a, b, s, alnpair = alnscore(affinegap, alnstr)
             aln = pairalign(GlobalAlignment(), a, b, affinegap)
-            @fact score(aln) --> s
-            @fact alignedpair(aln) --> alnpair
+            @test score(aln) == s
+            @test alignedpair(aln) == alnpair
             aln = pairalign(GlobalAlignment(), a, b, affinegap, score_only=true)
-            @fact score(aln) --> s
+            @test score(aln) == s
         end
 
-        context("empty sequences") do
+        @testset "empty sequences" begin
             aln = pairalign(GlobalAlignment(), "", "", affinegap)
-            @fact score(aln) --> 0
+            @test score(aln) == 0
         end
 
-        context("complete match") do
+        @testset "complete match" begin
             testaln("""
             ACGT
             ACGT
             """)
         end
 
-        context("mismatch") do
+        @testset "mismatch" begin
             testaln("""
             ACGT
             AGGT
@@ -447,7 +453,7 @@ facts("PairwiseAlignment") do
             """)
         end
 
-        context("insertion") do
+        @testset "insertion" begin
             testaln("""
             ACGTT
             ACGT-
@@ -479,7 +485,7 @@ facts("PairwiseAlignment") do
             """)
         end
 
-        context("deletion") do
+        @testset "deletion" begin
             testaln("""
             ACGT-
             ACGTT
@@ -516,34 +522,34 @@ facts("PairwiseAlignment") do
             """)
         end
 
-        context("banded") do
+        @testset "banded" begin
             a, b, s, alnpair = alnscore(affinegap, """
             ACGT
             ACGT
             """)
             aln = pairalign(GlobalAlignment(), a, b, affinegap, banded=true)
-            @fact score(aln) --> s
-            @fact alignedpair(aln) --> alnpair
+            @test score(aln) == s
+            @test alignedpair(aln) == alnpair
 
             a, b, s, alnpair = alnscore(affinegap, """
             ACGT
             AGGT
             """)
             aln = pairalign(GlobalAlignment(), a, b, affinegap, banded=true)
-            @fact score(aln) --> s
-            @fact alignedpair(aln) --> alnpair
+            @test score(aln) == s
+            @test alignedpair(aln) == alnpair
 
             a, b, s, alnpair = alnscore(affinegap, """
             ACG--T
             ACGAAT
             """)
             aln = pairalign(GlobalAlignment(), a, b, affinegap, banded=true, lower_offset=0, upper_offset=0)
-            @fact score(aln) --> s
-            @fact alignedpair(aln) --> alnpair
+            @test score(aln) == s
+            @test alignedpair(aln) == alnpair
         end
     end
 
-    context("SemiGlobalAlignment") do
+    @testset "SemiGlobalAlignment" begin
         affinegap = AffineGapScoreModel(
             match=0,
             mismatch=-6,
@@ -554,20 +560,20 @@ facts("PairwiseAlignment") do
         function testaln(alnstr)
             a, b, s, alnpair = alnscore(affinegap, alnstr, clip=false)
             aln = pairalign(SemiGlobalAlignment(), a, b, affinegap)
-            @fact score(aln) --> s
-            @fact alignedpair(aln) --> alnpair
+            @test score(aln) == s
+            @test alignedpair(aln) == alnpair
             aln = pairalign(SemiGlobalAlignment(), a, b, affinegap, score_only=true)
-            @fact score(aln) --> s
+            @test score(aln) == s
         end
 
-        context("complete match") do
+        @testset "complete match" begin
             testaln("""
             ACGT
             ACGT
             """)
         end
 
-        context("partial match") do
+        @testset "partial match" begin
             testaln("""
             --ACTT---
             TTACGTAGT
@@ -588,7 +594,7 @@ facts("PairwiseAlignment") do
         end
     end
 
-    context("OverlapAlignment") do
+    @testset "OverlapAlignment" begin
         affinegap = AffineGapScoreModel(
             match=3,
             mismatch=-6,
@@ -599,20 +605,20 @@ facts("PairwiseAlignment") do
         function testaln(alnstr)
             a, b, s, alnpair = alnscore(affinegap, alnstr, clip=false)
             aln = pairalign(OverlapAlignment(), a, b, affinegap)
-            @fact score(aln) --> s
-            @fact alignedpair(aln) --> alnpair
+            @test score(aln) == s
+            @test alignedpair(aln) == alnpair
             aln = pairalign(OverlapAlignment(), a, b, affinegap, score_only=true)
-            @fact score(aln) --> s
+            @test score(aln) == s
         end
 
-        context("complete match") do
+        @testset "complete match" begin
             testaln("""
             ACGT
             ACGT
             """)
         end
 
-        context("partial match") do
+        @testset "partial match" begin
             testaln("""
             ---ACGGTGATTAT
             GATACGGTGA----
@@ -639,8 +645,8 @@ facts("PairwiseAlignment") do
         end
     end
 
-    context("LocalAlignment") do
-        context("zero matching score") do
+    @testset "LocalAlignment" begin
+        @testset "zero matching score" begin
             affinegap = AffineGapScoreModel(
                 match=0,
                 mismatch=-6,
@@ -651,25 +657,25 @@ facts("PairwiseAlignment") do
             function testaln(alnstr)
                 a, b, s, alnpair = alnscore(affinegap, alnstr)
                 aln = pairalign(LocalAlignment(), a, b, affinegap)
-                @fact score(aln) --> s
-                @fact alignedpair(aln) --> alnpair
+                @test score(aln) == s
+                @test alignedpair(aln) == alnpair
                 aln = pairalign(LocalAlignment(), a, b, affinegap, score_only=true)
-                @fact score(aln) --> s
+                @test score(aln) == s
             end
 
-            context("empty sequences") do
+            @testset "empty sequences" begin
                 aln = pairalign(LocalAlignment(), "", "", affinegap)
-                @fact score(aln) --> 0
+                @test score(aln) == 0
             end
 
-            context("complete match") do
+            @testset "complete match" begin
                 testaln("""
                 ACGT
                 ACGT
                 """)
             end
 
-            context("partial match") do
+            @testset "partial match" begin
                 testaln("""
                 ACGT
                 AGGT
@@ -683,15 +689,15 @@ facts("PairwiseAlignment") do
                 """)
             end
 
-            context("no match") do
+            @testset "no match" begin
                 a = "AA"
                 b = "TTTT"
                 aln = pairalign(LocalAlignment(), a, b, affinegap)
-                @fact score(aln) --> 0
+                @test score(aln) == 0
             end
         end
 
-        context("positive matching score") do
+        @testset "positive matching score" begin
             affinegap = AffineGapScoreModel(
                 match=5,
                 mismatch=-6,
@@ -702,13 +708,13 @@ facts("PairwiseAlignment") do
             function testaln(alnstr)
                 a, b, s, alnpair = alnscore(affinegap, alnstr)
                 aln = pairalign(LocalAlignment(), a, b, affinegap)
-                @fact score(aln) --> s
-                @fact alignedpair(aln) --> alnpair
+                @test score(aln) == s
+                @test alignedpair(aln) == alnpair
                 aln = pairalign(LocalAlignment(), a, b, affinegap, score_only=true)
-                @fact score(aln) --> s
+                @test score(aln) == s
             end
 
-            context("complete match") do
+            @testset "complete match" begin
                 testaln("""
                 ACGT
                 ACGT
@@ -716,7 +722,7 @@ facts("PairwiseAlignment") do
                 """)
             end
 
-            context("partial match") do
+            @testset "partial match" begin
                 testaln("""
                 ACGT
                 AGGT
@@ -735,16 +741,16 @@ facts("PairwiseAlignment") do
                 """)
             end
 
-            context("no match") do
+            @testset "no match" begin
                 a = "AA"
                 b = "TTTT"
                 aln = pairalign(LocalAlignment(), a, b, affinegap)
-                @fact score(aln) --> 0
+                @test score(aln) == 0
             end
         end
     end
 
-    context("EditDistance") do
+    @testset "EditDistance" begin
         mismatch = 1
         submat = DichotomousSubstitutionMatrix(0, mismatch)
         insertion = 1
@@ -754,37 +760,37 @@ facts("PairwiseAlignment") do
         function testaln(alnstr)
             a, b, dist = alndistance(cost, alnstr)
             aln = pairalign(EditDistance(), a, b, cost)
-            @fact distance(aln) --> dist
-            @fact alignedpair(aln) --> chomp(alnstr)
+            @test distance(aln) == dist
+            @test alignedpair(aln) == chomp(alnstr)
             aln = pairalign(EditDistance(), a, b, cost, distance_only=true)
-            @fact distance(aln) --> dist
+            @test distance(aln) == dist
         end
 
-        context("empty sequences") do
+        @testset "empty sequences" begin
             aln = pairalign(EditDistance(), "", "", cost)
-            @fact distance(aln) --> 0
+            @test distance(aln) == 0
         end
 
-        context("complete match") do
+        @testset "complete match" begin
             testaln("""
             ACGT
             ACGT
             """)
         end
 
-        context("mismatch") do
-            testaln("""
-            AGGT
-            ACGT
-            """)
-
+        @testset "mismatch" begin
             testaln("""
             AGGT
             ACGT
             """)
+
+            testaln("""
+            AGGT
+            ACGT
+            """)
         end
 
-        context("insertion") do
+        @testset "insertion" begin
             testaln("""
             ACGTT
             ACG-T
@@ -796,7 +802,7 @@ facts("PairwiseAlignment") do
             """)
         end
 
-        context("deletion") do
+        @testset "deletion" begin
             testaln("""
             AC-T
             ACGT
@@ -809,44 +815,44 @@ facts("PairwiseAlignment") do
         end
     end
 
-    context("LevenshteinDistance") do
-        context("empty sequences") do
+    @testset "LevenshteinDistance" begin
+        @testset "empty sequences" begin
             aln = pairalign(LevenshteinDistance(), "", "")
-            @fact distance(aln) --> 0
+            @test distance(aln) == 0
         end
 
-        context("complete match") do
+        @testset "complete match" begin
             a = "ACGT"
             b = "ACGT"
             aln = pairalign(LevenshteinDistance(), a, b)
-            @fact distance(aln) --> 0
+            @test distance(aln) == 0
         end
     end
 
-    context("HammingDistance") do
+    @testset "HammingDistance" begin
         function testaln(alnstr)
             a, b = split(chomp(alnstr), '\n')
             dist = sum([x != y for (x, y) in zip(a, b)])
             aln = pairalign(HammingDistance(), a, b)
-            @fact distance(aln) --> dist
-            @fact alignedpair(aln) --> chomp(alnstr)
+            @test distance(aln) == dist
+            @test alignedpair(aln) == chomp(alnstr)
             aln = pairalign(HammingDistance(), a, b, distance_only=true)
-            @fact distance(aln) --> dist
+            @test distance(aln) == dist
         end
 
-        context("empty sequences") do
+        @testset "empty sequences" begin
             aln = pairalign(HammingDistance(), "", "")
-            @fact distance(aln) --> 0
+            @test distance(aln) == 0
         end
 
-        context("complete match") do
+        @testset "complete match" begin
             testaln("""
             ACGT
             ACGT
             """)
         end
 
-        context("mismatch") do
+        @testset "mismatch" begin
             testaln("""
             ACGT
             AGGT
@@ -858,9 +864,9 @@ facts("PairwiseAlignment") do
             """)
         end
 
-        context("indel") do
-            @fact_throws pairalign(HammingDistance(), "ACGT", "ACG")
-            @fact_throws pairalign(HammingDistance(), "ACG", "ACGT")
+        @testset "indel" begin
+            @test_throws Exception pairalign(HammingDistance(), "ACGT", "ACG")
+            @test_throws Exception pairalign(HammingDistance(), "ACG", "ACGT")
         end
     end
 end

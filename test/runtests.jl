@@ -21,6 +21,7 @@ else
 end
 
 include("TestFunctions.jl")
+
 for target in targets
     include("$target/runtests.jl")
 end

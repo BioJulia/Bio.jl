@@ -1,7 +1,13 @@
 module TestIntervals
 
-using FactCheck,
-    Bio.Intervals,
+if VERSION >= v"0.5-"
+    using Base.Test
+else
+    using BaseTestNext
+    const Test = BaseTestNext
+end
+
+using Bio.Intervals,
     Distributions,
     YAML,
     TestFunctions
@@ -116,42 +122,42 @@ function simple_coverage(intervals)
     return covintervals
 end
 
-facts("Interval") do
-    context("Constructor") do
+@testset "Interval" begin
+    @testset "Constructor" begin
         i = Interval("chr1", 10, 20)
-        @fact seqname(i) --> "chr1"
-        @fact first(i) --> 10
-        @fact last(i) --> 20
-        @fact strand(i) --> STRAND_BOTH
+        @test seqname(i) == "chr1"
+        @test first(i) == 10
+        @test last(i) == 20
+        @test strand(i) == STRAND_BOTH
 
         i1 = Interval("chr1", 10, 20, '+')
         i2 = Interval("chr1", 10, 20, STRAND_POS)
-        @fact i1 == i2 --> true
+        @test i1 == i2
 
         i1 = Interval("chr2", 5692667, 5701385, '+',        "SOX11")
         i2 = Interval("chr2", 5692667, 5701385, STRAND_POS, "SOX11")
-        @fact i1 == i2 --> true
+        @test i1 == i2
     end
 end
 
-facts("IntervalCollection") do
+@testset "IntervalCollection" begin
 
-    context("Insertion/Iteration") do
+    @testset "Insertion/Iteration" begin
         n = 100000
         intervals = random_intervals(["one", "two", "three"], 1000000, n)
         ic = IntervalCollection{Int}()
 
-        @fact isempty(ic) --> true
-        @fact (collect(Interval{Int}, ic) == Interval{Int}[]) --> true
+        @test isempty(ic)
+        @test collect(Interval{Int}, ic) == Interval{Int}[]
 
         for interval in intervals
             push!(ic, interval)
         end
-        @fact Intervals.isordered(collect(Interval{Int}, ic)) --> true
+        @test Intervals.isordered(collect(Interval{Int}, ic))
     end
 
 
-    context("Intersection") do
+    @testset "Intersection" begin
         n = 1000
         srand(1234)
         intervals_a = random_intervals(["one", "two", "three"], 1000000, n)
@@ -160,27 +166,26 @@ facts("IntervalCollection") do
         # empty versus empty
         ic_a = IntervalCollection{Int}()
         ic_b = IntervalCollection{Int}()
-        @fact (collect(intersect(ic_a, ic_b)) == Any[]) --> true
+        @test collect(intersect(ic_a, ic_b)) == Any[]
 
         # empty versus non-empty
         for interval in intervals_a
             push!(ic_a, interval)
         end
 
-        @fact (collect(intersect(ic_a, ic_b)) == Any[]) --> true
-        @fact (collect(intersect(ic_b, ic_a)) == Any[]) --> true
+        @test collect(intersect(ic_a, ic_b)) == Any[]
+        @test collect(intersect(ic_b, ic_a)) == Any[]
 
         # non-empty versus non-empty
         for interval in intervals_b
             push!(ic_b, interval)
         end
 
-        @fact (sort(collect(intersect(ic_a, ic_b))) ==
-               sort(simple_intersection(intervals_a, intervals_b))) --> true
+        @test sort(collect(intersect(ic_a, ic_b))) == sort(simple_intersection(intervals_a, intervals_b))
     end
 
 
-    context("Show") do
+    @testset "Show" begin
         ic = IntervalCollection{Int}()
         show(DevNull, ic)
 
@@ -201,28 +206,28 @@ facts("IntervalCollection") do
 end
 
 
-facts("Alphanumeric Sorting") do
-    @fact sort(["b", "c" ,"a"], lt=Intervals.alphanum_isless) --> ["a", "b", "c"]
-    @fact sort(["a10", "a2" ,"a1"], lt=Intervals.alphanum_isless) --> ["a1", "a2", "a10"]
-    @fact sort(["a10a", "a2c" ,"a3b"], lt=Intervals.alphanum_isless) --> ["a2c", "a3b", "a10a"]
-    @fact sort(["a3c", "a3b" ,"a3a"], lt=Intervals.alphanum_isless) --> ["a3a", "a3b", "a3c"]
-    @fact sort(["a1ac", "a1aa" ,"a1ab"], lt=Intervals.alphanum_isless) --> ["a1aa", "a1ab", "a1ac"]
+@testset "Alphanumeric Sorting" begin
+    @test sort(["b", "c" ,"a"], lt=Intervals.alphanum_isless) == ["a", "b", "c"]
+    @test sort(["a10", "a2" ,"a1"], lt=Intervals.alphanum_isless) == ["a1", "a2", "a10"]
+    @test sort(["a10a", "a2c" ,"a3b"], lt=Intervals.alphanum_isless) == ["a2c", "a3b", "a10a"]
+    @test sort(["a3c", "a3b" ,"a3a"], lt=Intervals.alphanum_isless) == ["a3a", "a3b", "a3c"]
+    @test sort(["a1ac", "a1aa" ,"a1ab"], lt=Intervals.alphanum_isless) == ["a1aa", "a1ab", "a1ac"]
 
-    @fact Intervals.alphanum_isless("aa", "aa1") --> true
-    @fact Intervals.alphanum_isless("aa1", "aa") --> false
+    @test Intervals.alphanum_isless("aa", "aa1")
+    @test !Intervals.alphanum_isless("aa1", "aa")
 
-    @fact sort(["ac3", "aa", "ab", "aa1", "ac", "ab2"], lt=Intervals.alphanum_isless) -->
+    @test sort(["ac3", "aa", "ab", "aa1", "ac", "ab2"], lt=Intervals.alphanum_isless) ==
         ["aa", "aa1", "ab", "ab2", "ac", "ac3"]
 end
 
 
-facts("IntervalStream") do
-    context("StreamBuffer") do
+@testset "IntervalStream" begin
+    @testset "StreamBuffer" begin
         ref = Int[]
         sb = Intervals.StreamBuffer{Int}()
-        @fact isempty(sb) --> true
-        @fact (length(sb) == 0) --> true
-        @fact_throws shift!(sb)
+        @test isempty(sb)
+        @test length(sb) == 0
+        @test_throws Exception shift!(sb)
 
         ref_shifts = Int[]
         sb_shifts = Int[]
@@ -238,14 +243,14 @@ facts("IntervalStream") do
             end
         end
 
-        @fact (length(sb) == length(ref)) --> true
-        @fact ([sb[i] for i in 1:length(sb)] == ref) --> true
-        @fact (ref_shifts == sb_shifts) --> true
-        @fact_throws sb[0]
-        @fact_throws sb[length(sb) + 1]
+        @test length(sb) == length(ref)
+        @test [sb[i] for i in 1:length(sb)] == ref
+        @test ref_shifts == sb_shifts
+        @test_throws BoundsError sb[0]
+        @test_throws BoundsError sb[length(sb) + 1]
     end
 
-    context("Intersection") do
+    @testset "Intersection" begin
         n = 1000
         srand(1234)
         intervals_a = random_intervals(["one", "two", "three"], 1000000, n)
@@ -267,8 +272,7 @@ facts("IntervalStream") do
                 IntervalCollection{Int}, IntervalCollection{Int}}(
                 ic_a, ic_b, Intervals.alphanum_isless)
 
-        @fact (sort(collect(it)) ==
-               sort(simple_intersection(intervals_a, intervals_b))) --> true
+        @test sort(collect(it)) == sort(simple_intersection(intervals_a, intervals_b))
 
         # Interesction edge cases: skipping over whole sequences
         typealias SimpleIntersectIterator
@@ -279,16 +283,16 @@ facts("IntervalStream") do
             [Interval("a", 1, 100, STRAND_POS, nothing), Interval("c", 1, 100, STRAND_POS, nothing)],
             [Interval("a", 1, 100, STRAND_POS, nothing), Interval("b", 1, 100, STRAND_POS, nothing)],
             isless)
-        @fact length(collect(it)) --> 1
+        @test length(collect(it)) == 1
 
         it = SimpleIntersectIterator(
             [Interval("c", 1, 100, STRAND_POS, nothing), Interval("d", 1, 100, STRAND_POS, nothing)],
             [Interval("b", 1, 100, STRAND_POS, nothing), Interval("d", 1, 100, STRAND_POS, nothing)],
             isless)
-        @fact length(collect(it)) --> 1
+        @test length(collect(it)) == 1
 
         # unsorted streams are not allowed
-        @fact_throws begin
+        @test_throws Exception begin
             it = SimpleIntersectIterator(
                 [Interval("b", 1, 1000, STRAND_POS, nothing),
                  Interval("a", 1, 1000, STRAND_POS, nothing)],
@@ -297,7 +301,7 @@ facts("IntervalStream") do
             collect(it)
         end
 
-        @fact_throws begin
+        @test_throws Exception begin
             it = SimpleIntersectIterator(
                 [Interval("a", 1, 1000, STRAND_POS, nothing),
                  Interval("a", 500, 1000, STRAND_POS, nothing),
@@ -309,7 +313,7 @@ facts("IntervalStream") do
     end
 
 
-    context("IntervalStream Intersection") do
+    @testset "IntervalStream Intersection" begin
         n = 1000
         srand(1234)
         intervals_a = random_intervals(["one", "two", "three"], 1000000, n)
@@ -329,11 +333,10 @@ facts("IntervalStream") do
         ItType = Intervals.IntervalStreamIntersectIterator{Int, Int,
             IntervalCollection{Int}, IntervalCollection{Int}}
 
-        @fact (sort(collect(ItType(ic_a, ic_b, isless))) ==
-               sort(simple_intersection(intervals_a, intervals_b))) --> true
+        @test sort(collect(ItType(ic_a, ic_b, isless))) == sort(simple_intersection(intervals_a, intervals_b))
     end
 
-    context("IntervalStream Coverage") do
+    @testset "IntervalStream Coverage" begin
         n = 10000
         srand(1234)
         intervals = random_intervals(["one", "two", "three"], 1000000, n)
@@ -343,13 +346,13 @@ facts("IntervalStream") do
             push!(ic, interval)
         end
 
-        @fact (sort(simple_coverage(intervals)) == sort(collect(coverage(ic)))) --> true
+        @test sort(simple_coverage(intervals)) == sort(collect(coverage(ic)))
     end
 end
 
 
-facts("Interval Parsing") do
-    context("BED Parsing") do
+@testset "Interval Parsing" begin
+    @testset "BED Parsing" begin
         get_bio_fmt_specimens()
 
         println("DONE THE GET SPECIMENS!")
@@ -392,14 +395,14 @@ facts("Interval Parsing") do
 
             valid = get(specimen, "valid", true)
             if valid
-                @fact check_bed_parse(joinpath(path, specimen["filename"])) --> true
+                @test check_bed_parse(joinpath(path, specimen["filename"]))
             else
-                @fact_throws check_bed_parse(joinpath(path, specimen["filename"]))
+                @test_throws Exception check_bed_parse(joinpath(path, specimen["filename"]))
             end
         end
     end
 
-    context("BED Intersection") do
+    @testset "BED Intersection" begin
         # Testing strategy: there are two entirely separate intersection
         # algorithms for IntervalCollection and IntervalStream. Here we test
         # them both by checking that they agree by generating and intersecting
@@ -444,13 +447,13 @@ facts("Interval Parsing") do
         end
         close(out)
 
-        @fact check_intersection(filename_a, filename_b) --> true
+        @test check_intersection(filename_a, filename_b)
     end
 end
 
 
-facts("BigBed") do
-    context("BED → BigBed → BED round-trip") do
+@testset "BigBed" begin
+    @testset "BED → BigBed → BED round-trip" begin
         path = Pkg.dir("Bio", "test", "BioFmtSpecimens", "BED")
         for specimen in YAML.load_file(joinpath(path, "index.yml"))
             if !get(specimen, "valid", true)
@@ -468,11 +471,11 @@ facts("BigBed") do
             bb = open(bigbed_data, BigBed)
             intervals2 = IntervalCollection(bb)
 
-            @fact intervals == intervals2 --> true
+            @test intervals == intervals2
         end
     end
 
-    context("BigBed Intersection") do
+    @testset "BigBed Intersection" begin
         n = 10000
         srand(1234)
         chroms = ["one", "two", "three", "four", "five"]
@@ -489,9 +492,9 @@ facts("BigBed") do
         num_queries = 1000
         queries = random_intervals(chroms, 1000000, num_queries)
 
-        @fact all(Bool[IntervalCollection(collect(BEDInterval, intersect(intervals, query))) ==
+        @test all(Bool[IntervalCollection(collect(BEDInterval, intersect(intervals, query))) ==
                        IntervalCollection(collect(BEDInterval, intersect(bb, query)))
-                       for query in queries]) --> true
+                       for query in queries])
     end
 
     # TODO: test summary information against output from kent's bigBedSummary
