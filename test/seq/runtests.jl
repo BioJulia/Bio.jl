@@ -404,32 +404,32 @@ end
                 end
 
                 a = b = dna"ACTGN"
-                @test ==(a, b)
-                @test ==(dna"ACTGN", dna"ACTGN")
-                @test ==(dna"ACTGN", dna"ACTGA") == false
-                @test ==(dna"ACTGN", dna"ACTG") == false
-                @test ==(dna"ACTG", dna"ACTGN") == false
+                @test a == b
+                @test dna"ACTGN" == dna"ACTGN"
+                @test dna"ACTGN" != dna"ACTGA"
+                @test dna"ACTGN" != dna"ACTG"
+                @test dna"ACTG"  != dna"ACTGN"
 
                 c = d = rna"ACUGN"
-                @test ==(c, d)
-                @test ==(rna"ACUGN", rna"ACUGN")
-                @test ==(rna"ACUGN", rna"ACUGA") == false
-                @test ==(rna"ACUGN", rna"ACUG") == false
-                @test ==(rna"ACUG", rna"ACUGN") == false
+                @test c == d
+                @test rna"ACUGN" == rna"ACUGN"
+                @test rna"ACUGN" != rna"ACUGA"
+                @test rna"ACUGN" != rna"ACUG"
+                @test rna"ACUG"  != rna"ACUGN"
 
                 a = dna"ACGTNACGTN"
                 b = dna"""
                 ACGTN
                 ACGTN
                 """
-                @test ==(a, b)
+                @test a == b
 
                 c = rna"ACUGNACUGN"
                 d = rna"""
                 ACUGN
                 ACUGN
                 """
-                @test ==(c, d)
+                @test c == d
             end
 
             @testset "Length" begin
@@ -1207,16 +1207,16 @@ end
 
         @testset "Equality" begin
             seq = aa"ARNDCQEGHILKMFPSTWYVX"
-            @test ==(seq, aa"ARNDCQEGHILKMFPSTWYVX")
-            @test ==(seq, aa"ARNDCQEGHILKMFPSTWYXV") == false
-            @test ==(seq, aa"ARNDCQEGHLKMFPSTWYVX")  == false
+            @test seq == aa"ARNDCQEGHILKMFPSTWYVX"
+            @test seq != aa"ARNDCQEGHILKMFPSTWYXV"
+            @test seq != aa"ARNDCQEGHLKMFPSTWYVX"
 
             seq′ = aa"""
             ARNDCQEGHI
             LKMFPSTWYV
             X
             """
-            @test ==(seq, seq′)
+            @test seq == seq′
         end
 
         @testset "Repetition" begin
