@@ -355,8 +355,6 @@ end
     @testset "BED Parsing" begin
         get_bio_fmt_specimens()
 
-        println("DONE THE GET SPECIMENS!")
-
         function check_bed_parse(filename)
             # Reading from a stream
             for interval in open(open(filename), BED)
@@ -386,13 +384,8 @@ end
             return expected_entries == read_entries
         end
 
-        println("DONE FUNCTION LOADING!")
-
         path = Pkg.dir("Bio", "test", "BioFmtSpecimens", "BED")
         for specimen in YAML.load_file(joinpath(path, "index.yml"))
-
-            println("NOW ON $specimen")
-
             valid = get(specimen, "valid", true)
             if valid
                 @test check_bed_parse(joinpath(path, specimen["filename"]))
