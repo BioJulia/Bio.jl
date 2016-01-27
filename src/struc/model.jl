@@ -15,7 +15,7 @@ export AbstractAtom,
     ishetatom,
     getserial,
     getatomname,
-    getaltloc,
+    getaltlocid,
     getresname,
     getchainid,
     getresnumber,
@@ -28,23 +28,25 @@ export AbstractAtom,
     gettempfac,
     getelement,
     getcharge,
-    getdefaultaltloc,
+    getdefaultaltlocid,
     getdefaultatom,
-    getaltlocs,
+    getaltlocids,
     ishetero,
     ishetres,
     getatomnames,
+    getresid,
+    getdefaultresname,
+    getdefaultresidue,
     getresids,
     getmodelnumber,
     getchainids,
     getstrucname,
     getmodelnumbers,
-    filteratoms,
-    filteratoms!,
-    unfold,
-    unfoldresidues,
+    applyselector,
+    applyselector!,
+    collectresidues,
     countresidues,
-    unfoldatoms,
+    collectatoms,
     countatoms,
     organise,
     organisemodel,
@@ -63,7 +65,15 @@ export AbstractAtom,
     waterselector
 
 
-import Base: getindex, setindex!, start, next, done, show
+import Base: getindex,
+    setindex!,
+    start,
+    next,
+    done,
+    eltype,
+    length,
+    collect,
+    show
 
 
 abstract StrucElement
@@ -75,7 +85,7 @@ immutable Atom <: AbstractAtom
     het_atom::Bool
     serial::Int
     name::AbstractString
-    alt_loc::Char
+    alt_loc_id::Char
     res_name::AbstractString
     chain_id::Char
     res_no::Int
@@ -88,7 +98,7 @@ immutable Atom <: AbstractAtom
 end
 
 immutable DisorderedAtom <: AbstractAtom
-    alt_locs::Dict{Char, Atom}
+    alt_loc_ids::Dict{Char, Atom}
     default::Char
 end
 
@@ -146,10 +156,10 @@ typealias ModelList Array{Model,1}
 typealias StrucElementOrList Union{StrucElement, AtomList, ResidueList, ChainList, ModelList}
 
 
-getindex(disordered_atom::DisorderedAtom, alt_loc::Char) = disordered_atom.alt_locs[alt_loc]
+getindex(disordered_atom::DisorderedAtom, alt_loc_id::Char) = disordered_atom.alt_loc_ids[alt_loc_id]
 
-function setindex!(disordered_atom::DisorderedAtom, atom::Atom, alt_loc::Char)
-    disordered_atom.alt_locs[alt_loc] = atom
+function setindex!(disordered_atom::DisorderedAtom, atom::Atom, alt_loc_id::Char)
+    disordered_atom.alt_loc_ids[alt_loc_id] = atom
 end
 
 getindex(res::Residue, atom_name::AbstractString) = res.atoms[atom_name]
@@ -198,7 +208,7 @@ end
 ishetatom(atom::Atom) = atom.het_atom
 getserial(atom::Atom) = atom.serial
 getatomname(atom::Atom) = atom.name
-getaltloc(atom::Atom) = atom.alt_loc
+getaltlocid(atom::Atom) = atom.alt_loc_id
 getresname(atom::Atom) = atom.res_name
 getchainid(atom::Atom) = atom.chain_id
 getresnumber(atom::Atom) = atom.res_no
@@ -212,19 +222,19 @@ gettempfac(atom::Atom) = atom.temp_fac
 getelement(atom::Atom) = atom.element
 getcharge(atom::Atom) = atom.charge
 
-getdefaultaltloc(disordered_atom::DisorderedAtom) = disordered_atom.default
+getdefaultaltlocid(disordered_atom::DisorderedAtom) = disordered_atom.default
 
-function setdefaultaltloc!(disordered_atom::DisorderedAtom, alt_loc::Char)
-    disordered_atom = DisorderedAtom(disordered_atom.alt_locs, alt_loc)
+function setdefaultaltlocid!(disordered_atom::DisorderedAtom, alt_loc_id::Char)
+    disordered_atom = DisorderedAtom(disordered_atom.alt_loc_ids, alt_loc_id)
 end
 
-getdefaultatom(disordered_atom::DisorderedAtom) = disordered_atom[getdefaultaltloc(disordered_atom)]
-getaltlocs(disordered_atom::DisorderedAtom) = sort(collect(keys(disordered_atom.alt_locs)))
+getdefaultatom(disordered_atom::DisorderedAtom) = disordered_atom[getdefaultaltlocid(disordered_atom)]
+getaltlocids(disordered_atom::DisorderedAtom) = sort(collect(keys(disordered_atom.alt_loc_ids)))
 
 ishetatom(disordered_atom::DisorderedAtom) = ishetatom(getdefaultatom(disordered_atom))
 getserial(disordered_atom::DisorderedAtom) = getserial(getdefaultatom(disordered_atom))
 getatomname(disordered_atom::DisorderedAtom) = getatomname(getdefaultatom(disordered_atom))
-getaltloc(disordered_atom::DisorderedAtom) = getdefaultaltloc(disordered_atom)
+getaltlocid(disordered_atom::DisorderedAtom) = getdefaultaltlocid(disordered_atom)
 getresname(disordered_atom::DisorderedAtom) = getresname(getdefaultatom(disordered_atom))
 getchainid(disordered_atom::DisorderedAtom) = getchainid(getdefaultatom(disordered_atom))
 getresnumber(disordered_atom::DisorderedAtom) = getresnumber(getdefaultatom(disordered_atom))
@@ -248,7 +258,6 @@ getinscode(res::Residue) = res.ins_code
 ishetres(res::Residue) = res.het_res
 getatomnames(res::Residue) = sort(collect(keys(res.atoms)), by= atom_name -> getserial(res[atom_name]))
 
-
 function getresid(element::Union{AbstractResidue, AbstractAtom}; full::Bool=false)
     res_id = strip("$(getresnumber(element))$(getinscode(element))")
     if ishetero(element)
@@ -265,7 +274,7 @@ getdefaultresname(disordered_res::DisorderedResidue) = disordered_res.default
 # Is immutatable
 #setdefaultresname!(disordered_res::DisorderedResidue, res_name::AbstractString)
 getdefaultresidue(disordered_res::DisorderedResidue) = disordered_res[getdefaultresname(disordered_res)]
-getresnames(disordered_res::DisorderedResidue) = sort(collect(keys(disordered_res.res_names)))
+getresnames(disordered_res::DisorderedResidue) = sort(collect(keys(disordered_res.res_names))) # Is alphabetical the correct sorting?
 
 getresname(disordered_res::DisorderedResidue) = getdefaultresname(disordered_res)
 getchainid(disordered_res::DisorderedResidue) = getchainid(getdefaultresidue(disordered_res))
@@ -293,79 +302,96 @@ getchainids(model::Model) = sort(collect(keys(model.chains)))
 
 getstrucname(struc::Structure) = struc.name
 getmodelnumbers(struc::Structure) = sort(collect(keys(struc.models)))
-countmodels(struc::Structure) = length(struc.models)
 
 
 
 start(::Structure) = 1
 next(struc::Structure, state) = (struc[getmodelnumbers(struc)[state]], state + 1)
 done(struc::Structure, state) = state > length(getmodelnumbers(struc))
+eltype(::Type{Structure}) = Model
+length(struc::Structure) = length(getmodelnumbers(struc))
 
 start(::Model) = 1
 next(model::Model, state) = (model[getchainids(model)[state]], state + 1)
 done(model::Model, state) = state > length(getchainids(model))
+eltype(::Type{Model}) = Chain
+length(model::Model) = length(getchainids(model))
 
 start(::Chain) = 1
 next(chain::Chain, state) = (residues[state], state + 1)
 done(chain::Chain, state) = state > length(getresids(chain))
+eltype(::Type{Chain}) = Model
+length(chain::Chain) = length(getresids(chain))
 
 start(::Residue) = 1
 next(res::Residue, state) = (res[getatomnames(res)[state]], state + 1)
 done(res::Residue, state) = state > length(getatomnames(res))
+eltype(::Type{Residue}) = AbstractAtom
+length(res::Residue) = length(getatomnames(res))
 
 start(::DisorderedResidue) = 1
 next(disordered_res::DisorderedResidue, state) = (getdefaultresidue(disordered_res)[getatomnames(disordered_res)[state]], state + 1)
 done(disordered_res::DisorderedResidue, state) = state > length(getatomnames(disordered_res))
+eltype(::Type{DisorderedResidue}) = AbstractAtom
+length(disordered_res::DisorderedResidue) = length(getatomnames(disordered_res))
 
 start(::Atom) = 1
 next(atom::Atom, state) = (atom, state + 1)
 done(atom::Atom, state) = state > 1
+eltype(::Type{Atom}) = Atom
+length(atom::Atom) = 1
 
+# or sort by serials?
 start(::DisorderedAtom) = 1
-next(disordered_atom::DisorderedAtom, state) = (disordered_atom[getaltlocs(disordered_atom)[state]], state + 1)
-done(disordered_atom::DisorderedAtom, state) = state > length(getaltlocs(disordered_atom))
+next(disordered_atom::DisorderedAtom, state) = (disordered_atom[getaltlocids(disordered_atom)[state]], state + 1)
+done(disordered_atom::DisorderedAtom, state) = state > length(getaltlocids(disordered_atom))
+eltype(::Type{DisorderedAtom}) = Atom
+length(disordered_atom::DisorderedAtom) = length(getaltlocids(disordered_atom))
 
 
-function filteratoms(atoms::AtomList, args...)
-    new_atoms = copy(atoms)
-    filteratoms!(new_atoms, args...)
-    return new_atoms
+# Is deepcopy needed?
+function applyselector(element_list::Union{ResidueList, AtomList}, args...)
+    new_list = copy(element_list)
+    applyselector!(new_list, args...)
+    return new_list
 end
 
-
-function filteratoms!(atoms::AtomList, args...)
-    for selection_function in args
-        filter!(atoms, atom -> selection_function(atom))
+function applyselector!(element_list::Union{ResidueList, AtomList}, args...)
+    for selector_function in args
+        filter!(element_list, element -> selector_function(element))
     end
 end
 
 
-unfold(element::StrucElement) = [sub_element for sub_element in element]
-unfold(atom_container::Union{AbstractResidue, AbstractAtom}, args...) = filteratoms(unfold(atom_container), args...)
+collect(element::Union{Chain, AbstractResidue, AbstractAtom}, args...) = applyselector(collect(element), args...)
 
-unfoldresidues(struc::Structure) = [unfoldresidues(model) for model in struc]
-unfoldresidues(model::Model) = [unfoldresidues(chain) for chain in model]
-unfoldresidues(chain::Chain) = unfold(chain)
-unfoldresidues(res::AbstractResidue) = [res]
-unfoldresidues(atom::AbstractAtom) = organise(atom)
-unfoldresidues(models::ModelList) = [unfoldresidues(model) for model in models]
-unfoldresidues(chains::ChainList) = [unfoldresidues(chain) for chain in chains]
-unfoldresidues(residues::ResidueList) = residues
-unfoldresidues(atoms::AtomList) = organise(atoms)
+# Map here
+collectresidues(struc::Structure, args...) = [collectresidues(model, args...) for model in struc]
+collectresidues(model::Model, args...) = [collectresidues(chain, args...) for chain in model]
+collectresidues(chain::Chain, args...) = collect(chain, args...)
+collectresidues(res::AbstractResidue, args...) = applyselector([res], args...)
+collectresidues(atom::AbstractAtom, args...) = applyselector(organise(atom), args...)
+collectresidues(models::ModelList, args...) = [collectresidues(model, args...) for model in models]
+collectresidues(chains::ChainList, args...) = [collectresidues(chain, args...) for chain in chains]
+collectresidues(residues::ResidueList, args...) = applyselector(residues, args...)
+collectresidues(atoms::AtomList, args...) = applyselector(organise(atoms), args...)
 
-countresidues(element::StrucElementOrList) = length(unfoldresidues(element))
+collectatoms(struc::Structure, args...) = [collectatoms(model, args...) for model in struc]
+collectatoms(model::Model, args...) = [collectatoms(chain, args...) for chain in model]
+collectatoms(chain::Chain, args...) = [collectatoms(res, args...) for res in chain]
+collectatoms(res::AbstractResidue, args...) = collect(res, args...)
+collectatoms(atom::AbstractAtom, args...) = collect(atom, args...)
+collectatoms(models::ModelList, args...) = [collectatoms(model, args...) for model in models]
+collectatoms(chains::ChainList, args...) = [collectatoms(chain, args...) for chain in chains]
+collectatoms(residues::ResidueList, args...) = [collectatoms(res, args...) for res in residues]
+collectatoms(atoms::AtomList, args...) = [collectatoms(atom, args...) for atom in atoms]
 
-unfoldatoms(struc::Structure, args...) = [unfoldatoms(model, args...) for model in struc]
-unfoldatoms(model::Model, args...) = [unfoldatoms(chain, args...) for chain in model]
-unfoldatoms(chain::Chain, args...) = [unfoldatoms(res, args...) for res in chain]
-unfoldatoms(res::AbstractResidue, args...) = unfold(res, args...)
-unfoldatoms(atom::AbstractAtom, args...) = unfold(atom, args...)
-unfoldatoms(models::ModelList, args...) = [unfoldatoms(model, args...) for model in models]
-unfoldatoms(chains::ChainList, args...) = [unfoldatoms(chain, args...) for chain in chains]
-unfoldatoms(residues::ResidueList, args...) = [unfoldatoms(res, args...) for res in residues]
-unfoldatoms(atoms::AtomList, args...) = [unfoldatoms(atom, args...) for atom in atoms]
 
-countatoms(element::StrucElementOrList, args...) = length(unfoldatoms(element, args...))
+countmodels(struc::Structure) = length(struc)
+countchains(struc::Structure) = length(struc[1])
+countchains(chain::Chain) = length(chain)
+countresidues(element::StrucElementOrList, args...) = length(collectresidues(element, args...))
+countatoms(element::StrucElementOrList, args...) = length(collectatoms(element, args...))
 
 
 function organise(models::ModelList; struc_name::AbstractString="")
@@ -388,7 +414,6 @@ function organise(chains::ChainList; model_number::Int=1)
 end
 
 
-# Currently assumes disordered residues are already sorted (also atoms)
 function organise(residues::ResidueList)
     chains = Dict{Char, Dict{AbstractString, AbstractResidue}}()
     for res in residue
@@ -404,7 +429,6 @@ function organise(residues::ResidueList)
 end
 
 
-# Should this organise into DisorderedAtoms where appropriate?
 # This needs to deal with disordered res
 function organise(atoms::AtomList)
     residues = Dict{AbstractString, Dict{AbstractString, AbstractAtom}}()
@@ -418,6 +442,44 @@ function organise(atoms::AtomList)
         residues[res_id][atom_name] = atom
     end
     return
+end
+
+
+function addtoatomlist!(atoms::AtomList, new_atom::Atom)
+    new_res_id = getresid(new_atom)
+    new_atom_name = getatomname(new_atom)
+    already_added = false
+    # Find if there is an existing atom with the same name on the same residue
+    for (i, atom) in enumerate(atoms)
+        if getresid(atom) == new_res_id && getatomname(atom) == new_atom_name
+            new_alt_loc_id = getaltlocid(new_atom)
+            # A disordered atom container already exists and the alt loc ID is not taken
+            if typeof(atom) == DisorderedAtom && !(new_alt_loc_id in getaltlocids(atom))
+                # Add the new atom to the disordered atom container
+                atom[new_alt_loc_id] = new_atom
+                # If the default alt loc requires changing, change it
+                if getoccupancy(new_atom) > getoccupancy(atom) || (getoccupancy(new_atom) == getoccupancy(atom) && Int(new_alt_loc_id) < Int(getdefaultaltlocid(atom)))
+                    setdefaultaltlocid!(atom, new_alt_loc_id)
+                end
+            # Create a new disordered atom container
+            elseif typeof(atom) == Atom && new_alt_loc_id != getaltlocid(atom)
+                # The default alt loc is the atom with the highest occupancy or the alt loc closest to A in the case of ties
+                if getoccupancy(atom) > getoccupancy(new_atom) || (getoccupancy(atom) == getoccupancy(new_atom) && Int(getaltlocid(atom)) < Int(new_alt_loc_id))
+                    default_alt_loc_id = getaltlocid(atom)
+                else
+                    default_alt_loc_id = new_alt_loc_id
+                end
+                atom = DisorderedAtom(Dict(getaltlocid(atom) => atom, new_alt_loc_id => new_atom), default_alt_loc_id)
+            else
+                error("Two identical atoms have the same alternative location ID")
+            end
+            already_added = true
+            break
+        end
+    end
+    if !already_added
+        push!(atoms, new_atom)
+    end
 end
 
 
@@ -466,49 +528,88 @@ const heavy_atom_names = ["C", "CA", "CB", "CD", "CD1", "CD2", "CE", "CE1",
 
 heavyatomselector(atom::AbstractAtom) = atomnameselector(atom, heavy_atom_names)
 
-resnameselector(atom::AbstractAtom, res_names::Array{AbstractString,1}) = getresname(atom) in res_names
+resnameselector(element::Union{AbstractResidue, AbstractAtom}, res_names::Array{AbstractString,1}) = getresname(element) in res_names
 
-const water_res_names = []
+# Any more?
+const water_res_names = ["HOH"]
 
-waterselector(atom::AbstractAtom) = resnameselector(atom, water_res_names)
+waterselector(element::Union{AbstractResidue, AbstractAtom}) = resnameselector(element, water_res_names)
+
+stdresselector(res::AbstractResidue) = !ishetres(res)
+
+hetresselector(res::AbstractResidue) = ishetres(res)
+
+disorderselector(atom::AbstractAtom) = typeof(atom) == DisorderedAtom
+
+disorderselector(res::AbstractResidue) = typeof(res) == DisorderedResidue
+
+hydrogenselector(atom::AbstractAtom) = getelement(atom) == "H" || ('H' in getatomname(atom) && !ismatch(r"[a-zA-Z]", getatomname(atom)[:findfirst(getatomname(atom), 'H')-1]))
 
 
 function show(io::IO, struc::Structure)
     model = struc[1]
-    println(io, "Name         -  ", getstrucname(struc))
-    println(io, "No models    -  ", countmodels(struc))
-    println(io, "Chain(s)     -  ", join(getchains(model)))
-    println(io, "No residues  -  ", countres(model, het_atom=false))
-    println(io, "No atoms     -  ", countatoms(model, het_atom=false))
-    println(io, "No hetatoms  -  ", countatoms(model, std_atom=false))
+    println(io, "Name                 -  ", getstrucname(struc))
+    println(io, "No models            -  ", countmodels(struc))
+    println(io, "Chain(s)             -  ", join(getchainids(model)))
+    println(io, "No residues          -  ", countresidues(model, stdresselector))
+    println(io, "No point mutations   -  ", countresidues(model, stdresselector, disorderselector))
+    println(io, "No other molecules   -  ", countresidues(model, hetresselector) - countresidues(model, hetresselector, waterselector))
+    println(io, "No water molecules   -  ", countresidues(model, hetresselector, waterselector))
+    println(io, "No atoms             -  ", countatoms(model, stdatomselector))
+    println(io, "No H atoms           -  ", countatoms(model, stdatomselector, hydrogenselector))
+    println(io, "No disordered atoms  -  ", countatoms(model, stdatomselector, disorderselector))
 end
-
 
 function show(io::IO, model::Model)
-    println(io, "Model number -  ", model.number)
-    println(io, "Chain(s)     -  ", join(getchainids(model)))
-    println(io, "No residues  -  ", countresidues(model, stdresselector))
-    println(io, "No atoms     -  ", countatoms(model, hetatomselector))
-    println(io, "No hetatoms  -  ", countatoms(model, stdatomselector))
+    println(io, "Model number         -  ", getmodelnumber(model))
+    println(io, "Chain(s)             -  ", join(getchainids(model)))
+    println(io, "No residues          -  ", countresidues(model, stdresselector))
+    println(io, "No point mutations   -  ", countresidues(model, stdresselector, disorderselector))
+    println(io, "No other molecules   -  ", countresidues(model, hetresselector) - countresidues(model, hetresselector, waterselector))
+    println(io, "No water molecules   -  ", countresidues(model, hetresselector, waterselector))
+    println(io, "No atoms             -  ", countatoms(model, stdatomselector))
+    println(io, "No H atoms           -  ", countatoms(model, stdatomselector, hydrogenselector))
+    println(io, "No disordered atoms  -  ", countatoms(model, stdatomselector, disorderselector))
 end
-
 
 function show(io::IO, chain::Chain)
-    println(io, "Chain ID     -  ", getchainid(chain))
-    println(io, "No residues  -  ", countresidues(chain, stdresselector))
-    println(io, "No atoms     -  ", countatoms(model, hetatomselector))
-    println(io, "No hetatoms  -  ", countatoms(model, stdatomselector))
+    println(io, "Chain ID             -  ", getchainid(chain))
+    println(io, "No residues          -  ", countresidues(chain, stdresselector))
+    println(io, "No point mutations   -  ", countresidues(chain, stdresselector, disorderselector))
+    println(io, "No other molecules   -  ", countresidues(chain, hetresselector) - countresidues(chain, hetresselector, waterselector))
+    println(io, "No water molecules   -  ", countresidues(chain, hetresselector, waterselector))
+    println(io, "No atoms             -  ", countatoms(chain, stdatomselector))
+    println(io, "No H atoms           -  ", countatoms(chain, stdatomselector, hydrogenselector))
+    println(io, "No disordered atoms  -  ", countatoms(chain, stdatomselector, disorderselector))
 end
-
 
 function show(io::IO, res::Residue)
-    println(io, "Res name     -  ", getresname(res))
-    println(io, "Res ID       -  ", getresid(res, full=true))
-    println(io, "No atoms     -  ", countatoms(model, hetatomselector))
-    println(io, "No hetatoms  -  ", countatoms(model, stdatomselector))
+    println(io, "Res ID               -  ", getresid(res, full=true))
+    println(io, "Res name             -  ", getresname(res))
+    println(io, "No atoms             -  ", countatoms(res))
+    println(io, "No H atoms           -  ", countatoms(res, hydrogenselector))
+    println(io, "No disordered atoms  -  ", countatoms(res, disorderselector))
 end
 
+function show(io::IO, disordered_res::DisorderedResidue)
+    println(io, "Res ID               -  ", getresid(disordered_res, full=true))
+    for res_name in getresnames(disordered_res)
+        println(io, "Res name             -  ", res_name)
+        println(io, "No atoms             -  ", countatoms(disordered_res[res_name]))
+        println(io, "No H atoms           -  ", countatoms(disordered_res[res_name], hydrogenselector))
+        println(io, "No disordered atoms  -  ", countatoms(disordered_res[res_name], disorderselector))
+    end
+end
 
+"""
 function show(io::IO, atom::Atom)
     print(io, getpdbline(atom)...)
+end
+"""
+
+function show(io::IO, disordered_atom::DisorderedAtom)
+    for atom in disordered_atom
+        show(io, atom)
+        println()
+    end
 end
