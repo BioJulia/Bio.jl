@@ -260,14 +260,9 @@ getatomnames(res::Residue) = sort(collect(keys(res.atoms)), by= atom_name -> get
 
 function getresid(element::Union{AbstractResidue, AbstractAtom}; full::Bool=false)
     res_id = strip("$(getresnumber(element))$(getinscode(element))")
-    if ishetero(element)
-        res_id = "H_$res_id"
-    end
-    if full
-        return "$(res_id):$(getchainid(element))"
-    else
-        return res_id
-    end
+    ishetero(element) ? res_id = "H_$res_id"
+    full ? res_id = "$(res_id):$(getchainid(element))"
+    return res_id
 end
 
 getdefaultresname(disordered_res::DisorderedResidue) = disordered_res.default
@@ -366,7 +361,7 @@ end
 collect(element::Union{Chain, AbstractResidue, AbstractAtom}, args...) = applyselector(collect(element), args...)
 
 # Map here
-collectresidues(struc::Structure, args...) = [collectresidues(model, args...) for model in struc]
+collectresidues(struc::Structure, args...) = collectresidues(struc[1], args...)
 collectresidues(model::Model, args...) = [collectresidues(chain, args...) for chain in model]
 collectresidues(chain::Chain, args...) = collect(chain, args...)
 collectresidues(res::AbstractResidue, args...) = applyselector([res], args...)
@@ -376,7 +371,7 @@ collectresidues(chains::ChainList, args...) = [collectresidues(chain, args...) f
 collectresidues(residues::ResidueList, args...) = applyselector(residues, args...)
 collectresidues(atoms::AtomList, args...) = applyselector(organise(atoms), args...)
 
-collectatoms(struc::Structure, args...) = [collectatoms(model, args...) for model in struc]
+collectatoms(struc::Structure, args...) = collectatoms(struc[1], args...)
 collectatoms(model::Model, args...) = [collectatoms(chain, args...) for chain in model]
 collectatoms(chain::Chain, args...) = [collectatoms(res, args...) for res in chain]
 collectatoms(res::AbstractResidue, args...) = collect(res, args...)
@@ -429,23 +424,48 @@ function organise(residues::ResidueList)
 end
 
 
-# This needs to deal with disordered res
+# No
 function organise(atoms::AtomList)
-    residues = Dict{AbstractString, Dict{AbstractString, AbstractAtom}}()
+    residues = Dict{AbstractString, AbstractResidue}()
     for atom in atoms
         res_id = getresid(atom)
+        # If the residue doesn't exist, create it
         if !(res_id in residues)
-            residues[res_id] = Dict{AbstractString, AbstractAtom}()
+            residues[res_id] = Residue()
+            current_residue = residues[res_id]
+        # If the residue exists but with a different residue name
+        elseif getresname(atom) != getresname(residues[res_id])
+            if typeof(residues[res_id]) == DisorderedResidue
+                residues[res_id][getresname(atom)] = Residue()
+            else
+                residues[res_id] = DisorderedResidue()
+            end
+            current_residue = residues[res_id][getresname(atom)]
+        # Otherwise the residue exists with the same residue name and we can add to it
+        else
+            current_residue = residues[res_id]
         end
         atom_name = getatomname(atom)
-        @assert !(atom_name in residues[res_id]) "Multiple atoms with the same atom name on the same residue - cannot organise into residues"
-        residues[res_id][atom_name] = atom
+        @assert !(atom_name in getatomnames(current_residue)) "Multiple atoms with the same atom name on the same residue - cannot organise into residues"
+        current_residue[atom_name] = atom
     end
     return
 end
 
 
-function addtoatomlist!(atoms::AtomList, new_atom::Atom)
+function choosedefaultaltlocid(atom_one::Atom, atom_two::Atom)
+    if getoccupancy(atom_one) > getoccupancy(atom_two) ||
+            (getoccupancy(atom_one) == getoccupancy(atom_two) &&
+            Int(getaltlocid(atom_one)) < Int(getaltlocid(atom_two)))
+        return getaltlocid(atom_one)
+    else
+        return getaltlocid(atom_two)
+    end
+end
+
+
+# This looks slow - instead take a whole list and do it at once like above?
+function addtoatomlist!(atoms::AtomList, new_atom::Atom, remove_disorder::Bool=false)
     new_res_id = getresid(new_atom)
     new_atom_name = getatomname(new_atom)
     already_added = false
@@ -458,28 +478,24 @@ function addtoatomlist!(atoms::AtomList, new_atom::Atom)
                 # Add the new atom to the disordered atom container
                 atom[new_alt_loc_id] = new_atom
                 # If the default alt loc requires changing, change it
-                if getoccupancy(new_atom) > getoccupancy(atom) || (getoccupancy(new_atom) == getoccupancy(atom) && Int(new_alt_loc_id) < Int(getdefaultaltlocid(atom)))
-                    setdefaultaltlocid!(atom, new_alt_loc_id)
-                end
-            # Create a new disordered atom container
+                choosedefaultaltlocid(getdefaultatom(atom), new_atom) != getdefaultaltlocid(atom) ? setdefaultaltlocid!(atom, new_alt_loc_id)
+            # The atom already exists and the alt loc ID is not taken
             elseif typeof(atom) == Atom && new_alt_loc_id != getaltlocid(atom)
-                # The default alt loc is the atom with the highest occupancy or the alt loc closest to A in the case of ties
-                if getoccupancy(atom) > getoccupancy(new_atom) || (getoccupancy(atom) == getoccupancy(new_atom) && Int(getaltlocid(atom)) < Int(new_alt_loc_id))
-                    default_alt_loc_id = getaltlocid(atom)
+                # If we are removing disorder and the new atom is preferred to the old one, replace the old one
+                if remove_disorder && choosedefaultaltlocid(atom, new_atom) == new_alt_loc_id
+                    atom = new_atom
+                # If we are not removing disorder, create a new disordered atom container
                 else
-                    default_alt_loc_id = new_alt_loc_id
+                    atom = DisorderedAtom(Dict(getaltlocid(atom) => atom, new_alt_loc_id => new_atom), choosedefaultaltlocid(atom, new_atom))
                 end
-                atom = DisorderedAtom(Dict(getaltlocid(atom) => atom, new_alt_loc_id => new_atom), default_alt_loc_id)
             else
-                error("Two identical atoms have the same alternative location ID")
+                error("Two copies of the same atom have the same alternative location ID")
             end
             already_added = true
             break
         end
     end
-    if !already_added
-        push!(atoms, new_atom)
-    end
+    !already_added ? push!(atoms, new_atom)
 end
 
 
@@ -601,11 +617,9 @@ function show(io::IO, disordered_res::DisorderedResidue)
     end
 end
 
-"""
 function show(io::IO, atom::Atom)
     print(io, getpdbline(atom)...)
 end
-"""
 
 function show(io::IO, disordered_atom::DisorderedAtom)
     for atom in disordered_atom
