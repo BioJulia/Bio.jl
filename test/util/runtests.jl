@@ -1,7 +1,13 @@
 module TestUtil
 
-using FactCheck,
-    Bio.Util,
+if VERSION >= v"0.5-"
+    using Base.Test
+else
+    using BaseTestNext
+    const Test = BaseTestNext
+end
+
+using Bio.Util,
     Bio.Seq,
     TestFunctions
 
@@ -28,54 +34,54 @@ function generate_test_itrs(width, step, arr, str, nuc, rib, aas)
     return arritr, stritr, nucitr, ribitr, aasitr
 end
 
-facts("Sliding-Windows") do
-    context("Iterator Creation") do
-        context("Sensible values") do
+@testset "Sliding-Windows" begin
+    @testset "Iterator Creation" begin
+        @testset "Sensible values" begin
             for _ in 1:10
                 n, arr, str, nuc, rib, aas = generate_testcase_data()
                 winwidth, winstep = generate_test_window(n)
                 arritr, stritr, nucitr, ribitr, aasitr =
                     generate_test_itrs(winwidth, winstep, arr, str, nuc, rib, aas)
-                @fact arritr --> EachWindowIterator{Array{Int, 1}}(arr, winwidth, winstep)
-                @fact stritr --> EachWindowIterator{ASCIIString}(str, winwidth, winstep)
-                @fact nucitr --> EachWindowIterator{DNASequence}(nuc, winwidth, winstep)
-                @fact ribitr --> EachWindowIterator{RNASequence}(rib, winwidth, winstep)
-                @fact aasitr --> EachWindowIterator{AminoAcidSequence}(aas, winwidth, winstep)
-                @fact arritr.width --> winwidth
-                @fact stritr.width --> winwidth
-                @fact nucitr.width --> winwidth
-                @fact ribitr.width --> winwidth
-                @fact aasitr.width --> winwidth
-                @fact arritr.step --> winstep
-                @fact stritr.step --> winstep
-                @fact nucitr.step --> winstep
-                @fact ribitr.step --> winstep
-                @fact aasitr.step --> winstep
-                @fact arritr.data --> arr
-                @fact stritr.data --> str
-                @fact nucitr.data --> nuc
-                @fact ribitr.data --> rib
-                @fact aasitr.data --> aas
+                @test arritr == EachWindowIterator{Array{Int, 1}}(arr, winwidth, winstep)
+                @test stritr == EachWindowIterator{ASCIIString}(str, winwidth, winstep)
+                @test nucitr == EachWindowIterator{DNASequence}(nuc, winwidth, winstep)
+                @test ribitr == EachWindowIterator{RNASequence}(rib, winwidth, winstep)
+                @test aasitr == EachWindowIterator{AminoAcidSequence}(aas, winwidth, winstep)
+                @test arritr.width == winwidth
+                @test stritr.width == winwidth
+                @test nucitr.width == winwidth
+                @test ribitr.width == winwidth
+                @test aasitr.width == winwidth
+                @test arritr.step == winstep
+                @test stritr.step == winstep
+                @test nucitr.step == winstep
+                @test ribitr.step == winstep
+                @test aasitr.step == winstep
+                @test arritr.data == arr
+                @test stritr.data == str
+                @test nucitr.data == nuc
+                @test ribitr.data == rib
+                @test aasitr.data == aas
             end
         end
 
-        context("Bad values") do
+        @testset "Bad values" begin
             for _ in 1:10
                 n, arr, str, nuc = generate_testcase_data()
                 winwidth = rand(n + 1:n + rand(1:1000))
                 winstep = rand(n + 1:n + rand(1:1000))
-                @fact_throws eachwindow(arr, winwidth, winstep)
-                @fact_throws eachwindow(str, winwidth, winstep)
-                @fact_throws eachwindow(nuc, winwidth, winstep)
-                @fact_throws eachwindow(rib, winwidth, winstep)
-                @fact_throws eachwindow(aas, winwidth, winstep)
+                @test_throws Exception eachwindow(arr, winwidth, winstep)
+                @test_throws Exception eachwindow(str, winwidth, winstep)
+                @test_throws Exception eachwindow(nuc, winwidth, winstep)
+                @test_throws Exception eachwindow(rib, winwidth, winstep)
+                @test_throws Exception eachwindow(aas, winwidth, winstep)
             end
         end
     end
 
 
-    context("Iteration") do
-        context("N & size of Windows, N of missed elements") do
+    @testset "Iteration" begin
+        @testset "N & size of Windows, N of missed elements" begin
             for _ in 1:10
                 n, arr, str, nuc, rib, aas = generate_testcase_data()
                 winwidth, winstep = generate_test_window(n)
@@ -87,97 +93,97 @@ facts("Sliding-Windows") do
                 ribres = collect(ribitr)
                 aasres = collect(aasitr)
                 expectedMissed = n - StepRange(winwidth, winstep, n).stop
-                @fact length(arrres) --> size(arritr)
-                @fact length(strres) --> size(stritr)
-                @fact length(nucres) --> size(nucitr)
-                @fact length(ribres) --> size(ribitr)
-                @fact length(aasres) --> size(aasitr)
-                @fact missed(arritr) --> expectedMissed
-                @fact missed(stritr) --> expectedMissed
-                @fact missed(nucitr) --> expectedMissed
-                @fact missed(ribitr) --> expectedMissed
-                @fact missed(aasitr) --> expectedMissed
+                @test length(arrres) == size(arritr)
+                @test length(strres) == size(stritr)
+                @test length(nucres) == size(nucitr)
+                @test length(ribres) == size(ribitr)
+                @test length(aasres) == size(aasitr)
+                @test missed(arritr) == expectedMissed
+                @test missed(stritr) == expectedMissed
+                @test missed(nucitr) == expectedMissed
+                @test missed(ribitr) == expectedMissed
+                @test missed(aasitr) == expectedMissed
                 for win in arrres
-                    @fact length(win) --> winwidth
+                    @test length(win) == winwidth
                 end
                 for win in strres
-                    @fact length(win) --> winwidth
+                    @test length(win) == winwidth
                 end
                 for win in nucres
-                    @fact length(win) --> winwidth
+                    @test length(win) == winwidth
                 end
                 for win in ribres
-                    @fact length(win) --> winwidth
+                    @test length(win) == winwidth
                 end
                 for win in aasres
-                    @fact length(win) --> winwidth
+                    @test length(win) == winwidth
                 end
             end
         end
 
-        context("Content of windows generated") do
-            context("DNA") do
+        @testset "Content of windows generated" begin
+            @testset "DNA" begin
                 nuc = DNASequence(random_dna(10))
                 for width = 1:5, step = 1:5
                     nucitr = eachwindow(nuc, width, step)
                     i, j = 1, width
                     for win in nucitr
-                        @fact win --> sub(nuc, i:j)
-                        @fact win --> nuc[i:j]
+                        @test win == sub(nuc, i:j)
+                        @test win == nuc[i:j]
                         i += step
                         j += step
                     end
                 end
             end
 
-            context("RNA") do
+            @testset "RNA" begin
                 rib = RNASequence(random_rna(10))
                 for width = 1:5, step = 1:5
                     ribitr = eachwindow(rib, width, step)
                     i, j = 1, width
                     for win in ribitr
-                        @fact win --> sub(rib, i:j)
-                        @fact win --> rib[i:j]
+                        @test win == sub(rib, i:j)
+                        @test win == rib[i:j]
                         i += step
                         j += step
                     end
                 end
             end
 
-            context("Amino Acids") do
+            @testset "Amino Acids" begin
                 aas = AminoAcidSequence(random_aa(10))
                 for width = 1:5, step = 1:5
                     aasitr = eachwindow(aas, width, step)
                     i, j = 1, width
                     for win in aasitr
-                        @fact win --> sub(aas, i:j)
-                        @fact win --> aas[i:j]
+                        @test win == sub(aas, i:j)
+                        @test win == aas[i:j]
                         i += step
                         j += step
                     end
                 end
             end
 
-            context("Arrays") do
+            @testset "Arrays" begin
                 arr = collect(1:10)
                 for width = 1:5, step = 1:5
                     arritr = eachwindow(arr, width, step)
                     i, j = 1, width
                     for win in arritr
-                        @fact win --> sub(arr, i:j)
+                        @test win == sub(arr, i:j)
                         i += step
                         j += step
                     end
                 end
             end
 
-            context("Strings") do
+            @testset "Strings" begin
                 str = randstring(10)
                 for width = 1:5, step = 1:5
                     stritr = eachwindow(str, width, step)
                     i, j = 1, width
                     for win in stritr
-                        @fact win --> str[i:j]
+                        @test win == str[i:j]
                         i += step
                         j += step
                     end

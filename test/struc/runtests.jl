@@ -1,4 +1,4 @@
-using Bio.Struc
+module TestStruc
 
 if VERSION >= v"0.5-"
     using Base.Test
@@ -7,6 +7,10 @@ else
     const Test = BaseTestNext
 end
 
+using Bio.Struc
+
 include("test_model.jl")
 include("test_pdb.jl")
 include("test_spatial.jl")
+
+end
