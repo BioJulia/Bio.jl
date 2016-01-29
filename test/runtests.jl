@@ -1,10 +1,27 @@
+# all test targets
+available_targets = [
+    "align",
+    "phylo",
+    "intervals",
+    "seq",
+    "services",
+    "tools",
+    "util"
+]
 
+if isempty(ARGS)
+    # run all available test targets
+    targets = available_targets
+else
+    targets = ARGS
+    invalids = setdiff(targets, available_targets)
+    if !isempty(invalids)
+        error("there are invalid test targets: ", join(invalids, ", "))
+    end
+end
 
 include("TestFunctions.jl")
-include("align/TestAlign.jl")
-include("phylo/TestPhylo.jl")
-include("intervals/TestIntervals.jl")
-include("seq/TestSeq.jl")
-include("services/TestServices.jl")
-include("tools/TestTools.jl")
-include("util/TestUtil.jl")
+
+for target in targets
+    include("$target/runtests.jl")
+end
