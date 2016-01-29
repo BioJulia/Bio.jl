@@ -31,12 +31,12 @@ end
 
 
 function read(input::IO,
-            ::Type{PDB};
+            ::Type{PDB},
+            args...;
             struc_name::AbstractString="",
             remove_disorder::Bool=false,
             read_std_atoms::Bool=true,
-            read_het_atoms::Bool=true,
-            args...)
+            read_het_atoms::Bool=true)
     # Dictionary of model numbers and atom lists
     atom_lists = Dict(1 => AbstractAtom[])
     # Entries outside of a MODEL/ENDMDL block are added to model 1
@@ -80,12 +80,13 @@ end
 
 
 function read(filepath::AbstractString,
-            ::Type{PDB};
+            ::Type{PDB},
+            args...;
             struc_name::AbstractString=splitdir(filepath)[2],
-            args...)
+            kwargs...)
     input = open(filepath)
     finalizer(input, input -> close(input))
-    return read(input, PDB; struc_name=struc_name, args...)
+    return read(input, PDB, args...; struc_name=struc_name, kwargs...)
 end
 
 
@@ -228,34 +229,32 @@ getpdbline(atom::Atom) = ASCIIString[
     ]
 
 
-function writepdb(output::IO, element::Union{Structure, ModelList}; args...)
+function writepdb(output::IO, element::Union{Structure, ModelList}, args...)
     # If there are multiple models, write out MODEL/ENDMDL lines
     if length(element) > 1
         for model in element
             println(output, "MODEL     ", spacestring(getmodelnumber(model), 4), repeat(" ", 66))
-            for atom in collectatoms(model; args...), atom_record in atom
-                println(out_file, getpdbline(atom_record)...)
-            end
+            writepdblines(output, model)
             println(output, "ENDMDL$(repeat(" ", 74))")
         end
     # If there is only one model, do not write out MODEL/ENDMDL lines
     else
-        writepdblines(output, element; args...)
+        writepdblines(output, element, args...)
     end
 end
 
-writepdb(output::IO, element::StrucElementOrList; args...) = writepdblines(output, element; args...)
+writepdb(output::IO, element::StrucElementOrList, args...) = writepdblines(output, element, args...)
 
 
-function writepdblines(output::IO, element::StrucElementOrList; args...)
-    for atom in collectatoms(element; args...), atom_record in atom
+function writepdblines(output::IO, element::StrucElementOrList, args...)
+    for atom in collectatoms(element, args...), atom_record in atom
         println(output, getpdbline(atom_record)...)
     end
 end
 
 
-function writepdb(filepath::AbstractString, element::StrucElementOrList; args...)
+function writepdb(filepath::AbstractString, element::StrucElementOrList, args...)
     output = open(filepath, "w")
     finalizer(output, output -> close(output))
-    return read(output, element; args...)
+    return writepdb(output, element, args...)
 end
