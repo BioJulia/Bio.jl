@@ -42,8 +42,8 @@ export AbstractAtom,
     getchainids,
     getstrucname,
     getmodelnumbers,
-    applyselector,
-    applyselector!,
+    applyselectors,
+    applyselectors!,
     collectresidues,
     countresidues,
     collectatoms,
@@ -123,6 +123,7 @@ end
 Residue(name::AbstractString, chain_id::Char, number::Int, ins_code::Char, het_res::Bool) = Residue(name, chain_id, number, ins_code, het_res, Dict())
 Residue(name::AbstractString, chain_id::Char, number::Int, ins_code::Char) = Residue(name, chain_id, number, ins_code, false, Dict())
 Residue(name::AbstractString, chain_id::Char, number::Int) = Residue(name, chain_id, number, ' ', false, Dict())
+Residue(atom::AbstractAtom) = Residue(getresname(atom), getchainid(atom), getresnumber(atom), getinscode(atom), ishetatom(atom))
 
 """A container to hold different versions of the same residue (point mutations)"""
 immutable DisorderedResidue <: AbstractResidue
@@ -273,8 +274,8 @@ end
 
 function getresid(element::Union{AbstractResidue, AbstractAtom}; full::Bool=false)
     res_id = strip("$(getresnumber(element))$(getinscode(element))")
-    ishetero(element) ? res_id = "H_$res_id"
-    full ? res_id = "$(res_id):$(getchainid(element))"
+    ishetero(element) ? res_id = "H_$res_id" : nothing
+    full ? res_id = "$(res_id):$(getchainid(element))" : nothing
     return res_id
 end
 
@@ -307,12 +308,10 @@ end
 
 getchainid(chain::Chain) = chain.id
 
-getresids(chain::Chain) = sortresids(collect(keys(chain.residues)))
-
-function sortresids(res_ids::Array{ASCIIString,1})
-    sorted_res_ids = sort(res_ids, by= res_id -> chain[res_id].ins_code)
-    sort!(sorted_res_ids, by= res_id -> chain[res_id].res_no)
-    sort!(sorted_res_ids, by= res_id -> chain[res_id].het_res)
+function getresids(chain::Chain)
+    sorted_res_ids = sort(collect(keys(chain.residues)), by= res_id -> getinscode(chain[res_id]))
+    sort!(sorted_res_ids, by= res_id -> getresnumber(chain[res_id]))
+    sort!(sorted_res_ids, by= res_id -> ishetres(chain[res_id]))
     return sorted_res_ids
 end
 
@@ -373,37 +372,41 @@ length(disordered_atom::DisorderedAtom) = length(getaltlocids(disordered_atom))
 
 
 # Is deepcopy needed?
-function applyselector(element_list::Union{ResidueList, AtomList}, args...)
+function applyselectors(element_list::Union{ResidueList, AtomList}, args...)
     new_list = copy(element_list)
-    applyselector!(new_list, args...)
+    applyselectors!(new_list, args...)
     return new_list
 end
 
-function applyselector!(element_list::Union{ResidueList, AtomList}, args...)
+function applyselectors!(element_list::Union{ResidueList, AtomList}, args...)
     for selector_function in args
-        filter!(element_list, element -> selector_function(element))
+        filter!(element -> selector_function(element), element_list)
     end
 end
 
+applyselectors(element_list::Union{ResidueList, AtomList}) = element_list
+applyselectors!(element_list::Union{ResidueList, AtomList}) = element_list
 
-collect(element::Union{Chain, AbstractResidue, AbstractAtom}, args...) = applyselector(collect(element), args...)
+
+#collect(element::Union{Chain, AbstractResidue, AbstractAtom}) = collect(element)
+#collect(element::Union{Chain, AbstractResidue, AbstractAtom}, args...) = applyselectors(collect(element), args...)
 
 # Map here
 collectresidues(struc::Structure, args...) = collectresidues(struc[1], args...)
 collectresidues(model::Model, args...) = [collectresidues(chain, args...) for chain in model]
-collectresidues(chain::Chain, args...) = collect(chain, args...)
-collectresidues(res::AbstractResidue, args...) = applyselector([res], args...)
-collectresidues(atom::AbstractAtom, args...) = applyselector(organise(atom), args...)
+collectresidues(chain::Chain, args...) = applyselectors(collect(chain), args...)
+collectresidues(res::AbstractResidue, args...) = applyselectors(AbstractResidue[res], args...)
+collectresidues(atom::AbstractAtom, args...) = applyselectors(organise(atom), args...)
 collectresidues(models::ModelList, args...) = [collectresidues(model, args...) for model in models]
 collectresidues(chains::ChainList, args...) = [collectresidues(chain, args...) for chain in chains]
-collectresidues(residues::ResidueList, args...) = applyselector(residues, args...)
-collectresidues(atoms::AtomList, args...) = applyselector(organise(atoms), args...)
+collectresidues(residues::ResidueList, args...) = applyselectors(residues, args...)
+collectresidues(atoms::AtomList, args...) = applyselectors(organise(atoms), args...)
 
 collectatoms(struc::Structure, args...) = collectatoms(struc[1], args...)
 collectatoms(model::Model, args...) = [collectatoms(chain, args...) for chain in model]
 collectatoms(chain::Chain, args...) = [collectatoms(res, args...) for res in chain]
-collectatoms(res::AbstractResidue, args...) = collect(res, args...)
-collectatoms(atom::AbstractAtom, args...) = collect(atom, args...)
+collectatoms(res::AbstractResidue, args...) = applyselectors(collect(res), args...)
+collectatoms(atom::AbstractAtom, args...) = applyselectors(collect(atom), args...)
 collectatoms(models::ModelList, args...) = [collectatoms(model, args...) for model in models]
 collectatoms(chains::ChainList, args...) = [collectatoms(chain, args...) for chain in chains]
 collectatoms(residues::ResidueList, args...) = [collectatoms(res, args...) for res in residues]
@@ -424,7 +427,7 @@ isdisorderd(element::StrucElementOrList) = countatoms(element, disorderselector)
 function organise(models::ModelList; struc_name::AbstractString="")
     struc = Structure(struc_name)
     for model in models
-        @assert !(getmodelnumber(model) in struc) "Multiple models with the same model number found - cannot organise into a structure"
+        @assert !(getmodelnumber(model) in getmodelnumbers(struc)) "Multiple models with the same model number found - cannot organise into a structure"
         struc[getmodelnumber(model)] = model
     end
     return struc
@@ -434,7 +437,7 @@ end
 function organise(chains::ChainList; model_number::Int=1)
     model = Model(model_number)
     for chain in chains
-        @assert !(getchainid(chain) in model) "Multiple chains with the same chain ID found - cannot organise into a model"
+        @assert !(getchainid(chain) in getchainids(model)) "Multiple chains with the same chain ID found - cannot organise into a model"
         model[getchainid(chain)] = chain
     end
     return model
@@ -443,97 +446,85 @@ end
 
 function organise(residues::ResidueList)
     chains = Dict{Char, Dict{AbstractString, AbstractResidue}}()
-    for res in residue
+    for res in residues
         chain_id = getchainid(res)
-        if !(chain_id in chains)
-            chains[chain_id] = Dict{AbstractString, AbstractResidue}()
-        end
+        !(chain_id in keys(chains)) ? chains[chain_id] = Dict{AbstractString, AbstractResidue}() : nothing
         res_id = getresid(res)
-        @assert !(res_id in chains[chain_id]) "Multiple residues with the same residue ID found - cannot organise into chains"
+        @assert !(res_id in keys(chains[chain_id])) "Multiple residues with the same residue ID found - cannot organise into chains"
         chains[chain_id][res_id] = res
     end
     return [Chain(chain_id, chains[chain_id]) for chain_id in sort(collect(keys(chains)))]
 end
 
 
+# Perhaps store chain as well so can be properly sorted
 function organise(atoms::AtomList)
     residues = Dict{AbstractString, AbstractResidue}()
     for atom in atoms
-        res_id = getresid(atom)
+        res_id = getresid(atom; full=true)
         # If the residue doesn't exist, create it
-        if !(res_id in residues)
-            residues[res_id] = Residue()
+        if !(res_id in keys(residues))
+            residues[res_id] = Residue(atom)
             current_residue = residues[res_id]
         # The disordered residue container could already exist
         elseif typeof(residues[res_id]) == DisorderedResidue
             # If the res name isn't present, need to add a new Residue
-            if !(getresname(atom) in getresnames(residues[res_id]))
-                residues[res_id][getresname(atom)] = Residue(
-                    getresname(atom),
-                    getchainid(atom),
-                    getresnumber(atom),
-                    getinscode(atom),
-                    ishetatom(atom)
-                )
-            end
+            !(getresname(atom) in getresnames(residues[res_id])) ? residues[res_id][getresname(atom)] = Residue(atom) : nothing
             current_residue = residues[res_id][getresname(atom)]
         # The disorered residue container doesn't exist and needs creating
         elseif getresname(atom) != getresname(residues[res_id])
             # The default res name is the first added
             residues[res_id] = DisorderedResidue(Dict(
                 getresname(residues[res_id]) => residues[res_id],
-                getresname(atom) => Residue(
-                    getresname(atom),
-                    getchainid(atom),
-                    getresnumber(atom),
-                    getinscode(atom),
-                    ishetatom(atom)
-                )
+                getresname(atom) => Residue(atom)
             ), getresname(residues[res_id]))
             current_residue = residues[res_id][getresname(atom)]
         # Otherwise the residue exists with the same residue name and we can try to add to it
         else
             current_residue = residues[res_id]
         end
-        @assert !(getatomname(atom) in getatomnames(current_residue)) "Multiple atoms with the same atom name on the same residue - cannot organise into residues"
-        current_residue[getatomname(atom)] = atom
+        atom_name = getatomname(atom)
+        @assert !(atom_name in getatomnames(current_residue)) "Multiple atoms with the same atom name on the same residue - cannot organise into residues:\n$(current_residue[atom_name])\n$(atom)"
+        current_residue[atom_name] = atom
     end
-    return [residues[res_id] for res_id in sortresids(collect(keys(residues)))]
+    #return [residues[res_id] for res_id in sortresids(collect(keys(residues)))]
+    return collect(values(residues))
 end
 
 
-# This looks slow - instead take a whole list and do it at once like above?
-function addtoatomlist!(atoms::AtomList, new_atom::Atom, remove_disorder::Bool=false)
-    new_res_id = getresid(new_atom)
-    new_atom_name = getatomname(new_atom)
-    already_added = false
-    # Find if there is an existing atom with the same name on the same residue
-    for (i, atom) in enumerate(atoms)
-        if getresid(atom) == new_res_id && getatomname(atom) == new_atom_name
-            new_alt_loc_id = getaltlocid(new_atom)
-            # A disordered atom container already exists and the alt loc ID is not taken
-            if typeof(atom) == DisorderedAtom && !(new_alt_loc_id in getaltlocids(atom))
-                # Add the new atom to the disordered atom container
-                atom[new_alt_loc_id] = new_atom
-                # If the default alt loc requires changing, change it
-                choosedefaultaltlocid(getdefaultatom(atom), new_atom) != getdefaultaltlocid(atom) ? setdefaultaltlocid!(atom, new_alt_loc_id)
-            # The atom already exists and the alt loc ID is not taken
-            elseif typeof(atom) == Atom && new_alt_loc_id != getaltlocid(atom)
-                # If we are removing disorder and the new atom is preferred to the old one, replace the old one
-                if remove_disorder && choosedefaultaltlocid(atom, new_atom) == new_alt_loc_id
-                    atom = new_atom
-                # If we are not removing disorder, create a new disordered atom container
-                else
-                    atom = DisorderedAtom(Dict(getaltlocid(atom) => atom, new_alt_loc_id => new_atom), choosedefaultaltlocid(atom, new_atom))
-                end
+# Should check none of the atoms are DisorderedAtoms already
+function formatomlist(atoms::AtomList; remove_disorder::Bool=false)
+    # Key is (residue ID, residue name, atom name)
+    # Remove this to a separate function getatomid?
+    atom_dic = Dict{Tuple{AbstractString, AbstractString, AbstractString}, AbstractAtom}()
+    for atom in atoms
+        atom_id = (getresid(atom; full=true), getresname(atom), getatomname(atom))
+        # The atom does not exist so we can create it
+        if !(atom_id in keys(atom_dic))
+            atom_dic[atom_id] = atom
+        # A disordered atom container already exists and the alt loc ID is not taken
+        elseif typeof(atom_dic[atom_id]) == DisorderedAtom && !(getaltlocid(atom) in getaltlocids(atom_dic[atom_id]))
+            # Add the new atom to the disordered atom container
+            atom_dic[atom_id][getaltlocid(atom)] = atom
+            # If the default alt loc requires changing, change it
+            choosedefaultaltlocid(getdefaultatom(atom_dic[atom_id]), atom) != getdefaultaltlocid(atom) ? setdefaultaltlocid!(atom_dic[atom_id], getaltlocid(atom)) : nothing
+        # The atom already exists and the alt loc IDs are different
+        elseif typeof(atom_dic[atom_id]) == Atom && getaltlocid(atom) != getaltlocid(atom_dic[atom_id])
+            # If we are removing disorder and the new atom is preferred to the old one, replace the old one
+            if remove_disorder && choosedefaultaltlocid(atom, atom_dic[atom_id]) == getaltlocid(atom)
+                atom_dic[atom_id] = atom
+            # If we are not removing disorder, create a new disordered atom container and add both atoms
             else
-                error("Two copies of the same atom have the same alternative location ID")
+                atom_dic[atom_id] = DisorderedAtom(Dict(
+                    getaltlocid(atom) => atom,
+                    getaltlocid(atom_dic[atom_id]) => atom_dic[atom_id]
+                ), choosedefaultaltlocid(atom, atom_dic[atom_id]))
             end
-            already_added = true
-            break
+        else
+            error("Two copies of the same atom have the same alternative location ID (note names are stripped of whitespace so identical names with different spacing, e.g. ' CA ' and 'CA  ', are not currently supported):\n$(atom_dic[atom_id])\n$(atom)")
         end
     end
-    !already_added ? push!(atoms, new_atom)
+    return sort(collect(values(atom_dic)), by= atom -> getserial(atom))
 end
 
 
@@ -577,15 +568,15 @@ hetatomselector(atom::AbstractAtom) = ishetatom(atom)
 
 atomnameselector(atom::AbstractAtom, atom_names::Array{AbstractString,1}) = getatomname(atom) in atom_names
 
-const calpha_atom_names = ["CA"]
+const calpha_atom_names = AbstractString["CA"]
 
 calphaselector(atom::AbstractAtom) = stdatomselector(atom) && atomnameselector(atom, calpha_atom_names)
 
-const backbone_atom_names = ["CA", "N", "C"]
+const backbone_atom_names = AbstractString["CA", "N", "C"]
 
 backboneselector(atom::AbstractAtom) = stdatomselector(atom) && atomnameselector(atom, backbone_atom_names)
 
-const heavy_atom_names = ["C", "CA", "CB", "CD", "CD1", "CD2", "CE", "CE1",
+const heavy_atom_names = AbstractString["C", "CA", "CB", "CD", "CD1", "CD2", "CE", "CE1",
                     "CE2", "CE3", "CG", "CG1", "CG2", "CH2", "CZ", "CZ2",
                     "CZ3", "N", "ND1", "ND2", "NE", "NE1", "NE2", "NH1", "NH2",
                     "NZ", "O", "OD1", "OD2", "OE1", "OE2", "OG", "OG1", "OH",
@@ -596,7 +587,7 @@ heavyatomselector(atom::AbstractAtom) = stdatomselector(atom) && atomnameselecto
 resnameselector(element::Union{AbstractResidue, AbstractAtom}, res_names::Array{AbstractString,1}) = getresname(element) in res_names
 
 # Any more?
-const water_res_names = ["HOH"]
+const water_res_names = AbstractString["HOH"]
 
 waterselector(element::Union{AbstractResidue, AbstractAtom}) = resnameselector(element, water_res_names)
 

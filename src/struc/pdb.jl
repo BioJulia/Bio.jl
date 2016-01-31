@@ -1,3 +1,13 @@
+export PDB,
+    PDBParseException,
+    getpdb,
+    parseatomrecord,
+    spaceatomname,
+    getpdbline,
+    writepdb,
+    writepdblines
+
+
 import Base: showerror,
     read
 
@@ -14,9 +24,7 @@ type PDBParseException <: Exception
 end
 
 
-function showerror(io::IO, e::PDBParseException)
-    println(io, e.message, " at line ", e.line_no, " of file:\n", e.line)
-end
+showerror(io::IO, e::PDBParseException) = println(io, e.message, " at line ", e.line_no, " of file:\n", e.line)
 
 
 function getpdb(pdbid::AbstractString, out_filepath::AbstractString="$pdbid.pdb"; ba_number::Int=0)
@@ -30,14 +38,14 @@ function getpdb(pdbid::AbstractString, out_filepath::AbstractString="$pdbid.pdb"
 end
 
 
+# Add selectors back in
 function read(input::IO,
-            ::Type{PDB},
-            args...;
+            ::Type{PDB};
             struc_name::AbstractString="",
             remove_disorder::Bool=false,
             read_std_atoms::Bool=true,
             read_het_atoms::Bool=true)
-    # Dictionary of model numbers and atom lists
+    # Dictionary of model numbers and raw atom lists
     atom_lists = Dict(1 => AbstractAtom[])
     # Entries outside of a MODEL/ENDMDL block are added to model 1
     curr_model = 1
@@ -48,16 +56,12 @@ function read(input::IO,
         if (read_std_atoms && startswith(line, "ATOM  ")) || (read_het_atoms && startswith(line, "HETATM"))
             atom = parseatomrecord(rstrip(line, '\n'), line_no)
             # Check selector functions are satisfied and if not skip this atom
-            selected = true
+            """selected = true
             for selector_function in args
-                !selector_function(atom) ? (selected = false; break)
+                !selector_function(atom) ? (selected = false; break) : nothing
             end
-            !selected ? continue
-            try
-                addtoatomlist!(atom_lists[curr_model], atom, remove_disorder=remove_disorder)
-            catch ErrorException
-                throw(PDBParseException("Two copies of the same atom have the same alternative location ID (note names are stripped of whitespace so identical names with different spacing, e.g. ' CA ' and 'CA  ', are not currently supported)", line_no, line))
-            end
+            !selected ? continue : nothing"""
+            push!(atom_lists[curr_model], atom)
         # Read MODEL record
         elseif startswith(line, "MODEL ")
             try
@@ -66,27 +70,31 @@ function read(input::IO,
                 throw(PDBParseException("Could not read model serial number", line_no, line))
             end
             # Create model if required
-            !haskey(atom_lists, curr_model) ? atom_lists[curr_model] = AbstractAtom[]
+            !haskey(atom_lists, curr_model) ? atom_lists[curr_model] = AbstractAtom[] : nothing
         # Read ENDMDL record
         elseif startswith(line, "ENDMDL")
             curr_model = 1
         end
     end
     # Remove model 1 atom list if it was not added to
-    length(atom_lists[1]) == 0 ? delete!(atom_lists[1], 1)
+    length(atom_lists[1]) == 0 ? delete!(atom_lists, 1) : nothing
+    # Form disordered atom containers or remove atoms depending on remove_disorder
+    for model_number in keys(atom_lists)
+        atom_lists[model_number] = formatomlist(atom_lists[model_number]; remove_disorder=remove_disorder)
+    end
     # Form structure by organising each atom list into a model
-    return organisestruc([organisemodel(atom_list) for atom_list in values(atom_lists)], struc_name)
+    return organisestruc([organisemodel(atom_list) for atom_list in values(atom_lists)]; struc_name=struc_name)
 end
 
 
+# Add selectors back in
 function read(filepath::AbstractString,
-            ::Type{PDB},
-            args...;
+            ::Type{PDB};
             struc_name::AbstractString=splitdir(filepath)[2],
             kwargs...)
     input = open(filepath)
     finalizer(input, input -> close(input))
-    return read(input, PDB, args...; struc_name=struc_name, kwargs...)
+    return read(input, PDB; struc_name=struc_name, kwargs...)
 end
 
 
