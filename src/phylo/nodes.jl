@@ -866,3 +866,15 @@ function cachenodes!{T}(store::NodeCache{T}, x::PhyNode, vf::Function)
     end
     return store
 end
+
+function sortdescendents!(x::PhyNode)
+    cache = NodeCache{ASCIIString}()
+    cachenodes!(cache, x, name)
+    for node in DepthFirst(x)
+        if haschildren(node)
+            sort!(node.children, by = )
+        end
+    end
+
+
+end
