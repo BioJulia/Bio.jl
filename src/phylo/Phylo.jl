@@ -33,6 +33,7 @@ export
   ispreterminal, issemipreterminal, countchildren, descendents,
   terminaldescendents, isancestral, mrca, name!, branchlength!,
   graft!, prune!, prunegraft!, delete!, detach!, isequal, distanceof,
+  NodeCache, cachenodes,
 
   # Phylogeny and associated methods
   Phylogeny, isrooted, isrerootable, root!,

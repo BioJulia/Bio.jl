@@ -618,10 +618,13 @@ Test whether two PhyNodes are equal. Implemented by testing for identity
 
 * `y`: The right PhyNode to compare.
 """
-function isequal(x::PhyNode, y::PhyNode)
-    return is(x, y)
-end
+function ==(x::PhyNode, y::PhyNode)
+    x.name == y.name &
+    isequal(x.branchlength, y.branchlength) &
+    isequal(x.confidence, y.confidence) &
+    all()
 
+end
 
 
 # Advanced calculations and manipulation of nodes,
@@ -835,4 +838,31 @@ Returns a new Phylogeny with the detached node as root.
 function detach!(x::PhyNode, name::ASCIIString = "", rooted::Bool = true, rerootable::Bool = true)
     detached = prune!(x)
     return Phylogeny(name, detached, rooted, rerootable)
+end
+
+
+
+
+
+
+
+### SORTING PHYLOGENETIC NODES.
+typealias NodeCache{T} Dict{PhyNode, Vector{T}}
+
+"""
+Cache the contents of the a phylogenetic node.
+"""
+function cachenodes!{T}(store::NodeCache{T}, x::PhyNode, vf::Function)
+    for child in x.children
+        cachenodes(child, vf, store)
+    end
+    store[x] = Vector{T}()
+    if haschildren(x)
+        for child in x.children
+            append!(store[x], store[child])
+        end
+    else
+        push!(store[x], vf(x))
+    end
+    return store
 end
