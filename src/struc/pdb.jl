@@ -14,9 +14,11 @@ import Base: showerror,
 import Bio.FileFormat
 
 
+"""Protein Data Bank (PDB) file format."""
 immutable PDB <: FileFormat end
 
 
+"""Error arising from parsing a PDB file."""
 type PDBParseException <: Exception
     message::AbstractString
     line_no::Int
@@ -27,8 +29,9 @@ end
 showerror(io::IO, e::PDBParseException) = println(io, e.message, " at line ", e.line_no, " of file:\n", e.line)
 
 
+"""Download a PDB file or biological assembly from the RCSB PDB."""
 function getpdb(pdbid::AbstractString, out_filepath::AbstractString="$pdbid.pdb"; ba_number::Int=0)
-    # Check PDB ID is 4 characters and only consits of alphanumeric characters
+    # Check PDB ID is 4 characters long and only consits of alphanumeric characters
     @assert length(pdbid) == 4 && !ismatch(r"[^a-zA-Z0-9]", pdbid) "Not a valid PDB ID: \"$pdbid\""
     if ba_number == 0
         download("http://www.rcsb.org/pdb/files/$pdbid.pdb", out_filepath)
@@ -181,10 +184,8 @@ function spacestring(val_in, new_length::Int)
 end
 
 
-"""
-Space an `Atom` name such that the second element letter (generally) appears in the second
-column. Having the `element` property of the `Atom` set improves the result.
-"""
+"""Space an `Atom` name such that the second element letter (generally) appears in the second
+column. Having the `element` property of the `Atom` set improves the result."""
 function spaceatomname(atom::Atom)
     atom_name = atom.name
     chars = length(atom_name)
@@ -209,9 +210,7 @@ function spaceatomname(atom::Atom)
 end
 
 
-"""
-Form a Protein Data Bank (PDB) format ATOM/HETATM record from an `Atom`.
-"""
+"""Form a Protein Data Bank (PDB) format ATOM/HETATM record from an `Atom`."""
 getpdbline(atom::Atom) = ASCIIString[
         ishetatom(atom) ? "HETATM" : "ATOM  ",
         spacestring(getserial(atom), 5),

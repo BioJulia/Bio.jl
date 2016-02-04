@@ -8,7 +8,7 @@ import Base.-
 
 
 # This doesn't work yet
-getcoordarray(element::StrucElementOrList, args...) = map(getcoords, unfoldatoms(element, args...))
+getcoordarray(element::StrucElementOrList, args...) = map(getcoords, collectatoms(element, args...))
 
 
 function getrmsd(coords_one::Array{Float64}, coords_two::Array{Float64})
