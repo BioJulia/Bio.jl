@@ -29,6 +29,10 @@ export StrucElement,
     gettempfac,
     getelement,
     getcharge,
+    setx!,
+    sety!,
+    setz!,
+    setcoords!,
     getdefaultaltlocid,
     getdefaultatom,
     getaltlocids,
@@ -243,18 +247,21 @@ gettempfac(atom::Atom) = atom.temp_fac
 getelement(atom::Atom) = atom.element
 getcharge(atom::Atom) = atom.charge
 
-setx!(atom::Atom, x::Real) = atom.coords[1] = x
-sety!(atom::Atom, y::Real) = atom.coords[2] = y
-setz!(atom::Atom, z::Real) = atom.coords[3] = z
+setx!(atom::Atom, x::Real) = (atom.coords[1] = x; nothing)
+sety!(atom::Atom, y::Real) = (atom.coords[2] = y; nothing)
+setz!(atom::Atom, z::Real) = (atom.coords[3] = z; nothing)
 
+# Return nothing here?
 function setcoords!(atom::Atom, coords::Array{Float64,1})
     @assert length(coords) == 3 "3 coordinates must be given"
     setx!(atom, coords[1])
     sety!(atom, coords[2])
     setz!(atom, coords[3])
+    return nothing
 end
 
-settempfac!(atom::Atom, temp_fac::Real) = atom.temp_fac = temp_fac
+# Type is immutable
+#settempfac!(atom::Atom, temp_fac::Real) = atom.temp_fac = temp_fac
 
 getdefaultaltlocid(disordered_atom::DisorderedAtom) = disordered_atom.default
 getdefaultatom(disordered_atom::DisorderedAtom) = disordered_atom[getdefaultaltlocid(disordered_atom)]
@@ -284,6 +291,12 @@ function setdefaultaltlocid!(disordered_atom::DisorderedAtom, alt_loc_id::Char)
     disordered_atom = DisorderedAtom(disordered_atom.alt_loc_ids, alt_loc_id)
 end
 
+# These coordinate setters only set the default atom coordinates
+setx!(disordered_atom::DisorderedAtom, x::Real) = setx!(getdefaultatom(disordered_atom), x)
+sety!(disordered_atom::DisorderedAtom, y::Real) = sety!(getdefaultatom(disordered_atom), y)
+setz!(disordered_atom::DisorderedAtom, z::Real) = setz!(getdefaultatom(disordered_atom), z)
+setcoords!(disordered_atom::DisorderedAtom, coords::Array{Float64,1}) = setcoords!(getdefaultatom(disordered_atom), coords)
+
 
 function getresid(element::Union{AbstractResidue, AbstractAtom}; full::Bool=false)
     res_id = strip("$(getresnumber(element))$(getinscode(element))")
@@ -303,14 +316,14 @@ getatomnames(res::Residue) = res.atom_list
 
 getdefaultresname(disordered_res::DisorderedResidue) = disordered_res.default
 getdefaultresidue(disordered_res::DisorderedResidue) = disordered_res[getdefaultresname(disordered_res)]
-getresnames(disordered_res::DisorderedResidue) = sort(collect(keys(disordered_res.res_names))) # Is alphabetical the correct sorting?
+getresnames(disordered_res::DisorderedResidue) = sort(collect(keys(disordered_res.names))) # Is alphabetical the correct sorting?
 
 getresname(disordered_res::DisorderedResidue) = getdefaultresname(disordered_res)
 getchainid(disordered_res::DisorderedResidue) = getchainid(getdefaultresidue(disordered_res))
 getresnumber(disordered_res::DisorderedResidue) = getresnumber(getdefaultresidue(disordered_res))
 getinscode(disordered_res::DisorderedResidue) = getinscode(getdefaultresidue(disordered_res))
 ishetres(disordered_res::DisorderedResidue) = ishetres(getdefaultresidue(disordered_res))
-geatomnames(disordered_res::DisorderedResidue) = getatomnames(getdefaultresidue(disordered_res))
+getatomnames(disordered_res::DisorderedResidue) = getatomnames(getdefaultresidue(disordered_res))
 
 ishetero(res::AbstractResidue) = ishetres(res)
 
@@ -409,7 +422,7 @@ end
 """Runs `applyselectors` in place."""
 function applyselectors!(element_list::Union{ResidueList, AtomList}, args...)
     for selector_function in args
-        filter!(element -> selector_function(element), element_list)
+        filter!(selector_function, element_list)
     end
 end
 
@@ -439,9 +452,10 @@ end
 Only elements that satisfy `args...` are returned."""
 collectatoms(struc::Structure, args...) = collectatoms(struc[1], args...)
 collectatoms(res::AbstractResidue, args...) = applyselectors(collect(res), args...)
-collectatoms(atom::AbstractAtom, args...) = applyselectors(collect(atom), args...)
+collectatoms(atom::AbstractAtom, args...) = applyselectors(AbstractAtom[atom], args...)
+collectatoms(atoms::AtomList, args...) = applyselectors(atoms, args...)
 
-function collectatoms(element::Union{Model, Chain, ModelList, ChainList, ResidueList, AtomList}, args...)
+function collectatoms(element::Union{Model, Chain, ModelList, ChainList, ResidueList}, args...)
     atoms = AbstractAtom[]
     for sub_element in element
         append!(atoms, collectatoms(sub_element, args...))
@@ -458,6 +472,7 @@ countatoms(element::StrucElementOrList, args...) = length(collectatoms(element, 
 
 
 # Returns true if the number of DisorderedAtoms or DisorderedResidues is greater than 0
+# This needs some thinking about as does not necessarily correspond to a non-blank alt loc ID
 isdisordered(element::StrucElementOrList) = countatoms(element, disorderselector) > 0 || countresidues(element, disorderselector) > 0
 
 
@@ -498,7 +513,6 @@ end
 
 
 # Perhaps store chain as well so can be properly sorted
-# Possibly args... here too
 function organise(atoms::AtomList)
     residues = Dict{AbstractString, AbstractResidue}()
     for atom in atoms
@@ -566,8 +580,7 @@ organise(res::AbstractResidue) = organise(AbstractResidue[res])
 organise(atom::AbstractAtom) = organise(AbstractAtom[atom])
 
 
-# Should check none of the atoms are DisorderedAtoms already
-# Possibly args... here too
+# Should check none of the atoms are DisorderedAtoms already, or enforce Array{Atom,1}
 """Form a list of `AbstractAtom`s from a list of `Atom`s. Combines disordered
 atoms into disordered atom containers unless `remove_disorder` is `true`, in
 which case removes all but one location for disordered atoms."""
@@ -576,6 +589,7 @@ function formatomlist(atoms::AtomList; remove_disorder::Bool=false)
     # Remove this to a separate function getatomid?
     atom_dic = Dict{Tuple{AbstractString, AbstractString, AbstractString}, AbstractAtom}()
     for atom in atoms
+        #@assert typeof(atom) != DisorderedAtom "There is already a DisorderedAtom container in the AtomList"
         atom_id = (getresid(atom; full=true), getresname(atom), getatomname(atom))
         # The atom does not exist so we can create it
         if !(atom_id in keys(atom_dic))
@@ -602,7 +616,7 @@ function formatomlist(atoms::AtomList; remove_disorder::Bool=false)
             error("Two copies of the same atom have the same alternative location ID (note names are stripped of whitespace so identical names with different spacing, e.g. ' CA ' and 'CA  ', are not currently supported):\n$(atom_dic[atom_id])\n$(atom)")
         end
     end
-    return sort(collect(values(atom_dic)), by= atom -> getserial(atom))
+    return sort(collect(values(atom_dic)), by=getserial)
 end
 
 

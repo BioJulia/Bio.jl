@@ -101,26 +101,25 @@ function read(filepath::AbstractString,
 end
 
 
+"""Parse a PDB ATOM or HETATM record and return an `Atom`."""
 function parseatomrecord(line::AbstractString, line_no::Int=1)
     @assert startswith(line, "ATOM  ") || startswith(line, "HETATM") "Line does not appear to be an ATOM/HETATM record: \"$line\""
-    het_atom = line[1:6] == "HETATM"
-    serial = parsestrict(line, (7,11), Int, "Could not read atom serial number", line_no)
-    name = strip(parsestrict(line, (13,16), AbstractString, "Could not read atom name", line_no))
-    alt_loc = parsestrict(line, (17,17), Char, "Could not read alt loc identifier", line_no)
-    res_name = strip(parsestrict(line, (18,20), AbstractString, "Could not read residue name", line_no))
-    chain_id = parsestrict(line, (22,22), Char, "Could not read chain ID", line_no)
-    res_no = parsestrict(line, (23,26), Int, "Could not read residue number", line_no)
-    ins_code = parsestrict(line, (27,27), Char, "Could not read insertion code", line_no)
-    x = parsestrict(line, (31,38), Float64, "Could not read x coordinate", line_no)
-    y = parsestrict(line, (39,46), Float64, "Could not read y coordinate", line_no)
-    z = parsestrict(line, (47,54), Float64, "Could not read z coordinate", line_no)
-    occupancy = parselenient(line, (55,60), Float64, 1.0)
-    temp_fac = parselenient(line, (61,66), Float64, 0.0)
-    element = strip(parselenient(line, (77,78), AbstractString, ""))
-    charge = strip(parselenient(line, (79,80), AbstractString, ""))
     return Atom(
-        het_atom, serial, name, alt_loc, res_name, chain_id, res_no, ins_code,
-        [x, y, z], occupancy, temp_fac, element, charge
+        line[1:6] == "HETATM",
+        parsestrict(line, (7,11), Int, "Could not read atom serial number", line_no),
+        strip(parsestrict(line, (13,16), AbstractString, "Could not read atom name", line_no)),
+        parsestrict(line, (17,17), Char, "Could not read alt loc identifier", line_no),
+        strip(parsestrict(line, (18,20), AbstractString, "Could not read residue name", line_no)),
+        parsestrict(line, (22,22), Char, "Could not read chain ID", line_no),
+        parsestrict(line, (23,26), Int, "Could not read residue number", line_no),
+        parsestrict(line, (27,27), Char, "Could not read insertion code", line_no),
+        [parsestrict(line, (31,38), Float64, "Could not read x coordinate", line_no),
+        parsestrict(line, (39,46), Float64, "Could not read y coordinate", line_no),
+        parsestrict(line, (47,54), Float64, "Could not read z coordinate", line_no)],
+        parselenient(line, (55,60), Float64, 1.0),
+        parselenient(line, (61,66), Float64, 0.0),
+        strip(parselenient(line, (77,78), AbstractString, "")),
+        strip(parselenient(line, (79,80), AbstractString, ""))
     )
 end
 
@@ -236,6 +235,7 @@ getpdbline(atom::Atom) = ASCIIString[
     ]
 
 
+"""Write a `StrucElementOrList` to a PDB format file."""
 function writepdb(output::IO, element::Union{Structure, ModelList}, args...)
     # If there are multiple models, write out MODEL/ENDMDL lines
     if length(element) > 1
@@ -253,6 +253,7 @@ end
 writepdb(output::IO, element::StrucElementOrList, args...) = writepdblines(output, element, args...)
 
 
+"""Write a `StrucElementOrList` as lines in PDB format."""
 function writepdblines(output::IO, element::StrucElementOrList, args...)
     for atom in collectatoms(element, args...), atom_record in atom
         println(output, getpdbline(atom_record)...)
