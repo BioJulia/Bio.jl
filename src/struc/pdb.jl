@@ -95,9 +95,9 @@ function read(filepath::AbstractString,
             ::Type{PDB};
             struc_name::AbstractString=splitdir(filepath)[2],
             kwargs...)
-    input = open(filepath)
-    finalizer(input, input -> close(input))
-    return read(input, PDB; struc_name=struc_name, kwargs...)
+    open(filepath, "r") do input
+        read(input, PDB; struc_name=struc_name, kwargs...)
+    end
 end
 
 
@@ -186,15 +186,15 @@ end
 """Space an `Atom` name such that the second element letter (generally) appears in the second
 column. Having the `element` property of the `Atom` set improves the result."""
 function spaceatomname(atom::Atom)
-    atom_name = atom.name
+    atom_name = getatomname(atom)
     chars = length(atom_name)
     @assert chars <= 4 "Atom name is greater than four characters: \"$atom_name\""
-    if atom.element == "" || findfirst(atom_name, atom.element[1]) == 0
-        # In the absence of the element, the first index goes in column two
+    # In the absence of the element, the first index goes in column two
+    if getelement(atom) == "" || findfirst(atom_name, getelement(atom)[1]) == 0
         cent_ind = 1
+    # The last letter of the element goes in column two where possible
     else
-        # The last letter of the element goes in column two where possible
-        cent_ind = findfirst(atom_name, atom.element[1]) + length(atom.element) - 1
+        cent_ind = findfirst(atom_name, getelement(atom)[1]) + length(getelement(atom)) - 1
     end
     @assert cent_ind <= 2 "Atom name is too long to space correctly: \"$atom_name\""
     if cent_ind == 1 && chars < 4
@@ -262,7 +262,7 @@ end
 
 
 function writepdb(filepath::AbstractString, element::StrucElementOrList, args...)
-    output = open(filepath, "w")
-    finalizer(output, output -> close(output))
-    return writepdb(output, element, args...)
+    open(filepath, "w") do output
+        writepdb(output, element, args...)
+    end
 end

@@ -37,23 +37,33 @@ export StrucElement,
     getdefaultatom,
     getaltlocids,
     ishetero,
+    setdefaultaltlocid!,
+    getresid,
     ishetres,
     getatomnames,
-    getresid,
+    getdisorderedres,
     getdefaultresname,
     getdefaultresidue,
+    getresnames,
+    setdefaultresname!,
     getresids,
     getmodelnumber,
     getchainids,
     getstrucname,
     getmodelnumbers,
+    setstrucname!,
     applyselectors,
     applyselectors!,
     collectresidues,
-    countresidues,
     collectatoms,
+    countmodels,
+    countchains,
+    countresidues,
     countatoms,
+    isdisordered,
     organise,
+    formatomlist,
+    choosedefaultaltlocid,
     organisemodel,
     organisestruc,
     stdatomselector,
@@ -67,17 +77,20 @@ export StrucElement,
     heavyatomselector,
     resnameselector,
     water_res_names,
-    waterselector
+    waterselector,
+    stdresselector,
+    hetresselector,
+    disorderselector,
+    hydrogenselector
 
 
 import Base: getindex,
     setindex!,
+    length,
     start,
     next,
     done,
     eltype,
-    length,
-    collect,
     show
 
 
@@ -259,7 +272,6 @@ setx!(atom::Atom, x::Real) = (atom.coords[1] = x; nothing)
 sety!(atom::Atom, y::Real) = (atom.coords[2] = y; nothing)
 setz!(atom::Atom, z::Real) = (atom.coords[3] = z; nothing)
 
-# Return nothing here?
 function setcoords!(atom::Atom, coords::Array{Float64,1})
     @assert length(coords) == 3 "3 coordinates must be given"
     setx!(atom, coords[1])
@@ -596,8 +608,8 @@ function organise(atoms::AtomList)
 end
 
 
-organise(model::Model) = organise([model])
-organise(chain::Chain) = organise([chain])
+organise(model::Model; struc_name::AbstractString="") = organise([model]; struc_name=struc_name)
+organise(chain::Chain; model_number::Int=1) = organise([chain]; model_number=model_number)
 organise(res::AbstractResidue) = organise(AbstractResidue[res])
 organise(atom::AbstractAtom) = organise(AbstractAtom[atom])
 
@@ -621,7 +633,7 @@ function formatomlist(atoms::AtomList; remove_disorder::Bool=false)
             # Add the new atom to the disordered atom container
             atom_dic[atom_id][getaltlocid(atom)] = atom
             # If the default alt loc requires changing, change it
-            choosedefaultaltlocid(getdefaultatom(atom_dic[atom_id]), atom) != getdefaultaltlocid(atom) ? setdefaultaltlocid!(atom_dic[atom_id], getaltlocid(atom)) : nothing
+            choosedefaultaltlocid(getdefaultatom(atom_dic[atom_id]), atom) != getdefaultaltlocid(atom_dic[atom_id]) ? setdefaultaltlocid!(atom_dic[atom_id], getaltlocid(atom)) : nothing
         # The atom already exists and the alt loc IDs are different
         elseif typeof(atom_dic[atom_id]) == Atom && getaltlocid(atom) != getaltlocid(atom_dic[atom_id])
             # If we are removing disorder and the new atom is preferred to the old one, replace the old one
