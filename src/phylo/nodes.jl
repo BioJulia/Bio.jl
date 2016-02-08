@@ -118,20 +118,6 @@ end
 #----------------------------------------------------------------------
 
 """
-Basic show method for a PhyNode.
-"""
-function Base.show(io::IO, n::PhyNode)
-    if isempty(n.children)
-        print(io, n.name)
-    else
-        print(io, "(")
-        print(io, join(map(string, n.children), ","))
-        print(io, ")")
-    end
-end
-
-
-"""
 Get the name of a PhyNode.
 
 **Parameters:**
@@ -441,24 +427,47 @@ function parent_unsafe!(parent::PhyNode, child::PhyNode)
 end
 
 
+# Methods for printing nodes in various ways
+#--------------------------------------------
 
-# Methods that test nodes for various charateristics
-#----------------------------------------------------
+"""
+Basic show method for a PhyNode.
+"""
+function Base.show(io::IO, n::PhyNode)
+    if isempty(n.children)
+        print(io, n.name)
+    else
+        print(io, "(")
+        print(io, join(map(string, n.children), ","))
+        print(io, ")")
+    end
+end
+
+
+
+# Methods that test nodes for basic relationships and properties
+#----------------------------------------------------------------
 
 """
 Test whether a node is empty.
+
+A node is considered empty, when the name is an empty string,
+the branch length and confidence is null, there are no children nodes,
+and the node does not have a parent.
 
 **Parameters:**
 
 * `x`: The PhyNode to test.
 """
-function isempty(x::PhyNode)
-    return x.name == "" && isnull(x.branchlength) && !haschildren(x) && parentisself(x) && isnull(x.confidence)
+function Base.isempty(x::PhyNode)
+    return x.name == "" && isnull(x.branchlength) && !haschildren(x) && isunlinked(x) && isnull(x.confidence)
 end
 
 
 """
 Test whether a node is a leaf.
+
+A node is a leaf, when it has a parent node, but no children nodes.
 
 **Parameters:**
 
@@ -496,7 +505,7 @@ end
 
 
 """
-Test whether a node is its own parent. See PhyNode().
+Test whether a node is its own parent.
 
 **Parameters:**
 
@@ -610,7 +619,7 @@ end
 
 
 """
-Test whether two PhyNodes are equal. Implemented by testing for identity
+Test whether two PhyNodes are equal.
 
 **Parameters:**
 
@@ -618,18 +627,17 @@ Test whether two PhyNodes are equal. Implemented by testing for identity
 
 * `y`: The right PhyNode to compare.
 """
-function ==(x::PhyNode, y::PhyNode)
+function Base.(:(==))(x::PhyNode, y::PhyNode)
     x.name == y.name &
     isequal(x.branchlength, y.branchlength) &
-    isequal(x.confidence, y.confidence) &
-    all()
+    isequal(x.confidence, y.confidence)
 
 end
 
 
-# Advanced calculations and manipulation of nodes,
-# including safe pruning and regrafting
-#--------------------------------------------------
+# Manipulation of node relationships and tree structure,
+# including safe pruning and regrafting.
+#--------------------------------------------------------
 
 """
 Count the number of children of a node.
@@ -813,7 +821,7 @@ Returns the deleted node.
 
 * `x`: The PhyNode to delete.
 """
-function delete!(x::PhyNode)
+function Base.delete!(x::PhyNode)
     deleted = prune!(x)
     graft!(parent(deleted), children(deleted))
     return deleted
@@ -841,13 +849,13 @@ function detach!(x::PhyNode, name::ASCIIString = "", rooted::Bool = true, reroot
 end
 
 
-
-
-
-
-
-### SORTING PHYLOGENETIC NODES.
+"""
+A NodeCache is a dictionary with PhyNodes as keys, and Vectors of some type
+as the content. This is used to cache the content of a tree to avoid too much
+repeated tree traversal.
+"""
 typealias NodeCache{T} Dict{PhyNode, Vector{T}}
+
 
 """
 Cache the contents of the a phylogenetic node.
@@ -867,14 +875,18 @@ function cachenodes!{T}(store::NodeCache{T}, x::PhyNode, vf::Function)
     return store
 end
 
+
+"""
+Sort the descendents of a phylogenetic tree.
+"""
 function sortdescendents!(x::PhyNode)
     cache = NodeCache{ASCIIString}()
     cachenodes!(cache, x, name)
     for node in DepthFirst(x)
         if haschildren(node)
-            sort!(node.children, by = )
+            nnames = cache[node]
+            sort!(nnames)
+            sort!(node.children, by = nnames)
         end
     end
-
-
 end
