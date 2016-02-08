@@ -35,7 +35,7 @@ using Bio.Struc
 
     atom_list = collect(atom)
     @test length(atom_list) == 1
-    @test typeof(atom_list) == Array{Atom,1}
+    @test isa(atom_list, Array{Atom,1})
     @test getserial(atom_list[1]) == 100
 
 
@@ -45,7 +45,7 @@ using Bio.Struc
     ), 'A')
 
     @test getdefaultaltlocid(disordered_atom) == 'A'
-    @test typeof(getdefaultatom(disordered_atom)) == Atom
+    @test isa(getdefaultatom(disordered_atom), Atom)
     @test getserial(getdefaultatom(disordered_atom)) == 100
     @test getaltlocids(disordered_atom) == ['A', 'B']
 
@@ -71,7 +71,7 @@ using Bio.Struc
 
     disordered_atom_list = collect(disordered_atom)
     @test length(disordered_atom_list) == 2
-    @test typeof(disordered_atom_list) == Array{Atom,1}
+    @test isa(disordered_atom_list, Array{Atom,1})
     @test getserial(disordered_atom_list[2]) == 101
 
 

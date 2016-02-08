@@ -56,10 +56,8 @@ function getdist(element_one::StrucElementOrList, element_two::StrucElementOrLis
     count_one = size(coords_one, 2)
     count_two = size(coords_two, 2)
     sq_dists = zeros(count_one, count_two)
-    for i in 1:count_one
-        for j in 1:count_two
-            @inbounds sq_dists[i,j] = (coords_one[1,i] - coords_two[1,j]) ^ 2 + (coords_one[2,i] - coords_two[2,j]) ^ 2 + (coords_one[3,i] - coords_two[3,j]) ^ 2
-        end
+    for i in 1:count_one, j in 1:count_two
+        @inbounds sq_dists[i,j] = (coords_one[1,i] - coords_two[1,j]) ^ 2 + (coords_one[2,i] - coords_two[2,j]) ^ 2 + (coords_one[3,i] - coords_two[3,j]) ^ 2
     end
     return sqrt(minimum(sq_dists))
 end
