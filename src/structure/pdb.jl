@@ -43,13 +43,14 @@ end
 
 # Add selectors back in
 function read(input::IO,
-            ::Type{PDB};
+            ::Type{PDB},
+            selector_functions::Function...;
             structure_name::ASCIIString="",
             remove_disorder::Bool=false,
             read_std_atoms::Bool=true,
             read_het_atoms::Bool=true)
     # Dictionary of model numbers and raw atom lists
-    atom_lists = Dict(1 => AbstractAtom[])
+    atom_lists = Dict(1 => Atom[])
     # Entries outside of a MODEL/ENDMDL block are added to model 1
     curr_model = 1
     line_number = 0
@@ -59,11 +60,11 @@ function read(input::IO,
         if (read_std_atoms && startswith(line, "ATOM  ")) || (read_het_atoms && startswith(line, "HETATM"))
             atom = parseatomrecord(rstrip(line, '\n'), line_number)
             # Check selector functions are satisfied and if not skip this atom
-            """selected = true
-            for selector_function in args
+            selected = true
+            for selector_function in selector_functions
                 !selector_function(atom) ? (selected = false; break) : nothing
             end
-            !selected ? continue : nothing"""
+            !selected ? continue : nothing
             push!(atom_lists[curr_model], atom)
         # Read MODEL record
         elseif startswith(line, "MODEL ")
@@ -82,21 +83,19 @@ function read(input::IO,
     # Remove model 1 atom list if it was not added to
     length(atom_lists[1]) == 0 ? delete!(atom_lists, 1) : nothing
     # Form disordered atom containers or remove atoms depending on remove_disorder
-    for model_number in keys(atom_lists)
-        atom_lists[model_number] = formatomlist(atom_lists[model_number]; remove_disorder=remove_disorder)
-    end
     # Form structure by organising each atom list into a model
-    return organisestructure([organisemodel(atom_list; model_number=model_number) for (model_number, atom_list) in atom_lists]; structure_name=structure_name)
+    return organisestructure([organisemodel(formatomlist(atom_list; remove_disorder=remove_disorder); model_number=model_number) for (model_number, atom_list) in atom_lists]; structure_name=structure_name)
 end
 
 
 # Add selectors back in
 function read(filepath::ASCIIString,
-            ::Type{PDB};
+            ::Type{PDB},
+            selector_functions::Function...;
             structure_name::ASCIIString=splitdir(filepath)[2],
             kwargs...)
     open(filepath, "r") do input
-        read(input, PDB; structure_name=structure_name, kwargs...)
+        read(input, PDB, selector_functions...; structure_name=structure_name, kwargs...)
     end
 end
 
@@ -238,33 +237,33 @@ pdbline(atom::Atom) = ASCIIString[
 
 
 """Write a `StrucElementOrList` to a PDB format file."""
-function writepdb(output::IO, element::Union{ProteinStructure, ModelList}, args...)
+function writepdb(output::IO, element::Union{ProteinStructure, Vector{Model}}, selector_functions::Function...)
     # If there are multiple models, write out MODEL/ENDMDL lines
     if length(element) > 1
         for model in element
             println(output, "MODEL     ", spacestring(modelnumber(model), 4), repeat(" ", 66))
-            writepdblines(output, model)
+            writepdblines(output, model, selector_functions...)
             println(output, "ENDMDL$(repeat(" ", 74))")
         end
     # If there is only one model, do not write out MODEL/ENDMDL lines
     else
-        writepdblines(output, element, args...)
+        writepdblines(output, element, selector_functions...)
     end
 end
 
-writepdb(output::IO, element::StrucElementOrList, args...) = writepdblines(output, element, args...)
+writepdb(output::IO, element::StrucElementOrList, selector_functions::Function...) = writepdblines(output, element, selector_functions...)
 
 
 """Write a `StrucElementOrList` as lines in PDB format."""
-function writepdblines(output::IO, element::StrucElementOrList, args...)
-    for atom in collectatoms(element, args...), atom_record in atom
+function writepdblines(output::IO, element::StrucElementOrList, selector_functions::Function...)
+    for atom in collectatoms(element, selector_functions...), atom_record in atom
         println(output, pdbline(atom_record)...)
     end
 end
 
 
-function writepdb(filepath::ASCIIString, element::StrucElementOrList, args...)
+function writepdb(filepath::ASCIIString, element::StrucElementOrList, selector_functions::Function...)
     open(filepath, "w") do output
-        writepdb(output, element, args...)
+        writepdb(output, element, selector_functions...)
     end
 end

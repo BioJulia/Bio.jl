@@ -1,4 +1,4 @@
-export StrucElement,
+export StructuralElement,
     AbstractAtom,
     Atom,
     DisorderedAtom,
@@ -8,10 +8,6 @@ export StrucElement,
     Chain,
     Model,
     ProteinStructure,
-    AtomList,
-    ResidueList,
-    ChainList,
-    ModelList,
     StrucElementOrList,
     ishetatom,
     serial,
@@ -49,9 +45,9 @@ export StrucElement,
     resids,
     modelnumber,
     chainids,
-    strucname,
+    structurename,
     modelnumbers,
-    strucname!,
+    structurename!,
     applyselectors,
     applyselectors!,
     collectresidues,
@@ -95,12 +91,12 @@ import Base: getindex,
 
 
 """A protein structural element."""
-abstract StrucElement
+abstract StructuralElement
 
 
 """An atom represented in a PDB file - either an `Atom` or a
 `DisorderedAtom`."""
-abstract AbstractAtom <: StrucElement
+abstract AbstractAtom <: StructuralElement
 
 """An atom record from a PDB file."""
 immutable Atom <: AbstractAtom
@@ -127,7 +123,7 @@ end
 
 
 """A residue (amino acid) or other molecule from a PDB file."""
-abstract AbstractResidue <: StrucElement
+abstract AbstractResidue <: StructuralElement
 
 """A residue (amino acid) or other molecule from a PDB file."""
 immutable Residue <: AbstractResidue
@@ -140,8 +136,8 @@ immutable Residue <: AbstractResidue
     atoms::Dict{ASCIIString, AbstractAtom}
 end
 
-Residue(name::ASCIIString, chain_id::Char, number::Int, ins_code::Char, het_res::Bool) = Residue(name, chain_id, number, ins_code, het_res, ASCIIString[], Dict())
-Residue(atom::AbstractAtom) = Residue(resname(atom), chainid(atom), resnumber(atom), inscode(atom), ishetatom(atom))
+#Residue(name::ASCIIString, chain_id::Char, number::Int, ins_code::Char, het_res::Bool) = Residue(name, chain_id, number, ins_code, het_res, ASCIIString[], Dict())
+#Residue(atom::AbstractAtom) = Residue(resname(atom), chainid(atom), resnumber(atom), inscode(atom), ishetatom(atom))
 
 """A container to hold different versions of the same residue
 (point mutations)."""
@@ -152,7 +148,7 @@ end
 
 
 """A chain from a PDB file."""
-immutable Chain <: StrucElement
+immutable Chain <: StructuralElement
     id::Char
     res_list::Array{ASCIIString,1}
     residues::Dict{ASCIIString, AbstractResidue}
@@ -162,7 +158,7 @@ Chain(id::Char) = Chain(id, Dict())
 
 
 """A model from a PDB file."""
-immutable Model <: StrucElement
+immutable Model <: StructuralElement
     number::Int
     chains::Dict{Char, Chain}
 end
@@ -171,7 +167,7 @@ Model(number::Int) = Model(number, Dict())
 
 
 """A container for multiple models from a PDB file."""
-immutable ProteinStructure <: StrucElement
+immutable ProteinStructure <: StructuralElement
     name::ASCIIString
     models::Dict{Int, Model}
 end
@@ -179,20 +175,8 @@ end
 ProteinStructure(name::ASCIIString) = ProteinStructure(name, Dict())
 
 
-"""An `Array{AbstractAtom,1}`."""
-typealias AtomList Array{AbstractAtom,1}
-
-"""An `Array{AbstractResidue,1}`."""
-typealias ResidueList Array{AbstractResidue,1}
-
-"""An `Array{Chain,1}`."""
-typealias ChainList Array{Chain,1}
-
-"""An `Array{Model,1}`."""
-typealias ModelList Array{Model,1}
-
 """A protein structural element or list of structural elements."""
-typealias StrucElementOrList Union{StrucElement, AtomList, ResidueList, ChainList, ModelList}
+typealias StrucElementOrList Union{StructuralElement, Vector{AbstractAtom}, Vector{AbstractResidue}, Vector{Chain}, Vector{Model}}
 
 
 # Allow accessing sub elements contained in an element like a dictionary
@@ -366,10 +350,10 @@ modelnumber(model::Model) = model.number
 chainids(model::Model) = sort(collect(keys(model.chains)))
 
 
-strucname(struc::ProteinStructure) = struc.name
+structurename(struc::ProteinStructure) = struc.name
 modelnumbers(struc::ProteinStructure) = sort(collect(keys(struc.models)))
 
-strucname!(struc::ProteinStructure, name::ASCIIString) = struc.name = name
+structurename!(struc::ProteinStructure, name::ASCIIString) = struc.name = name
 
 
 # Iterators to yield sub elements when looping over an element
@@ -428,54 +412,54 @@ done(disordered_atom::DisorderedAtom, state) = state > length(disordered_atom)
 eltype(::Type{DisorderedAtom}) = Atom
 
 
-"""Returns a copy of a `ResidueList` or `AtomList` with all elements that do not
-satisfy `args...` removed."""
-function applyselectors(element_list::Union{ResidueList, AtomList}, args...)
+"""Returns a copy of a `Vector{AbstractResidue}` or `Vector{AbstractAtom}` with all elements that do not
+satisfy `selector_functions...` removed."""
+function applyselectors(element_list::Union{Vector{AbstractResidue}, Vector{AbstractAtom}}, selector_functions::Function...)
     new_list = copy(element_list)
-    applyselectors!(new_list, args...)
+    applyselectors!(new_list, selector_functions...)
     return new_list
 end
 
 """Runs `applyselectors` in place."""
-function applyselectors!(element_list::Union{ResidueList, AtomList}, args...)
-    for selector_function in args
+function applyselectors!(element_list::Union{Vector{AbstractResidue}, Vector{AbstractAtom}}, selector_functions::Function...)
+    for selector_function in selector_functions
         filter!(selector_function, element_list)
     end
 end
 
-applyselectors(element_list::Union{ResidueList, AtomList}) = element_list
-applyselectors!(element_list::Union{ResidueList, AtomList}) = element_list
+applyselectors(element_list::Union{Vector{AbstractResidue}, Vector{AbstractAtom}}) = element_list
+applyselectors!(element_list::Union{Vector{AbstractResidue}, Vector{AbstractAtom}}) = element_list
 
 
-"""Returns a `ResidueList` of the residues in an element.
-Only elements that satisfy `args...` are returned."""
-collectresidues(struc::ProteinStructure, args...) = collectresidues(struc[1], args...)
-collectresidues(chain::Chain, args...) = applyselectors(collect(chain), args...)
-collectresidues(res::AbstractResidue, args...) = applyselectors(AbstractResidue[res], args...)
-collectresidues(atom::AbstractAtom, args...) = applyselectors(organise(atom), args...)
-collectresidues(residues::ResidueList, args...) = applyselectors(residues, args...)
-collectresidues(atoms::AtomList, args...) = applyselectors(organise(atoms), args...)
+"""Returns a `Vector{AbstractResidue}` of the residues in an element.
+Only elements that satisfy `selector_functions...` are returned."""
+collectresidues(struc::ProteinStructure, selector_functions::Function...) = collectresidues(struc[1], selector_functions...)
+collectresidues(chain::Chain, selector_functions::Function...) = applyselectors(collect(chain), selector_functions...)
+collectresidues(res::AbstractResidue, selector_functions::Function...) = applyselectors(AbstractResidue[res], selector_functions...)
+collectresidues(atom::AbstractAtom, selector_functions::Function...) = applyselectors(organise(atom), selector_functions...)
+collectresidues(residues::Vector{AbstractResidue}, selector_functions::Function...) = applyselectors(residues, selector_functions...)
+collectresidues(atoms::Vector{AbstractAtom}, selector_functions::Function...) = applyselectors(organise(atoms), selector_functions...)
 
-function collectresidues(element::Union{Model, ModelList, ChainList}, args...)
+function collectresidues(element::Union{Model, Vector{Model}, Vector{Chain}}, selector_functions::Function...)
     residues = AbstractResidue[]
     for sub_element in element
-        append!(residues, collectresidues(sub_element, args...))
+        append!(residues, collectresidues(sub_element, selector_functions...))
     end
     return residues
 end
 
 
-"""Return an `AtomList` of the atoms in an element.
-Only elements that satisfy `args...` are returned."""
-collectatoms(struc::ProteinStructure, args...) = collectatoms(struc[1], args...)
-collectatoms(res::AbstractResidue, args...) = applyselectors(collect(res), args...)
-collectatoms(atom::AbstractAtom, args...) = applyselectors(AbstractAtom[atom], args...)
-collectatoms(atoms::AtomList, args...) = applyselectors(atoms, args...)
+"""Return an `Vector{AbstractAtom}` of the atoms in an element.
+Only elements that satisfy `selector_functions...` are returned."""
+collectatoms(struc::ProteinStructure, selector_functions::Function...) = collectatoms(struc[1], selector_functions...)
+collectatoms(res::AbstractResidue, selector_functions::Function...) = applyselectors(collect(res), selector_functions...)
+collectatoms(atom::AbstractAtom, selector_functions::Function...) = applyselectors(AbstractAtom[atom], selector_functions...)
+collectatoms(atoms::Vector{AbstractAtom}, selector_functions::Function...) = applyselectors(atoms, selector_functions...)
 
-function collectatoms(element::Union{Model, Chain, ModelList, ChainList, ResidueList}, args...)
+function collectatoms(element::Union{Model, Chain, Vector{Model}, Vector{Chain}, Vector{AbstractResidue}}, selector_functions::Function...)
     atoms = AbstractAtom[]
     for sub_element in element
-        append!(atoms, collectatoms(sub_element, args...))
+        append!(atoms, collectatoms(sub_element, selector_functions...))
     end
     return atoms
 end
@@ -484,8 +468,8 @@ end
 countmodels(struc::ProteinStructure) = length(struc)
 countchains(struc::ProteinStructure) = length(struc[1])
 countchains(chain::Chain) = length(chain)
-countresidues(element::StrucElementOrList, args...) = length(collectresidues(element, args...))
-countatoms(element::StrucElementOrList, args...) = length(collectatoms(element, args...))
+countresidues(element::StrucElementOrList, selector_functions::Function...) = length(collectresidues(element, selector_functions...))
+countatoms(element::StrucElementOrList, selector_functions::Function...) = length(collectatoms(element, selector_functions...))
 
 
 # Returns true if the number of DisorderedAtoms or DisorderedResidues is greater than 0
@@ -494,10 +478,10 @@ isdisordered(element::StrucElementOrList) = countatoms(element, disorderselector
 
 
 """Organise a `StrucElementOrList` into the next level up the heirarchy. An
-`AtomList` becomes a `ResidueList`, a `ResidueList` becomes a `ChainList`, a
-`ChainList` becomes a `Model` and a `ModelList` becomes a `ProteinStructure`."""
-function organise(models::ModelList; structure_name::ASCIIString="")
-    # Organise a ModelList into a ProteinStructure
+`Vector{AbstractAtom}` becomes a `Vector{AbstractResidue}`, a `Vector{AbstractResidue}` becomes a `Vector{Chain}`, a
+`Vector{Chain}` becomes a `Model` and a `Vector{Model}` becomes a `ProteinStructure`."""
+function organise(models::Vector{Model}; structure_name::ASCIIString="")
+    # Organise a Vector{Model} into a ProteinStructure
     struc = ProteinStructure(structure_name)
     for model in models
         @assert !(modelnumber(model) in modelnumbers(struc)) "Multiple models with the same model number found - cannot organise into a protein structure"
@@ -507,8 +491,8 @@ function organise(models::ModelList; structure_name::ASCIIString="")
 end
 
 
-# Organise a ChainList into a Model
-function organise(chains::ChainList; model_number::Int=1)
+# Organise a Vector{Chain} into a Model
+function organise(chains::Vector{Chain}; model_number::Int=1)
     model = Model(model_number)
     for chain in chains
         @assert !(chainid(chain) in chainids(model)) "Multiple chains with the same chain ID found - cannot organise into a model"
@@ -518,8 +502,8 @@ function organise(chains::ChainList; model_number::Int=1)
 end
 
 
-# Organise a ResidueList into a ChainList
-function organise(residues::ResidueList)
+# Organise a Vector{AbstractResidue} into a Vector{Chain}
+function organise(residues::Vector{AbstractResidue})
     chains = Dict{Char, Dict{ASCIIString, AbstractResidue}}()
     for res in residues
         chain_id = chainid(res)
@@ -532,13 +516,13 @@ function organise(residues::ResidueList)
 end
 
 
-# Organise an AtomList into a ResidueList
+# Organise a Vector{AbstractAtom} into a Vector{AbstractResidue}
 # Perhaps store chain as well so can be properly sorted
-function organise(atoms::AtomList)
+function organise(atoms::Vector{AbstractAtom})
     # Key is residue ID, value is list of atoms
-    residues = Dict{ASCIIString, AtomList}()
+    residues = Dict{ASCIIString, Vector{AbstractAtom}}()
     # Key is residue ID, value is Dict where key is residue name and value is list of atoms
-    disordered_residues = Dict{ASCIIString, Dict{ASCIIString, AtomList}}()
+    disordered_residues = Dict{ASCIIString, Dict{ASCIIString, Vector{AbstractAtom}}}()
     # Key is residue ID, value is default residue name
     defaults = Dict{ASCIIString, ASCIIString}()
     for atom in atoms
@@ -614,16 +598,14 @@ organise(res::AbstractResidue) = organise(AbstractResidue[res])
 organise(atom::AbstractAtom) = organise(AbstractAtom[atom])
 
 
-# Should check none of the atoms are DisorderedAtoms already, or enforce Array{Atom,1}
 """Form a list of `AbstractAtom`s from a list of `Atom`s. Combines disordered
 atoms into disordered atom containers unless `remove_disorder` is `true`, in
 which case removes all but one location for disordered atoms."""
-function formatomlist(atoms::AtomList; remove_disorder::Bool=false)
+function formatomlist(atoms::Vector{Atom}; remove_disorder::Bool=false)
     # Key is (residue ID, residue name, atom name)
     # Remove this to a separate function atomid?
     atom_dic = Dict{Tuple{ASCIIString, ASCIIString, ASCIIString}, AbstractAtom}()
     for atom in atoms
-        #@assert !isa(atom, DisorderedAtom) "There is already a DisorderedAtom container in the AtomList"
         atom_id = (resid(atom; full=true), resname(atom), atomname(atom))
         # The atom does not exist so we can create it
         if !haskey(atom_dic, atom_id)
@@ -671,23 +653,23 @@ end
 
 # These can possibly be put as a Union
 """Organise elements into a `Model`."""
-organisemodel(chains::ChainList; model_number::Int=1) = organise(chains; model_number=model_number)
-organisemodel(residues::ResidueList; model_number::Int=1) = organise(organise(residues); model_number=model_number)
-organisemodel(atoms::AtomList; model_number::Int=1) = organise(organise(organise(atoms)); model_number=model_number)
+organisemodel(chains::Vector{Chain}; model_number::Int=1) = organise(chains; model_number=model_number)
+organisemodel(residues::Vector{AbstractResidue}; model_number::Int=1) = organise(organise(residues); model_number=model_number)
+organisemodel(atoms::Vector{AbstractAtom}; model_number::Int=1) = organise(organise(organise(atoms)); model_number=model_number)
 organisemodel(chain::Chain; model_number::Int=1) = organisemodel([chain]; model_number=model_number)
 organisemodel(res::AbstractResidue; model_number::Int=1) = organisemodel(AbstractResidue[res]; model_number=model_number)
 organisemodel(atom::AbstractAtom; model_number::Int=1) = organisemodel(AbstractAtom[atom]; model_number=model_number)
 
 
 """Organise elements into a `ProteinStructure`."""
-organisestructure(models::ModelList; structure_name::ASCIIString="") = organise(models; structure_name=structure_name)
-organisestructure(chains::ChainList; structure_name::ASCIIString="", model_number::Int=1) = organise(organisemodel(chains; model_number=model_number); structure_name=structure_name)
-organisestructure(residues::ResidueList; structure_name::ASCIIString="", model_number::Int=1) = organise(organisemodel(residues; model_number=model_number); structure_name=structure_name)
-organisestructure(atoms::AtomList; structure_name::ASCIIString="", model_number::Int=1) = organise(organisemodel(atoms; model_number=model_number); structure_name=structure_name)
-organisestructure(model::Model; structure_name::ASCIIString="") = organisestruc([model]; structure_name=structure_name)
-organisestructure(chain::Chain; structure_name::ASCIIString="", model_number::Int=1) = organisestruc([chain]; structure_name=structure_name, model_number=model_number)
-organisestructure(res::AbstractResidue; structure_name::ASCIIString="", model_number::Int=1) = organisestruc(AbstractResidue[res]; structure_name=structure_name, model_number=model_number)
-organisestructure(atom::AbstractAtom; structure_name::ASCIIString="", model_number::Int=1) = organisestruc(AbstractAtom[atom]; structure_name=structure_name, model_number=model_number)
+organisestructure(models::Vector{Model}; structure_name::ASCIIString="") = organise(models; structure_name=structure_name)
+organisestructure(chains::Vector{Chain}; structure_name::ASCIIString="", model_number::Int=1) = organise(organisemodel(chains; model_number=model_number); structure_name=structure_name)
+organisestructure(residues::Vector{AbstractResidue}; structure_name::ASCIIString="", model_number::Int=1) = organise(organisemodel(residues; model_number=model_number); structure_name=structure_name)
+organisestructure(atoms::Vector{AbstractAtom}; structure_name::ASCIIString="", model_number::Int=1) = organise(organisemodel(atoms; model_number=model_number); structure_name=structure_name)
+organisestructure(model::Model; structure_name::ASCIIString="") = organisestructure([model]; structure_name=structure_name)
+organisestructure(chain::Chain; structure_name::ASCIIString="", model_number::Int=1) = organisestructure([chain]; structure_name=structure_name, model_number=model_number)
+organisestructure(res::AbstractResidue; structure_name::ASCIIString="", model_number::Int=1) = organisestructure(AbstractResidue[res]; structure_name=structure_name, model_number=model_number)
+organisestructure(atom::AbstractAtom; structure_name::ASCIIString="", model_number::Int=1) = organisestructure(AbstractAtom[atom]; structure_name=structure_name, model_number=model_number)
 
 
 """Determines if an `AbstractAtom` is a non-hetero atom, i.e. came from an ATOM
@@ -700,6 +682,7 @@ hetatomselector(atom::AbstractAtom) = ishetatom(atom)
 
 """Determines if an `AbstractAtom` has its atom name in the given `Array`."""
 atomnameselector(atom::AbstractAtom, atom_names::Set{ASCIIString}) = atomname(atom) in atom_names
+# Set is faster but Vector method is retained for ease of use
 atomnameselector(atom::AbstractAtom, atom_names::Array{ASCIIString,1}) = atomname(atom) in atom_names
 
 """`Array` of C-alpha atom names."""
@@ -762,7 +745,7 @@ hydrogenselector(atom::AbstractAtom) = element(atom) == "H" || (element(atom) ==
 
 function show(io::IO, struc::ProteinStructure)
     model = struc[1]
-    println(io, "Name                        -  ", strucname(struc))
+    println(io, "Name                        -  ", structurename(struc))
     println(io, "Number of models            -  ", countmodels(struc))
     println(io, "Chain(s)                    -  ", join(chainids(model)))
     println(io, "Number of residues          -  ", countresidues(model, stdresselector))
