@@ -9,6 +9,6 @@ include("seq/Seq.jl")
 include("util/Util.jl")
 include("intervals/Intervals.jl")
 include("align/Align.jl")
-include("struc/Struc.jl")
+include("structure/Structure.jl")
 
 end # module Bio

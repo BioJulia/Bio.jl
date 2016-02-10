@@ -1,7 +1,7 @@
-module Struc
+module Structure
 
 include("model.jl")
 include("pdb.jl")
 include("spatial.jl")
 
-end # Struc
+end # Structure

@@ -1,7 +1,7 @@
-export getcoordarray,
-    getrmsd,
-    getdisps,
-    getdist
+export coordarray,
+    rmsd,
+    disps,
+    dist
 
 
 import Base.-
@@ -9,23 +9,23 @@ import Base.-
 
 """Get the atomic coordinates of a `StrucElementOrList` as an array with each
 column corresponding to one atom."""
-function getcoordarray(element::StrucElementOrList, args...)
+function coordarray(element::StrucElementOrList, args...)
     atoms = collectatoms(element, args...)
     coords = zeros(3, length(atoms))
     for j in eachindex(atoms)
-        coords[1,j] = getx(atoms[j])
-        coords[2,j] = gety(atoms[j])
-        coords[3,j] = getz(atoms[j])
+        coords[1,j] = x(atoms[j])
+        coords[2,j] = y(atoms[j])
+        coords[3,j] = z(atoms[j])
     end
     return coords
 end
 
-getcoordarray(coords::Array{Float64}, args...) = coords
+coordarray(coords::Array{Float64}, args...) = coords
 
 
 """Get the root-mean-square deviation (RMSD) between two `StrucElementOrList`s
 or coordinate arrays. Assumes they are aready aligned."""
-function getrmsd(coords_one::Array{Float64}, coords_two::Array{Float64})
+function rmsd(coords_one::Array{Float64}, coords_two::Array{Float64})
     @assert size(coords_one) == size(coords_two) "Sizes of coordinate arrays are different - cannot calculate RMSD"
     diff = coords_one - coords_two
     return sqrt(sum(diff .* diff) / size(coords_one, 2))
@@ -33,26 +33,25 @@ end
 
 # Repeat assertion here?
 # Backbone by default?
-getrmsd(element_one::StrucElementOrList, element_two::StrucElementOrList, args...) = getrmsd(getcoordarray(element_one, args...), getcoordarray(element_two, args...))
+rmsd(element_one::StrucElementOrList, element_two::StrucElementOrList, args...) = rmsd(coordarray(element_one, args...), coordarray(element_two, args...))
 
 
 """Get the displacements between atomic coordinates from two
 `StrucElementOrList`s or coordinate arrays. Assumes they are aready aligned."""
-function getdisps(coords_one::Array{Float64}, coords_two::Array{Float64})
+function disps(coords_one::Array{Float64}, coords_two::Array{Float64})
     @assert size(coords_one) == size(coords_two) "Sizes of coordinate arrays are different - cannot calculate displacements"
     diff = coords_one - coords_two
     return sqrt(sum(diff .* diff, 1))[:]
 end
 
-getdisps(element_one::StrucElementOrList, element_two::StrucElementOrList, args...) = getdisps(getcoordarray(element_one, args...), getcoordarray(element_two, args...))
+disps(element_one::StrucElementOrList, element_two::StrucElementOrList, args...) = disps(coordarray(element_one, args...), coordarray(element_two, args...))
 
 
-# Maximum keyword to get max instead?
 """Get the minimum distance between two `StrucElementOrList`s or coordinate
 arrays."""
-function getdist(element_one::StrucElementOrList, element_two::StrucElementOrList, args...)
-    coords_one = getcoordarray(element_one, args...)
-    coords_two = getcoordarray(element_two, args...)
+function dist(element_one::StrucElementOrList, element_two::StrucElementOrList, args...)
+    coords_one = coordarray(element_one, args...)
+    coords_two = coordarray(element_two, args...)
     count_one = size(coords_one, 2)
     count_two = size(coords_two, 2)
     sq_dists = zeros(count_one, count_two)
@@ -62,6 +61,6 @@ function getdist(element_one::StrucElementOrList, element_two::StrucElementOrLis
     return sqrt(minimum(sq_dists))
 end
 
-getdist(atom_one::AbstractAtom, atom_two::AbstractAtom) = sqrt((getx(atom_one) - getx(atom_two)) ^ 2 + (gety(atom_one) - gety(atom_two)) ^ 2 + (getz(atom_one) - getz(atom_two)) ^ 2)
+dist(atom_one::AbstractAtom, atom_two::AbstractAtom) = sqrt((x(atom_one) - x(atom_two)) ^ 2 + (y(atom_one) - y(atom_two)) ^ 2 + (z(atom_one) - z(atom_two)) ^ 2)
 
--(element_one::StrucElementOrList, element_two::StrucElementOrList) = getdist(element_one, element_two)
+-(element_one::StrucElementOrList, element_two::StrucElementOrList) = dist(element_one, element_two)

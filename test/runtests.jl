@@ -5,7 +5,7 @@ available_targets = [
     "intervals",
     "seq",
     "services",
-    "struc",
+    "structure",
     "tools",
     "util"
 ]

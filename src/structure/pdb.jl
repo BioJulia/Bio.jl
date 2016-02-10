@@ -1,9 +1,9 @@
 export PDB,
     PDBParseException,
-    getpdb,
+    downloadpdb,
     parseatomrecord,
     spaceatomname,
-    getpdbline,
+    pdbline,
     writepdb,
     writepdblines
 
@@ -30,7 +30,7 @@ showerror(io::IO, e::PDBParseException) = println(io, e.message, " at line ", e.
 
 
 """Download a PDB file or biological assembly from the RCSB PDB."""
-function getpdb(pdbid::ASCIIString, out_filepath::ASCIIString="$pdbid.pdb"; ba_number::Int=0)
+function downloadpdb(pdbid::ASCIIString, out_filepath::ASCIIString="$pdbid.pdb"; ba_number::Int=0)
     # Check PDB ID is 4 characters long and only consits of alphanumeric characters
     @assert length(pdbid) == 4 && !ismatch(r"[^a-zA-Z0-9]", pdbid) "Not a valid PDB ID: \"$pdbid\""
     if ba_number == 0
@@ -44,7 +44,7 @@ end
 # Add selectors back in
 function read(input::IO,
             ::Type{PDB};
-            struc_name::ASCIIString="",
+            structure_name::ASCIIString="",
             remove_disorder::Bool=false,
             read_std_atoms::Bool=true,
             read_het_atoms::Bool=true)
@@ -86,17 +86,17 @@ function read(input::IO,
         atom_lists[model_number] = formatomlist(atom_lists[model_number]; remove_disorder=remove_disorder)
     end
     # Form structure by organising each atom list into a model
-    return organisestruc([organisemodel(atom_list; model_number=model_number) for (model_number, atom_list) in atom_lists]; struc_name=struc_name)
+    return organisestructure([organisemodel(atom_list; model_number=model_number) for (model_number, atom_list) in atom_lists]; structure_name=structure_name)
 end
 
 
 # Add selectors back in
 function read(filepath::ASCIIString,
             ::Type{PDB};
-            struc_name::ASCIIString=splitdir(filepath)[2],
+            structure_name::ASCIIString=splitdir(filepath)[2],
             kwargs...)
     open(filepath, "r") do input
-        read(input, PDB; struc_name=struc_name, kwargs...)
+        read(input, PDB; structure_name=structure_name, kwargs...)
     end
 end
 
@@ -113,9 +113,11 @@ function parseatomrecord(line::ASCIIString, line_number::Int=1)
         parsestrict(line, (22,22), Char, "Could not read chain ID", line_number),
         parsestrict(line, (23,26), Int, "Could not read residue number", line_number),
         parsestrict(line, (27,27), Char, "Could not read insertion code", line_number),
-        [parsestrict(line, (31,38), Float64, "Could not read x coordinate", line_number),
-        parsestrict(line, (39,46), Float64, "Could not read y coordinate", line_number),
-        parsestrict(line, (47,54), Float64, "Could not read z coordinate", line_number)],
+        [
+            parsestrict(line, (31,38), Float64, "Could not read x coordinate", line_number),
+            parsestrict(line, (39,46), Float64, "Could not read y coordinate", line_number),
+            parsestrict(line, (47,54), Float64, "Could not read z coordinate", line_number)
+        ],
         parselenient(line, (55,60), Float64, 1.0),
         parselenient(line, (61,66), Float64, 0.0),
         strip(parselenient(line, (77,78), ASCIIString, "")),
@@ -186,15 +188,15 @@ end
 """Space an `Atom` name such that the second element letter (generally) appears in the second
 column. Having the `element` property of the `Atom` set improves the result."""
 function spaceatomname(atom::Atom)
-    atom_name = getatomname(atom)
+    atom_name = atomname(atom)
     chars = length(atom_name)
     @assert chars <= 4 "Atom name is greater than four characters: \"$atom_name\""
     # In the absence of the element, the first index goes in column two
-    if getelement(atom) == "" || findfirst(atom_name, getelement(atom)[1]) == 0
+    if element(atom) == "" || findfirst(atom_name, element(atom)[1]) == 0
         cent_ind = 1
     # The last letter of the element goes in column two where possible
     else
-        cent_ind = findfirst(atom_name, getelement(atom)[1]) + length(getelement(atom)) - 1
+        cent_ind = findfirst(atom_name, element(atom)[1]) + length(element(atom)) - 1
     end
     @assert cent_ind <= 2 "Atom name is too long to space correctly: \"$atom_name\""
     if cent_ind == 1 && chars < 4
@@ -210,37 +212,37 @@ end
 
 
 """Form a Protein Data Bank (PDB) format ATOM/HETATM record from an `Atom`."""
-getpdbline(atom::Atom) = ASCIIString[
+pdbline(atom::Atom) = ASCIIString[
         ishetatom(atom) ? "HETATM" : "ATOM  ",
-        spacestring(getserial(atom), 5),
+        spacestring(serial(atom), 5),
         " ",
         spaceatomname(atom),
-        string(getaltlocid(atom)),
-        spacestring(getresname(atom), 3),
+        string(altlocid(atom)),
+        spacestring(resname(atom), 3),
         " ",
-        string(getchainid(atom)),
-        spacestring(getresnumber(atom), 4),
-        string(getinscode(atom)),
+        string(chainid(atom)),
+        spacestring(resnumber(atom), 4),
+        string(inscode(atom)),
         "   ",
-        spacestring(round(getx(atom), 3), 8),
-        spacestring(round(gety(atom), 3), 8),
-        spacestring(round(getz(atom), 3), 8),
+        spacestring(round(x(atom), 3), 8),
+        spacestring(round(y(atom), 3), 8),
+        spacestring(round(z(atom), 3), 8),
         "  ",
-        spacestring(round(getoccupancy(atom), 2), 4),
+        spacestring(round(occupancy(atom), 2), 4),
         " ",
-        spacestring(round(gettempfac(atom), 2), 5),
+        spacestring(round(tempfac(atom), 2), 5),
         "          ",
-        spacestring(getelement(atom), 2),
-        spacestring(getcharge(atom), 2),
+        spacestring(element(atom), 2),
+        spacestring(charge(atom), 2),
     ]
 
 
 """Write a `StrucElementOrList` to a PDB format file."""
-function writepdb(output::IO, element::Union{Structure, ModelList}, args...)
+function writepdb(output::IO, element::Union{ProteinStructure, ModelList}, args...)
     # If there are multiple models, write out MODEL/ENDMDL lines
     if length(element) > 1
         for model in element
-            println(output, "MODEL     ", spacestring(getmodelnumber(model), 4), repeat(" ", 66))
+            println(output, "MODEL     ", spacestring(modelnumber(model), 4), repeat(" ", 66))
             writepdblines(output, model)
             println(output, "ENDMDL$(repeat(" ", 74))")
         end
@@ -256,7 +258,7 @@ writepdb(output::IO, element::StrucElementOrList, args...) = writepdblines(outpu
 """Write a `StrucElementOrList` as lines in PDB format."""
 function writepdblines(output::IO, element::StrucElementOrList, args...)
     for atom in collectatoms(element, args...), atom_record in atom
-        println(output, getpdbline(atom_record)...)
+        println(output, pdbline(atom_record)...)
     end
 end
 
