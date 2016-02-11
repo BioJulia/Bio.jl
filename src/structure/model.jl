@@ -37,16 +37,21 @@ export StructuralElement,
     resid,
     ishetres,
     atomnames,
+    atoms,
     disorderedres,
     defaultresname,
     defaultresidue,
     resnames,
     defaultresname!,
     resids,
+    sortresids,
+    residues,
     modelnumber,
     chainids,
+    chains,
     structurename,
     modelnumbers,
+    models,
     structurename!,
     applyselectors,
     applyselectors!,
@@ -108,7 +113,7 @@ immutable Atom <: AbstractAtom
     chain_id::Char
     res_number::Int
     ins_code::Char
-    coords::Array{Float64,1}
+    coords::Vector{Float64}
     occupancy::Float64
     temp_fac::Float64
     element::ASCIIString
@@ -132,12 +137,9 @@ immutable Residue <: AbstractResidue
     number::Int
     ins_code::Char
     het_res::Bool # Does the residue consist of hetatoms?
-    atom_list::Array{ASCIIString,1}
+    atom_list::Vector{ASCIIString}
     atoms::Dict{ASCIIString, AbstractAtom}
 end
-
-#Residue(name::ASCIIString, chain_id::Char, number::Int, ins_code::Char, het_res::Bool) = Residue(name, chain_id, number, ins_code, het_res, ASCIIString[], Dict())
-#Residue(atom::AbstractAtom) = Residue(resname(atom), chainid(atom), resnumber(atom), inscode(atom), ishetatom(atom))
 
 """A container to hold different versions of the same residue
 (point mutations)."""
@@ -150,7 +152,7 @@ end
 """A chain from a PDB file."""
 immutable Chain <: StructuralElement
     id::Char
-    res_list::Array{ASCIIString,1}
+    res_list::Vector{ASCIIString}
     residues::Dict{ASCIIString, AbstractResidue}
 end
 
@@ -235,6 +237,7 @@ end
 
 # Getters and setters for structural elements
 
+# Atom getters/setters
 ishetatom(atom::Atom) = atom.het_atom
 serial(atom::Atom) = atom.serial
 atomname(atom::Atom) = atom.name
@@ -252,11 +255,13 @@ tempfac(atom::Atom) = atom.temp_fac
 element(atom::Atom) = atom.element
 charge(atom::Atom) = atom.charge
 
+ishetero(atom::AbstractAtom) = ishetatom(atom)
+
 x!(atom::Atom, x::Real) = (atom.coords[1] = x; nothing)
 y!(atom::Atom, y::Real) = (atom.coords[2] = y; nothing)
 z!(atom::Atom, z::Real) = (atom.coords[3] = z; nothing)
 
-function coords!(atom::Atom, coords::Array{Float64,1})
+function coords!(atom::Atom, coords::Vector{Float64})
     @assert length(coords) == 3 "3 coordinates must be given"
     x!(atom, coords[1])
     y!(atom, coords[2])
@@ -264,6 +269,7 @@ function coords!(atom::Atom, coords::Array{Float64,1})
     return nothing
 end
 
+# DisorderedAtom getters/setters
 defaultaltlocid(disordered_atom::DisorderedAtom) = disordered_atom.default
 defaultatom(disordered_atom::DisorderedAtom) = disordered_atom[defaultaltlocid(disordered_atom)]
 altlocids(disordered_atom::DisorderedAtom) = sort(collect(keys(disordered_atom.alt_loc_ids)), by= alt_loc_id -> serial(disordered_atom[alt_loc_id]))
@@ -285,8 +291,6 @@ tempfac(disordered_atom::DisorderedAtom) = tempfac(defaultatom(disordered_atom))
 element(disordered_atom::DisorderedAtom) = element(defaultatom(disordered_atom))
 charge(disordered_atom::DisorderedAtom) = charge(defaultatom(disordered_atom))
 
-ishetero(atom::AbstractAtom) = ishetatom(atom)
-
 function defaultaltlocid!(disordered_atom::DisorderedAtom, alt_loc_id::Char)
     @assert alt_loc_id in altlocids(disordered_atom) "The new default alternative location ID must be present in the atom"
     disordered_atom = DisorderedAtom(disordered_atom.alt_loc_ids, alt_loc_id)
@@ -296,8 +300,7 @@ end
 x!(disordered_atom::DisorderedAtom, x::Real) = x!(defaultatom(disordered_atom), x)
 y!(disordered_atom::DisorderedAtom, y::Real) = y!(defaultatom(disordered_atom), y)
 z!(disordered_atom::DisorderedAtom, z::Real) = z!(defaultatom(disordered_atom), z)
-coords!(disordered_atom::DisorderedAtom, coords::Array{Float64,1}) = coords!(defaultatom(disordered_atom), coords)
-
+coords!(disordered_atom::DisorderedAtom, coords::Vector{Float64}) = coords!(defaultatom(disordered_atom), coords)
 
 function resid(element::Union{AbstractResidue, AbstractAtom}; full::Bool=false)
     res_id = strip("$(resnumber(element))$(inscode(element))")
@@ -307,13 +310,18 @@ function resid(element::Union{AbstractResidue, AbstractAtom}; full::Bool=false)
 end
 
 
+# Residue getters/setters
 resname(res::Residue) = res.name
 chainid(res::Residue) = res.chain_id
 resnumber(res::Residue) = res.number
 inscode(res::Residue) = res.ins_code
 ishetres(res::Residue) = res.het_res
 atomnames(res::Residue) = res.atom_list
+atoms(res::Residue) = res.atoms
 
+ishetero(res::AbstractResidue) = ishetres(res)
+
+# DisorderedResidue getters/setters
 disorderedres(disordered_res::DisorderedResidue, res_name::ASCIIString) = disordered_res.names[res_name]
 defaultresname(disordered_res::DisorderedResidue) = disordered_res.default
 defaultresidue(disordered_res::DisorderedResidue) = disordered_res.names[defaultresname(disordered_res)]
@@ -325,8 +333,7 @@ resnumber(disordered_res::DisorderedResidue) = resnumber(defaultresidue(disorder
 inscode(disordered_res::DisorderedResidue) = inscode(defaultresidue(disordered_res))
 ishetres(disordered_res::DisorderedResidue) = ishetres(defaultresidue(disordered_res))
 atomnames(disordered_res::DisorderedResidue) = atomnames(defaultresidue(disordered_res))
-
-ishetero(res::AbstractResidue) = ishetres(res)
+atoms(disordered_res::DisorderedResidue) = atoms(defaultresidue(disordered_res))
 
 function defaultresname!(disordered_res::DisorderedResidue, res_name::ASCIIString)
     @assert res_name in resnames(disordered_res) "The new default residue name must be present in the residue"
@@ -334,8 +341,8 @@ function defaultresname!(disordered_res::DisorderedResidue, res_name::ASCIIStrin
 end
 
 
+# Chain getters/setters
 chainid(chain::Chain) = chain.id
-
 resids(chain::Chain) = chain.res_list
 
 function sortresids(residues::Dict{ASCIIString, AbstractResidue})
@@ -345,15 +352,23 @@ function sortresids(residues::Dict{ASCIIString, AbstractResidue})
     return sorted_res_ids
 end
 
+residues(chain::Chain) = chain.residues
 
+
+# Model getters/setters
 modelnumber(model::Model) = model.number
 chainids(model::Model) = sort(collect(keys(model.chains)))
+chains(model::Model) = model.chains
 
 
+# ProteinStructure getters/setters
 structurename(struc::ProteinStructure) = struc.name
 modelnumbers(struc::ProteinStructure) = sort(collect(keys(struc.models)))
+models(struc::ProteinStructure) = struc.models
 
-structurename!(struc::ProteinStructure, name::ASCIIString) = struc.name = name
+function structurename!(struc::ProteinStructure, name::ASCIIString)
+    struc = ProteinStructure(name, models(struc))
+end
 
 
 # Iterators to yield sub elements when looping over an element
@@ -467,7 +482,7 @@ end
 
 countmodels(struc::ProteinStructure) = length(struc)
 countchains(struc::ProteinStructure) = length(struc[1])
-countchains(chain::Chain) = length(chain)
+countchains(model::Model) = length(model)
 countresidues(element::StrucElementOrList, selector_functions::Function...) = length(collectresidues(element, selector_functions...))
 countatoms(element::StrucElementOrList, selector_functions::Function...) = length(collectatoms(element, selector_functions...))
 
@@ -683,7 +698,7 @@ hetatomselector(atom::AbstractAtom) = ishetatom(atom)
 """Determines if an `AbstractAtom` has its atom name in the given `Array`."""
 atomnameselector(atom::AbstractAtom, atom_names::Set{ASCIIString}) = atomname(atom) in atom_names
 # Set is faster but Vector method is retained for ease of use
-atomnameselector(atom::AbstractAtom, atom_names::Array{ASCIIString,1}) = atomname(atom) in atom_names
+atomnameselector(atom::AbstractAtom, atom_names::Vector{ASCIIString}) = atomname(atom) in atom_names
 
 """`Array` of C-alpha atom names."""
 const calpha_atom_names = Set(["CA"])
@@ -713,7 +728,7 @@ heavyatomselector(atom::AbstractAtom) = stdatomselector(atom) && atomnameselecto
 """Determines if an `AbstractResidue` or `AbstractAtom` has its resiudue name in
 the given `Array`."""
 resnameselector(element::Union{AbstractResidue, AbstractAtom}, res_names::Set{ASCIIString}) = resname(element) in res_names
-resnameselector(element::Union{AbstractResidue, AbstractAtom}, res_names::Array{ASCIIString,1}) = resname(element) in res_names
+resnameselector(element::Union{AbstractResidue, AbstractAtom}, res_names::Vector{ASCIIString}) = resname(element) in res_names
 
 """`Array` of residue names corresponding to water."""
 const water_res_names = Set(["HOH"])
