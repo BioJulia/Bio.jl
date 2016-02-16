@@ -52,7 +52,6 @@ export StructuralElement,
     structurename,
     modelnumbers,
     models,
-    structurename!,
     applyselectors,
     applyselectors!,
     collectresidues,
@@ -61,7 +60,6 @@ export StructuralElement,
     countchains,
     countresidues,
     countatoms,
-    isdisordered,
     organise,
     formatomlist,
     choosedefaultaltlocid,
@@ -285,6 +283,7 @@ inscode(disordered_atom::DisorderedAtom) = inscode(defaultatom(disordered_atom))
 x(disordered_atom::DisorderedAtom) = x(defaultatom(disordered_atom))
 y(disordered_atom::DisorderedAtom) = y(defaultatom(disordered_atom))
 z(disordered_atom::DisorderedAtom) = z(defaultatom(disordered_atom))
+# Returns a Vector of atomic coordinates - compare with coordarray which returns a 2D array
 coords(disordered_atom::DisorderedAtom) = coords(defaultatom(disordered_atom))
 occupancy(disordered_atom::DisorderedAtom) = occupancy(defaultatom(disordered_atom))
 tempfac(disordered_atom::DisorderedAtom) = tempfac(defaultatom(disordered_atom))
@@ -303,10 +302,19 @@ z!(disordered_atom::DisorderedAtom, z::Real) = z!(defaultatom(disordered_atom), 
 coords!(disordered_atom::DisorderedAtom, coords::Vector{Float64}) = coords!(defaultatom(disordered_atom), coords)
 
 function resid(element::Union{AbstractResidue, AbstractAtom}; full::Bool=false)
-    res_id = strip("$(resnumber(element))$(inscode(element))")
-    ishetero(element) ? res_id = "H_$res_id" : nothing
-    full ? res_id = "$(res_id):$(chainid(element))" : nothing
-    return res_id
+    if ishetero(element)
+        if full
+            inscode(element) == ' ' ? "H_$(resnumber(element)):$(chainid(element))" : "H_$(resnumber(element))$(inscode(element)):$(chainid(element))"
+        else
+            inscode(element) == ' ' ? "H_$(resnumber(element))" : "H_$(resnumber(element))$(inscode(element))"
+        end
+    else
+        if full
+            inscode(element) == ' ' ? "$(resnumber(element)):$(chainid(element))" : "$(resnumber(element))$(inscode(element)):$(chainid(element))"
+        else
+            inscode(element) == ' ' ? "$(resnumber(element))" : "$(resnumber(element))$(inscode(element))"
+        end
+    end
 end
 
 
@@ -357,7 +365,13 @@ residues(chain::Chain) = chain.residues
 
 # Model getters/setters
 modelnumber(model::Model) = model.number
-chainids(model::Model) = sort(collect(keys(model.chains)))
+
+# Chains are ordered by character sorting except the empty chain ID comes last
+function chainids(model::Model)
+    ids = sort(collect(keys(model.chains)))
+    !isempty(ids) && ids[1] == ' ' ? [ids[2:end]; ' '] : ids
+end
+
 chains(model::Model) = model.chains
 
 
@@ -365,10 +379,6 @@ chains(model::Model) = model.chains
 structurename(struc::ProteinStructure) = struc.name
 modelnumbers(struc::ProteinStructure) = sort(collect(keys(struc.models)))
 models(struc::ProteinStructure) = struc.models
-
-function structurename!(struc::ProteinStructure, name::ASCIIString)
-    struc = ProteinStructure(name, models(struc))
-end
 
 
 # Iterators to yield sub elements when looping over an element
@@ -413,10 +423,10 @@ eltype(::Type{DisorderedResidue}) = AbstractAtom
 # Iterating over an Atom returns itself
 # This is not necessarily intuitive, it may be expected to not be an iterator
 # However this way iterating over an AbstractAtom always yields Atoms
-length(atom::Atom) = 1
+length(::Atom) = 1
 start(::Atom) = 1
 next(atom::Atom, state) = (atom, state + 1)
-done(atom::Atom, state) = state > 1
+done(::Atom, state) = state > 1
 eltype(::Type{Atom}) = Atom
 
 # Iterating over a DisorderedAtom yields Atoms
@@ -485,11 +495,6 @@ countchains(struc::ProteinStructure) = length(struc[1])
 countchains(model::Model) = length(model)
 countresidues(element::StrucElementOrList, selector_functions::Function...) = length(collectresidues(element, selector_functions...))
 countatoms(element::StrucElementOrList, selector_functions::Function...) = length(collectatoms(element, selector_functions...))
-
-
-# Returns true if the number of DisorderedAtoms or DisorderedResidues is greater than 0
-# This needs some thinking about as does not necessarily correspond to a non-blank alt loc ID
-isdisordered(element::StrucElementOrList) = countatoms(element, disorderselector) > 0 || countresidues(element, disorderselector) > 0
 
 
 """Organise a `StrucElementOrList` into the next level up the heirarchy. An
@@ -755,7 +760,7 @@ disorderselector(res::AbstractResidue) = isa(res, DisorderedResidue)
 # For example atom names 1H and H1 would be hydrogens but NH1 would not
 """Determines if an `AbstractAtom` represents hydrogen. Uses the element field
 where possible, otherwise uses the atom name."""
-hydrogenselector(atom::AbstractAtom) = element(atom) == "H" || (element(atom) == "" && 'H' in atomname(atom) && !ismatch(r"[a-zA-Z]", atomname(atom)[:findfirst(atomname(atom), 'H')-1]))
+hydrogenselector(atom::AbstractAtom) = element(atom) == "H" || (element(atom) == "" && 'H' in atomname(atom) && !ismatch(r"[a-zA-Z]", atomname(atom)[1:findfirst(atomname(atom), 'H')-1]))
 
 
 function show(io::IO, struc::ProteinStructure)

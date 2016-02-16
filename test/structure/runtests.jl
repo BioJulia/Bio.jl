@@ -10,6 +10,7 @@ end
 using Bio.Structure
 using Bio.Structure: parsestrict, parselenient, parsevalue, spacestring
 
+# Directory where PDB files are stored for parsing tests
 const test_files = "test/structure/test_files"
 
 
@@ -187,7 +188,7 @@ const test_files = "test/structure/test_files"
     @test resid(disordered_res) == "10"
     @test resid(disordered_res, full=true) == "10:A"
 
-    """defaultaltlocid!"""
+    """defaultresname!"""
 
     # Test DisorderedResidue indices
     @test isa(disordered_res["CA"], AbstractAtom)
@@ -284,10 +285,6 @@ const test_files = "test/structure/test_files"
     @test length(models(struc)) == 2
     @test resids(models(struc)[1]['A']) == ["10"]
 
-    """structurename!(struc, "new name")
-    @test structurename(struc) == "new name"
-    @test modelnumbers(struc) == [1, 5]"""
-
     # Test ProteinStructure indices
     @test isa(struc[5], Model)
     @test isa(struc[1], Model)
@@ -307,19 +304,60 @@ const test_files = "test/structure/test_files"
 
 
     # Test selector functions
+    atom_a = Atom(false, 100, "CA", ' ', "ALA", 'A', 10, ' ', [1.0, 2.0, 3.0], 1.0, 10.0, "C", "")
+    atom_b = Atom(true, 110, "MG", ' ', "MG", 'A', 11, ' ', [1.0, 2.0, 3.0], 1.0, 10.0, "C", "")
+    res_a = Residue("ALA", 'A', 10, ' ', false, [], Dict())
+    res_b = Residue("HOH", 'A', 100, ' ', true, [], Dict())
+
+    @test stdatomselector(atom_a)
+    @test !stdatomselector(atom_b)
+    @test !hetatomselector(atom_a)
+    @test hetatomselector(atom_b)
+    @test atomnameselector(atom_a, Set(["CA", "N", "C"]))
+    @test atomnameselector(atom_a, ["CA", "N", "C"])
+    @test !atomnameselector(atom_b, Set(["CA", "N", "C"]))
+    @test calphaselector(atom_a)
+    @test !calphaselector(atom_b)
+    @test !calphaselector(Atom(true, 100, "CA", ' ', "ALA", 'A', 10, ' ', [1.0, 2.0, 3.0], 1.0, 10.0, "C", ""))
+    @test backboneselector(atom_a)
+    @test !backboneselector(atom_b)
+    @test !backboneselector(Atom(true, 100, "CA", ' ', "ALA", 'A', 10, ' ', [1.0, 2.0, 3.0], 1.0, 10.0, "C", ""))
+    @test heavyatomselector(atom_a)
+    @test !heavyatomselector(atom_b)
+    @test !heavyatomselector(Atom(true, 100, "CA", ' ', "ALA", 'A', 10, ' ', [1.0, 2.0, 3.0], 1.0, 10.0, "C", ""))
+    @test resnameselector(atom_a, Set(["ALA"]))
+    @test resnameselector(atom_a, ["ALA"])
+    @test !resnameselector(atom_b, Set(["ALA"]))
+    @test resnameselector(res_a, Set(["ALA"]))
+    @test !resnameselector(res_b, Set(["ALA"]))
+    @test !waterselector(res_a)
+    @test waterselector(res_b)
+    @test stdresselector(res_a)
+    @test !stdresselector(res_b)
+    @test !hetresselector(res_a)
+    @test hetresselector(res_b)
+    @test !disorderselector(atom_a)
+    @test disorderselector(disordered_atom)
+    @test !disorderselector(res_a)
+    @test disorderselector(disordered_res)
+    @test hydrogenselector(Atom(false, 100, "H", ' ', "ALA", 'A', 10, ' ', [1.0, 2.0, 3.0], 1.0, 10.0, "H", ""))
+    @test !hydrogenselector(Atom(false, 100, "H", ' ', "ALA", 'A', 10, ' ', [1.0, 2.0, 3.0], 1.0, 10.0, "C", ""))
+    @test hydrogenselector(Atom(false, 100, "H1", ' ', "ALA", 'A', 10, ' ', [1.0, 2.0, 3.0], 1.0, 10.0, "", ""))
+    @test hydrogenselector(Atom(false, 100, "1H", ' ', "ALA", 'A', 10, ' ', [1.0, 2.0, 3.0], 1.0, 10.0, "", ""))
+    @test !hydrogenselector(Atom(false, 100, "NH1", ' ', "ALA", 'A', 10, ' ', [1.0, 2.0, 3.0], 1.0, 10.0, "", ""))
+
 
 
     # Test collectatoms and collectresidues
+    # These are further tested below
 
 
     # Test count functions
-
-
-    # Test isdisordered
+    # These are further tested below
 
 
     # Test organise functions
-
+    # These are further tested below
 
 
 end
@@ -401,9 +439,51 @@ end
     @test_throws PDBParseException parseatomrecord(line_d)
     @test_throws AssertionError parseatomrecord(line_e)
 
+    # Test parsing 1AKE (multiple chains, disordered atoms) and parsing options
+    struc = read("$test_files/1AKE.pdb", PDB)
+    @test structurename(struc) == "1AKE.pdb"
+    @test modelnumbers(struc) == [1]
+    @test chainids(struc[1]) == ['A', 'B']
+    @test countresidues(struc['A'], stdresselector) == 214
+    @test countresidues(struc['B'], stdresselector) == 214
+    @test countresidues(struc['A'], hetresselector) == 242
+    @test countresidues(struc['B'], hetresselector) == 138
+    @test countatoms(struc['A'], stdatomselector) == 1656
+    @test countatoms(struc['B'], stdatomselector) == 1656
+    @test countatoms(struc['A'], hetatomselector) == 298
+    @test countatoms(struc['B'], hetatomselector) == 194
+    @test resname(struc['A'][10]) == "GLY"
+    #@test !ishetres(struc['A'][10]) These are meant to be disorder not het checks
+    @test serial(struc['A'][200]["NZ"]) == 1555
+    #@test !ishetatom(struc['A'][200]["NZ"]) These are meant to be disorder not het checks
+    #@test ishetatom(struc['A'][167]["CD"]) These are meant to be disorder not het checks
+    @test altlocids(struc['A'][167]["CD"]) == ['A', 'B']
+    @test x(struc['A'][167]["CD"]) == 24.502
+    @test x(struc['A'][167]["CD"]['A']) == 24.502
+    @test x(struc['A'][167]["CD"]['B']) == 24.69
+
+    struc = read("$test_files/1AKE.pdb", PDB; structure_name="New name")
+    @test structurename(struc) == "New name"
+
+    struc = read("$test_files/1AKE.pdb", PDB; read_het_atoms=false)
+    struc = read("$test_files/1AKE.pdb", PDB; read_std_atoms=false)
+    struc = read("$test_files/1AKE.pdb", PDB; read_het_atoms=false, read_std_atoms=false)
+    struc = read("$test_files/1AKE.pdb", PDB; remove_disorder=true)
+    struc = read("$test_files/1AKE.pdb", PDB, backboneselector)
+    struc = read("$test_files/1AKE.pdb", PDB) # Multiple selectors
+
+    # Test parsing from stream
+    open("$test_files/1AKE.pdb", "r") do filename
+        struc = read(filename, PDB)
+
+    end
+
+    # Test parsing 1EN2 (disordered residue)
+    struc = read("$test_files/1EN2.pdb", PDB)
 
 
-    struc_1AKE = read("$test_files/1AKE.pdb", PDB)
+    # Test parsing 1SSU (multiple models)
+    struc = read("$test_files/1SSU.pdb", PDB)
 
 end
 
@@ -414,11 +494,29 @@ end
 
 
 @testset "Spatial" begin
-    # Tests for coordarray
+    # Test coordarray
+    atom = Atom(false, 100, "CA", ' ', "ALA", 'A', 10, ' ', [1.0, 2.0, 3.0], 1.0, 10.0, "C", "")
+    coords = coordarray(atom)
+    @test size(coords) == (3,1)
+    @test coords[1] == 1.0
+    @test coords[2] == 2.0
+    @test coords[3] == 3.0
+
+    struc_1AKE = read("$test_files/1AKE.pdb", PDB)
+    coords = coordarray(struc_1AKE)
+    @test size(coords) == (3,3804)
+    @test coords[1,3787] == 20.135
+    @test coords[2,3787] == -10.789
+    @test coords[3,3787] == -1.732
+    coords = coordarray(struc_1AKE['A'], calphaselector)
+    @test size(coords) == (3,214)
+    @test coords[1,10] == 17.487
+    @test coords[2,10] == 42.426
+    @test coords[3,10] == 19.756
+    @test coordarray(coords) == coords
 
 
-
-    # Tests for rmsd
+    # Test rmsd
     coords_one = [
         0.0 0.0;
         1.0 0.0;
@@ -430,7 +528,6 @@ end
         1.0 3.0;
     ]
     @test isapprox(rmsd(coords_one, coords_two), sqrt(5/2))
-
     coords_one = [
         0.0 0.0 1.0;
         1.0 0.0 2.0;
@@ -443,8 +540,13 @@ end
     ]
     @test_throws AssertionError rmsd(coords_one, coords_two)
 
+    struc_1SSU = read("$test_files/1SSU.pdb", PDB)
+    @test isapprox(rmsd(struc_1SSU[1], struc_1SSU[2], calphaselector), 4.1821925809691889)
+    @test isapprox(rmsd(struc_1SSU[5], struc_1SSU[6], backboneselector), 5.2878196391279939)
+    @test_throws AssertionError rmsd(struc_1SSU[1]['A'][8], struc_1SSU[1]['A'][9])
 
-    # Tests for disps
+
+    # Test displacements
     coords_one = [
         0.0 0.0;
         1.0 0.0;
@@ -455,8 +557,7 @@ end
         2.0 0.0;
         1.0 4.0;
     ]
-
-    @test isapprox(disps(coords_one, coords_two), [1.0, sqrt(5)])
+    @test isapprox(displacements(coords_one, coords_two), [1.0, sqrt(5)])
     coords_one = [
         0.0 0.0 1.0;
         1.0 0.0 2.0;
@@ -467,13 +568,31 @@ end
         2.0 0.0;
         1.0 4.0;
     ]
-    @test_throws AssertionError disps(coords_one, coords_two)
+    @test_throws AssertionError displacements(coords_one, coords_two)
+
+    disps = displacements(struc_1SSU[5], struc_1SSU[10])
+    @test isa(disps, Vector{Float64})
+    @test length(disps) == 756
+    @test isapprox(disps[20], sqrt(1.984766))
+    disps = displacements(struc_1SSU[5], struc_1SSU[10], calphaselector)
+    @test length(disps) == 51
+    @test isapprox(disps[20], sqrt(0.032822))
 
 
-    # Tests for dist
+    # Test distance
+    atom_a = Atom(false, 100, "CA", ' ', "ALA", 'A', 10, ' ', [1.0, 2.0, 3.0], 1.0, 10.0, "C", "")
+    atom_b = Atom(false, 110, "CA", ' ', "ALA", 'A', 11, ' ', [0.0, -1.0, 3.0], 1.0, 10.0, "C", "")
+    @test isapprox(distance(atom_a, atom_b), sqrt(10))
+    @test isapprox(atom_a - atom_b, sqrt(10))
 
-
+    @test isapprox(distance(struc_1AKE['A'], struc_1AKE['B']), sqrt(6.852947))
+    @test isapprox(distance(struc_1AKE['A'], struc_1AKE['B'][50]), sqrt(530.645746))
+    @test isapprox(distance(struc_1AKE['A'], struc_1AKE['B'][50]["CA"]), sqrt(574.699125))
+    @test isapprox(distance(struc_1AKE['A'], struc_1AKE['B'], backboneselector), sqrt(17.350083))
+    @test isapprox(distance(struc_1AKE['A'], struc_1AKE['B'], stdatomselector), sqrt(11.252973))
+    @test isapprox(distance(struc_1AKE['A'][50]["CA"], struc_1AKE['B'][50]["CA"]), sqrt(2607.154834))
+    @test isapprox(struc_1AKE['A'] - struc_1AKE['B'], sqrt(6.852947))
+    @test isapprox(struc_1AKE['A'][50]["CA"] - struc_1AKE['B'][50]["CA"], sqrt(2607.154834))
 end
-
 
 end # TestStructure

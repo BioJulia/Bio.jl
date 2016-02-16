@@ -184,8 +184,9 @@ function spacestring(val_in, new_length::Int)
 end
 
 
-"""Space an `Atom` name such that the second element letter (generally) appears in the second
-column. Having the `element` property of the `Atom` set improves the result."""
+"""Space an `Atom` name such that the last element letter (generally) appears in the second
+column. If the `element` property of the `Atom` is set it is used to get the element,
+otherwise the name starts from the second column where possible."""
 function spaceatomname(atom::Atom)
     atom_name = atomname(atom)
     chars = length(atom_name)
