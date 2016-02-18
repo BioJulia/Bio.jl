@@ -37,6 +37,7 @@ const test_files = "test/structure/test_files"
     @test charge(atom) == ""
 
     @test !ishetero(atom)
+    @test !isdisorderedatom(atom)
     @test resid(atom) == "10"
     @test resid(atom, full=true) == "10:A"
 
@@ -85,6 +86,7 @@ const test_files = "test/structure/test_files"
     @test charge(disordered_atom) == ""
 
     @test !ishetero(disordered_atom)
+    @test isdisorderedatom(disordered_atom)
     @test resid(disordered_atom) == "10"
     @test resid(disordered_atom, full=true) == "10:A"
 
@@ -130,6 +132,7 @@ const test_files = "test/structure/test_files"
         "CB" => Atom(false, 102, "CB", ' ', "ALA", 'A', 10, ' ', [1.0, 2.0, 3.0], 1.0, 0.0, "C", ""),
         "CG" => Atom(false, 103, "CG", ' ', "ALA", 'A', 10, ' ', [1.0, 2.0, 3.0], 1.0, 0.0, "C", "")
     ))
+    res_min = Residue("ALA", 'A', 10, ' ', false)
 
     # Test Residue getters/setters
     @test resname(res) == "ALA"
@@ -143,6 +146,7 @@ const test_files = "test/structure/test_files"
     @test serial(atoms(res)["CA"]) == 100
 
     @test !ishetero(res)
+    @test !isdisorderedres(res)
     @test resid(res) == "10"
     @test resid(res, full=true) == "10:A"
 
@@ -185,6 +189,7 @@ const test_files = "test/structure/test_files"
     @test serial(atoms(res)["CA"]) == 100
 
     @test !ishetero(disordered_res)
+    @test isdisorderedres(disordered_res)
     @test resid(disordered_res) == "10"
     @test resid(disordered_res, full=true) == "10:A"
 
@@ -210,11 +215,11 @@ const test_files = "test/structure/test_files"
             "PB" => Atom(true, 120, "PB", ' ', "ATP", 'A', 11, ' ', [1.0, 2.0, 3.0], 1.0, 0.0, "P", "")
         ))
     ))
+    chain_min = Chain('A')
 
     # Test Chain getters/setters
     @test chainid(chain) == 'A'
     @test resids(chain) == ["10", "H_11"]
-    @test sortresids(residues(chain)) == ["10", "H_11"]
     @test isa(residues(chain), Dict{ASCIIString, AbstractResidue})
     @test length(residues(chain)) == 2
     @test serial(residues(chain)["10"]["CA"]) == 100
@@ -245,6 +250,7 @@ const test_files = "test/structure/test_files"
             ))
         ))
     ))
+    model_min = Model(1)
 
     # Test Model getters/setters
     @test modelnumber(model) == 5
@@ -277,6 +283,8 @@ const test_files = "test/structure/test_files"
             ))
         ))
     ))
+    struc_min = ProteinStructure("test")
+    struc_min = ProteinStructure()
 
     # Test ProteinStructure getters/setters
     @test structurename(struc) == "test"
@@ -346,6 +354,56 @@ const test_files = "test/structure/test_files"
     @test hydrogenselector(Atom(false, 100, "1H", ' ', "ALA", 'A', 10, ' ', [1.0, 2.0, 3.0], 1.0, 10.0, "", ""))
     @test !hydrogenselector(Atom(false, 100, "NH1", ' ', "ALA", 'A', 10, ' ', [1.0, 2.0, 3.0], 1.0, 10.0, "", ""))
 
+
+    # Further tests for element ordering
+    # Order when looping over a DisorderedAtom is the atom serial
+    disordered_atom_ord = DisorderedAtom(Dict(
+        'A' => Atom(false, 102, "CA", 'A', "ALA", 'A', 10, ' ', [1.0, 2.0, 3.0], 0.3, 10.0, "C", ""),
+        'B' => Atom(false, 101, "CA", 'B', "ALA", 'A', 10, ' ', [1.0, 2.0, 3.0], 0.4, 10.0, "C", ""),
+        'C' => Atom(false, 100, "CA", 'C', "ALA", 'A', 10, ' ', [1.0, 2.0, 3.0], 0.3, 10.0, "C", ""),
+    ), 'B')
+    @test altlocids(disordered_atom_ord) == ['C', 'B', 'A']
+
+    # Order when looping over an AbstractResidue is the atom serial
+    atom_list_ord = AbstractAtom[
+        DisorderedAtom(Dict(
+            'A' => Atom(false, 100, "CA", 'A', "ALA", 'A', 10, ' ', [1.0, 2.0, 3.0], 0.4, 10.0, "C", ""),
+            'B' => Atom(false, 104, "CA", 'B', "ALA", 'A', 10, ' ', [1.0, 2.0, 3.0], 0.6, 10.0, "C", "")
+        ), 'B'),
+        Atom(false, 102, "CB", ' ', "ALA", 'A', 10, ' ', [1.0, 2.0, 3.0], 1.0, 10.0, "C", ""),
+        Atom(false, 103, "CG", ' ', "ALA", 'A', 10, ' ', [1.0, 2.0, 3.0], 1.0, 10.0, "C", "")
+    ]
+    @test map(atomname, sort(atom_list_ord)) == ["CB", "CG", "CA"]
+    sort!(atom_list_ord)
+    @test map(atomname, atom_list_ord) == ["CB", "CG", "CA"]
+
+    # Order when looping over a Chain is stdres/hetres, then residue number, then insertion code
+    residues_ord = AbstractResidue[
+        Residue("res", 'A', 201, 'A', false),
+        Residue("res", 'A', 203, ' ', false),
+        Residue("res", 'A', 200, ' ', true),
+        Residue("res", 'A', 201, 'B', false),
+        Residue("res", 'A', 202, ' ', false),
+        Residue("res", 'A', 201, ' ', true),
+        Residue("res", 'A', 201, ' ', false),
+        Residue("res", 'A', 201, 'A', true),
+        Residue("res", 'A', 203, ' ', true),
+        Residue("res", 'A', 200, ' ', false),
+    ]
+    @test map(resid, sort(residues_ord)) == ["200", "201", "201A", "201B", "202", "203", "H_200", "H_201", "H_201A", "H_203"]
+    sort!(residues_ord)
+    @test map(resid, residues_ord) == ["200", "201", "201A", "201B", "202", "203", "H_200", "H_201", "H_201A", "H_203"]
+
+    # Order when looping over a Model is chain ID with the empty chain ID at the end
+    model_ord = Model(1, Dict(
+        'A' => Chain('A'),
+        ' ' => Chain(' '),
+        '1' => Chain('1'),
+        'a' => Chain('a'),
+        'X' => Chain('X'),
+    ))
+    @test chainids(model_ord) == ['1', 'A', 'X', 'a', ' ']
+    @test sortchainids(['A', ' ', '1', 'a', 'X']) == ['1', 'A', 'X', 'a', ' ']
 
 
     # Test collectatoms and collectresidues
@@ -453,10 +511,10 @@ end
     @test countatoms(struc['A'], hetatomselector) == 298
     @test countatoms(struc['B'], hetatomselector) == 194
     @test resname(struc['A'][10]) == "GLY"
-    #@test !ishetres(struc['A'][10]) These are meant to be disorder not het checks
+    @test !isdisorderedres(struc['A'][10])
     @test serial(struc['A'][200]["NZ"]) == 1555
-    #@test !ishetatom(struc['A'][200]["NZ"]) These are meant to be disorder not het checks
-    #@test ishetatom(struc['A'][167]["CD"]) These are meant to be disorder not het checks
+    @test !isdisorderedatom(struc['A'][200]["NZ"])
+    @test isdisorderedatom(struc['A'][167]["CD"])
     @test altlocids(struc['A'][167]["CD"]) == ['A', 'B']
     @test x(struc['A'][167]["CD"]) == 24.502
     @test x(struc['A'][167]["CD"]['A']) == 24.502

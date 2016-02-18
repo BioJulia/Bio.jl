@@ -8,9 +8,6 @@ export PDB,
     writepdblines
 
 
-import Base: showerror,
-    read
-
 import Bio.FileFormat
 
 
@@ -26,7 +23,7 @@ type PDBParseException <: Exception
 end
 
 
-showerror(io::IO, e::PDBParseException) = println(io, e.message, " at line ", e.line_number, " of file:\n", e.line)
+Base.showerror(io::IO, e::PDBParseException) = println(io, e.message, " at line ", e.line_number, " of file:\n", e.line)
 
 
 """Download a PDB file or biological assembly from the RCSB PDB."""
@@ -42,7 +39,7 @@ end
 
 
 # Add selectors back in
-function read(input::IO,
+function Base.read(input::IO,
             ::Type{PDB},
             selector_functions::Function...;
             structure_name::ASCIIString="",
@@ -58,14 +55,7 @@ function read(input::IO,
         line_number += 1
         # Read ATOM and HETATM records as required
         if (read_std_atoms && startswith(line, "ATOM  ")) || (read_het_atoms && startswith(line, "HETATM"))
-            atom = parseatomrecord(rstrip(line, '\n'), line_number)
-            # Check selector functions are satisfied and if not skip this atom
-            selected = true
-            for selector_function in selector_functions
-                !selector_function(atom) ? (selected = false; break) : nothing
-            end
-            !selected ? continue : nothing
-            push!(atom_lists[curr_model], atom)
+            push!(atom_lists[curr_model], parseatomrecord(rstrip(line, '\n'), line_number))
         # Read MODEL record
         elseif startswith(line, "MODEL ")
             try
@@ -83,13 +73,16 @@ function read(input::IO,
     # Remove model 1 atom list if it was not added to
     length(atom_lists[1]) == 0 ? delete!(atom_lists, 1) : nothing
     # Form disordered atom containers or remove atoms depending on remove_disorder
+    # Apply selectors at this point so e.g. disorderselector work correctly
     # Form structure by organising each atom list into a model
-    return organisestructure([organisemodel(formatomlist(atom_list; remove_disorder=remove_disorder); model_number=model_number) for (model_number, atom_list) in atom_lists]; structure_name=structure_name)
+    return organisestructure(
+        [organisemodel(applyselectors(formatomlist(atom_list; remove_disorder=remove_disorder), selector_functions...); model_number=model_number) for (model_number, atom_list) in atom_lists]; structure_name=structure_name
+    )
 end
 
 
 # Add selectors back in
-function read(filepath::ASCIIString,
+function Base.read(filepath::ASCIIString,
             ::Type{PDB},
             selector_functions::Function...;
             structure_name::ASCIIString=splitdir(filepath)[2],

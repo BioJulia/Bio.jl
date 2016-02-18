@@ -4,9 +4,6 @@ export coordarray,
     distance
 
 
-import Base.-
-
-
 # Returns a 2D array of coordinates with size (3,n)
 """Get the atomic coordinates of a `StrucElementOrList` as an array with each
 column corresponding to one atom."""
@@ -64,4 +61,4 @@ end
 
 distance(atom_one::AbstractAtom, atom_two::AbstractAtom) = sqrt((x(atom_one) - x(atom_two)) ^ 2 + (y(atom_one) - y(atom_two)) ^ 2 + (z(atom_one) - z(atom_two)) ^ 2)
 
--(element_one::StrucElementOrList, element_two::StrucElementOrList) = distance(element_one, element_two)
+Base.(:-)(element_one::StrucElementOrList, element_two::StrucElementOrList) = distance(element_one, element_two)
