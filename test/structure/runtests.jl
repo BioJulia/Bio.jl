@@ -90,7 +90,10 @@ const test_files = "test/structure/test_files"
     @test resid(disordered_atom) == "10"
     @test resid(disordered_atom, full=true) == "10:A"
 
-    """defaultaltlocid!"""
+    disordered_atom_mod = DisorderedAtom(disordered_atom, 'B')
+    @test defaultaltlocid(disordered_atom_mod) == 'B'
+    @test serial(disordered_atom_mod) == 101
+    @test_throws AssertionError DisorderedAtom(disordered_atom, 'C')
 
     # Only the coordinates on the default atom are changed
     x!(disordered_atom, 10.0)
@@ -193,7 +196,10 @@ const test_files = "test/structure/test_files"
     @test resid(disordered_res) == "10"
     @test resid(disordered_res, full=true) == "10:A"
 
-    """defaultresname!"""
+    disordered_res_mod = DisorderedResidue(disordered_res, "VAL")
+    @test defaultresname(disordered_res_mod) == "VAL"
+    @test atomnames(disordered_res_mod) == ["CA"]
+    @test_throws AssertionError DisorderedResidue(disordered_res, "SER")
 
     # Test DisorderedResidue indices
     @test isa(disordered_res["CA"], AbstractAtom)
@@ -251,6 +257,7 @@ const test_files = "test/structure/test_files"
         ))
     ))
     model_min = Model(1)
+    model_min = Model()
 
     # Test Model getters/setters
     @test modelnumber(model) == 5
@@ -355,7 +362,7 @@ const test_files = "test/structure/test_files"
     @test !hydrogenselector(Atom(false, 100, "NH1", ' ', "ALA", 'A', 10, ' ', [1.0, 2.0, 3.0], 1.0, 10.0, "", ""))
 
 
-    # Further tests for element ordering
+    # Further tests for structural element ordering
     # Order when looping over a DisorderedAtom is the atom serial
     disordered_atom_ord = DisorderedAtom(Dict(
         'A' => Atom(false, 102, "CA", 'A', "ALA", 'A', 10, ' ', [1.0, 2.0, 3.0], 0.3, 10.0, "C", ""),
@@ -404,20 +411,6 @@ const test_files = "test/structure/test_files"
     ))
     @test chainids(model_ord) == ['1', 'A', 'X', 'a', ' ']
     @test sortchainids(['A', ' ', '1', 'a', 'X']) == ['1', 'A', 'X', 'a', ' ']
-
-
-    # Test collectatoms and collectresidues
-    # These are further tested below
-
-
-    # Test count functions
-    # These are further tested below
-
-
-    # Test organise functions
-    # These are further tested below
-
-
 end
 
 
@@ -438,9 +431,9 @@ end
     line_b = "ATOM    591  C   GLY A  80 "
     @test parsestrict(line, (7,11), Int, "could not read atom serial number", 10) == 591
     @test strip(parsestrict(line, (13,16), ASCIIString, "could not read atom name", 20)) == "C"
-    @test_throws PDBParseException parsestrict(line_a, (31,38), Float64, "could not read x coordinate", 10)
-    @test_throws PDBParseException parsestrict(line_b, (31,38), Float64, "could not read x coordinate", 10)
-    @test_throws PDBParseException parsestrict(line, (7,11), Bool, "could not read atom serial number", 10)
+    @test_throws PDBParseError parsestrict(line_a, (31,38), Float64, "could not read x coordinate", 10)
+    @test_throws PDBParseError parsestrict(line_b, (31,38), Float64, "could not read x coordinate", 10)
+    @test_throws PDBParseError parsestrict(line, (7,11), Bool, "could not read atom serial number", 10)
 
     # Test parselenient
     line =   "ATOM     40  CB  LEU A   5      22.088  45.547  29.675  1.00 22.23           C  "
@@ -493,11 +486,11 @@ end
     @test tempfac(atom) == 39.15
     @test element(atom) == "O"
     @test charge(atom) == "1-"
-    @test_throws PDBParseException parseatomrecord(line_c)
-    @test_throws PDBParseException parseatomrecord(line_d)
+    @test_throws PDBParseError parseatomrecord(line_c)
+    @test_throws PDBParseError parseatomrecord(line_d)
     @test_throws AssertionError parseatomrecord(line_e)
 
-    # Test parsing 1AKE (multiple chains, disordered atoms) and parsing options
+    # Test parsing 1AKE (multiple chains, disordered atoms)
     struc = read("$test_files/1AKE.pdb", PDB)
     @test structurename(struc) == "1AKE.pdb"
     @test modelnumbers(struc) == [1]
@@ -520,20 +513,81 @@ end
     @test x(struc['A'][167]["CD"]['A']) == 24.502
     @test x(struc['A'][167]["CD"]['B']) == 24.69
 
+    # Test collectatoms and collectresidues
+
+
+    # Test count functions
+
+
+    # Test organise functions
+
+
+    # Test formatomlist
+    atom_a = Atom(false, 103, "N", ' ', "ALA", 'A', 10, ' ', [1.0, 2.0, 3.0], 1.0, 10.0, "N", "")
+    atom_b = Atom(false, 100, "CA", 'A', "ALA", 'A', 10, ' ', [1.0, 2.0, 3.0], 0.4, 10.0, "C", "")
+    atom_c = Atom(false, 102, "C", ' ', "ALA", 'A', 10, ' ', [1.0, 2.0, 3.0], 1.0, 10.0, "C", "")
+    atom_d = Atom(false, 101, "CA", 'B', "ALA", 'A', 10, ' ', [1.0, 2.0, 3.0], 0.6, 10.0, "C", "")
+    atom_list = formatomlist([atom_a, atom_b, atom_c, atom_d])
+    @test length(atom_list) == 3
+    @test isa(atom_list[1], DisorderedAtom)
+    @test isa(atom_list[2], Atom)
+    @test isa(atom_list[3], Atom)
+    @test map(length, atom_list) == [2, 1, 1]
+    @test map(serial, atom_list) == [101, 102, 103]
+    atom_list = formatomlist([atom_a, atom_b, atom_c, atom_d]; remove_disorder=true)
+    @test length(atom_list) == 3
+    @test map(x -> isa(x, Atom), atom_list) == [true, true, true]
+    @test map(length, atom_list) == [1, 1, 1]
+    @test map(serial, atom_list) == [101, 102, 103]
+
+    # Test choosedefaultaltlocid
+    atom_a = Atom(false, 100, "CA", 'A', "ALA", 'A', 10, ' ', [1.0, 2.0, 3.0], 0.4, 10.0, "C", "")
+    atom_b = Atom(false, 101, "CA", 'B', "ALA", 'A', 10, ' ', [1.0, 2.0, 3.0], 0.6, 10.0, "C", "")
+    @test choosedefaultaltlocid(atom_a, atom_b) == 'B'
+    @test choosedefaultaltlocid(atom_b, atom_a) == 'B'
+    atom_a = Atom(false, 100, "CA", 'A', "ALA", 'A', 10, ' ', [1.0, 2.0, 3.0], 0.5, 10.0, "C", "")
+    atom_b = Atom(false, 101, "CA", 'B', "ALA", 'A', 10, ' ', [1.0, 2.0, 3.0], 0.5, 10.0, "C", "")
+    @test choosedefaultaltlocid(atom_a, atom_b) == 'A'
+    @test choosedefaultaltlocid(atom_b, atom_a) == 'A'
+
+
+    # Test parsing options
     struc = read("$test_files/1AKE.pdb", PDB; structure_name="New name")
     @test structurename(struc) == "New name"
+    @test countatoms(struc) == 3804
 
     struc = read("$test_files/1AKE.pdb", PDB; read_het_atoms=false)
+    @test countatoms(struc) == 3312
+    @test serial(collectatoms(struc)[2000]) == 2006
+    @test sum(map(ishetatom, collectatoms(struc))) == 0
+
     struc = read("$test_files/1AKE.pdb", PDB; read_std_atoms=false)
+    @test countatoms(struc) == 492
+    @test serial(collectatoms(struc)[400]) == 3726
+    @test sum(map(ishetatom, collectatoms(struc))) == 492
+
     struc = read("$test_files/1AKE.pdb", PDB; read_het_atoms=false, read_std_atoms=false)
+    @test countatoms(struc) == 0
+    @test countresidues(struc) == 0
+
     struc = read("$test_files/1AKE.pdb", PDB; remove_disorder=true)
+    @test countatoms(struc) == 3804
+    @test sum(map(isdisorderedatom, collectatoms(struc))) == 0
+    @test tempfac(struc['A'][167]["NE"]) == 23.32
+
     struc = read("$test_files/1AKE.pdb", PDB, backboneselector)
+    @test countatoms(struc) == 1284
+    @test countatoms(struc, backboneselector) == 1284
+    @test serial(collectatoms(struc)[1000]) == 2566
+
     struc = read("$test_files/1AKE.pdb", PDB) # Multiple selectors
 
-    # Test parsing from stream
-    open("$test_files/1AKE.pdb", "r") do filename
-        struc = read(filename, PDB)
 
+    # Test parsing from stream
+    open("$test_files/1AKE.pdb", "r") do file
+        struc = read(file, PDB)
+        @test countatoms(struc) == 3804
+        @test countresidues(struc) == 808
     end
 
     # Test parsing 1EN2 (disordered residue)
@@ -543,11 +597,73 @@ end
     # Test parsing 1SSU (multiple models)
     struc = read("$test_files/1SSU.pdb", PDB)
 
+
+    # Test parser error handling
+    # Missing coordinate (blank string)
+    @test_throws PDBParseError read("$test_files/1AKE_err_a.pdb", PDB)
+    # Missing chain ID (line ends early)
+    @test_throws PDBParseError read("$test_files/1AKE_err_b.pdb", PDB)
+    # Bad MODEL record
+    @test_throws PDBParseError read("$test_files/1SSU_err.pdb", PDB)
+    # Duplicate atom names in same residue
+    @test_throws ErrorException read("$test_files/1AKE_err_c.pdb", PDB)
+    # Non-existent file
+    @test_throws SystemError read("$test_files/non_existent_file.pdb", PDB)
 end
 
 
 @testset "Writing" begin
+    # Test spacestring
+    @test spacestring(1.5, 5) == "  1.5"
+    @test spacestring("A", 3) == "  A"
+    @test spacestring('A', 3) == "  A"
+    @test spacestring(1.456789, 5) == "1.456" # Note incorrect rounding
+    @test spacestring("ABCDEF", 3) == "ABC"
 
+
+    # Test spaceatomname
+    @test spaceatomname(Atom(false, 1, "N", ' ', "ALA", 'A', 1, ' ', [0.0, 0.0, 0.0], 1.0, 0.0, "N", "")) == " N  "
+    @test spaceatomname(Atom(false, 1, "N", ' ', "ALA", 'A', 1, ' ', [0.0, 0.0, 0.0], 1.0, 0.0, "", "")) == " N  "
+    @test spaceatomname(Atom(false, 1, "CA", ' ', "ALA", 'A', 1, ' ', [0.0, 0.0, 0.0], 1.0, 0.0, "C", "")) == " CA "
+    @test spaceatomname(Atom(false, 1, "NE1", ' ', "ALA", 'A', 1, ' ', [0.0, 0.0, 0.0], 1.0, 0.0, "N", "")) == " NE1"
+    @test spaceatomname(Atom(false, 1, "2HD1", ' ', "ALA", 'A', 1, ' ', [0.0, 0.0, 0.0], 1.0, 0.0, "H", "")) == "2HD1"
+    @test spaceatomname(Atom(false, 1, "HH11", ' ', "ALA", 'A', 1, ' ', [0.0, 0.0, 0.0], 1.0, 0.0, "H", "")) == "HH11"
+    @test spaceatomname(Atom(false, 1, "1H", ' ', "ALA", 'A', 1, ' ', [0.0, 0.0, 0.0], 1.0, 0.0, "H", "")) == "1H  "
+    @test spaceatomname(Atom(false, 1, "MG", ' ', "ALA", 'A', 1, ' ', [0.0, 0.0, 0.0], 1.0, 0.0, "MG", "")) == "MG  "
+    @test spaceatomname(Atom(false, 1, "MG", ' ', "ALA", 'A', 1, ' ', [0.0, 0.0, 0.0], 1.0, 0.0, "", "")) == " MG "
+    @test_throws AssertionError spaceatomname(Atom(false, 1, "11H", ' ', "ALA", 'A', 1, ' ', [0.0, 0.0, 0.0], 1.0, 0.0, "H", ""))
+    @test_throws AssertionError spaceatomname(Atom(false, 1, "11H11", ' ', "ALA", 'A', 1, ' ', [0.0, 0.0, 0.0], 1.0, 0.0, "H", ""))
+    @test_throws AssertionError spaceatomname(Atom(false, 1, "1MG", ' ', "ALA", 'A', 1, ' ', [0.0, 0.0, 0.0], 1.0, 0.0, "MG", ""))
+
+
+    # Test pdbline
+    # These tests should be changed long term to require the conventional decimal formatting, e.g. 0.50 not 0.5 for occupancy
+    atom = Atom(false, 10, "N", ' ', "ALA", 'A', 1, ' ', [0.0, 0.0, 0.0], 1.0, 0.0, "N", "")
+    @test join(pdbline(atom)) == "ATOM     10  N   ALA A   1         0.0     0.0     0.0   1.0   0.0           N  "
+    atom = Atom(true, 101, "C", 'A', "LEU", 'B', 20, ' ', [10.5, 20.12345, -5.1227], 0.50, 50.126, "C", "1+")
+    line = join(pdbline(atom))
+    @test line == "HETATM  101  C  ALEU B  20        10.5  20.123  -5.123   0.5 50.13           C1+"
+    atom = parseatomrecord(line)
+    @test ishetatom(atom)
+    @test serial(atom) == 101
+    @test atomname(atom) == "C"
+    @test altlocid(atom) == 'A'
+    @test resname(atom) == "LEU"
+    @test chainid(atom) == 'B'
+    @test resnumber(atom) == 20
+    @test inscode(atom) == ' '
+    @test coords(atom) == [10.5, 20.123, -5.123]
+    @test occupancy(atom) == 0.5
+    @test tempfac(atom) == 50.13
+    @test element(atom) == "C"
+    @test charge(atom) == "1+"
+
+
+    # Test writepdb and writepdblines
+    struc = read("$test_files/1SSU.pdb", PDB)
+    temp_filename = tempname()
+    writepdb(temp_filename, struc)
+    rm(temp_filename)
 end
 
 

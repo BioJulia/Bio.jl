@@ -1,5 +1,5 @@
 export PDB,
-    PDBParseException,
+    PDBParseError,
     downloadpdb,
     parseatomrecord,
     spaceatomname,
@@ -16,14 +16,14 @@ immutable PDB <: FileFormat end
 
 
 """Error arising from parsing a PDB file."""
-type PDBParseException <: Exception
+type PDBParseError <: Exception
     message::ASCIIString
     line_number::Int
     line::ASCIIString
 end
 
 
-Base.showerror(io::IO, e::PDBParseException) = println(io, e.message, " at line ", e.line_number, " of file:\n", e.line)
+Base.showerror(io::IO, e::PDBParseError) = println(io, e.message, " at line ", e.line_number, " of file:\n", e.line)
 
 
 """Download a PDB file or biological assembly from the RCSB PDB."""
@@ -61,7 +61,7 @@ function Base.read(input::IO,
             try
                 curr_model = parse(Int, line[11:14])
             catch ArgumentError
-                throw(PDBParseException("Could not read model serial number", line_number, line))
+                throw(PDBParseError("Could not read model serial number", line_number, line))
             end
             # Create model if required
             !haskey(atom_lists, curr_model) ? atom_lists[curr_model] = AbstractAtom[] : nothing
@@ -73,7 +73,7 @@ function Base.read(input::IO,
     # Remove model 1 atom list if it was not added to
     length(atom_lists[1]) == 0 ? delete!(atom_lists, 1) : nothing
     # Form disordered atom containers or remove atoms depending on remove_disorder
-    # Apply selectors at this point so e.g. disorderselector work correctly
+    # Apply selectors at this point (so e.g. disorderselector work correctly)
     # Form structure by organising each atom list into a model
     return organisestructure(
         [organisemodel(applyselectors(formatomlist(atom_list; remove_disorder=remove_disorder), selector_functions...); model_number=model_number) for (model_number, atom_list) in atom_lists]; structure_name=structure_name
@@ -127,7 +127,7 @@ function parsestrict(line::ASCIIString,
     try
         return parsevalue(line, cols, out_type)
     catch
-        throw(PDBParseException(error_message, line_number, line))
+        throw(PDBParseError(error_message, line_number, line))
     end
 end
 
@@ -169,11 +169,10 @@ end
 function spacestring(val_in, new_length::Int)
     string_out = string(val_in)
     if length(string_out) > new_length
-        string_out = string_out[1:new_length]
+        return string_out[1:new_length]
     else
-        string_out = "$(repeat(" ", new_length - length(string_out)))$string_out"
+        return "$(repeat(" ", new_length - length(string_out)))$string_out"
     end
-    return string_out
 end
 
 
@@ -230,7 +229,7 @@ pdbline(atom::Atom) = ASCIIString[
     ]
 
 
-"""Write a `StrucElementOrList` to a PDB format file."""
+"""Write a `StructuralElementOrList` to a PDB format file."""
 function writepdb(output::IO, element::Union{ProteinStructure, Vector{Model}}, selector_functions::Function...)
     # If there are multiple models, write out MODEL/ENDMDL lines
     if length(element) > 1
@@ -245,18 +244,18 @@ function writepdb(output::IO, element::Union{ProteinStructure, Vector{Model}}, s
     end
 end
 
-writepdb(output::IO, element::StrucElementOrList, selector_functions::Function...) = writepdblines(output, element, selector_functions...)
+writepdb(output::IO, element::StructuralElementOrList, selector_functions::Function...) = writepdblines(output, element, selector_functions...)
 
 
-"""Write a `StrucElementOrList` as lines in PDB format."""
-function writepdblines(output::IO, element::StrucElementOrList, selector_functions::Function...)
+"""Write a `StructuralElementOrList` as lines in PDB format."""
+function writepdblines(output::IO, element::StructuralElementOrList, selector_functions::Function...)
     for atom in collectatoms(element, selector_functions...), atom_record in atom
         println(output, pdbline(atom_record)...)
     end
 end
 
 
-function writepdb(filepath::ASCIIString, element::StrucElementOrList, selector_functions::Function...)
+function writepdb(filepath::ASCIIString, element::StructuralElementOrList, selector_functions::Function...)
     open(filepath, "w") do output
         writepdb(output, element, selector_functions...)
     end

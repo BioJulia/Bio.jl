@@ -5,9 +5,9 @@ export coordarray,
 
 
 # Returns a 2D array of coordinates with size (3,n)
-"""Get the atomic coordinates of a `StrucElementOrList` as an array with each
+"""Get the atomic coordinates of a `StructuralElementOrList` as an array with each
 column corresponding to one atom."""
-function coordarray(element::StrucElementOrList, selector_functions::Function...)
+function coordarray(element::StructuralElementOrList, selector_functions::Function...)
     atoms = collectatoms(element, selector_functions...)
     coords = zeros(3, length(atoms))
     for j in eachindex(atoms)
@@ -21,7 +21,7 @@ end
 coordarray(coords::Array{Float64}, selector_functions::Function...) = coords
 
 
-"""Get the root-mean-square deviation (RMSD) between two `StrucElementOrList`s
+"""Get the root-mean-square deviation (RMSD) between two `StructuralElementOrList`s
 or coordinate arrays. Assumes they are aready aligned."""
 function rmsd(coords_one::Array{Float64}, coords_two::Array{Float64})
     @assert size(coords_one) == size(coords_two) "Sizes of coordinate arrays are different - cannot calculate RMSD"
@@ -31,23 +31,23 @@ end
 
 # Repeat assertion here?
 # Backbone by default?
-rmsd(element_one::StrucElementOrList, element_two::StrucElementOrList, selector_functions::Function...) = rmsd(coordarray(element_one, selector_functions...), coordarray(element_two, selector_functions...))
+rmsd(element_one::StructuralElementOrList, element_two::StructuralElementOrList, selector_functions::Function...) = rmsd(coordarray(element_one, selector_functions...), coordarray(element_two, selector_functions...))
 
 
 """Get the displacements between atomic coordinates from two
-`StrucElementOrList`s or coordinate arrays. Assumes they are aready aligned."""
+`StructuralElementOrList`s or coordinate arrays. Assumes they are aready aligned."""
 function displacements(coords_one::Array{Float64}, coords_two::Array{Float64})
     @assert size(coords_one) == size(coords_two) "Sizes of coordinate arrays are different - cannot calculate displacements"
     difference = coords_one - coords_two
     return sqrt(sum(difference .* difference, 1))[:]
 end
 
-displacements(element_one::StrucElementOrList, element_two::StrucElementOrList, selector_functions::Function...) = displacements(coordarray(element_one, selector_functions...), coordarray(element_two, selector_functions...))
+displacements(element_one::StructuralElementOrList, element_two::StructuralElementOrList, selector_functions::Function...) = displacements(coordarray(element_one, selector_functions...), coordarray(element_two, selector_functions...))
 
 
-"""Get the minimum distance between two `StrucElementOrList`s or coordinate
+"""Get the minimum distance between two `StructuralElementOrList`s or coordinate
 arrays."""
-function distance(element_one::StrucElementOrList, element_two::StrucElementOrList, selector_functions::Function...)
+function distance(element_one::StructuralElementOrList, element_two::StructuralElementOrList, selector_functions::Function...)
     coords_one = coordarray(element_one, selector_functions...)
     coords_two = coordarray(element_two, selector_functions...)
     count_one = size(coords_one, 2)
@@ -61,4 +61,4 @@ end
 
 distance(atom_one::AbstractAtom, atom_two::AbstractAtom) = sqrt((x(atom_one) - x(atom_two)) ^ 2 + (y(atom_one) - y(atom_two)) ^ 2 + (z(atom_one) - z(atom_two)) ^ 2)
 
-Base.(:-)(element_one::StrucElementOrList, element_two::StrucElementOrList) = distance(element_one, element_two)
+Base.(:-)(element_one::StructuralElementOrList, element_two::StructuralElementOrList) = distance(element_one, element_two)
