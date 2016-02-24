@@ -51,6 +51,7 @@ export StructuralElement,
     structurename,
     modelnumbers,
     models,
+    defaultmodel,
     sortchainids,
     applyselectors,
     applyselectors!,
@@ -170,7 +171,7 @@ ProteinStructure() = ProteinStructure("")
 
 
 """A protein structural element or list of structural elements."""
-typealias StructuralElementOrList Union{StructuralElement, Vector{AbstractAtom}, Vector{AbstractResidue}, Vector{Chain}, Vector{Model}}
+typealias StructuralElementOrList Union{StructuralElement, Vector{AbstractAtom}, Vector{Atom}, Vector{DisorderedAtom}, Vector{AbstractResidue}, Vector{Residue}, Vector{DisorderedResidue}, Vector{Chain}, Vector{Model}}
 
 
 # Allow accessing sub elements contained in an element like a dictionary
@@ -191,9 +192,9 @@ end
 # Accessing a DisorderedResidue with an ASCIIString returns the AbstractAtom in the default Residue with that atom name
 # This is not necessarily intuitive, it may be expected to return the Residue with that residue name
 # However this way accessing an AbstractResidue always returns an AbstractAtom
-Base.getindex(disordered_res::DisorderedResidue, atom_name::ASCIIString) = disordered_res.names[disordered_res.default][atom_name]
+Base.getindex(disordered_res::DisorderedResidue, atom_name::ASCIIString) = disordered_res.names[defaultresname(disordered_res)][atom_name]
 function Base.setindex!(disordered_res::DisorderedResidue, atom::AbstractAtom, atom_name::ASCIIString)
-    disordered_res.names[disordered_res.default][atom_name] = atom
+    disordered_res.names[defaultresname(disordered_res)][atom_name] = atom
 end
 
 # Accessing a Chain with an ASCIIString returns the AbstractResidue with that residue ID
@@ -220,10 +221,10 @@ function Base.setindex!(struc::ProteinStructure, model::Model, model_number::Int
     struc.models[model_number] = model
 end
 
-# Accessing a ProteinStructure with a Char returns the Chain with that chain ID on model number 1
-Base.getindex(struc::ProteinStructure, chain_id::Char) = struc.models[1][chain_id]
+# Accessing a ProteinStructure with a Char returns the Chain with that chain ID on the default model
+Base.getindex(struc::ProteinStructure, chain_id::Char) = defaultmodel(struc)[chain_id]
 function Base.setindex!(struc::ProteinStructure, chain::Chain, chain_id::Char)
-    struc.models[1][chain_id] = chain
+    defaultmodel(struc)[chain_id] = chain
 end
 
 
@@ -370,12 +371,15 @@ structurename(struc::ProteinStructure) = struc.name
 modelnumbers(struc::ProteinStructure) = sort(collect(keys(struc.models)))
 models(struc::ProteinStructure) = struc.models
 
+defaultmodel(struc::ProteinStructure) = struc.models[modelnumbers(struc)[1]]
+chainids(struc::ProteinStructure) = countmodels(struc) > 0 ? chainids(defaultmodel(struc)) : Char[]
+
 
 # Explicit sorting functions
 
-Base.sort!(atoms::Vector{AbstractAtom}) = sort!(atoms, by=serial)
+Base.sort!{T <: AbstractAtom}(atoms::Vector{T}) = sort!(atoms, by=serial)
 
-function Base.sort(atoms::Vector{AbstractAtom})
+function Base.sort{T <: AbstractAtom}(atoms::Vector{T})
     atoms_copy = copy(atoms)
     sort!(atoms_copy)
     return atoms_copy
@@ -383,13 +387,14 @@ end
 
 
 # Assumes all on same chain
-function Base.sort!(residues::Vector{AbstractResidue})
+function Base.sort!{T <: AbstractResidue}(residues::Vector{T})
     sort!(residues, by=inscode)
     sort!(residues, by=resnumber)
     sort!(residues, by=ishetres)
+    sort!(residues, by=chainid, lt=chainidisless)
 end
 
-function Base.sort(residues::Vector{AbstractResidue})
+function Base.sort{T <: AbstractResidue}(residues::Vector{T})
     residues_copy = copy(residues)
     sort!(residues_copy)
     return residues_copy
@@ -397,10 +402,16 @@ end
 
 
 # Chains are ordered by character sorting except the empty chain ID comes last
-# This does not extend sort as it would clash with conventional Char sorting
-function sortchainids(chain_ids::Vector{Char})
-    sorted_ids = sort(chain_ids)
-    !isempty(sorted_ids) && sorted_ids[1] == ' ' ? [sorted_ids[2:end]; ' '] : sorted_ids
+sortchainids(chain_ids::Vector{Char}) = sort(chain_ids, lt=chainidisless)
+
+function chainidisless(chain_id_one::Char, chain_id_two::Char)
+    if Int(chain_id_one) < Int(chain_id_two) && chain_id_one != ' ' && chain_id_two != ' '
+        return true
+    elseif chain_id_two == ' ' && chain_id_one != ' '
+        return true
+    else
+        return false
+    end
 end
 
 
@@ -462,31 +473,31 @@ Base.eltype(::Type{DisorderedAtom}) = Atom
 
 """Returns a copy of a `Vector{AbstractResidue}` or `Vector{AbstractAtom}` with all elements that do not
 satisfy `selector_functions...` removed."""
-function applyselectors(element_list::Union{Vector{AbstractResidue}, Vector{AbstractAtom}}, selector_functions::Function...)
+function applyselectors{T <: Union{AbstractResidue, AbstractAtom}}(element_list::Vector{T}, selector_functions::Function...)
     new_list = copy(element_list)
     applyselectors!(new_list, selector_functions...)
     return new_list
 end
 
 """Runs `applyselectors` in place."""
-function applyselectors!(element_list::Union{Vector{AbstractResidue}, Vector{AbstractAtom}}, selector_functions::Function...)
+function applyselectors!{T <: Union{AbstractResidue, AbstractAtom}}(element_list::Vector{T}, selector_functions::Function...)
     for selector_function in selector_functions
         filter!(selector_function, element_list)
     end
 end
 
-applyselectors(element_list::Union{Vector{AbstractResidue}, Vector{AbstractAtom}}) = element_list
-applyselectors!(element_list::Union{Vector{AbstractResidue}, Vector{AbstractAtom}}) = element_list
+applyselectors{T <: Union{AbstractResidue, AbstractAtom}}(element_list::Vector{T}) = copy(element_list)
+applyselectors!{T <: Union{AbstractResidue, AbstractAtom}}(element_list::Vector{T}) = element_list
 
 
 """Returns a `Vector{AbstractResidue}` of the residues in an element.
 Only elements that satisfy `selector_functions...` are returned."""
-collectresidues(struc::ProteinStructure, selector_functions::Function...) = countmodels(struc) > 0 ? collectresidues(struc[1], selector_functions...) : AbstractResidue[]
+collectresidues(struc::ProteinStructure, selector_functions::Function...) = countmodels(struc) > 0 ? collectresidues(defaultmodel(struc), selector_functions...) : AbstractResidue[]
 collectresidues(chain::Chain, selector_functions::Function...) = applyselectors(collect(chain), selector_functions...)
 collectresidues(res::AbstractResidue, selector_functions::Function...) = applyselectors(AbstractResidue[res], selector_functions...)
 collectresidues(atom::AbstractAtom, selector_functions::Function...) = applyselectors(organise(atom), selector_functions...)
-collectresidues(residues::Vector{AbstractResidue}, selector_functions::Function...) = applyselectors(residues, selector_functions...)
-collectresidues(atoms::Vector{AbstractAtom}, selector_functions::Function...) = applyselectors(organise(atoms), selector_functions...)
+collectresidues{T <: AbstractResidue}(residues::Vector{T}, selector_functions::Function...) = sort(applyselectors(residues, selector_functions...))
+collectresidues{T <: AbstractAtom}(atoms::Vector{T}, selector_functions::Function...) = applyselectors(organise(atoms), selector_functions...)
 
 function collectresidues(element::Union{Model, Vector{Model}, Vector{Chain}}, selector_functions::Function...)
     residues = AbstractResidue[]
@@ -497,14 +508,15 @@ function collectresidues(element::Union{Model, Vector{Model}, Vector{Chain}}, se
 end
 
 
-"""Return an `Vector{AbstractAtom}` of the atoms in an element.
+"""Return an `Vector{AbstractAtom}` of the atoms in an element, ordered by serial.
 Only elements that satisfy `selector_functions...` are returned."""
-collectatoms(struc::ProteinStructure, selector_functions::Function...) = countmodels(struc) > 0 ? collectatoms(struc[1], selector_functions...) : AbstractAtom[]
+collectatoms(struc::ProteinStructure, selector_functions::Function...) = countmodels(struc) > 0 ? collectatoms(defaultmodel(struc), selector_functions...) : AbstractAtom[]
 collectatoms(res::AbstractResidue, selector_functions::Function...) = applyselectors(collect(res), selector_functions...)
 collectatoms(atom::AbstractAtom, selector_functions::Function...) = applyselectors(AbstractAtom[atom], selector_functions...)
-collectatoms(atoms::Vector{AbstractAtom}, selector_functions::Function...) = applyselectors(atoms, selector_functions...)
+# Note output is always Vector{AbstractAtom} unless input was Vector{Atom} or Vector{DisorderedAtom}, in which case output is same type as input type
+collectatoms{T <: AbstractAtom}(atoms::Vector{T}, selector_functions::Function...) = sort(applyselectors(atoms, selector_functions...))
 
-function collectatoms(element::Union{Model, Chain, Vector{Model}, Vector{Chain}, Vector{AbstractResidue}}, selector_functions::Function...)
+function collectatoms(element::Union{Model, Chain, Vector{Model}, Vector{Chain}, Vector{AbstractResidue}, Vector{Residue}, Vector{DisorderedResidue}}, selector_functions::Function...)
     atoms = AbstractAtom[]
     for sub_element in element
         append!(atoms, collectatoms(sub_element, selector_functions...))
@@ -514,7 +526,7 @@ end
 
 
 countmodels(struc::ProteinStructure) = length(struc)
-countchains(struc::ProteinStructure) = countmodels(struc) > 0 ? length(struc[1]) : 0
+countchains(struc::ProteinStructure) = countmodels(struc) > 0 ? length(defaultmodel(struc)) : 0
 countchains(model::Model) = length(model)
 countresidues(element::StructuralElementOrList, selector_functions::Function...) = length(collectresidues(element, selector_functions...))
 countatoms(element::StructuralElementOrList, selector_functions::Function...) = length(collectatoms(element, selector_functions...))
@@ -546,7 +558,7 @@ end
 
 
 # Organise a Vector{AbstractResidue} into a Vector{Chain}
-function organise(residues::Vector{AbstractResidue})
+function organise{T <: AbstractResidue}(residues::Vector{T})
     chains = Dict{Char, Dict{ASCIIString, AbstractResidue}}()
     for res in residues
         chain_id = chainid(res)
@@ -560,7 +572,7 @@ end
 
 
 # Organise a Vector{AbstractAtom} into a Vector{AbstractResidue}
-function organise(atoms::Vector{AbstractAtom})
+function organise{T <: AbstractAtom}(atoms::Vector{T})
     # Key is chain ID, value is Dict where key is residue ID and value is list of atoms
     residues = Dict{Char, Dict{ASCIIString, Vector{AbstractAtom}}}()
     # Key is chain ID, value is Dict where key is residue ID, value is Dict where key is residue name and value is list of atoms
@@ -612,7 +624,7 @@ function organise(atoms::Vector{AbstractAtom})
     for chain_id in sortchainids(collect(keys(residues)))
         residues_unord = AbstractResidue[]
         for res_id in keys(residues[chain_id])
-            atoms= sort(residues[chain_id][res_id])
+            atoms= sort(residues[chain_id][res_id]) # atoms should be renamed to not clash with method argument
             push!(residues_unord, Residue(
                 resname(atoms[1]),
                 chainid(atoms[1]),
@@ -682,7 +694,7 @@ function formatomlist(atoms::Vector{Atom}; remove_disorder::Bool=false)
                 ), choosedefaultaltlocid(atom, atom_dic[atom_id]))
             end
         else
-            error("Two copies of the same atom have the same alternative location ID (note names are stripped of whitespace so identical names with different spacing, e.g. ' CA ' and 'CA  ', are not currently supported):\n$(atom_dic[atom_id])\n$(atom)")
+            error("Two copies of the same atom have the same alternative location ID:\n$(atom_dic[atom_id])\n$(atom)\nformatomlist cannot be used on atom lists containing multiple models. In addition names are stripped of whitespace so identical names with different spacing, e.g. ' CA ' and 'CA  ', are not currently supported.")
         end
     end
     return sort(collect(values(atom_dic)), by=serial) # Is by serial redundant?
@@ -707,8 +719,8 @@ end
 # These can possibly be put as a Union
 """Organise elements into a `Model`."""
 organisemodel(chains::Vector{Chain}; model_number::Int=1) = organise(chains; model_number=model_number)
-organisemodel(residues::Vector{AbstractResidue}; model_number::Int=1) = organise(organise(residues); model_number=model_number)
-organisemodel(atoms::Vector{AbstractAtom}; model_number::Int=1) = organise(organise(organise(atoms)); model_number=model_number)
+organisemodel{T <: AbstractResidue}(residues::Vector{T}; model_number::Int=1) = organise(organise(residues); model_number=model_number)
+organisemodel{T <: AbstractAtom}(atoms::Vector{T}; model_number::Int=1) = organise(organise(organise(atoms)); model_number=model_number)
 organisemodel(chain::Chain; model_number::Int=1) = organisemodel([chain]; model_number=model_number)
 organisemodel(res::AbstractResidue; model_number::Int=1) = organisemodel(AbstractResidue[res]; model_number=model_number)
 organisemodel(atom::AbstractAtom; model_number::Int=1) = organisemodel(AbstractAtom[atom]; model_number=model_number)
@@ -717,8 +729,8 @@ organisemodel(atom::AbstractAtom; model_number::Int=1) = organisemodel(AbstractA
 """Organise elements into a `ProteinStructure`."""
 organisestructure(models::Vector{Model}; structure_name::ASCIIString="") = organise(models; structure_name=structure_name)
 organisestructure(chains::Vector{Chain}; structure_name::ASCIIString="", model_number::Int=1) = organise(organisemodel(chains; model_number=model_number); structure_name=structure_name)
-organisestructure(residues::Vector{AbstractResidue}; structure_name::ASCIIString="", model_number::Int=1) = organise(organisemodel(residues; model_number=model_number); structure_name=structure_name)
-organisestructure(atoms::Vector{AbstractAtom}; structure_name::ASCIIString="", model_number::Int=1) = organise(organisemodel(atoms; model_number=model_number); structure_name=structure_name)
+organisestructure{T <: AbstractResidue}(residues::Vector{T}; structure_name::ASCIIString="", model_number::Int=1) = organise(organisemodel(residues; model_number=model_number); structure_name=structure_name)
+organisestructure{T <: AbstractAtom}(atoms::Vector{T}; structure_name::ASCIIString="", model_number::Int=1) = organise(organisemodel(atoms; model_number=model_number); structure_name=structure_name)
 organisestructure(model::Model; structure_name::ASCIIString="") = organisestructure([model]; structure_name=structure_name)
 organisestructure(chain::Chain; structure_name::ASCIIString="", model_number::Int=1) = organisestructure([chain]; structure_name=structure_name, model_number=model_number)
 organisestructure(res::AbstractResidue; structure_name::ASCIIString="", model_number::Int=1) = organisestructure(AbstractResidue[res]; structure_name=structure_name, model_number=model_number)
@@ -798,7 +810,7 @@ hydrogenselector(atom::AbstractAtom) = element(atom) == "H" || (element(atom) ==
 
 function Base.show(io::IO, struc::ProteinStructure)
     if countmodels(struc) > 0
-        model = struc[1]
+        model = defaultmodel(struc)
         println(io, "Name                        -  ", structurename(struc))
         println(io, "Number of models            -  ", countmodels(struc))
         println(io, "Chain(s)                    -  ", join(chainids(model)))
