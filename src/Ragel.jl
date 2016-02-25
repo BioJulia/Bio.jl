@@ -254,7 +254,7 @@ end
 # Open functions for various sources
 # ----------------------------------
 
-function open{T <: FileFormat}(filename::AbstractString, ::Type{T}; args...)
+function Base.open{T <: FileFormat}(filename::AbstractString, ::Type{T}; args...)
     memory_map = false
     i = 0
     for arg in args
@@ -279,7 +279,7 @@ function open{T <: FileFormat}(filename::AbstractString, ::Type{T}; args...)
 end
 
 
-function open{T <: FileFormat}(source::Union{IO, Vector{UInt8}}, ::Type{T}; args...)
+function Base.open{T <: FileFormat}(source::Union{IO, Vector{UInt8}}, ::Type{T}; args...)
     open(BufferedInputStream(source), T; args...)
 end
 
@@ -287,7 +287,7 @@ end
 # Iterators for parsers
 # ---------------------
 
-function start{PT <: AbstractParser}(parser::PT)
+function Base.start{PT <: AbstractParser}(parser::PT)
     ET = eltype(PT)
     nextitem = ET()
     if read!(parser, nextitem)
@@ -298,7 +298,7 @@ function start{PT <: AbstractParser}(parser::PT)
 end
 
 
-function next{ET}(parser::AbstractParser, nextitem_::Nullable{ET})
+function Base.next{ET}(parser::AbstractParser, nextitem_::Nullable{ET})
     nextitem = get(nextitem_)
     value = copy(nextitem)
     return (value,
@@ -306,7 +306,7 @@ function next{ET}(parser::AbstractParser, nextitem_::Nullable{ET})
 end
 
 
-function done(parser::AbstractParser, nextitem::Nullable)
+function Base.done(parser::AbstractParser, nextitem::Nullable)
     return isnull(nextitem)
 end
 

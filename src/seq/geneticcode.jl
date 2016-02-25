@@ -11,23 +11,23 @@ end
 # Basic Functions
 # ---------------
 
-@inline getindex(code::GeneticCode, idx::RNAKmer{3}) = code.tbl[convert(UInt64, idx) + 1]
-setindex!(code::GeneticCode, aa::AminoAcid, idx::RNAKmer{3}) = (code.tbl[convert(UInt64, idx) + 1] = aa)
-copy(code::GeneticCode) = GeneticCode(copy(code.tbl))
-length(code::GeneticCode) = 64
+@inline Base.getindex(code::GeneticCode, idx::RNAKmer{3}) = code.tbl[convert(UInt64, idx) + 1]
+Base.setindex!(code::GeneticCode, aa::AminoAcid, idx::RNAKmer{3}) = (code.tbl[convert(UInt64, idx) + 1] = aa)
+Base.copy(code::GeneticCode) = GeneticCode(copy(code.tbl))
+Base.length(code::GeneticCode) = 64
 
 
 # Iterating through genetic code
 # ------------------------------
 
-start(code::GeneticCode) = UInt64(0)
+Base.start(code::GeneticCode) = UInt64(0)
 
-function next(code::GeneticCode, x::UInt64)
+function Base.next(code::GeneticCode, x::UInt64)
     c = convert(Codon, x)
     return ((c, code[c]), (x + 1))
 end
 
-done(code::GeneticCode, x::UInt64) = (x > UInt64(0b111111))
+Base.done(code::GeneticCode, x::UInt64) = (x > UInt64(0b111111))
 
 
 # Default genetic codes
@@ -212,7 +212,8 @@ Convert an `RNASequence` to an `AminoAcidSequence`.
 ### Returns
 A translated `AminoAcidSequence`
 """
-function translate(seq::RNASequence, code::GeneticCode=standard_genetic_code,
+function translate(seq::RNASequence,
+                   code::GeneticCode=standard_genetic_code,
                    allow_ambiguous_codons::Bool=false)
     aaseqlen, r = divrem(length(seq), 3)
     if r != 0
@@ -224,7 +225,6 @@ function translate(seq::RNASequence, code::GeneticCode=standard_genetic_code,
 
     for i in npositions(seq)
         d, r = divrem(i - 1, 3)
-
         if r != 2
             if allow_ambiguous_codons
                 aaseq[d + 1] = AA_X
@@ -241,6 +241,7 @@ function translate(seq::RNASequence, code::GeneticCode=standard_genetic_code,
             aaseq[d + 1] = aa
         end
     end
+
     @inbounds for (i, codon) in each(RNAKmer{3}, seq, 3)
         aa = code[codon]
         if aa == AA_INVALID
@@ -250,5 +251,5 @@ function translate(seq::RNASequence, code::GeneticCode=standard_genetic_code,
         aaseq[j] = code[codon]
     end
 
-    return AminoAcidSequence(aaseq, 1:aaseqlen, false, false)
+    return AminoAcidSequence(aaseq)
 end

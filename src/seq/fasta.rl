@@ -1,5 +1,3 @@
-
-
 # FASTA sequence types
 
 immutable FASTA <: FileFormat end
@@ -16,12 +14,12 @@ function FASTAMetadata()
 end
 
 
-function (==)(a::FASTAMetadata, b::FASTAMetadata)
+function Base.(:(==))(a::FASTAMetadata, b::FASTAMetadata)
     return a.description == b.description
 end
 
 
-function copy(metadata::FASTAMetadata)
+function Base.copy(metadata::FASTAMetadata)
     return FASTAMetadata(copy(metadata.description))
 end
 
@@ -38,10 +36,14 @@ typealias FASTARNASeqRecord       RNASeqRecord{FASTAMetadata}
 "A `SeqRecord` type for FASTA amino acid sequences"
 typealias FASTAAminoAcidSeqRecord AminoAcidSeqRecord{FASTAMetadata}
 
-
-function show{S}(io::IO, seqrec::SeqRecord{S, FASTAMetadata})
+function Base.show{S}(io::IO, seqrec::SeqRecord{S, FASTAMetadata})
     write(io, ">", seqrec.name, " ", seqrec.metadata.description, "\n")
     show(io, seqrec.seq)
+end
+
+function Base.print{S}(io::IO, seqrec::SeqRecord{S,FASTAMetadata})
+    write(io, ">", seqrec.name, " ", seqrec.metadata.description, "\n")
+    print(io, seqrec.seq)
 end
 
 
@@ -71,8 +73,7 @@ end
 
     action finish_match {
         if seqtype(typeof(output)) == Sequence
-            alphabet = infer_alphabet(input.seqbuf.buffer, 1,
-                                       length(input.seqbuf), input.default_alphabet)
+            alphabet = predict(input.seqbuf.buffer, 1, length(input.seqbuf))
             ET = alphabet_type[alphabet]
             if ET == typeof(output.seq)
                 copy!(output.seq, input.seqbuf.buffer, 1, length(input.seqbuf))
@@ -80,10 +81,10 @@ end
                 output.seq = ET(input.seqbuf.buffer, 1, length(input.seqbuf),
                                 mutable=true)
             end
-            input.default_alphabet = alphabet
         else
             copy!(output.seq, input.seqbuf.buffer, 1, length(input.seqbuf))
         end
+        #immutable!(output.seq)
         empty!(input.seqbuf)
         yield = true;
         fbreak;
@@ -116,22 +117,21 @@ end
 type FASTAParser <: AbstractParser
     state::Ragel.State
     seqbuf::BufferedOutputStream{BufferedStreams.EmptyStreamSource}
-    default_alphabet::Alphabet
 
     function FASTAParser(input::BufferedInputStream)
         %% write init;
 
-        return new(Ragel.State(cs, input), BufferedOutputStream(), DNA_ALPHABET)
+        return new(Ragel.State(cs, input), BufferedOutputStream())
     end
 end
 
 
-function eltype(::Type{FASTAParser})
+function Base.eltype(::Type{FASTAParser})
     return FASTASeqRecord
 end
 
 
-function open(input::BufferedInputStream, ::Type{FASTA})
+function Base.open(input::BufferedInputStream, ::Type{FASTA})
     return FASTAParser(input)
 end
 

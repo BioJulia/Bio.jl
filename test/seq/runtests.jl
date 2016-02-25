@@ -467,20 +467,8 @@ end
                 end
 
                 @testset "Iteration through DNA Sequence" begin
-                    @test start(dna"ACNTG") == (1,3)
-                    @test start(dna"")      == (1,1)
-
-                    @test next(dna"ACTGN", (2,5)) == (DNA_C, (3,5))
-                    @test next(dna"ACTGN", (5,5)) == (DNA_N, (6,6))
-
-                    @test  done(dna"", (1,1))
-                    @test !done(dna"ACTGN", (2,5))
-                    @test !done(dna"ACTGN", (5,5))
-                    @test  done(dna"ACTGN", (6,5))
-                    @test !done(dna"ACTGN", (0,5))
-
                     dna_vector = [DNA_A, DNA_C, DNA_T, DNA_G]
-                    @test all(Bool[nucleotide == dna_vector[i] for (i, nucleotide) in enumerate(dna_seq)])
+                    @test all([nucleotide == dna_vector[i] for (i, nucleotide) in enumerate(dna_seq)])
                 end
 
                 @testset "Access RNA Sequence" begin
@@ -494,22 +482,8 @@ end
                 end
 
                 @testset "Iteration through RNA Sequence" begin
-                    @test start(rna"ACNUG") == (1,3)
-                    @test start(rna"")      == (1,1)
-
-                    @test next(rna"ACUGN", (2,5)) == (RNA_C, (3,5))
-                    @test next(rna"ACUGN", (5,5)) == (RNA_N, (6,6))
-
-                    @test  done(rna"", (1,1))
-                    @test !done(rna"ACUGN", (2,5))
-                    @test !done(rna"ACUGN", (5,5))
-                    @test  done(rna"ACUGN", (6,5))
-                    @test !done(rna"ACUGN", (0,5))
-
-                    # Iteration through RNA Sequence
-
                     rna_vector = [RNA_A, RNA_C, RNA_U, RNA_G]
-                    @test all(Bool[nucleotide == rna_vector[i] for (i, nucleotide) in enumerate(rna_seq)])
+                    @test all([nucleotide == rna_vector[i] for (i, nucleotide) in enumerate(rna_seq)])
                 end
 
                 @testset "Indexing with Ranges" begin
@@ -633,7 +607,7 @@ end
             end
         end
 
-        @testset "SequenceNIterator" begin
+        @testset "npositions" begin
             function check_ns(T, seq)
                 expected = Int[]
                 for i in 1:length(seq)
@@ -653,12 +627,6 @@ end
 
             dna_seq   = dna"ANANANA"
             dna_niter = npositions(dna_seq)
-            @test start(dna_niter) == 2
-            @test next(dna_niter, 2) == (2,4)
-            @test !done(dna_niter, 6)
-            @test  done(dna_niter, 8)
-
-
             ns = [2,4,6]
             for (i, n) in enumerate(dna_niter)
                 @test n == ns[i]
@@ -666,11 +634,6 @@ end
 
             rna_seq   = rna"ANANANA"
             rna_niter = npositions(rna_seq)
-            @test start(rna_niter) == 2
-            @test next(rna_niter, 2) == (2,4)
-            @test !done(rna_niter, 6)
-            @test  done(rna_niter, 8)
-
             ns = [2,4,6]
             for (i, n) in enumerate(rna_niter)
                 @test n == ns[i]
@@ -707,7 +670,7 @@ end
 
                 # Check that kmers can be constructed from a NucleotideSequence
                 #   NucleotideSequence → Kmer → NucleotideSequence
-                function check_nucsequence_construction(seq::NucleotideSequence)
+                function check_nucsequence_construction(seq::BioSequence)
                     return convert(NucleotideSequence, convert(Kmer, seq)) == seq
                 end
 

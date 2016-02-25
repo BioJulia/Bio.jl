@@ -21,12 +21,12 @@ end
 end
 
 
-function (==)(a::FASTQMetadata, b::FASTQMetadata)
+function Base.(:(==))(a::FASTQMetadata, b::FASTQMetadata)
 	return a.description == b.description && a.quality == b.quality
 end
 
 
-function copy(metadata::FASTQMetadata)
+function Base.copy(metadata::FASTQMetadata)
 	return FASTQMetadata(copy(metadata.description), copy(metadata.quality))
 end
 
@@ -44,7 +44,7 @@ end
 """
 Show a `FASTQSeqRecord` to `io`, with graphical display of quality scores.
 """
-function show(io::IO, seqrec::FASTQSeqRecord)
+function Base.show(io::IO, seqrec::FASTQSeqRecord)
 	write(io, "@", seqrec.name, " ", seqrec.metadata.description, "\n")
 	for c in seqrec.seq
 	show(io, c)
@@ -77,8 +77,8 @@ end
 """
 Write a `FASTQSeqRecord` to `io`, as a valid FASTQ record.
 """
-function write(io::IO, seqrec::FASTQSeqRecord; offset::Integer=-1,
-	qualheader::Bool=false)
+function Base.write(io::IO, seqrec::FASTQSeqRecord;
+	offset::Integer=-1, qualheader::Bool=false)
 
 	# choose offset automatically
 	if 	offset < 0
@@ -147,12 +147,12 @@ end
 end
 
 
-function eltype(::Type{FASTQParser})
+function Base.eltype(::Type{FASTQParser})
 return FASTQSeqRecord
 end
 
 
-function open(input::BufferedInputStream, ::Type{FASTQ};
+function Base.open(input::BufferedInputStream, ::Type{FASTQ};
 quality_encodings::QualityEncoding=EMPTY_QUAL_ENCODING)
 return FASTQParser(input, quality_encodings)
 end

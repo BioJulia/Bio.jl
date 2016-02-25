@@ -2,8 +2,8 @@
 # ================
 
 # Iterate through every k-mer in a nucleotide sequence
-immutable EachKmerIterator{T, K}
-    seq::NucleotideSequence{T}
+immutable EachKmerIterator{T,K,S}
+    seq::S
     step::Int
 end
 
@@ -30,88 +30,81 @@ A EachKmerIterator constructed with these parameters
         @show pos, codon
     end
 """
-function each{T, K}(t::Type{Kmer{T, K}}, seq::NucleotideSequence{T}, step::Integer=1)
-    @assert K >= 0 "K must be ≥ 0 in EachKmer"
-    @assert K <= 32 "K must be ≤ 32 in EachKmer"
-    @assert step >= 1 "step must be ≥ 1"
-
-    return EachKmerIterator{T, K}(seq, step)
+function each{T,K,A<:Union{DNAAlphabet,RNAAlphabet}}(t::Type{Kmer{T,K}}, seq::BioSequence{A}, step::Integer=1)
+    @assert K ≥ 0 "K must be ≥ 0 in EachKmer"
+    @assert K ≤ 32 "K must be ≤ 32 in EachKmer"
+    @assert step ≥ 1 "step must be ≥ 1"
+    return EachKmerIterator{T,K,BioSequence{A}}(seq, step)
 end
 
-function eachkmer{T}(seq::NucleotideSequence{T}, K::Integer, step::Integer=1)
-    return each(Kmer{T, Int(K)}, seq, step)
+eachkmer{A<:DNAAlphabet}(seq::BioSequence{A}, K::Integer, step::Integer=1) = each(DNAKmer{Int(K)}, seq, step)
+eachkmer{A<:RNAAlphabet}(seq::BioSequence{A}, K::Integer, step::Integer=1) = each(RNAKmer{Int(K)}, seq, step)
+
+@inline function Base.start{T,K}(it::EachKmerIterator{T,K})
+    nextn = find_next_ambiguous(it.seq, it.seq.part.start)
+    pair = Nullable{Tuple{Int,Kmer{T,K}}}()
+    pair, nextn = nextkmer(Kmer{T,K}, it.seq, 1, it.step, nextn, pair)
+    return pair, nextn
 end
 
-@inline function start{T,K}(it::EachKmerIterator{T,K})
-    nextn = findnext(it.seq.ns, it.seq.part.start)
-    kmer = Nullable{Tuple{Int,Kmer{T,K}}}()
-    kmer, i, nextn = nextkmer(Kmer{T,K}, it.seq, 1, it.step, nextn, kmer)
-    return kmer, i, nextn
-end
-
-@inline function done{T,K}(it::EachKmerIterator{T,K}, state)
+@inline function Base.done{T,K}(::EachKmerIterator{T,K}, state)
     return isnull(state[1])
 end
 
-@inline function next{T,K}(it::EachKmerIterator{T,K}, state)
-    kmer, i, nextn = state
-    return get(kmer), nextkmer(Kmer{T,K}, it.seq, i, it.step, nextn, kmer)
+@inline function Base.next{T,K}(it::EachKmerIterator{T,K}, state)
+    pair, nextn = state
+    from, kmer = get(pair)
+    return (from, kmer), nextkmer(Kmer{T,K}, it.seq, from + it.step, it.step, nextn, pair)
 end
 
 @inline function nextkmer{T,K}(::Type{Kmer{T,K}}, seq, i, step, nextn, kmer)
-    # find a position from which we can extract
-    # at least K unambiguous nucleotides
-    offset = i + seq.part.start - 1
-    start = offset
-    while nextn > 0 && nextn - offset < K
-        i = (nextn + 1) - seq.part.start + 1
-        # align
-        r = rem(i - 1, step)
+    # find a position from which we can extract at least K unambiguous nucleotides
+    from = i
+    while nextn > 0 && nextn - from < K
+        from = nextn + 1
+        # align `from` since it must be a multiple of `step`
+        r = rem(from - 1, step)
         if r > 0
-            i += step - r
+            from += step - r
         end
-        offset = i + seq.part.start - 1
-        nextn = findnext(seq.ns, offset)
+        nextn = find_next_ambiguous(seq, from)
     end
-    if seq.part.stop - offset + 1 < K
-        # no kmer
-        return Nullable{Tuple{Int,Kmer{T,K}}}(), i, nextn
-    end
-
-    newkmer = extract_kmer(Kmer{T,K}, seq, offset, kmer)
-
-    # prepare for the next iteration
-    if nextn > 0 && nextn < offset + step
-        nextn = findnext(seq.ns, offset + step)
+    if endof(seq) - from + 1 < K
+        # no available kmer
+        return Nullable{Tuple{Int,Kmer{T,K}}}(), nextn
     end
 
-    return Nullable((i, newkmer)), i + step, nextn
+    newkmer = extract_kmer(Kmer{T,K}, seq, from, kmer)
+
+    # update `nextn` for the next iteration if needed
+    if nextn > 0 && nextn < from + step
+        nextn = find_next_ambiguous(seq, from)
+    end
+
+    return Nullable((from, newkmer)), nextn
 end
 
-@inline function extract_kmer{K,T}(::Type{Kmer{T,K}}, seq, from, kmer)
-    if isnull(kmer) || get(kmer)[1] + K - 1 < from
-        # the current kmer doesn't overlap the next kmer
+@inline function extract_kmer{K,T}(::Type{Kmer{T,K}}, seq, from, pair)
+    if isnull(pair) || get(pair)[1] + K - 1 < from
+        # the last kmer doesn't overlap the extracting one
         x = UInt64(0)
         for k in 1:K
-            nt = getnuc(T, seq.data, from + k - 1)
+            nt = unsafe_getindex(seq, from + k - 1)
             x = x << 2 | UInt8(nt)
         end
     else
-        tmp = get(kmer)
-        x = let pos = tmp[1], kmer = tmp[2]
-            # |<-K->|
-            # -------
-            #     -------
-            # ^   ^
-            # pos from
-            n = from - pos
-            from += K - n
-            x = UInt64(kmer)
-            for k in 1:n
-                nt = getnuc(T, seq.data, from + k - 1)
-                x = x << 2 | UInt8(nt)
-            end
-            x
+        pos, kmer = get(pair)
+        # |<-K->|
+        # -------
+        #     -------
+        # ^   ^
+        # pos from
+        n = from - pos
+        from += K - n
+        x = UInt64(kmer)
+        for k in 1:n
+            nt = unsafe_getindex(seq, from + k - 1)
+            x = x << 2 | UInt8(nt)
         end
     end
     return Kmer{T,K}(x)

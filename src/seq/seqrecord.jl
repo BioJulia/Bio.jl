@@ -1,4 +1,3 @@
-
 # A sequence record is a named sequence with attached metadata.
 """
 `SeqRecord{S, T}` is a type holding a named sequence of type `S`, along with
@@ -26,22 +25,22 @@ end
 
 # Degelgate sequence operations
 "Return a `SeqRecord` holding just the nucleotide at position `i`"
-function getindex(seqrec::SeqRecord, i::Integer)
+function Base.getindex(seqrec::SeqRecord, i::Integer)
     return SeqRecord(seqreq.name, seqrec.seq[i], seqreq.metadata)
 end
 
 "Return a `SeqRecord` holding the specified subsequence"
-function getindex(seqrec::SeqRecord, r::UnitRange)
+function Base.getindex(seqrec::SeqRecord, r::UnitRange)
     return SeqRecord(seqrec.name, seqrec.seq[r], seqrec.metadata)
 end
 
 
-function (==){T <: SeqRecord}(a::T, b::T)
+function Base.(:(==)){T <: SeqRecord}(a::T, b::T)
     return a.name == b.name && a.seq == b.seq && a.metadata == b.metadata
 end
 
 
-function copy{T <: SeqRecord}(seqrec::T)
+function Base.copy{T <: SeqRecord}(seqrec::T)
     return T(copy(seqrec.name), copy(seqrec.seq), copy(seqrec.metadata))
 end
 
