@@ -1,6 +1,7 @@
 module Seq
 
-export Nucleotide,
+export
+    Nucleotide,
     DNANucleotide,
     RNANucleotide,
     DNA_A,
@@ -14,11 +15,14 @@ export Nucleotide,
     RNA_U,
     RNA_N,
     Sequence,
-    NucleotideSequence,
+    BioSequence,
     DNASequence,
     RNASequence,
+    AminoAcidSequence,
+    NucleotideSequence,
     @dna_str,
     @rna_str,
+    @aa_str,
     alphabet,
     ismutable,
     mutable!,
@@ -27,7 +31,6 @@ export Nucleotide,
     mismatches,
     npositions,
     hasn,
-    eachsubseq,
     canonical,
     neighbors,
     eachkmer,
@@ -42,12 +45,9 @@ export Nucleotide,
     KmerCounts,
     DNAKmerCounts,
     RNAKmerCounts,
-    AminoAcid,
-    AminoAcidSequence,
-    @aa_str,
     translate,
     ncbi_trans_table,
-    alphabet,
+    AminoAcid,
     AA_A,
     AA_R,
     AA_N,
@@ -87,39 +87,6 @@ using Bio:
     FileFormat,
     AbstractParser
 
-import Base:
-    convert,
-    complement,
-    show,
-    length,
-    sub,
-    start,
-    next,
-    done,
-    copy,
-    copy!,
-    reverse,
-    show,
-    endof,
-    isless,
-    clipboard,
-    parse,
-    repeat,
-    unsafe_copy!,
-    read,
-    read!,
-    write,
-    open,
-    eltype,
-    getindex,
-    setindex!,
-    hash,
-    ==,
-    *,
-    ^,
-    |,
-    &
-
 
 abstract Sequence
 
@@ -131,19 +98,40 @@ function Sequence()
 end
 
 include("nucleotide.jl")
+include("aminoacid.jl")
+include("alphabet.jl")
+include("bioseq.jl")
 include("kmer.jl")
 include("eachkmer.jl")
 include("kmercounts.jl")
-include("aminoacid.jl")
+include("composition.jl")
 include("geneticcode.jl")
 include("util.jl")
-include("alphabet.jl")
 include("quality.jl")
 include("seqrecord.jl")
 
 # Parsing file types
+include("naivebayes.jl")
 include("fasta.jl")
 include("fastq.jl")
+
+# DEPRECATED: defined just for compatibility
+type NucleotideSequence{T<:Nucleotide} end
+
+Base.call(::Type{NucleotideSequence{DNANucleotide}}) = DNASequence()
+Base.call(::Type{NucleotideSequence{RNANucleotide}}) = RNASequence()
+Base.call(::Type{NucleotideSequence}, ::Type{DNANucleotide}) = DNASequence()
+Base.call(::Type{NucleotideSequence}, ::Type{RNANucleotide}) = RNASequence()
+Base.call(::Type{NucleotideSequence{DNANucleotide}}, seq::Union{AbstractVector{DNANucleotide},AbstractString}) = DNASequence(seq)
+Base.call(::Type{NucleotideSequence{RNANucleotide}}, seq::Union{AbstractVector{RNANucleotide},AbstractString}) = RNASequence(seq)
+
+Base.convert(::Type{NucleotideSequence}, seq::DNAKmer) = DNASequence(seq)
+Base.convert(::Type{NucleotideSequence}, seq::RNAKmer) = RNASequence(seq)
+Base.convert(::Type{NucleotideSequence{DNANucleotide}}, seq::Union{AbstractVector{DNANucleotide},AbstractString,DNAKmer}) = DNASequence(seq)
+Base.convert(::Type{NucleotideSequence{RNANucleotide}}, seq::Union{AbstractVector{RNANucleotide},AbstractString,RNAKmer}) = RNASequence(seq)
+
+# DEPRECATED
+NucleotideCounts(seq) = Composition(seq)
 
 
 end # module Seq

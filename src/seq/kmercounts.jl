@@ -11,30 +11,30 @@ not recommended for large k-mer sizes.
   * 'seq`: A NucleotideSequence
   * `step`: K-mers counted are separated by this many nucleotides (deafult: 1)
 """
-immutable KmerCounts{T, K}
+immutable KmerCounts{T,K}
     data::Vector{UInt32}
 
-    function KmerCounts(seq::NucleotideSequence{T}, step::Integer=1)
+    function KmerCounts{A<:Union{DNAAlphabet,RNAAlphabet}}(seq::BioSequence{A}, step::Integer=1)
         data = zeros(UInt32, 4^K)
-        @inbounds for (_, x) in each(Kmer{T, K}, seq, step)
+        @inbounds for (_, x) in each(Kmer{eltype(A),K}, seq, step)
             data[convert(UInt64, x) + 1] += 1
         end
         return new(data)
     end
 end
 
-typealias DNAKmerCounts{K} KmerCounts{DNANucleotide, K}
-typealias RNAKmerCounts{K} KmerCounts{DNANucleotide, K}
+typealias DNAKmerCounts{K} KmerCounts{DNANucleotide,K}
+typealias RNAKmerCounts{K} KmerCounts{DNANucleotide,K}
 
-function getindex{T, K}(counts::KmerCounts{T, K}, x::Kmer{T, K})
+function Base.getindex{T,K}(counts::KmerCounts{T,K}, x::Kmer{T,K})
     @inbounds c = counts.data[convert(UInt64, x) + 1]
     return c
 end
 
-function show{T, K}(io::IO, counts::KmerCounts{T, K})
+function Base.show{T,K}(io::IO, counts::KmerCounts{T,K})
     println(io, (T == DNANucleotide ? "DNA" : "RNA"), "KmerCounts{", K, "}:")
     for x in UInt64(1):UInt64(4^K)
-        s = convert(AbstractString, convert(Kmer{T, K}, x - 1))
+        s = ASCIIString(Kmer{T,K}(x - 1))
         println(io, "  ", s, " => ", counts.data[x])
     end
 end
