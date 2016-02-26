@@ -131,6 +131,8 @@ immutable Residue <: AbstractResidue
 end
 
 Residue(name::ASCIIString, chain_id::Char, number::Int, ins_code::Char, het_res::Bool) = Residue(name, chain_id, number, ins_code, het_res, [], Dict())
+# Constructor from a list of atoms
+Residue{T <: AbstractAtom}(atoms::Vector{T}) = Residue(resname(atoms[1]), chainid(atoms[1]), resnumber(atoms[1]), inscode(atoms[1]), ishetero(atoms[1]), map(atomname, sort(atoms)), [atomname(atom) => atom for atom in atoms])
 
 """A container to hold different versions of the same residue
 (point mutations)."""
@@ -176,6 +178,7 @@ typealias StructuralElementOrList Union{StructuralElement, Vector{AbstractAtom},
 
 # Allow accessing sub elements contained in an element like a dictionary
 # e.g. allows you to do res[atom_name] rather than res.atoms[atom_name]
+# setindex! should be used with caution as it is not checked and can lead to inconsistencies
 
 # Accessing a DisorderedAtom with a character returns the Atom with that alt loc ID
 Base.getindex(disordered_atom::DisorderedAtom, alt_loc_id::Char) = disordered_atom.alt_loc_ids[alt_loc_id]
@@ -250,6 +253,7 @@ charge(atom::Atom) = atom.charge
 
 ishetero(atom::AbstractAtom) = ishetatom(atom)
 isdisorderedatom(::Atom) = false
+atomid(atom::Atom) = (resid(atom; full=true), resname(atom), atomname(atom))
 
 x!(atom::Atom, x::Real) = (atom.coords[1] = x; nothing)
 y!(atom::Atom, y::Real) = (atom.coords[2] = y; nothing)
@@ -287,6 +291,7 @@ element(disordered_atom::DisorderedAtom) = element(defaultatom(disordered_atom))
 charge(disordered_atom::DisorderedAtom) = charge(defaultatom(disordered_atom))
 
 isdisorderedatom(::DisorderedAtom) = true
+atomid(disordered_atom::DisorderedAtom) = atomid(defaultatom(disordered_atom))
 
 # Constructor acts as a setter for the default alt loc ID
 function DisorderedAtom(disordered_atom::DisorderedAtom, default::Char)
@@ -316,8 +321,6 @@ function resid(element::Union{AbstractResidue, AbstractAtom}; full::Bool=false)
     end
 end
 
-atomid(atom::Atom) = (resid(atom; full=true), resname(atom), atomname(atom))
-
 
 # Residue getters/setters
 resname(res::Residue) = res.name
@@ -335,7 +338,8 @@ isdisorderedres(::Residue) = false
 disorderedres(disordered_res::DisorderedResidue, res_name::ASCIIString) = disordered_res.names[res_name]
 defaultresname(disordered_res::DisorderedResidue) = disordered_res.default
 defaultresidue(disordered_res::DisorderedResidue) = disordered_res.names[defaultresname(disordered_res)]
-resnames(disordered_res::DisorderedResidue) = sort(collect(keys(disordered_res.names)))
+# Orders default residue name first then others alphabetically
+resnames(disordered_res::DisorderedResidue) = sort(collect(keys(disordered_res.names)), lt= (res_name_one, res_name_two) -> (isless(res_name_one, res_name_two) && res_name_two != defaultresname(disordered_res)) || res_name_one == defaultresname(disordered_res))
 
 resname(disordered_res::DisorderedResidue) = defaultresname(disordered_res)
 chainid(disordered_res::DisorderedResidue) = chainid(defaultresidue(disordered_res))
@@ -496,6 +500,7 @@ collectresidues(struc::ProteinStructure, selector_functions::Function...) = coun
 collectresidues(chain::Chain, selector_functions::Function...) = applyselectors(collect(chain), selector_functions...)
 collectresidues(res::AbstractResidue, selector_functions::Function...) = applyselectors(AbstractResidue[res], selector_functions...)
 collectresidues(atom::AbstractAtom, selector_functions::Function...) = applyselectors(organise(atom), selector_functions...)
+# Note output is always Vector{AbstractResidue} unless input was Vector{Residue} or Vector{DisorderedResidue}, in which case output is same type as input type
 collectresidues{T <: AbstractResidue}(residues::Vector{T}, selector_functions::Function...) = sort(applyselectors(residues, selector_functions...))
 collectresidues{T <: AbstractAtom}(atoms::Vector{T}, selector_functions::Function...) = applyselectors(organise(atoms), selector_functions...)
 
@@ -624,31 +629,12 @@ function organise{T <: AbstractAtom}(atoms::Vector{T})
     for chain_id in sortchainids(collect(keys(residues)))
         residues_unord = AbstractResidue[]
         for res_id in keys(residues[chain_id])
-            atoms= sort(residues[chain_id][res_id]) # atoms should be renamed to not clash with method argument
-            push!(residues_unord, Residue(
-                resname(atoms[1]),
-                chainid(atoms[1]),
-                resnumber(atoms[1]),
-                inscode(atoms[1]),
-                ishetero(atoms[1]),
-                map(atomname, atoms),
-                [atomname(atom) => atom for atom in atoms]
-            ))
+            push!(residues_unord, Residue(residues[chain_id][res_id]))
         end
         for res_id in keys(disordered_residues[chain_id])
             new_disordered_res = DisorderedResidue(Dict(), defaults[chain_id][res_id])
             for res_name in keys(disordered_residues[chain_id][res_id])
-                atoms= sort(disordered_residues[chain_id][res_id][res_name])
-                # Hacky setter
-                new_disordered_res.names[res_name] = Residue(
-                    resname(atoms[1]),
-                    chainid(atoms[1]),
-                    resnumber(atoms[1]),
-                    inscode(atoms[1]),
-                    ishetero(atoms[1]),
-                    map(atomname, atoms),
-                    [atomname(atom) => atom for atom in atoms]
-                )
+                new_disordered_res.names[res_name] = Residue(disordered_residues[chain_id][res_id][res_name])
             end
             push!(residues_unord, new_disordered_res)
         end
@@ -819,7 +805,7 @@ function Base.show(io::IO, struc::ProteinStructure)
         println(io, "Number of other molecules   -  ", countresidues(model, hetresselector) - countresidues(model, hetresselector, waterselector))
         println(io, "Number of water molecules   -  ", countresidues(model, hetresselector, waterselector))
         println(io, "Number of atoms             -  ", countatoms(model, stdatomselector))
-        println(io, "Number of H atoms           -  ", countatoms(model, stdatomselector, hydrogenselector))
+        println(io, "Number of hydrogens           -  ", countatoms(model, stdatomselector, hydrogenselector))
         println(io, "Number of disordered atoms  -  ", countatoms(model, stdatomselector, disorderselector))
     else
         println(io, "Name                        -  ", structurename(struc))
@@ -835,7 +821,7 @@ function Base.show(io::IO, model::Model)
     println(io, "Number of other molecules   -  ", countresidues(model, hetresselector) - countresidues(model, hetresselector, waterselector))
     println(io, "Number of water molecules   -  ", countresidues(model, hetresselector, waterselector))
     println(io, "Number of atoms             -  ", countatoms(model, stdatomselector))
-    println(io, "Number of H atoms           -  ", countatoms(model, stdatomselector, hydrogenselector))
+    println(io, "Number of hydrogens           -  ", countatoms(model, stdatomselector, hydrogenselector))
     println(io, "Number of disordered atoms  -  ", countatoms(model, stdatomselector, disorderselector))
 end
 
@@ -846,25 +832,25 @@ function Base.show(io::IO, chain::Chain)
     println(io, "Number of other molecules   -  ", countresidues(chain, hetresselector) - countresidues(chain, hetresselector, waterselector))
     println(io, "Number of water molecules   -  ", countresidues(chain, hetresselector, waterselector))
     println(io, "Number of atoms             -  ", countatoms(chain, stdatomselector))
-    println(io, "Number of H atoms           -  ", countatoms(chain, stdatomselector, hydrogenselector))
+    println(io, "Number of hydrogens           -  ", countatoms(chain, stdatomselector, hydrogenselector))
     println(io, "Number of disordered atoms  -  ", countatoms(chain, stdatomselector, disorderselector))
 end
 
 function Base.show(io::IO, res::Residue)
-    println(io, "Residue ID                  -  ", resid(res, full=true))
+    println(io, "Residue ID                  -  ", resid(res; full=true))
     println(io, "Residue name                -  ", resname(res))
     println(io, "Number of atoms             -  ", countatoms(res))
-    println(io, "Number of H atoms           -  ", countatoms(res, hydrogenselector))
+    println(io, "Number of hydrogens           -  ", countatoms(res, hydrogenselector))
     println(io, "Number of disordered atoms  -  ", countatoms(res, disorderselector))
 end
 
 function Base.show(io::IO, disordered_res::DisorderedResidue)
-    println(io, "Residue ID                  -  ", resid(disordered_res, full=true))
+    println(io, "Residue ID                  -  ", resid(disordered_res; full=true))
     for res_name in resnames(disordered_res)
         println(io, "Residue name                -  ", res_name)
-        println(io, "Number of atoms             -  ", countatoms(disordered_res[res_name]))
-        println(io, "Number of H atoms           -  ", countatoms(disordered_res[res_name], hydrogenselector))
-        println(io, "Number of disordered atoms  -  ", countatoms(disordered_res[res_name], disorderselector))
+        println(io, "Number of atoms             -  ", countatoms(disorderedres(disordered_res, res_name)))
+        println(io, "Number of hydrogens           -  ", countatoms(disorderedres(disordered_res, res_name), hydrogenselector))
+        println(io, "Number of disordered atoms  -  ", countatoms(disorderedres(disordered_res, res_name), disorderselector))
     end
 end
 

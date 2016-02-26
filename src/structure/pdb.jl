@@ -33,6 +33,7 @@ function downloadpdb(pdbid::ASCIIString, out_filepath::ASCIIString="$pdbid.pdb";
     if ba_number == 0
         download("http://www.rcsb.org/pdb/files/$pdbid.pdb", out_filepath)
     else
+        # Currently will download error page if ba_number is too high
         download("http://www.rcsb.org/pdb/files/$pdbid.pdb$ba_number", out_filepath)
     end
 end
@@ -229,6 +230,8 @@ pdbline(atom::Atom) = ASCIIString[
     ]
 
 
+# Note the selector functions are for atoms
+# TER labels, header, END etc not written but MODEL/ENDMDL are
 """Write a `StructuralElementOrList` to a PDB format file."""
 function writepdb(output::IO, element::Union{ProteinStructure, Vector{Model}}, selector_functions::Function...)
     # If there are multiple models, write out MODEL/ENDMDL lines
@@ -249,8 +252,16 @@ writepdb(output::IO, element::StructuralElementOrList, selector_functions::Funct
 
 """Write a `StructuralElementOrList` as lines in PDB format."""
 function writepdblines(output::IO, element::StructuralElementOrList, selector_functions::Function...)
-    for atom in collectatoms(element, selector_functions...), atom_record in atom
-        println(output, pdbline(atom_record)...)
+    for res in collectresidues(element)
+        if isa(res, Residue)
+            for atom in collectatoms(res, selector_functions...), atom_record in atom
+                println(output, pdbline(atom_record)...)
+            end
+        else
+            for res_name in resnames(res), atom in collectatoms(disorderedres(res, res_name), selector_functions...), atom_record in atom
+                println(output, pdbline(atom_record)...)
+            end
+        end
     end
 end
 
