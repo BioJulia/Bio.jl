@@ -290,30 +290,48 @@ end
         @test BLOSUM62[AA_R,AA_A] == -1
         @test BLOSUM62[AA_R,AA_R] ==  5
         @test typeof(BLOSUM62[AA_A,AA_R]) == Int
+
         # undefined
         @test BLOSUM62[AA_O,AA_R] ==  0
         @test BLOSUM62[AA_R,AA_O] ==  0
-        @test Bio.Align.is_defined_symbol(BLOSUM62, AA_R) == true
-        @test Bio.Align.is_defined_symbol(BLOSUM62, AA_O) == false
+        @test  Bio.Align.is_defined_symbol(BLOSUM62, AA_R)
+        @test !Bio.Align.is_defined_symbol(BLOSUM62, AA_O)
 
         # no error
-        print(IOBuffer(), BLOSUM62)
+        try
+            print(IOBuffer(), BLOSUM62)
+            @test true
+        catch
+            @test false
+        end
 
-        mat = Int[
-            +2 -3 -3 -3  0;
-            -3 +2 -3 -3  0;
-            -3 -3 +2 -3  0;
-            -3 -3 -3 +2  0;
-             0  0  0  0  0;
+        # substitution matrix for DNA
+        mat = zeros(Int, (16, 16))
+        mat[1:4,1:4] = [
+            +2 -3 -3 -3;
+            -3 +2 -3 -3;
+            -3 -3 +2 -3;
+            -3 -3 -3 +2;
         ]
-        defined = BitVector([1, 1, 1, 1, 0])
-        match = 0
-        mismatch = -1
-        submat = SubstitutionMatrix{Int}(mat, defined, match, mismatch)
-        @test submat[DNA_A,DNA_A] == +2
-        @test submat[DNA_N,DNA_N] ==  0
-        @test submat[DNA_N,DNA_A] == -1
-        @test submat[DNA_A,DNA_N] == -1
+        defined = falses(16)
+        defined[1:4] = true
+        default_match = 0
+        default_mismatch = -1
+        submat = SubstitutionMatrix{Int}(
+            mat,
+            defined,
+            default_match,
+            default_mismatch,
+            DNANucleotide
+        )
+        @test submat[DNA_A,DNA_A] === +2
+        @test submat[DNA_A,DNA_C] === -3
+        @test submat[DNA_N,DNA_N] ===  0
+        @test submat[DNA_N,DNA_A] === -1
+        @test submat[DNA_A,DNA_N] === -1
+        @test  Bio.Align.is_defined_symbol(submat, DNA_A)
+        @test !Bio.Align.is_defined_symbol(submat, DNA_N)
+        @test !Bio.Align.is_defined_symbol(submat, DNA_A, DNA_N)
     end
 
     @testset "AffineGapScoreModel" begin
