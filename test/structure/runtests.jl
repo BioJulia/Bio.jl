@@ -8,7 +8,13 @@ else
 end
 
 using Bio.Structure
-using Bio.Structure: atomid, chainidisless, parsestrict, parselenient, parsevalue, spacestring
+using Bio.Structure: atomid,
+    chainidisless,
+    parsestrict,
+    parselenient,
+    parsevalue,
+    spacestring
+
 
 # Directory where PDB files are stored for parsing tests
 const test_files = "test/structure/test_files"
@@ -767,6 +773,7 @@ end
     @test choosedefaultaltlocid(atom_a, atom_b) == 'A'
     @test choosedefaultaltlocid(atom_b, atom_a) == 'A'
 
+
     # Test applyselectors
     atoms = collectatoms(struc)
     # Not providing any selector functions just returns the input list
@@ -1157,7 +1164,7 @@ end
 
 
     # Test writepdb and writepdblines
-    # All writing is done to one temporary file which is removed at the end
+    # Counts lines in a file
     function countlines(filename::ASCIIString)
         counter = 0
         open(filename, "r") do file
@@ -1169,6 +1176,7 @@ end
     end
 
     struc = read("$test_files/1SSU.pdb", PDB)
+    # All writing is done to one temporary file which is removed at the end
     temp_filename = tempname()
     writepdb(temp_filename, struc)
     @test countlines(temp_filename) == 15160

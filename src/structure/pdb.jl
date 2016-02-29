@@ -11,11 +11,11 @@ export PDB,
 import Bio.FileFormat
 
 
-"""Protein Data Bank (PDB) file format."""
+"Protein Data Bank (PDB) file format."
 immutable PDB <: FileFormat end
 
 
-"""Error arising from parsing a PDB file."""
+"Error arising from parsing a PDB file."
 type PDBParseError <: Exception
     message::ASCIIString
     line_number::Int
@@ -26,7 +26,7 @@ end
 Base.showerror(io::IO, e::PDBParseError) = println(io, e.message, " at line ", e.line_number, " of file:\n", e.line)
 
 
-"""Download a PDB file or biological assembly from the RCSB PDB."""
+"Download a PDB file or biological assembly from the RCSB PDB."
 function downloadpdb(pdbid::ASCIIString, out_filepath::ASCIIString="$pdbid.pdb"; ba_number::Int=0)
     # Check PDB ID is 4 characters long and only consits of alphanumeric characters
     @assert length(pdbid) == 4 && !ismatch(r"[^a-zA-Z0-9]", pdbid) "Not a valid PDB ID: \"$pdbid\""
@@ -39,7 +39,6 @@ function downloadpdb(pdbid::ASCIIString, out_filepath::ASCIIString="$pdbid.pdb";
 end
 
 
-# Add selectors back in
 function Base.read(input::IO,
             ::Type{PDB},
             selector_functions::Function...;
@@ -81,8 +80,6 @@ function Base.read(input::IO,
     )
 end
 
-
-# Add selectors back in
 function Base.read(filepath::ASCIIString,
             ::Type{PDB},
             selector_functions::Function...;
@@ -94,7 +91,7 @@ function Base.read(filepath::ASCIIString,
 end
 
 
-"""Parse a PDB ATOM or HETATM record and return an `Atom`."""
+"Parse a PDB ATOM or HETATM record and return an `Atom`."
 function parseatomrecord(line::ASCIIString, line_number::Int=1)
     @assert startswith(line, "ATOM  ") || startswith(line, "HETATM") "Line does not appear to be an ATOM/HETATM record: \"$line\""
     return Atom(
@@ -119,7 +116,7 @@ function parseatomrecord(line::ASCIIString, line_number::Int=1)
 end
 
 
-"""Parse columns from a line and return the value or throw an error."""
+"Parse columns from a line and return the value or throw a `PDBParseError`."
 function parsestrict(line::ASCIIString,
                     cols::Tuple{Int, Int},
                     out_type::Type,
@@ -133,7 +130,7 @@ function parsestrict(line::ASCIIString,
 end
 
 
-"""Parse columns from a line and return the value or a default value."""
+"Parse columns from a line and return the value or a default value."
 function parselenient(line::ASCIIString,
                     cols::Tuple{Int, Int},
                     out_type::Type,
@@ -146,7 +143,7 @@ function parselenient(line::ASCIIString,
 end
 
 
-"""Parse columns from a line."""
+"Parse columns from a line."
 function parsevalue(line::ASCIIString, cols::Tuple{Int, Int}, out_type::Type)
     try
         if out_type == Int
@@ -166,7 +163,7 @@ function parsevalue(line::ASCIIString, cols::Tuple{Int, Int}, out_type::Type)
 end
 
 
-"""Form a string of a certain length from a value."""
+"Form a string of a certain length from a value."
 function spacestring(val_in, new_length::Int)
     string_out = string(val_in)
     if length(string_out) > new_length
@@ -177,9 +174,12 @@ function spacestring(val_in, new_length::Int)
 end
 
 
-"""Space an `Atom` name such that the last element letter (generally) appears in the second
-column. If the `element` property of the `Atom` is set it is used to get the element,
-otherwise the name starts from the second column where possible."""
+"""
+Space an `Atom` name such that the last element letter (generally) appears in
+the second column. If the `element` property of the `Atom` is set it is used to
+get the element, otherwise the name starts from the second column where
+possible.
+"""
 function spaceatomname(atom::Atom)
     atom_name = atomname(atom)
     chars = length(atom_name)
@@ -204,7 +204,7 @@ function spaceatomname(atom::Atom)
 end
 
 
-"""Form a Protein Data Bank (PDB) format ATOM/HETATM record from an `Atom`."""
+"Form a Protein Data Bank (PDB) format ATOM or HETATM record from an `Atom`."
 pdbline(atom::Atom) = ASCIIString[
         ishetatom(atom) ? "HETATM" : "ATOM  ",
         spacestring(serial(atom), 5),
@@ -230,9 +230,10 @@ pdbline(atom::Atom) = ASCIIString[
     ]
 
 
-# Note the selector functions are for atoms
-# TER labels, header, END etc not written but MODEL/ENDMDL are
-"""Write a `StructuralElementOrList` to a PDB format file."""
+"""
+Write a `StructuralElementOrList` to a PDB format file. Only ATOM, HETATM, MODEL
+and ENDMDL records are written - there is no header and no TER records.
+"""
 function writepdb(output::IO, element::Union{ProteinStructure, Vector{Model}}, selector_functions::Function...)
     # If there are multiple models, write out MODEL/ENDMDL lines
     if length(element) > 1
@@ -249,9 +250,16 @@ end
 
 writepdb(output::IO, element::StructuralElementOrList, selector_functions::Function...) = writepdblines(output, element, selector_functions...)
 
+function writepdb(filepath::ASCIIString, element::StructuralElementOrList, selector_functions::Function...)
+    open(filepath, "w") do output
+        writepdb(output, element, selector_functions...)
+    end
+end
 
-"""Write a `StructuralElementOrList` as lines in PDB format."""
+
+"Write a `StructuralElementOrList` to an output as lines in PDB format."
 function writepdblines(output::IO, element::StructuralElementOrList, selector_functions::Function...)
+    # Collect residues then expand out disordered residues and atoms
     for res in collectresidues(element)
         if isa(res, Residue)
             for atom in collectatoms(res, selector_functions...), atom_record in atom
@@ -262,12 +270,5 @@ function writepdblines(output::IO, element::StructuralElementOrList, selector_fu
                 println(output, pdbline(atom_record)...)
             end
         end
-    end
-end
-
-
-function writepdb(filepath::ASCIIString, element::StructuralElementOrList, selector_functions::Function...)
-    open(filepath, "w") do output
-        writepdb(output, element, selector_functions...)
     end
 end
