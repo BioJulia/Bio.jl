@@ -153,9 +153,6 @@ macro alphabet(args...)
 end
 
 
-"""
-DNA nucleotide alphabet.
-"""
 #immutable DNAAlphabet{n} <: Alphabet end
 
 @alphabet(name = DNAAlphabet,
@@ -163,9 +160,6 @@ DNA nucleotide alphabet.
           element_type = DNANucleotide,
           alphabet = [DNA_A:DNA_T, alphabet(DNANucleotide)])
 
-"""
-RNA nucleotide alphabet.
-"""
 #immutable RNAAlphabet{n} <: Alphabet end
 
 @alphabet(name = RNAAlphabet,
@@ -173,9 +167,6 @@ RNA nucleotide alphabet.
           element_type = RNANucleotide,
           alphabet = [RNA_A:RNA_U, alphabet(RNANucleotide)])
 
-"""
-Amino acid alphabet.
-"""
 #immutable AminoAcidAlphabet <: Alphabet end
 @alphabet(name = AminoAcidAlphabet,
           bits = 8,
