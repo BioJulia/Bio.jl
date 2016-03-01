@@ -267,21 +267,21 @@ Base.endof(seq::BioSequence) = length(seq)
 Base.isempty(seq::BioSequence) = length(seq) == 0
 Base.eltype{A}(seq::BioSequence{A}) = eltype(A)
 
-function Base.checkbounds(seq::BioSequence, i::Integer)
+@inline function Base.checkbounds(seq::BioSequence, i::Integer)
     if 1 ≤ i ≤ endof(seq)
         return true
     end
     throw(BoundsError(seq, i))
 end
 
-function Base.checkbounds(seq::BioSequence, part::UnitRange)
+@inline function Base.checkbounds(seq::BioSequence, part::UnitRange)
     if 1 ≤ part.start && part.stop ≤ endof(seq)
         return true
     end
     throw(BoundsError(seq, part))
 end
 
-function checkmutability(seq::BioSequence)
+@inline function checkmutability(seq::BioSequence)
     if seq.mutable
         return true
     end
