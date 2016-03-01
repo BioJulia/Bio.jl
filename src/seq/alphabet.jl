@@ -106,7 +106,7 @@ macro alphabet(args...)
                 types[i] = typeof(alphs[i])
             end
         end
-        multi_alphs = all(Bool[i == Range || i == Array || Function for i in types]) && length(types) > 1
+        multi_alphs = all(Bool[i == Range || i == Array || i == Function for i in types]) && length(types) > 1
         if multi_alphs
             if length(alphs) != length(bits)
                 error("Number of alphabet options does not match number of bit options.")
