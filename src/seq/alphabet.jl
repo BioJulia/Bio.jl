@@ -191,22 +191,6 @@ Amino acid alphabet.
 #end
 #bitsof(::Type{AminoAcidAlphabet}) = 8
 
-<<<<<<< 06013802eebed1705f48edbe8fed7ab52db3f402
-Base.eltype(::Type{DNAAlphabet}) = DNANucleotide
-Base.eltype(::Type{RNAAlphabet}) = RNANucleotide
-Base.eltype{n}(::Type{DNAAlphabet{n}}) = DNANucleotide
-Base.eltype{n}(::Type{RNAAlphabet{n}}) = RNANucleotide
-Base.eltype(::Type{AminoAcidAlphabet}) = AminoAcid
-
-alphabet(::Type{DNAAlphabet{2}}) = DNA_A:DNA_T
-alphabet(::Type{RNAAlphabet{2}}) = RNA_A:RNA_U
-alphabet(::Type{DNAAlphabet{4}}) = alphabet(DNANucleotide)
-alphabet(::Type{RNAAlphabet{4}}) = alphabet(RNANucleotide)
-alphabet(::Type{AminoAcidAlphabet}) = alphabet(AminoAcid)
-=======
-mask(n::Integer) = (UInt64(1) << n) - 1
-mask{A <: Alphabet}(::Type{A}) = mask(bitsof(A))
-
 #Base.eltype(::Type{DNAAlphabet}) = DNANucleotide
 #Base.eltype(::Type{RNAAlphabet}) = RNANucleotide
 #Base.eltype{n}(::Type{DNAAlphabet{n}}) = DNANucleotide
@@ -218,7 +202,6 @@ mask{A <: Alphabet}(::Type{A}) = mask(bitsof(A))
 #alphabet(::Type{DNAAlphabet{4}}) = alphabet(DNANucleotide)
 #alphabet(::Type{RNAAlphabet{4}}) = alphabet(RNANucleotide)
 #alphabet(::Type{AminoAcidAlphabet}) = alphabet(AminoAcid)
->>>>>>> First draft of alphabet building macro
 
 
 # Encoders & Decoders
