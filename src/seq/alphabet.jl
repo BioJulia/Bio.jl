@@ -112,7 +112,7 @@ macro alphabet(args...)
                 error("Number of alphabet options does not match number of bit options.")
             end
         else
-            alphs = Array{Int, 1}[[alphs]]
+            alphs = Array{Int, 1}[alphs]
         end
     end
 
@@ -133,18 +133,20 @@ macro alphabet(args...)
 
     # Base.eltype functions:
     for i in 1:length(element_type)
-        n = multi_eltypes ? bits[i] : :(n)
-        t = put_n ? :(::Type{$typename{$n}}) : :(::Type{$typename})
-        push!(code.args, esc(:(function Base.eltype($t)
+        sn = multi_eltypes ? bits[i] : :(n)
+        fun = sn == :(n) ? :(Base.eltype{n}) : :(Base.eltype)
+        argument = put_n ? :(::Type{$typename{$sn}}) : :(::Type{$typename})
+        push!(code.args, esc(:(function $fun($argument)
                                $(element_type[i])
                                end)))
     end
 
     # alphabet functions:
     for i in 1:length(alphs)
-        n = multi_alphs ? bits[i] : :(n)
-        t = put_n ? :(::Type{$typename{$n}}) : :(::Type{$typename})
-        push!(code.args, esc(:(function alphabet($t)
+        sn = multi_alphs ? bits[i] : :(n)
+        fun = sn == :(n) ? :(alphabet{n}) : :(alphabet)
+        argument = put_n ? :(::Type{$typename{$sn}}) : :(::Type{$typename})
+        push!(code.args, esc(:(function $fun($argument)
                                $(alphs[i])
                                end)))
     end
