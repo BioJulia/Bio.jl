@@ -288,6 +288,7 @@ end
     error("attempt to modify immutable sequence")
 end
 
+# NOTE: This function assumes `i ≥ 1`.
 @inline function bitsid{A}(seq::BioSequence{A}, i::Integer)
     n = bitsof(A)
     d, r = divrem(i + seq.part.start - 2, div(64, n))
@@ -295,9 +296,49 @@ end
     return d + 1, r * n
 end
 
+@inline function bitsid{A<:Union{DNAAlphabet{2},RNAAlphabet{2}}}(seq::BioSequence{A}, i::Integer)
+    d, r = divrem32(i + seq.part.start - 2)
+    return d + 1, 2r
+end
+
+@inline function bitsid{A<:Union{DNAAlphabet{4},RNAAlphabet{4}}}(seq::BioSequence{A}, i::Integer)
+    d, r = divrem16(i + seq.part.start - 2)
+    return d + 1, 4r
+end
+
+@inline function bitsid(seq::AminoAcidSequence, i::Integer)
+    d, r = divrem8(i + seq.part.start - 2)
+    return d + 1, 8r
+end
+
+#=
+# Unfortunately, combination of `@inline` and `@generated` won't work.
+@inline @generated function bitsid{A}(seq::BioSequence{A}, i::Integer)
+    n = bitsof(A)
+    index = :(Int(i) + seq.part.start - 2)
+
+    if n == 2
+        divrem = :(divrem32($index))
+    elseif n == 4
+        divrem = :(divrem16($index))
+    elseif n == 8
+        divrem = :( divrem8($index))
+    else
+        divrem = :(  divrem($index, $(div(64, n))))
+    end
+
+    quote
+        d, r = $divrem
+        # (element index, bits offset)
+        return d + 1, r * $n
+    end
+end
+=#
+
 mask(n::Integer) = (UInt64(1) << n) - 1
 mask{A<:Alphabet}(::Type{A}) = mask(bitsof(A))
 
+divrem8(i::Int)  = i >> 3, i & 0b111
 divrem16(i::Int) = i >> 4, i & 0b1111
 divrem32(i::Int) = i >> 5, i & 0b11111
 
@@ -560,7 +601,7 @@ function Base.complement!{A<:Union{DNAAlphabet{2},RNAAlphabet{2}}}(seq::BioSeque
     return seq
 end
 
-# compute complement of `x`'s bits selected by `mask`.
+# Compute complement of `x`'s bits selected by `mask`.
 # NOTE: 4-bit encoding is assumed and ambiguous nucleotides are left untouched.
 macro complement(x, mask)
     quote
