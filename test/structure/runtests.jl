@@ -7,7 +7,8 @@ else
     const Test = BaseTestNext
 end
 
-using Bio.Structure
+using Bio.Structure,
+    TestFunctions.get_bio_fmt_specimens
 using Bio.Structure: atomid,
     chainidisless,
     parsestrict,
@@ -16,8 +17,10 @@ using Bio.Structure: atomid,
     spacestring
 
 
+get_bio_fmt_specimens()
+
 # Directory where PDB files are stored for parsing tests
-const test_files = "test/structure/test_files"
+const test_files = "test/BioFmtSpecimens/PDB"
 
 
 @testset "Model" begin
@@ -371,7 +374,7 @@ const test_files = "test/structure/test_files"
     @test !backboneselector(Atom(true, 100, "CA", ' ', "ALA", 'A', 10, ' ', [1.0, 2.0, 3.0], 1.0, 10.0, "C", ""))
     @test heavyatomselector(atom_a)
     @test !heavyatomselector(atom_b)
-    @test !heavyatomselector(Atom(true, 100, "CA", ' ', "ALA", 'A', 10, ' ', [1.0, 2.0, 3.0], 1.0, 10.0, "C", ""))
+    @test !heavyatomselector(Atom(false, 100, "H1", ' ', "ALA", 'A', 10, ' ', [1.0, 2.0, 3.0], 1.0, 10.0, "H", ""))
     @test resnameselector(atom_a, Set(["ALA"]))
     @test resnameselector(atom_a, ["ALA"])
     @test !resnameselector(atom_b, Set(["ALA"]))
@@ -413,6 +416,7 @@ const test_files = "test/structure/test_files"
         Atom(false, 103, "CG", ' ', "ALA", 'A', 10, ' ', [1.0, 2.0, 3.0], 1.0, 10.0, "C", "")
     ]
     @test map(atomname, sort(atom_list_ord)) == ["CB", "CG", "CA"]
+    @test map(atomname, sort(atom_list_ord; rev=true)) == ["CA", "CG", "CB"]
     sort!(atom_list_ord)
     @test map(atomname, atom_list_ord) == ["CB", "CG", "CA"]
 
@@ -435,6 +439,7 @@ const test_files = "test/structure/test_files"
     @test map(resid, residues_ord) == ["201A", "203", "H_200", "201B", "202", "300", "H_201", "201", "H_201A", "100", "H_203", "200"]
     @test map(res -> resid(res; full=true), residues_ord) == ["201A:A", "203:A", "H_200:A", "201B:A", "202:A", "300:B", "H_201:A", "201:A", "H_201A:A", "100:B", "H_203:A", "200:A"]
     @test map(res -> resid(res; full=true), sort(residues_ord)) == ["200:A", "201:A", "201A:A", "201B:A", "202:A", "203:A", "H_200:A", "H_201:A", "H_201A:A", "H_203:A", "100:B", "300:B"]
+    @test map(res -> resid(res; full=true), sort(residues_ord; rev=true)) == ["300:B", "100:B", "H_203:A", "H_201A:A", "H_201:A", "H_200:A", "203:A", "202:A", "201B:A", "201A:A", "201:A", "200:A"]
     sort!(residues_ord)
     @test map(res -> resid(res; full=true), residues_ord) == ["200:A", "201:A", "201A:A", "201B:A", "202:A", "203:A", "H_200:A", "H_201:A", "H_201A:A", "H_203:A", "100:B", "300:B"]
 
@@ -1120,8 +1125,8 @@ end
     @test spacestring(1.5, 5) == "  1.5"
     @test spacestring("A", 3) == "  A"
     @test spacestring('A', 3) == "  A"
-    @test spacestring(1.456789, 5) == "1.456" # Note incorrect rounding
-    @test spacestring("ABCDEF", 3) == "ABC"
+    @test_throws AssertionError spacestring(1.456789, 5)
+    @test_throws AssertionError spacestring("ABCDEF", 3)
 
 
     # Test spaceatomname
@@ -1404,7 +1409,6 @@ end
     atom_a = Atom(false, 100, "CA", ' ', "ALA", 'A', 10, ' ', [1.0, 2.0, 3.0], 1.0, 10.0, "C", "")
     atom_b = Atom(false, 110, "CA", ' ', "ALA", 'A', 11, ' ', [0.0, -1.0, 3.0], 1.0, 10.0, "C", "")
     @test isapprox(distance(atom_a, atom_b), sqrt(10))
-    @test isapprox(atom_a - atom_b, sqrt(10))
 
     @test isapprox(distance(struc_1AKE['A'], struc_1AKE['B']), sqrt(6.852947))
     @test isapprox(distance(struc_1AKE['A'], struc_1AKE['B'][50]), sqrt(530.645746))
@@ -1412,8 +1416,6 @@ end
     @test isapprox(distance(struc_1AKE['A'], struc_1AKE['B'], backboneselector), sqrt(17.350083))
     @test isapprox(distance(struc_1AKE['A'], struc_1AKE['B'], stdatomselector), sqrt(11.252973))
     @test isapprox(distance(struc_1AKE['A'][50]["CA"], struc_1AKE['B'][50]["CA"]), sqrt(2607.154834))
-    @test isapprox(struc_1AKE['A'] - struc_1AKE['B'], sqrt(6.852947))
-    @test isapprox(struc_1AKE['A'][50]["CA"] - struc_1AKE['B'][50]["CA"], sqrt(2607.154834))
 end
 
 end # TestStructure

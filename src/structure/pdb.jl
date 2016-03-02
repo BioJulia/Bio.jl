@@ -60,11 +60,13 @@ function Base.read(input::IO,
         elseif startswith(line, "MODEL ")
             try
                 curr_model = parse(Int, line[11:14])
-            catch ArgumentError
+            catch
                 throw(PDBParseError("Could not read model serial number", line_number, line))
             end
             # Create model if required
-            !haskey(atom_lists, curr_model) ? atom_lists[curr_model] = AbstractAtom[] : nothing
+            if !haskey(atom_lists, curr_model)
+                atom_lists[curr_model] = AbstractAtom[]
+            end
         # Read ENDMDL record
         elseif startswith(line, "ENDMDL")
             curr_model = 1
@@ -163,14 +165,14 @@ function parsevalue(line::ASCIIString, cols::Tuple{Int, Int}, out_type::Type)
 end
 
 
-"Form a string of a certain length from a value."
+"""
+Form a string of a certain length from a value by adding spaces to the left.
+Throws an error if the value is too long.
+"""
 function spacestring(val_in, new_length::Int)
     string_out = string(val_in)
-    if length(string_out) > new_length
-        return string_out[1:new_length]
-    else
-        return "$(repeat(" ", new_length - length(string_out)))$string_out"
-    end
+    @assert length(string_out) <= new_length "Cannot fit value \"$string_out\" into $new_length space(s)"
+    return lpad(string_out, new_length)
 end
 
 
@@ -197,10 +199,7 @@ function spaceatomname(atom::Atom)
     else
         out_string = "$atom_name"
     end
-    while length(out_string) < 4
-        out_string = "$out_string "
-    end
-    return out_string
+    return rpad(out_string, 4)
 end
 
 
@@ -217,13 +216,13 @@ pdbline(atom::Atom) = ASCIIString[
         spacestring(resnumber(atom), 4),
         string(inscode(atom)),
         "   ",
+        # This will throw an error for large coordinate values, e.g. -1000.123
         spacestring(round(x(atom), 3), 8),
         spacestring(round(y(atom), 3), 8),
         spacestring(round(z(atom), 3), 8),
-        "  ",
-        spacestring(round(occupancy(atom), 2), 4),
-        " ",
-        spacestring(round(tempfac(atom), 2), 5),
+        spacestring(round(occupancy(atom), 2), 6),
+        # This will throw an error for large temp facs, e.g. 1000.12
+        spacestring(round(tempfac(atom), 2), 6),
         "          ",
         spacestring(element(atom), 2),
         spacestring(charge(atom), 2),

@@ -73,7 +73,6 @@ export StructuralElement,
     calphaselector,
     backbone_atom_names,
     backboneselector,
-    heavy_atom_names,
     heavyatomselector,
     resnameselector,
     water_res_names,
@@ -207,6 +206,7 @@ typealias StructuralElementOrList Union{
 Base.getindex(disordered_atom::DisorderedAtom, alt_loc_id::Char) = disordered_atom.alt_loc_ids[alt_loc_id]
 function Base.setindex!(disordered_atom::DisorderedAtom, atom::Atom, alt_loc_id::Char)
     disordered_atom.alt_loc_ids[alt_loc_id] = atom
+    return disordered_atom
 end
 
 # Accessing a Residue with an ASCIIString returns the AbstractAtom with that
@@ -214,6 +214,7 @@ end
 Base.getindex(res::Residue, atom_name::ASCIIString) = res.atoms[atom_name]
 function Base.setindex!(res::Residue, atom::AbstractAtom, atom_name::ASCIIString)
     res.atoms[atom_name] = atom
+    return res
 end
 
 # Accessing a DisorderedResidue with an ASCIIString returns the AbstractAtom in
@@ -224,6 +225,7 @@ end
 Base.getindex(disordered_res::DisorderedResidue, atom_name::ASCIIString) = disordered_res.names[defaultresname(disordered_res)][atom_name]
 function Base.setindex!(disordered_res::DisorderedResidue, atom::AbstractAtom, atom_name::ASCIIString)
     disordered_res.names[defaultresname(disordered_res)][atom_name] = atom
+    return disordered_res
 end
 
 # Accessing a Chain with an ASCIIString returns the AbstractResidue with that
@@ -231,6 +233,7 @@ end
 Base.getindex(chain::Chain, res_id::ASCIIString) = chain.residues[res_id]
 function Base.setindex!(chain::Chain, res::AbstractResidue, res_id::ASCIIString)
     chain.residues[res_id] = res
+    return chain
 end
 
 # Accessing a Chain with an Int returns the AbstractResidue with that residue ID
@@ -238,12 +241,14 @@ end
 Base.getindex(chain::Chain, res_number::Int) = chain.residues[string(res_number)]
 function Base.setindex!(chain::Chain, res::AbstractResidue, res_number::Int)
     chain.residues[string(res_number)] = res
+    return chain
 end
 
 # Accessing a Model with a Char returns the Chain with that chain ID
 Base.getindex(model::Model, chain_id::Char) = model.chains[chain_id]
 function Base.setindex!(model::Model, chain::Chain, chain_id::Char)
     model.chains[chain_id] = chain
+    return model
 end
 
 # Accessing a ProteinStructure with an Int returns the Model with that model
@@ -251,6 +256,7 @@ end
 Base.getindex(struc::ProteinStructure, model_number::Int) = struc.models[model_number]
 function Base.setindex!(struc::ProteinStructure, model::Model, model_number::Int)
     struc.models[model_number] = model
+    return struc
 end
 
 # Accessing a ProteinStructure with a Char returns the Chain with that chain ID
@@ -258,6 +264,7 @@ end
 Base.getindex(struc::ProteinStructure, chain_id::Char) = defaultmodel(struc)[chain_id]
 function Base.setindex!(struc::ProteinStructure, chain::Chain, chain_id::Char)
     defaultmodel(struc)[chain_id] = chain
+    return struc
 end
 
 
@@ -353,19 +360,19 @@ atomid(atom::Atom) = (resid(atom; full=true), resname(atom), atomname(atom))
 Set the x coordinate of an `AbstractAtom`. For `DisorderedAtom`s only the
 default atom is updated.
 """
-x!(atom::Atom, x::Real) = (atom.coords[1] = x; nothing)
+x!(atom::Atom, x::Real) = (atom.coords[1] = x; atom)
 
 """
 Set the y coordinate of an `AbstractAtom`. For `DisorderedAtom`s only the
 default atom is updated.
 """
-y!(atom::Atom, y::Real) = (atom.coords[2] = y; nothing)
+y!(atom::Atom, y::Real) = (atom.coords[2] = y; atom)
 
 """
 Set the z coordinate of an `AbstractAtom`. For `DisorderedAtom`s only the
 default atom is updated.
 """
-z!(atom::Atom, z::Real) = (atom.coords[3] = z; nothing)
+z!(atom::Atom, z::Real) = (atom.coords[3] = z; atom)
 
 
 """
@@ -377,7 +384,7 @@ function coords!(atom::Atom, coords::Vector{Float64})
     x!(atom, coords[1])
     y!(atom, coords[2])
     z!(atom, coords[3])
-    return nothing
+    return atom
 end
 
 # DisorderedAtom getters/setters
@@ -441,15 +448,31 @@ If `full` equals true the chain ID is also added after a colon. Examples are
 function resid(element::Union{AbstractResidue, AbstractAtom}; full::Bool=false)
     if ishetero(element)
         if full
-            inscode(element) == ' ' ? "H_$(resnumber(element)):$(chainid(element))" : "H_$(resnumber(element))$(inscode(element)):$(chainid(element))"
+            if inscode(element) == ' '
+                "H_$(resnumber(element)):$(chainid(element))"
+            else
+                "H_$(resnumber(element))$(inscode(element)):$(chainid(element))"
+            end
         else
-            inscode(element) == ' ' ? "H_$(resnumber(element))" : "H_$(resnumber(element))$(inscode(element))"
+            if inscode(element) == ' '
+                "H_$(resnumber(element))"
+            else
+                "H_$(resnumber(element))$(inscode(element))"
+            end
         end
     else
         if full
-            inscode(element) == ' ' ? "$(resnumber(element)):$(chainid(element))" : "$(resnumber(element))$(inscode(element)):$(chainid(element))"
+            if inscode(element) == ' '
+                "$(resnumber(element)):$(chainid(element))"
+            else
+                "$(resnumber(element))$(inscode(element)):$(chainid(element))"
+            end
         else
-            inscode(element) == ' ' ? "$(resnumber(element))" : "$(resnumber(element))$(inscode(element))"
+            if inscode(element) == ' '
+                "$(resnumber(element))"
+            else
+                "$(resnumber(element))$(inscode(element))"
+            end
         end
     end
 end
@@ -566,27 +589,26 @@ chainids(struc::ProteinStructure) = countmodels(struc) > 0 ? chainids(defaultmod
 # Sorting functions
 
 # Sort atoms by serial
-Base.sort!{T <: AbstractAtom}(atoms::Vector{T}) = sort!(atoms, by=serial)
+Base.isless(atom_one::AbstractAtom, atom_two::AbstractAtom) = isless(serial(atom_one), serial(atom_two))
 
-function Base.sort{T <: AbstractAtom}(atoms::Vector{T})
-    atoms_copy = copy(atoms)
-    sort!(atoms_copy)
-    return atoms_copy
-end
-
-
-# Sort residues by chain, hetero, resumber and ins code
-function Base.sort!{T <: AbstractResidue}(residues::Vector{T})
-    sort!(residues, by=inscode)
-    sort!(residues, by=resnumber)
-    sort!(residues, by=ishetres)
-    sort!(residues, by=chainid, lt=chainidisless)
-end
-
-function Base.sort{T <: AbstractResidue}(residues::Vector{T})
-    residues_copy = copy(residues)
-    sort!(residues_copy)
-    return residues_copy
+# Sort residues by chain, then hetero, then resumber, then ins code
+function Base.isless(res_one::AbstractResidue, res_two::AbstractResidue)
+    if chainidisless(chainid(res_one), chainid(res_two))
+        return true
+    elseif chainid(res_one) == chainid(res_two)
+        if !ishetres(res_one) && ishetres(res_two)
+            return true
+        elseif ishetres(res_one) == ishetres(res_two)
+            if isless(resnumber(res_one), resnumber(res_two))
+                return true
+            elseif resnumber(res_one) == resnumber(res_two)
+                if isless(inscode(res_one), inscode(res_two))
+                    return true
+                end
+            end
+        end
+    end
+    return false
 end
 
 
@@ -679,10 +701,8 @@ function applyselectors!{T <: Union{AbstractResidue, AbstractAtom}}(element_list
     for selector_function in selector_functions
         filter!(selector_function, element_list)
     end
+    return element_list
 end
-
-applyselectors{T <: Union{AbstractResidue, AbstractAtom}}(element_list::Vector{T}) = copy(element_list)
-applyselectors!{T <: Union{AbstractResidue, AbstractAtom}}(element_list::Vector{T}) = element_list
 
 
 "Returns a sorted `Vector` of the residues in a `StructuralElementOrList`."
@@ -881,7 +901,7 @@ function formatomlist(atoms::Vector{Atom}; remove_disorder::Bool=false)
             error("Two copies of the same atom have the same alternative location ID:\n$(atom_dic[atom_id])\n$(atom)\nformatomlist cannot be used on atom lists containing multiple models. In addition names are stripped of whitespace so identical names with different spacing, e.g. ' CA ' and 'CA  ', are not currently supported.")
         end
     end
-    return sort(collect(values(atom_dic)), by=serial) # Is by serial redundant?
+    return sort(collect(values(atom_dic)))
 end
 
 
@@ -960,18 +980,11 @@ protein backbone atom.
 """
 backboneselector(atom::AbstractAtom) = stdatomselector(atom) && atomnameselector(atom, backbone_atom_names)
 
-"`Set` of protein standard heavy atom names."
-const heavy_atom_names = Set(["C", "CA", "CB", "CD", "CD1", "CD2",
-                    "CE", "CE1", "CE2", "CE3", "CG", "CG1", "CG2", "CH2", "CZ",
-                    "CZ2", "CZ3", "N", "ND1", "ND2", "NE", "NE1", "NE2", "NH1",
-                    "NH2", "NZ", "O", "OD1", "OD2", "OE1", "OE2", "OG", "OG1",
-                    "OH", "SG"])
-
 """
-Determines if an `AbstractAtom` is not a hetero-atom and corresponds to a
-standard protein heavy atom.
+Determines if an `AbstractAtom` corresponds to a heavy (non-hydrogen) atom and
+is not a hetero-atom.
 """
-heavyatomselector(atom::AbstractAtom) = stdatomselector(atom) && atomnameselector(atom, heavy_atom_names)
+heavyatomselector(atom::AbstractAtom) = stdatomselector(atom) && !hydrogenselector(atom)
 
 """
 Determines if an `AbstractResidue` or `AbstractAtom` has its resiudue name in
@@ -1018,6 +1031,8 @@ where possible, otherwise uses the atom name.
 """
 hydrogenselector(atom::AbstractAtom) = element(atom) == "H" || (element(atom) == "" && 'H' in atomname(atom) && !ismatch(r"[a-zA-Z]", atomname(atom)[1:findfirst(atomname(atom), 'H')-1]))
 
+
+# Descriptive showing of elements
 
 function Base.show(io::IO, struc::ProteinStructure)
     if countmodels(struc) > 0

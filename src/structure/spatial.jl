@@ -67,5 +67,3 @@ function distance(element_one::StructuralElementOrList, element_two::StructuralE
 end
 
 distance(atom_one::AbstractAtom, atom_two::AbstractAtom) = sqrt((x(atom_one) - x(atom_two)) ^ 2 + (y(atom_one) - y(atom_two)) ^ 2 + (z(atom_one) - z(atom_two)) ^ 2)
-
-Base.(:-)(element_one::StructuralElementOrList, element_two::StructuralElementOrList) = distance(element_one, element_two)
