@@ -560,48 +560,44 @@ function Base.complement!{A<:Union{DNAAlphabet{2},RNAAlphabet{2}}}(seq::BioSeque
     return seq
 end
 
-macro compl4(x)
+# compute complement of `x`'s bits selected by `mask`.
+# NOTE: 4-bit encoding is assumed and ambiguous nucleotides are left untouched.
+macro complement(x, mask)
     quote
-        #($x & 0xCCCCCCCCCCCCCCCC) | (~$x & 0x3333333333333333)
-        y = ($x & 0x8888888888888888) >> 1 | ($x & 0x4444444444444444)
-        y = y >> 1 | y
-        y = ~y
+        if hasambiguous($x)
+            m = ($x & 0x8888888888888888) | (($x & 0x4444444444444444) << 1)
+            m |= m >> 1 | m >> 2 | m >> 3
+            m = ~m & $mask
+            (~$x & 0x3333333333333333 & m) | ($x & ~m)
+        else
+            m = $mask
+            (~$x & 0x3333333333333333 & m) | ($x & ~m)
+        end
     end
 end
 
-function Base.complement!(seq::DNASequence)
+function Base.complement!(seq::Union{DNASequence,RNASequence})
     checkmutability(seq)
-    for i in 1:endof(seq)
-        nt = seq[i]
-        if nt == DNA_A
-            seq[i] = DNA_T
-        elseif nt == DNA_C
-            seq[i] = DNA_G
-        elseif nt == DNA_G
-            seq[i] = DNA_C
-        elseif nt == DNA_T
-            seq[i] = DNA_A
-        end
+    j1, r1 = bitsid(seq, 1)
+    j2, r2 = bitsid(seq, endof(seq) + 1)
+
+    # special case: whole sequence is within an element (i.e. `seq.data[j1]`)
+    if j1 == j2
+        seq.data[j1] = @complement seq.data[j1] (mask(r2) - mask(r1))
+        return seq
+    end
+
+    seq.data[j1] = @complement seq.data[j1] ~mask(r1)
+    @inbounds for j in j1+1:j2-1
+        seq.data[j] = @complement seq.data[j] 0xFFFFFFFFFFFFFFFF
+    end
+    if r2 > 0
+        seq.data[j2] = @complement seq.data[j2] mask(r2)
     end
     return seq
 end
 
-function Base.complement!(seq::RNASequence)
-    checkmutability(seq)
-    for i in 1:endof(seq)
-        nt = seq[i]
-        if nt == RNA_A
-            seq[i] = RNA_U
-        elseif nt == RNA_C
-            seq[i] = RNA_G
-        elseif nt == RNA_G
-            seq[i] = RNA_C
-        elseif nt == RNA_U
-            seq[i] = RNA_A
-        end
-    end
-    return seq
-end
+hasambiguous(x::UInt64) = x & 0xCCCCCCCCCCCCCCCC != 0
 
 function Base.complement{A<:Union{DNAAlphabet,RNAAlphabet}}(seq::BioSequence{A})
     newseq = docopy(seq)
