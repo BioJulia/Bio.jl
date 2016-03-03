@@ -14,7 +14,7 @@ typealias AminoAcidCounts Composition{AminoAcidAlphabet}
 
 function Composition{A}(seq::BioSequence{A})
     comp = Composition{A}()
-    for x in seq
+    @inbounds for x in seq
         comp.counts[encode(A, x)+1] += 1
     end
     return comp

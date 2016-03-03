@@ -505,7 +505,7 @@ end
 # iterator
 Base.start(seq::BioSequence) = 1
 Base.done(seq::BioSequence, i) = i > endof(seq)
-Base.next(seq::BioSequence, i) = seq[i], i + 1
+Base.next(seq::BioSequence, i) = unsafe_getindex(seq, i), i + 1
 
 function Base.(:(==)){A1,A2}(s1::BioSequence{A1}, s2::BioSequence{A2})
     if s1.data === s2.data && s1.part === s2.part && A1 === A2
