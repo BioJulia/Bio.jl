@@ -40,8 +40,7 @@ function parse_genetic_codes(s)
     codes = GeneticCode(Vector{AminoAcid}(4^3))
     @assert length(aas) == 73
     for i in 10:73
-        # TODO: may need to add the stop codon to the amino acids
-        aa = aas[i] != '*' ? AminoAcid(aas[i]) : AA_INVALID
+        aa = AminoAcid(aas[i])
         b1 = DNANucleotide(base1[i])
         b2 = DNANucleotide(base2[i])
         b3 = DNANucleotide(base3[i])

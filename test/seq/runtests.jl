@@ -25,10 +25,10 @@ const codons = [
         "GCA", "GCC", "GCG", "GCU",
         "GGA", "GGC", "GGG", "GGU",
         "GUA", "GUC", "GUG", "GUU",
-        "UAC", "UAU", "UCA", "UCC",
-        "UCG", "UCU", "UGC", "UGG",
-        "UGU", "UUA", "UUC", "UUG",
-        "UUU",
+        "UAA", "UAC", "UAG", "UAU",
+        "UCA", "UCC", "UCG", "UCU",
+        "UGA", "UGC", "UGG", "UGU",
+        "UUA", "UUC", "UUG", "UUU",
         # translatable ambiguities in the standard code
         "CUN", "CCN", "CGN", "ACN",
         "GUN", "GCN", "GGN", "UCN"
@@ -1399,8 +1399,7 @@ end
     end
 
     reps = 10
-    #for len in [1, 10, 32, 1000, 10000, 100000]
-    for len in [1, 10, 32]
+    for len in [1, 10, 32, 1000, 10000, 100000]
         @test all(Bool[check_translate(random_translatable_rna(len)) for _ in 1:reps])
     end
 
