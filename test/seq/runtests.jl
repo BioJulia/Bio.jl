@@ -1169,13 +1169,15 @@ end
     @testset "Arithmetic and Order" begin
         @test AA_A + 1 == AA_R
         @test AA_R + 1 == AA_N
+        @test AA_A + 2 == AA_N
         @test AA_R - 1 == AA_A
+        @test AA_N - 2 == AA_A
         @test AA_D - AA_A ==  3
         @test AA_A - AA_D == -3
-        @test AA_A < AA_R < AA_N < AA_Z < AA_X < AA_O < AA_U
+        @test AA_A < AA_R < AA_N < AA_Z < AA_X < AA_O < AA_U < AA_Stop < AA_Gap
         @test !(AA_J < AA_B)
 
-        @test length(alphabet(AminoAcid)) == 26
+        @test length(alphabet(AminoAcid)) == 28
         @test AA_A in alphabet(AminoAcid)
         @test AA_I in alphabet(AminoAcid)
         @test AA_U in alphabet(AminoAcid)
@@ -1197,12 +1199,10 @@ end
                 @test all(Bool[check_string_construction(random_aa(len)) for _ in 1:reps])
                 @test all(Bool[check_string_construction(lowercase(random_aa(len))) for _ in 1:reps])
             end
-
-            # Check creation of empty
         end
 
         @testset "Conversion" begin
-            seq = aa"ARNDCQEGHILKMFPSTWYVOUBZJX"
+            seq = aa"ARNDCQEGHILKMFPSTWYVBJZXOU*-"
             @test convert(AminoAcidSequence, [aa for aa in seq]) == seq
             @test convert(Vector{AminoAcid}, seq) == [aa for aa in seq]
 
@@ -1346,6 +1346,8 @@ end
                 @test parse(AminoAcid, one) == aa
                 @test parse(AminoAcid, three) == aa
             end
+            @test parse(AminoAcid, "*") == AA_Stop
+            @test parse(AminoAcid, "-") == AA_Gap
         end
 
         @testset "Invalid Cases" begin
