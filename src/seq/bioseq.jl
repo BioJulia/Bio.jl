@@ -288,20 +288,22 @@ end
     error("attempt to modify immutable sequence")
 end
 
+# Returns `(<element index>, <bits offset>)`.
 # NOTE: This function assumes `i ≥ 1`.
 @inline function bitsid{A}(seq::BioSequence{A}, i::Integer)
     n = bitsof(A)
     d, r = divrem(i + seq.part.start - 2, div(64, n))
-    # (element index, bits offset)
     return d + 1, r * n
 end
 
-@inline function bitsid{A<:Union{DNAAlphabet{2},RNAAlphabet{2}}}(seq::BioSequence{A}, i::Integer)
+@inline function bitsid{A<:Union{DNAAlphabet{2},RNAAlphabet{2}}}(seq::BioSequence{A},
+                                                                 i::Integer)
     d, r = divrem32(i + seq.part.start - 2)
     return d + 1, 2r
 end
 
-@inline function bitsid{A<:Union{DNAAlphabet{4},RNAAlphabet{4}}}(seq::BioSequence{A}, i::Integer)
+@inline function bitsid{A<:Union{DNAAlphabet{4},RNAAlphabet{4}}}(seq::BioSequence{A},
+                                                                 i::Integer)
     d, r = divrem16(i + seq.part.start - 2)
     return d + 1, 4r
 end
@@ -746,23 +748,150 @@ nucleotides are compared.
 ### Returns
 The number of mismatches
 """
-function mismatches{A<:Union{DNAAlphabet,RNAAlphabet}}(a::BioSequence{A},
-                                                       b::BioSequence{A},
-                                                       nmatches::Bool=false)
+function mismatches end
+
+function mismatches{A<:DNAAlphabet}(a::BioSequence{A},
+                                    b::BioSequence{A},
+                                    nmatches::Bool=false)
+    if nmatches
+        return count_mismatches(a, b, nmatches, DNA_N)
+    else
+        return count_mismatches(a, b)
+    end
+end
+
+function mismatches{A<:RNAAlphabet}(a::BioSequence{A},
+                                    b::BioSequence{A},
+                                    nmatches::Bool=false)
+    if nmatches
+        return count_mismatches(a, b, nmatches, RNA_N)
+    else
+        return count_mismatches(a, b)
+    end
+end
+
+function mismatches(a::AminoAcidSequence, b::AminoAcidSequence, xmatches::Bool=false)
+    return count_mismatches(a, b, xmatches, AA_X)
+end
+
+function count_mismatches(a::BioSequence, b::BioSequence, anychar_matches::Bool, anychar)
     count = 0
-    # TODO: nmatches
     for (x, y) in zip(a, b)
-        if x != y
-            count += 1
+        if anychar_matches
+            mismatch = x != y && x != anychar && y != anychar
+        else
+            mismatch = x != y
         end
+        count += mismatch
     end
     return count
 end
 
-# mismatch count between two kmers
-function nucmismatches(x::UInt64, y::UInt64)
+# fast and exact counting algorithm
+@generated function count_mismatches{A<:Union{DNAAlphabet,RNAAlphabet}}(a::BioSequence{A},
+                                                                        b::BioSequence{A})
+    n = bitsof(A)
+    if n == 2
+        nucmismatches = :nuc2mismatches
+    elseif n == 4
+        nucmismatches = :nuc4mismatches
+    else
+        error("n ∉ (2, 4)")
+    end
+
+    quote
+        if length(a) > length(b)
+            return count_mismatches(b, a)
+        end
+
+        ja, ra = bitsid(a, 1)
+        j2, r2 = bitsid(a, endof(a) + 1)
+        jb, rb = bitsid(b, 1)
+        mismatches = 0
+
+        m = mask($n)
+        while ra != 0 && (ja, ra) < (j2, r2)
+            x = (a.data[ja] >> ra) & m
+            y = (b.data[jb] >> rb) & m
+            mismatches += x != y
+            if (ra += $n) ≥ 64
+                ja += 1
+                ra = 0
+            end
+            if (rb += $n) ≥ 64
+                jb += 1
+                rb = 0
+            end
+        end
+
+        if ja == j2 && ra == r2
+            return mismatches
+        end
+
+        if rb == 0
+            # fortunately, data are aligned with each other
+            while ja < j2
+                x = a.data[ja]
+                y = b.data[jb]
+                mismatches += $nucmismatches(x, y)
+                ja += 1
+                jb += 1
+            end
+            if r2 > 0
+                x = a.data[ja]
+                y = b.data[jb]
+                m = mask(r2)
+                mismatches += $nucmismatches(x & m, y & m)
+            end
+        else
+            y = b.data[jb] >> rb
+            m = mask(64 - rb)
+            while ja < j2
+                jb += 1
+                x = a.data[ja]
+                y′ = b.data[jb]
+                mismatches += $nucmismatches(x, y & m | (y′ << (64 - rb)) & ~m)
+                y = y′ >> rb
+                ja += 1
+            end
+
+            m = mask($n)
+            while (ja, ra) < (j2, r2)
+                x = (a.data[ja] >> ra) & m
+                y = (b.data[jb] >> rb) & m
+                mismatches += x != y
+                if (ra += $n) ≥ 64
+                    ja += 1
+                    ra = 0
+                end
+                if (rb += $n) ≥ 64
+                    jb += 1
+                    rb = 0
+                end
+            end
+        end
+        return mismatches
+    end
+end
+
+# mismatch count between two kmers (4 bits)
+function nuc4mismatches(x::UInt64, y::UInt64)
     xyxor = x $ y
-    return count_ones((xyxor & 0x5555555555555555) | ((xyxor & 0xAAAAAAAAAAAAAAAA) >>> 1))
+    mismatches = UInt64(0)
+    mismatches |=  xyxor & 0x1111111111111111
+    mismatches |= (xyxor & 0x2222222222222222) >> 1
+    mismatches |= (xyxor & 0x4444444444444444) >> 2
+    mismatches |= (xyxor & 0x8888888888888888) >> 3
+    return count_ones(mismatches)
+end
+
+# mismatch count between two kmers (2 bits)
+function nuc2mismatches(x::UInt64, y::UInt64)
+    xyxor = x $ y
+    mismatches = UInt64(0)
+    mismatches |=  xyxor & 0x5555555555555555
+    mismatches |= (xyxor & 0xAAAAAAAAAAAAAAAA) >> 1
+    return count_ones(mismatches)
 end
 
 

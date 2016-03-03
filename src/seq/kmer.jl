@@ -206,7 +206,7 @@ Return the number of mismatches between `a` and `b`.
 ### Returns
 The number of mismatches
 """
-mismatches{T, K}(a::Kmer{T, K}, b::Kmer{T, K}) = nucmismatches(UInt64(a), UInt64(b))
+mismatches{T, K}(a::Kmer{T, K}, b::Kmer{T, K}) = nuc2mismatches(UInt64(a), UInt64(b))
 
 """
 Canonical k-mer of `x`
