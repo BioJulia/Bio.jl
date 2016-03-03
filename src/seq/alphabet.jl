@@ -17,184 +17,98 @@ The number of bits to represent the alphabet.
 """
 function bitsof end
 
-
 # Creating an alphabet requires quite a few type and method definitions for each alphabet.
 # This macro makes it simpler to define an alphabet with less boilerplate code.
-macro alphabet(args...)
+macro alphabet(name, bits, element_type, charset)
     code = quote end
 
-    # Process options for desired alphabet
-    # -------------------------------------
-
-    options = Dict{Symbol, Any}()
-    for arg in args
-        options[arg.args[1]] = arg.args[2]
-    end
-
-    # Check for and process base name for alphabet type.
-    if !haskey(options, :name)
-        error("No name provided for alphabet.")
-    end
-    typename = options[:name]
-
-    # Check for and process whether the alphabet will have
-    # different bit encodings.
-    bits = get(options, :bits, 8)
-    bits = typeof(bits) == Expr ? bits.args : bits
-
-    # Check for and process different element types.
-    if !haskey(options, :element_type)
-        error("You need to provide an element type.")
-    end
-    element_type = options[:element_type]
-    element_type = typeof(element_type) == Expr ? element_type.args : element_type
-
-
-    # Check for and make sure that the alphabet argument has
-    # been provided.
-    if !haskey(options, :alphabet)
-        error("You must provide one or more alphabets.")
-    end
-    alphs = options[:alphabet]
-    alphs = typeof(alphs) == Expr ? alphs.args : alphs
-
-
-    # Make some descision on how functions and code need to be defined
-    # -----------------------------------------------------------------
-
-    # Descisions that depend on if alphabet has different bit encodings:
-    typename_n = esc(:($typename))
-    put_n = false
-    if typeof(bits) <: Array
-        if length(bits) > 1
-            typename_n = esc(:($typename{n}))
-            put_n = true
-        else
-            bits = bits[1]
-        end
-    end
-
-    # Descisions that depend on arguments passed as alphabet:
-    multi_eltypes = false
-    if typeof(element_type) <: Array
-        multi_eltypes = length(element_type) > 1
-        if multi_eltypes && length(element_type) != length(bits)
-            error("Number of element options does not match the number of bit options.")
-        end
+    # Name should be a symbol or expression.
+    type_name = typeof(name) == Symbol ? name : Symbol(name)
+    # Bits should be a single integer or array of integers.
+    multi_encodings = false
+    if typeof(bits) <: Integer
+        bit_encoding = bits
     else
-        element_type = Symbol[element_type]
+        if bits.head == :vect
+            bit_encoding = bits.args
+            multi_encodings = true
+        end
     end
 
+    # Eltype should be a single value, or an array.
+    element_type =
+        typeof(element_type) == Symbol ? Symbol[element_type] : convert(Array{Symbol, 1}, element_type.args)
+    multi_eltypes =
+        typeof(element_type) == Array && length(element_type) > 1 ? true : false
 
-    # Descisions based on arguments passed as alphabet:
-    multi_alphs = false
-    if typeof(alphs) <: Array
-        # Determine if it's one array of a single type, an array of character sets.
-        types = Vector{DataType}(length(alphs))
-        for i in 1:length(alphs)
-            if typeof(alphs[i]) == Expr
-                if alphs[i].head == :(:)
-                    types[i] = Range
-                elseif alphs[i].head == :(vect)
-                    types[i] = Array
-                elseif alphs[i].head == :(call)
-                    types[i] = Function
-                else
-                    error("Unrecognised head when determining types of alphabet arguments.")
-                end
-            else
-                types[i] = typeof(alphs[i])
-            end
-        end
-        multi_alphs = all(Bool[i == Range || i == Array || i == Function for i in types]) && length(types) > 1
-        if multi_alphs
-            if length(alphs) != length(bits)
-                error("Number of alphabet options does not match number of bit options.")
-            end
+    # Alphabet should be a single range/function/array,
+    # or an array of functions/ranges/arrays.
+    if typeof(charset) != Expr
+        error("Invalid options provided as charset")
+    end
+    multi_charsets = false
+    charset_head = charset.head
+    if charset_head == :vect
+        charset = charset.args
+        types = DataType[typeof(c) for c in charset]
+        if length(unique(types)) == 1 && all(types .!= Expr)
+            multi_charsets = false
+            charset = Array[charset]
+        elseif length(charset) == length(bit_encoding)
+            multi_charsets = true
         else
-            alphs = Array{Int, 1}[alphs]
+            error("Invalid options provided as charset")
         end
+    elseif charset_head == :call || charset_head == :(:)
+        charset = Expr[charset]
     end
 
-
-    # Build up code expressions now
-    # ------------------------------
-
-    # Type definition:
-    push!(code.args, :(immutable $typename_n <: Alphabet end))
-
-    # bitsof functions:
-    for i in bits
-        t = put_n ? :(::Type{$typename{$i}}) : :(::Type{$typename})
+    # Generate the code for the alphabet.
+    typetodef = multi_encodings ? :($(type_name){n}) : :($type_name)
+    push!(code.args, esc(:(immutable $(typetodef) <: Alphabet end)))
+    just_type = :(::Type{$type_name})
+    for i in bit_encoding
+        t = multi_encodings ? :(::Type{$type_name{$i}}) : just_type
         push!(code.args, esc(:(function bitsof($t)
                                $i
                                end)))
     end
-
-    # Base.eltype functions:
     for i in 1:length(element_type)
-        sn = multi_eltypes ? bits[i] : :(n)
-        fun = sn == :(n) ? :(Base.eltype{n}) : :(Base.eltype)
-        argument = put_n ? :(::Type{$typename{$sn}}) : :(::Type{$typename})
+        sn = multi_eltypes ? bit_encoding[i] : :(n)
+        fun = sn == :(n) && multi_encodings ? :(Base.eltype{n}) : :(Base.eltype)
+        argument = multi_encodings ? :(::Type{$type_name{$sn}}) : just_type
         push!(code.args, esc(:(function $fun($argument)
                                $(element_type[i])
                                end)))
     end
-
-    # alphabet functions:
-    for i in 1:length(alphs)
-        sn = multi_alphs ? bits[i] : :(n)
-        fun = sn == :(n) ? :(alphabet{n}) : :(alphabet)
-        argument = put_n ? :(::Type{$typename{$sn}}) : :(::Type{$typename})
+    for i in 1:length(charset)
+        sn = multi_charsets ? bit_encoding[i] : :(n)
+        fun = sn == :(n) && multi_encodings ? :(alphabet{n}) : :(alphabet)
+        argument = multi_encodings ? :(::Type{$type_name{$sn}}) : just_type
         push!(code.args, esc(:(function $fun($argument)
-                               $(alphs[i])
+                               $(charset[i])
                                end)))
     end
-
     return code
 end
 
 
-#immutable DNAAlphabet{n} <: Alphabet end
-
-@alphabet(name = DNAAlphabet,
-          bits = [2, 4],
-          element_type = DNANucleotide,
-          alphabet = [DNA_A:DNA_T, alphabet(DNANucleotide)])
-
-#immutable RNAAlphabet{n} <: Alphabet end
-
-@alphabet(name = RNAAlphabet,
-          bits = [2, 4],
-          element_type = RNANucleotide,
-          alphabet = [RNA_A:RNA_U, alphabet(RNANucleotide)])
-
-#immutable AminoAcidAlphabet <: Alphabet end
-@alphabet(name = AminoAcidAlphabet,
-          bits = 8,
-          element_type = AminoAcid,
-          alphabet = alphabet(AminoAcid))
+@alphabet(DNAAlphabet,
+          [2, 4],
+          DNANucleotide,
+          [DNA_A:DNA_T, alphabet(DNANucleotide)])
 
 
-#for n in (2, 4)
-#    @eval begin
-#        bitsof(::Type{DNAAlphabet{$n}}) = $n
-#        bitsof(::Type{RNAAlphabet{$n}}) = $n
-#    end
-#end
-#bitsof(::Type{AminoAcidAlphabet}) = 8
+@alphabet(RNAAlphabet,
+          [2, 4],
+          RNANucleotide,
+          [RNA_A:RNA_U, alphabet(RNANucleotide)])
 
-#Base.eltype(::Type{DNAAlphabet}) = DNANucleotide
-#Base.eltype(::Type{RNAAlphabet}) = RNANucleotide
-#Base.eltype{n}(::Type{DNAAlphabet{n}}) = DNANucleotide
-#Base.eltype{n}(::Type{RNAAlphabet{n}}) = RNANucleotide
-#Base.eltype(::Type{AminoAcidAlphabet}) = AminoAcid
 
-#alphabet(::Type{DNAAlphabet{2}}) = DNA_A:DNA_T
-#alphabet(::Type{RNAAlphabet{2}}) = RNA_A:RNA_U
-#alphabet(::Type{DNAAlphabet{4}}) = alphabet(DNANucleotide)
-#alphabet(::Type{RNAAlphabet{4}}) = alphabet(RNANucleotide)
-#alphabet(::Type{AminoAcidAlphabet}) = alphabet(AminoAcid)
+@alphabet(AminoAcidAlphabet,
+          8,
+          AminoAcid,
+          alphabet(AminoAcid))
 
 
 # Encoders & Decoders
