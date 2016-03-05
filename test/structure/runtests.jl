@@ -19,8 +19,9 @@ using Bio.Structure: atomid,
 
 get_bio_fmt_specimens()
 
-# Directory where PDB files are stored for parsing tests
-const test_files = "test/BioFmtSpecimens/PDB"
+function pdbfilepath(filename)
+    return Pkg.dir("Bio", "test", "BioFmtSpecimens", "PDB", filename)
+end
 
 
 @testset "Model" begin
@@ -551,7 +552,7 @@ end
     @test_throws AssertionError parseatomrecord(line_e)
 
     # Test parsing 1AKE (multiple chains, disordered atoms)
-    struc = read("$test_files/1AKE.pdb", PDB)
+    struc = read(pdbfilepath("1AKE.pdb"), PDB)
     @test structurename(struc) == "1AKE.pdb"
     @test countmodels(struc) == 1
     @test modelnumbers(struc) == [1]
@@ -826,35 +827,35 @@ end
 
 
     # Test parsing options
-    struc = read("$test_files/1AKE.pdb", PDB; structure_name="New name")
+    struc = read(pdbfilepath("1AKE.pdb"), PDB; structure_name="New name")
     @test structurename(struc) == "New name"
     @test countatoms(struc) == 3804
 
-    struc = read("$test_files/1AKE.pdb", PDB; read_het_atoms=false)
+    struc = read(pdbfilepath("1AKE.pdb"), PDB; read_het_atoms=false)
     @test countatoms(struc) == 3312
     @test serial(collectatoms(struc)[2000]) == 2006
     @test sum(map(ishetatom, collectatoms(struc))) == 0
 
-    struc = read("$test_files/1AKE.pdb", PDB; read_std_atoms=false)
+    struc = read(pdbfilepath("1AKE.pdb"), PDB; read_std_atoms=false)
     @test countatoms(struc) == 492
     @test serial(collectatoms(struc)[400]) == 3726
     @test sum(map(ishetatom, collectatoms(struc))) == 492
 
-    struc = read("$test_files/1AKE.pdb", PDB; read_het_atoms=false, read_std_atoms=false)
+    struc = read(pdbfilepath("1AKE.pdb"), PDB; read_het_atoms=false, read_std_atoms=false)
     @test countatoms(struc) == 0
     @test countresidues(struc) == 0
 
-    struc = read("$test_files/1AKE.pdb", PDB; remove_disorder=true)
+    struc = read(pdbfilepath("1AKE.pdb"), PDB; remove_disorder=true)
     @test countatoms(struc) == 3804
     @test sum(map(isdisorderedatom, collectatoms(struc))) == 0
     @test tempfac(struc['A'][167]["NE"]) == 23.32
 
-    struc = read("$test_files/1AKE.pdb", PDB, backboneselector)
+    struc = read(pdbfilepath("1AKE.pdb"), PDB, backboneselector)
     @test countatoms(struc) == 1284
     @test countatoms(struc, backboneselector) == 1284
     @test serial(collectatoms(struc)[1000]) == 2566
 
-    struc = read("$test_files/1AKE.pdb", PDB, stdatomselector, disorderselector)
+    struc = read(pdbfilepath("1AKE.pdb"), PDB, stdatomselector, disorderselector)
     @test countatoms(struc) == 5
     @test sum(map(isdisorderedatom, collectatoms(struc))) == 5
     @test sum(map(ishetatom, collectatoms(struc))) == 0
@@ -862,14 +863,14 @@ end
 
 
     # Test parsing from stream
-    open("$test_files/1AKE.pdb", "r") do file
+    open(pdbfilepath("1AKE.pdb"), "r") do file
         struc = read(file, PDB)
         @test countatoms(struc) == 3804
         @test countresidues(struc) == 808
     end
 
     # Test parsing 1EN2 (disordered residue)
-    struc = read("$test_files/1EN2.pdb", PDB)
+    struc = read(pdbfilepath("1EN2.pdb"), PDB)
     @test modelnumbers(struc) == [1]
     @test chainids(struc[1]) == ['A']
     @test serial(struc['A'][48]["CA"]) == 394
@@ -905,7 +906,7 @@ end
 
 
     # Test parsing 1SSU (multiple models)
-    struc = read("$test_files/1SSU.pdb", PDB)
+    struc = read(pdbfilepath("1SSU.pdb"), PDB)
     # Test countmodels
     @test countmodels(struc) == 20
     @test modelnumbers(struc) == collect(1:20)
@@ -947,7 +948,7 @@ end
     @test modelnumbers(struc_new) == [5]
     @test countatoms(struc_new[5]) == 756
 
-    struc = read("$test_files/1AKE.pdb", PDB)
+    struc = read(pdbfilepath("1AKE.pdb"), PDB)
     model_new = organise(Chain[struc['B'], struc['A']])
     @test isa(model_new, Model)
     @test modelnumber(model_new) == 1
@@ -973,13 +974,13 @@ end
     @test length(chains_new) == 2
     @test chainid(chains_new[2]) == 'B'
     @test x(chains_new[2][10]["C"]) == 23.612
-    struc = read("$test_files/1EN2.pdb", PDB)
+    struc = read(pdbfilepath("1EN2.pdb"), PDB)
     chains_new = organise(DisorderedResidue[struc['A'][10], struc['A'][16]])
     @test isa(chains_new, Vector{Chain})
     @test length(chains_new) == 1
     @test chainid(chains_new[1]) == 'A'
     @test x(chains_new[1][10]["C"]) == -5.157
-    struc = read("$test_files/1AKE.pdb", PDB)
+    struc = read(pdbfilepath("1AKE.pdb"), PDB)
     chains_new = organise(struc['A'][50])
     @test isa(chains_new, Vector{Chain})
     @test length(chains_new) == 1
@@ -1008,7 +1009,7 @@ end
     @test resid(residues_new[1]) == "50"
     @test countatoms(residues_new[1]) == 1
 
-    struc = read("$test_files/1EN2.pdb", PDB)
+    struc = read(pdbfilepath("1EN2.pdb"), PDB)
     atoms = [
         collect(struc['A'][9]);
         collect(disorderedres(struc['A'][10], "SER"));
@@ -1026,7 +1027,7 @@ end
 
 
     # Test organisemodel
-    struc = read("$test_files/1AKE.pdb", PDB)
+    struc = read(pdbfilepath("1AKE.pdb"), PDB)
     model_new = organisemodel(Chain[struc['B'], struc['A']])
     @test isa(model_new, Model)
     @test modelnumber(model_new) == 1
@@ -1059,7 +1060,7 @@ end
 
 
     # Test organisestructure
-    struc = read("$test_files/1SSU.pdb", PDB)
+    struc = read(pdbfilepath("1SSU.pdb"), PDB)
     struc_new = organisestructure(Model[struc[5], struc[3]])
     @test isa(struc_new, ProteinStructure)
     @test structurename(struc_new) == ""
@@ -1072,7 +1073,7 @@ end
     @test modelnumbers(struc_new) == [5]
     @test countatoms(struc_new[5]) == 756
 
-    struc = read("$test_files/1AKE.pdb", PDB)
+    struc = read(pdbfilepath("1AKE.pdb"), PDB)
     struc_new = organisestructure(Chain[struc['B'], struc['A']])
     @test isa(struc_new, ProteinStructure)
     @test modelnumbers(struc_new) == [1]
@@ -1108,15 +1109,15 @@ end
     # Test parser error handling
     error = PDBParseError("message", 10, "line")
     # Missing coordinate (blank string)
-    @test_throws PDBParseError read("$test_files/1AKE_err_a.pdb", PDB)
+    @test_throws PDBParseError read(pdbfilepath("1AKE_err_a.pdb"), PDB)
     # Missing chain ID (line ends early)
-    @test_throws PDBParseError read("$test_files/1AKE_err_b.pdb", PDB)
+    @test_throws PDBParseError read(pdbfilepath("1AKE_err_b.pdb"), PDB)
     # Bad MODEL record
-    @test_throws PDBParseError read("$test_files/1SSU_err.pdb", PDB)
+    @test_throws PDBParseError read(pdbfilepath("1SSU_err.pdb"), PDB)
     # Duplicate atom names in same residue
-    @test_throws ErrorException read("$test_files/1AKE_err_c.pdb", PDB)
+    @test_throws ErrorException read(pdbfilepath("1AKE_err_c.pdb"), PDB)
     # Non-existent file
-    @test_throws SystemError read("$test_files/non_existent_file.pdb", PDB)
+    @test_throws SystemError read(pdbfilepath("non_existent_file.pdb"), PDB)
 end
 
 
@@ -1180,7 +1181,7 @@ end
         return counter
     end
 
-    struc = read("$test_files/1SSU.pdb", PDB)
+    struc = read(pdbfilepath("1SSU.pdb"), PDB)
     # All writing is done to one temporary file which is removed at the end
     temp_filename = tempname()
     writepdb(temp_filename, struc)
@@ -1213,7 +1214,7 @@ end
     @test resname(struc_written['A'][13]["CE1"]) == "PHE"
 
     # Test selectors
-    struc = read("$test_files/1AKE.pdb", PDB)
+    struc = read(pdbfilepath("1AKE.pdb"), PDB)
     writepdb(temp_filename, struc, hetatomselector)
     @test countlines(temp_filename) == 499
     struc_written = read(temp_filename, PDB)
@@ -1277,7 +1278,7 @@ end
     @test !ishetatom(struc_written['A'][51]["CA"])
 
     # Test multiple model writing
-    struc = read("$test_files/1SSU.pdb", PDB)
+    struc = read(pdbfilepath("1SSU.pdb"), PDB)
     writepdb(temp_filename, Model[struc[10], struc[5]])
     @test countlines(temp_filename) == 1516
     struc_written = read(temp_filename, PDB)
@@ -1288,7 +1289,7 @@ end
     @test_throws KeyError struc_written[1]
 
     # Test disordered residue writing
-    struc = read("$test_files/1EN2.pdb", PDB)
+    struc = read(pdbfilepath("1EN2.pdb"), PDB)
     writepdb(temp_filename, struc)
     @test countlines(temp_filename) == 819
     struc_written = read(temp_filename, PDB)
@@ -1328,7 +1329,7 @@ end
     @test coords[2] == 2.0
     @test coords[3] == 3.0
 
-    struc_1AKE = read("$test_files/1AKE.pdb", PDB)
+    struc_1AKE = read(pdbfilepath("1AKE.pdb"), PDB)
     coords = coordarray(struc_1AKE)
     @test size(coords) == (3,3804)
     @test coords[1,3787] == 20.135
@@ -1366,7 +1367,7 @@ end
     ]
     @test_throws AssertionError rmsd(coords_one, coords_two)
 
-    struc_1SSU = read("$test_files/1SSU.pdb", PDB)
+    struc_1SSU = read(pdbfilepath("1SSU.pdb"), PDB)
     @test isapprox(rmsd(struc_1SSU[1], struc_1SSU[2], calphaselector), 4.1821925809691889)
     @test isapprox(rmsd(struc_1SSU[5], struc_1SSU[6], backboneselector), 5.2878196391279939)
     @test_throws AssertionError rmsd(struc_1SSU[1]['A'][8], struc_1SSU[1]['A'][9])
