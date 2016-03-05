@@ -368,15 +368,19 @@ end
 
 # util to define a setindex! method
 macro define_setindex!(A)
-    quote
-        @eval function Base.setindex!(seq::BioSequence{$(A)}, x::$(eltype(A)), i::Integer)
+    esc(quote
+        function Base.setindex!(seq::BioSequence{$(A)}, x::$(eltype(A)), i::Integer)
             checkmutability(seq)
             checkbounds(seq, i)
+            return unsafe_setindex!(seq, x, i)
+        end
+        function unsafe_setindex!(seq::BioSequence{$(A)}, x::$(eltype(A)), i::Integer)
             j, r = bitsid(seq, i)
-            seq.data[j] = (seq.data[j] & ~(mask($(A)) << r)) | UInt64(encode($(A), x)) << r
+            bin = UInt64(encode($(A), x))
+            @inbounds seq.data[j] = (bin << r) | (seq.data[j] & ~($(mask(eval(A))) << r))
             return seq
         end
-    end
+    end)
 end
 
 for A in (DNAAlphabet{2}, DNAAlphabet{4},
@@ -565,6 +569,18 @@ function Base.reverse!{A}(seq::BioSequence{A})
     checkmutability(seq)
     for i in 1:div(endof(seq), 2)
         seq[i], seq[end-i+1] = seq[end-i+1], seq[i]
+    end
+    return seq
+end
+
+function Base.reverse!{A<:Union{DNAAlphabet,RNAAlphabet,AminoAcidAlphabet}}(seq::BioSequence{A})
+    checkmutability(seq)
+    for i in 1:div(endof(seq),2)
+        # same as `seq[i], seq[end-i+1] = seq[end-i+1], seq[i]`
+        j = endof(seq) - i + 1
+        x = unsafe_getindex(seq, i)
+        unsafe_setindex!(seq, unsafe_getindex(seq, j), i)
+        unsafe_setindex!(seq, x, j)
     end
     return seq
 end
