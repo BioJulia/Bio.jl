@@ -61,18 +61,49 @@ Encode biological characters to binary representation.
 """
 function encode end
 
+immutable EncodeError{A<:Alphabet,T} <: Exception
+    val::T
+end
+
+Base.call{A,T}(::Type{EncodeError{A}}, val::T) = EncodeError{A,T}(val)
+
+function Base.showerror{A}(io::IO, err::EncodeError{A})
+    print(io, "cannot encode ", err.val, " in ", A)
+end
+
 """
 Decode biological characters from binary representation.
 """
 function decode end
 
-for (A, N) in ((DNAAlphabet, DNANucleotide),
-               (RNAAlphabet, RNANucleotide)), n in (2, 4)
-    @eval begin
-        encode(::Type{$A{$n}}, x::$N) = reinterpret(UInt8, x)
-        decode(::Type{$A{$n}}, x::UInt8) = reinterpret($N, x)
-    end
+immutable DecodeError{A<:Alphabet,T} <: Exception
+    val::T
 end
 
-encode(::Type{AminoAcidAlphabet}, x::AminoAcid) = reinterpret(UInt8, x)
-decode(::Type{AminoAcidAlphabet}, x::UInt8) = reinterpret(AminoAcid, x)
+Base.call{A,T}(::Type{DecodeError{A}}, val::T) = DecodeError{A,T}(val)
+
+function Base.showerror{A}(io::IO, err::DecodeError{A})
+    print(io, "cannot decode ", err.val, " in ", A)
+end
+
+for (A, T, ub) in [
+        (DNAAlphabet{2},    DNANucleotide, DNA_T  ),
+        (DNAAlphabet{4},    DNANucleotide, DNA_Gap),
+        (RNAAlphabet{2},    RNANucleotide, RNA_U  ),
+        (RNAAlphabet{4},    RNANucleotide, RNA_Gap),
+        (AminoAcidAlphabet, AminoAcid,     AA_Gap )]
+    @eval begin
+        @inline function encode(::Type{$A}, x::$T)
+            if x > $ub
+                throw(EncodeError{$A}(x))
+            end
+            return reinterpret(UInt8, x)
+        end
+        @inline function decode(::Type{$A}, x::UInt8)
+            if x > $(reinterpret(UInt8, ub))
+                throw(DecodeError{$A}(x))
+            end
+            return reinterpret($T, x)
+        end
+    end
+end

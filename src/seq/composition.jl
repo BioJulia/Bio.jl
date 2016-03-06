@@ -47,11 +47,14 @@ function Composition{K}(kmer::RNAKmer{K})
 end
 
 function Base.getindex{A}(comp::Composition{A}, x)
-    i = encode(A, x) + 1
-    if i > endof(comp.counts)
-        return 0
-    else
+    try
+        i = encode(A, x) + 1
         return Int(comp.counts[i])
+    catch ex
+        if isa(ex, EncodeError{A})
+            return 0
+        end
+        rethrow()
     end
 end
 
