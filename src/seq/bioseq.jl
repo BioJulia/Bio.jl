@@ -573,24 +573,44 @@ function Base.reverse!{A}(seq::BioSequence{A})
     return seq
 end
 
-function Base.reverse!{A<:Union{DNAAlphabet,RNAAlphabet,AminoAcidAlphabet}}(seq::BioSequence{A})
-    checkmutability(seq)
-    for i in 1:div(endof(seq),2)
-        # same as `seq[i], seq[end-i+1] = seq[end-i+1], seq[i]`
-        j = endof(seq) - i + 1
-        x = unsafe_getindex(seq, i)
-        unsafe_setindex!(seq, unsafe_getindex(seq, j), i)
-        unsafe_setindex!(seq, x, j)
-    end
-    return seq
-end
-
 function Base.reverse{A}(seq::BioSequence{A})
     newseq = docopy(seq)
     mutable!(newseq)
     reverse!(newseq)
     newseq.mutable = seq.mutable
     return newseq
+end
+
+@generated function Base.reverse{A<:Union{DNAAlphabet,RNAAlphabet}}(seq::BioSequence{A})
+    n = bitsof(A)
+    if n == 2
+        nucrev = :nucrev2
+    elseif n == 4
+        nucrev = :nucrev4
+    else
+        error("n ∉ (2, 4)")
+    end
+
+    quote
+        data = zeros(UInt64, seq_data_len(A, length(seq)))
+        j, r = bitsid(seq, endof(seq) + 1)
+        if r == 0
+            @inbounds for j′ in 1:endof(data)
+                j -= 1
+                data[j′] = $nucrev(seq.data[j])
+            end
+        else
+            x = (seq.data[j] & mask(r)) << (64 - r)
+            @inbounds for j′ in 1:endof(data)-1
+                j -= 1
+                x′ = seq.data[j]
+                data[j′] = $nucrev(x | (x′ >> r))
+                x = x′ << (64 - r)
+            end
+            data[end] = $nucrev(x)
+        end
+        return BioSequence{A}(data, 1:length(seq), seq.mutable, false)
+    end
 end
 
 function Base.complement!{A<:Union{DNAAlphabet{2},RNAAlphabet{2}}}(seq::BioSequence{A})
