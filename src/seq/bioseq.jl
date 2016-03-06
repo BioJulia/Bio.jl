@@ -44,7 +44,7 @@ typealias AminoAcidSequence BioSequence{AminoAcidAlphabet}
 
 # This is the body of the BioSequence constructor below. It's separated into a
 # macro so we can generate two versions depending on wether the `unsafe` flag is
-# set. In this macro, `strdata[startpos:stoppos]` would be encoded into
+# set. In this macro, `srcdata[startpos:stoppos]` would be encoded into
 # `seqdata` as alphabet `A`.
 macro encode_seq(nt_convert_expr)
     quote
@@ -56,7 +56,7 @@ macro encode_seq(nt_convert_expr)
                 shift = 0
                 data_i = UInt64(0)
                 while shift < 64 && j <= stoppos
-                    c = strdata[j]
+                    c = srcdata[j]
                     bioc = $(nt_convert_expr)
                     hasinvalid |= !isvalid(bioc)
                     data_i |= UInt64(encode(A, bioc)) << shift
@@ -69,7 +69,7 @@ macro encode_seq(nt_convert_expr)
             if hasinvalid
                 # figure out what the first bad character was.
                 for i in startpos:stoppos
-                    c = strdata[j]
+                    c = srcdata[j]
                     bioc = $(nt_convert_expr)
                     if !isvalid(bioc)
                         error(c, " is not a valid character in ", A)
@@ -93,7 +93,7 @@ function Base.call{A<:Alphabet}(::Type{BioSequence{A}},
                                 unsafe::Bool=false, mutable::Bool=false)
     len = stoppos - startpos + 1
     seqdata = zeros(UInt64, seq_data_len(A, len))
-    strdata = seq
+    srcdata = seq
     T = eltype(A)
     if unsafe
         @encode_seq unsafe_ascii_byte_to_nucleotide(T, c)
@@ -111,7 +111,7 @@ for A in (DNAAlphabet, RNAAlphabet)
                                     unsafe::Bool=false, mutable::Bool=false)
         len = stoppos - startpos + 1
         seqdata = zeros(UInt64, seq_data_len(A, len))
-        strdata = seq
+        srcdata = seq
         if unsafe
             @encode_seq c
         else
@@ -136,7 +136,7 @@ function Base.call(::Type{AminoAcidSequence},
                    unsafe::Bool=false, mutable::Bool=false)
     len = stoppos - startpos + 1
     seqdata = zeros(UInt64, seq_data_len(AminoAcidAlphabet, len))
-    strdata = seq
+    srcdata = seq
     A = AminoAcidAlphabet
     if unsafe
         @encode_seq c
@@ -412,7 +412,7 @@ end
 Base.(:^)(chunk::BioSequence, n::Integer) = repeat(chunk, n)
 
 function Base.copy!{A}(seq::BioSequence{A},
-                       strdata::Vector{UInt8},
+                       srcdata::Vector{UInt8},
                        startpos::Integer, stoppos::Integer)
     checkmutability(seq)
     n = stoppos - startpos + 1
