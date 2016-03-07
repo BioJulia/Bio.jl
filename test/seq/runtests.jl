@@ -7,6 +7,7 @@ else
     const Test = BaseTestNext
 end
 
+import Bio
 using Bio.Seq,
     YAML,
     TestFunctions
@@ -245,6 +246,84 @@ end
             @test convert(RNANucleotide, 2) == RNA_G
             @test convert(RNANucleotide, 3) == RNA_U
             @test convert(RNANucleotide, 14) == RNA_N
+        end
+    end
+
+    @testset "Encoder" begin
+        @testset "DNA" begin
+            encode = Bio.Seq.encode
+            EncodeError = Bio.Seq.EncodeError
+
+            # 2 bits
+            @test encode(DNAAlphabet{2}, DNA_A) === convert(UInt8, DNA_A) === 0b00
+            @test encode(DNAAlphabet{2}, DNA_C) === convert(UInt8, DNA_C) === 0b01
+            @test encode(DNAAlphabet{2}, DNA_G) === convert(UInt8, DNA_G) === 0b10
+            @test encode(DNAAlphabet{2}, DNA_T) === convert(UInt8, DNA_T) === 0b11
+            @test_throws EncodeError encode(DNAAlphabet{2}, DNA_M)
+            @test_throws EncodeError encode(DNAAlphabet{2}, DNA_N)
+
+            # 4 bits
+            for nt in alphabet(DNANucleotide)
+                @test encode(DNAAlphabet{4}, nt) === convert(UInt8, nt)
+            end
+            @test_throws EncodeError encode(DNAAlphabet{4}, Bio.Seq.DNA_INVALID)
+        end
+        @testset "RNA" begin
+            encode = Bio.Seq.encode
+            EncodeError = Bio.Seq.EncodeError
+
+            # 2 bits
+            @test encode(RNAAlphabet{2}, RNA_A) === convert(UInt8, RNA_A) === 0b00
+            @test encode(RNAAlphabet{2}, RNA_C) === convert(UInt8, RNA_C) === 0b01
+            @test encode(RNAAlphabet{2}, RNA_G) === convert(UInt8, RNA_G) === 0b10
+            @test encode(RNAAlphabet{2}, RNA_U) === convert(UInt8, RNA_U) === 0b11
+            @test_throws EncodeError encode(RNAAlphabet{2}, RNA_M)
+            @test_throws EncodeError encode(RNAAlphabet{2}, RNA_N)
+
+            # 4 bits
+            for nt in alphabet(RNANucleotide)
+                @test encode(RNAAlphabet{4}, nt) === convert(UInt8, nt)
+            end
+            @test_throws EncodeError encode(RNAAlphabet{4}, Bio.Seq.RNA_INVALID)
+        end
+    end
+
+    @testset "Decoder" begin
+        @testset "DNA" begin
+            decode = Bio.Seq.decode
+            DecodeError = Bio.Seq.DecodeError
+
+            # 2 bits
+            @test decode(DNAAlphabet{2}, 0b00) === convert(DNANucleotide, 0b00) === DNA_A
+            @test decode(DNAAlphabet{2}, 0b01) === convert(DNANucleotide, 0b01) === DNA_C
+            @test decode(DNAAlphabet{2}, 0b10) === convert(DNANucleotide, 0b10) === DNA_G
+            @test decode(DNAAlphabet{2}, 0b11) === convert(DNANucleotide, 0b11) === DNA_T
+            @test_throws DecodeError decode(DNAAlphabet{2}, 0b0100)
+            @test_throws DecodeError decode(DNAAlphabet{2}, 0b1110)
+
+            # 4 bits
+            for x in 0b0000:0b1111
+                @test decode(DNAAlphabet{4}, x) === convert(DNANucleotide, x)
+            end
+            @test_throws DecodeError decode(DNAAlphabet{4}, 0b10000)
+        end
+        @testset "RNA" begin
+            decode = Bio.Seq.decode
+            DecodeError = Bio.Seq.DecodeError
+
+            # 2 bits
+            @test decode(RNAAlphabet{2}, 0b00) === convert(RNANucleotide, 0b00) === RNA_A
+            @test decode(RNAAlphabet{2}, 0b01) === convert(RNANucleotide, 0b01) === RNA_C
+            @test decode(RNAAlphabet{2}, 0b10) === convert(RNANucleotide, 0b10) === RNA_G
+            @test decode(RNAAlphabet{2}, 0b11) === convert(RNANucleotide, 0b11) === RNA_U
+            @test_throws DecodeError decode(RNAAlphabet{2}, 0b0100)
+            @test_throws DecodeError decode(RNAAlphabet{2}, 0b1110)
+
+            # 4 bits
+            for x in 0b0000:0b1111
+                @test decode(RNAAlphabet{4}, x) === convert(RNANucleotide, x)
+            end
+            @test_throws DecodeError decode(RNAAlphabet{4}, 0b10000)
         end
     end
 
@@ -1181,6 +1260,24 @@ end
         @test AA_A in alphabet(AminoAcid)
         @test AA_I in alphabet(AminoAcid)
         @test AA_U in alphabet(AminoAcid)
+    end
+
+    @testset "Encoder" begin
+        encode = Bio.Seq.encode
+        @test encode(AminoAcidAlphabet, AA_A) === 0x00
+        for aa in alphabet(AminoAcid)
+            @test encode(AminoAcidAlphabet, aa) === convert(UInt8, aa)
+        end
+        @test_throws Bio.Seq.EncodeError encode(AminoAcidAlphabet, Bio.Seq.AA_INVALID)
+    end
+
+    @testset "Decoder" begin
+        decode = Bio.Seq.decode
+        @test decode(AminoAcidAlphabet, 0x00) === AA_A
+        for x in 0x00:0x1b
+            @test decode(AminoAcidAlphabet, x) === convert(AminoAcid, x)
+        end
+        @test_throws Bio.Seq.DecodeError decode(AminoAcidAlphabet, 0x1c)
     end
 
     @testset "AminoAcid Sequences" begin

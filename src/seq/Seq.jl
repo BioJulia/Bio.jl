@@ -100,7 +100,10 @@ export
     AA_Gap,
     FASTA,
     FASTQ,
-    Alphabet
+    Alphabet,
+    DNAAlphabet,
+    RNAAlphabet,
+    AminoAcidAlphabet
 
 using BufferedStreams,
     Base.Intrinsics,
