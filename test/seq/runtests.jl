@@ -1442,8 +1442,8 @@ end
         for specimen in YAML.load_file(joinpath(path, "index.yml"))
             tags = specimen["tags"]
             valid = get(specimen, "valid", true)
-            # currently unsupported features
-            if contains(tags, "gaps") || contains(tags, "comments") || (contains(tags, "ambiguity") && !contains(tags, "protein"))
+            if contains(tags, "comments")
+                # currently comments are not supported
                 continue
             end
             if valid
