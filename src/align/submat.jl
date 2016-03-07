@@ -166,14 +166,13 @@ function parse_ncbi_submat(filepath)
             end
         end
     end
+
     # create the substitution matrix
     aas = alphabet(AminoAcid)
     n_aas = length(aas)
     defined = falses(n_aas)
     for char in header
-        if char != '*'
-            defined[UInt8(AminoAcid(char))+1] = true
-        end
+        defined[UInt8(AminoAcid(char))+1] = true
     end
     submat = Matrix{Int}(n_aas, n_aas)
     for (i, x) in enumerate(aas), (j, y) in enumerate(aas)
