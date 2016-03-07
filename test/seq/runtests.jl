@@ -535,16 +535,6 @@ end
             end
 
             @testset "Equality" begin
-                reps = 10
-                function check_seq_equality(len)
-                    a = random_dna(len)
-                    return a == copy(a)
-                end
-
-                for len in [1, 10, 32, 1000]
-                    @test all(Bool[check_seq_equality(len) for _ in 1:reps])
-                end
-
                 a = b = dna"ACTGN"
                 @test a == b
                 @test dna"ACTGN" == dna"ACTGN"
