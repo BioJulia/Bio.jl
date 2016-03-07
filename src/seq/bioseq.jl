@@ -86,6 +86,10 @@ function Base.call{A<:Alphabet}(::Type{BioSequence{A}}; mutable::Bool=true)
     return BioSequence{A}(UInt64[], 1:0, mutable, false)
 end
 
+BioSequence(::Type{DNANucleotide}) = DNASequence()
+BioSequence(::Type{RNANucleotide}) = RNASequence()
+BioSequence(::Type{AminoAcid}) = AminoAcidSequence()
+
 function Base.call{A<:Alphabet}(::Type{BioSequence{A}},
                                 seq::Union{AbstractString,Vector{UInt8}},
                                 startpos::Integer=1,
@@ -659,6 +663,9 @@ end
 
 function Base.complement!(seq::Union{DNASequence,RNASequence})
     checkmutability(seq)
+    if isempty(seq)
+        return seq
+    end
     j1, r1 = bitsid(seq, 1)
     j2, r2 = bitsid(seq, endof(seq) + 1)
 

@@ -73,10 +73,10 @@ end
 
 make_kmer{K,T}(seq::NTuple{K,T}) = make_kmer(Kmer{T,K}, seq)
 
-Base.convert{K}(::Type{DNASequence}, x::DNAKmer{K}) = DNASequence([nt for nt in x])
-Base.convert{K}(::Type{RNASequence}, x::RNAKmer{K}) = RNASequence([nt for nt in x])
 Base.convert{K}(::Type{BioSequence}, x::DNAKmer{K}) = DNASequence(x)
 Base.convert{K}(::Type{BioSequence}, x::RNAKmer{K}) = RNASequence(x)
+Base.convert{A<:DNAAlphabet,K}(::Type{BioSequence{A}}, x::DNAKmer{K}) = BioSequence{A}([nt for nt in x])
+Base.convert{A<:RNAAlphabet,K}(::Type{BioSequence{A}}, x::RNAKmer{K}) = BioSequence{A}([nt for nt in x])
 Base.convert{S<:AbstractString}(::Type{S}, seq::Kmer) = convert(S, [Char(x) for x in seq])
 
 # Constructors

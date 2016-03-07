@@ -57,6 +57,7 @@ export
     neighbors,
     eachkmer,
     each,
+    Composition,
     NucleotideCounts,
     Kmer,
     DNAKmer,

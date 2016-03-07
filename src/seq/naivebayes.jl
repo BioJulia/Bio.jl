@@ -20,8 +20,8 @@ const loglikelihood = [
     1.999e-06 6.664e-05 2.834e-02;
     1.999e-06 6.664e-05 7.261e-01;
 ]
-#const logprior = log(ones(length(alphabets)) / length(alphabets))
-const logprior = log([0.45, 0.1, 0.45])
+# DNA:RNA:AminoAcid = 45:10:45
+const logprior = log([0.45, 0.10, 0.45])
 
 function predict(seq::Vector{UInt8}, start, stop)
     # count characters

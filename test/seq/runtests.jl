@@ -70,6 +70,41 @@ function random_rna_kmer_nucleotides(len)
                         [0.25, 0.25, 0.25, 0.25])
 end
 
+function dna_complement(seq::AbstractString)
+    seqc = Array(Char, length(seq))
+    for (i, c) in enumerate(seq)
+        if c     ==   'A'
+            seqc[i] = 'T'
+        elseif c ==   'C'
+            seqc[i] = 'G'
+        elseif c ==   'G'
+            seqc[i] = 'C'
+        elseif c ==   'T'
+            seqc[i] = 'A'
+        else
+            seqc[i] = seq[i]
+        end
+    end
+    return convert(ASCIIString, seqc)
+end
+
+function rna_complement(seq::AbstractString)
+    seqc = Array(Char, length(seq))
+    for (i, c) in enumerate(seq)
+        if c == 'A'
+            seqc[i] = 'U'
+        elseif c == 'C'
+            seqc[i] = 'G'
+        elseif c == 'G'
+            seqc[i] = 'C'
+        elseif c == 'U'
+            seqc[i] = 'A'
+        else
+            seqc[i] = seq[i]
+        end
+    end
+    return convert(ASCIIString, seqc)
+end
 
 function random_interval(minstart, maxstop)
     start = rand(minstart:maxstop)
@@ -377,861 +412,6 @@ end
         end
         @test takebuf_string(buf) == "ACGUN"
     end
-
-    @testset "Sequences" begin
-        function dna_complement(seq::AbstractString)
-            seqc = Array(Char, length(seq))
-            for (i, c) in enumerate(seq)
-                if c     ==   'A'
-                    seqc[i] = 'T'
-                elseif c ==   'C'
-                    seqc[i] = 'G'
-                elseif c ==   'G'
-                    seqc[i] = 'C'
-                elseif c ==   'T'
-                    seqc[i] = 'A'
-                else
-                    seqc[i] = 'N'
-                end
-            end
-
-            return convert(AbstractString, seqc)
-        end
-
-        function rna_complement(seq::AbstractString)
-            seqc = Array(Char, length(seq))
-            for (i, c) in enumerate(seq)
-                if c == 'A'
-                    seqc[i] = 'U'
-                elseif c == 'C'
-                    seqc[i] = 'G'
-                elseif c == 'G'
-                    seqc[i] = 'C'
-                elseif c == 'U'
-                    seqc[i] = 'A'
-                else
-                    seqc[i] = 'N'
-                end
-            end
-
-            return convert(AbstractString, seqc)
-        end
-
-        function check_reversal(T, seq)
-            return reverse(seq) == convert(AbstractString, reverse(convert(T, seq)))
-        end
-
-        function check_dna_complement(T, seq)
-            return dna_complement(seq) ==
-                convert(AbstractString, complement(convert(T, seq)))
-        end
-
-        function check_rna_complement(T, seq)
-            return rna_complement(seq) ==
-                convert(AbstractString, complement(convert(T, seq)))
-        end
-
-        function check_dna_revcomp(T, seq)
-            return reverse(dna_complement(seq)) ==
-                convert(AbstractString, reverse_complement(convert(T, seq)))
-        end
-
-        function check_rna_revcomp(T, seq)
-            return reverse(rna_complement(seq)) ==
-                convert(AbstractString, reverse_complement(convert(T, seq)))
-        end
-
-        function check_mismatches(T, a, b)
-            count = 0
-            for (ca, cb) in zip(a, b)
-                if ca != cb
-                    count += 1
-                end
-            end
-            return mismatches(convert(T, a), convert(T, b)) == count
-        end
-
-        @testset "Nucleotide Sequences" begin
-            reps = 10
-            @testset "Construction and Conversions" begin
-                @testset "Constructing empty sequences" begin
-                    # Check construction of empty nucleotide sequences
-                    #  using RNASequence and DNASequence functions
-                    @test RNASequence() == NucleotideSequence(RNANucleotide)
-                    @test DNASequence() == NucleotideSequence(DNANucleotide)
-                end
-
-                @testset "Conversion from/to Strings" begin
-                    # Check that sequences in strings survive round trip conversion:
-                    #   String → NucleotideSequence → String
-                    function check_string_construction(T::Type, seq::AbstractString)
-                        return convert(AbstractString, NucleotideSequence{T}(seq)) == uppercase(seq)
-                    end
-
-                    for len in [0, 1, 10, 32, 1000, 10000, 100000]
-                        @test all(Bool[check_string_construction(DNANucleotide, random_dna(len)) for _ in 1:reps])
-                        @test all(Bool[check_string_construction(RNANucleotide, random_rna(len)) for _ in 1:reps])
-                        @test all(Bool[check_string_construction(DNANucleotide, lowercase(random_dna(len))) for _ in 1:reps])
-                        @test all(Bool[check_string_construction(RNANucleotide, lowercase(random_rna(len))) for _ in 1:reps])
-                    end
-
-                    # Non-nucleotide characters should throw
-                    @test_throws Exception DNASequence("ACCNNCATTTTTTAGATXATAG")
-                    @test_throws Exception RNASequence("ACCNNCATTTTTTAGATXATAG")
-                end
-
-                @testset "Conversion between RNA and DNA" begin
-                    @test convert(RNASequence, DNASequence("ACGTN")) == rna"ACGUN"
-                    @test convert(DNASequence, RNASequence("ACGUN")) == dna"ACGTN"
-                end
-
-                @testset "Construction from nucleotide vectors" begin
-                    function check_vector_construction(T::Type, seq::AbstractString)
-                        xs = T[convert(T, c) for c in seq]
-                        return NucleotideSequence{T}(xs) == NucleotideSequence{T}(seq)
-                    end
-
-                    for len in [0, 1, 10, 32, 1000, 10000, 100000]
-                        @test all(Bool[check_vector_construction(DNANucleotide, random_dna(len)) for _ in 1:reps])
-                        @test all(Bool[check_vector_construction(RNANucleotide, random_rna(len)) for _ in 1:reps])
-                    end
-                end
-
-                @testset "Concatenation" begin
-                    function check_concatenation(::Type{DNANucleotide}, n)
-                        chunks = [random_dna(rand(100:300)) for i in 1:n]
-                        parts = Any[]
-                        for i in 1:n
-                            start = rand(1:length(chunks[i]))
-                            stop = rand(start:length(chunks[i]))
-                            push!(parts, start:stop)
-                        end
-
-                        str = string([chunk[parts[i]]
-                                      for (i, chunk) in enumerate(chunks)]...)
-
-                        seq = *([DNASequence(chunk)[parts[i]]
-                                 for (i, chunk) in enumerate(chunks)]...)
-
-                        return convert(AbstractString, seq) == uppercase(str)
-                    end
-
-                    @test all(Bool[check_concatenation(DNANucleotide, rand(1:10)) for _ in 1:100])
-                end
-
-                @testset "Repetition" begin
-                    function check_repetition(::Type{DNANucleotide}, n)
-                        chunk = random_dna(rand(100:300))
-                        start = rand(1:length(chunk))
-                        stop = rand(start:length(chunk))
-
-                        str = chunk[start:stop] ^ n
-                        seq = DNASequence(chunk)[start:stop] ^ n
-                        return convert(AbstractString, seq) == uppercase(str)
-                    end
-
-                    @test all(Bool[check_repetition(DNANucleotide, rand(1:10)) for _ in 1:100])
-                end
-            end
-
-            @testset "Equality" begin
-                a = b = dna"ACTGN"
-                @test a == b
-                @test dna"ACTGN" == dna"ACTGN"
-                @test dna"ACTGN" != dna"ACTGA"
-                @test dna"ACTGN" != dna"ACTG"
-                @test dna"ACTG"  != dna"ACTGN"
-
-                c = d = rna"ACUGN"
-                @test c == d
-                @test rna"ACUGN" == rna"ACUGN"
-                @test rna"ACUGN" != rna"ACUGA"
-                @test rna"ACUGN" != rna"ACUG"
-                @test rna"ACUG"  != rna"ACUGN"
-
-                a = dna"ACGTNACGTN"
-                b = dna"""
-                ACGTN
-                ACGTN
-                """
-                @test a == b
-
-                c = rna"ACUGNACUGN"
-                d = rna"""
-                ACUGN
-                ACUGN
-                """
-                @test c == d
-            end
-
-            @testset "Length" begin
-                for len in [0, 1, 10, 32, 1000, 10000, 100000]
-                    @test length(DNASequence(random_dna(len))) == len
-                    @test endof(DNASequence(random_dna(len))) == len
-                    @test length(DNASequence(random_dna(len))) == len
-                    @test endof(DNASequence(random_dna(len))) == len
-                end
-            end
-
-            @testset "Copy" begin
-                function check_copy(T, seq)
-                    return convert(AbstractString, copy(NucleotideSequence{T}(seq))) == seq
-                end
-
-                for len in [1, 10, 32, 1000, 10000, 100000]
-                    @test all(Bool[check_copy(DNANucleotide, random_dna(len)) for _ in 1:reps])
-                    @test all(Bool[check_copy(RNANucleotide, random_rna(len)) for _ in 1:reps])
-                end
-            end
-
-            @testset "Access and Iterations" begin
-                dna_seq = dna"ACTG"
-                rna_seq = rna"ACUG"
-
-                @testset "Access DNA Sequence" begin
-                    # Access indexes out of bounds
-                    @test_throws Exception dna_seq[-1]
-                    @test_throws Exception dna_seq[0]
-                    @test_throws Exception dna_seq[5]
-                    @test_throws Exception getindex(dna_seq,-1)
-                    @test_throws Exception getindex(dna_seq, 0)
-                    @test_throws Exception getindex(dna_seq, 5)
-                end
-
-                @testset "Iteration through DNA Sequence" begin
-                    dna_vector = [DNA_A, DNA_C, DNA_T, DNA_G]
-                    @test all([nucleotide == dna_vector[i] for (i, nucleotide) in enumerate(dna_seq)])
-                end
-
-                @testset "Access RNA Sequence" begin
-                    # Access indexes out of bounds
-                    @test_throws Exception rna_seq[-1]
-                    @test_throws Exception rna_seq[0]
-                    @test_throws Exception rna_seq[5]
-                    @test_throws Exception getindex(rna_seq, -1)
-                    @test_throws Exception getindex(rna_seq, 0)
-                    @test_throws Exception getindex(rna_seq, 5)
-                end
-
-                @testset "Iteration through RNA Sequence" begin
-                    rna_vector = [RNA_A, RNA_C, RNA_U, RNA_G]
-                    @test all([nucleotide == rna_vector[i] for (i, nucleotide) in enumerate(rna_seq)])
-                end
-
-                @testset "Indexing with Ranges" begin
-                    @test getindex(dna"ACTGNACTGN", 1:5) == dna"ACTGN"
-                    @test getindex(rna"ACUGNACUGN", 1:5) == rna"ACUGN"
-                    @test getindex(dna"ACTGNACTGN", 5:1) == dna""
-                    @test getindex(rna"ACUGNACUGN", 5:1) == rna""
-                end
-            end
-
-            @testset "Subsequence Construction" begin
-                for len in [1, 10, 32, 1000, 10000, 100000]
-                    seq = random_dna(len)
-                    dnaseq = DNASequence(seq)
-
-                    results = Bool[]
-                    for _ in 1:reps
-                        part = random_interval(1, length(seq))
-                        push!(results, seq[part] == convert(AbstractString, dnaseq[part]))
-                    end
-                    @test all(results)
-                end
-
-                for len in [1, 10, 32, 1000, 10000, 100000]
-                    seq = random_rna(len)
-                    rnaseq = RNASequence(seq)
-
-                    results = Bool[]
-                    for _ in 1:reps
-                        part = random_interval(1, length(seq))
-
-                        push!(results, seq[part] == convert(AbstractString, rnaseq[part]))
-                    end
-                    @test all(results)
-                end
-
-                @testset "Subsequence Construction from Ranges" begin
-                    # Subsequence from range
-                    @test RNASequence(rna"AUCGAUCG", 5:8) == RNASequence("AUCG")
-                    @test DNASequence(dna"ATCGATCG", 5:8) == DNASequence("ATCG")
-
-                    # Invalid ranges
-                    @test_throws Exception RNASequence(rna"AUCGAUCG", 5:10)
-                    @test_throws Exception DNASequence(dna"ATCGATCG", 5:10)
-
-                    # Empty ranges
-                    @test RNASequence(rna"AUCGAUCG", 5:4) == RNASequence()
-                    @test DNASequence(dna"ATCGATCG", 5:4) == DNASequence()
-
-                    # Subsequence of subsequence
-                    @test dna"ACGTAG"[4:end][1:2] == dna"TA"
-                    @test dna"ACGTAG"[4:end][2:3] == dna"AG"
-                    @test_throws Exception dna"ACGTAG"[4:end][0:1]
-                    @test_throws Exception dna"ACGTAG"[4:end][3:4]
-                end
-            end
-
-            @testset "Transformations" begin
-                @testset "Reversal" begin
-                    for len in [0, 1, 10, 32, 1000, 10000, 100000]
-                        @test all(Bool[check_reversal(DNASequence, random_dna(len)) for _ in 1:reps])
-                        @test all(Bool[check_reversal(RNASequence, random_rna(len)) for _ in 1:reps])
-                    end
-                end
-
-                @testset "Complement" begin
-                    for len in [1, 10, 32, 1000, 10000, 100000]
-                        @test all(Bool[check_dna_complement(DNASequence, random_dna(len)) for _ in 1:reps])
-                        @test all(Bool[check_rna_complement(RNASequence, random_rna(len)) for _ in 1:reps])
-                    end
-                end
-
-                @testset "Reverse Complement" begin
-                    for len in [1, 10, 32, 1000, 10000, 100000]
-                        @test all(Bool[check_dna_revcomp(DNASequence, random_dna(len)) for _ in 1:reps])
-                        @test all(Bool[check_rna_revcomp(RNASequence, random_rna(len)) for _ in 1:reps])
-                    end
-                end
-            end
-
-            @testset "Mismatches" begin
-                for len in [1, 10, 32, 1000, 10000, 100000]
-                    @test all(Bool[check_mismatches(DNASequence, random_dna(len), random_dna(len)) for _ in 1:reps])
-                    @test all(Bool[check_mismatches(RNASequence, random_rna(len), random_rna(len)) for _ in 1:reps])
-                end
-            end
-
-            @testset "Mutability" begin
-                seq = dna"ACGTACGT"
-                @test !ismutable(seq)
-                @test_throws Exception seq[1] = DNA_C
-
-                seq2 = seq[1:4]
-                @test !ismutable(seq2)
-
-                mutable!(seq)
-                @test ismutable(seq)
-
-                seq[1] = DNA_C
-                @test seq[1] == DNA_C
-                @test seq2[1] == DNA_A
-
-                seq[2] = DNA_N
-                @test seq[2] == DNA_N
-                @test seq2[2] == DNA_C
-
-                seq[2] = DNA_G
-                @test seq[2] == DNA_G
-
-                immutable!(seq)
-                @test_throws Exception seq[1] = DNA_A
-
-                seq = dna"ACGTACGT"
-                mutable!(seq)
-                rnaseq = convert(RNASequence, seq)
-                @test ismutable(rnaseq)
-                @test_throws Exception rnaseq[1] = DNA_C
-                rnaseq[1] = RNA_C
-                @test seq == dna"ACGTACGT"
-                @test rnaseq == rna"CCGUACGU"
-            end
-        end
-
-        @testset "npositions" begin
-            function check_ns(T, seq)
-                expected = Int[]
-                for i in 1:length(seq)
-                    if seq[i] == 'N'
-                        push!(expected, i)
-                    end
-                end
-
-                collect(npositions(T(seq))) == expected
-            end
-
-            reps = 10
-            for len in [1, 10, 32, 1000, 10000, 100000]
-                @test all(Bool[check_ns(DNASequence, random_dna(len)) for _ in 1:reps])
-                @test all(Bool[check_ns(RNASequence, random_rna(len)) for _ in 1:reps])
-            end
-
-            dna_seq   = dna"ANANANA"
-            dna_niter = npositions(dna_seq)
-            ns = [2,4,6]
-            for (i, n) in enumerate(dna_niter)
-                @test n == ns[i]
-            end
-
-            rna_seq   = rna"ANANANA"
-            rna_niter = npositions(rna_seq)
-            ns = [2,4,6]
-            for (i, n) in enumerate(rna_niter)
-                @test n == ns[i]
-            end
-
-        end
-
-        @testset "Kmer" begin
-            reps = 100
-            @testset "Construction and Conversions" begin
-                # Check that kmers in strings survive round trip conversion:
-                #   UInt64 → Kmer → UInt64
-                function check_uint64_convertion(T::Type, n::UInt64, len::Int)
-                    return convert(UInt64, convert(Kmer{T, len}, n)) === n
-                end
-
-                # Check that kmers in strings survive round trip conversion:
-                #   String → Kmer → String
-                function check_string_construction(T::Type, seq::AbstractString)
-                    return convert(AbstractString, convert(Kmer{T}, seq)) == uppercase(seq)
-                end
-
-                # Check that dnakmers can be constructed from a DNASequence
-                #   DNASequence → Kmer → DNASequence
-                function check_dnasequence_construction(seq::DNASequence)
-                    return convert(DNASequence, convert(DNAKmer, seq)) == seq
-                end
-
-                # Check that rnakmers can be constructed from a RNASequence
-                #   RNASequence → Kmer → RNASequence
-                function check_rnasequence_construction(seq::RNASequence)
-                    return convert(RNASequence, convert(RNAKmer, seq)) == seq
-                end
-
-                # Check that kmers can be constructed from a NucleotideSequence
-                #   NucleotideSequence → Kmer → NucleotideSequence
-                function check_nucsequence_construction(seq::BioSequence)
-                    return convert(NucleotideSequence, convert(Kmer, seq)) == seq
-                end
-
-                # Check that kmers can be constructed from an array of nucleotides
-                #   Vector{Nucleotide} → Kmer → Vector{Nucleotide}
-                function check_nucarray_kmer{T <: Nucleotide}(seq::Vector{T})
-                    return convert(AbstractString, [convert(Char, c) for c in seq]) ==
-                           convert(AbstractString, kmer(seq...))
-                end
-
-                # Check that kmers in strings survive round trip conversion:
-                #   String → NucleotideSequence → Kmer → NucleotideSequence → String
-                function check_roundabout_construction(T::Type, seq::AbstractString)
-                    return convert(AbstractString,
-                               convert(NucleotideSequence{T},
-                                   convert(Kmer,
-                                       convert(NucleotideSequence{T}, seq)))) == uppercase(seq)
-                end
-
-
-
-                for len in [0, 1, 16, 32]
-                    # UInt64 conversions
-                    @test all(Bool[check_uint64_convertion(DNANucleotide, rand(UInt64(0):UInt64(UInt64(1) << 2len - 1)), len) for _ in 1:reps])
-                    @test all(Bool[check_uint64_convertion(RNANucleotide, rand(UInt64(0):UInt64(UInt64(1) << 2len - 1)), len) for _ in 1:reps])
-
-                    # String construction
-                    @test all(Bool[check_string_construction(DNANucleotide, random_dna_kmer(len)) for _ in 1:reps])
-                    @test all(Bool[check_string_construction(RNANucleotide, random_rna_kmer(len)) for _ in 1:reps])
-
-                    # DNA/RNASequence Constructions
-                    @test all(Bool[check_dnasequence_construction(DNASequence(random_dna_kmer(len))) for _ in 1:reps])
-                    @test all(Bool[check_rnasequence_construction(RNASequence(random_rna_kmer(len))) for _ in 1:reps])
-
-                    # NucleotideSequence Construction
-                    @test all(Bool[check_nucsequence_construction(DNASequence(random_dna_kmer(len))) for _ in 1:reps])
-                    @test all(Bool[check_nucsequence_construction(RNASequence(random_rna_kmer(len))) for _ in 1:reps])
-
-                    # Construction from nucleotide arrays
-                    if len > 0
-                        @test all(Bool[check_nucarray_kmer(random_dna_kmer_nucleotides(len)) for _ in 1:reps])
-                        @test all(Bool[check_nucarray_kmer(random_rna_kmer_nucleotides(len)) for _ in 1:reps])
-                    end
-
-                    # Roundabout conversions
-                    @test all(Bool[check_roundabout_construction(DNANucleotide, random_dna_kmer(len)) for _ in 1:reps])
-                    @test all(Bool[check_roundabout_construction(RNANucleotide, random_rna_kmer(len)) for _ in 1:reps])
-                end
-
-                @test_throws Exception kmer() # can't construct 0-mer using `kmer()`
-                @test_throws Exception kmer(RNA_A, RNA_C, RNA_G, RNA_N, RNA_U) # no Ns in kmers
-                @test_throws Exception kmer(DNA_A, DNA_C, DNA_G, DNA_N, DNA_T) # no Ns in kmers
-                @test_throws Exception kmer(rna"ACGNU")# no Ns in kmers
-                @test_throws Exception rnmakmer(rna"ACGNU")# no Ns in kmers
-                @test_throws Exception kmer(dna"ACGNT") # no Ns in kmers
-                @test_throws Exception dnmakmer(dna"ACGNT") # no Ns in kmers
-                @test_throws Exception kmer(RNA_A, DNA_A) # no mixing of RNA and DNA
-                @test_throws Exception kmer(random_rna(33)) # no kmer larger than 32nt
-                @test_throws Exception kmer(random_dna(33)) # no kmer larger than 32nt
-                @test_throws Exception kmer(RNA_A, RNA_C, RNA_G, RNA_U, # no kmer larger than 32nt
-                                  RNA_A, RNA_C, RNA_G, RNA_U,
-                                  RNA_A, RNA_C, RNA_G, RNA_U,
-                                  RNA_A, RNA_C, RNA_G, RNA_U,
-                                  RNA_A, RNA_C, RNA_G, RNA_U,
-                                  RNA_A, RNA_C, RNA_G, RNA_U,
-                                  RNA_A, RNA_C, RNA_G, RNA_U,
-                                  RNA_A, RNA_C, RNA_G, RNA_U,
-                                  RNA_A, RNA_C, RNA_G, RNA_U)
-                @test_throws Exception kmer(DNA_A, DNA_C, DNA_G, DNA_T, # no kmer larger than 32nt
-                                  DNA_A, DNA_C, DNA_G, DNA_T,
-                                  DNA_A, DNA_C, DNA_G, DNA_T,
-                                  DNA_A, DNA_C, DNA_G, DNA_T,
-                                  DNA_A, DNA_C, DNA_G, DNA_T,
-                                  DNA_A, DNA_C, DNA_G, DNA_T,
-                                  DNA_A, DNA_C, DNA_G, DNA_T,
-                                  DNA_A, DNA_C, DNA_G, DNA_T,
-                                  DNA_A, DNA_C, DNA_G, DNA_T)
-
-                @testset "From strings" begin
-                    @test dnakmer("ACTG") == convert(Kmer, DNASequence("ACTG"))
-                    @test rnakmer("ACUG") == convert(Kmer, RNASequence("ACUG"))
-
-                    # N is not allowed in Kmers
-                    @test_throws Exception dnakmer("ACGTNACGT")
-                    @test_throws Exception rnakmer("ACGUNACGU")
-                end
-            end
-
-            @testset "Comparisons" begin
-                @testset "Equality" begin
-                    function check_seq_kmer_equality(len)
-                        a = dnakmer(random_dna_kmer(len))
-                        b = convert(DNASequence, a)
-                        return a == b && b == a
-                    end
-
-                    for len in [1, 10, 32]
-                        @test all(Bool[check_seq_kmer_equality(len) for _ in 1:reps])
-                    end
-
-                    # True negatives
-                    @test (dnakmer("ACG") == rnakmer("ACG")) == false
-                    @test (dnakmer("T")   == rnakmer("U"))   == false
-                    @test (dnakmer("AC")  == dnakmer("AG"))  == false
-                    @test (rnakmer("AC")  == rnakmer("AG"))  == false
-
-                    @test (dnakmer("ACG") == rna"ACG") == false
-                    @test (dnakmer("T")   == rna"U")   == false
-                    @test (dnakmer("AC")  == dna"AG")  == false
-                    @test (rnakmer("AC")  == rna"AG")  == false
-
-                    @test (rna"ACG" == dnakmer("ACG")) == false
-                    @test (rna"U"   == dnakmer("T"))   == false
-                    @test (dna"AG"  == dnakmer("AC"))  == false
-                    @test (rna"AG"  == rnakmer("AC"))  == false
-                end
-
-                @testset "Inequality" begin
-                    for len in [1, 10, 32]
-                        @test  isless(convert(DNAKmer{1}, UInt64(0)), convert(DNAKmer{1}, UInt64(1)))
-                        @test !isless(convert(DNAKmer{1}, UInt64(0)), convert(DNAKmer{1}, UInt64(0)))
-                        @test !isless(convert(DNAKmer{1}, UInt64(1)), convert(DNAKmer{1}, UInt64(0)))
-
-                        @test  isless(convert(RNAKmer{1}, UInt64(0)), convert(RNAKmer{1}, UInt64(1)))
-                        @test !isless(convert(RNAKmer{1}, UInt64(0)), convert(RNAKmer{1}, UInt64(0)))
-                        @test !isless(convert(RNAKmer{1}, UInt64(1)), convert(RNAKmer{1}, UInt64(0)))
-                    end
-                end
-
-                @testset "Hash" begin
-                    kmers = map(dnakmer, ["AAAA", "AACT", "ACGT", "TGCA"])
-                    for x in kmers, y in kmers
-                        @test (x == y) == (hash(x) == hash(y))
-                    end
-                    kmers = map(rnakmer, ["AAAA", "AACU", "ACGU", "UGCA"])
-                    for x in kmers, y in kmers
-                        @test (x == y) == (hash(x) == hash(y))
-                    end
-                end
-            end
-
-            @testset "Length" begin
-                for len in [0, 1, 16, 32]
-                    @test length(dnakmer(random_dna_kmer(len))) == len
-                    @test length(rnakmer(random_rna_kmer(len))) == len
-                end
-            end
-
-            @testset "Arithmetic" begin
-                x = dnakmer("AA")
-                @test x - 1 == x + (-1) == dnakmer("TT")
-                @test x + 1 == x - (-1) == dnakmer("AC")
-
-                x = dnakmer("TT")
-                @test x - 1 == x + (-1) == dnakmer("TG")
-                @test x + 1 == x - (-1) == dnakmer("AA")
-
-                base = dnakmer("AAA")
-                offset = 0
-                nucs = "ACGT"
-                for a in nucs, b in nucs, c in nucs
-                    @test base + offset == dnakmer(string(a, b, c))
-                    offset += 1
-                end
-            end
-
-            @testset "Order" begin
-                @test dnakmer("AA") < dnakmer("AC") < dnakmer("AG") < dnakmer("AT") < dnakmer("CA")
-                @test rnakmer("AA") < rnakmer("AC") < rnakmer("AG") < rnakmer("AU") < rnakmer("CA")
-            end
-
-            @testset "Access and Iterations" begin
-                dna_kmer = dnakmer("ACTG")
-                rna_kmer = rnakmer("ACUG")
-
-                @testset "Access DNA Kmer" begin
-                    @test dna_kmer[1] == DNA_A
-                    @test dna_kmer[2] == DNA_C
-                    @test dna_kmer[3] == DNA_T
-                    @test dna_kmer[4] == DNA_G
-
-                    # Access indexes out of bounds
-                    @test_throws Exception dna_kmer[-1]
-                    @test_throws Exception dna_kmer[0]
-                    @test_throws Exception dna_kmer[5]
-                    @test_throws Exception getindex(dna_kmer,-1)
-                    @test_throws Exception getindex(dna_kmer, 0)
-                    @test_throws Exception getindex(dna_kmer, 5)
-                end
-
-                @testset "Iteration through DNA Kmer" begin
-                    @test start(dnakmer("ACTG"))  == 1
-                    @test start(dnakmer(""))      == 1
-
-                    @test next(dnakmer("ACTG"), 1) == (DNA_A, 2)
-                    @test next(dnakmer("ACTG"), 4) == (DNA_G, 5)
-
-                    @test  done(dnakmer(""), 1)
-                    @test !done(dnakmer("ACTG"), 1)
-                    @test !done(dnakmer("ACTG"), 4)
-                    @test  done(dnakmer("ACTG"), 5)
-                    @test !done(dnakmer("ACTG"), -1)
-
-
-                    dna_kmer_vector = [DNA_A, DNA_C, DNA_T, DNA_G]
-                    @test all(Bool[nucleotide == dna_kmer_vector[i] for (i, nucleotide) in enumerate(dna_kmer)])
-                end
-
-                @testset "Access RNA Kmer" begin
-                    @test rna_kmer[1] == RNA_A
-                    @test rna_kmer[2] == RNA_C
-                    @test rna_kmer[3] == RNA_U
-                    @test rna_kmer[4] == RNA_G
-
-                    # Access indexes out of bounds
-                    @test_throws Exception rna_kmer[-1]
-                    @test_throws Exception rna_kmer[0]
-                    @test_throws Exception rna_kmer[5]
-                    @test_throws Exception getindex(rna_kmer, -1)
-                    @test_throws Exception getindex(rna_kmer, 0)
-                    @test_throws Exception getindex(rna_kmer, 5)
-                end
-
-                @testset "Iteration through RNA Kmer" begin
-                    @test start(rnakmer("ACUG"))  == 1
-                    @test start(rnakmer(""))      == 1
-
-                    @test next(rnakmer("ACUG"), 1) == (RNA_A, 2)
-                    @test next(rnakmer("ACUG"), 4) == (RNA_G, 5)
-
-                    @test  done(rnakmer(""), 1)
-                    @test !done(rnakmer("ACUG"), 1)
-                    @test !done(rnakmer("ACUG"), 4)
-                    @test  done(rnakmer("ACUG"), 5)
-                    @test !done(rnakmer("ACUG"), -1)
-
-                    rna_kmer_vector = [RNA_A, RNA_C, RNA_U, RNA_G]
-                    @test all(Bool[nucleotide == rna_kmer_vector[i] for (i, nucleotide) in enumerate(rna_kmer)])
-                end
-            end
-
-            reps = 10
-            @testset "Transformations" begin
-                @testset "Reversal" begin
-                    for len in [0, 1, 16, 32]
-                        @test all(Bool[check_reversal(DNAKmer, random_dna_kmer(len)) for _ in 1:reps])
-                        @test all(Bool[check_reversal(RNAKmer, random_rna_kmer(len)) for _ in 1:reps])
-                    end
-                end
-
-                @testset "Complement" begin
-                    for len in [0, 1, 16, 32]
-                        @test all(Bool[check_dna_complement(DNAKmer, random_dna_kmer(len)) for _ in 1:reps])
-                        @test all(Bool[check_rna_complement(RNAKmer, random_rna_kmer(len)) for _ in 1:reps])
-                    end
-                end
-
-                @testset "Reverse Complement" begin
-                    for len in [0, 1, 16, 32]
-                        @test all(Bool[check_dna_revcomp(DNAKmer, random_dna_kmer(len)) for _ in 1:reps])
-                        @test all(Bool[check_rna_revcomp(RNAKmer, random_rna_kmer(len)) for _ in 1:reps])
-                    end
-                end
-            end
-
-            @testset "Mismatches" begin
-                for len in [0, 1, 16, 32]
-                    @test all(Bool[check_mismatches(DNAKmer, random_dna_kmer(len), random_dna_kmer(len)) for _ in 1:reps])
-                    @test all(Bool[check_mismatches(RNAKmer, random_rna_kmer(len), random_rna_kmer(len)) for _ in 1:reps])
-                end
-            end
-        end
-
-        @testset "EachKmer" begin
-            function string_eachkmer(seq::AbstractString, k, step)
-                kmers = AbstractString[]
-                i = 1
-                for i in 1:step:length(seq) - k + 1
-                    subseq = seq[i:i + k - 1]
-                    if !in('N', subseq)
-                        push!(kmers, subseq)
-                    end
-                end
-                return kmers
-            end
-
-            function check_eachkmer(T, seq::AbstractString, k, step)
-                xs = [convert(AbstractString, x) for (i, x) in collect(each(Kmer{T, k}, NucleotideSequence{T}(seq), step))]
-                ys = [convert(AbstractString, x) for (i, x) in collect(eachkmer(NucleotideSequence{T}(seq), k, step))]
-                zs = string_eachkmer(seq, k, step)
-                return xs == ys == zs
-            end
-
-            reps = 10
-            len = 10000
-
-            for k in [0, 1, 3, 16, 32], step in 1:3
-                @test all(Bool[check_eachkmer(DNANucleotide, random_dna(len), k, step) for _ in 1:reps])
-                @test all(Bool[check_eachkmer(RNANucleotide, random_rna(len), k, step) for _ in 1:reps])
-            end
-
-            @test isempty(collect(each(DNAKmer{1}, dna"")))
-            @test isempty(collect(each(DNAKmer{1}, dna"NNNNNNNNNN")))
-            @test_throws Exception each(DNAKmer{-1}, dna"ACGT")
-            @test_throws Exception each(DNAKmer{33}, dna"ACGT")
-        end
-
-        @testset "Nucleotide Counting" begin
-            function string_nucleotide_count(::Type{DNANucleotide}, seq::AbstractString)
-                counts = Dict{DNANucleotide, Int}(
-                    DNA_A => 0,
-                    DNA_C => 0,
-                    DNA_G => 0,
-                    DNA_T => 0,
-                    DNA_N => 0 )
-                for c in seq
-                    counts[convert(DNANucleotide, c)] += 1
-                end
-
-                return counts
-            end
-
-            function string_nucleotide_count(::Type{RNANucleotide}, seq::AbstractString)
-                counts = Dict{RNANucleotide, Int}(
-                    RNA_A => 0,
-                    RNA_C => 0,
-                    RNA_G => 0,
-                    RNA_U => 0,
-                    RNA_N => 0 )
-                for c in seq
-                    counts[convert(RNANucleotide, c)] += 1
-                end
-
-                return counts
-            end
-
-            function check_nucleotide_count(::Type{DNANucleotide}, seq::AbstractString)
-                string_counts = string_nucleotide_count(DNANucleotide, seq)
-                seq_counts = NucleotideCounts(DNASequence(seq))
-                return string_counts[DNA_A] == seq_counts[DNA_A] &&
-                       string_counts[DNA_C] == seq_counts[DNA_C] &&
-                       string_counts[DNA_G] == seq_counts[DNA_G] &&
-                       string_counts[DNA_T] == seq_counts[DNA_T] &&
-                       string_counts[DNA_N] == seq_counts[DNA_N]
-            end
-
-            function check_nucleotide_count(::Type{RNANucleotide}, seq::AbstractString)
-                string_counts = string_nucleotide_count(RNANucleotide, seq)
-                seq_counts = NucleotideCounts(RNASequence(seq))
-                return string_counts[RNA_A] == seq_counts[RNA_A] &&
-                       string_counts[RNA_C] == seq_counts[RNA_C] &&
-                       string_counts[RNA_G] == seq_counts[RNA_G] &&
-                       string_counts[RNA_U] == seq_counts[RNA_U] &&
-                       string_counts[RNA_N] == seq_counts[RNA_N]
-            end
-
-            function check_kmer_nucleotide_count(::Type{DNANucleotide}, seq::AbstractString)
-                string_counts = string_nucleotide_count(DNANucleotide, seq)
-                kmer_counts = NucleotideCounts(dnakmer(seq))
-                return string_counts[DNA_A] == kmer_counts[DNA_A] &&
-                       string_counts[DNA_C] == kmer_counts[DNA_C] &&
-                       string_counts[DNA_G] == kmer_counts[DNA_G] &&
-                       string_counts[DNA_T] == kmer_counts[DNA_T] &&
-                       string_counts[DNA_N] == kmer_counts[DNA_N]
-            end
-
-            function check_kmer_nucleotide_count(::Type{RNANucleotide}, seq::AbstractString)
-                string_counts = string_nucleotide_count(RNANucleotide, seq)
-                kmer_counts = NucleotideCounts(rnakmer(seq))
-                return string_counts[RNA_A] == kmer_counts[RNA_A] &&
-                       string_counts[RNA_C] == kmer_counts[RNA_C] &&
-                       string_counts[RNA_G] == kmer_counts[RNA_G] &&
-                       string_counts[RNA_U] == kmer_counts[RNA_U] &&
-                       string_counts[RNA_N] == kmer_counts[RNA_N]
-            end
-
-            reps = 10
-            for len in [1, 10, 32, 1000, 10000, 100000]
-                @test all(Bool[check_nucleotide_count(DNANucleotide, random_dna(len)) for _ in 1:reps])
-                @test all(Bool[check_nucleotide_count(RNANucleotide, random_rna(len)) for _ in 1:reps])
-            end
-
-            for len in [1, 10, 32]
-                @test all(Bool[check_kmer_nucleotide_count(DNANucleotide, random_dna_kmer(len)) for _ in 1:reps])
-                @test all(Bool[check_kmer_nucleotide_count(RNANucleotide, random_rna_kmer(len)) for _ in 1:reps])
-            end
-        end
-
-        @testset "Kmer Counting" begin
-            function string_kmer_count{T <: Nucleotide}(::Type{T}, seq::AbstractString, k, step)
-                counts = Dict{Kmer{T, k}, Int}()
-                for x in UInt64(0):UInt64(4^k-1)
-                    counts[convert(Kmer{T, k}, x)] = 0
-                end
-
-                for i in 1:step:(length(seq)-k+1)
-                    s = seq[i:i+k-1]
-                    if 'N' in s
-                        continue
-                    end
-                    counts[convert(Kmer{T, k}, s)] += 1
-                end
-
-                return counts
-            end
-
-            function check_kmer_count{T <: Nucleotide}(::Type{T}, seq::AbstractString, k, step)
-                string_counts = string_kmer_count(T, seq, k, step)
-                kmer_counts = KmerCounts{T, k}(convert(NucleotideSequence{T}, seq), step)
-                for y in UInt64(0):UInt64(4^k-1)
-                    x = convert(Kmer{T, k}, y)
-                    if string_counts[x] != kmer_counts[x]
-                        return false
-                    end
-                end
-                return true
-            end
-
-            reps = 10
-            for len in [1, 10, 32, 1000, 10000]
-                for k in [1, 2, 5]
-                    for step in [1, 3]
-                        @test all(Bool[check_kmer_count(DNANucleotide, random_dna(len), k, step) for _ in 1:reps])
-                        @test all(Bool[check_kmer_count(RNANucleotide, random_rna(len), k, step) for _ in 1:reps])
-                    end
-                end
-            end
-        end
-    end
 end
 
 @testset "Aminoacids" begin
@@ -1268,126 +448,6 @@ end
             @test decode(AminoAcidAlphabet, x) === convert(AminoAcid, x)
         end
         @test_throws Bio.Seq.DecodeError decode(AminoAcidAlphabet, 0x1c)
-    end
-
-    @testset "AminoAcid Sequences" begin
-        reps = 10
-        @testset "Construction" begin
-            # Non-aa characters should throw
-            @test_throws Exception AminoAcidSequence("ATGHLMY@ZACAGNM")
-
-            # Check that sequences in strings survive round trip conversion:
-            #   String → AminoAcidSequence → String
-            function check_string_construction(seq::AbstractString)
-                return convert(AbstractString, AminoAcidSequence(seq)) == uppercase(seq)
-            end
-
-            for len in [0, 1, 10, 32, 1000, 10000, 100000]
-                @test all(Bool[check_string_construction(random_aa(len)) for _ in 1:reps])
-                @test all(Bool[check_string_construction(lowercase(random_aa(len))) for _ in 1:reps])
-            end
-        end
-
-        @testset "Conversion" begin
-            seq = aa"ARNDCQEGHILKMFPSTWYVBJZXOU*-"
-            @test convert(AminoAcidSequence, [aa for aa in seq]) == seq
-            @test convert(Vector{AminoAcid}, seq) == [aa for aa in seq]
-
-            @test_throws Exception convert(AminoAcidSequence, [convert(AminoAcid, UInt8(30))])
-        end
-
-        @testset "Concatenation" begin
-            function check_concatenation(n)
-                chunks = [random_aa(rand(100:300)) for i in 1:n]
-                parts = Any[]
-                for i in 1:n
-                    start = rand(1:length(chunks[i]))
-                    stop = rand(start:length(chunks[i]))
-                    push!(parts, start:stop)
-                end
-
-                str = string([chunk[parts[i]]
-                              for (i, chunk) in enumerate(chunks)]...)
-
-                seq = *([AminoAcidSequence(chunk)[parts[i]]
-                         for (i, chunk) in enumerate(chunks)]...)
-
-                return convert(AbstractString, seq) == uppercase(str)
-            end
-
-            @test all(Bool[check_concatenation(rand(1:10)) for _ in 1:100])
-        end
-
-        @testset "Equality" begin
-            seq = aa"ARNDCQEGHILKMFPSTWYVX"
-            @test seq == aa"ARNDCQEGHILKMFPSTWYVX"
-            @test seq != aa"ARNDCQEGHILKMFPSTWYXV"
-            @test seq != aa"ARNDCQEGHLKMFPSTWYVX"
-
-            seq′ = aa"""
-            ARNDCQEGHI
-            LKMFPSTWYV
-            X
-            """
-            @test seq == seq′
-        end
-
-        @testset "Repetition" begin
-            function check_repetition(n)
-                chunk = random_aa(rand(100:300))
-                start = rand(1:length(chunk))
-                stop = rand(start:length(chunk))
-
-                str = chunk[start:stop] ^ n
-                seq = AminoAcidSequence(chunk)[start:stop] ^ n
-
-                return convert(AbstractString, seq) == uppercase(str)
-            end
-
-            @test all(Bool[check_repetition(rand(1:10)) for _ in 1:100])
-        end
-
-        @testset "Copy" begin
-            function check_copy(seq)
-                return convert(AbstractString, copy(AminoAcidSequence(seq))) == uppercase(seq)
-            end
-
-            for len in [1, 10, 32, 1000, 10000, 100000]
-                @test all(Bool[check_copy(random_aa(len)) for _ in 1:reps])
-            end
-        end
-
-        @testset "Subsequence Construction" begin
-            for len in [1, 10, 32, 1000, 10000, 100000]
-                seq = random_aa(len)
-                aaseq = AminoAcidSequence(seq)
-
-                results = Bool[]
-                for _ in 1:reps
-                    part = random_interval(1, length(seq))
-                    push!(results, seq[part] == convert(AbstractString, aaseq[part]))
-                end
-                @test all(results)
-            end
-        end
-
-        @testset "Mutability" begin
-            seq = aa"ARNDCQEGHILKMFPSTWYVX"
-            @test ismutable(seq) == false
-            @test_throws Exception seq[1] = AA_C
-
-            seq2 = seq[1:4]
-            @test ismutable(seq2) == false
-
-            mutable!(seq)
-            @test ismutable(seq)
-            seq[1] = AA_C
-            @test seq[1] == AA_C
-            @test seq2[1] == AA_A
-
-            immutable!(seq)
-            @test_throws Exception seq[1] = AA_A
-        end
     end
 
     @testset "Parsers" begin
@@ -1446,9 +506,984 @@ end
     end
 end
 
+@testset "BioSequence" begin
+    @testset "Constructing empty sequences" begin
+        @test DNASequence() == BioSequence(DNANucleotide)
+        @test RNASequence() == BioSequence(RNANucleotide)
+        @test AminoAcidSequence() == BioSequence(AminoAcid)
+    end
+
+    @testset "Conversion from/to strings" begin
+        # Check that sequences in strings survive round trip conversion:
+        #   String → BioSequence → String
+        function test_string_construction(A::Type, seq::AbstractString)
+            @test convert(AbstractString, BioSequence{A}(seq)) == uppercase(seq)
+        end
+
+        for len in [0, 1, 2, 3, 10, 32, 1000, 10000]
+            test_string_construction(DNAAlphabet{4}, random_dna(len))
+            test_string_construction(DNAAlphabet{4}, lowercase(random_dna(len)))
+            test_string_construction(RNAAlphabet{4}, lowercase(random_rna(len)))
+            test_string_construction(RNAAlphabet{4}, random_rna(len))
+            test_string_construction(AminoAcidAlphabet, random_aa(len))
+            test_string_construction(AminoAcidAlphabet, lowercase(random_aa(len)))
+
+            probs = [0.25, 0.25, 0.25, 0.25, 0.00]
+            test_string_construction(DNAAlphabet{2}, random_dna(len, probs))
+            test_string_construction(DNAAlphabet{2}, lowercase(random_dna(len, probs)))
+            test_string_construction(RNAAlphabet{2}, random_rna(len, probs))
+            test_string_construction(RNAAlphabet{2}, lowercase(random_rna(len, probs)))
+        end
+
+        # non-standard string literal
+        @test isa(dna"ACGTMRWSYKVHDBN-", BioSequence{DNAAlphabet{4}})
+        @test isa(rna"ACGUMRWSYKVHDBN-", BioSequence{RNAAlphabet{4}})
+        @test isa(aa"ARNDCQEGHILKMFPSTWYVBJZXOU*-", BioSequence{AminoAcidAlphabet})
+
+        # Non-nucleotide characters should throw
+        @test_throws Exception DNASequence("ACCNNCATTTTTTAGATXATAG")
+        @test_throws Exception RNASequence("ACCNNCATTTTTTAGATXATAG")
+        @test_throws Exception AminoAcidSequence("ATGHLMY@ZACAGNM")
+    end
+
+    @testset "Construction from vectors" begin
+        function test_vector_construction(A, seq::AbstractString)
+            T = eltype(A)
+            xs = T[convert(T, c) for c in seq]
+            @test BioSequence{A}(xs) == BioSequence{A}(seq)
+        end
+
+        for len in [0, 1, 10, 32, 1000, 10000]
+            test_vector_construction(DNAAlphabet{4}, random_dna(len))
+            test_vector_construction(RNAAlphabet{4}, random_rna(len))
+            test_vector_construction(AminoAcidAlphabet, random_aa(len))
+
+            probs = [0.25, 0.25, 0.25, 0.25, 0.00]
+            test_vector_construction(DNAAlphabet{2}, random_dna(len, probs))
+            test_vector_construction(RNAAlphabet{2}, random_rna(len, probs))
+        end
+    end
+
+    @testset "Conversion between RNA and DNA" begin
+        @test convert(RNASequence, DNASequence("ACGTN")) == rna"ACGUN"
+        @test convert(DNASequence, RNASequence("ACGUN")) == dna"ACGTN"
+    end
+
+    @testset "Copy" begin
+        function test_copy(A, seq)
+            @test convert(AbstractString, copy(BioSequence{A}(seq))) == seq
+        end
+
+        for len in [1, 10, 16, 32, 1000, 10000]
+            test_copy(DNAAlphabet{4}, random_dna(len))
+            test_copy(RNAAlphabet{4}, random_rna(len))
+            test_copy(AminoAcidAlphabet, random_aa(len))
+
+            probs = [0.25, 0.25, 0.25, 0.25, 0.00]
+            test_copy(DNAAlphabet{2}, random_dna(len, probs))
+            test_copy(RNAAlphabet{2}, random_rna(len, probs))
+        end
+    end
+
+    @testset "Concatenation" begin
+        function test_concatenation(A, chunks)
+            parts = UnitRange{Int}[]
+            for i in 1:endof(chunks)
+                start = rand(1:length(chunks[i]))
+                stop = rand(start:length(chunks[i]))
+                push!(parts, start:stop)
+            end
+            str = string([chunk[parts[i]] for (i, chunk) in enumerate(chunks)]...)
+            seq = *([BioSequence{A}(chunk)[parts[i]] for (i, chunk) in enumerate(chunks)]...)
+            @test convert(ASCIIString, seq) == uppercase(str)
+        end
+
+        for _ in 1:100
+            n = rand(1:10)
+            chunks = [random_dna(rand(1:100)) for _ in 1:n]
+            test_concatenation(DNAAlphabet{4}, chunks)
+
+            chunks = [random_rna(rand(1:100)) for _ in 1:n]
+            test_concatenation(RNAAlphabet{4}, chunks)
+
+            chunks = [random_aa(rand(1:100)) for _ in 1:n]
+            test_concatenation(AminoAcidAlphabet, chunks)
+
+            probs = [0.25, 0.25, 0.25, 0.25, 0.00]
+            chunks = [random_dna(rand(1:100), probs) for _ in 1:n]
+            test_concatenation(DNAAlphabet{2}, chunks)
+
+            chunks = [random_rna(rand(1:100), probs) for _ in 1:n]
+            test_concatenation(RNAAlphabet{2}, chunks)
+        end
+    end
+
+    @testset "Repetition" begin
+        function test_repetition(A, chunk)
+            start = rand(1:length(chunk))
+            stop = rand(start:length(chunk))
+            n = rand(1:10)
+            str = chunk[start:stop] ^ n
+            seq = BioSequence{A}(chunk)[start:stop] ^ n
+            @test convert(ASCIIString, seq) == uppercase(str)
+        end
+
+        for _ in 1:10
+            chunk = random_dna(rand(1:100))
+            test_repetition(DNAAlphabet{4}, chunk)
+
+            chunk = random_rna(rand(1:100))
+            test_repetition(RNAAlphabet{4}, chunk)
+
+            chunk = random_aa(rand(1:100))
+            test_repetition(AminoAcidAlphabet, chunk)
+
+            probs = [0.25, 0.25, 0.25, 0.25, 0.00]
+            chunk = random_dna(rand(1:100), probs)
+            test_repetition(DNAAlphabet{2}, chunk)
+
+            chunk = random_rna(rand(1:100), probs)
+            test_repetition(RNAAlphabet{2}, chunk)
+        end
+    end
+
+    @testset "Equality" begin
+        @testset "DNA" begin
+            a = dna"ACTGN"
+            b = dna"ACTGN"
+            @test a == b
+            @test dna"ACTGN" == dna"ACTGN"
+            @test dna"ACTGN" != dna"ACTGA"
+            @test dna"ACTGN" != dna"ACTG"
+            @test dna"ACTG"  != dna"ACTGN"
+
+            a = dna"ACGTNACGTN"
+            b = dna"""
+            ACGTN
+            ACGTN
+            """
+            @test a == b
+        end
+
+        @testset "RNA" begin
+            a = rna"ACUGN"
+            b = rna"ACUGN"
+            @test a == b
+            @test rna"ACUGN" == rna"ACUGN"
+            @test rna"ACUGN" != rna"ACUGA"
+            @test rna"ACUGN" != rna"ACUG"
+            @test rna"ACUG"  != rna"ACUGN"
+
+            a = rna"ACUGNACUGN"
+            b = rna"""
+            ACUGN
+            ACUGN
+            """
+            @test a == b
+        end
+
+        @testset "AminoAcid" begin
+            a = aa"ARNDCQEGHILKMFPSTWYVX"
+            b = aa"ARNDCQEGHILKMFPSTWYVX"
+            @test a == b
+            @test a != aa"ARNDCQEGHILKMFPSTWYXV"
+            @test a != aa"ARNDCQEGHLKMFPSTWYVX"
+
+            b = aa"""
+            ARNDCQEGHI
+            LKMFPSTWYV
+            X
+            """
+            @test a == b
+        end
+    end
+
+    @testset "Length" begin
+        for len in [0, 1, 2, 3, 10, 16, 32, 1000, 10000]
+            seq = DNASequence(random_dna(len))
+            @test length(seq) === endof(seq) === len
+
+            seq = RNASequence(random_rna(len))
+            @test length(seq) === endof(seq) === len
+
+            seq = AminoAcidSequence(random_aa(len))
+            @test length(seq) === endof(seq) === len
+        end
+    end
+
+    @testset "Access" begin
+        dna_seq = dna"ACTG"
+
+        @test dna_seq[1] === DNA_A
+        @test dna_seq[2] === DNA_C
+        @test dna_seq[3] === DNA_T
+        @test dna_seq[4] === DNA_G
+
+        # Access indexes out of bounds
+        @test_throws BoundsError dna_seq[-1]
+        @test_throws BoundsError dna_seq[0]
+        @test_throws BoundsError dna_seq[5]
+
+        @test dna"ACTGNACTGN"[1:5] == dna"ACTGN"
+        @test dna"ACTGNACTGN"[5:1] == dna""
+
+        rna_seq = rna"ACUG"
+        @test rna_seq[1] === RNA_A
+        @test rna_seq[2] === RNA_C
+        @test rna_seq[3] === RNA_U
+        @test rna_seq[4] === RNA_G
+
+        # Access indexes out of bounds
+        @test_throws BoundsError rna_seq[-1]
+        @test_throws BoundsError rna_seq[0]
+        @test_throws BoundsError rna_seq[5]
+
+        @test rna"ACUGNACUGN"[1:5] == rna"ACUGN"
+        @test rna"ACUGNACUGN"[5:1] == rna""
+    end
+
+    @testset "Iteration" begin
+        dna_seq = dna"ACTG"
+        dna_vec = [DNA_A, DNA_C, DNA_T, DNA_G]
+        @test all([nt === dna_vec[i] for (i, nt) in enumerate(dna_seq)])
+
+        rna_seq = rna"ACUG"
+        rna_vec = [RNA_A, RNA_C, RNA_U, RNA_G]
+        @test all([nt === rna_vec[i] for (i, nt) in enumerate(rna_seq)])
+
+        aa_seq = aa"ARNPS"
+        aa_vec = [AA_A, AA_R, AA_N, AA_P, AA_S]
+        @test all([aa == aa_vec[i] for (i, aa) in enumerate(aa_seq)])
+    end
+
+    @testset "Subsequence construction" begin
+        function test_subseq(A, seq)
+            bioseq = BioSequence{A}(seq)
+            for _ in 1:100
+                part = random_interval(1, endof(seq))
+                @test convert(ASCIIString, bioseq[part]) == seq[part]
+            end
+        end
+
+        for len in [1, 10, 32, 1000, 10000, 100000]
+            test_subseq(DNAAlphabet{4}, random_dna(len))
+            test_subseq(RNAAlphabet{4}, random_rna(len))
+            test_subseq(AminoAcidAlphabet, random_aa(len))
+
+            probs = [0.25, 0.25, 0.25, 0.25, 0.00]
+            test_subseq(DNAAlphabet{2}, random_dna(len, probs))
+            test_subseq(RNAAlphabet{2}, random_rna(len, probs))
+        end
+
+        # Subsequence from range
+        @test RNASequence(rna"AUCGAUCG", 5:8) == RNASequence("AUCG")
+        @test DNASequence(dna"ATCGATCG", 5:8) == DNASequence("ATCG")
+
+        # Invalid ranges
+        @test_throws Exception RNASequence(rna"AUCGAUCG", 5:10)
+        @test_throws Exception DNASequence(dna"ATCGATCG", 5:10)
+
+        # Empty ranges
+        @test RNASequence(rna"AUCGAUCG", 5:4) == RNASequence()
+        @test DNASequence(dna"ATCGATCG", 5:4) == DNASequence()
+
+        # Subsequence of subsequence
+        @test dna"ACGTAG"[4:end][1:2] == dna"TA"
+        @test dna"ACGTAG"[4:end][2:3] == dna"AG"
+        @test_throws Exception dna"ACGTAG"[4:end][0:1]
+        @test_throws Exception dna"ACGTAG"[4:end][3:4]
+    end
+
+    @testset "Mutability" begin
+        # non-standard string literals are immutable
+        @test !ismutable(dna"ACGT")
+        @test !ismutable(rna"ACGU")
+        @test !ismutable(aa"ARG")
+
+        function test_mutability(A, s)
+            @assert length(s) ≥ 4
+            @assert s[1] != s[2]
+
+            seq = BioSequence{A}(s)
+            @test !ismutable(seq)
+            @test_throws Exception seq[1] = seq[2]
+
+            subseq = seq[1:endof(seq)]
+            @test !ismutable(subseq)
+
+            mutable!(seq)
+            @test ismutable(seq)
+            @test seq[1] !== seq[2]
+            seq[1] = seq[2]
+            @test seq[1] === seq[2]
+            @test subseq[1] === eltype(A)(s[1])
+
+            immutable!(seq)
+            @test_throws Exception seq[1] = seq[2]
+        end
+
+        test_mutability(DNAAlphabet{2}, "ACGTACGT")
+        test_mutability(DNAAlphabet{4}, "ACGTNACGTN")
+        test_mutability(RNAAlphabet{2}, "ACGUACGU")
+        test_mutability(RNAAlphabet{4}, "ACGUNACGUN")
+        test_mutability(AminoAcidAlphabet, "MTTQA")
+
+        seq = dna"ACGTACGT"
+        mutable!(seq)
+        rnaseq = convert(RNASequence, seq)
+        @test ismutable(rnaseq)
+        @test_throws Exception rnaseq[1] = DNA_C
+        rnaseq[1] = RNA_C
+        @test seq == dna"ACGTACGT"
+        @test rnaseq == rna"CCGUACGU"
+    end
+
+    @testset "Transformations" begin
+        function test_reverse(A, seq)
+            revseq = reverse(BioSequence{A}(seq))
+            @test convert(ASCIIString, revseq) == reverse(seq)
+        end
+
+        function test_dna_complement(A, seq)
+            comp = complement(BioSequence{A}(seq))
+            @test convert(ASCIIString, comp) == dna_complement(seq)
+        end
+
+        function test_rna_complement(A, seq)
+            comp = complement(BioSequence{A}(seq))
+            @test convert(ASCIIString, comp) == rna_complement(seq)
+        end
+
+        function test_dna_revcomp(A, seq)
+            revcomp = reverse_complement(BioSequence{A}(seq))
+            @test convert(ASCIIString, revcomp) == reverse(dna_complement(seq))
+        end
+
+        function test_rna_revcomp(A, seq)
+            revcomp = reverse_complement(BioSequence{A}(seq))
+            @test convert(ASCIIString, revcomp) == reverse(rna_complement(seq))
+        end
+
+        @testset "Reverse" begin
+            for len in [0, 1, 10, 32, 1000, 10000, 100000], _ in 1:10
+                test_reverse(DNAAlphabet{4}, random_dna(len))
+                test_reverse(RNAAlphabet{4}, random_rna(len))
+                test_reverse(AminoAcidAlphabet, random_aa(len))
+
+                probs = [0.25, 0.25, 0.25, 0.25, 0.00]
+                test_reverse(DNAAlphabet{2}, random_dna(len, probs))
+                test_reverse(RNAAlphabet{2}, random_rna(len, probs))
+            end
+        end
+
+        @testset "Complement" begin
+            for len in [0, 1, 10, 32, 1000, 10000, 100000], _ in 1:10
+                test_dna_complement(DNAAlphabet{4}, random_dna(len))
+                test_rna_complement(RNAAlphabet{4}, random_rna(len))
+
+                probs = [0.25, 0.25, 0.25, 0.25, 0.00]
+                test_dna_complement(DNAAlphabet{2}, random_dna(len, probs))
+                test_rna_complement(RNAAlphabet{2}, random_rna(len, probs))
+            end
+        end
+
+        @testset "Reverse complement" begin
+            for len in [0, 1, 10, 32, 1000, 10000, 100000], _ in 1:10
+                test_dna_revcomp(DNAAlphabet{4}, random_dna(len))
+                test_rna_revcomp(RNAAlphabet{4}, random_rna(len))
+
+                probs = [0.25, 0.25, 0.25, 0.25, 0.00]
+                test_dna_revcomp(DNAAlphabet{2}, random_dna(len, probs))
+                test_rna_revcomp(RNAAlphabet{2}, random_rna(len, probs))
+            end
+        end
+    end
+
+    @testset "Mismatches" begin
+        @test mismatches(dna"ACGT", dna"ACGT") == 0
+        @test mismatches(dna"ACGT", dna"ACGTT") == 0
+        @test mismatches(dna"ACGT", dna"ACGA") == 1
+        @test mismatches(dna"ACGT", dna"ACGAA") == 1
+
+        @test mismatches(rna"ACGU", rna"ACGU") == 0
+        @test mismatches(rna"ACGU", rna"ACGUU") == 0
+        @test mismatches(rna"ACGU", rna"ACGA") == 1
+        @test mismatches(rna"ACGU", rna"ACGAA") == 1
+
+        @test mismatches(aa"MTTQAP", aa"MTTQAP") == 0
+        @test mismatches(aa"MTTQAP", aa"MTTQAPM") == 0
+        @test mismatches(aa"MTTQAP", aa"MTTQAT") == 1
+        @test mismatches(aa"MTTQAP", aa"MTTQATT") == 1
+
+        function test_mismatches(A, a, b)
+            count = 0
+            for (ca, cb) in zip(a, b)
+                if ca != cb
+                    count += 1
+                end
+            end
+            seq_a = BioSequence{A}(a)
+            seq_b = BioSequence{A}(b)
+            @test mismatches(seq_a, seq_b) === mismatches(seq_b, seq_a) == count
+        end
+
+        for len in [0, 1, 10, 32, 1000, 10000, 100000], _ in 1:10
+            test_mismatches(DNAAlphabet{4}, random_dna(len), random_dna(len))
+            test_mismatches(RNAAlphabet{4}, random_rna(len), random_rna(len))
+            test_mismatches(AminoAcidAlphabet, random_aa(len), random_aa(len))
+
+            probs = [0.25, 0.25, 0.25, 0.25, 0.00]
+            test_mismatches(DNAAlphabet{2}, random_dna(len, probs), random_dna(len, probs))
+            test_mismatches(RNAAlphabet{2}, random_rna(len, probs), random_rna(len, probs))
+        end
+    end
+
+    @testset "N positions" begin
+        function test_ns(A, seq)
+            expected = Int[]
+            for i in 1:length(seq)
+                if seq[i] == 'N'
+                    push!(expected, i)
+                end
+            end
+            bioseq = BioSequence{A}(seq)
+            @test collect(npositions(bioseq)) == expected
+        end
+
+        for len in [1, 10, 32, 1000, 10000, 100000]
+            test_ns(DNAAlphabet{4}, random_dna(len))
+            test_ns(RNAAlphabet{4}, random_rna(len))
+
+            probs = [0.25, 0.25, 0.25, 0.25, 0.00]
+            test_ns(DNAAlphabet{2}, random_dna(len, probs))
+            test_ns(RNAAlphabet{2}, random_rna(len, probs))
+        end
+
+        dna_seq   = dna"ANANANA"
+        dna_niter = npositions(dna_seq)
+        ns = [2,4,6]
+        for (i, n) in enumerate(dna_niter)
+            @test n == ns[i]
+        end
+
+        rna_seq   = rna"ANANANA"
+        rna_niter = npositions(rna_seq)
+        ns = [2,4,6]
+        for (i, n) in enumerate(rna_niter)
+            @test n == ns[i]
+        end
+    end
+end
+
+@testset "Composition" begin
+    function string_nucleotide_count(::Type{DNANucleotide}, seq::AbstractString)
+        counts = Dict{DNANucleotide, Int}(
+            DNA_A => 0,
+            DNA_C => 0,
+            DNA_G => 0,
+            DNA_T => 0,
+            DNA_N => 0 )
+        for c in seq
+            counts[convert(DNANucleotide, c)] += 1
+        end
+        return counts
+    end
+
+    function string_nucleotide_count(::Type{RNANucleotide}, seq::AbstractString)
+        counts = Dict{RNANucleotide, Int}(
+            RNA_A => 0,
+            RNA_C => 0,
+            RNA_G => 0,
+            RNA_U => 0,
+            RNA_N => 0 )
+        for c in seq
+            counts[convert(RNANucleotide, c)] += 1
+        end
+        return counts
+    end
+
+    function check_nucleotide_count(::Type{DNANucleotide}, seq::AbstractString)
+        string_counts = string_nucleotide_count(DNANucleotide, seq)
+        seq_counts = Composition(DNASequence(seq))
+        return string_counts[DNA_A] == seq_counts[DNA_A] &&
+               string_counts[DNA_C] == seq_counts[DNA_C] &&
+               string_counts[DNA_G] == seq_counts[DNA_G] &&
+               string_counts[DNA_T] == seq_counts[DNA_T] &&
+               string_counts[DNA_N] == seq_counts[DNA_N]
+    end
+
+    function check_nucleotide_count(::Type{RNANucleotide}, seq::AbstractString)
+        string_counts = string_nucleotide_count(RNANucleotide, seq)
+        seq_counts = Composition(RNASequence(seq))
+        return string_counts[RNA_A] == seq_counts[RNA_A] &&
+               string_counts[RNA_C] == seq_counts[RNA_C] &&
+               string_counts[RNA_G] == seq_counts[RNA_G] &&
+               string_counts[RNA_U] == seq_counts[RNA_U] &&
+               string_counts[RNA_N] == seq_counts[RNA_N]
+    end
+
+    function check_kmer_nucleotide_count(::Type{DNANucleotide}, seq::AbstractString)
+        string_counts = string_nucleotide_count(DNANucleotide, seq)
+        kmer_counts = Composition(dnakmer(seq))
+        return string_counts[DNA_A] == kmer_counts[DNA_A] &&
+               string_counts[DNA_C] == kmer_counts[DNA_C] &&
+               string_counts[DNA_G] == kmer_counts[DNA_G] &&
+               string_counts[DNA_T] == kmer_counts[DNA_T] &&
+               string_counts[DNA_N] == kmer_counts[DNA_N]
+    end
+
+    function check_kmer_nucleotide_count(::Type{RNANucleotide}, seq::AbstractString)
+        string_counts = string_nucleotide_count(RNANucleotide, seq)
+        kmer_counts = Composition(rnakmer(seq))
+        return string_counts[RNA_A] == kmer_counts[RNA_A] &&
+               string_counts[RNA_C] == kmer_counts[RNA_C] &&
+               string_counts[RNA_G] == kmer_counts[RNA_G] &&
+               string_counts[RNA_U] == kmer_counts[RNA_U] &&
+               string_counts[RNA_N] == kmer_counts[RNA_N]
+    end
+
+    reps = 10
+    for len in [1, 10, 32, 1000, 10000, 100000]
+        @test all(Bool[check_nucleotide_count(DNANucleotide, random_dna(len)) for _ in 1:reps])
+        @test all(Bool[check_nucleotide_count(RNANucleotide, random_rna(len)) for _ in 1:reps])
+    end
+
+    @test Composition(aa"MTTQAPMFTQPLQSVVV")[AA_E] === 0
+    @test Composition(aa"MTTQAPMFTQPLQSVVV")[AA_A] === 1
+    @test Composition(aa"MTTQAPMFTQPLQSVVV")[AA_P] === 2
+    @test Composition(aa"MTTQAPMFTQPLQSVVV")[AA_V] === 3
+
+    for len in [1, 10, 32]
+        @test all(Bool[check_kmer_nucleotide_count(DNANucleotide, random_dna_kmer(len)) for _ in 1:reps])
+        @test all(Bool[check_kmer_nucleotide_count(RNANucleotide, random_rna_kmer(len)) for _ in 1:reps])
+    end
+end
+
+@testset "Kmer" begin
+    reps = 10
+    @testset "Construction and Conversions" begin
+        # Check that kmers in strings survive round trip conversion:
+        #   UInt64 → Kmer → UInt64
+        function check_uint64_convertion(T::Type, n::UInt64, len::Int)
+            return convert(UInt64, convert(Kmer{T, len}, n)) === n
+        end
+
+        # Check that kmers in strings survive round trip conversion:
+        #   String → Kmer → String
+        function check_string_construction(T::Type, seq::AbstractString)
+            return convert(AbstractString, convert(Kmer{T}, seq)) == uppercase(seq)
+        end
+
+        # Check that dnakmers can be constructed from a DNASequence
+        #   DNASequence → Kmer → DNASequence
+        function check_dnasequence_construction(seq::DNASequence)
+            return convert(DNASequence, convert(DNAKmer, seq)) == seq
+        end
+
+        # Check that rnakmers can be constructed from a RNASequence
+        #   RNASequence → Kmer → RNASequence
+        function check_rnasequence_construction(seq::RNASequence)
+            return convert(RNASequence, convert(RNAKmer, seq)) == seq
+        end
+
+        # Check that kmers can be constructed from a BioSequence
+        #   BioSequence → Kmer → BioSequence
+        function check_biosequence_construction(seq::BioSequence)
+            return convert(BioSequence, convert(Kmer, seq)) == seq
+        end
+
+        # Check that kmers can be constructed from an array of nucleotides
+        #   Vector{Nucleotide} → Kmer → Vector{Nucleotide}
+        function check_nucarray_kmer{T <: Nucleotide}(seq::Vector{T})
+            return convert(AbstractString, [convert(Char, c) for c in seq]) ==
+                   convert(AbstractString, kmer(seq...))
+        end
+
+        # Check that kmers in strings survive round trip conversion:
+        #   String → BioSequence → Kmer → BioSequence → String
+        function check_roundabout_construction(A, seq::AbstractString)
+            T = eltype(A)
+            return convert(AbstractString,
+                       convert(BioSequence{A},
+                           convert(Kmer,
+                               convert(BioSequence{A}, seq)))) == uppercase(seq)
+        end
+
+        for len in [0, 1, 16, 32]
+            # UInt64 conversions
+            @test all(Bool[check_uint64_convertion(DNANucleotide, rand(UInt64(0):UInt64(UInt64(1) << 2len - 1)), len) for _ in 1:reps])
+            @test all(Bool[check_uint64_convertion(RNANucleotide, rand(UInt64(0):UInt64(UInt64(1) << 2len - 1)), len) for _ in 1:reps])
+
+            # String construction
+            @test all(Bool[check_string_construction(DNANucleotide, random_dna_kmer(len)) for _ in 1:reps])
+            @test all(Bool[check_string_construction(RNANucleotide, random_rna_kmer(len)) for _ in 1:reps])
+
+            # DNA/RNASequence Constructions
+            @test all(Bool[check_dnasequence_construction(DNASequence(random_dna_kmer(len))) for _ in 1:reps])
+            @test all(Bool[check_rnasequence_construction(RNASequence(random_rna_kmer(len))) for _ in 1:reps])
+
+            # BioSequence Construction
+            @test all(Bool[check_biosequence_construction(DNASequence(random_dna_kmer(len))) for _ in 1:reps])
+            @test all(Bool[check_biosequence_construction(RNASequence(random_rna_kmer(len))) for _ in 1:reps])
+
+            # Construction from nucleotide arrays
+            if len > 0
+                @test all(Bool[check_nucarray_kmer(random_dna_kmer_nucleotides(len)) for _ in 1:reps])
+                @test all(Bool[check_nucarray_kmer(random_rna_kmer_nucleotides(len)) for _ in 1:reps])
+            end
+
+            # Roundabout conversions
+            @test all(Bool[check_roundabout_construction(DNAAlphabet{2}, random_dna_kmer(len)) for _ in 1:reps])
+            @test all(Bool[check_roundabout_construction(DNAAlphabet{4}, random_dna_kmer(len)) for _ in 1:reps])
+            @test all(Bool[check_roundabout_construction(RNAAlphabet{2}, random_rna_kmer(len)) for _ in 1:reps])
+            @test all(Bool[check_roundabout_construction(RNAAlphabet{4}, random_rna_kmer(len)) for _ in 1:reps])
+        end
+
+        @test_throws Exception kmer() # can't construct 0-mer using `kmer()`
+        @test_throws Exception kmer(RNA_A, RNA_C, RNA_G, RNA_N, RNA_U) # no Ns in kmers
+        @test_throws Exception kmer(DNA_A, DNA_C, DNA_G, DNA_N, DNA_T) # no Ns in kmers
+        @test_throws Exception kmer(rna"ACGNU")# no Ns in kmers
+        @test_throws Exception rnmakmer(rna"ACGNU")# no Ns in kmers
+        @test_throws Exception kmer(dna"ACGNT") # no Ns in kmers
+        @test_throws Exception dnmakmer(dna"ACGNT") # no Ns in kmers
+        @test_throws Exception kmer(RNA_A, DNA_A) # no mixing of RNA and DNA
+        @test_throws Exception kmer(random_rna(33)) # no kmer larger than 32nt
+        @test_throws Exception kmer(random_dna(33)) # no kmer larger than 32nt
+        @test_throws Exception kmer(RNA_A, RNA_C, RNA_G, RNA_U, # no kmer larger than 32nt
+                          RNA_A, RNA_C, RNA_G, RNA_U,
+                          RNA_A, RNA_C, RNA_G, RNA_U,
+                          RNA_A, RNA_C, RNA_G, RNA_U,
+                          RNA_A, RNA_C, RNA_G, RNA_U,
+                          RNA_A, RNA_C, RNA_G, RNA_U,
+                          RNA_A, RNA_C, RNA_G, RNA_U,
+                          RNA_A, RNA_C, RNA_G, RNA_U,
+                          RNA_A, RNA_C, RNA_G, RNA_U)
+        @test_throws Exception kmer(DNA_A, DNA_C, DNA_G, DNA_T, # no kmer larger than 32nt
+                          DNA_A, DNA_C, DNA_G, DNA_T,
+                          DNA_A, DNA_C, DNA_G, DNA_T,
+                          DNA_A, DNA_C, DNA_G, DNA_T,
+                          DNA_A, DNA_C, DNA_G, DNA_T,
+                          DNA_A, DNA_C, DNA_G, DNA_T,
+                          DNA_A, DNA_C, DNA_G, DNA_T,
+                          DNA_A, DNA_C, DNA_G, DNA_T,
+                          DNA_A, DNA_C, DNA_G, DNA_T)
+
+        @testset "From strings" begin
+            @test dnakmer("ACTG") == convert(Kmer, DNASequence("ACTG"))
+            @test rnakmer("ACUG") == convert(Kmer, RNASequence("ACUG"))
+
+            # N is not allowed in Kmers
+            @test_throws Exception dnakmer("ACGTNACGT")
+            @test_throws Exception rnakmer("ACGUNACGU")
+        end
+    end
+
+    @testset "Comparisons" begin
+        @testset "Equality" begin
+            function check_seq_kmer_equality(len)
+                a = dnakmer(random_dna_kmer(len))
+                b = convert(DNASequence, a)
+                return a == b && b == a
+            end
+
+            for len in [1, 10, 32]
+                @test all(Bool[check_seq_kmer_equality(len) for _ in 1:reps])
+            end
+
+            # True negatives
+            @test dnakmer("ACG") != rnakmer("ACG")
+            @test dnakmer("T")   != rnakmer("U")
+            @test dnakmer("AC")  != dnakmer("AG")
+            @test rnakmer("AC")  != rnakmer("AG")
+
+            @test dnakmer("ACG") != rna"ACG"
+            @test dnakmer("T")   != rna"U"
+            @test dnakmer("AC")  != dna"AG"
+            @test rnakmer("AC")  != rna"AG"
+
+            @test rna"ACG" != dnakmer("ACG")
+            @test rna"U"   != dnakmer("T")
+            @test dna"AG"  != dnakmer("AC")
+            @test rna"AG"  != rnakmer("AC")
+        end
+
+        @testset "Inequality" begin
+            for len in [1, 10, 32]
+                @test  isless(convert(DNAKmer{1}, UInt64(0)), convert(DNAKmer{1}, UInt64(1)))
+                @test !isless(convert(DNAKmer{1}, UInt64(0)), convert(DNAKmer{1}, UInt64(0)))
+                @test !isless(convert(DNAKmer{1}, UInt64(1)), convert(DNAKmer{1}, UInt64(0)))
+
+                @test  isless(convert(RNAKmer{1}, UInt64(0)), convert(RNAKmer{1}, UInt64(1)))
+                @test !isless(convert(RNAKmer{1}, UInt64(0)), convert(RNAKmer{1}, UInt64(0)))
+                @test !isless(convert(RNAKmer{1}, UInt64(1)), convert(RNAKmer{1}, UInt64(0)))
+            end
+        end
+
+        @testset "Hash" begin
+            kmers = map(dnakmer, ["AAAA", "AACT", "ACGT", "TGCA"])
+            for x in kmers, y in kmers
+                @test (x == y) == (hash(x) == hash(y))
+            end
+            kmers = map(rnakmer, ["AAAA", "AACU", "ACGU", "UGCA"])
+            for x in kmers, y in kmers
+                @test (x == y) == (hash(x) == hash(y))
+            end
+        end
+    end
+
+    @testset "Length" begin
+        for len in [0, 1, 16, 32]
+            @test length(dnakmer(random_dna_kmer(len))) == len
+            @test length(rnakmer(random_rna_kmer(len))) == len
+        end
+    end
+
+    @testset "Arithmetic" begin
+        x = dnakmer("AA")
+        @test x - 1 == x + (-1) == dnakmer("TT")
+        @test x + 1 == x - (-1) == dnakmer("AC")
+
+        x = dnakmer("TT")
+        @test x - 1 == x + (-1) == dnakmer("TG")
+        @test x + 1 == x - (-1) == dnakmer("AA")
+
+        base = dnakmer("AAA")
+        offset = 0
+        nucs = "ACGT"
+        for a in nucs, b in nucs, c in nucs
+            @test base + offset == dnakmer(string(a, b, c))
+            offset += 1
+        end
+    end
+
+    @testset "Order" begin
+        @test dnakmer("AA") < dnakmer("AC") < dnakmer("AG") < dnakmer("AT") < dnakmer("CA")
+        @test rnakmer("AA") < rnakmer("AC") < rnakmer("AG") < rnakmer("AU") < rnakmer("CA")
+    end
+
+    @testset "Access and Iterations" begin
+        dna_kmer = dnakmer("ACTG")
+        rna_kmer = rnakmer("ACUG")
+
+        @testset "Access DNA Kmer" begin
+            @test dna_kmer[1] == DNA_A
+            @test dna_kmer[2] == DNA_C
+            @test dna_kmer[3] == DNA_T
+            @test dna_kmer[4] == DNA_G
+
+            # Access indexes out of bounds
+            @test_throws Exception dna_kmer[-1]
+            @test_throws Exception dna_kmer[0]
+            @test_throws Exception dna_kmer[5]
+            @test_throws Exception getindex(dna_kmer,-1)
+            @test_throws Exception getindex(dna_kmer, 0)
+            @test_throws Exception getindex(dna_kmer, 5)
+        end
+
+        @testset "Iteration through DNA Kmer" begin
+            @test start(dnakmer("ACTG")) == 1
+            @test start(dnakmer(""))     == 1
+
+            @test next(dnakmer("ACTG"), 1) == (DNA_A, 2)
+            @test next(dnakmer("ACTG"), 4) == (DNA_G, 5)
+
+            @test  done(dnakmer(""), 1)
+            @test !done(dnakmer("ACTG"), 1)
+            @test !done(dnakmer("ACTG"), 4)
+            @test  done(dnakmer("ACTG"), 5)
+            @test !done(dnakmer("ACTG"), -1)
+
+
+            dna_vec = [DNA_A, DNA_C, DNA_T, DNA_G]
+            @test all([nt === dna_vec[i] for (i, nt) in enumerate(dna_kmer)])
+        end
+
+        @testset "Access RNA Kmer" begin
+            @test rna_kmer[1] == RNA_A
+            @test rna_kmer[2] == RNA_C
+            @test rna_kmer[3] == RNA_U
+            @test rna_kmer[4] == RNA_G
+
+            # Access indexes out of bounds
+            @test_throws Exception rna_kmer[-1]
+            @test_throws Exception rna_kmer[0]
+            @test_throws Exception rna_kmer[5]
+            @test_throws Exception getindex(rna_kmer, -1)
+            @test_throws Exception getindex(rna_kmer, 0)
+            @test_throws Exception getindex(rna_kmer, 5)
+        end
+
+        @testset "Iteration through RNA Kmer" begin
+            @test start(rnakmer("ACUG")) == 1
+            @test start(rnakmer(""))     == 1
+
+            @test next(rnakmer("ACUG"), 1) == (RNA_A, 2)
+            @test next(rnakmer("ACUG"), 4) == (RNA_G, 5)
+
+            @test  done(rnakmer(""), 1)
+            @test !done(rnakmer("ACUG"), 1)
+            @test !done(rnakmer("ACUG"), 4)
+            @test  done(rnakmer("ACUG"), 5)
+            @test !done(rnakmer("ACUG"), -1)
+
+            rna_vec = [RNA_A, RNA_C, RNA_U, RNA_G]
+            @test all([nt === rna_vec[i] for (i, nt) in enumerate(rna_kmer)])
+        end
+    end
+
+    @testset "Transformations" begin
+        function test_reverse(T, seq)
+            revseq = reverse(Kmer{T,length(seq)}(seq))
+            @test convert(ASCIIString, revseq) == reverse(seq)
+        end
+
+        function test_dna_complement(seq)
+            comp = complement(DNAKmer{length(seq)}(seq))
+            @test convert(ASCIIString, comp) == dna_complement(seq)
+        end
+
+        function test_rna_complement(seq)
+            comp = complement(RNAKmer{length(seq)}(seq))
+            @test convert(ASCIIString, comp) == rna_complement(seq)
+        end
+
+        function test_dna_revcomp(seq)
+            revcomp = reverse_complement(DNAKmer{length(seq)}(seq))
+            @test convert(ASCIIString, revcomp) == reverse(dna_complement(seq))
+        end
+
+        function test_rna_revcomp(seq)
+            revcomp = reverse_complement(RNAKmer{length(seq)}(seq))
+            @test convert(ASCIIString, revcomp) == reverse(rna_complement(seq))
+        end
+
+        @testset "Reverse" begin
+            for len in 0:32, _ in 1:10
+                test_reverse(DNANucleotide, random_dna_kmer(len))
+                test_reverse(RNANucleotide, random_rna_kmer(len))
+            end
+        end
+
+        @testset "Complement" begin
+            for len in 0:32, _ in 1:10
+                test_dna_complement(random_dna_kmer(len))
+                test_rna_complement(random_rna_kmer(len))
+            end
+        end
+
+        @testset "Reverse Complement" begin
+            for len in 0:32, _ in 1:10
+                test_dna_revcomp(random_dna_kmer(len))
+                test_rna_revcomp(random_rna_kmer(len))
+            end
+        end
+    end
+
+    @testset "Mismatches" begin
+        function test_mismatches(a, b)
+            count = 0
+            for (x, y) in zip(a, b)
+                count += x != y
+            end
+            @test mismatches(a, b) === mismatches(b, a) === count
+        end
+
+        for len in 0:32, _ in 1:10
+            a = random_dna_kmer(len)
+            b = random_dna_kmer(len)
+            test_mismatches(dnakmer(a), dnakmer(b))
+
+            a = random_rna_kmer(len)
+            b = random_rna_kmer(len)
+            test_mismatches(rnakmer(a), rnakmer(b))
+        end
+    end
+
+    @testset "EachKmer" begin
+        function string_eachkmer(seq::AbstractString, k, step)
+            kmers = ASCIIString[]
+            i = 1
+            for i in 1:step:length(seq) - k + 1
+                subseq = seq[i:i + k - 1]
+                if !in('N', subseq)
+                    push!(kmers, subseq)
+                end
+            end
+            return kmers
+        end
+
+        function test_eachkmer(A, seq::AbstractString, k, step)
+            T = eltype(A)
+            xs = [convert(AbstractString, x) for (i, x) in collect(each(Kmer{T,k}, BioSequence{A}(seq), step))]
+            ys = [convert(AbstractString, x) for (i, x) in collect(eachkmer(BioSequence{A}(seq), k, step))]
+            zs = string_eachkmer(seq, k, step)
+            @test xs == ys == zs
+        end
+
+        len = 10000
+
+        for k in [0, 1, 3, 16, 32], step in 1:3, _ in 1:10
+            test_eachkmer(DNAAlphabet{4}, random_dna(len), k, step)
+            test_eachkmer(RNAAlphabet{4}, random_rna(len), k, step)
+
+            probs = [0.25, 0.25, 0.25, 0.25, 0.00]
+            test_eachkmer(DNAAlphabet{2}, random_dna(len, probs), k, step)
+            test_eachkmer(RNAAlphabet{2}, random_rna(len, probs), k, step)
+        end
+
+        @test isempty(collect(each(DNAKmer{1}, dna"")))
+        @test isempty(collect(each(DNAKmer{1}, dna"NNNNNNNNNN")))
+        @test_throws Exception each(DNAKmer{-1}, dna"ACGT")
+        @test_throws Exception each(DNAKmer{33}, dna"ACGT")
+    end
+
+    @testset "Kmer Counting" begin
+        function string_kmer_count{T <: Nucleotide}(::Type{T}, seq::AbstractString, k, step)
+            counts = Dict{Kmer{T, k}, Int}()
+            for x in UInt64(0):UInt64(4^k-1)
+                counts[convert(Kmer{T, k}, x)] = 0
+            end
+
+            for i in 1:step:(length(seq)-k+1)
+                s = seq[i:i+k-1]
+                if 'N' in s
+                    continue
+                end
+                counts[convert(Kmer{T, k}, s)] += 1
+            end
+
+            return counts
+        end
+
+        function test_kmer_count(A, seq::AbstractString, k, step)
+            T = eltype(A)
+            string_counts = string_kmer_count(T, seq, k, step)
+            kmer_counts = KmerCounts{T,k}(BioSequence{A}(seq), step)
+            ok = true
+            for y in UInt64(0):UInt64(4^k-1)
+                x = convert(Kmer{T,k}, y)
+                if string_counts[x] != kmer_counts[x]
+                    ok = false
+                    break
+                end
+            end
+            @test ok
+        end
+
+        for len in [1, 10, 32, 1000, 10000], k in [1, 2, 5], step in 1:3, _ in 1:10
+            test_kmer_count(DNAAlphabet{4}, random_dna(len), k, step)
+            test_kmer_count(RNAAlphabet{4}, random_rna(len), k, step)
+
+            probs = [0.25, 0.25, 0.25, 0.25, 0.00]
+            test_kmer_count(DNAAlphabet{2}, random_dna(len, probs), k, step)
+            test_kmer_count(RNAAlphabet{2}, random_rna(len, probs), k, step)
+        end
+    end
+end
+
 @testset "Translation" begin
     # crummy string translation to test against
-    standard_genetic_code_dict = Dict{AbstractString, Char}(
+    standard_genetic_code_dict = Dict{ASCIIString,Char}(
         "AAA" => 'K', "AAC" => 'N', "AAG" => 'K', "AAU" => 'N',
         "ACA" => 'T', "ACC" => 'T', "ACG" => 'T', "ACU" => 'T',
         "AGA" => 'R', "AGC" => 'S', "AGG" => 'R', "AGU" => 'S',
@@ -1469,7 +1504,6 @@ end
         # translatable ambiguities in the standard code
         "CUN" => 'L', "CCN" => 'P', "CGN" => 'R', "ACN" => 'T',
         "GUN" => 'V', "GCN" => 'A', "GGN" => 'G', "UCN" => 'S'
-
     )
 
     function string_translate(seq::AbstractString)
@@ -1496,8 +1530,8 @@ end
 end
 
 
-@testset "Sequence Parsing" begin
-    @testset "FASTA Parsing" begin
+@testset "Parsing" begin
+    @testset "FASTA" begin
         get_bio_fmt_specimens()
 
         function check_fasta_parse(filename)
@@ -1541,7 +1575,7 @@ end
         end
     end
 
-    @testset "FASTQ Parsing" begin
+    @testset "FASTQ" begin
         get_bio_fmt_specimens()
 
         function check_fastq_parse(filename)
@@ -1587,9 +1621,37 @@ end
     end
 end
 
+@testset "Writing" begin
+    @testset "FASTA" begin
+        dna_seq1 = random_dna(79 * 3) # full lines
+        dna_seq2 = random_dna(50)     # short line
+        seq_name1 = "Sequence 1"
+        seq_name2 = "Sequence 2"
+        seq_description1 = "Description 1"
+        seq_description2 = "Description 2"
+
+        wrapped_seq1 = join([dna_seq1[1:79], dna_seq1[80:158], dna_seq1[159:end]], "\n")
+
+        expected_seq1 = string(">", seq_name1, " ", seq_description1, "\n", wrapped_seq1, "\n")
+        expected_seq2 = string(">", seq_name2, " ", seq_description2, "\n", dna_seq2, "\n")
+        expected = string(expected_seq1, expected_seq2)
+
+        fasta_seq1 = Seq.FASTADNASeqRecord(
+            seq_name1, DNASequence(dna_seq1), Seq.FASTAMetadata(seq_description1))
+        fasta_seq2 = Seq.FASTADNASeqRecord(
+            seq_name2, DNASequence(dna_seq2), Seq.FASTAMetadata(seq_description2))
+        sequences = [fasta_seq1, fasta_seq2]
+
+        output = IOBuffer()
+        for seq in sequences
+            write(output, seq)
+        end
+        @test takebuf_string(output) == expected
+    end
+end
+
 @testset "Quality scores" begin
     @testset "Decoding PHRED scores" begin
-
         function test_decode(encoding, values, expected)
             result = Array(Int8, length(expected))
             Seq.decode_quality_string!(encoding, values, result, 1, length(result))
@@ -1628,7 +1690,6 @@ end
     end
 
     @testset "Encoding PHRED scores" begin
-
         function test_encode(encoding, values, expected)
             # With start & end
             result = Array(UInt8, length(expected))
@@ -1663,35 +1724,6 @@ end
         test_encode(Seq.ILLUMINA18_QUAL_ENCODING,
                     Int8[0, 2, 3, 4, 5, 40, 93],
                     UInt8['!', '#', '$', '%', '&', 'I', '~'])
-    end
-
-    @testset "Sequence Writing" begin
-        @testset "FASTA writing" begin
-            dna_seq1 = random_dna(79 * 3) # full lines
-            dna_seq2 = random_dna(50)     # short line
-            seq_name1 = "Sequence 1"
-            seq_name2 = "Sequence 2"
-            seq_description1 = "Description 1"
-            seq_description2 = "Description 2"
-
-            wrapped_seq1 = join([dna_seq1[1:79], dna_seq1[80:158], dna_seq1[159:end]], "\n")
-
-            expected_seq1 = string(">", seq_name1, " ", seq_description1, "\n", wrapped_seq1, "\n")
-            expected_seq2 = string(">", seq_name2, " ", seq_description2, "\n", dna_seq2, "\n")
-            expected = string(expected_seq1, expected_seq2)
-
-            fasta_seq1 = Seq.FASTADNASeqRecord(
-                seq_name1, DNASequence(dna_seq1), Seq.FASTAMetadata(seq_description1))
-            fasta_seq2 = Seq.FASTADNASeqRecord(
-                seq_name2, DNASequence(dna_seq2), Seq.FASTAMetadata(seq_description2))
-            sequences = [fasta_seq1, fasta_seq2]
-
-            output = IOBuffer()
-            for seq in sequences
-                write(output, seq)
-            end
-            @test takebuf_string(output) == expected
-        end
     end
 end
 
