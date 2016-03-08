@@ -27,7 +27,7 @@ Base.showerror(io::IO, e::PDBParseError) = println(io, e.message, " at line ", e
 
 
 "Download a PDB file or biological assembly from the RCSB PDB."
-function downloadpdb(pdbid::ASCIIString, out_filepath::ASCIIString="$pdbid.pdb"; ba_number::Int=0)
+function downloadpdb(pdbid::AbstractString, out_filepath::AbstractString="$pdbid.pdb"; ba_number::Integer=0)
     # Check PDB ID is 4 characters long and only consits of alphanumeric characters
     @assert length(pdbid) == 4 && !ismatch(r"[^a-zA-Z0-9]", pdbid) "Not a valid PDB ID: \"$pdbid\""
     if ba_number == 0
@@ -42,7 +42,7 @@ end
 function Base.read(input::IO,
             ::Type{PDB},
             selector_functions::Function...;
-            structure_name::ASCIIString="",
+            structure_name::AbstractString="",
             remove_disorder::Bool=false,
             read_std_atoms::Bool=true,
             read_het_atoms::Bool=true)
@@ -82,10 +82,10 @@ function Base.read(input::IO,
     )
 end
 
-function Base.read(filepath::ASCIIString,
+function Base.read(filepath::AbstractString,
             ::Type{PDB},
             selector_functions::Function...;
-            structure_name::ASCIIString=splitdir(filepath)[2],
+            structure_name::AbstractString=splitdir(filepath)[2],
             kwargs...)
     open(filepath, "r") do input
         read(input, PDB, selector_functions...; structure_name=structure_name, kwargs...)
@@ -94,7 +94,7 @@ end
 
 
 "Parse a PDB ATOM or HETATM record and return an `Atom`."
-function parseatomrecord(line::ASCIIString, line_number::Int=1)
+function parseatomrecord(line::ASCIIString, line_number::Integer=1)
     @assert startswith(line, "ATOM  ") || startswith(line, "HETATM") "Line does not appear to be an ATOM/HETATM record: \"$line\""
     return Atom(
         line[1:6] == "HETATM",
@@ -120,10 +120,10 @@ end
 
 "Parse columns from a line and return the value or throw a `PDBParseError`."
 function parsestrict(line::ASCIIString,
-                    cols::Tuple{Int, Int},
+                    cols::Tuple{Integer, Integer},
                     out_type::Type,
-                    error_message::ASCIIString,
-                    line_number::Int)
+                    error_message::AbstractString,
+                    line_number::Integer)
     try
         return parsevalue(line, cols, out_type)
     catch
@@ -134,7 +134,7 @@ end
 
 "Parse columns from a line and return the value or a default value."
 function parselenient(line::ASCIIString,
-                    cols::Tuple{Int, Int},
+                    cols::Tuple{Integer, Integer},
                     out_type::Type,
                     default)
     try
@@ -146,7 +146,7 @@ end
 
 
 "Parse columns from a line."
-function parsevalue(line::ASCIIString, cols::Tuple{Int, Int}, out_type::Type)
+function parsevalue(line::ASCIIString, cols::Tuple{Integer, Integer}, out_type::Type)
     try
         if out_type == Int
             return parse(Int, line[cols[1]:cols[2]])
@@ -169,7 +169,7 @@ end
 Form a string of a certain length from a value by adding spaces to the left.
 Throws an error if the value is too long.
 """
-function spacestring(val_in, new_length::Int)
+function spacestring(val_in, new_length::Integer)
     string_out = string(val_in)
     @assert length(string_out) <= new_length "Cannot fit value \"$string_out\" into $new_length space(s)"
     return lpad(string_out, new_length)
@@ -249,7 +249,7 @@ end
 
 writepdb(output::IO, element::StructuralElementOrList, selector_functions::Function...) = writepdblines(output, element, selector_functions...)
 
-function writepdb(filepath::ASCIIString, element::StructuralElementOrList, selector_functions::Function...)
+function writepdb(filepath::AbstractString, element::StructuralElementOrList, selector_functions::Function...)
     open(filepath, "w") do output
         writepdb(output, element, selector_functions...)
     end

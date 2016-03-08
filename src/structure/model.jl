@@ -132,7 +132,7 @@ immutable Residue <: AbstractResidue
 end
 
 # Constructor without atoms
-Residue(name::ASCIIString, chain_id::Char, number::Int, ins_code::Char, het_res::Bool) = Residue(
+Residue(name::AbstractString, chain_id::Char, number::Integer, ins_code::Char, het_res::Bool) = Residue(
     name, chain_id, number, ins_code, het_res, [], Dict())
 # Constructor from a list of atoms
 Residue{T <: AbstractAtom}(atoms::Vector{T}) = Residue(
@@ -168,7 +168,7 @@ immutable Model <: StructuralElement
     chains::Dict{Char, Chain}
 end
 
-Model(number::Int) = Model(number, Dict())
+Model(number::Integer) = Model(number, Dict())
 Model() = Model(1)
 
 
@@ -178,7 +178,7 @@ immutable ProteinStructure <: StructuralElement
     models::Dict{Int, Model}
 end
 
-ProteinStructure(name::ASCIIString) = ProteinStructure(name, Dict())
+ProteinStructure(name::AbstractString) = ProteinStructure(name, Dict())
 ProteinStructure() = ProteinStructure("")
 
 
@@ -209,37 +209,37 @@ function Base.setindex!(disordered_atom::DisorderedAtom, atom::Atom, alt_loc_id:
     return disordered_atom
 end
 
-# Accessing a Residue with an ASCIIString returns the AbstractAtom with that
+# Accessing a Residue with an AbstractString returns the AbstractAtom with that
 #   atom name
-Base.getindex(res::Residue, atom_name::ASCIIString) = res.atoms[atom_name]
-function Base.setindex!(res::Residue, atom::AbstractAtom, atom_name::ASCIIString)
+Base.getindex(res::Residue, atom_name::AbstractString) = res.atoms[atom_name]
+function Base.setindex!(res::Residue, atom::AbstractAtom, atom_name::AbstractString)
     res.atoms[atom_name] = atom
     return res
 end
 
-# Accessing a DisorderedResidue with an ASCIIString returns the AbstractAtom in
-#   the default Residue with that atom name
+# Accessing a DisorderedResidue with an AbstractString returns the AbstractAtom
+#   in the default Residue with that atom name
 # This is not necessarily intuitive, it may be expected to return the Residue
 #   with that residue name
 # However this way accessing an AbstractResidue always returns an AbstractAtom
-Base.getindex(disordered_res::DisorderedResidue, atom_name::ASCIIString) = disordered_res.names[defaultresname(disordered_res)][atom_name]
-function Base.setindex!(disordered_res::DisorderedResidue, atom::AbstractAtom, atom_name::ASCIIString)
+Base.getindex(disordered_res::DisorderedResidue, atom_name::AbstractString) = disordered_res.names[defaultresname(disordered_res)][atom_name]
+function Base.setindex!(disordered_res::DisorderedResidue, atom::AbstractAtom, atom_name::AbstractString)
     disordered_res.names[defaultresname(disordered_res)][atom_name] = atom
     return disordered_res
 end
 
-# Accessing a Chain with an ASCIIString returns the AbstractResidue with that
+# Accessing a Chain with an AbstractString returns the AbstractResidue with that
 #  residue ID
-Base.getindex(chain::Chain, res_id::ASCIIString) = chain.residues[res_id]
-function Base.setindex!(chain::Chain, res::AbstractResidue, res_id::ASCIIString)
+Base.getindex(chain::Chain, res_id::AbstractString) = chain.residues[res_id]
+function Base.setindex!(chain::Chain, res::AbstractResidue, res_id::AbstractString)
     chain.residues[res_id] = res
     return chain
 end
 
-# Accessing a Chain with an Int returns the AbstractResidue with that residue ID
+# Accessing a Chain with an Integer returns the AbstractResidue with that residue ID
 #   converted to a string
-Base.getindex(chain::Chain, res_number::Int) = chain.residues[string(res_number)]
-function Base.setindex!(chain::Chain, res::AbstractResidue, res_number::Int)
+Base.getindex(chain::Chain, res_number::Integer) = chain.residues[string(res_number)]
+function Base.setindex!(chain::Chain, res::AbstractResidue, res_number::Integer)
     chain.residues[string(res_number)] = res
     return chain
 end
@@ -251,10 +251,10 @@ function Base.setindex!(model::Model, chain::Chain, chain_id::Char)
     return model
 end
 
-# Accessing a ProteinStructure with an Int returns the Model with that model
+# Accessing a ProteinStructure with an Integer returns the Model with that model
 #   number
-Base.getindex(struc::ProteinStructure, model_number::Int) = struc.models[model_number]
-function Base.setindex!(struc::ProteinStructure, model::Model, model_number::Int)
+Base.getindex(struc::ProteinStructure, model_number::Integer) = struc.models[model_number]
+function Base.setindex!(struc::ProteinStructure, model::Model, model_number::Integer)
     struc.models[model_number] = model
     return struc
 end
@@ -507,7 +507,7 @@ isdisorderedres(::Residue) = false
 # DisorderedResidue getters/setters
 
 "Access the `Residue` in a `DisorderedResidue` with a certain residue name."
-disorderedres(disordered_res::DisorderedResidue, res_name::ASCIIString) = disordered_res.names[res_name]
+disorderedres(disordered_res::DisorderedResidue, res_name::AbstractString) = disordered_res.names[res_name]
 
 """
 Get the name of the default `Residue` in a `DisorderedResidue`. The default is
@@ -538,7 +538,7 @@ atoms(disordered_res::DisorderedResidue) = atoms(defaultresidue(disordered_res))
 isdisorderedres(::DisorderedResidue) = true
 
 # Constructor acts as a setter for the default residue name
-function DisorderedResidue(disordered_res::DisorderedResidue, default::ASCIIString)
+function DisorderedResidue(disordered_res::DisorderedResidue, default::AbstractString)
     @assert default in resnames(disordered_res) "The new default residue name must be present in the residue"
     return DisorderedResidue(disordered_res.names, default)
 end
@@ -761,7 +761,7 @@ Organise a `StructuralElementOrList` into the next level up the heirarchy. A
 `Vector{AbstractResidue}` becomes a `Vector{Chain}`, a `Vector{Chain}` becomes a
 `Model` and a `Vector{Model}` becomes a `ProteinStructure`.
 """
-function organise(models::Vector{Model}; structure_name::ASCIIString="")
+function organise(models::Vector{Model}; structure_name::AbstractString="")
     # Organise a Vector{Model} into a ProteinStructure
     struc = ProteinStructure(structure_name)
     for model in models
@@ -772,7 +772,7 @@ function organise(models::Vector{Model}; structure_name::ASCIIString="")
 end
 
 # Organise a Vector{Chain} into a Model
-function organise(chains::Vector{Chain}; model_number::Int=1)
+function organise(chains::Vector{Chain}; model_number::Integer=1)
     model = Model(model_number)
     for chain in chains
         @assert !(chainid(chain) in chainids(model)) "Multiple chains with the same chain ID found - cannot organise into a model"
@@ -860,8 +860,8 @@ function organise{T <: AbstractAtom}(atoms::Vector{T})
     return residues_out
 end
 
-organise(model::Model; structure_name::ASCIIString="") = organise([model]; structure_name=structure_name)
-organise(chain::Chain; model_number::Int=1) = organise([chain]; model_number=model_number)
+organise(model::Model; structure_name::AbstractString="") = organise([model]; structure_name=structure_name)
+organise(chain::Chain; model_number::Integer=1) = organise([chain]; model_number=model_number)
 organise(res::AbstractResidue) = organise(AbstractResidue[res])
 organise(atom::AbstractAtom) = organise(AbstractAtom[atom])
 
@@ -923,23 +923,23 @@ end
 
 
 "Organise elements into a `Model`."
-organisemodel(chains::Vector{Chain}; model_number::Int=1) = organise(chains; model_number=model_number)
-organisemodel{T <: AbstractResidue}(residues::Vector{T}; model_number::Int=1) = organise(organise(residues); model_number=model_number)
-organisemodel{T <: AbstractAtom}(atoms::Vector{T}; model_number::Int=1) = organise(organise(organise(atoms)); model_number=model_number)
-organisemodel(chain::Chain; model_number::Int=1) = organisemodel([chain]; model_number=model_number)
-organisemodel(res::AbstractResidue; model_number::Int=1) = organisemodel(AbstractResidue[res]; model_number=model_number)
-organisemodel(atom::AbstractAtom; model_number::Int=1) = organisemodel(AbstractAtom[atom]; model_number=model_number)
+organisemodel(chains::Vector{Chain}; model_number::Integer=1) = organise(chains; model_number=model_number)
+organisemodel{T <: AbstractResidue}(residues::Vector{T}; model_number::Integer=1) = organise(organise(residues); model_number=model_number)
+organisemodel{T <: AbstractAtom}(atoms::Vector{T}; model_number::Integer=1) = organise(organise(organise(atoms)); model_number=model_number)
+organisemodel(chain::Chain; model_number::Integer=1) = organisemodel([chain]; model_number=model_number)
+organisemodel(res::AbstractResidue; model_number::Integer=1) = organisemodel(AbstractResidue[res]; model_number=model_number)
+organisemodel(atom::AbstractAtom; model_number::Integer=1) = organisemodel(AbstractAtom[atom]; model_number=model_number)
 
 
 "Organise elements into a `ProteinStructure`."
-organisestructure(models::Vector{Model}; structure_name::ASCIIString="") = organise(models; structure_name=structure_name)
-organisestructure(chains::Vector{Chain}; structure_name::ASCIIString="", model_number::Int=1) = organise(organisemodel(chains; model_number=model_number); structure_name=structure_name)
-organisestructure{T <: AbstractResidue}(residues::Vector{T}; structure_name::ASCIIString="", model_number::Int=1) = organise(organisemodel(residues; model_number=model_number); structure_name=structure_name)
-organisestructure{T <: AbstractAtom}(atoms::Vector{T}; structure_name::ASCIIString="", model_number::Int=1) = organise(organisemodel(atoms; model_number=model_number); structure_name=structure_name)
-organisestructure(model::Model; structure_name::ASCIIString="") = organisestructure([model]; structure_name=structure_name)
-organisestructure(chain::Chain; structure_name::ASCIIString="", model_number::Int=1) = organisestructure([chain]; structure_name=structure_name, model_number=model_number)
-organisestructure(res::AbstractResidue; structure_name::ASCIIString="", model_number::Int=1) = organisestructure(AbstractResidue[res]; structure_name=structure_name, model_number=model_number)
-organisestructure(atom::AbstractAtom; structure_name::ASCIIString="", model_number::Int=1) = organisestructure(AbstractAtom[atom]; structure_name=structure_name, model_number=model_number)
+organisestructure(models::Vector{Model}; structure_name::AbstractString="") = organise(models; structure_name=structure_name)
+organisestructure(chains::Vector{Chain}; structure_name::AbstractString="", model_number::Integer=1) = organise(organisemodel(chains; model_number=model_number); structure_name=structure_name)
+organisestructure{T <: AbstractResidue}(residues::Vector{T}; structure_name::AbstractString="", model_number::Integer=1) = organise(organisemodel(residues; model_number=model_number); structure_name=structure_name)
+organisestructure{T <: AbstractAtom}(atoms::Vector{T}; structure_name::AbstractString="", model_number::Integer=1) = organise(organisemodel(atoms; model_number=model_number); structure_name=structure_name)
+organisestructure(model::Model; structure_name::AbstractString="") = organisestructure([model]; structure_name=structure_name)
+organisestructure(chain::Chain; structure_name::AbstractString="", model_number::Integer=1) = organisestructure([chain]; structure_name=structure_name, model_number=model_number)
+organisestructure(res::AbstractResidue; structure_name::AbstractString="", model_number::Integer=1) = organisestructure(AbstractResidue[res]; structure_name=structure_name, model_number=model_number)
+organisestructure(atom::AbstractAtom; structure_name::AbstractString="", model_number::Integer=1) = organisestructure(AbstractAtom[atom]; structure_name=structure_name, model_number=model_number)
 
 
 """

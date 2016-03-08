@@ -19,9 +19,8 @@ using Bio.Structure: atomid,
 
 get_bio_fmt_specimens()
 
-function pdbfilepath(filename)
-    return Pkg.dir("Bio", "test", "BioFmtSpecimens", "PDB", filename)
-end
+# Access a PDB file in BioFmtSpecimens
+pdbfilepath(filename::AbstractString) = Pkg.dir("Bio", "test", "BioFmtSpecimens", "PDB", filename)
 
 
 @testset "Model" begin
@@ -1171,7 +1170,7 @@ end
 
     # Test writepdb and writepdblines
     # Counts lines in a file
-    function countlines(filename::ASCIIString)
+    function countlines(filename::AbstractString)
         counter = 0
         open(filename, "r") do file
             for line in eachline(file)
