@@ -78,13 +78,11 @@ end
             if ET == typeof(output.seq)
                 copy!(output.seq, input.seqbuf.buffer, 1, length(input.seqbuf))
             else
-                output.seq = ET(input.seqbuf.buffer, 1, length(input.seqbuf),
-                                mutable=true)
+                output.seq = ET(input.seqbuf.buffer, 1, length(input.seqbuf))
             end
         else
             copy!(output.seq, input.seqbuf.buffer, 1, length(input.seqbuf))
         end
-        #immutable!(output.seq)
         empty!(input.seqbuf)
         yield = true;
         fbreak;

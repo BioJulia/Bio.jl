@@ -3,39 +3,53 @@
 #
 # A general purpose biological sequence representation.
 #
-# TODO: Commens below may not reflect the current changes.
+# It is cheap to create a subsequence from a sequence because sequences can
+# share underlying data: creating a subsequence is just allocating a new
+# sequence object defining a part of the original sequence without copy.
+# Destructive operations create a copy of the underlying data if and only if it
+# is shared between (sub)sequences. This is often called as copy-on-write
+# strategy in computer science and should be transparent to the user.
 #
-# Sequences are either explicitly immutable or mutable. Immutable sequences have
-# the benefit that subsequence operations (`seq[i:j]`) are cheap, since they
-# share the underlying data and do not copy anything. Mutable sequences may be
-# mutated, but as a consequence subsequences copy data rather than reference it.
 #
-# Sequences can be converted between mutable and immutable using `mutable!` and
-# `immutable!`, respectively. Converting from mutable to immutable is cheap: it
-# only flips the `mutable` flag. The converse, immutable to mutable, is cheap
-# *if* the sequence is not a subsequence and has no subsequences, otherwise it
-# must make a copy of the data.
+# About Internals
+# ---------------
 #
-#      the behavior of subsequence syntax
-#   |           | seq[i:j] | sub(seq, i:j) |
-#   |-----------|----------|---------------|
-#   | immutable |   view   |     view      |
-#   |  mutable  |   copy   |     view      |
+# The `data` field of a `BioSequence{A}` object contains binary representation
+# of a biological character sequence. Each character is encoded with an encoder
+# corresponding to the alphabet `A` and compactly packed into `data`. To extract
+# a character from a sequence, you should decode this binary sequence with a
+# decoder that is a pair of the encoder. The length of encoded binary bits is
+# fixed, and hence a character at arbitrary position can be extracted in a
+# constant time. To know the exact location of a character at a position, you
+# can use the `bitsof(seq, i)` function, which returns a pair of element's index
+# containing binary bits and bits' offset. As a whole, character extraction
+# `seq[i]` can be written as:
 #
+#     j, r = bitsid(seq, i)
+#     decode(A, UInt8((seq.data[j] >> r) & mask(A)))
+#
+#  index :           j - 1              j               j + 1
+#   data : ....|xxxxx...........|xxXxxxxxxxxxxxxx|............xxxx|....
+# offset :                          |<--- r ----|
+#  width :      |<---- 64 ---->| |<---- 64 ---->| |<---- 64 ---->|
+#
+#  * '.' : unused (4 bits/char)
+#  * 'x' : used
+#  * 'X' : used and pointed by (j, r)
+
 
 """
 Biological sequence data structure indexed by an alphabet type `A`.
 """
 type BioSequence{A<:Alphabet} <: Sequence
-    data::Vector{UInt64}  # encoded sequence
+    data::Vector{UInt64}  # encoded character sequence data
     part::UnitRange{Int}  # interval within `data` defining the (sub)sequence
-    mutable::Bool         # true if and only if the sequence can be safely mutated
     shared::Bool          # true if and only if `data` is shared between sequences
 end
 
 # type aliases
-typealias DNASequence BioSequence{DNAAlphabet{4}}
-typealias RNASequence BioSequence{RNAAlphabet{4}}
+typealias DNASequence       BioSequence{DNAAlphabet{4}}
+typealias RNASequence       BioSequence{RNAAlphabet{4}}
 typealias AminoAcidSequence BioSequence{AminoAcidAlphabet}
 
 
@@ -82,8 +96,12 @@ end
 
 seq_data_len{A}(::Type{A}, len::Integer) = cld(len, div(64, bitsof(A)))
 
-function Base.call{A<:Alphabet}(::Type{BioSequence{A}}; mutable::Bool=true)
-    return BioSequence{A}(UInt64[], 1:0, mutable, false)
+function Base.call{A<:Alphabet}(::Type{BioSequence{A}})
+    return BioSequence{A}(UInt64[], 1:0, false)
+end
+
+function Base.call{A<:Alphabet}(::Type{BioSequence{A}}, len::Integer)
+    return BioSequence{A}(Vector{UInt64}(seq_data_len(A, len)), 1:len, false)
 end
 
 BioSequence(::Type{DNANucleotide}) = DNASequence()
@@ -94,7 +112,7 @@ function Base.call{A<:Alphabet}(::Type{BioSequence{A}},
                                 seq::Union{AbstractString,Vector{UInt8}},
                                 startpos::Integer=1,
                                 stoppos::Integer=endof(seq);
-                                unsafe::Bool=false, mutable::Bool=false)
+                                unsafe::Bool=false)
     len = stoppos - startpos + 1
     seqdata = zeros(UInt64, seq_data_len(A, len))
     srcdata = seq
@@ -104,78 +122,63 @@ function Base.call{A<:Alphabet}(::Type{BioSequence{A}},
     else
         @encode_seq convert(T, Char(c))
     end
-    return BioSequence{A}(seqdata, 1:len, mutable, false)
+    return BioSequence{A}(seqdata, 1:len, false)
 end
 
-for A in (DNAAlphabet, RNAAlphabet)
-    @eval function Base.call{A<:$(A)}(::Type{BioSequence{A}},
-                                    seq::AbstractVector{$(eltype(A))},
-                                    startpos::Integer=1,
-                                    stoppos::Integer=endof(seq);
-                                    unsafe::Bool=false, mutable::Bool=false)
-        len = stoppos - startpos + 1
-        seqdata = zeros(UInt64, seq_data_len(A, len))
-        srcdata = seq
-        if unsafe
-            @encode_seq c
-        else
-            @encode_seq begin
-                if !isvalid(c)
-                    error("invalid nucleotide")
-                end
-                if A == $(A){2} && isambiguous(c)
-                    error("cannot store ambiguous nucleotide")
-                end
-                c
-            end
-        end
-        return BioSequence{A}(seqdata, 1:len, mutable, false)
-    end
+function Base.call{A<:DNAAlphabet}(::Type{BioSequence{A}},
+                                   seq::AbstractVector{DNANucleotide},
+                                   startpos::Integer=1,
+                                   stoppos::Integer=endof(seq);
+                                   unsafe::Bool=false)
+    return make_from_vector(A, seq, startpos, stoppos, unsafe)
+end
+
+function Base.call{A<:RNAAlphabet}(::Type{BioSequence{A}},
+                                   seq::AbstractVector{RNANucleotide},
+                                   startpos::Integer=1,
+                                   stoppos::Integer=endof(seq);
+                                   unsafe::Bool=false)
+    return make_from_vector(A, seq, startpos, stoppos, unsafe)
 end
 
 function Base.call(::Type{AminoAcidSequence},
                    seq::AbstractVector{AminoAcid},
                    startpos::Integer=1,
                    stoppos::Integer=endof(seq);
-                   unsafe::Bool=false, mutable::Bool=false)
+                   unsafe::Bool=false)
+    return make_from_vector(AminoAcidAlphabet, seq, startpos, stoppos, unsafe)
+end
+
+function make_from_vector{A,T}(::Type{A}, srcdata::AbstractVector{T}, startpos, stoppos, unsafe)
     len = stoppos - startpos + 1
-    seqdata = zeros(UInt64, seq_data_len(AminoAcidAlphabet, len))
-    srcdata = seq
-    A = AminoAcidAlphabet
+    seqdata = zeros(UInt64, seq_data_len(A, len))
     if unsafe
         @encode_seq c
     else
         @encode_seq begin
             if !isvalid(c)
-                error("invalid amino acid")
+                throw(ArgumentError("invalid $T"))
             end
             c
         end
     end
-    return AminoAcidSequence(seqdata, 1:len, mutable, false)
+    return BioSequence{A}(seqdata, 1:len, false)
 end
 
-function BioSequence{A}(other::BioSequence{A},
-                        part::UnitRange;
-                        mutable::Bool=other.mutable)
+# create a subsequence
+function BioSequence{A,T<:Integer}(other::BioSequence{A}, part::UnitRange{T})
     checkbounds(other, part)
     start = other.part.start + part.start - 1
     stop = start + length(part) - 1
-    subseq = BioSequence{A}(other.data, start:stop, true, true)
-    if mutable || other.mutable
-        orphan!(subseq)
-    else
-        subseq.shared = other.shared = true
-    end
-    subseq.mutable = mutable
+    subseq = BioSequence{A}(other.data, start:stop, true)
+    other.shared = true
     return subseq
 end
 
 function Base.call{A}(::Type{BioSequence{A}},
                       other::BioSequence{A},
-                      part::UnitRange;
-                      mutable::Bool=other.mutable)
-    return BioSequence(other, part, mutable=mutable)
+                      part::UnitRange)
+    return BioSequence(other, part)
 end
 
 function BioSequence{A}(chunks::BioSequence{A}...)
@@ -183,28 +186,26 @@ function BioSequence{A}(chunks::BioSequence{A}...)
     for chunk in chunks
         len += length(chunk)
     end
-    seqdata = zeros(UInt64, seq_data_len(A, len))
-    newseq = BioSequence{A}(seqdata, 1:len, false, false)
+    seq = BioSequence{A}(len)
     offset = 1
     for chunk in chunks
-        unsafe_copy!(newseq, offset, chunk)
+        copy!(seq, offset, chunk, 1)
         offset += length(chunk)
     end
-    return newseq
+    return seq
 end
 
 # conversion between DNA and RNA
-for (A1, A2) in [(DNAAlphabet, RNAAlphabet), (RNAAlphabet, DNAAlphabet)]
-    for n in (2, 4)
-        @eval function Base.convert(::Type{BioSequence{$(A1{n})}}, seq::BioSequence{$(A2{n})})
-            newseq = BioSequence{$(A1{n})}(seq.data, seq.part, true, true)
-            orphan!(newseq)
-            newseq.mutable = seq.mutable
-            return newseq
-        end
+for (A1, A2) in [(DNAAlphabet, RNAAlphabet), (RNAAlphabet, DNAAlphabet)], n in (2, 4)
+    # NOTE: assumes that binary representation is identical between DNA and RNA
+    @eval function Base.convert(::Type{BioSequence{$(A1{n})}}, seq::BioSequence{$(A2{n})})
+        newseq = BioSequence{$(A1{n})}(seq.data, seq.part, true)
+        seq.shared = true
+        return newseq
     end
 end
 
+# from a vector
 Base.convert{A<:DNAAlphabet}(::Type{BioSequence{A}}, seq::AbstractVector{DNANucleotide}) =
     BioSequence{A}(seq, 1, endof(seq))
 Base.convert{A<:RNAAlphabet}(::Type{BioSequence{A}}, seq::AbstractVector{RNANucleotide}) =
@@ -212,24 +213,23 @@ Base.convert{A<:RNAAlphabet}(::Type{BioSequence{A}}, seq::AbstractVector{RNANucl
 Base.convert(::Type{AminoAcidSequence}, seq::AbstractVector{AminoAcid}) =
     AminoAcidSequence(seq, 1, endof(seq))
 
+# to a vector
 Base.convert(::Type{Vector}, seq::BioSequence) = collect(seq)
 Base.convert{A<:DNAAlphabet}(::Type{Vector{DNANucleotide}}, seq::BioSequence{A}) = collect(seq)
 Base.convert{A<:RNAAlphabet}(::Type{Vector{RNANucleotide}}, seq::BioSequence{A}) = collect(seq)
 Base.convert(::Type{Vector{AminoAcid}}, seq::AminoAcidSequence) = collect(seq)
 
+# from/to a string
 Base.convert{S<:AbstractString}(::Type{S}, seq::BioSequence) = convert(S, [Char(x) for x in seq])
-Base.convert{S<:AbstractString,A<:Alphabet}(::Type{BioSequence{A}}, seq::S) = BioSequence{A}(seq)
+Base.convert{S<:AbstractString,A}(::Type{BioSequence{A}}, seq::S) = BioSequence{A}(seq)
 
 
 # Printers
 # --------
 
-Base.summary{A<:DNAAlphabet}(seq::BioSequence{A}) =
-    string(length(seq), "nt ", seq.mutable ? "Mutable " : "", "DNA Sequence")
-Base.summary{A<:RNAAlphabet}(seq::BioSequence{A}) =
-    string(length(seq), "nt ", seq.mutable ? "Mutable " : "", "RNA Sequence")
-Base.summary(seq::AminoAcidSequence) =
-    string(length(seq), "aa ", seq.mutable ? "Mutable " : "", "Amino Acid Sequence")
+Base.summary{A<:DNAAlphabet}(seq::BioSequence{A}) = string(length(seq), "nt ", "DNA Sequence")
+Base.summary{A<:RNAAlphabet}(seq::BioSequence{A}) = string(length(seq), "nt ", "RNA Sequence")
+Base.summary(seq::AminoAcidSequence) = string(length(seq), "aa ", "Amino Acid Sequence")
 
 # pretting printing of sequences
 function Base.show(io::IO, seq::BioSequence)
@@ -239,9 +239,13 @@ function Base.show(io::IO, seq::BioSequence)
     width = Base.tty_size()[2] - 2
     if length(seq) > width
         half = div(width, 2)
-        print(io, seq[1:half-1], -1)
-        write(io, " … ")
-        print(io, seq[end-half+2:end], -1)
+        for i in 1:half-1
+            print(io, seq[i])
+        end
+        print(io, " … ")
+        for i in endof(seq)-half+2:endof(seq)
+            print(io, seq[i])
+        end
     else
         for x in seq
             write(io, Char(x))
@@ -278,18 +282,43 @@ Base.eltype{A}(seq::BioSequence{A}) = eltype(A)
     throw(BoundsError(seq, i))
 end
 
-@inline function Base.checkbounds(seq::BioSequence, part::UnitRange)
-    if 1 ≤ part.start && part.stop ≤ endof(seq)
+function Base.checkbounds(seq::BioSequence, range::UnitRange)
+    if 1 ≤ range.start && range.stop ≤ endof(seq)
         return true
     end
-    throw(BoundsError(seq, part))
+    throw(BoundsError(seq, range))
 end
 
-@inline function checkmutability(seq::BioSequence)
-    if seq.mutable
+function Base.checkbounds(seq::BioSequence, locs::AbstractVector{Bool})
+    if length(seq) == length(locs)
         return true
     end
-    error("attempt to modify immutable sequence")
+    throw(BoundsError(seq, locs))
+end
+
+function Base.checkbounds(seq::BioSequence, locs::AbstractVector)
+    for i in locs
+        checkbounds(seq, i)
+    end
+    return true
+end
+
+function checkdimension(from::Integer, to::Integer)
+    if from == to
+        return true
+    end
+    throw(DimensionMismatch(string(
+        "attempt to assign ",
+        from, " elements to ",
+        to,   " elements")))
+end
+
+function checkdimension(seq::BioSequence, locs::AbstractVector)
+    return checkdimension(length(seq), length(locs))
+end
+
+function checkdimension(seq::BioSequence, locs::AbstractVector{Bool})
+    return checkdimension(length(seq), sum(locs))
 end
 
 # Returns `(<element index>, <bits offset>)`.
@@ -359,66 +388,184 @@ function Base.getindex{A}(seq::BioSequence{A}, i::Integer)
 end
 
 Base.getindex(seq::BioSequence, part::UnitRange) = BioSequence(seq, part)
+Base.sub(seq::BioSequence, part::UnitRange)      = BioSequence(seq, part)
 
-# always create a view without copying
-function Base.sub{A}(seq::BioSequence{A}, part::UnitRange)
-    checkbounds(seq, part)
-    start = seq.part.start + part.start - 1
-    stop = start + length(part) - 1
-    subseq = BioSequence{A}(seq.data, start:stop, seq.mutable, true)
-    seq.shared = true
-    return subseq
-end
-
-# util to define a setindex! method
-macro define_setindex!(A)
-    esc(quote
-        function Base.setindex!(seq::BioSequence{$(A)}, x::$(eltype(A)), i::Integer)
-            checkmutability(seq)
-            checkbounds(seq, i)
-            return unsafe_setindex!(seq, x, i)
-        end
-        function unsafe_setindex!(seq::BioSequence{$(A)}, x::$(eltype(A)), i::Integer)
-            j, r = bitsid(seq, i)
-            bin = UInt64(encode($(A), x))
-            @inbounds seq.data[j] = (bin << r) | (seq.data[j] & ~($(mask(eval(A))) << r))
-            return seq
-        end
-    end)
-end
-
-for A in (DNAAlphabet{2}, DNAAlphabet{4},
-          RNAAlphabet{2}, RNAAlphabet{4},
-          AminoAcidAlphabet)
-    @eval begin
-        @define_setindex! $(A)
-        function Base.setindex!(seq::BioSequence{$(A)}, x::Char, i::Integer)
-            return setindex!(seq, $(eltype(A))(x), i)
-        end
+function Base.repeat{A}(chunk::BioSequence{A}, n::Integer)
+    seq = BioSequence{A}(length(chunk) * n)
+    offset = 1
+    for _ in 1:n
+        copy!(seq, offset, chunk, 1)
+        offset += length(chunk)
     end
+    return seq
 end
 
 Base.(:*){A}(chunk1::BioSequence{A}, chunks::BioSequence{A}...) =
     BioSequence(chunk1, chunks...)
 
-function Base.repeat{A}(chunk::BioSequence{A}, n::Integer)
-    len = length(chunk) * n
-    seqdata = zeros(UInt64, seq_data_len(A, len))
-    newseq = BioSequence{A}(seqdata, 1:len, false, false)
-    offset = 1
-    for _ in 1:n
-        unsafe_copy!(newseq, offset, chunk)
-        offset += length(chunk)
-    end
-    return newseq
+Base.(:^)(chunk::BioSequence, n::Integer) = repeat(chunk, n)
+
+function Base.setindex!(seq::BioSequence, x, i::Integer)
+    checkbounds(seq, i)
+    orphan!(seq)
+    return unsafe_setindex!(seq, x, i)
 end
 
-Base.(:^)(chunk::BioSequence, n::Integer) = repeat(chunk, n)
+@generated function Base.setindex!{A,T<:Integer}(seq::BioSequence{A},
+                                                 x,
+                                                 locs::AbstractVector{T})
+    if locs <: AbstractVector{Bool}
+        quote
+            checkbounds(seq, locs)
+            bin = enc(seq, x)
+            orphan!(seq)
+            i = j = 0
+            while (i = findnext(locs, i + 1)) > 0
+                encoded_setindex!(seq, bin, i)
+            end
+            return seq
+        end
+    else
+        quote
+            checkbounds(seq, locs)
+            bin = enc(seq, x)
+            orphan!(seq)
+            for i in locs
+                encoded_setindex!(seq, bin, i)
+            end
+            return seq
+        end
+    end
+end
+
+Base.setindex!{A}(seq::BioSequence{A}, x, ::Colon) = setindex!(seq, x, 1:endof(seq))
+
+@generated function Base.setindex!{A,T<:Integer}(seq::BioSequence{A},
+                                                 other::BioSequence{A},
+                                                 locs::AbstractVector{T})
+    if locs <: UnitRange
+        quote
+            checkbounds(seq, locs)
+            checkdimension(other, locs)
+            return copy!(seq, locs.start, other, 1)
+        end
+    elseif locs <: AbstractVector{Bool}
+        quote
+            checkbounds(seq, locs)
+            checkdimension(other, locs)
+            orphan!(seq)
+            i = j = 0
+            while (i = findnext(locs, i + 1)) > 0
+                unsafe_setindex!(seq, other[j+=1], i)
+            end
+            return seq
+        end
+    else
+        quote
+            checkbounds(seq, locs)
+            checkdimension(other, locs)
+            orphan!(seq)
+            for (i, x) in zip(locs, other)
+                unsafe_setindex!(seq, x, i)
+            end
+            return seq
+        end
+    end
+end
+
+function Base.setindex!{A}(seq::BioSequence{A}, other::BioSequence{A}, ::Colon)
+    return setindex!(seq, other, 1:endof(seq))
+end
+
+@inline function unsafe_setindex!{A}(seq::BioSequence{A}, x, i::Integer)
+    bin = enc(seq, x)
+    return encoded_setindex!(seq, UInt64(bin), i)
+end
+
+@inline function encoded_setindex!{A}(seq::BioSequence{A}, bin::UInt64, i::Integer)
+    j, r = bitsid(seq, i)
+    m = mask(A)
+    @inbounds seq.data[j] = (bin << r) | (seq.data[j] & ~(m << r))
+    return seq
+end
+
+function Base.resize!{A}(seq::BioSequence{A}, size::Integer)
+    if size < 0
+        throw(ArgumentError("size must be non-negative"))
+    end
+    orphan!(seq, size)
+    resize!(seq.data, seq_data_len(A, size + seq.part.start - 1))
+    seq.part = seq.part.start:seq.part.start+size-1
+    return seq
+end
+
+Base.empty!(seq::BioSequence) = resize!(seq, 0)
+
+function Base.push!{A}(seq::BioSequence{A}, x)
+    bin = enc(seq, x)
+    resize!(seq, length(seq) + 1)
+    encoded_setindex!(seq, bin, endof(seq))
+    return seq
+end
+
+function Base.unshift!{A}(seq::BioSequence{A}, x)
+    bin = enc(seq, x)
+    resize!(seq, length(seq) + 1)
+    copy!(seq, 2, seq, 1, length(seq) - 1)
+    encoded_setindex!(seq, bin, 1)
+    return seq
+end
+
+function Base.pop!(seq::BioSequence)
+    if isempty(seq)
+        throw(ArgumentError("sequence must be non-empty"))
+    end
+    x = seq[end]
+    deleteat!(seq, endof(seq))
+    return x
+end
+
+function Base.shift!(seq::BioSequence)
+    if isempty(seq)
+        throw(ArgumentError("sequence must be non-empty"))
+    end
+    x = seq[1]
+    deleteat!(seq, 1)
+    return x
+end
+
+function Base.insert!{A}(seq::BioSequence{A}, i::Integer, x)
+    checkbounds(seq, i)
+    bin = enc(seq, x)
+    resize!(seq, length(seq) + 1)
+    copy!(seq, i + 1, seq, i, endof(seq) - i)
+    encoded_setindex!(seq, bin, i)
+    return seq
+end
+
+function Base.deleteat!{A,T<:Integer}(seq::BioSequence{A}, range::UnitRange{T})
+    checkbounds(seq, range)
+    copy!(seq, range.start, seq, range.stop + 1, length(seq) - range.stop)
+    resize!(seq, length(seq) - length(range))
+    return seq
+end
+
+function Base.deleteat!(seq::BioSequence, i::Integer)
+    checkbounds(seq, i)
+    copy!(seq, i, seq, i + 1, length(seq) - i)
+    resize!(seq, length(seq) - 1)
+    return seq
+end
+
+function Base.append!{A}(seq::BioSequence{A}, other::BioSequence{A})
+    resize!(seq, length(seq) + length(other))
+    copy!(seq, endof(seq) - length(other) + 1, other, 1)
+    return seq
+end
 
 function Base.copy!{A}(seq::BioSequence{A},
                        srcdata::Vector{UInt8},
                        startpos::Integer, stoppos::Integer)
-    checkmutability(seq)
     n = stoppos - startpos + 1
     len = seq_data_len(A, n)
     seqdata = seq.data
@@ -431,84 +578,97 @@ function Base.copy!{A}(seq::BioSequence{A},
     return seq
 end
 
-function unsafe_copy!{A}(dst::BioSequence{A}, pos::Int, src::BioSequence{A})
-    n = bitsof(A)
-    j1, r1 = bitsid(dst, pos)
-    j2, r2 = bitsid(src, 1)
-    rest = length(src) * n
+function Base.copy!{A}(dst::BioSequence{A}, src::BioSequence{A})
+    return copy!(dst, 1, src, 1)
+end
+
+function Base.copy!{A}(dst::BioSequence{A}, doff::Integer,
+                       src::BioSequence{A}, soff::Integer)
+    return copy!(dst, doff, src, soff, length(src) - soff + 1)
+end
+
+function Base.copy!{A}(dst::BioSequence{A}, doff::Integer,
+                       src::BioSequence{A}, soff::Integer, len::Integer)
+    checkbounds(dst, doff:doff+len-1)
+    checkbounds(src, soff:soff+len-1)
+
+    if dst.shared || (dst === src && doff > soff)
+        orphan!(dst, length(dst), true)
+    end
+
+    j1, r1 = bitsid(dst, doff)
+    j2, r2 = bitsid(src, soff)
+    rest = len * bitsof(A)
+
     while rest > 0
-        m = mask(min(rest, 64))
-        if r1 == r2 == 0
-            dst.data[j1] = src.data[j2] & m
+        # move `k` bits from `src` to `dst`
+        x = dst.data[j1]
+        y = src.data[j2]
+        if r1 < r2
+            y >>= r2 - r1
+            k = min(64 - r2, rest)
         else
-            dst.data[j1] |= ((src.data[j2] >> r2) & m) << r1
+            y <<= r1 - r2
+            k = min(64 - r1, rest)
         end
-        if r1 > r2
-            k = 64 - r1
+        m = mask(k) << r1
+        dst.data[j1] = y & m | x & ~m
+
+        if r1 + k ≥ 64
             j1 += 1
             r1 = 0
-            r2 += k
-        elseif r2 > r1
-            k = 64 - r2
+        else
+            r1 += k
+        end
+        if r2 + k ≥ 64
             j2 += 1
             r2 = 0
-            r1 += k
-        else # r1 == r2
-            k = 64 - r1
-            r1 += k
+        else
             r2 += k
-            if r1 ≥ 64
-                r1 = 0
-                r2 = 0
-                j1 += 1
-                j2 += 1
-            end
         end
         rest -= k
     end
+
     return dst
+end
+
+@inline function enc{A}(seq::BioSequence{A}, x)
+    return UInt64(encode(A, convert(eltype(A), x)))
 end
 
 # Replace a BioSequence's data with a copy, copying only what's needed.
 # The user should never need to call this, as it has no outward effect on the
-# sequence, but it makes functions like mismatch easier and faster if can assume
-# a sequence is aligned with its data.
-function orphan!{A}(seq::BioSequence{A})
-    # no need to orphan data from an immutable sequence
-    @assert seq.mutable
+# sequence.
+function orphan!{A}(seq::BioSequence{A}, size::Integer=length(seq), force::Bool=false)
+    if !seq.shared && !force
+        return seq
+    end
 
-    data = zeros(UInt64, seq_data_len(A, length(seq)))
-    j, shift = divrem(seq.part.start - 1, div(64, bitsof(A)))
-    j += 1
-    shift *= bitsof(A)
+    j, r = bitsid(seq, 1)
+    data = Vector{UInt64}(seq_data_len(A, size))
 
-    @inbounds for i in 1:length(data)
-        data[i] |= seq.data[j] >> shift
-        j += 1
-        if j > endof(seq.data)
-            break
+    if !isempty(seq)
+        x = seq.data[j] >> r
+        l = min(endof(data), bitsid(seq, endof(seq))[1] - j + 1)
+        @inbounds @simd for i in 1:l-1
+            y = seq.data[j+i]
+            data[i] = x | y << (64 - r)
+            x = y >> r
         end
-        data[i] |= seq.data[j] << (64 - shift)
+        data[l] = x
     end
 
     seq.data = data
-    seq.part = 1:length(seq.part)
+    seq.part = 1:length(seq)
     seq.shared = false
     return seq
 end
 
+# actually, users don't need to create a copy of a sequence.
 function Base.copy(seq::BioSequence)
-    if !seq.mutable
-        return seq
-    end
-    return docopy(seq)
-end
-
-function docopy{A}(seq::BioSequence{A})
-    newseq = BioSequence{A}(seq.data, seq.part, true, false)
+    newseq = seq[1:end]
     orphan!(newseq)
     @assert newseq.data !== seq.data
-    newseq.mutable = seq.mutable
     return newseq
 end
 
@@ -533,6 +693,9 @@ function Base.(:(==)){A1,A2}(s1::BioSequence{A1}, s2::BioSequence{A2})
     return true
 end
 
+function Base.hash{A}(seq::BioSequence{A}, h::UInt64)
+end
+
 function Base.cmp{A1,A2}(s1::BioSequence{A1}, s2::BioSequence{A2})
     for i in 1:min(endof(s1), endof(s2))
         c = cmp(s1[i], s2[i])
@@ -545,34 +708,12 @@ end
 
 Base.isless{A1,A2}(s1::BioSequence{A1}, s2::BioSequence{A2}) = cmp(s1, s2) < 0
 
-ismutable(seq::BioSequence) = seq.mutable
-
-function mutable!(seq::BioSequence)
-    if ismutable(seq)
-        return seq
-    end
-    seq.mutable = true
-    orphan!(seq)
-    return seq
-end
-
-function immutable!(seq::BioSequence)
-    if !ismutable(seq)
-        return seq
-    end
-    seq.mutable = false
-    if seq.shared
-        orphan!(seq)
-    end
-    return seq
-end
-
 
 # Transformations
 # ---------------
 
 function Base.reverse!{A}(seq::BioSequence{A})
-    checkmutability(seq)
+    orphan!(seq)
     for i in 1:div(endof(seq), 2)
         seq[i], seq[end-i+1] = seq[end-i+1], seq[i]
     end
@@ -580,11 +721,7 @@ function Base.reverse!{A}(seq::BioSequence{A})
 end
 
 function Base.reverse{A}(seq::BioSequence{A})
-    newseq = docopy(seq)
-    mutable!(newseq)
-    reverse!(newseq)
-    newseq.mutable = seq.mutable
-    return newseq
+    return reverse!(copy(seq))
 end
 
 @generated function Base.reverse{A<:Union{DNAAlphabet,RNAAlphabet}}(seq::BioSequence{A})
@@ -615,15 +752,15 @@ end
             end
             data[end] = $nucrev(x)
         end
-        return BioSequence{A}(data, 1:length(seq), seq.mutable, false)
+        return BioSequence{A}(data, 1:length(seq), false)
     end
 end
 
 function Base.complement!{A<:Union{DNAAlphabet{2},RNAAlphabet{2}}}(seq::BioSequence{A})
-    checkmutability(seq)
     if isempty(seq)
         return seq
     end
+    orphan!(seq)
     j1, r1 = bitsid(seq, 1)
     j2, r2 = bitsid(seq, endof(seq) + 1)
     data_j = seq.data[j1]
@@ -662,10 +799,10 @@ macro complement(x, mask)
 end
 
 function Base.complement!(seq::Union{DNASequence,RNASequence})
-    checkmutability(seq)
     if isempty(seq)
         return seq
     end
+    orphan!(seq)
     j1, r1 = bitsid(seq, 1)
     j2, r2 = bitsid(seq, endof(seq) + 1)
 
@@ -688,24 +825,15 @@ end
 hasambiguous(x::UInt64) = x & 0xCCCCCCCCCCCCCCCC != 0
 
 function Base.complement{A<:Union{DNAAlphabet,RNAAlphabet}}(seq::BioSequence{A})
-    newseq = docopy(seq)
-    mutable!(newseq)
-    complement!(newseq)
-    newseq.mutable = seq.mutable
-    return newseq
+    return complement!(copy(seq))
 end
 
 function reverse_complement!{A<:Union{DNAAlphabet,RNAAlphabet}}(seq::BioSequence{A})
-    checkmutability(seq)
     return complement!(reverse!(seq))
 end
 
 function reverse_complement{A<:Union{DNAAlphabet,RNAAlphabet}}(seq::BioSequence{A})
-    newseq = docopy(seq)
-    mutable!(newseq)
-    complement!(reverse!(newseq))
-    newseq.mutable = seq.mutable
-    return newseq
+    return reverse_complement!(copy(seq))
 end
 
 function nucrev2(x::UInt64)

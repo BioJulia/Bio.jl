@@ -36,8 +36,7 @@ typealias FASTQSeqRecord DNASeqRecord{FASTQMetadata}
 
 
 function FASTQSeqRecord()
-	return FASTQSeqRecord(StringField(), DNASequence(mutable=true),
-	FASTQMetadata())
+	return FASTQSeqRecord(StringField(), DNASequence(), FASTQMetadata())
 end
 
 
