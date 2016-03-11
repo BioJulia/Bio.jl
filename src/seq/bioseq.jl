@@ -25,8 +25,8 @@
 # containing binary bits and bits' offset. As a whole, character extraction
 # `seq[i]` can be written as:
 #
-#     j, r = bitsid(seq, i)
-#     decode(A, UInt8((seq.data[j] >> r) & mask(A)))
+#     j = bitindex(seq, i)
+#     decode(A, UInt8((seq.data[index(j)] >> offset(j)) & mask(A)))
 #
 #  index :           j - 1              j               j + 1
 #   data : ....|xxxxx...........|xxXxxxxxxxxxxxxx|............xxxx|....
@@ -195,6 +195,28 @@ function BioSequence{A}(chunks::BioSequence{A}...)
     return seq
 end
 
+# conversion between different alphabet size
+for A in [DNAAlphabet, RNAAlphabet]
+    # 4 bits => 2 bits
+    @eval function Base.convert(::Type{BioSequence{$(A{2})}}, seq::BioSequence{$(A{4})})
+        # TODO: make it faster with bit-parallel algorithm
+        newseq = BioSequence{$(A{2})}(length(seq))
+        for (i, x) in enumerate(seq)
+            unsafe_setindex!(newseq, x, i)
+        end
+        return newseq
+    end
+
+    # 2 bits => 4 bits
+    @eval function Base.convert(::Type{BioSequence{$(A{4})}}, seq::BioSequence{$(A{2})})
+        newseq = BioSequence{$(A{4})}(length(seq))
+        for (i, x) in enumerate(seq)
+            unsafe_setindex!(newseq, x, i)
+        end
+        return newseq
+    end
+end
+
 # conversion between DNA and RNA
 for (A1, A2) in [(DNAAlphabet, RNAAlphabet), (RNAAlphabet, DNAAlphabet)], n in (2, 4)
     # NOTE: assumes that binary representation is identical between DNA and RNA
@@ -271,6 +293,32 @@ function Base.print(io::IO, seq::BioSequence, width::Integer=50)
 end
 
 
+# BitIndex
+# --------
+
+# useful for accessing bits of sequence's data
+immutable BitIndex
+    val::Int64
+end
+
+index(i::BitIndex) = (i.val >> 6) + 1
+offset(i::BitIndex) = i.val & 0b111111
+Base.(:+)(i::BitIndex, n::Int) = BitIndex(i.val + n)
+Base.(:-)(i::BitIndex, n::Int) = BitIndex(i.val - n)
+Base.(:-)(i1::BitIndex, i2::BitIndex) = i1.val - i2.val
+Base.(:(==))(i1::BitIndex, i2::BitIndex) = i1.val == i2.val
+Base.isless(i1::BitIndex, i2::BitIndex) = isless(i1.val, i2.val)
+Base.show(io::IO, i::BitIndex) = print(io, '(', index(i), ", ", offset(i), ')')
+Base.start(i::BitIndex) = 1
+Base.done(i::BitIndex, s) = s > 2
+Base.next(i::BitIndex, s) = ifelse(s == 1, (index(i), 2), (offset(i), 3))
+
+# assumes `i` is positive and `bitsof(A)` is a power of 2
+@inline function bitindex{A}(seq::BioSequence{A}, i::Integer)
+    return BitIndex((Int(i) + seq.part.start - 2) << trailing_zeros(bitsof(A)))
+end
+
+
 # Basic Operators
 # ---------------
 
@@ -325,65 +373,13 @@ function checkdimension(seq::BioSequence, locs::AbstractVector{Bool})
     return checkdimension(length(seq), sum(locs))
 end
 
-# Returns `(<element index>, <bits offset>)`.
-# NOTE: This function assumes `i ≥ 1`.
-@inline function bitsid{A}(seq::BioSequence{A}, i::Integer)
-    n = bitsof(A)
-    d, r = divrem(i + seq.part.start - 2, div(64, n))
-    return d + 1, r * n
-end
-
-@inline function bitsid{A<:Union{DNAAlphabet{2},RNAAlphabet{2}}}(seq::BioSequence{A},
-                                                                 i::Integer)
-    d, r = divrem32(i + seq.part.start - 2)
-    return d + 1, 2r
-end
-
-@inline function bitsid{A<:Union{DNAAlphabet{4},RNAAlphabet{4}}}(seq::BioSequence{A},
-                                                                 i::Integer)
-    d, r = divrem16(i + seq.part.start - 2)
-    return d + 1, 4r
-end
-
-@inline function bitsid(seq::AminoAcidSequence, i::Integer)
-    d, r = divrem8(i + seq.part.start - 2)
-    return d + 1, 8r
-end
-
-#=
-# Unfortunately, combination of `@inline` and `@generated` won't work.
-@inline @generated function bitsid{A}(seq::BioSequence{A}, i::Integer)
-    n = bitsof(A)
-    index = :(Int(i) + seq.part.start - 2)
-
-    if n == 2
-        divrem = :(divrem32($index))
-    elseif n == 4
-        divrem = :(divrem16($index))
-    elseif n == 8
-        divrem = :( divrem8($index))
-    else
-        divrem = :(  divrem($index, $(div(64, n))))
-    end
-
-    quote
-        d, r = $divrem
-        # (element index, bits offset)
-        return d + 1, r * $n
-    end
-end
-=#
-
+# creates a bit mask for given number of bits `n`
 mask(n::Integer) = (UInt64(1) << n) - 1
 mask{A<:Alphabet}(::Type{A}) = mask(bitsof(A))
 
-divrem8(i::Int)  = i >> 3, i & 0b111
-divrem16(i::Int) = i >> 4, i & 0b1111
-divrem32(i::Int) = i >> 5, i & 0b11111
-
 @inline function unsafe_getindex{A}(seq::BioSequence{A}, i::Integer)
-    j, r = bitsid(seq, i)
-    @inbounds return decode(A, UInt8((seq.data[j] >> r) & mask(A)))
+    j = bitindex(seq, i)
+    @inbounds return decode(A, UInt8((seq.data[index(j)] >> offset(j)) & mask(A)))
 end
 
 function Base.getindex{A}(seq::BioSequence{A}, i::Integer)
@@ -392,7 +388,7 @@ function Base.getindex{A}(seq::BioSequence{A}, i::Integer)
 end
 
 Base.getindex(seq::BioSequence, part::UnitRange) = BioSequence(seq, part)
-Base.sub(seq::BioSequence, part::UnitRange)      = BioSequence(seq, part)
+Base.sub(seq::BioSequence, part::UnitRange) = BioSequence(seq, part)
 
 function Base.repeat{A}(chunk::BioSequence{A}, n::Integer)
     seq = BioSequence{A}(length(chunk) * n)
@@ -409,87 +405,76 @@ Base.(:*){A}(chunk1::BioSequence{A}, chunks::BioSequence{A}...) =
 
 Base.(:^)(chunk::BioSequence, n::Integer) = repeat(chunk, n)
 
-function Base.setindex!(seq::BioSequence, x, i::Integer)
-    checkbounds(seq, i)
+function Base.setindex!{A,T<:Integer}(seq::BioSequence{A}, other::BioSequence{A}, locs::AbstractVector{T})
+
+    checkbounds(seq, locs)
+    checkdimension(other, locs)
     orphan!(seq)
-    return unsafe_setindex!(seq, x, i)
+    for (i, x) in zip(locs, other)
+        unsafe_setindex!(seq, x, i)
+    end
+    return seq
 end
 
-@generated function Base.setindex!{A,T<:Integer}(seq::BioSequence{A},
-                                                 x,
-                                                 locs::AbstractVector{T})
-    if locs <: AbstractVector{Bool}
-        quote
-            checkbounds(seq, locs)
-            bin = enc(seq, x)
-            orphan!(seq)
-            i = j = 0
-            while (i = findnext(locs, i + 1)) > 0
-                encoded_setindex!(seq, bin, i)
-            end
-            return seq
-        end
-    else
-        quote
-            checkbounds(seq, locs)
-            bin = enc(seq, x)
-            orphan!(seq)
-            for i in locs
-                encoded_setindex!(seq, bin, i)
-            end
-            return seq
-        end
-    end
+function Base.setindex!{A,T<:Integer}(seq::BioSequence{A}, other::BioSequence{A}, locs::UnitRange{T})
+    checkbounds(seq, locs)
+    checkdimension(other, locs)
+    return copy!(seq, locs.start, other, 1)
 end
 
-Base.setindex!{A}(seq::BioSequence{A}, x, ::Colon) = setindex!(seq, x, 1:endof(seq))
-
-@generated function Base.setindex!{A,T<:Integer}(seq::BioSequence{A},
-                                                 other::BioSequence{A},
-                                                 locs::AbstractVector{T})
-    if locs <: UnitRange
-        quote
-            checkbounds(seq, locs)
-            checkdimension(other, locs)
-            return copy!(seq, locs.start, other, 1)
-        end
-    elseif locs <: AbstractVector{Bool}
-        quote
-            checkbounds(seq, locs)
-            checkdimension(other, locs)
-            orphan!(seq)
-            i = j = 0
-            while (i = findnext(locs, i + 1)) > 0
-                unsafe_setindex!(seq, other[j+=1], i)
-            end
-            return seq
-        end
-    else
-        quote
-            checkbounds(seq, locs)
-            checkdimension(other, locs)
-            orphan!(seq)
-            for (i, x) in zip(locs, other)
-                unsafe_setindex!(seq, x, i)
-            end
-            return seq
-        end
+function Base.setindex!{A}(seq::BioSequence{A}, other::BioSequence{A}, locs::AbstractVector{Bool})
+    checkbounds(seq, locs)
+    checkdimension(other, locs)
+    orphan!(seq)
+    i = j = 0
+    while (i = findnext(locs, i + 1)) > 0
+        unsafe_setindex!(seq, other[j+=1], i)
     end
+    return seq
 end
 
 function Base.setindex!{A}(seq::BioSequence{A}, other::BioSequence{A}, ::Colon)
     return setindex!(seq, other, 1:endof(seq))
 end
 
+function Base.setindex!(seq::BioSequence, x, i::Integer)
+    checkbounds(seq, i)
+    orphan!(seq)
+    return unsafe_setindex!(seq, x, i)
+end
+
+function Base.setindex!{A,T<:Integer}(seq::BioSequence{A}, x, locs::AbstractVector{T})
+    checkbounds(seq, locs)
+    bin = enc(seq, x)
+    orphan!(seq)
+    for i in locs
+        encoded_setindex!(seq, bin, i)
+    end
+    return seq
+end
+
+function Base.setindex!{A}(seq::BioSequence{A}, x, locs::AbstractVector{Bool})
+    checkbounds(seq, locs)
+    bin = enc(seq, x)
+    orphan!(seq)
+    i = j = 0
+    while (i = findnext(locs, i + 1)) > 0
+        encoded_setindex!(seq, bin, i)
+    end
+    return seq
+end
+
+Base.setindex!{A}(seq::BioSequence{A}, x, ::Colon) = setindex!(seq, x, 1:endof(seq))
+
+# this is "unsafe" because of no bounds check and no orphan! call
 @inline function unsafe_setindex!{A}(seq::BioSequence{A}, x, i::Integer)
     bin = enc(seq, x)
     return encoded_setindex!(seq, UInt64(bin), i)
 end
 
 @inline function encoded_setindex!{A}(seq::BioSequence{A}, bin::UInt64, i::Integer)
-    j, r = bitsid(seq, i)
-    m = mask(A)
-    @inbounds seq.data[j] = (bin << r) | (seq.data[j] & ~(m << r))
+    j, r = bitindex(seq, i)
+    @inbounds seq.data[j] = (bin << r) | (seq.data[j] & ~(mask(A) << r))
     return seq
 end
 
@@ -600,36 +585,26 @@ function Base.copy!{A}(dst::BioSequence{A}, doff::Integer,
         orphan!(dst, length(dst), true)
     end
 
-    j1, r1 = bitsid(dst, doff)
-    j2, r2 = bitsid(src, soff)
+    id = bitindex(dst, doff)
+    is = bitindex(src, soff)
     rest = len * bitsof(A)
 
     while rest > 0
         # move `k` bits from `src` to `dst`
-        x = dst.data[j1]
-        y = src.data[j2]
-        if r1 < r2
-            y >>= r2 - r1
-            k = min(64 - r2, rest)
+        x = dst.data[index(id)]
+        y = src.data[index(is)]
+        if offset(id) < offset(is)
+            y >>= offset(is) - offset(id)
+            k = min(64 - offset(is), rest)
         else
-            y <<= r1 - r2
-            k = min(64 - r1, rest)
+            y <<= offset(id) - offset(is)
+            k = min(64 - offset(id), rest)
         end
-        m = mask(k) << r1
-        dst.data[j1] = y & m | x & ~m
+        m = mask(k) << offset(id)
+        dst.data[index(id)] = y & m | x & ~m
 
-        if r1 + k ≥ 64
-            j1 += 1
-            r1 = 0
-        else
-            r1 += k
-        end
-        if r2 + k ≥ 64
-            j2 += 1
-            r2 = 0
-        else
-            r2 += k
-        end
+        id += k
+        is += k
         rest -= k
     end
 
@@ -648,12 +623,12 @@ function orphan!{A}(seq::BioSequence{A}, size::Integer=length(seq), force::Bool=
         return seq
     end
 
-    j, r = bitsid(seq, 1)
+    j, r = bitindex(seq, 1)
     data = Vector{UInt64}(seq_data_len(A, size))
 
     if !isempty(seq)
         x = seq.data[j] >> r
-        l = min(endof(data), bitsid(seq, endof(seq))[1] - j + 1)
+        l = min(endof(data), index(bitindex(seq, endof(seq))) - j + 1)
         @inbounds @simd for i in 1:l-1
             y = seq.data[j+i]
             data[i] = x | y << (64 - r)
@@ -668,10 +643,16 @@ function orphan!{A}(seq::BioSequence{A}, size::Integer=length(seq), force::Bool=
     return seq
 end
 
+function Base.similar{A}(seq::BioSequence{A}, len::Integer=length(seq))
+    return BioSequence{A}(len)
+end
+
 # actually, users don't need to create a copy of a sequence.
-function Base.copy(seq::BioSequence)
-    newseq = seq[1:end]
-    orphan!(newseq)
+function Base.copy{A}(seq::BioSequence{A})
+    # NOTE: no need to set `seq.shared = true` here
+    # since `newseq` will be `orphan!`ed soon.
+    newseq = BioSequence{A}(seq.data, 1:endof(seq), true)
+    orphan!(newseq, length(seq), true)  # force orphan!
     @assert newseq.data !== seq.data
     return newseq
 end
@@ -713,17 +694,17 @@ Base.isless{A1,A2}(s1::BioSequence{A1}, s2::BioSequence{A2}) = cmp(s1, s2) < 0
 # Transformations
 # ---------------
 
-function Base.reverse!{A}(seq::BioSequence{A})
+function Base.reverse!(seq::BioSequence)
     orphan!(seq)
     for i in 1:div(endof(seq), 2)
-        seq[i], seq[end-i+1] = seq[end-i+1], seq[i]
+        x = unsafe_getindex(seq, i)
+        unsafe_setindex!(seq, unsafe_getindex(seq, endof(seq) - i + 1), i)
+        unsafe_setindex!(seq, x, endof(seq) - i + 1)
     end
     return seq
 end
 
-function Base.reverse{A}(seq::BioSequence{A})
-    return reverse!(copy(seq))
-end
+Base.reverse(seq::BioSequence) = reverse!(copy(seq))
 
 @generated function Base.reverse{A<:Union{DNAAlphabet,RNAAlphabet}}(seq::BioSequence{A})
     n = bitsof(A)
@@ -732,98 +713,80 @@ end
     elseif n == 4
         nucrev = :nucrev4
     else
-        error("n ∉ (2, 4)")
+        error("n (= $n) ∉ (2, 4)")
     end
 
     quote
-        data = zeros(UInt64, seq_data_len(A, length(seq)))
-        j, r = bitsid(seq, endof(seq) + 1)
-        if r == 0
-            @inbounds for j′ in 1:endof(data)
-                j -= 1
-                data[j′] = $nucrev(seq.data[j])
+        data = Vector{UInt64}(seq_data_len(A, length(seq)))
+        next = bitindex(seq, endof(seq))
+        stop = bitindex(seq, 0)
+        i = 0
+        while next - stop > 0
+            r = offset(next) + $n
+            x = seq.data[index(next)] << (64 - r)
+            next -= r
+            if next - stop > 0
+                x |= seq.data[index(next)] >> r
+                next -= 64 - r
             end
-        else
-            x = (seq.data[j] & mask(r)) << (64 - r)
-            @inbounds for j′ in 1:endof(data)-1
-                j -= 1
-                x′ = seq.data[j]
-                data[j′] = $nucrev(x | (x′ >> r))
-                x = x′ << (64 - r)
-            end
-            data[end] = $nucrev(x)
+            data[i+=1] = $nucrev(x)
         end
         return BioSequence{A}(data, 1:length(seq), false)
     end
 end
 
-function Base.complement!{A<:Union{DNAAlphabet{2},RNAAlphabet{2}}}(seq::BioSequence{A})
-    if isempty(seq)
-        return seq
-    end
-    orphan!(seq)
-    j1, r1 = bitsid(seq, 1)
-    j2, r2 = bitsid(seq, endof(seq) + 1)
-    data_j = seq.data[j1]
-    if j1 == j2
-        m = mask(r2 - r1) << r1
-        seq.data[j1] = (~data_j & m) | (data_j & ~m)
+@inline function nucrev2(x::UInt64)
+     x = (x & 0x3333333333333333) <<  2 | (x & 0xCCCCCCCCCCCCCCCC) >>  2
+     x = (x & 0x0F0F0F0F0F0F0F0F) <<  4 | (x & 0xF0F0F0F0F0F0F0F0) >>  4
+     x = (x & 0x00FF00FF00FF00FF) <<  8 | (x & 0xFF00FF00FF00FF00) >>  8
+     x = (x & 0x0000FFFF0000FFFF) << 16 | (x & 0xFFFF0000FFFF0000) >> 16
+     x = (x & 0x00000000FFFFFFFF) << 32 | (x & 0xFFFFFFFF00000000) >> 32
+     return x
+end
+
+@inline function nucrev4(x::UInt64)
+     x = (x & 0x0F0F0F0F0F0F0F0F) <<  4 | (x & 0xF0F0F0F0F0F0F0F0) >>  4
+     x = (x & 0x00FF00FF00FF00FF) <<  8 | (x & 0xFF00FF00FF00FF00) >>  8
+     x = (x & 0x0000FFFF0000FFFF) << 16 | (x & 0xFFFF0000FFFF0000) >> 16
+     x = (x & 0x00000000FFFFFFFF) << 32 | (x & 0xFFFFFFFF00000000) >> 32
+     return x
+end
+
+@generated function Base.complement!{A<:Union{DNAAlphabet,RNAAlphabet}}(seq::BioSequence{A})
+    n = bitsof(A)
+    if n == 2
+        nuccomp = :nuccomp2
+    elseif n == 4
+        nuccomp = :nuccomp4
     else
-        m = mask(64 - r1) << r1
-        seq.data[j1] = (~data_j & m) | (data_j & ~m)
-        for j in j1+1:j2-1
-            seq.data[j] = ~seq.data[j]
-        end
-        if r2 > 0
-            data_j = seq.data[j2]
-            m = mask(r2 + 2)
-            seq.data[j2] = (~data_j & m) | (data_j & ~m)
-        end
+        error("n (= $n) ∉ (2, 4)")
     end
-    return seq
-end
 
-# Compute complement of `x`'s bits selected by `mask`.
-# NOTE: 4-bit encoding is assumed and ambiguous nucleotides are left untouched.
-macro complement(x, mask)
     quote
-        if hasambiguous($x)
-            m = ($x & 0x8888888888888888) | (($x & 0x4444444444444444) << 1)
-            m |= m >> 1 | m >> 2 | m >> 3
-            m = ~m & $mask
-            (~$x & 0x3333333333333333 & m) | ($x & ~m)
-        else
-            m = $mask
-            (~$x & 0x3333333333333333 & m) | ($x & ~m)
+        orphan!(seq)
+        next = bitindex(seq, 1)
+        stop = bitindex(seq, endof(seq) + 1)
+        @inbounds while next < stop
+            seq.data[index(next)] = $nuccomp(seq.data[index(next)])
+            next += 64
         end
+        return seq
     end
 end
 
-function Base.complement!(seq::Union{DNASequence,RNASequence})
-    if isempty(seq)
-        return seq
-    end
-    orphan!(seq)
-    j1, r1 = bitsid(seq, 1)
-    j2, r2 = bitsid(seq, endof(seq) + 1)
+nuccomp2(x::UInt64) = ~x
 
-    # special case: whole sequence is within an element (i.e. `seq.data[j1]`)
-    if j1 == j2
-        seq.data[j1] = @complement seq.data[j1] (mask(r2) - mask(r1))
-        return seq
+@inline function nuccomp4(x::UInt64)
+    if x & 0xCCCCCCCCCCCCCCCC != 0
+        # ignore ambiguous nucleotides
+        m = (x & 0x8888888888888888) | (x & 0x4444444444444444) << 1
+        m |= m >> 1 | m >> 2 | m >> 3
+        m = ~m
+        return (~x & 0x3333333333333333 & m) | (x & ~m)
+    else
+        return  ~x & 0x3333333333333333
     end
-
-    seq.data[j1] = @complement seq.data[j1] ~mask(r1)
-    @inbounds for j in j1+1:j2-1
-        seq.data[j] = @complement seq.data[j] 0xFFFFFFFFFFFFFFFF
-    end
-    if r2 > 0
-        seq.data[j2] = @complement seq.data[j2] mask(r2)
-    end
-    return seq
 end
-
-hasambiguous(x::UInt64) = x & 0xCCCCCCCCCCCCCCCC != 0
 
 function Base.complement{A<:Union{DNAAlphabet,RNAAlphabet}}(seq::BioSequence{A})
     return complement!(copy(seq))
@@ -837,30 +800,12 @@ function reverse_complement{A<:Union{DNAAlphabet,RNAAlphabet}}(seq::BioSequence{
     return reverse_complement!(copy(seq))
 end
 
-function nucrev2(x::UInt64)
-     x = (x & 0x3333333333333333) <<  2 | (x & 0xCCCCCCCCCCCCCCCC) >>>  2
-     x = (x & 0x0F0F0F0F0F0F0F0F) <<  4 | (x & 0xF0F0F0F0F0F0F0F0) >>>  4
-     x = (x & 0x00FF00FF00FF00FF) <<  8 | (x & 0xFF00FF00FF00FF00) >>>  8
-     x = (x & 0x0000FFFF0000FFFF) << 16 | (x & 0xFFFF0000FFFF0000) >>> 16
-     x = (x & 0x00000000FFFFFFFF) << 32 | (x & 0xFFFFFFFF00000000) >>> 32
-     return x
-end
-
-function nucrev4(x::UInt64)
-     x = (x & 0x0F0F0F0F0F0F0F0F) <<  4 | (x & 0xF0F0F0F0F0F0F0F0) >>>  4
-     x = (x & 0x00FF00FF00FF00FF) <<  8 | (x & 0xFF00FF00FF00FF00) >>>  8
-     x = (x & 0x0000FFFF0000FFFF) << 16 | (x & 0xFFFF0000FFFF0000) >>> 16
-     x = (x & 0x00000000FFFFFFFF) << 32 | (x & 0xFFFFFFFF00000000) >>> 32
-     return x
-end
 
 immutable AmbiguousNucleotideIterator{A<:Union{DNAAlphabet,RNAAlphabet}}
     seq::BioSequence{A}
 end
 
-function npositions{A<:Union{DNAAlphabet,RNAAlphabet}}(seq::BioSequence{A})
-    return AmbiguousNucleotideIterator(seq)
-end
+ambiguous_positions(seq::BioSequence) = AmbiguousNucleotideIterator(seq)
 
 Base.start(it::AmbiguousNucleotideIterator) = find_next_ambiguous(it.seq, 1)
 Base.done(it::AmbiguousNucleotideIterator, nextpos) = nextpos == 0
@@ -873,31 +818,27 @@ function find_next_ambiguous{A<:Union{DNAAlphabet{2},RNAAlphabet{2}}}(seq::BioSe
     return 0
 end
 
-# Note: `i` is absolute index
 function find_next_ambiguous{A<:Union{DNAAlphabet{4},RNAAlphabet{4}}}(seq::BioSequence{A}, i::Integer)
     if i > endof(seq)
         return 0
     end
-    j, r = divrem16(Int(max(i, 1) + seq.part.start - 2))
-    j += 1
-    data_j = seq.data[j] & ~mask(4r)
+
     # extract ambiguity bits using following bit masks:
     #   * 0x44... = 0b01000100...
     #   * 0x88... = 0b10001000...
     #   * 0xCC... = 0b11001100...
-    amb = data_j & 0xCCCCCCCCCCCCCCCC
-    if amb != 0
-        amb = ((amb & 0x8888888888888888) >> 1) | (amb & 0x4444444444444444)
-        return ((j - 1) << 4) + ((trailing_zeros(amb) - 2) >> 2) + 1
-    end
-    for j in j+1:endof(seq.data)
-        data_j = seq.data[j]
-        amb = data_j & 0xCCCCCCCCCCCCCCCC
-        if amb != 0
-            amb = ((amb & 0x8888888888888888) >> 1) | (amb & 0x4444444444444444)
-            return ((j - 1) << 4) + ((trailing_zeros(amb) - 2) >> 2) + 1
+    next = bitindex(seq, max(i, 1))
+    stop = bitindex(seq, endof(seq) + 1)
+    while next < stop
+        m = mask(min(stop - next, 64)) << offset(next)
+        x = seq.data[index(next)] & m
+        if x & 0xCCCCCCCCCCCCCCCC != 0
+            x = (x & 0x8888888888888888) | (x & 0x4444444444444444) << 1
+            return (index(next) - 1) << 4 + (trailing_zeros(x) + 1) >> 2
         end
+        next += 64 - offset(next)
     end
+
     # found no ambiguity
     return 0
 end
@@ -970,80 +911,75 @@ end
     elseif n == 4
         nucmismatches = :nuc4mismatches
     else
-        error("n ∉ (2, 4)")
+        error("n (= $n) ∉ (2, 4)")
     end
 
     quote
         if length(a) > length(b)
             return count_mismatches(b, a)
         end
+        @assert length(a) ≤ length(b)
 
-        ja, ra = bitsid(a, 1)
-        j2, r2 = bitsid(a, endof(a) + 1)
-        jb, rb = bitsid(b, 1)
+        nexta = bitindex(a, 1)
+        nextb = bitindex(b, 1)
+        stopa = bitindex(a, endof(a) + 1)
         mismatches = 0
 
-        m = mask($n)
-        while ra != 0 && (ja, ra) < (j2, r2)
-            x = (a.data[ja] >> ra) & m
-            y = (b.data[jb] >> rb) & m
-            mismatches += x != y
-            if (ra += $n) ≥ 64
-                ja += 1
-                ra = 0
+        # align reading position of `a.data` so that `offset(nexta) == 0`
+        if nexta < stopa && offset(nexta) != 0
+            x = a.data[index(nexta)] >> offset(nexta)
+            y = b.data[index(nextb)] >> offset(nextb)
+            if offset(nextb) > offset(nexta)
+                y |= b.data[index(nextb)+1] << (64 - offset(nextb))
             end
-            if (rb += $n) ≥ 64
-                jb += 1
-                rb = 0
-            end
+            k = 64 - offset(nexta)
+            m = mask(k)
+            mismatches += $nucmismatches(x & m, y & m)
+            nexta += k
+            nextb += k
         end
+        @assert offset(nexta) == 0
 
-        if ja == j2 && ra == r2
-            return mismatches
-        end
-
-        if rb == 0
-            # fortunately, data are aligned with each other
-            while ja < j2
-                x = a.data[ja]
-                y = b.data[jb]
+        if offset(nextb) == 0  # data are aligned with each other
+            while stopa - nexta ≥ 64
+                x = a.data[index(nexta)]
+                y = b.data[index(nextb)]
                 mismatches += $nucmismatches(x, y)
-                ja += 1
-                jb += 1
+                nexta += 64
+                nextb += 64
             end
-            if r2 > 0
-                x = a.data[ja]
-                y = b.data[jb]
-                m = mask(r2)
+
+            if nexta < stopa
+                x = a.data[index(nexta)]
+                y = b.data[index(nextb)]
+                m = mask(stopa - nexta)
                 mismatches += $nucmismatches(x & m, y & m)
             end
-        else
-            y = b.data[jb] >> rb
-            m = mask(64 - rb)
-            while ja < j2
-                jb += 1
-                x = a.data[ja]
-                y′ = b.data[jb]
-                mismatches += $nucmismatches(x, y & m | (y′ << (64 - rb)) & ~m)
-                y = y′ >> rb
-                ja += 1
+        elseif nexta < stopa
+            y = b.data[index(nextb)]
+            nextb += 64
+
+            while stopa - nexta ≥ 64
+                x = a.data[index(nexta)]
+                z = b.data[index(nextb)]
+                y = y >> offset(nextb) | z << (64 - offset(nextb))
+                mismatches += $nucmismatches(x, y)
+                y = z
+                nexta += 64
+                nextb += 64
             end
 
-            m = mask($n)
-            while (ja, ra) < (j2, r2)
-                x = (a.data[ja] >> ra) & m
-                y = (b.data[jb] >> rb) & m
-                mismatches += x != y
-                if (ra += $n) ≥ 64
-                    ja += 1
-                    ra = 0
+            if nexta < stopa
+                x = a.data[index(nexta)]
+                y = y >> offset(nextb)
+                if 64 - offset(nextb) < stopa - nexta
+                    y |= a.data[index(nextb)] << (64 - offset(nextb))
                 end
-                if (rb += $n) ≥ 64
-                    jb += 1
-                    rb = 0
-                end
+                m = mask(stopa - nexta)
+                mismatches += $nucmismatches(x & m, y & m)
             end
         end
+
         return mismatches
     end
 end

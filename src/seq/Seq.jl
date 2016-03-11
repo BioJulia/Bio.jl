@@ -48,6 +48,7 @@ export
     alphabet,
     reverse_complement,
     mismatches,
+    ambiguous_positions,
     npositions,
     hasn,
     canonical,
@@ -159,5 +160,7 @@ Base.convert(::Type{NucleotideSequence{RNANucleotide}}, seq::Union{AbstractVecto
 # DEPRECATED
 NucleotideCounts(seq) = Composition(seq)
 
+# DEPRECATED: use ambiguous_positions
+npositions(seq::BioSequence) = ambiguous_positions(seq)
 
 end # module Seq

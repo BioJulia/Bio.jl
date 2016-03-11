@@ -10,21 +10,6 @@
 # written by Austin Appleby, and the source code is distributed under the public
 # domain: https://github.com/aappleby/smhasher/blob/master/src/MurmurHash3.cpp
 
-immutable BitIndex
-    val::Int64
-    BitIndex(val::Int) = new(val)
-    BitIndex(index::Int, offset::Int) = new(index << 6 + offset)
-    BitIndex(pair::Tuple{Int,Int}) = BitIndex(pair[1], pair[2])
-end
-
-Base.(:+)(i::BitIndex, n::Int) = BitIndex(i.val + n)
-Base.(:-)(i1::BitIndex, i2::BitIndex) = i1.val - i2.val
-index(i::BitIndex) = i.val >> 6
-offset(i::BitIndex) = i.val & 0b111111
-Base.show(io::IO, i::BitIndex) = print(io, '(', index(i), ", ", offset(i), ')')
-Base.(:(==))(i1::BitIndex, i2::BitIndex) = i1.val == i2.val
-Base.isless(i1::BitIndex, i2::BitIndex) = isless(i1.val, i2.val)
-
 @inline function rotl64(x::UInt64, r)
     return (x << r) | (x >> (64 - r))
 end
@@ -78,8 +63,8 @@ function Base.hash(seq::BioSequence, seed::UInt64)
     c1 = 0x87c37b91114253d5
     c2 = 0x4cf5ad432745937f
 
-    next = BitIndex(bitsid(seq, 1))
-    last = BitIndex(bitsid(seq, endof(seq) + 1))
+    next = bitindex(seq, 1)
+    last = bitindex(seq, endof(seq) + 1)
 
     k1::UInt64 = 0
     k2::UInt64 = 0

@@ -32,7 +32,7 @@ type State{T <: BufferedInputStream}
 
     # Internal ragel state:
     p::Int  # index into the input stream (0-based)
-    cs::Int # current DFA stae
+    cs::Int # current DFA state
     dfa_start_state::Int # Initial DFA state
 
     # Parser is responsible for updating this

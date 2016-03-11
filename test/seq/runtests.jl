@@ -572,6 +572,32 @@ end
         end
     end
 
+    @testset "Conversion between 2-bit and 4-bit encodings" begin
+        function test_conversion(A1, A2, seq)
+            @test convert(BioSequence{A1}, BioSequence{A2}(seq)) == convert(BioSequence{A1}, seq)
+        end
+
+        test_conversion(DNAAlphabet{2}, DNAAlphabet{4}, "")
+        test_conversion(DNAAlphabet{4}, DNAAlphabet{2}, "")
+        test_conversion(RNAAlphabet{4}, RNAAlphabet{2}, "")
+        test_conversion(RNAAlphabet{2}, RNAAlphabet{4}, "")
+
+        test_conversion(DNAAlphabet{2}, DNAAlphabet{4}, "ACGT")
+        test_conversion(DNAAlphabet{4}, DNAAlphabet{2}, "ACGT")
+        test_conversion(RNAAlphabet{4}, RNAAlphabet{2}, "ACGU")
+        test_conversion(RNAAlphabet{2}, RNAAlphabet{4}, "ACGU")
+
+        test_conversion(DNAAlphabet{2}, DNAAlphabet{4}, "ACGT"^100)
+        test_conversion(DNAAlphabet{4}, DNAAlphabet{2}, "ACGT"^100)
+        test_conversion(RNAAlphabet{4}, RNAAlphabet{2}, "ACGU"^100)
+        test_conversion(RNAAlphabet{2}, RNAAlphabet{4}, "ACGU"^100)
+
+        # ambiguous nucleotides cannot be stored in 2-bit encoding
+        EncodeError = Bio.Seq.EncodeError
+        @test_throws EncodeError convert(BioSequence{DNAAlphabet{2}}, dna"AN")
+        @test_throws EncodeError convert(BioSequence{RNAAlphabet{2}}, rna"AN")
+    end
+
     @testset "Conversion between RNA and DNA" begin
         @test convert(RNASequence, DNASequence("ACGTN")) == rna"ACGUN"
         @test convert(DNASequence, RNASequence("ACGUN")) == dna"ACGTN"
@@ -1076,6 +1102,9 @@ end
         @test mismatches(aa"MTTQAP", aa"MTTQAT") == 1
         @test mismatches(aa"MTTQAP", aa"MTTQATT") == 1
 
+        @test mismatches(dna"ACGT", dna"TACTG"[2:end]) == 2
+        @test mismatches(dna"ACGT"[2:end], dna"AGT") == 1
+
         function test_mismatches(A, a, b)
             count = 0
             for (ca, cb) in zip(a, b)
@@ -1099,7 +1128,7 @@ end
         end
     end
 
-    @testset "N positions" begin
+    @testset "Ambiguous nucleotide positions" begin
         function test_ns(A, seq)
             expected = Int[]
             for i in 1:length(seq)
@@ -1108,7 +1137,7 @@ end
                 end
             end
             bioseq = BioSequence{A}(seq)
-            @test collect(npositions(bioseq)) == expected
+            @test collect(ambiguous_positions(bioseq)) == expected
         end
 
         for len in [1, 10, 32, 1000, 10000, 100000]
@@ -1120,18 +1149,28 @@ end
             test_ns(RNAAlphabet{2}, random_rna(len, probs))
         end
 
-        dna_seq   = dna"ANANANA"
-        dna_niter = npositions(dna_seq)
-        ns = [2,4,6]
-        for (i, n) in enumerate(dna_niter)
-            @test n == ns[i]
+        dna_seq = dna"ANANANA"
+        pos = [2, 4, 6]
+        for (i, p) in enumerate(ambiguous_positions(dna_seq))
+            @test p == pos[i]
         end
 
-        rna_seq   = rna"ANANANA"
-        rna_niter = npositions(rna_seq)
-        ns = [2,4,6]
-        for (i, n) in enumerate(rna_niter)
-            @test n == ns[i]
+        dna_seq = dna"NATTCGRATY"
+        pos = [1, 7, 10]
+        for (i, p) in enumerate(ambiguous_positions(dna_seq))
+            @test p == pos[i]
+        end
+
+        rna_seq = rna"ANANANA"
+        pos = [2, 4, 6]
+        for (i, p) in enumerate(ambiguous_positions(rna_seq))
+            @test p == pos[i]
+        end
+
+        rna_seq = rna"NAUUCGRAUY"
+        pos = [1, 7, 10]
+        for (i, p) in enumerate(ambiguous_positions(rna_seq))
+            @test p == pos[i]
         end
     end
 end
