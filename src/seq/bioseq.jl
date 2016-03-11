@@ -234,15 +234,19 @@ Base.summary(seq::AminoAcidSequence) = string(length(seq), "aa ", "Amino Acid Se
 # pretting printing of sequences
 function Base.show(io::IO, seq::BioSequence)
     println(io, summary(seq), ':')
-    # don't show more than this many characters to avoid filling the screen
-    # with junk
+    showcompact(io, seq)
+end
+
+function Base.showcompact(io::IO, seq::BioSequence)
+    # don't show more than this many characters
+    # to avoid filling the screen with junk
     width = Base.tty_size()[2] - 2
     if length(seq) > width
         half = div(width, 2)
         for i in 1:half-1
             print(io, seq[i])
         end
-        print(io, " … ")
+        print(io, '…')
         for i in endof(seq)-half+2:endof(seq)
             print(io, seq[i])
         end
@@ -691,9 +695,6 @@ function Base.(:(==)){A1,A2}(s1::BioSequence{A1}, s2::BioSequence{A2})
         end
     end
     return true
-end
-
-function Base.hash{A}(seq::BioSequence{A}, h::UInt64)
 end
 
 function Base.cmp{A1,A2}(s1::BioSequence{A1}, s2::BioSequence{A2})
