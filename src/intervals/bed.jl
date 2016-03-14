@@ -70,6 +70,71 @@ end
 #function show(io::IO, metadata::BEDMetadata)
 #end
 
-
 "An `Interval` with associated metadata from a BED file"
 typealias BEDInterval Interval{BEDMetadata}
+
+"""
+Write a BEDInterval in BED format.
+"""
+function Base.write(out::IO, interval::BEDInterval)
+    print(out, interval.seqname, '\t', interval.first - 1, '\t', interval.last)
+    write_optional_fields(out, interval)
+    write(out, '\n')
+end
+
+function write_optional_fields(out::IO, interval::BEDInterval, leadingtab::Bool=true)
+    if interval.metadata.used_fields >= 1
+        if leadingtab
+            write(out, '\t')
+        end
+        print(out, interval.metadata.name)
+    else return end
+
+    if interval.metadata.used_fields >= 2
+        print(out, '\t', interval.metadata.score)
+    else return end
+
+    if interval.metadata.used_fields >= 3
+        print(out, '\t', interval.strand)
+    else return end
+
+    if interval.metadata.used_fields >= 4
+        print(out, '\t', interval.metadata.thick_first - 1)
+    else return end
+
+    if interval.metadata.used_fields >= 5
+        print(out, '\t', interval.metadata.thick_last)
+    else return end
+
+    if interval.metadata.used_fields >= 6
+        item_rgb = interval.metadata.item_rgb
+        print(out, '\t',
+              round(Int, 255 * item_rgb.r), ',',
+              round(Int, 255 * item_rgb.g), ',',
+              round(Int, 255 * item_rgb.b))
+    else return end
+
+    if interval.metadata.used_fields >= 7
+        print(out, '\t', interval.metadata.block_count)
+    else return end
+
+    if interval.metadata.used_fields >= 8
+        block_sizes = interval.metadata.block_sizes
+        if !isempty(block_sizes)
+            print(out, '\t', block_sizes[1])
+            for i in 2:length(block_sizes)
+                print(out, ',', block_sizes[i])
+            end
+        end
+    else return end
+
+    if interval.metadata.used_fields >= 9
+        block_firsts = interval.metadata.block_firsts
+        if !isempty(block_firsts)
+            print(out, '\t', block_firsts[1] - 1)
+            for i in 2:length(block_firsts)
+                print(out, ',', block_firsts[i] - 1)
+            end
+        end
+    end
+end

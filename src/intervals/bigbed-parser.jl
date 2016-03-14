@@ -37,7 +37,7 @@ typealias StringFieldVector Vector{StringField}
 typealias NullableStringFieldVector Nullable{StringFieldVector}
 typealias NullableStringField Nullable{StringField}
 
-type BigBedDataParser
+type BigBedDataParser <: AbstractParser
 state::Ragel.State
 
 # intermediate values used during parsing
@@ -169,17 +169,10 @@ begin
 input.block_size_idx = 1
 input.block_first_idx = 1
 
-yield = true
 # // fbreak causes will cause the pushmark action for the next seqname
 # // to be skipped, so we do it here
 Ragel.@anchor!
-begin
-p+= 1;
-cs = 1;
-@goto _out
-
-end
-
+Ragel.@yield 1
 end
 begin
 Ragel.@anchor!
@@ -1511,17 +1504,10 @@ begin
 input.block_size_idx = 1
 input.block_first_idx = 1
 
-yield = true
 # // fbreak causes will cause the pushmark action for the next seqname
 # // to be skipped, so we do it here
 Ragel.@anchor!
-begin
-p+= 1;
-cs = 0;
-@goto _out
-
-end
-
+Ragel.@yield 0
 end
 
 break;

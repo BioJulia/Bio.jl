@@ -554,7 +554,7 @@ function start(bb::BigBedData)
         seq_names=Nullable(seq_names))
 
     next_interval = BEDInterval()
-    parser_isdone = read!(parser, next_interval)
+    parser_isdone = isnull(tryread!(parser, next_interval))
 
     return BigBedIteratorState(seq_names, data_count, 1,
                                getindex(zlib_stream.source.zstream).total_in,
@@ -570,7 +570,7 @@ function next(bb::BigBedData, state::BigBedIteratorState)
         return value, state
     end
 
-    state.parser_isdone = !read!(state.parser, state.next_interval)
+    state.parser_isdone = isnull(tryread!(state.parser, state.next_interval))
 
     if state.parser_isdone
         seek(bb.stream, bb.header.full_data_offset + state.data_offset + sizeof(UInt64))
@@ -583,7 +583,7 @@ function next(bb::BigBedData, state::BigBedIteratorState)
              seq_names=Nullable(state.seq_names))
         state.data_offset += getindex(zlib_stream.source.zstream).total_in
 
-        state.parser_isdone = !read!(state.parser, state.next_interval)
+        state.parser_isdone = isnull(tryread!(state.parser, state.next_interval))
         @assert !state.parser_isdone
     end
 
@@ -716,7 +716,7 @@ function find_next_intersection!(it::BigBedIntersectIterator)
         while !isnull(it.parser)
             parser = get(it.parser)
             # Run the parser until we find an intersection
-            it.done = !read!(parser, it.nextinterval)
+            it.done = isnull(tryread!(parser, it.nextinterval))
             if it.done
                 it.parser = Nullable{BigBedDataParser}()
                 break

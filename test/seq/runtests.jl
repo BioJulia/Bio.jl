@@ -1823,6 +1823,13 @@ end
             for seqrec in open(filename, FASTA, memory_map=true)
             end
 
+            # in-place parsing
+            stream = open(filename, FASTA)
+            entry = eltype(stream)()
+            while !eof(stream)
+                read!(stream, entry)
+            end
+
             # Check round trip
             output = IOBuffer()
             expected_entries = Any[]
@@ -1865,6 +1872,13 @@ end
 
             # Reading from a memory mapped file
             for seqrec in open(filename, FASTQ, memory_map=true)
+            end
+
+            # in-place parsing
+            stream = open(filename, FASTQ)
+            entry = eltype(stream)()
+            while !eof(stream)
+                read!(stream, entry)
             end
 
             # Check round trip

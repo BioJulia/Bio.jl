@@ -18,6 +18,9 @@ export Strand,
     BigBed,
     BigWig
 
+import ..Ragel: tryread!
+export tryread!
+
 using Base.Intrinsics,
     Bio.Ragel,
     Bio.StringFields,

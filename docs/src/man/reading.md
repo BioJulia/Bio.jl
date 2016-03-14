@@ -11,6 +11,7 @@ open{T <: FileFormat}(source::IO, ::Type{T})
 open{T <: FileFormat}(data::Vector{UInt8}, ::Type{T})
 ```
 
+
 ## Parsing by iteration
 
 Parsers in Bio.jl all read and return entries one at a time. The most convenient
@@ -23,24 +24,24 @@ for entry in stream
 end
 ```
 
+
 ## In-place parsing
 
 Iterating through entries in a file is convenient, but for each entry in the
-file, the parser must allocate , and ultimately the garbage collector must spend
+file, the parser must allocate, and ultimately the garbage collector must spend
 time to deallocate it. For performance critical applications, a separate lower
 level parsing interface can be used that avoid unnecessary allocation by
 overwriting one entry. For files with a large number of small entries, this can
 greatly speed up reading.
 
 Instead of looping over a parser stream `read!` is called with a preallocated
-entry. It will then attempt to read one entry, returning `true` if successful and
-`false` if the end of the input has been reached.
-
+entry.
 ```julia
 stream = open("input.bed", BED)
 entry = BEDInterval()
-while read!(stream, entry)
-    # perform some operation on entry
+while !eof(stream)
+    read!(input, entry)
+    # perform some operation on `entry`
 end
 ```
 

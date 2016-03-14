@@ -1,5 +1,5 @@
 %%{
-    machine _fastaparser;
+    machine fastaparser;
 
     action finish_match {
         if seqtype(typeof(output)) == Sequence
@@ -16,8 +16,7 @@
             encode_copy!(output.seq, 1, input.seqbuf.buffer, 1, length(input.seqbuf))
         end
         empty!(input.seqbuf)
-        yield = true;
-        fbreak;
+        Ragel.@yield ftargs
     }
 
     action count_line  { state.linenum += 1 }
@@ -49,26 +48,26 @@ type FASTAParser <: AbstractParser
     seqbuf::BufferedOutputStream{BufferedStreams.EmptyStream}
 
     function FASTAParser(input::BufferedInputStream)
-        %% write init;
-
-        return new(Ragel.State(cs, input), BufferedOutputStream())
+        return new(Ragel.State(fastaparser_start, input), BufferedOutputStream())
     end
 end
-
 
 function Base.eltype(::Type{FASTAParser})
     return FASTASeqRecord
 end
 
+function Base.eof(parser::FASTAParser)
+    return eof(parser.state.stream)
+end
 
 function Base.open(input::BufferedInputStream, ::Type{FASTA})
     return FASTAParser(input)
 end
 
-
-typealias FASTAAnySeqRecord{S} SeqRecord{S, FASTAMetadata}
-
-Ragel.@generate_read_fuction("_fastaparser", FASTAParser, FASTAAnySeqRecord,
+Ragel.@generate_read_fuction(
+    "fastaparser",
+    FASTAParser,
+    FASTASeqRecord,
     begin
         %% write exec;
     end)
