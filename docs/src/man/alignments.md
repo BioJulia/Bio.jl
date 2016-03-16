@@ -1,5 +1,8 @@
 # Align: Sequence Alignments
 
+    {meta}
+    CurrentModule = Bio.Align
+
 The `Align` module contains tools for computing and working with sequence
 alignments.
 

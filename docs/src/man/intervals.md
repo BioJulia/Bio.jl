@@ -1,5 +1,8 @@
 # Intervals: Genomic Interval Manipulation
 
+    {meta}
+    CurrentModule = Bio.Intervals
+
 The `Intervals` module consists of tools for working efficiently with genomic
 intervals.
 
