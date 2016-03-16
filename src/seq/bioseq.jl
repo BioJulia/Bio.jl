@@ -185,7 +185,8 @@ end
 # conversion between DNA and RNA
 for (A1, A2) in [(DNAAlphabet, RNAAlphabet), (RNAAlphabet, DNAAlphabet)], n in (2, 4)
     # NOTE: assumes that binary representation is identical between DNA and RNA
-    @eval function Base.convert(::Type{BioSequence{$(A1{n})}}, seq::BioSequence{$(A2{n})})
+    @eval function Base.convert(::Type{BioSequence{$(A1{n})}},
+                                seq::BioSequence{$(A2{n})})
         newseq = BioSequence{$(A1{n})}(seq.data, seq.part, true)
         seq.shared = true
         return newseq
@@ -193,21 +194,34 @@ for (A1, A2) in [(DNAAlphabet, RNAAlphabet), (RNAAlphabet, DNAAlphabet)], n in (
 end
 
 # from a vector
-Base.convert{A<:DNAAlphabet}(::Type{BioSequence{A}}, seq::AbstractVector{DNANucleotide}) =
-    BioSequence{A}(seq, 1, endof(seq))
-Base.convert{A<:RNAAlphabet}(::Type{BioSequence{A}}, seq::AbstractVector{RNANucleotide}) =
-    BioSequence{A}(seq, 1, endof(seq))
-Base.convert(::Type{AminoAcidSequence}, seq::AbstractVector{AminoAcid}) =
-    AminoAcidSequence(seq, 1, endof(seq))
+function Base.convert{A<:DNAAlphabet}(::Type{BioSequence{A}},
+                                      seq::AbstractVector{DNANucleotide})
+    return BioSequence{A}(seq, 1, endof(seq))
+end
+function Base.convert{A<:RNAAlphabet}(::Type{BioSequence{A}},
+                                      seq::AbstractVector{RNANucleotide})
+    return BioSequence{A}(seq, 1, endof(seq))
+end
+function Base.convert(::Type{AminoAcidSequence}, seq::AbstractVector{AminoAcid})
+    return AminoAcidSequence(seq, 1, endof(seq))
+end
 
 # to a vector
 Base.convert(::Type{Vector}, seq::BioSequence) = collect(seq)
-Base.convert{A<:DNAAlphabet}(::Type{Vector{DNANucleotide}}, seq::BioSequence{A}) = collect(seq)
-Base.convert{A<:RNAAlphabet}(::Type{Vector{RNANucleotide}}, seq::BioSequence{A}) = collect(seq)
+function Base.convert{A<:DNAAlphabet}(::Type{Vector{DNANucleotide}},
+                                      seq::BioSequence{A})
+    return collect(seq)
+end
+function Base.convert{A<:RNAAlphabet}(::Type{Vector{RNANucleotide}},
+                                      seq::BioSequence{A})
+    return collect(seq)
+end
 Base.convert(::Type{Vector{AminoAcid}}, seq::AminoAcidSequence) = collect(seq)
 
 # from/to a string
-Base.convert{S<:AbstractString}(::Type{S}, seq::BioSequence) = convert(S, [Char(x) for x in seq])
+function Base.convert{S<:AbstractString}(::Type{S}, seq::BioSequence)
+    return convert(S, [Char(x) for x in seq])
+end
 Base.convert{S<:AbstractString,A}(::Type{BioSequence{A}}, seq::S) = BioSequence{A}(seq)
 
 
@@ -371,8 +385,9 @@ Base.(:*){A}(chunk1::BioSequence{A}, chunks::BioSequence{A}...) =
 
 Base.(:^)(chunk::BioSequence, n::Integer) = repeat(chunk, n)
 
-function Base.setindex!{A,T<:Integer}(seq::BioSequence{A}, other::BioSequence{A}, locs::AbstractVector{T})
-
+function Base.setindex!{A,T<:Integer}(seq::BioSequence{A},
+                                      other::BioSequence{A},
+                                      locs::AbstractVector{T})
     checkbounds(seq, locs)
     checkdimension(other, locs)
     orphan!(seq)
@@ -382,13 +397,17 @@ function Base.setindex!{A,T<:Integer}(seq::BioSequence{A}, other::BioSequence{A}
     return seq
 end
 
-function Base.setindex!{A,T<:Integer}(seq::BioSequence{A}, other::BioSequence{A}, locs::UnitRange{T})
+function Base.setindex!{A,T<:Integer}(seq::BioSequence{A},
+                                      other::BioSequence{A},
+                                      locs::UnitRange{T})
     checkbounds(seq, locs)
     checkdimension(other, locs)
     return copy!(seq, locs.start, other, 1)
 end
 
-function Base.setindex!{A}(seq::BioSequence{A}, other::BioSequence{A}, locs::AbstractVector{Bool})
+function Base.setindex!{A}(seq::BioSequence{A},
+                           other::BioSequence{A},
+                           locs::AbstractVector{Bool})
     checkbounds(seq, locs)
     checkdimension(other, locs)
     orphan!(seq)
@@ -518,34 +537,26 @@ function Base.append!{A}(seq::BioSequence{A}, other::BioSequence{A})
     return seq
 end
 
-#=
-function Base.copy!{A}(seq::BioSequence{A},
-                       srcdata::Vector{UInt8},
-                       startpos::Integer, stoppos::Integer)
-    n = stoppos - startpos + 1
-    len = seq_data_len(A, n)
-    seqdata = seq.data
-    if length(seqdata) < len
-        resize!(seq.data, len)
-    end
-    fill!(seq.data, 0)
-    seq.part = 1:n
-    @encode_seq convert(eltype(A), Char(c))
-    return seq
-end
-=#
-
-function encode_copy!{A}(dst::BioSequence{A}, src::Union{AbstractVector,AbstractString})
+function encode_copy!{A}(dst::BioSequence{A},
+                         src::Union{AbstractVector,AbstractString})
     return encode_copy!(dst, 1, src, 1)
 end
 
-function encode_copy!{A}(dst::BioSequence{A}, doff::Integer, src::Union{AbstractVector,AbstractString}, soff::Integer)
+function encode_copy!{A}(dst::BioSequence{A},
+                         doff::Integer,
+                         src::Union{AbstractVector,AbstractString},
+                         soff::Integer)
     return encode_copy!(dst, doff, src, soff, length(src) - soff + 1)
 end
 
 function encode_copy!{A}(dst::BioSequence{A},
                          doff::Integer,
-                         src::Union{AbstractVector,ASCIIString,UTF32String,SubString{ASCIIString},SubString{UTF32String}},
+                         # these types support random access
+                         src::Union{AbstractVector,
+                                    ASCIIString,
+                                    UTF32String,
+                                    SubString{ASCIIString},
+                                    SubString{UTF32String}},
                          soff::Integer,
                          len::Integer)
     checkbounds(dst, doff:doff+len-1)
@@ -855,12 +866,14 @@ function Base.next(it::AmbiguousNucleotideIterator, nextpos)
     return nextpos, find_next_ambiguous(it.seq, nextpos + 1)
 end
 
-function find_next_ambiguous{A<:Union{DNAAlphabet{2},RNAAlphabet{2}}}(seq::BioSequence{A}, i::Integer)
+function find_next_ambiguous{A<:Union{DNAAlphabet{2},RNAAlphabet{2}}}(
+        seq::BioSequence{A}, i::Integer)
     # no ambiguity
     return 0
 end
 
-function find_next_ambiguous{A<:Union{DNAAlphabet{4},RNAAlphabet{4}}}(seq::BioSequence{A}, i::Integer)
+function find_next_ambiguous{A<:Union{DNAAlphabet{4},RNAAlphabet{4}}}(
+        seq::BioSequence{A}, i::Integer)
     if i > endof(seq)
         return 0
     end
