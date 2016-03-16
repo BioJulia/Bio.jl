@@ -20,4 +20,4 @@ markdown_extensions:
 docs_dir: 'build'
 
 pages:
-  - Home: index.md
+- Home: index.md
