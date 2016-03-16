@@ -3,7 +3,7 @@
 # Bioinformatics and Computational Biology infrastructure for [Julia](http://julialang.org)
 
 Get Help: [![Join the chat at Gitter!](https://badges.gitter.im/BioJulia.png)](https://gitter.im/BioJulia/Bio.jl)
-[![reference docs](https://img.shields.io/badge/docs-reference-blue.svg)](http://biojulia.github.io/Bio.jl/)
+[![reference docs](https://img.shields.io/badge/docs-reference-blue.svg)](http://biojulia.github.io/Bio.jl/latest/)
 
 Activity: [![Issues Ready](https://badge.waffle.io/BioJulia/Bio.jl.svg?label=ready&title=Issues%20Ready)](http://waffle.io/BioJulia/Bio.jl)
 [![Issues in Progress](https://badge.waffle.io/BioJulia/Bio.jl.svg?label=WIP&title=Issues%20In%20Progress)](http://waffle.io/BioJulia/Bio.jl)
