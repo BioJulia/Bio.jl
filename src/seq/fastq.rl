@@ -158,7 +158,8 @@ end
         end
 
         # sequence
-        copy!(output.seq, input.seqbuf.buffer, 1, input.seqbuf.position - 1)
+        resize!(output.seq, input.seqbuf.position - 1)
+        encode_copy!(output.seq, 1, input.seqbuf.buffer, 1, input.seqbuf.position - 1)
 
         # quality
         encoding, input.quality_encodings =

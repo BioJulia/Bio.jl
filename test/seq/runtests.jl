@@ -511,6 +511,7 @@ end
         @test DNASequence() == BioSequence(DNANucleotide)
         @test RNASequence() == BioSequence(RNANucleotide)
         @test AminoAcidSequence() == BioSequence(AminoAcid)
+        @test CharSequence() == BioSequence(Char)
     end
 
     @testset "Constructing uninitialized sequences" begin
@@ -544,9 +545,10 @@ end
         end
 
         # non-standard string literal
-        @test isa(dna"ACGTMRWSYKVHDBN-", BioSequence{DNAAlphabet{4}})
-        @test isa(rna"ACGUMRWSYKVHDBN-", BioSequence{RNAAlphabet{4}})
-        @test isa(aa"ARNDCQEGHILKMFPSTWYVBJZXOU*-", BioSequence{AminoAcidAlphabet})
+        @test isa(dna"ACGTMRWSYKVHDBN-", DNASequence)
+        @test isa(rna"ACGUMRWSYKVHDBN-", RNASequence)
+        @test isa(aa"ARNDCQEGHILKMFPSTWYVBJZXOU*-", AminoAcidSequence)
+        @test isa(char"いろは αβγ 甲乙丙", CharSequence)
 
         # Non-nucleotide characters should throw
         @test_throws Exception DNASequence("ACCNNCATTTTTTAGATXATAG")
@@ -781,6 +783,8 @@ end
             seq = AminoAcidSequence(random_aa(len))
             @test length(seq) === endof(seq) === len
         end
+
+        @test length(char"いろはabc") === 6
     end
 
     @testset "Access" begin
@@ -812,6 +816,9 @@ end
 
         @test rna"ACUGNACUGN"[1:5] == rna"ACUGN"
         @test rna"ACUGNACUGN"[5:1] == rna""
+
+        @test aa"KSAAV"[3] == AA_A
+        @test char"いろはにほ"[3] == 'は'
     end
 
     @testset "Iteration" begin

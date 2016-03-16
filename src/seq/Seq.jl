@@ -41,10 +41,12 @@ export
     DNASequence,
     RNASequence,
     AminoAcidSequence,
+    CharSequence,
     NucleotideSequence,
     @dna_str,
     @rna_str,
     @aa_str,
+    @char_str,
     alphabet,
     reverse_complement,
     mismatches,
@@ -102,7 +104,8 @@ export
     Alphabet,
     DNAAlphabet,
     RNAAlphabet,
-    AminoAcidAlphabet
+    AminoAcidAlphabet,
+    CharAlphabet
 
 using BufferedStreams,
     Base.Intrinsics,

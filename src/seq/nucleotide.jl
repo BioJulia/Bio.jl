@@ -79,7 +79,8 @@ dna_to_char[0b1111 + 1] = '-'
 nnucleotide(::Type{DNANucleotide}) = DNA_N
 invalid_nucleotide(::Type{DNANucleotide}) = DNA_INVALID
 
-isvalid(nt::DNANucleotide) = nt ≤ DNA_Gap
+Base.isvalid(::Type{DNANucleotide}, x::Integer) = 0 ≤ x < 16
+Base.isvalid(nt::DNANucleotide) = nt ≤ DNA_Gap
 isambiguous(nt::DNANucleotide) = nt > DNA_T
 alphabet(::Type{DNANucleotide}) = DNA_A:DNA_Gap
 
@@ -125,7 +126,8 @@ rna_to_char[0b1111 + 1] = '-'
 nnucleotide(::Type{RNANucleotide}) = RNA_N
 invalid_nucleotide(::Type{RNANucleotide}) = RNA_INVALID
 
-isvalid(nt::RNANucleotide) = nt ≤ RNA_Gap
+Base.isvalid(::Type{RNANucleotide}, x::Integer) = 0 ≤ x < 16
+Base.isvalid(nt::RNANucleotide) = nt ≤ RNA_Gap
 isambiguous(nt::RNANucleotide) = nt > RNA_U
 alphabet(::Type{RNANucleotide}) = RNA_A:RNA_Gap
 

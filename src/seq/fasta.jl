@@ -180,12 +180,14 @@ if seqtype(typeof(output)) == Sequence
 		alphabet = predict(input.seqbuf.buffer, 1, length(input.seqbuf))
 		ET = alphabet_type[alphabet]
 		if 	ET == typeof(output.seq)
-	copy!(output.seq, input.seqbuf.buffer, 1, length(input.seqbuf))
+	resize!(output.seq, length(input.seqbuf))
+	encode_copy!(output.seq, 1, input.seqbuf.buffer, 1, length(input.seqbuf))
 else
 	output.seq = ET(input.seqbuf.buffer, 1, length(input.seqbuf))
 end
 else
-			copy!(output.seq, input.seqbuf.buffer, 1, length(input.seqbuf))
+			resize!(output.seq, length(input.seqbuf))
+	encode_copy!(output.seq, 1, input.seqbuf.buffer, 1, length(input.seqbuf))
 end
 empty!(input.seqbuf)
 yield = true;
@@ -207,12 +209,14 @@ if seqtype(typeof(output)) == Sequence
 alphabet = predict(input.seqbuf.buffer, 1, length(input.seqbuf))
 ET = alphabet_type[alphabet]
 if ET == typeof(output.seq)
-		copy!(output.seq, input.seqbuf.buffer, 1, length(input.seqbuf))
+		resize!(output.seq, length(input.seqbuf))
+		encode_copy!(output.seq, 1, input.seqbuf.buffer, 1, length(input.seqbuf))
 		else
 output.seq = ET(input.seqbuf.buffer, 1, length(input.seqbuf))
 		end
 else
-copy!(output.seq, input.seqbuf.buffer, 1, length(input.seqbuf))
+resize!(output.seq, length(input.seqbuf))
+encode_copy!(output.seq, 1, input.seqbuf.buffer, 1, length(input.seqbuf))
 end
 empty!(input.seqbuf)
 yield = true;
@@ -525,12 +529,14 @@ if seqtype(typeof(output)) == Sequence
 alphabet = predict(input.seqbuf.buffer, 1, length(input.seqbuf))
 ET = alphabet_type[alphabet]
 if ET == typeof(output.seq)
-copy!(output.seq, input.seqbuf.buffer, 1, length(input.seqbuf))
+resize!(output.seq, length(input.seqbuf))
+encode_copy!(output.seq, 1, input.seqbuf.buffer, 1, length(input.seqbuf))
 else
 output.seq = ET(input.seqbuf.buffer, 1, length(input.seqbuf))
 end
 else
-copy!(output.seq, input.seqbuf.buffer, 1, length(input.seqbuf))
+resize!(output.seq, length(input.seqbuf))
+encode_copy!(output.seq, 1, input.seqbuf.buffer, 1, length(input.seqbuf))
 end
 empty!(input.seqbuf)
 yield = true;
@@ -553,12 +559,14 @@ if seqtype(typeof(output)) == Sequence
 alphabet = predict(input.seqbuf.buffer, 1, length(input.seqbuf))
 ET = alphabet_type[alphabet]
 if ET == typeof(output.seq)
-copy!(output.seq, input.seqbuf.buffer, 1, length(input.seqbuf))
+resize!(output.seq, length(input.seqbuf))
+encode_copy!(output.seq, 1, input.seqbuf.buffer, 1, length(input.seqbuf))
 else
 output.seq = ET(input.seqbuf.buffer, 1, length(input.seqbuf))
 end
 else
-copy!(output.seq, input.seqbuf.buffer, 1, length(input.seqbuf))
+resize!(output.seq, length(input.seqbuf))
+encode_copy!(output.seq, 1, input.seqbuf.buffer, 1, length(input.seqbuf))
 end
 empty!(input.seqbuf)
 yield = true;

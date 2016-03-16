@@ -275,7 +275,9 @@ error("Error parsing FASTQ: sequence and quality scores have non-matching identi
 end
 
 # sequence
-copy!(output.seq, input.seqbuf.buffer, 1, input.seqbuf.position - 1)
+# copy!(output.seq, input.seqbuf.buffer, 1, input.seqbuf.position - 1)
+resize!(output.seq, input.seqbuf.position - 1)
+encode_copy!(output.seq, 1, input.seqbuf.buffer, 1, input.seqbuf.position - 1)
 
 # quality
 encoding, input.quality_encodings =
@@ -1117,7 +1119,9 @@ error("Error parsing FASTQ: sequence and quality scores have non-matching identi
 end
 
 # sequence
-copy!(output.seq, input.seqbuf.buffer, 1, input.seqbuf.position - 1)
+# copy!(output.seq, input.seqbuf.buffer, 1, input.seqbuf.position - 1)
+resize!(output.seq, input.seqbuf.position - 1)
+encode_copy!(output.seq, 1, input.seqbuf.buffer, 1, input.seqbuf.position - 1)
 
 # quality
 encoding, input.quality_encodings =

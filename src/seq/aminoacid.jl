@@ -84,7 +84,8 @@ const AA_Gap = convert(AminoAcid, 0x1b)
 char_to_aa[Int('-') + 1] = AA_Gap
 aa_to_char[0x1b+1] = '-'
 
-isvalid(aa::AminoAcid) = aa ≤ AA_Gap
+Base.isvalid(::Type{AminoAcid}, x::Integer) = 0 ≤ x ≤ 0x1b
+Base.isvalid(aa::AminoAcid) = aa ≤ AA_Gap
 alphabet(::Type{AminoAcid}) = AA_A:AA_Gap
 
 

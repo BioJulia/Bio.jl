@@ -26,7 +26,7 @@
 # `seq[i]` can be written as:
 #
 #     j = bitindex(seq, i)
-#     decode(A, UInt8((seq.data[index(j)] >> offset(j)) & mask(A)))
+#     decode(A, (seq.data[index(j)] >> offset(j)) & mask(A))
 #
 #  index :           j - 1              j               j + 1
 #   data : ....|xxxxx...........|xxXxxxxxxxxxxxxx|............xxxx|....
@@ -47,10 +47,32 @@ type BioSequence{A<:Alphabet} <: Sequence
     shared::Bool          # true if and only if `data` is shared between sequences
 end
 
-# type aliases
 typealias DNASequence       BioSequence{DNAAlphabet{4}}
 typealias RNASequence       BioSequence{RNAAlphabet{4}}
 typealias AminoAcidSequence BioSequence{AminoAcidAlphabet}
+typealias CharSequence      BioSequence{CharAlphabet}
+
+
+# String Decorators
+# -----------------
+
+remove_newlines(s) = replace(s, r"\r|\n", "")
+
+macro dna_str(seq, flags...)
+    return DNASequence(remove_newlines(seq))
+end
+
+macro rna_str(seq, flags...)
+    return RNASequence(remove_newlines(seq))
+end
+
+macro aa_str(seq, flags...)
+    return AminoAcidSequence(remove_newlines(seq))
+end
+
+macro char_str(seq, flags...)
+    return CharSequence(remove_newlines(seq))
+end
 
 
 # Constructors
@@ -60,35 +82,25 @@ typealias AminoAcidSequence BioSequence{AminoAcidAlphabet}
 # macro so we can generate two versions depending on wether the `unsafe` flag is
 # set. In this macro, `srcdata[startpos:stoppos]` would be encoded into
 # `seqdata` as alphabet `A`.
-macro encode_seq(nt_convert_expr)
+macro encode_seq(convert_expr)
     quote
-        j = startpos
         @inbounds begin
-            hasinvalid = false
+            if isa(srcdata, AbstractVector) || isa(srcdata, ASCIIString)
+            else
+            end
+            j = startpos
+            s = start(srcdata)
             for i in 1:endof(seqdata)
-                n = bitsof(A)
                 shift = 0
                 data_i = UInt64(0)
-                while shift < 64 && j <= stoppos
-                    c = srcdata[j]
-                    bioc = $(nt_convert_expr)
-                    hasinvalid |= !isvalid(bioc)
+                while shift < 64 && j ≤ stoppos && !done(srcdata, s)
+                    c, s = next(srcdata, s)
+                    bioc = $(convert_expr)
                     data_i |= UInt64(encode(A, bioc)) << shift
                     j += 1
-                    shift += n
+                    shift += bitsof(A)
                 end
                 seqdata[i] = data_i
-            end
-
-            if hasinvalid
-                # figure out what the first bad character was.
-                for i in startpos:stoppos
-                    c = srcdata[j]
-                    bioc = $(nt_convert_expr)
-                    if !isvalid(bioc)
-                        error(c, " is not a valid character in ", A)
-                    end
-                end
             end
         end
     end
@@ -107,62 +119,15 @@ end
 BioSequence(::Type{DNANucleotide}) = DNASequence()
 BioSequence(::Type{RNANucleotide}) = RNASequence()
 BioSequence(::Type{AminoAcid}) = AminoAcidSequence()
+BioSequence(::Type{Char}) = CharSequence()
 
 function Base.call{A<:Alphabet}(::Type{BioSequence{A}},
-                                seq::Union{AbstractString,Vector{UInt8}},
+                                src::Union{AbstractString,AbstractVector},
                                 startpos::Integer=1,
-                                stoppos::Integer=endof(seq);
-                                unsafe::Bool=false)
+                                stoppos::Integer=length(src))
     len = stoppos - startpos + 1
-    seqdata = zeros(UInt64, seq_data_len(A, len))
-    srcdata = seq
-    T = eltype(A)
-    if unsafe
-        @encode_seq unsafe_ascii_byte_to_nucleotide(T, c)
-    else
-        @encode_seq convert(T, Char(c))
-    end
-    return BioSequence{A}(seqdata, 1:len, false)
-end
-
-function Base.call{A<:DNAAlphabet}(::Type{BioSequence{A}},
-                                   seq::AbstractVector{DNANucleotide},
-                                   startpos::Integer=1,
-                                   stoppos::Integer=endof(seq);
-                                   unsafe::Bool=false)
-    return make_from_vector(A, seq, startpos, stoppos, unsafe)
-end
-
-function Base.call{A<:RNAAlphabet}(::Type{BioSequence{A}},
-                                   seq::AbstractVector{RNANucleotide},
-                                   startpos::Integer=1,
-                                   stoppos::Integer=endof(seq);
-                                   unsafe::Bool=false)
-    return make_from_vector(A, seq, startpos, stoppos, unsafe)
-end
-
-function Base.call(::Type{AminoAcidSequence},
-                   seq::AbstractVector{AminoAcid},
-                   startpos::Integer=1,
-                   stoppos::Integer=endof(seq);
-                   unsafe::Bool=false)
-    return make_from_vector(AminoAcidAlphabet, seq, startpos, stoppos, unsafe)
-end
-
-function make_from_vector{A,T}(::Type{A}, srcdata::AbstractVector{T}, startpos, stoppos, unsafe)
-    len = stoppos - startpos + 1
-    seqdata = zeros(UInt64, seq_data_len(A, len))
-    if unsafe
-        @encode_seq c
-    else
-        @encode_seq begin
-            if !isvalid(c)
-                throw(ArgumentError("invalid $T"))
-            end
-            c
-        end
-    end
-    return BioSequence{A}(seqdata, 1:len, false)
+    seq = BioSequence{A}(len)
+    return encode_copy!(seq, 1, src, startpos, len)
 end
 
 # create a subsequence
@@ -252,6 +217,7 @@ Base.convert{S<:AbstractString,A}(::Type{BioSequence{A}}, seq::S) = BioSequence{
 Base.summary{A<:DNAAlphabet}(seq::BioSequence{A}) = string(length(seq), "nt ", "DNA Sequence")
 Base.summary{A<:RNAAlphabet}(seq::BioSequence{A}) = string(length(seq), "nt ", "RNA Sequence")
 Base.summary(seq::AminoAcidSequence) = string(length(seq), "aa ", "Amino Acid Sequence")
+Base.summary(seq::CharSequence) = string(length(seq), "char ", "Char Sequence")
 
 # pretting printing of sequences
 function Base.show(io::IO, seq::BioSequence)
@@ -325,7 +291,7 @@ end
 Base.length(seq::BioSequence) = length(seq.part)
 Base.endof(seq::BioSequence) = length(seq)
 Base.isempty(seq::BioSequence) = length(seq) == 0
-Base.eltype{A}(seq::BioSequence{A}) = eltype(A)
+Base.eltype{A}(::Type{BioSequence{A}}) = eltype(A)
 
 @inline function Base.checkbounds(seq::BioSequence, i::Integer)
     if 1 ≤ i ≤ endof(seq)
@@ -379,7 +345,7 @@ mask{A<:Alphabet}(::Type{A}) = mask(bitsof(A))
 
 @inline function unsafe_getindex{A}(seq::BioSequence{A}, i::Integer)
     j = bitindex(seq, i)
-    @inbounds return decode(A, UInt8((seq.data[index(j)] >> offset(j)) & mask(A)))
+    @inbounds return decode(A, (seq.data[index(j)] >> offset(j)) & mask(A))
 end
 
 function Base.getindex{A}(seq::BioSequence{A}, i::Integer)
@@ -445,7 +411,7 @@ end
 
 function Base.setindex!{A,T<:Integer}(seq::BioSequence{A}, x, locs::AbstractVector{T})
     checkbounds(seq, locs)
-    bin = enc(seq, x)
+    bin = enc64(seq, x)
     orphan!(seq)
     for i in locs
         encoded_setindex!(seq, bin, i)
@@ -455,7 +421,7 @@ end
 
 function Base.setindex!{A}(seq::BioSequence{A}, x, locs::AbstractVector{Bool})
     checkbounds(seq, locs)
-    bin = enc(seq, x)
+    bin = enc64(seq, x)
     orphan!(seq)
     i = j = 0
     while (i = findnext(locs, i + 1)) > 0
@@ -468,8 +434,8 @@ Base.setindex!{A}(seq::BioSequence{A}, x, ::Colon) = setindex!(seq, x, 1:endof(s
 
 # this is "unsafe" because of no bounds check and no orphan! call
 @inline function unsafe_setindex!{A}(seq::BioSequence{A}, x, i::Integer)
-    bin = enc(seq, x)
-    return encoded_setindex!(seq, UInt64(bin), i)
+    bin = enc64(seq, x)
+    return encoded_setindex!(seq, bin, i)
 end
 
 @inline function encoded_setindex!{A}(seq::BioSequence{A}, bin::UInt64, i::Integer)
@@ -491,14 +457,14 @@ end
 Base.empty!(seq::BioSequence) = resize!(seq, 0)
 
 function Base.push!{A}(seq::BioSequence{A}, x)
-    bin = enc(seq, x)
+    bin = enc64(seq, x)
     resize!(seq, length(seq) + 1)
     encoded_setindex!(seq, bin, endof(seq))
     return seq
 end
 
 function Base.unshift!{A}(seq::BioSequence{A}, x)
-    bin = enc(seq, x)
+    bin = enc64(seq, x)
     resize!(seq, length(seq) + 1)
     copy!(seq, 2, seq, 1, length(seq) - 1)
     encoded_setindex!(seq, bin, 1)
@@ -525,7 +491,7 @@ end
 
 function Base.insert!{A}(seq::BioSequence{A}, i::Integer, x)
     checkbounds(seq, i)
-    bin = enc(seq, x)
+    bin = enc64(seq, x)
     resize!(seq, length(seq) + 1)
     copy!(seq, i + 1, seq, i, endof(seq) - i)
     encoded_setindex!(seq, bin, i)
@@ -552,6 +518,7 @@ function Base.append!{A}(seq::BioSequence{A}, other::BioSequence{A})
     return seq
 end
 
+#=
 function Base.copy!{A}(seq::BioSequence{A},
                        srcdata::Vector{UInt8},
                        startpos::Integer, stoppos::Integer)
@@ -564,6 +531,83 @@ function Base.copy!{A}(seq::BioSequence{A},
     fill!(seq.data, 0)
     seq.part = 1:n
     @encode_seq convert(eltype(A), Char(c))
+    return seq
+end
+=#
+
+function encode_copy!{A}(dst::BioSequence{A}, src::Union{AbstractVector,AbstractString})
+    return encode_copy!(dst, 1, src, 1)
+end
+
+function encode_copy!{A}(dst::BioSequence{A}, doff::Integer, src::Union{AbstractVector,AbstractString}, soff::Integer)
+    return encode_copy!(dst, doff, src, soff, length(src) - soff + 1)
+end
+
+function encode_copy!{A}(dst::BioSequence{A},
+                         doff::Integer,
+                         src::Union{AbstractVector,ASCIIString,UTF32String,SubString{ASCIIString},SubString{UTF32String}},
+                         soff::Integer,
+                         len::Integer)
+    checkbounds(dst, doff:doff+len-1)
+    if length(src) < soff + len - 1
+        throw(ArgumentError("source string does not contain $len elements from $soff"))
+    end
+
+    orphan!(dst)
+    next = bitindex(dst, doff)
+    stop = bitindex(dst, doff + len)
+    i = soff
+    while next < stop
+        x = UInt64(0)
+        j = index(next)
+        while index(next) == j && next < stop
+            x |= enc64(dst, convert(Char, src[i])) << offset(next)
+            i += 1
+            next += bitsof(A)
+        end
+        dst.data[j] = x
+    end
+    return dst
+end
+
+function encode_copy!{A}(dst::BioSequence{A},
+                         doff::Integer,
+                         src::AbstractString,
+                         soff::Integer,
+                         len::Integer)
+    checkbounds(dst, doff:doff+len-1)
+    if length(src) < soff + len - 1
+        throw(ArgumentError("source string does not contain $len elements from $soff"))
+    end
+
+    orphan!(dst)
+    next = bitindex(dst, doff)
+    stop = bitindex(dst, doff + len)
+
+    # cast first `soff - 1` elements by iteration because strings
+    # whose encoding is variable-length don't support random access
+    s = start(src)
+    for i in 1:soff-1
+        _, s = Base.next(src, s)
+    end
+
+    while next < stop
+        x = UInt64(0)
+        j = index(next)
+        while index(next) == j && next < stop
+            @assert !done(src, s)
+            c, s = Base.next(src, s)
+            x |= enc64(dst, c) << offset(next)
+            next += bitsof(A)
+        end
+        dst.data[j] = x
+    end
+    return dst
+end
+
+function Base.copy!{A}(seq::BioSequence{A}, doff::Integer,
+                       src::Vector{UInt8},  soff::Integer, len::Integer)
+    datalen = seq_data_len(A, len)
     return seq
 end
 
@@ -611,9 +655,7 @@ function Base.copy!{A}(dst::BioSequence{A}, doff::Integer,
     return dst
 end
 
-@inline function enc{A}(seq::BioSequence{A}, x)
-    return UInt64(encode(A, convert(eltype(A), x)))
-end
+enc64{A}(::BioSequence{A}, x) = UInt64(encode(A, convert(eltype(A), x)))
 
 # Replace a BioSequence's data with a copy, copying only what's needed.
 # The user should never need to call this, as it has no outward effect on the
@@ -1002,22 +1044,4 @@ function nuc2mismatches(x::UInt64, y::UInt64)
     mismatches |=  xyxor & 0x5555555555555555
     mismatches |= (xyxor & 0xAAAAAAAAAAAAAAAA) >> 1
     return count_ones(mismatches)
-end
-
-
-# String Decorators
-# -----------------
-
-remove_newlines(s) = replace(s, r"\r|\n", "")
-
-macro dna_str(seq, flags...)
-    return DNASequence(remove_newlines(seq))
-end
-
-macro rna_str(seq, flags...)
-    return RNASequence(remove_newlines(seq))
-end
-
-macro aa_str(seq, flags...)
-    return AminoAcidSequence(remove_newlines(seq))
 end
