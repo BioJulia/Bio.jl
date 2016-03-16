@@ -1,0 +1,23 @@
+site_name:   Bio.jl
+repo_url:    https://github.com/BioJulia/Bio.jl
+site_description: Bioinformatics and Computational Biology Infastructure for Julia
+site_author: The BioJulia Org
+
+theme: readthedocs
+
+extra_css:
+  - assets/Lapidary.css
+
+extra_javascript:
+  - https://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS_HTML
+  - assets/mathjaxhelper.js
+
+markdown_extensions:
+  - extra
+  - tables
+  - fenced_code
+
+docs_dir: 'build'
+
+pages:
+  - Home: index.md
