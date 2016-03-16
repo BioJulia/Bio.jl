@@ -27,3 +27,4 @@ pages:
   - Sequences: man/seq.md
   - Alignments: man/alignments.md
   - Intervals: man/intervals.md
+- Contributing: man/contributing.md
