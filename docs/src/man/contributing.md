@@ -68,6 +68,7 @@ considered it must meet the following guidelines.
 
     end
     ```
+    
   * Files that declare modules should have the same name name of the module, e.g
     the module `SomeModule` is declared under the file `SomeModule.jl`.
 
