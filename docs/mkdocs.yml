@@ -1,7 +1,7 @@
 site_name:   Bio.jl
 repo_url:    https://github.com/BioJulia/Bio.jl
 site_description: Bioinformatics and Computational Biology Infastructure for Julia
-site_author: The BioJulia Org
+site_author: Ward9250
 
 theme: readthedocs
 
