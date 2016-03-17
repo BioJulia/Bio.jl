@@ -16,7 +16,7 @@ docs_dir: 'build'
 
 # Options
 extra:
-  logo: assets/images/biojl.png 
+  logo: images/biojl.png 
   author:
     github: BioJulia
   palette:
