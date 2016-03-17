@@ -1,4 +1,4 @@
-# Seq: Nucleotide and Amino Acid Sequences
+# Bio.Seq: Biological Sequences
     
     {meta}
     CurrentModule = Bio.Seq

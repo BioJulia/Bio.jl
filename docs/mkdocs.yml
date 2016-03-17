@@ -1,4 +1,5 @@
 site_name:   Bio.jl
+repo_name: 'Github'
 repo_url:    https://github.com/BioJulia/Bio.jl
 site_description: Bioinformatics and Computational Biology Infastructure for Julia
 site_author: The BioJulia Organisation 
@@ -30,7 +31,7 @@ pages:
 - Manual:
   - Installation: man/install.md
   - IO API: man/reading.md
-  - Sequences: man/seq.md
+  - Biological Sequences: man/seq.md
   - Alignments: man/alignments.md
   - Intervals: man/intervals.md
 - Reference:
