@@ -40,6 +40,8 @@ end
 eachkmer{A<:DNAAlphabet}(seq::BioSequence{A}, K::Integer, step::Integer=1) = each(DNAKmer{Int(K)}, seq, step)
 eachkmer{A<:RNAAlphabet}(seq::BioSequence{A}, K::Integer, step::Integer=1) = each(RNAKmer{Int(K)}, seq, step)
 
+Base.eltype{T,k,S}(::Type{EachKmerIterator{T,k,S}}) = Tuple{Int,Kmer{T,k}}
+
 @inline function Base.start{T,K}(it::EachKmerIterator{T,K})
     nextn = find_next_ambiguous(it.seq, it.seq.part.start)
     pair = Nullable{Tuple{Int,Kmer{T,K}}}()
