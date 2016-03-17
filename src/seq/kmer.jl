@@ -149,9 +149,18 @@ end
     return convert(T, (UInt64(x) >> (2K - 2i)) & 0b11)
 end
 
-function Base.show{T,K}(io::IO, x::Kmer{T,K})
-    println(io, (T === DNANucleotide ? "DNA " : "RNA "), K, "-mer:")
-    for i in 1:K
+Base.summary{k}(x::DNAKmer{k}) = string("DNA ", k, "-mer")
+Base.summary{k}(x::RNAKmer{k}) = string("RNA ", k, "-mer")
+
+function Base.show(io::IO, x::Kmer)
+    println(io, summary(x), ':')
+    print(io, x)
+end
+
+Base.print(io::IO, x::Kmer) = showcompact(io, x)
+
+function Base.showcompact{T,k}(io::IO, x::Kmer{T,k})
+    for i in 1:k
         write(io, convert(Char, x[i]))
     end
 end
