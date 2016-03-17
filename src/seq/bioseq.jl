@@ -807,6 +807,13 @@ end
      return x
 end
 
+"""
+    complement!(seq)
+
+Make a complement sequence of `seq` in place.
+
+Ambiguous nucleotides are left as-is.
+"""
 @generated function Base.complement!{A<:Union{DNAAlphabet,RNAAlphabet}}(seq::BioSequence{A})
     n = bitsof(A)
     if n == 2
@@ -843,14 +850,35 @@ nuccomp2(x::UInt64) = ~x
     end
 end
 
+"""
+    complement(seq)
+
+Make a complement sequence of `seq`.
+
+Ambiguous nucleotides are left as-is.
+"""
 function Base.complement{A<:Union{DNAAlphabet,RNAAlphabet}}(seq::BioSequence{A})
     return complement!(copy(seq))
 end
 
+"""
+    reverse_complement!(seq)
+
+Make a reversed complement sequence of `seq` in place.
+
+Ambiguous nucleotides are left as-is.
+"""
 function reverse_complement!{A<:Union{DNAAlphabet,RNAAlphabet}}(seq::BioSequence{A})
     return complement!(reverse!(seq))
 end
 
+"""
+    reverse_complement(seq)
+
+Make a reversed complement sequence of `seq`.
+
+Ambiguous nucleotides are left as-is.
+"""
 function reverse_complement{A<:Union{DNAAlphabet,RNAAlphabet}}(seq::BioSequence{A})
     return reverse_complement!(copy(seq))
 end

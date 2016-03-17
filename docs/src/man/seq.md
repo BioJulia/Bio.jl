@@ -1,163 +1,286 @@
 # Bio.Seq: Biological Sequences
-    
+
     {meta}
     CurrentModule = Bio.Seq
-
-```julia
-using Bio.Seq
-```
+    DocTestSetup = quote
+        using Bio.Seq
+    end
 
 The `Seq` module provides representations and tools for manipulating nucleotide
 and amino acid sequences. Sequences in Bio.jl are more strictly typed than in
 many other libraries. They are special purpose types rather than simply strings.
-Bio.jl currently provides three distinct sequence types: `DNASequence`,
-`RNASequence`, and `AminoAcidSequence`. Each is defined over a separate
-alphabet, represented by types `DNANucleotide`, `RNANucleotide`, and
-`AminoAcid`, respectively. Symbols from multiple alphabets can't be intermixed
-in one sequence type.
+Bio.jl currently provides a single generic sequence type:
+`BioSequence{A<:Alphabet}`. `BioSequence` is parameterized by an alphabet type
+`A` that defines the domain (or set) of biological symbols, and each alphabet
+has an associated symbol type. For example, `AminoAcidAlphabet` is associated
+with `AminoAcid` and hence an object of `BioSequence{AminoAcidAlphabet}`
+represents a sequence of amino acids.  Symbols from multiple alphabets can't
+be intermixed in one sequence type.
+
+The following table summarizes common sequence types that are defined in the
+`Bio.Seq` module:
+
+| Type                               | Symbol type      | Type alias          |
+| :--------------------------------- | :--------------- | :------------------ |
+| `BioSequence{DNAAlphabet{4}}`      | `DNANucleotide`  | `DNASequence`       |
+| `BioSequence{RNAAlphabet{4}}`      | `RNANucleotide`  | `RNASequence`       |
+| `BioSequence{AminoAcidAlphabet}`   | `AminoAcid`      | `AminoAcidSequence` |
+| `BioSequence{CharAlphabet}`        | `Char`           | `CharSequence`      |
+
 
 Though this strictness sacrifices some convenience, it also means you can always
 rely on a `DNASequence` to store DNA and nothing but DNA, without having to
 check, or deal with lowercase versus uppercase and so on. Strict separation of
 sequence types also means we are free to choose the most efficient
-representation. DNA and RNA sequences are encoded using two bits per base making
-them extremely memory efficient, and also allowing us to speed up many common
-operations like nucleotide composition, reverse complement, and k-mer
+representation. DNA and RNA sequences are encoded using four bits per base by
+default making them memory efficient, and also allowing us to speed up many
+common operations like nucleotide composition, reverse complement, and *k*-mer
 enumeration.
-
-Sequence are all able to represent missing or unobserved values using the
-special symbols `DNA_N`, `RNA_N`, and `AA_X`.
 
 
 ## Constructing sequences and nucleotides
 
 Nucleotide or amino acid symbols can be constructed by converting regular
-characters.
+characters:
 
 ```julia
-# These calls produce three different types each representing "A" in a different alphabet
-convert(AminoAcid, 'A')
-convert(DNANucleotide, 'A')
-convert(RNANucleotide, 'A')
+julia> using Bio.Seq
+
+julia> convert(DNANucleotide, 'A')  # Adenine (DNA)
+A
+
+julia> convert(RNANucleotide, 'A')  # Adenine (RNA)
+A
+
+julia> convert(AminoAcid, 'A')      # Alanine (amino acid)
+A
+
 ```
 
 There are also constants defined for each, such as `DNA_A`, `RNA_A`, and `AA_A`.
 
 Sequence types corresponding to these alphabets can be constructed a number of
 different ways. Most immediately, sequence literals can be constructed using
-the string macros `dna`, `rna`, and `aa`.
+the string macros `dna`, `rna`, and `aa`:
 
 ```julia
 # String decorators are provided for common sequence types
-dna"TACGTANNATC"
-rna"AUUUGNCCANU"
-aa"ARNDCQEGHILKMFPSTWYVX"
+julia> dna"TACGTANNATC"
+11nt DNA Sequence:
+TACGTANNATC
+
+julia> rna"AUUUGNCCANU"
+11nt RNA Sequence:
+AUUUGNCCANU
+
+julia> aa"ARNDCQEGHILKMFPSTWYVX"
+21aa Amino Acid Sequence:
+ARNDCQEGHILKMFPSTWYVX
+
 ```
 
 Sequence can be constructed from strings or arrays of nucleotide or amino acid
-symbols using constructors or the `convert` function.
+symbols using constructors or the `convert` function:
 
 ```julia
-DNASequence("TTANGTAGACCG")
-DNASequence([DNA_T, DNA_T, DNA_A, DNA_N, DNA_C])
+julia> DNASequence("TTANC")
+5nt DNA Sequence:
+TTANC
+
+julia> DNASequence([DNA_T, DNA_T, DNA_A, DNA_N, DNA_C])
+5nt DNA Sequence:
+TTANC
+
 ```
 
 Using `convert`, these operations are reversible: sequences can be converted to
 strings or arrays:
 
 ```julia
-convert(String, dna"TTANGTAGACCG")
-#convert(Vector{DNANucleotide}, dna"TTANGTAGACCG")
+julia> convert(ASCIIString, dna"TTANGTA")
+"TTANGTA"
+
+julia> convert(Vector{DNANucleotide}, dna"TTANGTA")
+7-element Array{Bio.Seq.DNANucleotide,1}:
+ T
+ T
+ A
+ N
+ G
+ T
+ A
+
 ```
 
-Sequences can also be concatenated into longer sequences
+Sequences can also be concatenated into longer sequences:
 
 ```julia
-DNASequence(dna"ACGT", dna"NNNN", dna"TGCA")
+julia> DNASequence(dna"ACGT", dna"NNNN", dna"TGCA")
+12nt DNA Sequence:
+ACGTNNNNTGCA
+
+julia> dna"ACGT" * dna"TGCA"
+8nt DNA Sequence:
+ACGTTGCA
+
+julia> repeat(dna"TA", 10)
+20nt DNA Sequence:
+TATATATATATATATATATA
+
+julia> dna"TA" ^ 10
+20nt DNA Sequence:
+TATATATATATATATATATA
+
 ```
 
 Despite being separate types, `DNASequence` and `RNASequence` can freely be
-converted between efficiently without copying the underlying data.
+converted between efficiently without copying the underlying data:
 
 ```julia
-convert(RNASequence, dna"TTANGTAGACCG")
+julia> dna = dna"TTANGTAGACCG"
+12nt DNA Sequence:
+TTANGTAGACCG
+
+julia> rna = convert(RNASequence, dna)
+12nt RNA Sequence:
+UUANGUAGACCG
+
+julia> dna.data === rna.data  # underlying data are same
+true
+
 ```
 
 A translatable `RNASequence` can also be converted to an `AminoAcidSequence`
 using the `translate` function described below.
 
-## Indexing and iteration
 
-Sequences for the most part behave like other string types. They can be indexed
+## Indexing and modifying
+
+Sequences for the most part behave like other vector or string types. They can be indexed
 using integers or ranges:
 
 ```julia
-seq = dna"ACGTTTANAGTNNAGTACC"
-seq[5]
-seq[6:end]
+julia> seq = dna"ACGTTTANAGTNNAGTACC"
+19nt DNA Sequence:
+ACGTTTANAGTNNAGTACC
+
+julia> seq[5]
+T
+
+julia> seq[6:end]
+14nt DNA Sequence:
+TANAGTNNAGTACC
+
 ```
 
-They also work as iterators over nucleotides or amino acids:
+Indexing by range creates a subsequence of the original sequence. Unlike
+`ASCIIString` and `Vector` in the standard library, creating a subsequences is
+copy-free: a subsequence is just a reference to the original sequence with its range.
+You may think that this is unsafe because modifying subsequences propagates to
+the original sequence, but this doesn't happen actually:
 
 ```julia
-for (i, nt) in enumerate(seq)
-    if nt == DNA_N
-        println("N in position ", i)
-    end
-end
+julia> seq = dna"AAAA"  # create a sequence
+4nt DNA Sequence:
+AAAA
+
+julia> subseq = seq[1:2]  # create a subsequence from `seq`
+2nt DNA Sequence:
+AA
+
+julia> subseq[2] = DNA_T  # modify the second element of it
+T
+
+julia> subseq  # the subsequence is modified
+2nt DNA Sequence:
+AT
+
+julia> seq  # but the original sequence is not
+4nt DNA Sequence:
+AAAA
+
 ```
 
-## Mutability
+This is because modifying a sequence checks whether its underlying data are shared with other sequences under the hood. If and only if the data are shared, the subsequence creates a copy of itself. Any modifying operation does this check. This is called *copy-on-write* strategy and users don't need to care about it because it is transparent from outward.
 
-Most sequences in Bio.jl are immutable, which means attempting to change
-nucleotides in the sequence will result in an error. The advantage of
-immutability is that subsequences don't have to make copies of the original data
-but can instead just point to different intervals in the same memory.
+The following modifying operations are currently supported:
 
 ```julia
-# initialize a random million nucleotide sequence
-large_sequence = DNASequence(rand([DNA_A, DNA_C, DNA_T, DNA_G], 1000000))
-
-# This subsequence requires very little additional memory, since it doesn't copy the underlying data.
-suffix = large_sequence[2:end]
+setindex!(seq, item, index)
+push!(seq, item)
+pop!(seq)
+shift!(seq)
+unshift!(seq, item)
+insert!(seq, index, item)
+deleteat!(seq, index)
+append!(seq, other_seq)
+copy!(dst_seq, dest_offset, src_seq, src_offset, len)
+reverse!(seq)
 ```
-
-Immutable sequences have an obvious disadvantage: some algorithms are easier or
-more efficient to implement if a sequence can be altered or overwritten. For
-this reason we provide a mutable mode for sequences. Mutability can be turned on
-and off at any time by calling `mutable!(seq)` and `immutable!(seq)`,
-respectively.
-
-```julia
-# This is an error, because sequences are immutable by default
-seq = dna"ACGNACCTAGATAC"
-seq[1] = DNA_T
-
-# Switching the sequence into mutable mode allows this
-mutable!(seq)
-seq[1] = DNA_T
-```
-
-There are few subtleties to mode switching to be aware of if you're writing
-performance critical code. Switching a mutable sequence to immutable is always
-efficient; no data needs to be copied to do so. So is switching from immutable
-to mutable, but only if the sequence hasn't had any subsequences made, and isn't
-itself a subsequence, otherwise a complete copy of the data will be made.
-
-## Operations on sequences
-
-A number of common sequence operations on nucleotide sequences are provided in the Seq module.
 
     {docs}
-    reverse_complement
-    reverse
+    complement!(seq)
+    reverse_complement!(seq)
+
+
+```julia
+julia> seq = dna"ACG"
+3nt DNA Sequence:
+ACG
+
+julia> push!(seq, DNA_T)
+4nt DNA Sequence:
+ACGT
+
+julia> append!(seq, dna"AT")
+6nt DNA Sequence:
+ACGTAT
+
+julia> reverse!(seq)
+6nt DNA Sequence:
+TATGCA
+
+julia> complement!(seq)
+6nt DNA Sequence:
+ATACGT
+
+julia> reverse_complement!(seq)
+6nt DNA Sequence:
+ACGTAT
+
+```
+
+Sequences also work as iterators over symbols:
+
+```julia
+julia> n = 0
+0
+
+julia> for nt in dna"ATNGNNT"
+           if nt == DNA_N
+               n += 1
+           end
+       end
+
+julia> n
+3
+
+```
+
+
+## Other operations on sequences
+
+A number of common sequence operations are provided in the `Bio.Seq` module:
+
+    {docs}
     complement
-    repeat
+    reverse_complement
     mismatches
-    NucleotideCounts
+    composition
     translate
 
-The `Seq` module contains all NCBI defined genetic codes:
+The `Bio.Seq` module contains all NCBI defined genetic codes:
+
 ```julia
 standard_genetic_code,
 vertebrate_mitochondrial_genetic_code,
@@ -179,25 +302,29 @@ pterobrachia_mitochondrial_genetic_code,
 candidate_division_sr1_genetic_code
 ```
 
+<http://www.insdc.org/documents/feature_table.html#7.4.5>
+
 In most cases, and by default, `standard_genetic_code` is used.
+
 
 ## Nucleotide K-mers
 
 A common strategy to simplify the analysis of sequence data is to operate or
 short k-mers, for size fixed size `k`. These can be packed into machine integers
-allowing extremely efficient code. The Seq module has built in support for
+allowing extremely efficient code. The `Bio.Seq` module has built in support for
 representing short sequences in 64-bit integers. Besides being fixed length,
-`Kmer` types, unlike other sequence types cannot contain `N` symbols.
+`Kmer` types, unlike other sequence types cannot contain ambiguous symbols like
+'N'.
 
-The `Kmer{T, K}` type parameterized on alphabet (`T`, either `DNANucleotide`, or
-`RNANucleotide`) and size `K`. A number of functions are provided for operating
+The `Kmer{T,k}` type parameterized on alphabet (`T`, either `DNANucleotide`, or
+`RNANucleotide`) and size `k`. A number of functions are provided for operating
 on `Kmers`.
 
-{docs}
-each
-KmerCounts
-canonical
-neighbors
+    {docs}
+    each
+    KmerCounts
+    canonical
+    neighbors
 
 
 ## Sequence records
