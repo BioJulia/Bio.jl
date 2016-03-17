@@ -1,16 +1,29 @@
+# Project information
 site_name:   Bio.jl
-repo_name: 'Github'
-repo_url:    https://github.com/BioJulia/Bio.jl
 site_description: Bioinformatics and Computational Biology Infastructure for Julia
-site_author: The BioJulia Organisation 
+site_author: The BioJulia Organisation
+site_url: https://biojulia.github.io/Bio.jl/
 
+# Repository
+repo_name: Github
+repo_url:  https://github.com/BioJulia/Bio.jl
+
+# Copyright
+copyright: Copyright (c) 2016 The BioJulia Organisation
+
+# Documentation and theme
 theme: material
+docs_dir: 'build'
 
+# Options
 extra:
+  logo: https://raw.githubusercontent.com/BioJulia/assets/master/branding/bio.jl.png
+  author:
+    github: BioJulia
   palette:
     primary: 'indigo'
     accent:  'blue'
-
+  
 extra_css:
   - assets/Lapidary.css
 
@@ -18,14 +31,14 @@ extra_javascript:
   - https://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS_HTML
   - assets/mathjaxhelper.js
 
+# Extensions
 markdown_extensions:
   - extra
   - tables
   - fenced_code
   - codehilite
 
-docs_dir: 'build'
-
+# Page tree
 pages:
 - Home: index.md
 - Manual:
