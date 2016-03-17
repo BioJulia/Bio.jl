@@ -45,6 +45,10 @@ type BioSequence{A<:Alphabet} <: Sequence
     data::Vector{UInt64}  # encoded character sequence data
     part::UnitRange{Int}  # interval within `data` defining the (sub)sequence
     shared::Bool          # true if and only if `data` is shared between sequences
+
+    function BioSequence(data::Vector{UInt64}, part::UnitRange{Int}, shared::Bool)
+        return new(data, part, shared)
+    end
 end
 
 typealias DNASequence       BioSequence{DNAAlphabet{4}}
@@ -108,10 +112,6 @@ end
 
 seq_data_len{A}(::Type{A}, len::Integer) = cld(len, div(64, bitsof(A)))
 
-function Base.call{A<:Alphabet}(::Type{BioSequence{A}})
-    return BioSequence{A}(UInt64[], 1:0, false)
-end
-
 function Base.call{A<:Alphabet}(::Type{BioSequence{A}}, len::Integer)
     return BioSequence{A}(Vector{UInt64}(seq_data_len(A, len)), 1:len, false)
 end
@@ -146,7 +146,8 @@ function Base.call{A}(::Type{BioSequence{A}},
     return BioSequence(other, part)
 end
 
-function BioSequence{A}(chunks::BioSequence{A}...)
+# concatenate chunks
+function Base.call{A}(::Type{BioSequence{A}}, chunks::BioSequence{A}...)
     len = 0
     for chunk in chunks
         len += length(chunk)
@@ -159,6 +160,22 @@ function BioSequence{A}(chunks::BioSequence{A}...)
     end
     return seq
 end
+
+function Base.(:*){A}(chunk::BioSequence{A}, chunks::BioSequence{A}...)
+    return BioSequence{A}(chunk, chunks...)
+end
+
+function Base.repeat{A}(chunk::BioSequence{A}, n::Integer)
+    seq = BioSequence{A}(length(chunk) * n)
+    offset = 1
+    for _ in 1:n
+        copy!(seq, offset, chunk, 1)
+        offset += length(chunk)
+    end
+    return seq
+end
+
+Base.(:^)(chunk::BioSequence, n::Integer) = repeat(chunk, n)
 
 # conversion between different alphabet size
 for A in [DNAAlphabet, RNAAlphabet]
@@ -369,21 +386,6 @@ end
 
 Base.getindex(seq::BioSequence, part::UnitRange) = BioSequence(seq, part)
 Base.sub(seq::BioSequence, part::UnitRange) = BioSequence(seq, part)
-
-function Base.repeat{A}(chunk::BioSequence{A}, n::Integer)
-    seq = BioSequence{A}(length(chunk) * n)
-    offset = 1
-    for _ in 1:n
-        copy!(seq, offset, chunk, 1)
-        offset += length(chunk)
-    end
-    return seq
-end
-
-Base.(:*){A}(chunk1::BioSequence{A}, chunks::BioSequence{A}...) =
-    BioSequence(chunk1, chunks...)
-
-Base.(:^)(chunk::BioSequence, n::Integer) = repeat(chunk, n)
 
 function Base.setindex!{A,T<:Integer}(seq::BioSequence{A},
                                       other::BioSequence{A},
