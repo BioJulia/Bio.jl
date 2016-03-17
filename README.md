@@ -16,7 +16,7 @@ Code Quality: [![Build Status](https://travis-ci.org/BioJulia/Bio.jl.svg?branch=
 
 ### Documentation
 
-[Read the reference manual here.](http://biojulia.github.io/Bio.jl/)
+[Read the reference manual here.](http://biojulia.github.io/Bio.jl/latest)
 
 ### Running tests
 
