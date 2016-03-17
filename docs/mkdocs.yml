@@ -5,6 +5,11 @@ site_author: The BioJulia Organisation
 
 theme: material
 
+extra:
+  palette:
+    primary: 'indigo'
+    accent:  'blue'
+
 extra_css:
   - assets/Lapidary.css
 
@@ -28,4 +33,6 @@ pages:
   - Sequences: man/seq.md
   - Alignments: man/alignments.md
   - Intervals: man/intervals.md
+- Reference:
+  - Seq: lib/seq.md
 - Contributing: man/contributing.md
