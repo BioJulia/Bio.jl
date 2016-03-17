@@ -59,6 +59,7 @@ export
     eachkmer,
     each,
     Composition,
+    composition,
     NucleotideCounts,
     Kmer,
     DNAKmer,

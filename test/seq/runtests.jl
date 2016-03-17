@@ -1212,7 +1212,7 @@ end
 
     function check_nucleotide_count(::Type{DNANucleotide}, seq::AbstractString)
         string_counts = string_nucleotide_count(DNANucleotide, seq)
-        seq_counts = Composition(DNASequence(seq))
+        seq_counts = composition(DNASequence(seq))
         return string_counts[DNA_A] == seq_counts[DNA_A] &&
                string_counts[DNA_C] == seq_counts[DNA_C] &&
                string_counts[DNA_G] == seq_counts[DNA_G] &&
@@ -1222,7 +1222,7 @@ end
 
     function check_nucleotide_count(::Type{RNANucleotide}, seq::AbstractString)
         string_counts = string_nucleotide_count(RNANucleotide, seq)
-        seq_counts = Composition(RNASequence(seq))
+        seq_counts = composition(RNASequence(seq))
         return string_counts[RNA_A] == seq_counts[RNA_A] &&
                string_counts[RNA_C] == seq_counts[RNA_C] &&
                string_counts[RNA_G] == seq_counts[RNA_G] &&
@@ -1232,7 +1232,7 @@ end
 
     function check_kmer_nucleotide_count(::Type{DNANucleotide}, seq::AbstractString)
         string_counts = string_nucleotide_count(DNANucleotide, seq)
-        kmer_counts = Composition(dnakmer(seq))
+        kmer_counts = composition(dnakmer(seq))
         return string_counts[DNA_A] == kmer_counts[DNA_A] &&
                string_counts[DNA_C] == kmer_counts[DNA_C] &&
                string_counts[DNA_G] == kmer_counts[DNA_G] &&
@@ -1242,7 +1242,7 @@ end
 
     function check_kmer_nucleotide_count(::Type{RNANucleotide}, seq::AbstractString)
         string_counts = string_nucleotide_count(RNANucleotide, seq)
-        kmer_counts = Composition(rnakmer(seq))
+        kmer_counts = composition(rnakmer(seq))
         return string_counts[RNA_A] == kmer_counts[RNA_A] &&
                string_counts[RNA_C] == kmer_counts[RNA_C] &&
                string_counts[RNA_G] == kmer_counts[RNA_G] &&
@@ -1256,10 +1256,10 @@ end
         @test all(Bool[check_nucleotide_count(RNANucleotide, random_rna(len)) for _ in 1:reps])
     end
 
-    @test Composition(aa"MTTQAPMFTQPLQSVVV")[AA_E] === 0
-    @test Composition(aa"MTTQAPMFTQPLQSVVV")[AA_A] === 1
-    @test Composition(aa"MTTQAPMFTQPLQSVVV")[AA_P] === 2
-    @test Composition(aa"MTTQAPMFTQPLQSVVV")[AA_V] === 3
+    @test composition(aa"MTTQAPMFTQPLQSVVV")[AA_E] === 0
+    @test composition(aa"MTTQAPMFTQPLQSVVV")[AA_A] === 1
+    @test composition(aa"MTTQAPMFTQPLQSVVV")[AA_P] === 2
+    @test composition(aa"MTTQAPMFTQPLQSVVV")[AA_V] === 3
 
     for len in [1, 10, 32]
         @test all(Bool[check_kmer_nucleotide_count(DNANucleotide, random_dna_kmer(len)) for _ in 1:reps])

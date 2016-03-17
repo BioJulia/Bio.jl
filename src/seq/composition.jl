@@ -46,6 +46,15 @@ function Composition{K}(kmer::RNAKmer{K})
     return comp
 end
 
+"""
+    composition(seq)
+
+Calculate composition of biological symbols in `seq`.
+"""
+function composition(seq::Sequence)
+    return Composition(seq)
+end
+
 function Base.getindex{A}(comp::Composition{A}, x)
     try
         i = encode(A, x) + 1
