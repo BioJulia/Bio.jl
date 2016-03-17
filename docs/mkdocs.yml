@@ -5,7 +5,6 @@ site_author: The BioJulia Organisation
 site_url: https://biojulia.github.io/Bio.jl/
 
 # Repository
-repo_name: Github
 repo_url:  https://github.com/BioJulia/Bio.jl
 
 # Copyright
@@ -17,7 +16,7 @@ docs_dir: 'build'
 
 # Options
 extra:
-  logo: https://raw.githubusercontent.com/BioJulia/assets/master/branding/bio.jl.png
+  logo: assets/images/biojl.png 
   author:
     github: BioJulia
   palette:
