@@ -97,7 +97,7 @@ export
     AA_X,
     AA_O,
     AA_U,
-    AA_Stop,
+    AA_Term,
     AA_Gap,
     FASTA,
     FASTQ,

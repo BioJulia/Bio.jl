@@ -423,7 +423,7 @@ end
         @test AA_N - 2 == AA_A
         @test AA_D - AA_A ==  3
         @test AA_A - AA_D == -3
-        @test AA_A < AA_R < AA_N < AA_Z < AA_X < AA_O < AA_U < AA_Stop < AA_Gap
+        @test AA_A < AA_R < AA_N < AA_Z < AA_X < AA_O < AA_U < AA_Term < AA_Gap
         @test !(AA_J < AA_B)
 
         @test length(alphabet(AminoAcid)) == 28
@@ -493,7 +493,7 @@ end
                 @test parse(AminoAcid, one) == aa
                 @test parse(AminoAcid, three) == aa
             end
-            @test parse(AminoAcid, "*") == AA_Stop
+            @test parse(AminoAcid, "*") == AA_Term
             @test parse(AminoAcid, "-") == AA_Gap
         end
 
