@@ -60,12 +60,12 @@ for (aa, doc, code) in [
         ('W', "Tryptophan",                        0x11),
         ('Y', "Tyrosine",                          0x12),
         ('V', "Valine",                            0x13),
-        ('B', "Aspartic Acid or Asparagine",       0x14),  # ambiguous
-        ('J', "Leucine or Isoleucine",             0x15),  # ambiguous
-        ('Z', "Glutamine or Glutamic Acid",        0x16),  # ambiguous
-        ('X', "Unspecified or Unknown Amino Acid", 0x17),  # ambiguous
-        ('O', "Pyrrolysine",                       0x18),  # non-standard
-        ('U', "Selenocysteine",                    0x19)]  # non-standard
+        ('O', "Pyrrolysine",                       0x14),  # non-standard
+        ('U', "Selenocysteine",                    0x15),  # non-standard
+        ('B', "Aspartic Acid or Asparagine",       0x16),  # ambiguous
+        ('J', "Leucine or Isoleucine",             0x17),  # ambiguous
+        ('Z', "Glutamine or Glutamic Acid",        0x18),  # ambiguous
+        ('X', "Unspecified or Unknown Amino Acid", 0x19)]  # ambiguous
     var = symbol("AA_", aa)
     @eval begin
         @doc $doc const $var = convert(AminoAcid, $code)
@@ -74,9 +74,9 @@ for (aa, doc, code) in [
     end
 end
 
-"Stop"
-const AA_Stop = convert(AminoAcid, 0x1a)
-char_to_aa[Int('*')+1] = AA_Stop
+"Terminal"
+const AA_Term = convert(AminoAcid, 0x1a)
+char_to_aa[Int('*')+1] = AA_Term
 aa_to_char[0x1a+1] = '*'
 
 "Amino Acid Gap"

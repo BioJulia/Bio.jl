@@ -423,7 +423,8 @@ end
         @test AA_N - 2 == AA_A
         @test AA_D - AA_A ==  3
         @test AA_A - AA_D == -3
-        @test AA_A < AA_R < AA_N < AA_Z < AA_X < AA_O < AA_U < AA_Term < AA_Gap
+        @test (AA_A < AA_R < AA_N < AA_V < AA_O < AA_U <
+               AA_B < AA_J < AA_Z < AA_X < AA_Term < AA_Gap)
         @test !(AA_J < AA_B)
 
         @test length(alphabet(AminoAcid)) == 28
@@ -481,12 +482,12 @@ end
                 ("W", "TRP", AA_W),
                 ("Y", "TYR", AA_Y),
                 ("V", "VAL", AA_V),
+                ("O", "PYL", AA_O),
+                ("U", "SEC", AA_U),
                 ("B", "ASX", AA_B),
                 ("J", "XLE", AA_J),
                 ("Z", "GLX", AA_Z),
                 ("X", "XAA", AA_X),
-                ("O", "PYL", AA_O),
-                ("U", "SEC", AA_U),
             ]
             @test length(aas) == 26
             for (one, three, aa) in aas
