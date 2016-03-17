@@ -49,6 +49,7 @@ export
     @char_str,
     alphabet,
     reverse_complement,
+    reverse_complement!,
     mismatches,
     ambiguous_positions,
     npositions,
