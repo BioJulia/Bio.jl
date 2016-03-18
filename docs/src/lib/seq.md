@@ -7,10 +7,6 @@
 
 ## Types
 
-    {docs}
-    NucleotideSequence
-    DNASequence
-    RNASequence
     
 
 ## Methods
