@@ -1901,35 +1901,6 @@ end
     end
 end
 
-@testset "Writing" begin
-    @testset "FASTA" begin
-        dna_seq1 = random_dna(79 * 3) # full lines
-        dna_seq2 = random_dna(50)     # short line
-        seq_name1 = "Sequence 1"
-        seq_name2 = "Sequence 2"
-        seq_description1 = "Description 1"
-        seq_description2 = "Description 2"
-
-        wrapped_seq1 = join([dna_seq1[1:79], dna_seq1[80:158], dna_seq1[159:end]], "\n")
-
-        expected_seq1 = string(">", seq_name1, " ", seq_description1, "\n", wrapped_seq1, "\n")
-        expected_seq2 = string(">", seq_name2, " ", seq_description2, "\n", dna_seq2, "\n")
-        expected = string(expected_seq1, expected_seq2)
-
-        fasta_seq1 = Seq.FASTADNASeqRecord(
-            seq_name1, DNASequence(dna_seq1), Seq.FASTAMetadata(seq_description1))
-        fasta_seq2 = Seq.FASTADNASeqRecord(
-            seq_name2, DNASequence(dna_seq2), Seq.FASTAMetadata(seq_description2))
-        sequences = [fasta_seq1, fasta_seq2]
-
-        output = IOBuffer()
-        for seq in sequences
-            write(output, seq)
-        end
-        @test takebuf_string(output) == expected
-    end
-end
-
 @testset "Quality scores" begin
     @testset "Decoding PHRED scores" begin
         function test_decode(encoding, values, expected)
