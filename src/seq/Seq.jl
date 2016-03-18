@@ -48,6 +48,8 @@ export
     @aa_str,
     @char_str,
     alphabet,
+    complement,
+    complement!,
     reverse_complement,
     reverse_complement!,
     mismatches,

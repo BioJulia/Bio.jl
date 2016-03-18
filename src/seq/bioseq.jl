@@ -814,7 +814,7 @@ Make a complement sequence of `seq` in place.
 
 Ambiguous nucleotides are left as-is.
 """
-@generated function Base.complement!{A<:Union{DNAAlphabet,RNAAlphabet}}(seq::BioSequence{A})
+@generated function complement!{A<:Union{DNAAlphabet,RNAAlphabet}}(seq::BioSequence{A})
     n = bitsof(A)
     if n == 2
         nuccomp = :nuccomp2
@@ -857,7 +857,7 @@ Make a complement sequence of `seq`.
 
 Ambiguous nucleotides are left as-is.
 """
-function Base.complement{A<:Union{DNAAlphabet,RNAAlphabet}}(seq::BioSequence{A})
+function complement{A<:Union{DNAAlphabet,RNAAlphabet}}(seq::BioSequence{A})
     return complement!(copy(seq))
 end
 

@@ -187,7 +187,7 @@ Base.done(x::Kmer, i::Int) = i > length(x)
 
 The Kmer complement of `kmer`
 """
-Base.complement{T, K}(x::Kmer{T, K}) = Kmer{T,K}(~UInt64(x))
+complement{T, K}(x::Kmer{T, K}) = Kmer{T,K}(~UInt64(x))
 
 """
 `reverse(kmer::Kmer)`

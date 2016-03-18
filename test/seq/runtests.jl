@@ -1040,12 +1040,12 @@ end
         end
 
         function test_dna_complement(A, seq)
-            comp = complement(BioSequence{A}(seq))
+            comp = Seq.complement(BioSequence{A}(seq))
             @test convert(ASCIIString, comp) == dna_complement(seq)
         end
 
         function test_rna_complement(A, seq)
-            comp = complement(BioSequence{A}(seq))
+            comp = Seq.complement(BioSequence{A}(seq))
             @test convert(ASCIIString, comp) == rna_complement(seq)
         end
 
@@ -1546,12 +1546,12 @@ end
         end
 
         function test_dna_complement(seq)
-            comp = complement(DNAKmer{length(seq)}(seq))
+            comp = Seq.complement(DNAKmer{length(seq)}(seq))
             @test convert(ASCIIString, comp) == dna_complement(seq)
         end
 
         function test_rna_complement(seq)
-            comp = complement(RNAKmer{length(seq)}(seq))
+            comp = Seq.complement(RNAKmer{length(seq)}(seq))
             @test convert(ASCIIString, comp) == rna_complement(seq)
         end
 
