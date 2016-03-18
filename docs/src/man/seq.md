@@ -38,26 +38,7 @@ common operations like nucleotide composition, reverse complement, and *k*-mer
 enumeration.
 
 
-## Constructing sequences and nucleotides
-
-Nucleotide or amino acid symbols can be constructed by converting regular
-characters:
-
-```julia
-julia> using Bio.Seq
-
-julia> convert(DNANucleotide, 'A')  # Adenine (DNA)
-A
-
-julia> convert(RNANucleotide, 'A')  # Adenine (RNA)
-A
-
-julia> convert(AminoAcid, 'A')      # Alanine (amino acid)
-A
-
-```
-
-There are also constants defined for each, such as `DNA_A`, `RNA_A`, and `AA_A`.
+## Constructing sequences
 
 Sequence types corresponding to these alphabets can be constructed a number of
 different ways. Most immediately, sequence literals can be constructed using
@@ -305,6 +286,30 @@ candidate_division_sr1_genetic_code
 <http://www.insdc.org/documents/feature_table.html#7.4.5>
 
 In most cases, and by default, `standard_genetic_code` is used.
+
+
+## Compact representation
+
+As we saw above, DNA and RNA sequences can store any ambiguous nucleotides like 'N'.
+If you are sure that nucleotide sequences store unambiguous nucleotides only, you can
+save the memory space sequences use. `DNAAlphabet{2}` is an alphabet that uses
+two bits per base and limited only to umambiguous nucleotide symbols, namely ACGT in DNA and ACGU in RNA. To create a sequence of this alphabet, you need to
+explicitly pass `DNAAlphabet{2}` to `BioSequence` as its parametric type:
+
+```julia
+julia> seq = BioSequence{DNAAlphabet{2}}("ACGT")
+4nt DNA Sequence:
+ACGT
+
+```
+
+Recall that `DNASequence` is a type alias of `BioSequence{DNAAlphabet{4}}`,
+which uses four bits per base. That is, `BioSequence{DNAAlphabet{2}}` saves
+half memory footprint of `BioSequence{DNAAlphabet{4}}`. If you need to handle
+reference sequences that are composed of five nucleotides, ACGTN, consider to use
+[ReferenceSequences.jl](https://github.com/BioJulia/ReferenceSequences.jl). This
+compresses positions of 'N' and enables to handle long DNA sequences with the
+near space of two-bit encoding.
 
 
 ## Nucleotide K-mers
