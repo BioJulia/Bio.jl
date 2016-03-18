@@ -6,14 +6,15 @@ Supertype of substitution matrix.
 
 The required method:
 
-* `Base.getindex(submat, x, y) = <substitution score/cost from x to y>`
+* `Base.getindex(submat, x, y)`: substitution score/cost from `x` to `y`
 """
 abstract AbstractSubstitutionMatrix{T<:Real}
 
 function show_submat(io::IO, submat::AbstractSubstitutionMatrix, alphabet, sz)
     alphabets = [string(alphabet(UInt8(x))) for x in 0:sz-1]
     # NA: not available
-    mat = [is_defined_symbol(submat, x, y) ? string(submat[x,y]) : "NA" for x in 0:sz-1, y in 0:sz-1]
+    mat = [is_defined_symbol(submat, x, y) ? string(submat[x,y]) : "NA"
+           for x in 0:sz-1, y in 0:sz-1]
     # add rows
     mat = hcat(alphabets, mat)
     # add columns
@@ -166,14 +167,13 @@ function parse_ncbi_submat(filepath)
             end
         end
     end
+
     # create the substitution matrix
     aas = alphabet(AminoAcid)
     n_aas = length(aas)
     defined = falses(n_aas)
     for char in header
-        if char != '*'
-            defined[UInt8(AminoAcid(char))+1] = true
-        end
+        defined[UInt8(AminoAcid(char))+1] = true
     end
     submat = Matrix{Int}(n_aas, n_aas)
     for (i, x) in enumerate(aas), (j, y) in enumerate(aas)

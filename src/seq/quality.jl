@@ -6,22 +6,22 @@
 "A `QualityEncoding` value holds a set of encoding compatible with a string"
 bitstype 16 QualityEncoding
 
-function convert(::Type{QualityEncoding}, nt::UInt16)
+function Base.convert(::Type{QualityEncoding}, nt::UInt16)
     return box(QualityEncoding, unbox(UInt16, nt))
 end
 
 
-function convert(::Type{UInt16}, nt::QualityEncoding)
+function Base.convert(::Type{UInt16}, nt::QualityEncoding)
     return box(UInt16, unbox(QualityEncoding, nt))
 end
 
 
-function (|)(a::QualityEncoding, b::QualityEncoding)
+function Base.(:|)(a::QualityEncoding, b::QualityEncoding)
     return convert(QualityEncoding, convert(UInt16, a) | convert(UInt16, b))
 end
 
 
-function (&)(a::QualityEncoding, b::QualityEncoding)
+function Base.(:&)(a::QualityEncoding, b::QualityEncoding)
     return convert(QualityEncoding, convert(UInt16, a) & convert(UInt16, b))
 end
 
