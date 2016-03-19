@@ -87,6 +87,7 @@ aa_to_char[0x1b+1] = '-'
 Base.isvalid(::Type{AminoAcid}, x::Integer) = 0 ≤ x ≤ 0x1b
 Base.isvalid(aa::AminoAcid) = aa ≤ AA_Gap
 alphabet(::Type{AminoAcid}) = AA_A:AA_Gap
+gap(::Type{AminoAcid}) = AA_Gap
 
 
 # Conversion from/to Char

@@ -48,6 +48,7 @@ export
     @aa_str,
     @char_str,
     alphabet,
+    gap,
     complement,
     complement!,
     reverse_complement,

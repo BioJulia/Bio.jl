@@ -88,6 +88,7 @@ Base.isvalid(::Type{DNANucleotide}, x::Integer) = 0 ≤ x < 16
 Base.isvalid(nt::DNANucleotide) = nt ≤ DNA_Gap
 isambiguous(nt::DNANucleotide) = nt > DNA_T
 alphabet(::Type{DNANucleotide}) = DNA_A:DNA_Gap
+gap(::Type{DNANucleotide}) = DNA_Gap
 
 # check if two nucleotides are compatible (no contradiction) with each other
 function iscompatible(x::Nucleotide, y::Nucleotide)
@@ -140,6 +141,7 @@ Base.isvalid(::Type{RNANucleotide}, x::Integer) = 0 ≤ x < 16
 Base.isvalid(nt::RNANucleotide) = nt ≤ RNA_Gap
 isambiguous(nt::RNANucleotide) = nt > RNA_U
 alphabet(::Type{RNANucleotide}) = RNA_A:RNA_Gap
+gap(::Type{RNANucleotide}) = RNA_Gap
 
 
 # Conversion from Char

@@ -56,6 +56,8 @@ typealias RNASequence       BioSequence{RNAAlphabet{4}}
 typealias AminoAcidSequence BioSequence{AminoAcidAlphabet}
 typealias CharSequence      BioSequence{CharAlphabet}
 
+gap(::Type{Char}) = '-'
+
 
 # String Decorators
 # -----------------

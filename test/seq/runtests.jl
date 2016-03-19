@@ -372,6 +372,8 @@ end
             @test DNA_T - DNA_C == 2
             @test DNA_A < DNA_C < DNA_G < DNA_T < DNA_M < DNA_N < DNA_Gap
             @test !(DNA_A > DNA_G)
+
+            @test gap(DNANucleotide) === DNA_Gap
             @test collect(alphabet(DNANucleotide)) == [
                 DNA_A, DNA_C, DNA_G, DNA_T,
                 DNA_M, DNA_R, DNA_W, DNA_S,
@@ -388,6 +390,8 @@ end
             @test RNA_U - RNA_C == 2
             @test RNA_A < RNA_C < RNA_G < RNA_U < RNA_M < RNA_N < RNA_Gap
             @test !(RNA_A > RNA_G)
+
+            @test gap(RNANucleotide) === RNA_Gap
             @test collect(alphabet(RNANucleotide)) == [
                 RNA_A, RNA_C, RNA_G, RNA_U,
                 RNA_M, RNA_R, RNA_W, RNA_S,
@@ -427,6 +431,7 @@ end
                AA_B < AA_J < AA_Z < AA_X < AA_Term < AA_Gap)
         @test !(AA_J < AA_B)
 
+        @test gap(AminoAcid) === AA_Gap
         @test length(alphabet(AminoAcid)) == 28
         @test AA_A in alphabet(AminoAcid)
         @test AA_I in alphabet(AminoAcid)
