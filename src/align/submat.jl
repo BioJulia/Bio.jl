@@ -1,5 +1,5 @@
 # Substitution Matrices
-# ---------------------
+# =====================
 
 """
 Supertype of substitution matrix.
@@ -8,112 +8,141 @@ The required method:
 
 * `Base.getindex(submat, x, y)`: substitution score/cost from `x` to `y`
 """
-abstract AbstractSubstitutionMatrix{T<:Real}
-
-function show_submat(io::IO, submat::AbstractSubstitutionMatrix, alphabet, sz)
-    alphabets = [string(alphabet(UInt8(x))) for x in 0:sz-1]
-    # NA: not available
-    mat = [is_defined_symbol(submat, x, y) ? string(submat[x,y]) : "NA"
-           for x in 0:sz-1, y in 0:sz-1]
-    # add rows
-    mat = hcat(alphabets, mat)
-    # add columns
-    mat = vcat(vcat(" ", alphabets)', mat)
-    width = [maximum([length(mat[i,j]) + 1 for j in 1:sz+1]) for i in 1:sz+1]
-    println(io, typeof(submat), ":")
-    for i in 1:sz+1
-        print(io, " ")  # indent
-        for j in 1:sz+1
-            print(io, lpad(mat[i,j], width[j]))
-        end
-        println(io)
-    end
-end
-
+abstract AbstractSubstitutionMatrix{S<:Real}
 
 """
 Substitution matrix.
 """
-immutable SubstitutionMatrix{T} <: AbstractSubstitutionMatrix{T}
+immutable SubstitutionMatrix{T,S} <: AbstractSubstitutionMatrix{S}
     # square substitution matrix
-    data::Matrix{T}
-    # a character is defined or not
-    defined::BitVector
-    # default matching/mismatching score for undefined characters
-    default_match::T
-    default_mismatch::T
-    # alphabet type (e.g. AminoAcid)
-    alphabet::Nullable{DataType}
+    data::Matrix{S}
+    # score is defined or not
+    defined::BitMatrix
 
-    function SubstitutionMatrix(data, defined, default_match, default_mismatch, alphabet=Nullable())
-        sz = size(data, 1)
-        @assert sz == size(data, 2)
-        @assert sz == length(defined)
-
-        # fill undefined cells with default match/mismatch
-        undefined = ~defined
-        i = 0
-        while (i = findnext(undefined, i + 1)) > 0
-            for j in 1:sz
-                data[i,j] = data[j,i] = ifelse(i == j, default_match, default_mismatch)
-            end
-        end
-
-        return new(data, defined, default_match, default_mismatch, alphabet)
+    function SubstitutionMatrix(data::Matrix{S}, defined::BitMatrix)
+        @assert size(data) == size(defined)
+        @assert alphabet(T)[end] == gap(T)
+        @assert size(data, 1) == size(data, 2) == length(alphabet(T)) - 1
+        return new(data, defined)
     end
+
 end
 
-function Base.convert{T}(::Type{SubstitutionMatrix}, submat::AbstractMatrix{T})
-    sz = size(submat, 1)
-    return SubstitutionMatrix{T}(submat, trues(sz), 0, 0, Nullable())
+function SubstitutionMatrix{T,S}(::Type{T},
+                                 submat::AbstractMatrix{S},
+                                 defined::AbstractMatrix{Bool},
+                                 default_match::S,
+                                 default_mismatch::S)
+    alpha = alphabet(T)[1:end-1]  # drop gap
+    n = length(alpha)
+    data = Matrix{S}(n, n)
+    for x in alpha, y in alpha
+        i = convert(Int, x) + 1
+        j = convert(Int, y) + 1
+        if defined[i,j]
+            data[i,j] = submat[i,j]
+        else
+            data[i,j] = x == y ? default_match : default_mismatch
+        end
+    end
+    return SubstitutionMatrix{T,S}(data, copy(defined))
 end
 
-function SubstitutionMatrix{T}(submat::AbstractMatrix{T};
-                               defined::BitVector=trues(size(submat, 1)),
-                               default_match=T(0),
-                               default_mismatch=T(0),
-                               alphabet=Nullable())
-    return SubstitutionMatrix{T}(submat, defined, default_match, default_mismatch, alphabet)
+function SubstitutionMatrix{T,S}(::Type{T},
+                                 submat::AbstractMatrix{S},
+                                 # assume scores of all substitutions are defined
+                                 defined=trues(size(submat));
+                                 default_match=S(0), default_mismatch=S(0))
+    return SubstitutionMatrix(T, submat, defined, default_match, default_mismatch)
 end
 
-Base.convert(::Type{Matrix}, submat::SubstitutionMatrix) = submat.data
-Base.convert{T}(::Type{Matrix{T}}, submat::SubstitutionMatrix{T}) = submat.data
-
-@inline function Base.getindex(submat::SubstitutionMatrix, x, y)
-    return submat.data[UInt8(x)+1,UInt8(y)+1]
+function SubstitutionMatrix{T,S}(scores::Associative{Tuple{T,T},S};
+                                 default_match=S(0), default_mismatch=S(0))
+    n = length(alphabet(T)) - 1
+    submat = Matrix{S}(n, n)
+    defined = falses(n, n)
+    for ((x, y), score) in scores
+        i = convert(Int, x) + 1
+        j = convert(Int, y) + 1
+        submat[i,j] = score
+        defined[i,j] = true
+    end
+    return SubstitutionMatrix(T, submat, defined, default_match, default_mismatch)
 end
 
-function is_defined_symbol(submat::SubstitutionMatrix, x)
-    return submat.defined[UInt8(x)+1]
+Base.convert(::Type{Matrix}, submat::SubstitutionMatrix) = copy(submat.data)
+
+@inline function Base.getindex{T}(submat::SubstitutionMatrix{T}, x, y)
+    i = convert(Int, convert(T, x)) + 1
+    j = convert(Int, convert(T, y)) + 1
+    return submat.data[i,j]
 end
 
-function is_defined_symbol(submat::SubstitutionMatrix, x, y)
-    return is_defined_symbol(submat, x) && is_defined_symbol(submat, y)
+function Base.setindex!{T}(submat::SubstitutionMatrix{T}, val, x, y)
+    i = convert(Int, convert(T, x)) + 1
+    j = convert(Int, convert(T, y)) + 1
+    submat.data[i,j] = val
+    submat.defined[i,j] = true
+    return submat
+end
+
+function Base.copy{T,S}(submat::SubstitutionMatrix{T,S})
+    return SubstitutionMatrix{T,S}(copy(submat.data), copy(submat.defined))
 end
 
 Base.minimum(submat::SubstitutionMatrix) = minimum(submat.data)
 Base.maximum(submat::SubstitutionMatrix) = maximum(submat.data)
 
-function Base.show(io::IO, submat::SubstitutionMatrix)
-    alphabet = get(submat.alphabet, UInt8)
-    show_submat(io, submat, alphabet, size(submat.data, 1))
-    print(io,
-          "  (default: match = ", submat.default_match,
-          ", mismatch = ", submat.default_mismatch, ')')
+function Base.show{T,S}(io::IO, submat::SubstitutionMatrix{T,S})
+    n = size(submat.data, 1)
+    mat = Matrix{UTF8String}(n, n)
+    for i in 1:n, j in 1:n
+        mat[i,j] = string(submat.data[i,j])
+        if !submat.defined[i,j]
+            mat[i,j] = underline(mat[i,j])
+        end
+    end
+
+    # add rows and columns
+    rows = map(string, alphabet(T)[1:end-1])
+    mat = hcat(rows, mat)
+    cols = vcat("", rows)
+    mat = vcat(cols', mat)
+
+    println(io, summary(submat), ':')
+    width = maximum(map(x -> length(x), mat))
+    for i in 1:n+1
+        for j in 1:n+1
+            print(io, lpad(mat[i,j], width + 1))
+        end
+        println(io)
+    end
+    print(io, "(underlined values are default ones)")
 end
+
+underline(s) = join([string(c, '\U0332') for c in s])
 
 
 """
 Dichotomous substitution matrix.
 """
-immutable DichotomousSubstitutionMatrix{T} <: AbstractSubstitutionMatrix{T}
-    match::T
-    mismatch::T
+immutable DichotomousSubstitutionMatrix{S} <: AbstractSubstitutionMatrix{S}
+    match::S
+    mismatch::S
 end
 
 function DichotomousSubstitutionMatrix(match::Real, mismatch::Real)
     typ = promote_type(typeof(match), typeof(mismatch))
     return DichotomousSubstitutionMatrix{typ}(match, mismatch)
+end
+
+function Base.convert{T,S}(::Type{SubstitutionMatrix{T,S}},
+                           submat::DichotomousSubstitutionMatrix)
+    n = length(alphabet(T)) - 1
+    data = Matrix{S}(n, n)
+    fill!(data, submat.mismatch)
+    data[diagind(data)] = submat.match
+    return SubstitutionMatrix{T,S}(data, trues(n, n))
 end
 
 @inline function Base.getindex(submat::DichotomousSubstitutionMatrix, x, y)
@@ -131,69 +160,47 @@ function Base.show(io::IO, submat::DichotomousSubstitutionMatrix)
 end
 
 
-# Utils for loading substitution matrices from files
+# Predefined Substitution Matrices
+# --------------------------------
 
-function load_submat(name)
+function load_submat{T}(::Type{T}, name)
     submatfile = Pkg.dir("Bio", "src", "align", "data", "submat", name)
-    return parse_ncbi_submat(submatfile)
+    return parse_ncbi_submat(T, submatfile)
 end
 
-function parse_ncbi_submat(filepath)
-    d = Dict{Tuple{Char,Char},Int}()
-    # column => one-letter amino acid
-    header = Char[]
+function parse_ncbi_submat{T}(::Type{T}, filepath)
+    scores = Dict{Tuple{T,T},Int}()
+    cols = T[]
     open(filepath) do io
-        # column width (inferred from the header line)
-        w = 0
-        local ncols::Int
         for line in eachline(io)
-            if startswith(line, "#")
-                continue
-            elseif isempty(header)
-                # header line
-                ncols = length(matchall(r"[A-Z*]", line))
-                w = div(length(line) - 2, ncols)
-                for col in 1:ncols
-                    char = line[w*col+1]
-                    @assert isalpha(char) || char == '*'
-                    push!(header, char)
+            line = chomp(line)
+            if startswith(line, "#") || isempty(line)
+                continue  # skip comments and empty lines
+            end
+            if isempty(cols)
+                for y in matchall(r"[A-Z*]", line)
+                    @assert length(y) == 1
+                    push!(cols, convert(T, first(y)))
                 end
             else
-                a = line[1]
-                for col in 1:ncols
-                    b = header[col]
-                    d[(a, b)] = parse(Int, line[w*col-1:w*col+1])
+                x = convert(T, first(line))
+                ss = matchall(r"-?\d+", line)
+                @assert length(ss) == length(cols)
+                for (y, s) in zip(cols, ss)
+                    scores[(x, y)] = parse(Int, s)
                 end
             end
         end
     end
-
-    # create the substitution matrix
-    aas = alphabet(AminoAcid)
-    n_aas = length(aas)
-    defined = falses(n_aas)
-    for char in header
-        defined[UInt8(AminoAcid(char))+1] = true
-    end
-    submat = Matrix{Int}(n_aas, n_aas)
-    for (i, x) in enumerate(aas), (j, y) in enumerate(aas)
-        submat[i,j] = get(d, (Char(x), Char(y)), 0)
-    end
-    return SubstitutionMatrix(
-        submat,
-        defined=defined,
-        default_match=0,
-        default_mismatch=0,
-        alphabet=AminoAcid
-    )
+    return SubstitutionMatrix(scores, default_match=0, default_mismatch=0)
 end
 
-# predefined substitution matrices
-const PAM30  = load_submat("PAM30")
-const PAM70  = load_submat("PAM70")
-const PAM250 = load_submat("PAM250")
-const BLOSUM45 = load_submat("BLOSUM45")
-const BLOSUM50 = load_submat("BLOSUM50")
-const BLOSUM62 = load_submat("BLOSUM62")
-const BLOSUM80 = load_submat("BLOSUM80")
-const BLOSUM90 = load_submat("BLOSUM90")
+const EDNAFULL = load_submat(DNANucleotide, "NUC.4.4")
+const PAM30    = load_submat(AminoAcid, "PAM30")
+const PAM70    = load_submat(AminoAcid, "PAM70")
+const PAM250   = load_submat(AminoAcid, "PAM250")
+const BLOSUM45 = load_submat(AminoAcid, "BLOSUM45")
+const BLOSUM50 = load_submat(AminoAcid, "BLOSUM50")
+const BLOSUM62 = load_submat(AminoAcid, "BLOSUM62")
+const BLOSUM80 = load_submat(AminoAcid, "BLOSUM80")
+const BLOSUM90 = load_submat(AminoAcid, "BLOSUM90")

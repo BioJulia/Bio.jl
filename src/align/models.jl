@@ -94,6 +94,19 @@ function Base.call(::Type{AffineGapScoreModel}; scores...)
     return AffineGapScoreModel(submat, gap_open, gap_extend)
 end
 
+function Base.show(io::IO, model::AffineGapScoreModel)
+    println(io, summary(model), ':')
+    if isa(model.submat, DichotomousSubstitutionMatrix)
+        println(io, "       match = ", model.submat.match)
+        println(io, "    mismatch = ", model.submat.mismatch)
+    else
+        print(io, "  ")
+        println(io, model.submat)
+    end
+    println(io, "    gap_open = ", model.gap_open)
+      print(io, "  gap_extend = ", model.gap_extend)
+end
+
 
 # Cost Models
 # -----------

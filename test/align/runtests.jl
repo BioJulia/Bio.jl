@@ -285,53 +285,50 @@ end
 
 @testset "PairwiseAlignment" begin
     @testset "SubstitutionMatrix" begin
-        # defined
-        @test BLOSUM62[AA_A,AA_R] == -1
-        @test BLOSUM62[AA_R,AA_A] == -1
-        @test BLOSUM62[AA_R,AA_R] ==  5
-        @test typeof(BLOSUM62[AA_A,AA_R]) == Int
+        # DNA
+        @test EDNAFULL[DNA_A,DNA_A] ===  5
+        @test EDNAFULL[DNA_G,DNA_G] ===  5
+        @test EDNAFULL[DNA_A,DNA_G] === -4
+        @test EDNAFULL[DNA_G,DNA_A] === -4
+        @test EDNAFULL[DNA_M,DNA_T] === -4
+        @test EDNAFULL[DNA_M,DNA_C] ===  1
 
-        # undefined
-        @test BLOSUM62[AA_O,AA_R] ==  0
-        @test BLOSUM62[AA_R,AA_O] ==  0
-        @test  Bio.Align.is_defined_symbol(BLOSUM62, AA_R)
-        @test !Bio.Align.is_defined_symbol(BLOSUM62, AA_O)
+        # amino acid
+        @test BLOSUM62[AA_A,AA_R] === -1
+        @test BLOSUM62[AA_R,AA_A] === -1
+        @test BLOSUM62[AA_R,AA_R] ===  5
+        @test BLOSUM62[AA_O,AA_R] ===  0  # default
+        @test BLOSUM62[AA_R,AA_O] ===  0  # default
 
-        # no error
+        # update
+        myblosum = copy(BLOSUM62)
+        @test myblosum[AA_A,AA_R] === -1
+        myblosum[AA_A,AA_R] = 10
+        @test myblosum[AA_A,AA_R] === 10
+
+        @test BLOSUM62[AA_O,AA_R] ===  0  # default
+        myblosum[AA_O,AA_R] = -3
+        @test myblosum[AA_O,AA_R] === -3
+
+        submat = SubstitutionMatrix(DNANucleotide, rand(Float64, 15, 15))
+        @test isa(submat, SubstitutionMatrix{DNANucleotide,Float64})
+
+        submat = DichotomousSubstitutionMatrix(5, -4)
+        @test isa(submat, DichotomousSubstitutionMatrix{Int})
+        submat = convert(SubstitutionMatrix{DNANucleotide,Int}, submat)
+        @test submat[DNA_A,DNA_A] ===  5
+        @test submat[DNA_C,DNA_C] ===  5
+        @test submat[DNA_A,DNA_C] === -4
+        @test submat[DNA_C,DNA_A] === -4
+
         try
+            print(IOBuffer(), EDNAFULL)
             print(IOBuffer(), BLOSUM62)
+            # no error
             @test true
         catch
             @test false
         end
-
-        # substitution matrix for DNA
-        mat = zeros(Int, (16, 16))
-        mat[1:4,1:4] = [
-            +2 -3 -3 -3;
-            -3 +2 -3 -3;
-            -3 -3 +2 -3;
-            -3 -3 -3 +2;
-        ]
-        defined = falses(16)
-        defined[1:4] = true
-        default_match = 0
-        default_mismatch = -1
-        submat = SubstitutionMatrix{Int}(
-            mat,
-            defined,
-            default_match,
-            default_mismatch,
-            DNANucleotide
-        )
-        @test submat[DNA_A,DNA_A] === +2
-        @test submat[DNA_A,DNA_C] === -3
-        @test submat[DNA_N,DNA_N] ===  0
-        @test submat[DNA_N,DNA_A] === -1
-        @test submat[DNA_A,DNA_N] === -1
-        @test  Bio.Align.is_defined_symbol(submat, DNA_A)
-        @test !Bio.Align.is_defined_symbol(submat, DNA_N)
-        @test !Bio.Align.is_defined_symbol(submat, DNA_A, DNA_N)
     end
 
     @testset "AffineGapScoreModel" begin
@@ -345,12 +342,7 @@ end
         end
 
         # matrix
-        submat = Float64[
-             1 -1 -1 -1;
-            -1  1 -1 -1;
-            -1 -1  1 -1;
-            -1 -1 -1  1;
-        ]
+        submat = SubstitutionMatrix(DNANucleotide, rand(Float64, 15, 15))
         for affinegap in [AffineGapScoreModel(submat, -3, -1),
                           AffineGapScoreModel(submat, gap_open=-3, gap_extend=-1),
                           AffineGapScoreModel(submat, gap_open_penalty=3, gap_extend_penalty=1)]
@@ -366,12 +358,7 @@ end
     end
 
     @testset "CostModel" begin
-        submat = [
-            0 3 3 3;
-            3 0 3 3;
-            3 3 0 3;
-            3 3 3 0;
-        ]
+        submat = SubstitutionMatrix(DNANucleotide, rand(Int, 15, 15))
         for cost in [CostModel(submat, 5, 6),
                      CostModel(submat, insertion=5, deletion=6)]
             @test cost.insertion == 5
