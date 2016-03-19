@@ -1734,7 +1734,11 @@ end
 
     @test_throws Exception translate(dna"ACGTACGTA") # can't translate DNA
     @test_throws Exception translate(rna"ACGUACGU")  # can't translate non-multiples of three
-    @test_throws Exception translate(rna"ACGUACGNU") # can't translate N
+    # can't translate N
+    @test_throws Exception translate(rna"ACGUACGNU", allow_ambiguous_codons=false)
+
+    # issue #133
+    @test translate(rna"GAN") == aa"X"
 end
 
 

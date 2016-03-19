@@ -182,25 +182,39 @@ const ncbi_trans_table = GeneticCode[
 # Translation
 # -----------
 
-# Try to translate a codon (u, v, RNA_N). Return the corresponding amino acid,
-# if it can be unambiguously translated, and AA_INVALID if it cannot be.
-function translate_ambiguous_codon(code::GeneticCode, u::RNANucleotide,
-                                   v::RNANucleotide)
-    aa_a = code[kmer(u, v, RNA_A)]
-    aa_c = code[kmer(u, v, RNA_C)]
-    aa_g = code[kmer(u, v, RNA_G)]
-    aa_u = code[kmer(u, v, RNA_U)]
-
-    if aa_a == aa_c == aa_g == aa_u
-        return aa_a
-    else
-        error("Codon $(u)$(v)N cannot be unambiguously translated.")
+function try_translate_ambiguous_codon(code::GeneticCode,
+                                       x::RNANucleotide,
+                                       y::RNANucleotide,
+                                       z::RNANucleotide)
+    if !isambiguous(x) && !isambiguous(y)
+        # try to translate a codon `(x, y, RNA_N)`
+        aa_a = code[kmer(x, y, RNA_A)]
+        aa_c = code[kmer(x, y, RNA_C)]
+        aa_g = code[kmer(x, y, RNA_G)]
+        aa_u = code[kmer(x, y, RNA_U)]
+        if aa_a == aa_c == aa_g == aa_u
+            return Nullable{AminoAcid}(aa_a)
+        end
     end
+
+    found = Nullable{AminoAcid}()
+    for (codon, aa) in code
+        if (iscompatible(x, codon[1]) &&
+            iscompatible(y, codon[2]) &&
+            iscompatible(z, codon[3]))
+            if isnull(found)
+                found = Nullable(aa)
+            elseif aa != get(found)
+                return Nullable{AminoAcid}()
+            end
+        end
+    end
+    return found
 end
 
 
 """
-Convert an `RNASequence` to an `AminoAcidSequence`.
+Translate an `RNASequence` to an `AminoAcidSequence`.
 
 ### Arguments
   * `seq`: RNA sequence to translate.
@@ -213,42 +227,40 @@ A translated `AminoAcidSequence`
 """
 function translate(seq::RNASequence,
                    code::GeneticCode=standard_genetic_code,
-                   allow_ambiguous_codons::Bool=false)
+                   allow_ambiguous_codons::Bool=true)
     aaseqlen, r = divrem(length(seq), 3)
     if r != 0
         error("RNASequence length is not divisible by three. Cannot translate.")
     end
 
-    # try to translate codons whose third nucleotide is N
-    aaseq = Array(AminoAcid, aaseqlen)
-
-    for i in npositions(seq)
-        d, r = divrem(i - 1, 3)
-        if r != 2
-            if allow_ambiguous_codons
-                aaseq[d + 1] = AA_X
-            else
-                if r == 0
-                    codon_str = "N$(seq[i+1])$(seq[i+2])"
+    aaseq = AminoAcidSequence(aaseqlen)
+    i = j = 1
+    while i ≤ endof(seq) - 2
+        x = seq[i]
+        y = seq[i+1]
+        z = seq[i+2]
+        if isambiguous(x) || isambiguous(y) || isambiguous(z)
+            aa = try_translate_ambiguous_codon(code, x, y, z)
+            if isnull(aa)
+                if allow_ambiguous_codons
+                    aaseq[j] = AA_X
                 else
-                    codon_str = "$(seq[i-1])N$(seq[i+1])"
+                    error("codon ", x, y, z, " cannot be unambiguously translated")
                 end
-                error("Codon $(codon_str) cannot be unambiguously translated.")
+            else
+                aaseq[j] = get(aa)
             end
         else
-            aa = translate_ambiguous_codon(code, seq[i-2], seq[i-1])
-            aaseq[d + 1] = aa
+            aaseq[j] = code[kmer(x, y, z)]
         end
+        i += 3
+        j += 1
     end
+    return aaseq
+end
 
-    @inbounds for (i, codon) in each(RNAKmer{3}, seq, 3)
-        aa = code[codon]
-        if aa == AA_INVALID
-            error("Cannot translate stop codons.")
-        end
-        j = div(i - 1, 3) + 1
-        aaseq[j] = code[codon]
-    end
-
-    return AminoAcidSequence(aaseq)
+function translate(seq::RNASequence;
+                   code::GeneticCode=standard_genetic_code,
+                   allow_ambiguous_codons::Bool=true)
+    return translate(seq, code, allow_ambiguous_codons)
 end
