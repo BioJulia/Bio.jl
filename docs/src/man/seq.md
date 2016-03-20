@@ -445,33 +445,44 @@ A number of common sequence operations are provided in the `Bio.Seq` module:
     reverse_complement
     mismatches
     composition
-    translate
 
-The `Bio.Seq` module contains all NCBI defined genetic codes:
+
+### Translation
+
+The [`translate`]({ref}) funtion translates a sequence of codons in a RNA sequence
+to a amino acid sequence besed on a genetic code mapping.  The `Bio.Seq` module
+contains all NCBI defined genetic codes and they are registered in
+[`ncbi_trans_table`]({ref}).
+
+    {docs}
+    translate
+    ncbi_trans_table
+
 ```julia
-standard_genetic_code,
-vertebrate_mitochondrial_genetic_code,
-yeast_mitochondrial_genetic_code,
-mold_mitochondrial_genetic_code,
-invertebrate_mitochondrial_genetic_code,
-ciliate_nuclear_genetic_code,
-echinoderm_mitochondrial_genetic_code,
-euplotid_nuclear_genetic_code,
-bacterial_plastid_genetic_code,
-alternative_yeast_nuclear_genetic_code,
-ascidian_mitochondrial_genetic_code,
-alternative_flatworm_mitochondrial_genetic_code,
-chlorophycean_mitochondrial_genetic_code,
-trematode_mitochondrial_genetic_code,
-scenedesmus_obliquus_mitochondrial_genetic_code,
-thraustochytrium_mitochondrial_genetic_code,
-pterobrachia_mitochondrial_genetic_code,
-candidate_division_sr1_genetic_code
+julia> ncbi_trans_table
+Translation Tables:
+  1. The Standard Code (standard_genetic_code)
+  2. The Vertebrate Mitochondrial Code (vertebrate_mitochondrial_genetic_code)
+  3. The Yeast Mitochondrial Code (yeast_mitochondrial_genetic_code)
+  4. The Mold, Protozoan, and Coelenterate Mitochondrial Code and the Mycoplasma/Spiroplasma Code (mold_mitochondrial_genetic_code)
+  5. The Invertebrate Mitochondrial Code (invertebrate_mitochondrial_genetic_code)
+  6. The Ciliate, Dasycladacean and Hexamita Nuclear Code (ciliate_nuclear_genetic_code)
+  9. The Echinoderm and Flatworm Mitochondrial Code (echinoderm_mitochondrial_genetic_code)
+ 10. The Euplotid Nuclear Code (euplotid_nuclear_genetic_code)
+ 11. The Bacterial, Archaeal and Plant Plastid Code (bacterial_plastid_genetic_code)
+ 12. The Alternative Yeast Nuclear Code (alternative_yeast_nuclear_genetic_code)
+ 13. The Ascidian Mitochondrial Code (ascidian_mitochondrial_genetic_code)
+ 14. The Alternative Flatworm Mitochondrial Code (alternative_flatworm_mitochondrial_genetic_code)
+ 16. Chlorophycean Mitochondrial Code (chlorophycean_mitochondrial_genetic_code)
+ 21. Trematode Mitochondrial Code (trematode_mitochondrial_genetic_code)
+ 22. Scenedesmus obliquus Mitochondrial Code (scenedesmus_obliquus_mitochondrial_genetic_code)
+ 23. Thraustochytrium Mitochondrial Code (thraustochytrium_mitochondrial_genetic_code)
+ 24. Pterobranchia Mitochondrial Code (pterobrachia_mitochondrial_genetic_code)
+ 25. Candidate Division SR1 and Gracilibacteria Code (candidate_division_sr1_genetic_code)
+
 ```
 
-<http://www.insdc.org/documents/feature_table.html#7.4.5>
-
-In most cases, and by default, `standard_genetic_code` is used.
+<http://www.ncbi.nlm.nih.gov/Taxonomy/taxonomyhome.html/index.cgi?chapter=cgencodes>
 
 
 ## Compact representation
