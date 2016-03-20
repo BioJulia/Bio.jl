@@ -43,30 +43,34 @@ const DNA_INVALID = convert(DNANucleotide, 0b10000) # Indicates invalid DNA when
 const char_to_dna = [DNA_INVALID for _ in 0x00:0x7f]
 const dna_to_char = Vector{Char}(16)
 
+# compatibility bits
+const compatbits = zeros(UInt8, 16)
+
 # derived from "The DDBJ/ENA/GenBank Feature Table Definition"
 # §7.4.1 Nucleotide base code (IUPAC)
 # http://www.insdc.org/documents/feature_table.html#7.4.1
-for (nt, doc, code) in [
-        ('A', "DNA Adenine",  0b0000),
-        ('C', "DNA Cytosine", 0b0001),
-        ('G', "DNA Guanine",  0b0010),
-        ('T', "DNA Thymine",  0b0011),
-        ('M', "DNA Adenine or Cytosine", 0b0100),
-        ('R', "DNA Adenine or Guanine",  0b0101),
-        ('W', "DNA Adenine or Thymine",  0b0110),
-        ('S', "DNA Cytosine or Guanine", 0b0111),
-        ('Y', "DNA Cytosine or Thymine", 0b1000),
-        ('K', "DNA Guanine or Thymine",  0b1001),
-        ('V', "DNA Adenine, Cytosine or Guanine", 0b1010),
-        ('H', "DNA Adenine, Cytosine or Thymine", 0b1011),
-        ('D', "DNA Adenine, Guanine or Thymine",  0b1100),
-        ('B', "DNA Cytosine, Guanine or Thymine", 0b1101),
-        ('N', "DNA Adenine, Cytosine, Guanine or Thymine", 0b1110)]
+for (code, (nt, doc, compat)) in enumerate([
+        ('A', "DNA Adenine",                               0b0001),
+        ('C', "DNA Cytosine",                              0b0010),
+        ('G', "DNA Guanine",                               0b0100),
+        ('T', "DNA Thymine",                               0b1000),
+        ('M', "DNA Adenine or Cytosine",                   0b0011),
+        ('R', "DNA Adenine or Guanine",                    0b0101),
+        ('W', "DNA Adenine or Thymine",                    0b1001),
+        ('S', "DNA Cytosine or Guanine",                   0b0110),
+        ('Y', "DNA Cytosine or Thymine",                   0b1010),
+        ('K', "DNA Guanine or Thymine",                    0b1100),
+        ('V', "DNA Adenine, Cytosine or Guanine",          0b0111),
+        ('H', "DNA Adenine, Cytosine or Thymine",          0b1011),
+        ('D', "DNA Adenine, Guanine or Thymine",           0b1101),
+        ('B', "DNA Cytosine, Guanine or Thymine",          0b1110),
+        ('N', "DNA Adenine, Cytosine, Guanine or Thymine", 0b1111)])
     var = symbol("DNA_", nt)
     @eval begin
-        @doc $doc const $var = convert(DNANucleotide, $code)
+        @doc $doc const $var = convert(DNANucleotide, $(UInt8(code - 1)))
         char_to_dna[$(Int(nt + 1))] = char_to_dna[$(Int(lowercase(nt) + 1))] = $var
-        dna_to_char[$(code + 1)] = $nt
+        dna_to_char[$(code)] = $nt
+        compatbits[$(code)] = $compat
     end
 end
 
@@ -74,6 +78,7 @@ end
 const DNA_Gap = convert(DNANucleotide, 0b1111)
 char_to_dna[Int('-') + 1] = DNA_Gap
 dna_to_char[0b1111 + 1] = '-'
+compatbits[0b1111 + 1] = 0b0000
 
 "Returns Any DNA Nucleotide (DNA_N)"
 nnucleotide(::Type{DNANucleotide}) = DNA_N
@@ -84,6 +89,11 @@ Base.isvalid(nt::DNANucleotide) = nt ≤ DNA_Gap
 isambiguous(nt::DNANucleotide) = nt > DNA_T
 alphabet(::Type{DNANucleotide}) = DNA_A:DNA_Gap
 
+# check if two nucleotides are compatible (no contradiction) with each other
+function iscompatible(x::Nucleotide, y::Nucleotide)
+    return (compatbits[Int8(x)+1] & compatbits[Int8(y)+1]) != 0
+end
+
 # RNA Nucleotides
 
 "Invalid RNA Nucleotide"
@@ -93,27 +103,27 @@ const RNA_INVALID = convert(RNANucleotide, 0b10000) # Indicates invalid RNA when
 const char_to_rna = [RNA_INVALID for _ in 0x00:0x7f]
 const rna_to_char = Vector{Char}(16)
 
-for (nt, doc, code) in [
-        ('A', "RNA Adenine",  0b0000),
-        ('C', "RNA Cytosine", 0b0001),
-        ('G', "RNA Guanine",  0b0010),
-        ('U', "RNA Uracil",   0b0011),
-        ('M', "RNA Adenine or Cytosine", 0b0100),
-        ('R', "RNA Adenine or Guanine",  0b0101),
-        ('W', "RNA Adenine or Uracil",   0b0110),
-        ('S', "RNA Cytosine or Guanine", 0b0111),
-        ('Y', "RNA Cytosine or Uracil",  0b1000),
-        ('K', "RNA Guanine or Uracil",   0b1001),
-        ('V', "RNA Adenine, Cytosine or Guanine", 0b1010),
-        ('H', "RNA Adenine, Cytosine or Uracil",  0b1011),
-        ('D', "RNA Adenine, Guanine or Uracil",   0b1100),
-        ('B', "RNA Cytosine, Guanine or Uracil",  0b1101),
-        ('N', "RNA Adenine, Cytosine, Guanine or Uracil", 0b1110)]
+for (code, (nt, doc)) in enumerate([
+        ('A', "RNA Adenine"                             ),
+        ('C', "RNA Cytosine"                            ),
+        ('G', "RNA Guanine"                             ),
+        ('U', "RNA Uracil"                              ),
+        ('M', "RNA Adenine or Cytosine"                 ),
+        ('R', "RNA Adenine or Guanine"                  ),
+        ('W', "RNA Adenine or Uracil"                   ),
+        ('S', "RNA Cytosine or Guanine"                 ),
+        ('Y', "RNA Cytosine or Uracil"                  ),
+        ('K', "RNA Guanine or Uracil"                   ),
+        ('V', "RNA Adenine, Cytosine or Guanine"        ),
+        ('H', "RNA Adenine, Cytosine or Uracil"         ),
+        ('D', "RNA Adenine, Guanine or Uracil"          ),
+        ('B', "RNA Cytosine, Guanine or Uracil"         ),
+        ('N', "RNA Adenine, Cytosine, Guanine or Uracil")])
     var = symbol("RNA_", nt)
     @eval begin
-        @doc $doc const $var = convert(RNANucleotide, $code)
+        @doc $doc const $var = convert(RNANucleotide, $(UInt8(code - 1)))
         char_to_rna[$(Int(nt + 1))] = char_to_rna[$(Int(lowercase(nt) + 1))] = $var
-        rna_to_char[$(code + 1)] = $nt
+        rna_to_char[$(code)] = $nt
     end
 end
 

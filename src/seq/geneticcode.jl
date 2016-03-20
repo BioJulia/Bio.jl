@@ -4,6 +4,7 @@
 # A genetic code is a table mapping RNA 3-mers (i.e. RNAKmer{3}) to AminoAcids.
 "Type representing a Genetic Code"
 immutable GeneticCode <: Associative{RNAKmer{3}, AminoAcid}
+    name::ASCIIString
     tbl::Vector{AminoAcid}
 end
 
@@ -11,10 +12,35 @@ end
 # Basic Functions
 # ---------------
 
-@inline Base.getindex(code::GeneticCode, idx::RNAKmer{3}) = code.tbl[convert(UInt64, idx) + 1]
-Base.setindex!(code::GeneticCode, aa::AminoAcid, idx::RNAKmer{3}) = (code.tbl[convert(UInt64, idx) + 1] = aa)
-Base.copy(code::GeneticCode) = GeneticCode(copy(code.tbl))
+function Base.getindex(code::GeneticCode, idx::RNAKmer{3})
+    return code.tbl[convert(UInt64, idx) + 1]
+end
+
+function Base.setindex!(code::GeneticCode, aa::AminoAcid, idx::RNAKmer{3})
+    return setindex!(code.tbl, aa, convert(UInt64, idx) + 1)
+end
+
+Base.copy(code::GeneticCode) = GeneticCode(copy(code.name), copy(code.tbl))
 Base.length(code::GeneticCode) = 64
+
+Base.showcompact(io::IO, code::GeneticCode) = print(io, code.name)
+
+function Base.show(io::IO, code::GeneticCode)
+    print(io, code.name)
+    rna = rna"ACGU"
+    for x in rna, y in rna
+        println(io)
+        print(io, "  ")
+        for z in rna
+            codon = kmer(x, y, z)
+            aa = code[codon]
+            print(io, codon, ": ", aa)
+            if z != RNA_U
+                print(io, "    ")
+            end
+        end
+    end
+end
 
 
 # Iterating through genetic code
@@ -32,12 +58,53 @@ Base.done(code::GeneticCode, x::UInt64) = (x > UInt64(0b111111))
 
 # Default genetic codes
 # ---------------------
-# All of these taken from:
-# http://www.ncbi.nlm.nih.gov/Taxonomy/taxonomyhome.html/index.cgi?chapter=tgencodes#SG1
 
-function parse_genetic_codes(s)
-    aas, _, base1, base2, base3 = split(chomp(s), '\n')
-    codes = GeneticCode(Vector{AminoAcid}(4^3))
+immutable TransTables
+    tables::Dict{Int,GeneticCode}
+    bindings::Dict{Int,Symbol}
+    function TransTables()
+        return new(Dict(), Dict())
+    end
+end
+
+Base.getindex(trans::TransTables, key::Integer) = trans.tables[Int(key)]
+
+function Base.show(io::IO, trans::TransTables)
+    print(io, "Translation Tables:")
+    ids = sort(collect(keys(trans.tables)))
+    for id in ids
+        println(io)
+        print(io, lpad(id, 3), ". ")
+        showcompact(io, trans.tables[id])
+        if haskey(trans.bindings, id)
+            print(io, " (", trans.bindings[id], ")")
+        end
+    end
+end
+
+"""
+Genetic code list of NCBI.
+
+The standard genetic code is `ncbi_trans_table[1]` and others can be shown by
+`show(ncbi_trans_table)`.
+For more details, consult the next link:
+http://www.ncbi.nlm.nih.gov/Taxonomy/taxonomyhome.html/index.cgi?chapter=cgencodes.
+"""
+const ncbi_trans_table = TransTables()
+
+macro register_ncbi_gencode(id, bind, tbl)
+    quote
+        gencode = parse_gencode($tbl)
+        const $(esc(bind)) = gencode
+        ncbi_trans_table.tables[$id] = gencode
+        ncbi_trans_table.bindings[$id] = symbol($(string(bind)))
+    end
+end
+
+function parse_gencode(s)
+    name, _, aas, _, base1, base2, base3 = split(chomp(s), '\n')
+    name = split(name, ' ', limit=2)[2]  # drop number
+    codes = GeneticCode(name, Vector{AminoAcid}(4^3))
     @assert length(aas) == 73
     for i in 10:73
         aa = AminoAcid(aas[i])
@@ -50,205 +117,269 @@ function parse_genetic_codes(s)
     return codes
 end
 
-# Standard Code
-const standard_genetic_code = parse_genetic_codes("""
+# Genetic codes translation tables are taken from the NCBI taxonomy database.
+
+@register_ncbi_gencode 1 standard_genetic_code """
+1. The Standard Code
+
   AAs  = FFLLSSSSYY**CC*WLLLLPPPPHHQQRRRRIIIMTTTTNNKKSSRRVVVVAAAADDEEGGGG
 Starts = ---M---------------M---------------M----------------------------
 Base1  = TTTTTTTTTTTTTTTTCCCCCCCCCCCCCCCCAAAAAAAAAAAAAAAAGGGGGGGGGGGGGGGG
 Base2  = TTTTCCCCAAAAGGGGTTTTCCCCAAAAGGGGTTTTCCCCAAAAGGGGTTTTCCCCAAAAGGGG
 Base3  = TCAGTCAGTCAGTCAGTCAGTCAGTCAGTCAGTCAGTCAGTCAGTCAGTCAGTCAGTCAGTCAG
-""")
+"""
 
-# Vertebrate mithocondrial genetic code
-const vertebrate_mitochondrial_genetic_code = copy(standard_genetic_code)
-vertebrate_mitochondrial_genetic_code[rnakmer("AGA")] = AA_INVALID
-vertebrate_mitochondrial_genetic_code[rnakmer("AGG")] = AA_INVALID
-vertebrate_mitochondrial_genetic_code[rnakmer("AUA")] = AA_M
-vertebrate_mitochondrial_genetic_code[rnakmer("UGA")] = AA_W
+@register_ncbi_gencode 2 vertebrate_mitochondrial_genetic_code """
+2. The Vertebrate Mitochondrial Code
 
-# Yeast mithocondrial genetic code
-const yeast_mitochondrial_genetic_code = copy(standard_genetic_code)
-yeast_mitochondrial_genetic_code[rnakmer("AUA")] = AA_M
-yeast_mitochondrial_genetic_code[rnakmer("CUU")] = AA_T
-yeast_mitochondrial_genetic_code[rnakmer("CUC")] = AA_T
-yeast_mitochondrial_genetic_code[rnakmer("CUA")] = AA_T
-yeast_mitochondrial_genetic_code[rnakmer("CUG")] = AA_T
-yeast_mitochondrial_genetic_code[rnakmer("UGA")] = AA_W
-yeast_mitochondrial_genetic_code[rnakmer("CGA")] = AA_INVALID
-yeast_mitochondrial_genetic_code[rnakmer("CGC")] = AA_INVALID
+  AAs  = FFLLSSSSYY**CCWWLLLLPPPPHHQQRRRRIIMMTTTTNNKKSS**VVVVAAAADDEEGGGG
+Starts = --------------------------------MMMM---------------M------------
+Base1  = TTTTTTTTTTTTTTTTCCCCCCCCCCCCCCCCAAAAAAAAAAAAAAAAGGGGGGGGGGGGGGGG
+Base2  = TTTTCCCCAAAAGGGGTTTTCCCCAAAAGGGGTTTTCCCCAAAAGGGGTTTTCCCCAAAAGGGG
+Base3  = TCAGTCAGTCAGTCAGTCAGTCAGTCAGTCAGTCAGTCAGTCAGTCAGTCAGTCAGTCAGTCAG
+"""
 
-# Mold mithocondrial genetic code
-const mold_mitochondrial_genetic_code = copy(standard_genetic_code)
-mold_mitochondrial_genetic_code[rnakmer("UGA")] = AA_W
+@register_ncbi_gencode 3 yeast_mitochondrial_genetic_code """
+3. The Yeast Mitochondrial Code
 
-# Invertebrate mithocondrial genetic code
-const invertebrate_mitochondrial_genetic_code = copy(standard_genetic_code)
-invertebrate_mitochondrial_genetic_code[rnakmer("AGA")] = AA_S
-invertebrate_mitochondrial_genetic_code[rnakmer("AGG")] = AA_S
-invertebrate_mitochondrial_genetic_code[rnakmer("AUA")] = AA_M
-invertebrate_mitochondrial_genetic_code[rnakmer("AGA")] = AA_W
+  AAs  = FFLLSSSSYY**CCWWTTTTPPPPHHQQRRRRIIMMTTTTNNKKSSRRVVVVAAAADDEEGGGG
+Starts = ----------------------------------MM----------------------------
+Base1  = TTTTTTTTTTTTTTTTCCCCCCCCCCCCCCCCAAAAAAAAAAAAAAAAGGGGGGGGGGGGGGGG
+Base2  = TTTTCCCCAAAAGGGGTTTTCCCCAAAAGGGGTTTTCCCCAAAAGGGGTTTTCCCCAAAAGGGG
+Base3  = TCAGTCAGTCAGTCAGTCAGTCAGTCAGTCAGTCAGTCAGTCAGTCAGTCAGTCAGTCAGTCAG
+"""
 
-# Ciliate nuclear genetic code
-const ciliate_nuclear_genetic_code = copy(standard_genetic_code)
-ciliate_nuclear_genetic_code[rnakmer("UAA")] = AA_Q
-ciliate_nuclear_genetic_code[rnakmer("UAG")] = AA_Q
+@register_ncbi_gencode 4 mold_mitochondrial_genetic_code """
+4. The Mold, Protozoan, and Coelenterate Mitochondrial Code and the Mycoplasma/Spiroplasma Code
 
-# Echinoderm mithocondrial genetic code
-const echinoderm_mitochondrial_genetic_code = copy(standard_genetic_code)
-echinoderm_mitochondrial_genetic_code[rnakmer("AAA")] = AA_N
-echinoderm_mitochondrial_genetic_code[rnakmer("AGA")] = AA_S
-echinoderm_mitochondrial_genetic_code[rnakmer("AGG")] = AA_S
-echinoderm_mitochondrial_genetic_code[rnakmer("UGA")] = AA_W
+  AAs  = FFLLSSSSYY**CCWWLLLLPPPPHHQQRRRRIIIMTTTTNNKKSSRRVVVVAAAADDEEGGGG
+Starts = --MM---------------M------------MMMM---------------M------------
+Base1  = TTTTTTTTTTTTTTTTCCCCCCCCCCCCCCCCAAAAAAAAAAAAAAAAGGGGGGGGGGGGGGGG
+Base2  = TTTTCCCCAAAAGGGGTTTTCCCCAAAAGGGGTTTTCCCCAAAAGGGGTTTTCCCCAAAAGGGG
+Base3  = TCAGTCAGTCAGTCAGTCAGTCAGTCAGTCAGTCAGTCAGTCAGTCAGTCAGTCAGTCAGTCAG
+"""
 
-# Euplotid nuclear genetic code
-const euplotid_nuclear_genetic_code = copy(standard_genetic_code)
-euplotid_nuclear_genetic_code[rnakmer("UGA")] = AA_C
+@register_ncbi_gencode 5 invertebrate_mitochondrial_genetic_code """
+5. The Invertebrate Mitochondrial Code
 
-# Bacterial plastid genetic code
-const bacterial_plastid_genetic_code = copy(standard_genetic_code)
+  AAs  = FFLLSSSSYY**CCWWLLLLPPPPHHQQRRRRIIMMTTTTNNKKSSSSVVVVAAAADDEEGGGG
+Starts = ---M----------------------------MMMM---------------M------------
+Base1  = TTTTTTTTTTTTTTTTCCCCCCCCCCCCCCCCAAAAAAAAAAAAAAAAGGGGGGGGGGGGGGGG
+Base2  = TTTTCCCCAAAAGGGGTTTTCCCCAAAAGGGGTTTTCCCCAAAAGGGGTTTTCCCCAAAAGGGG
+Base3  = TCAGTCAGTCAGTCAGTCAGTCAGTCAGTCAGTCAGTCAGTCAGTCAGTCAGTCAGTCAGTCAG
+"""
 
-# Alternative yeast nuclear genetic code
-const alternative_yeast_nuclear_genetic_code = copy(standard_genetic_code)
-alternative_yeast_nuclear_genetic_code[rnakmer("CUG")] = AA_S
+@register_ncbi_gencode 6 ciliate_nuclear_genetic_code """
+6. The Ciliate, Dasycladacean and Hexamita Nuclear Code
 
-# Ascidian mithocondrial genetic code
-const ascidian_mitochondrial_genetic_code = copy(standard_genetic_code)
-ascidian_mitochondrial_genetic_code[rnakmer("AGA")] = AA_G
-ascidian_mitochondrial_genetic_code[rnakmer("AGG")] = AA_G
-ascidian_mitochondrial_genetic_code[rnakmer("AUA")] = AA_M
-ascidian_mitochondrial_genetic_code[rnakmer("UGA")] = AA_W
+  AAs  = FFLLSSSSYYQQCC*WLLLLPPPPHHQQRRRRIIIMTTTTNNKKSSRRVVVVAAAADDEEGGGG
+Starts = -----------------------------------M----------------------------
+Base1  = TTTTTTTTTTTTTTTTCCCCCCCCCCCCCCCCAAAAAAAAAAAAAAAAGGGGGGGGGGGGGGGG
+Base2  = TTTTCCCCAAAAGGGGTTTTCCCCAAAAGGGGTTTTCCCCAAAAGGGGTTTTCCCCAAAAGGGG
+Base3  = TCAGTCAGTCAGTCAGTCAGTCAGTCAGTCAGTCAGTCAGTCAGTCAGTCAGTCAGTCAGTCAG
+"""
 
-# Alternative flatworm mithocondrial genetic code
-const alternative_flatworm_mitochondrial_genetic_code = copy(standard_genetic_code)
-alternative_flatworm_mitochondrial_genetic_code[rnakmer("AAA")] = AA_N
-alternative_flatworm_mitochondrial_genetic_code[rnakmer("AGA")] = AA_S
-alternative_flatworm_mitochondrial_genetic_code[rnakmer("AGG")] = AA_S
-alternative_flatworm_mitochondrial_genetic_code[rnakmer("UAA")] = AA_Y
-alternative_flatworm_mitochondrial_genetic_code[rnakmer("UGA")] = AA_W
+@register_ncbi_gencode 9 echinoderm_mitochondrial_genetic_code """
+9. The Echinoderm and Flatworm Mitochondrial Code
 
-# Clorophycean mithocondrial genetic code
-const chlorophycean_mitochondrial_genetic_code = copy(standard_genetic_code)
-chlorophycean_mitochondrial_genetic_code[rnakmer("UAG")] = AA_L
+  AAs  = FFLLSSSSYY**CCWWLLLLPPPPHHQQRRRRIIIMTTTTNNNKSSSSVVVVAAAADDEEGGGG
+Starts = -----------------------------------M---------------M------------
+Base1  = TTTTTTTTTTTTTTTTCCCCCCCCCCCCCCCCAAAAAAAAAAAAAAAAGGGGGGGGGGGGGGGG
+Base2  = TTTTCCCCAAAAGGGGTTTTCCCCAAAAGGGGTTTTCCCCAAAAGGGGTTTTCCCCAAAAGGGG
+Base3  = TCAGTCAGTCAGTCAGTCAGTCAGTCAGTCAGTCAGTCAGTCAGTCAGTCAGTCAGTCAGTCAG
+"""
 
-# Trematode mithocondrial genetic code
-const trematode_mitochondrial_genetic_code = copy(standard_genetic_code)
-trematode_mitochondrial_genetic_code[rnakmer("UGA")] = AA_W
-trematode_mitochondrial_genetic_code[rnakmer("AUA")] = AA_M
-trematode_mitochondrial_genetic_code[rnakmer("AGA")] = AA_S
-trematode_mitochondrial_genetic_code[rnakmer("AGG")] = AA_S
-trematode_mitochondrial_genetic_code[rnakmer("AAA")] = AA_N
+@register_ncbi_gencode 10 euplotid_nuclear_genetic_code """
+10. The Euplotid Nuclear Code
 
-# Scenedesmus obliquus mithocondrial genetic code
-const scenedesmus_obliquus_mitochondrial_genetic_code = copy(standard_genetic_code)
-scenedesmus_obliquus_mitochondrial_genetic_code[rnakmer("UCA")] = AA_INVALID
-scenedesmus_obliquus_mitochondrial_genetic_code[rnakmer("UAG")] = AA_L
+  AAs  = FFLLSSSSYY**CCCWLLLLPPPPHHQQRRRRIIIMTTTTNNKKSSRRVVVVAAAADDEEGGGG
+Starts = -----------------------------------M----------------------------
+Base1  = TTTTTTTTTTTTTTTTCCCCCCCCCCCCCCCCAAAAAAAAAAAAAAAAGGGGGGGGGGGGGGGG
+Base2  = TTTTCCCCAAAAGGGGTTTTCCCCAAAAGGGGTTTTCCCCAAAAGGGGTTTTCCCCAAAAGGGG
+Base3  = TCAGTCAGTCAGTCAGTCAGTCAGTCAGTCAGTCAGTCAGTCAGTCAGTCAGTCAGTCAGTCAG
+"""
 
-# Vertebrate mithocondrial genetic code
-const thraustochytrium_mitochondrial_genetic_code = copy(standard_genetic_code)
-thraustochytrium_mitochondrial_genetic_code[rnakmer("UUA")] = AA_INVALID
+@register_ncbi_gencode 11 bacterial_plastid_genetic_code """
+11. The Bacterial, Archaeal and Plant Plastid Code
 
-# Pterobrachia mithocondrial genetic code
-const pterobrachia_mitochondrial_genetic_code = copy(standard_genetic_code)
-pterobrachia_mitochondrial_genetic_code[rnakmer("AGA")] = AA_S
-pterobrachia_mitochondrial_genetic_code[rnakmer("AGG")] = AA_K
-pterobrachia_mitochondrial_genetic_code[rnakmer("UGA")] = AA_W
+  AAs  = FFLLSSSSYY**CC*WLLLLPPPPHHQQRRRRIIIMTTTTNNKKSSRRVVVVAAAADDEEGGGG
+Starts = ---M---------------M------------MMMM---------------M------------
+Base1  = TTTTTTTTTTTTTTTTCCCCCCCCCCCCCCCCAAAAAAAAAAAAAAAAGGGGGGGGGGGGGGGG
+Base2  = TTTTCCCCAAAAGGGGTTTTCCCCAAAAGGGGTTTTCCCCAAAAGGGGTTTTCCCCAAAAGGGG
+Base3  = TCAGTCAGTCAGTCAGTCAGTCAGTCAGTCAGTCAGTCAGTCAGTCAGTCAGTCAGTCAGTCAG
+"""
 
-# Candidate division sr1 genetic code
-const candidate_division_sr1_genetic_code = copy(standard_genetic_code)
-candidate_division_sr1_genetic_code[rnakmer("UGA")] = AA_INVALID
+@register_ncbi_gencode 12 alternative_yeast_nuclear_genetic_code """
+12. The Alternative Yeast Nuclear Code
 
-# Genetic codes indexed as in NCBI's trans_table
-const ncbi_trans_table = GeneticCode[
-    standard_genetic_code,
-    vertebrate_mitochondrial_genetic_code,
-    yeast_mitochondrial_genetic_code,
-    mold_mitochondrial_genetic_code,
-    invertebrate_mitochondrial_genetic_code,
-    ciliate_nuclear_genetic_code,
-    echinoderm_mitochondrial_genetic_code,
-    euplotid_nuclear_genetic_code,
-    bacterial_plastid_genetic_code,
-    alternative_yeast_nuclear_genetic_code,
-    ascidian_mitochondrial_genetic_code,
-    alternative_flatworm_mitochondrial_genetic_code,
-    chlorophycean_mitochondrial_genetic_code,
-    trematode_mitochondrial_genetic_code,
-    scenedesmus_obliquus_mitochondrial_genetic_code,
-    thraustochytrium_mitochondrial_genetic_code,
-    pterobrachia_mitochondrial_genetic_code,
-    candidate_division_sr1_genetic_code ]
+  AAs  = FFLLSSSSYY**CC*WLLLSPPPPHHQQRRRRIIIMTTTTNNKKSSRRVVVVAAAADDEEGGGG
+Starts = -------------------M---------------M----------------------------
+Base1  = TTTTTTTTTTTTTTTTCCCCCCCCCCCCCCCCAAAAAAAAAAAAAAAAGGGGGGGGGGGGGGGG
+Base2  = TTTTCCCCAAAAGGGGTTTTCCCCAAAAGGGGTTTTCCCCAAAAGGGGTTTTCCCCAAAAGGGG
+Base3  = TCAGTCAGTCAGTCAGTCAGTCAGTCAGTCAGTCAGTCAGTCAGTCAGTCAGTCAGTCAGTCAG
+"""
+
+@register_ncbi_gencode 13 ascidian_mitochondrial_genetic_code """
+13. The Ascidian Mitochondrial Code
+
+  AAs  = FFLLSSSSYY**CCWWLLLLPPPPHHQQRRRRIIMMTTTTNNKKSSGGVVVVAAAADDEEGGGG
+Starts = ---M------------------------------MM---------------M------------
+Base1  = TTTTTTTTTTTTTTTTCCCCCCCCCCCCCCCCAAAAAAAAAAAAAAAAGGGGGGGGGGGGGGGG
+Base2  = TTTTCCCCAAAAGGGGTTTTCCCCAAAAGGGGTTTTCCCCAAAAGGGGTTTTCCCCAAAAGGGG
+Base3  = TCAGTCAGTCAGTCAGTCAGTCAGTCAGTCAGTCAGTCAGTCAGTCAGTCAGTCAGTCAGTCAG
+"""
+
+@register_ncbi_gencode 14 alternative_flatworm_mitochondrial_genetic_code """
+14. The Alternative Flatworm Mitochondrial Code
+
+  AAs  = FFLLSSSSYYY*CCWWLLLLPPPPHHQQRRRRIIIMTTTTNNNKSSSSVVVVAAAADDEEGGGG
+Starts = -----------------------------------M----------------------------
+Base1  = TTTTTTTTTTTTTTTTCCCCCCCCCCCCCCCCAAAAAAAAAAAAAAAAGGGGGGGGGGGGGGGG
+Base2  = TTTTCCCCAAAAGGGGTTTTCCCCAAAAGGGGTTTTCCCCAAAAGGGGTTTTCCCCAAAAGGGG
+Base3  = TCAGTCAGTCAGTCAGTCAGTCAGTCAGTCAGTCAGTCAGTCAGTCAGTCAGTCAGTCAGTCAG
+"""
+
+@register_ncbi_gencode 16 chlorophycean_mitochondrial_genetic_code """
+16. Chlorophycean Mitochondrial Code
+
+  AAs  = FFLLSSSSYY*LCC*WLLLLPPPPHHQQRRRRIIIMTTTTNNKKSSRRVVVVAAAADDEEGGGG
+Starts = -----------------------------------M----------------------------
+Base1  = TTTTTTTTTTTTTTTTCCCCCCCCCCCCCCCCAAAAAAAAAAAAAAAAGGGGGGGGGGGGGGGG
+Base2  = TTTTCCCCAAAAGGGGTTTTCCCCAAAAGGGGTTTTCCCCAAAAGGGGTTTTCCCCAAAAGGGG
+Base3  = TCAGTCAGTCAGTCAGTCAGTCAGTCAGTCAGTCAGTCAGTCAGTCAGTCAGTCAGTCAGTCAG
+"""
+
+@register_ncbi_gencode 21 trematode_mitochondrial_genetic_code """
+21. Trematode Mitochondrial Code
+
+  AAs  = FFLLSSSSYY**CCWWLLLLPPPPHHQQRRRRIIMMTTTTNNNKSSSSVVVVAAAADDEEGGGG
+Starts = -----------------------------------M---------------M------------
+Base1  = TTTTTTTTTTTTTTTTCCCCCCCCCCCCCCCCAAAAAAAAAAAAAAAAGGGGGGGGGGGGGGGG
+Base2  = TTTTCCCCAAAAGGGGTTTTCCCCAAAAGGGGTTTTCCCCAAAAGGGGTTTTCCCCAAAAGGGG
+Base3  = TCAGTCAGTCAGTCAGTCAGTCAGTCAGTCAGTCAGTCAGTCAGTCAGTCAGTCAGTCAGTCAG
+"""
+
+@register_ncbi_gencode 22 scenedesmus_obliquus_mitochondrial_genetic_code """
+22. Scenedesmus obliquus Mitochondrial Code
+
+  AAs  = FFLLSS*SYY*LCC*WLLLLPPPPHHQQRRRRIIIMTTTTNNKKSSRRVVVVAAAADDEEGGGG
+Starts = -----------------------------------M----------------------------
+Base1  = TTTTTTTTTTTTTTTTCCCCCCCCCCCCCCCCAAAAAAAAAAAAAAAAGGGGGGGGGGGGGGGG
+Base2  = TTTTCCCCAAAAGGGGTTTTCCCCAAAAGGGGTTTTCCCCAAAAGGGGTTTTCCCCAAAAGGGG
+Base3  = TCAGTCAGTCAGTCAGTCAGTCAGTCAGTCAGTCAGTCAGTCAGTCAGTCAGTCAGTCAGTCAG
+"""
+
+@register_ncbi_gencode 23 thraustochytrium_mitochondrial_genetic_code """
+23. Thraustochytrium Mitochondrial Code
+
+  AAs  = FF*LSSSSYY**CC*WLLLLPPPPHHQQRRRRIIIMTTTTNNKKSSRRVVVVAAAADDEEGGGG
+Starts = --------------------------------M--M---------------M------------
+Base1  = TTTTTTTTTTTTTTTTCCCCCCCCCCCCCCCCAAAAAAAAAAAAAAAAGGGGGGGGGGGGGGGG
+Base2  = TTTTCCCCAAAAGGGGTTTTCCCCAAAAGGGGTTTTCCCCAAAAGGGGTTTTCCCCAAAAGGGG
+Base3  = TCAGTCAGTCAGTCAGTCAGTCAGTCAGTCAGTCAGTCAGTCAGTCAGTCAGTCAGTCAGTCAG
+"""
+
+@register_ncbi_gencode 24 pterobrachia_mitochondrial_genetic_code """
+24. Pterobranchia Mitochondrial Code
+
+  AAs  = FFLLSSSSYY**CCWWLLLLPPPPHHQQRRRRIIIMTTTTNNKKSSSKVVVVAAAADDEEGGGG
+Starts = ---M---------------M---------------M---------------M------------
+Base1  = TTTTTTTTTTTTTTTTCCCCCCCCCCCCCCCCAAAAAAAAAAAAAAAAGGGGGGGGGGGGGGGG
+Base2  = TTTTCCCCAAAAGGGGTTTTCCCCAAAAGGGGTTTTCCCCAAAAGGGGTTTTCCCCAAAAGGGG
+Base3  = TCAGTCAGTCAGTCAGTCAGTCAGTCAGTCAGTCAGTCAGTCAGTCAGTCAGTCAGTCAGTCAG
+"""
+
+@register_ncbi_gencode 25 candidate_division_sr1_genetic_code """
+25. Candidate Division SR1 and Gracilibacteria Code
+
+  AAs  = FFLLSSSSYY**CCGWLLLLPPPPHHQQRRRRIIIMTTTTNNKKSSRRVVVVAAAADDEEGGGG
+Starts = ---M-------------------------------M---------------M------------
+Base1  = TTTTTTTTTTTTTTTTCCCCCCCCCCCCCCCCAAAAAAAAAAAAAAAAGGGGGGGGGGGGGGGG
+Base2  = TTTTCCCCAAAAGGGGTTTTCCCCAAAAGGGGTTTTCCCCAAAAGGGGTTTTCCCCAAAAGGGG
+Base3  = TCAGTCAGTCAGTCAGTCAGTCAGTCAGTCAGTCAGTCAGTCAGTCAGTCAGTCAGTCAGTCAG
+"""
 
 
 # Translation
 # -----------
 
-# Try to translate a codon (u, v, RNA_N). Return the corresponding amino acid,
-# if it can be unambiguously translated, and AA_INVALID if it cannot be.
-function translate_ambiguous_codon(code::GeneticCode, u::RNANucleotide,
-                                   v::RNANucleotide)
-    aa_a = code[kmer(u, v, RNA_A)]
-    aa_c = code[kmer(u, v, RNA_C)]
-    aa_g = code[kmer(u, v, RNA_G)]
-    aa_u = code[kmer(u, v, RNA_U)]
+"""
+    translate(rna_seq, code=standard_genetic_code, allow_ambiguous_codons=true)
 
-    if aa_a == aa_c == aa_g == aa_u
-        return aa_a
-    else
-        error("Codon $(u)$(v)N cannot be unambiguously translated.")
-    end
+Translate an `RNASequence` to an `AminoAcidSequence`.
+
+Translation uses genetic code `code` to map codons to amino acids. See
+`ncbi_trans_table` for available genetic codes.
+If codons in the given RNA sequence cannot determine a unique amino acid, they
+will be translated to `AA_X` if `allow_ambiguous_codons` is `true` and otherwise
+result in an error.
+"""
+function translate(seq::RNASequence;
+                   code::GeneticCode=standard_genetic_code,
+                   allow_ambiguous_codons::Bool=true)
+    return translate(seq, code, allow_ambiguous_codons)
 end
 
-
-"""
-Convert an `RNASequence` to an `AminoAcidSequence`.
-
-### Arguments
-  * `seq`: RNA sequence to translate.
-  * `code`: Genetic code to use (default is the standard genetic code).
-  * `allow_ambiguous_codons`: True if ambiguous codons should be allowed and
-      translated to `AA_X`. If false, they will throw an error. (default is true)
-
-### Returns
-A translated `AminoAcidSequence`
-"""
 function translate(seq::RNASequence,
                    code::GeneticCode=standard_genetic_code,
-                   allow_ambiguous_codons::Bool=false)
+                   allow_ambiguous_codons::Bool=true)
     aaseqlen, r = divrem(length(seq), 3)
     if r != 0
         error("RNASequence length is not divisible by three. Cannot translate.")
     end
 
-    # try to translate codons whose third nucleotide is N
-    aaseq = Array(AminoAcid, aaseqlen)
-
-    for i in npositions(seq)
-        d, r = divrem(i - 1, 3)
-        if r != 2
-            if allow_ambiguous_codons
-                aaseq[d + 1] = AA_X
-            else
-                if r == 0
-                    codon_str = "N$(seq[i+1])$(seq[i+2])"
+    aaseq = AminoAcidSequence(aaseqlen)
+    i = j = 1
+    while i ≤ endof(seq) - 2
+        x = seq[i]
+        y = seq[i+1]
+        z = seq[i+2]
+        if isambiguous(x) || isambiguous(y) || isambiguous(z)
+            aa = try_translate_ambiguous_codon(code, x, y, z)
+            if isnull(aa)
+                if allow_ambiguous_codons
+                    aaseq[j] = AA_X
                 else
-                    codon_str = "$(seq[i-1])N$(seq[i+1])"
+                    error("codon ", x, y, z, " cannot be unambiguously translated")
                 end
-                error("Codon $(codon_str) cannot be unambiguously translated.")
+            else
+                aaseq[j] = get(aa)
             end
         else
-            aa = translate_ambiguous_codon(code, seq[i-2], seq[i-1])
-            aaseq[d + 1] = aa
+            aaseq[j] = code[kmer(x, y, z)]
+        end
+        i += 3
+        j += 1
+    end
+    return aaseq
+end
+
+function try_translate_ambiguous_codon(code::GeneticCode,
+                                       x::RNANucleotide,
+                                       y::RNANucleotide,
+                                       z::RNANucleotide)
+    if !isambiguous(x) && !isambiguous(y)
+        # try to translate a codon `(x, y, RNA_N)`
+        aa_a = code[kmer(x, y, RNA_A)]
+        aa_c = code[kmer(x, y, RNA_C)]
+        aa_g = code[kmer(x, y, RNA_G)]
+        aa_u = code[kmer(x, y, RNA_U)]
+        if aa_a == aa_c == aa_g == aa_u
+            return Nullable{AminoAcid}(aa_a)
         end
     end
 
-    @inbounds for (i, codon) in each(RNAKmer{3}, seq, 3)
-        aa = code[codon]
-        if aa == AA_INVALID
-            error("Cannot translate stop codons.")
+    found = Nullable{AminoAcid}()
+    for (codon, aa) in code
+        if (iscompatible(x, codon[1]) &&
+            iscompatible(y, codon[2]) &&
+            iscompatible(z, codon[3]))
+            if isnull(found)
+                found = Nullable(aa)
+            elseif aa != get(found)
+                return Nullable{AminoAcid}()
+            end
         end
-        j = div(i - 1, 3) + 1
-        aaseq[j] = code[codon]
     end
-
-    return AminoAcidSequence(aaseq)
+    return found
 end
