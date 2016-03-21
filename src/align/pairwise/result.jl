@@ -28,13 +28,14 @@ alignment(aln::PairwiseAlignmentResult) = get(aln.aln)
 hasalignment(aln::PairwiseAlignmentResult) = !isnull(aln.aln)
 
 function Base.show{T,S1,S2}(io::IO, aln::PairwiseAlignmentResult{T,S1,S2})
-    println(io, "PairwiseAlignmentResult{", T, ",", S1, ",", S2, "}:")
+    println(io, summary(aln), ':')
     if aln.isscore
         print(io, "  score: ", aln.value)
     else
         print(io, "  distance: ", aln.value)
     end
     if hasalignment(aln)
-        show_pairwise_alignment(io, alignment(aln))
+        println(io)
+        print(io, alignment(aln))
     end
 end

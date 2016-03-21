@@ -274,13 +274,43 @@ function alndistance{T}(cost::CostModel{T}, alnstr::ASCIIString)
 end
 
 function alignedpair(alnres)
-    a, b = alignment(alnres)
+    aln = alignment(alnres)
+    a = aln.a
+    b = aln.b
     anchors = a.aln.anchors
     buf = IOBuffer()
-    Bio.Align.show_seq(buf, a, anchors)
+    print_seq(buf, a, anchors)
     println(buf)
-    Bio.Align.show_ref(buf, b, anchors)
+    print_ref(buf, b, anchors)
     return bytestring(buf)
+end
+
+function print_seq(io, seq, anchors)
+    for i in 2:length(anchors)
+        if ismatchop(anchors[i].op) || isinsertop(anchors[i].op)
+            for j in anchors[i-1].seqpos+1:anchors[i].seqpos
+                print(io, seq.seq[j])
+            end
+        elseif isdeleteop(anchors[i].op)
+            for _ in anchors[i-1].refpos+1:anchors[i].refpos
+                print(io, '-')
+            end
+        end
+    end
+end
+
+function print_ref(io, ref, anchors)
+    for i in 2:length(anchors)
+        if ismatchop(anchors[i].op) || isdeleteop(anchors[i].op)
+            for j in anchors[i-1].refpos+1:anchors[i].refpos
+                print(io, ref[j])
+            end
+        elseif isinsertop(anchors[i].op)
+            for _ in anchors[i-1].seqpos+1:anchors[i].seqpos
+                print(io, '-')
+            end
+        end
+    end
 end
 
 @testset "PairwiseAlignment" begin
@@ -380,9 +410,7 @@ end
         seq = AlignedSequence("ACG", anchors)
         ref = "ACG"
         aln = PairwiseAlignment(seq, ref)
-        a, b = aln
-        @test a === seq
-        @test b === ref
+        @test collect(aln) == [('A', 'A'), ('C', 'C'), ('G', 'G')]
         result = PairwiseAlignmentResult(3, true, seq, ref)
         @test isa(result, PairwiseAlignmentResult) == true
         @test isa(alignment(result), PairwiseAlignment) == true
