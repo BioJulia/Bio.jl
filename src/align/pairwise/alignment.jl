@@ -77,34 +77,36 @@ function Base.count(aln::PairwiseAlignment, target::Operation)
 end
 
 """
+    count_matches(aln)
+
 Count the number of matching positions.
 """
-function count_matches(aln::PairwiseAlignment)
-    return count(aln, OP_SEQ_MATCH)
-end
+count_matches(aln::PairwiseAlignment) = count(aln, OP_SEQ_MATCH)
 
 """
+    count_mismatches(aln)
+
 Count the number of mismatching positions.
 """
-function count_mismatches(aln::PairwiseAlignment)
-    return count(aln, OP_SEQ_MISMATCH)
-end
+count_mismatches(aln::PairwiseAlignment) = count(aln, OP_SEQ_MISMATCH)
 
 """
+    count_insertions(aln)
+
 Count the number of inserting positions.
 """
-function count_insertions(aln::PairwiseAlignment)
-    return count(aln, OP_INSERT)
-end
+count_insertions(aln::PairwiseAlignment) = count(aln, OP_INSERT)
 
 """
+    count_deletions(aln)
+
 Count the number of deleting positions.
 """
-function count_deletions(aln::PairwiseAlignment)
-    return count(aln, OP_DELETE)
-end
+count_deletions(aln::PairwiseAlignment) = count(aln, OP_DELETE)
 
 """
+    count_aligned(aln)
+
 Count the number of aligned positions.
 """
 function count_aligned(aln::PairwiseAlignment)
@@ -120,6 +122,10 @@ function count_aligned(aln::PairwiseAlignment)
     end
     return n
 end
+
+
+# Printers
+# --------
 
 function Base.show{S1,S2}(io::IO, aln::PairwiseAlignment{S1,S2})
     println(io, "PairwiseAlignment{", S1, ",", S2, "}:")

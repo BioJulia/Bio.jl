@@ -37,26 +37,26 @@ the position in the reference and query prior to the start of the alignment, or
 0, if the alignment starts at position 1.
 
 For example, consider the following alignment:
-```
-              4   8   12   17    20 23  27
-              |   |   |    |     |  |   |
-reference: AGGGTGGCATTTATCAG---ACGTTTCGAGAC
-    query:     TGGC----ATCATTTAACG---CAAG
-              |   |        |  |  |      |
-              0   4        9  12 15     19
 
-```
+                  0   4        9  12 15     19
+                  |   |        |  |  |      |
+        query:     TGGC----ATCATTTAACG---CAAG
+    reference: AGGGTGGCATTTATCAG---ACGTTTCGAGAC
+                  |   |   |    |     |  |   |
+                  4   8   12   17    20 23  27
 
 Using anchors we would represent this as the following series of anchors:
-```
-AlignmentAnchor(0, 4, OP_START),
-AlignmentAnchor(4, 8, OP_MATCH),
-AlignmentAnchor(4, 12, OP_DELETE),
-AlignmentAnchor(9, 17, OP_MATCH),
-AlignmentAnchor(12, 17, OP_INSERT),
-AlignmentAnchor(15, 20, OP_MATCH),
-AlignmentAnchor(15, 23, OP_DELETE),
-AlignmentAnchor(19, 27, OP_MATCH)
+```julia
+[
+    AlignmentAnchor( 0,  4, OP_START),
+    AlignmentAnchor( 4,  8, OP_MATCH),
+    AlignmentAnchor( 4, 12, OP_DELETE),
+    AlignmentAnchor( 9, 17, OP_MATCH),
+    AlignmentAnchor(12, 17, OP_INSERT),
+    AlignmentAnchor(15, 20, OP_MATCH),
+    AlignmentAnchor(15, 23, OP_DELETE),
+    AlignmentAnchor(19, 27, OP_MATCH)
+]
 ```
 
 
@@ -81,177 +81,182 @@ format](https://samtools.github.io/hts-specs/SAMv1.pdf) and are stored in the
 | `OP_START`           | special            | indicate the start of an alignment within the reference and query sequence      |
 
 
-## Operating on Alignments
+## Operating on alignments
 
     {docs}
     first
     last
+    seq2ref
+    ref2seq
     cigar
 
 
-## Pairwise Alignment
+## Pairwise alignment
 
-Pairwise alignment is a sequence alignment between two sequences.
-The `Bio.Align` module provides some pairwise alignment algorithms that
-optimize alignment score.
+Pairwise alignment is a sequence alignment between two sequences.  The
+`Bio.Align` module implements several pairwise alignment methods that maximize
+alignment score or minimize alignment cost.
 
-Let $\Sigma$ be a set of symbols, and $a$ and $b$ be two sequences of $\Sigma$, then
-pairwise alignment is defined as a pair of two gap-padded sequences $a^\prime$
-and $b^\prime$ of $\Sigma \cap \\{\texttt{'-'}\\}$. Alignment score of this
-alignment is defined as a sum of element-wise scores:
-$$ \sum_i score(a^\prime_i, b^\prime_i) $$
-where $score(x, y)$ is a scoring function of two symbols $x$ and $y$.
+A pair of optimization type and score (or cost) model determines the best
+alignments between two sequences. The next example uses a pair of
+`GlobalAlignment` and `AffineGapScoreModel` to obtain the best alignment:
 
-A pair of optimization problem and score (or cost) model determines the best
-alignment between two sequences. For example, a pair of `GlobalAlignment` problem and
-`AffineGapScoreModel` model is well known as end-to-end alignment with affine
-penalty for gap insertion. Two strings, "succeed" and "precede", are aligned as
-follows in this settings:
 ```julia
-julia> using Bio.Align
-
 julia> problem = GlobalAlignment()
 Bio.Align.GlobalAlignment()
 
-julia> model = AffineGapScoreModel(
-           match=5,
-           mismatch=-2,
-           gap_open=-3,
-           gap_extend=-1
-       )
+julia> scoremodel = AffineGapScoreModel(
+                  match=5,
+                  mismatch=-4,
+                  gap_open=-4,
+                  gap_extend=-1
+              )
 Bio.Align.AffineGapScoreModel{Int64}:
        match = 5
-    mismatch = -2
-    gap_open = -3
+    mismatch = -4
+    gap_open = -4
   gap_extend = -1
 
-julia> pairalign(problem, "succeed", "precede", model)
-PairwiseAlignmentResult{Int64,ASCIIString,ASCIIString}:
-  score: 1
-  seq: succe-ed
-          || |
-  ref: precede-
+julia> pairalign(problem, dna"CGGATTA", dna"GGTTTAC", scoremodel)
+Bio.Align.PairwiseAlignmentResult{Int64,Bio.Seq.BioSequence{Bio.Seq.DNAAlphabet{4}},Bio.Seq.BioSequence{Bio.Seq.DNAAlphabet{4}}}:
+  score: 11
+  seq: 1 CGGATTA- 7
+          || |||
+  ref: 0 -GGTTTAC 7
 
 ```
 
+`pairalign` takes an alignment type as its first argument, then two sequences to
+align, and score (or cost) model. Alignment type is one of the following four
+types:
 
-### Alignment types
+* `GlobalAlignment`: global-to-global alignment
+* `SemiGlobalAlignment`: local-to-global alignment
+* `LocalAlignment`: local-to-local alignment
+* `OverlapAlignment`: end-free alignment
 
-#### Alignments
+For scoring model, `AffineGapScoreModel` is currently supported. It imposes an
+**affine gap penalty** for insertions and deletions: `gap_open + k * gap_extend`
+for a consecutive insertion/deletion of length `k`. The affine gap penalty is
+flexible enough to create a constant and linear scoring model. Setting
+`gap_extend = 0` or `gap_open = 0`, they are equivalent to the constant or
+linear gap penalty, respectively.
+The first argument of `AffineGapScoreModel` can be a substitution matrix like
+`AffineGapScoreModel(BLOSUM62, gap_open=-10, gap_extend=-1)`. For details on
+substitution matrices, see the [Substitution matrices]({ref}) section.
 
-| Alignment Problem | Description |
-|:---------------|:-----------|
-| `GlobalAlignment` | global-global alignment |
-| `SemiGlobalAlignment` | global-local alignment |
-| `OverlapAlignment` | global-global alignment without end gap penalties |
-| `LocalAlignment` | local-local alignment |
+Alignment type can also be a distance of two sequences:
 
-#### Global vs. local alignment
+* `EditDistance`
+* `LevenshteinDistance`
+* `HammingDistance`
 
+In this alignment, `CostModel` is used instead of `AffineGapScoreModel` to define
+cost of substitution, insertion, and deletion:
 ```julia
-julia> a = dna"CAGGTAGTAGAGTATATTATGGCCATTTCTATCGTTATTT"
-40nt DNA Sequence:
-CAGGTAGTAGAGTATATTATGGCCATTTCTATCGTTATTT
+julia> costmodel = CostModel(match=0, mismatch=1, insertion=1, deletion=1);
 
-julia> b = dna"ATCTCTAATATTTATATCATGGACATTAAATCTCGCAGGA"
-40nt DNA Sequence:
-ATCTCTAATATTTATATCATGGACATTAAATCTCGCAGGA
-
-julia> affinegap = AffineGapScoreModel(match=5, mismatch=-4, gap_open=-10, gap_extend=-1)
-Bio.Align.AffineGapScoreModel{Int64}:
-       match = 5
-    mismatch = -4
-    gap_open = -10
-  gap_extend = -1
-
-julia> pairalign(GlobalAlignment(), a, b, affinegap)
-Bio.Seq.PairwiseAlignmentResult{Int64,Bio.Seq.BioSequence{Bio.Seq.DNAAlphabet{4}},Bio.Seq.BioSeque
-nce{Bio.Seq.DNAAlphabet{4}}}:
-  score: 12
-  seq:  0 ----CAGGTAGTAGAGTATATTATGGCCATT---TCTATCGTTATTT 40
-              |   || |    ||||| |||| ||||   |||  |   |
-  ref:  1 ATCTCTAATATT----TATATCATGGACATTAAATCTCGCAGGA--- 40
-
-
-julia> pairalign(LocalAlignment(), a, b, affinegap)
-Bio.Seq.PairwiseAlignmentResult{Int64,Bio.Seq.BioSequence{Bio.Seq.DNAAlphabet{4}},Bio.Seq.BioSeque
-nce{Bio.Seq.DNAAlphabet{4}}}:
-  score: 59
-  seq: 13 TATATTATGGCCATT---TCT 30
-          ||||| |||| ||||   |||
-  ref: 13 TATATCATGGACATTAAATCT 33
-
+julia> pairalign(EditDistance(), "abcd", "adcde", costmodel)
+Bio.Align.PairwiseAlignmentResult{Int64,ASCIIString,ASCIIString}:
+  distance: 2
+  seq: 1 abcd- 4
+         | ||
+  ref: 1 adcde 5
 
 ```
 
-#### Global vs. semi-global alignment
+### Operations on pairwise alignment
+
+`pairalign` returns a `PairwiseAlignmentResult` object and some accessors are
+provided for it.
+
+    {docs}
+    score
+    distance
+    hasalignment
+    alignment
+
+Pairwise alignment also implements some useful operations on it.
+
+    {docs}
+    count_matches
+    count_mismatches
+    count_insertions
+    count_deletions
+    count_aligned
+
+The example below shows a use case of these operations:
+```julia
+julia> s1 = dna"CCTAGGAGGG";
+
+julia> s2 = dna"ACCTGGTATGATAGCG";
+
+julia> scoremodel = AffineGapScoreModel(EDNAFULL, gap_open=-5, gap_extend=-1);
+
+julia> res = pairalign(GlobalAlignment(), s1, s2, scoremodel)  # run pairwise alignment
+Bio.Align.PairwiseAlignmentResult{Int64,Bio.Seq.BioSequence{Bio.Seq.DNAAlphabet{4}},Bio.Seq.BioSequence{Bio.Seq.DNAAlphabet{4}}}:
+  score: 13
+  seq:  0 -CCTAGG------AGGG 10
+           ||| ||      || |
+  ref:  1 ACCT-GGTATGATAGCG 16
+
+
+julia> score(res)  # get the achieved score of this alignment
+13
+
+julia> aln = alignment(res)
+PairwiseAlignment{Bio.Seq.BioSequence{Bio.Seq.DNAAlphabet{4}},Bio.Seq.BioSequence{Bio.Seq.DNAAlphabet{4}}}:
+  seq:  0 -CCTAGG------AGGG 10
+           ||| ||      || |
+  ref:  1 ACCT-GGTATGATAGCG 16
+
+
+julia> count_matches(aln)
+8
+
+julia> count_mismatches(aln)
+1
+
+julia> count_insertions(aln)
+1
+
+julia> count_deletions(aln)
+7
+
+julia> count_aligned(aln)
+17
+
+julia> collect(aln)  # pairwise alignment is iterable
+17-element Array{Tuple{Bio.Seq.DNANucleotide,Bio.Seq.DNANucleotide},1}:
+ (-,A)
+ (C,C)
+ (C,C)
+ (T,T)
+ (A,-)
+ (G,G)
+ (G,G)
+ (-,T)
+ (-,A)
+ (-,T)
+ (-,G)
+ (-,A)
+ (-,T)
+ (A,A)
+ (G,G)
+ (G,C)
+ (G,G)
+
+julia> DNASequence([x for (x, _) in aln])  # create aligned `s1` with gaps
+17nt DNA Sequence:
+-CCTAGG------AGGG
+
+julia> DNASequence([y for (_, y) in aln])  # create aligned `s2` with gaps
+17nt DNA Sequence:
+ACCT-GGTATGATAGCG
+
 ```
-julia> a = dna"TATTCCATGATT"
-12nt DNA Sequence:
-TATTCCATGATT
 
-julia> b = dna"ATCTCTAATATTTATATCATGGACATTAAATCTCGCAGGA"
-40nt DNA Sequence:
-ATCTCTAATATTTATATCATGGACATTAAATCTCGCAGGA
-
-julia> affinegap = AffineGapScoreModel(match=5, mismatch=-4, gap_open=-10, gap_extend=-1)
-Bio.Align.AffineGapScoreModel{Int64}:
-       match = 5
-    mismatch = -4
-    gap_open = -10
-  gap_extend = -1
-
-julia> pairalign(GlobalAlignment(), a, b, affinegap)
-Bio.Align.PairwiseAlignmentResult{Int64,Bio.Seq.BioSequence{Bio.Seq.DNAAlphabet{4}},Bio.Se
-q.BioSequence{Bio.Seq.DNAAlphabet{4}}}:
-  score: -16
-  seq:  0 ------------TATTCCATG---ATT------------- 12
-                      |||  ||||   |||
-  ref:  1 ATCTCTAATATTTATATCATGGACATTAAATCTCGCAGGA 40
-
-
-julia> pairalign(SemiGlobalAlignment(), a, b, affinegap)
-Bio.Align.PairwiseAlignmentResult{Int64,Bio.Seq.BioSequence{Bio.Seq.DNAAlphabet{4}},Bio.Se
-q.BioSequence{Bio.Seq.DNAAlphabet{4}}}:
-  score: 29
-  seq:  0 ------------TATTCCATG---ATT------------- 12
-                      |||  ||||   |||
-  ref:  1 ATCTCTAATATTTATATCATGGACATTAAATCTCGCAGGA 40
-
-
-```
-
-#### Global vs. overlap alignment
-
-```
-julia> a = dna"ATCTAACATTGGACATTAAATCTCGCATGATCGGACATTG"
-
-julia> b = dna"ATCTCTAATATTTATATCATGGACATTAAATCTCGCAGGA"
-40nt DNA Sequence:
-ATCTCTAATATTTATATCATGGACATTAAATCTCGCAGGA
-
-julia> affinegap = AffineGapScoreModel(match=5, mismatch=-4, gap_open=-10, gap_extend=-1)
-Bio.Align.AffineGapScoreModel{Int64}:
-       match = 5
-    mismatch = -4
-    gap_open = -10
-  gap_extend = -1
-
-```
-
-### Distances
-
-| Alignment Problem | Description |
-|:----------------|:-------------|
-| `EditDistance` | edit distance |
-| `LevenshteinDistance` | special case of edit distance |
-| `HammingDistance` | special case of edit distance |
-
-
-### Scoring models
-
-
-### Substitution matrices
+## Substitution matrices
 
 A substitution matrix is a function of substitution score (or cost) from one
 symbol to other. Substitution value of `submat` from `x` to `y` can be obtained
