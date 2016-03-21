@@ -146,26 +146,98 @@ PairwiseAlignmentResult{Int64,ASCIIString,ASCIIString}:
 | `OverlapAlignment` | global-global alignment without end gap penalties |
 | `LocalAlignment` | local-local alignment |
 
-    GlobalAlignment
+#### Global vs. local alignment
 
-        a: -CGAATTCGT
-        b: ACGTA-TC--
+```julia
+julia> a = dna"CAGGTAGTAGAGTATATTATGGCCATTTCTATCGTTATTT"
+40nt DNA Sequence:
+CAGGTAGTAGAGTATATTATGGCCATTTCTATCGTTATTT
 
-    SemiGlobalAlignment
+julia> b = dna"ATCTCTAATATTTATATCATGGACATTAAATCTCGCAGGA"
+40nt DNA Sequence:
+ATCTCTAATATTTATATCATGGACATTAAATCTCGCAGGA
 
-        a: -CGGT---
-        b: ACG-TATC
+julia> affinegap = AffineGapScoreModel(match=5, mismatch=-4, gap_open=-10, gap_extend=-1)
+Bio.Align.AffineGapScoreModel{Int64}:
+       match = 5
+    mismatch = -4
+    gap_open = -10
+  gap_extend = -1
 
-    OverlapAlignment
+julia> pairalign(GlobalAlignment(), a, b, affinegap)
+Bio.Seq.PairwiseAlignmentResult{Int64,Bio.Seq.BioSequence{Bio.Seq.DNAAlphabet{4}},Bio.Seq.BioSeque
+nce{Bio.Seq.DNAAlphabet{4}}}:
+  score: 12
+  seq:  0 ----CAGGTAGTAGAGTATATTATGGCCATT---TCTATCGTTATTT 40
+              |   || |    ||||| |||| ||||   |||  |   |
+  ref:  1 ATCTCTAATATT----TATATCATGGACATTAAATCTCGCAGGA--- 40
 
-        a: ---TACCAG
-        b: ACGTATC--
 
-    LocalAlignment
+julia> pairalign(LocalAlignment(), a, b, affinegap)
+Bio.Seq.PairwiseAlignmentResult{Int64,Bio.Seq.BioSequence{Bio.Seq.DNAAlphabet{4}},Bio.Seq.BioSeque
+nce{Bio.Seq.DNAAlphabet{4}}}:
+  score: 59
+  seq: 13 TATATTATGGCCATT---TCT 30
+          ||||| |||| ||||   |||
+  ref: 13 TATATCATGGACATTAAATCT 33
 
-        a:     GTTT
-        b: AC  GTAT  C
 
+```
+
+#### Global vs. semi-global alignment
+```
+julia> a = dna"TATTCCATGATT"
+12nt DNA Sequence:
+TATTCCATGATT
+
+julia> b = dna"ATCTCTAATATTTATATCATGGACATTAAATCTCGCAGGA"
+40nt DNA Sequence:
+ATCTCTAATATTTATATCATGGACATTAAATCTCGCAGGA
+
+julia> affinegap = AffineGapScoreModel(match=5, mismatch=-4, gap_open=-10, gap_extend=-1)
+Bio.Align.AffineGapScoreModel{Int64}:
+       match = 5
+    mismatch = -4
+    gap_open = -10
+  gap_extend = -1
+
+julia> pairalign(GlobalAlignment(), a, b, affinegap)
+Bio.Align.PairwiseAlignmentResult{Int64,Bio.Seq.BioSequence{Bio.Seq.DNAAlphabet{4}},Bio.Se
+q.BioSequence{Bio.Seq.DNAAlphabet{4}}}:
+  score: -16
+  seq:  0 ------------TATTCCATG---ATT------------- 12
+                      |||  ||||   |||
+  ref:  1 ATCTCTAATATTTATATCATGGACATTAAATCTCGCAGGA 40
+
+
+julia> pairalign(SemiGlobalAlignment(), a, b, affinegap)
+Bio.Align.PairwiseAlignmentResult{Int64,Bio.Seq.BioSequence{Bio.Seq.DNAAlphabet{4}},Bio.Se
+q.BioSequence{Bio.Seq.DNAAlphabet{4}}}:
+  score: 29
+  seq:  0 ------------TATTCCATG---ATT------------- 12
+                      |||  ||||   |||
+  ref:  1 ATCTCTAATATTTATATCATGGACATTAAATCTCGCAGGA 40
+
+
+```
+
+#### Global vs. overlap alignment
+
+```
+julia> a = dna"ATCTAACATTGGACATTAAATCTCGCATGATCGGACATTG"
+
+julia> b = dna"ATCTCTAATATTTATATCATGGACATTAAATCTCGCAGGA"
+40nt DNA Sequence:
+ATCTCTAATATTTATATCATGGACATTAAATCTCGCAGGA
+
+julia> affinegap = AffineGapScoreModel(match=5, mismatch=-4, gap_open=-10, gap_extend=-1)
+Bio.Align.AffineGapScoreModel{Int64}:
+       match = 5
+    mismatch = -4
+    gap_open = -10
+  gap_extend = -1
+
+```
 
 ### Distances
 
