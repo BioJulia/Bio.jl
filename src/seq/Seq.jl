@@ -131,6 +131,26 @@ function Sequence()
     return DNASequence()
 end
 
+"""
+    alphabet(typ)
+
+Return an iterator of symbols of `typ`.
+
+`typ` is one of `DNANucleotide`, `RNANucleotide`, or `AminoAcid`.
+"""
+function alphabet end
+
+"""
+    gap(typ)
+
+Return the gap symbol of `typ`.
+
+`typ` is one of `DNANucleotide`, `RNANucleotide`, `AminoAcid`, or `Char`.
+"""
+function gap end
+
+gap(::Type{Char}) = '-'
+
 include("nucleotide.jl")
 include("aminoacid.jl")
 include("alphabet.jl")
