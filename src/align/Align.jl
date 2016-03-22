@@ -66,6 +66,7 @@ export
     AbstractSubstitutionMatrix,
     SubstitutionMatrix,
     DichotomousSubstitutionMatrix,
+    EDNAFULL,
     PAM30,
     PAM70,
     PAM250,

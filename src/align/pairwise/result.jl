@@ -1,5 +1,5 @@
 # Pairwise-Alignment Result
-# -------------------------
+# =========================
 
 """
 Result of pairwise alignment
@@ -12,29 +12,68 @@ type PairwiseAlignmentResult{T,S1,S2}
 end
 
 function PairwiseAlignmentResult(value, isscore, seq, ref)
-    return PairwiseAlignmentResult(value, isscore, Nullable(PairwiseAlignment(seq, ref)))
+    return PairwiseAlignmentResult(value, isscore,
+                                   Nullable(PairwiseAlignment(seq, ref)))
 end
 
 function Base.call{S1,S2}(::Type{PairwiseAlignmentResult{S1,S2}}, value, isscore)
-    return PairwiseAlignmentResult(value, isscore, Nullable{PairwiseAlignment{S1,S2}}())
+    return PairwiseAlignmentResult(value, isscore,
+                                   Nullable{PairwiseAlignment{S1,S2}}())
 end
 
-# TODO: add useful queries
 
-# accessors
+# Accessors
+# ---------
+
+"""
+    score(alignment_result)
+
+Return score of alignment.
+"""
 score(aln::PairwiseAlignmentResult) = aln.value
+
+"""
+    distance(alignment_result)
+
+Retrun distance of alignment.
+"""
 distance(aln::PairwiseAlignmentResult) = aln.value
-alignment(aln::PairwiseAlignmentResult) = get(aln.aln)
+
+
+"""
+    hasalignment(alignment_result)
+
+Check if alignment is stored or not.
+"""
 hasalignment(aln::PairwiseAlignmentResult) = !isnull(aln.aln)
 
+"""
+    alignment(alignment_result)
+
+Return alignment if any.
+
+See also: `hasalignment`
+"""
+function alignment(aln::PairwiseAlignmentResult)
+    if !hasalignment(aln)
+        throw(ArgumentError("alignment is not stored"))
+    end
+    return get(aln.aln)
+end
+
+
+# Printer
+# -------
+
 function Base.show{T,S1,S2}(io::IO, aln::PairwiseAlignmentResult{T,S1,S2})
-    println(io, "PairwiseAlignmentResult{", T, ",", S1, ",", S2, "}:")
+    println(io, summary(aln), ':')
     if aln.isscore
         print(io, "  score: ", aln.value)
     else
         print(io, "  distance: ", aln.value)
     end
     if hasalignment(aln)
-        show_pairwise_alignment(io, alignment(aln))
+        println(io)
+        print(io, alignment(aln))
     end
 end

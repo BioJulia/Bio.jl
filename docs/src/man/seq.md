@@ -187,6 +187,12 @@ Invalid DNA Nucleotide
 
 ```
 
+### Other functions
+
+    {docs}
+    alphabet
+    gap
+
 
 ## Sequences
 
