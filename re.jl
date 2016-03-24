@@ -175,8 +175,8 @@ const sym2bits_nuc = UInt32[
     0b1101,
     0b1110,
     0b1111]
-sym2bits(nt::DNANucleotide) = sym2bits_nuc[Int8(nt)+1]
-sym2bits(nt::RNANucleotide) = sym2bits_nuc[Int8(nt)+1]
+sym2bits(nt::DNANucleotide) = sym2bits_nuc[reinterpret(Int8, nt)+1]
+sym2bits(nt::RNANucleotide) = sym2bits_nuc[reinterpret(Int8, nt)+1]
 mask(::Type{DNANucleotide}) = (UInt32(1) << 4) - one(UInt32)
 mask(::Type{RNANucleotide}) = (UInt32(1) << 4) - one(UInt32)
 
@@ -445,23 +445,53 @@ function captured(m::RegexMatch)
             for k in 2:div(length(m.captured), 2)]
 end
 
+# simple stack
+type Stack{T}
+    top::Int
+    data::Vector{T}
+
+    Stack(sz::Int=0) = new(0, Vector{T}(sz))
+end
+
+Base.isempty(stack::Stack) = stack.top == 0
+
+@inline function Base.push!{T}(stack::Stack{T}, x::T)
+    if stack.top + 1 > length(stack.data)
+        push!(stack.data, x)
+    else
+        stack.data[stack.top+1] = x
+    end
+    stack.top += 1
+    return stack
+end
+
+@inline function Base.pop!(stack::Stack)
+    item = stack.data[stack.top]
+    stack.top -= 1
+    return item
+end
+
+@inline function Base.empty!(stack::Stack)
+    stack.top = 0
+    return stack
+end
+
 function match{T}(re::Regex{T}, seq::BioSequence)
     if eltype(seq) != T
         throw(ArgumentError("element type of sequence doesn't match with regex"))
     end
     ss = start(seq)
+    # a thread is `(<program counter>, <sequence's iterator state>)`
+    threads = Stack{Tuple{Int,Int}}()
+    captured = zeros(typeof(ss), re.nsaves)
     while !done(seq, ss)
-        # a thread is `(<program counter>, <sequence's iterator state>)`
-        threads = [(1, ss)]
-        captured = zeros(typeof(ss), re.nsaves)
+        push!(threads, (1, ss))
         while !isempty(threads)
             pc, s = pop!(threads)
             while true
                 op = re.code[pc]
                 t = tag(op)
-                if t == MatchTag
-                    return Nullable(RegexMatch(seq, captured))
-                elseif t == BitsTag
+                if t == BitsTag
                     if done(seq, s)
                         break
                     end
@@ -474,7 +504,7 @@ function match{T}(re::Regex{T}, seq::BioSequence)
                 elseif t == JumpTag
                     pc = convert(Int, operand(op))
                 elseif t == BranchTag
-                    push!(threads, (operand(op), s))
+                    push!(threads, (convert(Int, operand(op)), s))
                     pc += 1
                 elseif t == SaveTag
                     captured[operand(op)] = s
@@ -491,9 +521,12 @@ function match{T}(re::Regex{T}, seq::BioSequence)
                     else
                         break
                     end
+                elseif t == MatchTag
+                    return Nullable(RegexMatch(seq, captured))
                 end
             end
         end
+        empty!(threads)
         _, ss = next(seq, ss)
     end
     return Nullable{RegexMatch{eltype(seq)}}()
