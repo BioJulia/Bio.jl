@@ -436,7 +436,7 @@ function Base.show(io::IO, m::RegexMatch)
     print(io, ')')
 end
 
-function match(m::RegexMatch)
+function matched(m::RegexMatch)
     return m.seq[m.captured[1]:m.captured[2]-1]
 end
 
@@ -551,7 +551,7 @@ using Base.Test
 @test  ismatch(Regex{DNANucleotide}("A+C+"), dna"AAC")
 @test !ismatch(Regex{DNANucleotide}("A+C+"), dna"AA")
 
-@test    match(get(match(Regex{DNANucleotide}("A(C+)"), dna"ACCC"))) == dna"ACCC"
+@test  matched(get(match(Regex{DNANucleotide}("A(C+)"), dna"ACCC"))) == dna"ACCC"
 @test captured(get(match(Regex{DNANucleotide}("A(C+)"), dna"ACCC"))) == [dna"CCC"]
 @test captured(get(match(Regex{DNANucleotide}("(A)(C+)"), dna"ACCC"))) == [dna"A", dna"CCC"]
 
