@@ -68,12 +68,9 @@ function parserec{T}(::Type{T}, pat, s)
             arg = pop!(args)
             push!(args, expr(:range, [rng, arg]))
         elseif c == '|'
-            if isempty(args)
-                arg1 = expr(:concat, [])
-            else
-                arg1 = pop!(args)
-            end
+            arg1 = expr(:concat, args)
             arg2, s = parserec(T, pat, s)
+            args = []
             push!(args, expr(:|, [arg1, arg2]))
         elseif c == '['
             setexpr, s = parseset(T, pat, s)
@@ -550,6 +547,7 @@ using Base.Test
 @test !ismatch(Regex{DNANucleotide}("A+"), dna"CC")
 @test  ismatch(Regex{DNANucleotide}("A+C+"), dna"AAC")
 @test !ismatch(Regex{DNANucleotide}("A+C+"), dna"AA")
+@test  ismatch(Regex{DNANucleotide}("T(A[AG]|GA)"), dna"TGA")
 
 @test  matched(get(match(Regex{DNANucleotide}("A(C+)"), dna"ACCC"))) == dna"ACCC"
 @test captured(get(match(Regex{DNANucleotide}("A(C+)"), dna"ACCC"))) == [dna"CCC"]
