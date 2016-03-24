@@ -409,7 +409,12 @@ immutable Regex{T}
 
     function Regex(pat::AbstractString)
         code = compile(desugar(T, parse(T, pat)))
-        return new(pat, code, count_saves(code))
+        nsaves = 0
+        for op in code
+            nsaves += tag(op) == SaveTag
+        end
+        @assert iseven(nsaves)
+        return new(pat, code, nsaves)
     end
 end
 
@@ -530,15 +535,6 @@ function match{T}(re::Regex{T}, seq::BioSequence)
 end
 
 ismatch{T}(re::Regex{T}, seq::BioSequence) = !isnull(match(re, seq))
-
-function count_saves(code)
-    n = 0
-    for op in code
-        n += tag(op) == SaveTag
-    end
-    @assert iseven(n)
-    return n
-end
 
 # inline quick tests
 using Base.Test
