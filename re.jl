@@ -510,4 +510,16 @@ function count_saves(code)
     return n
 end
 
+# inline quick tests
+using Base.Test
+@test  ismatch(Regex{DNANucleotide}("A"), dna"AA")
+@test  ismatch(Regex{DNANucleotide}("A+"), dna"AA")
+@test !ismatch(Regex{DNANucleotide}("A+"), dna"CC")
+@test  ismatch(Regex{DNANucleotide}("A+C+"), dna"AAC")
+@test !ismatch(Regex{DNANucleotide}("A+C+"), dna"AA")
+
+@test    match(get(match(Regex{DNANucleotide}("A(C+)"), dna"ACCC"))) == dna"ACCC"
+@test captured(get(match(Regex{DNANucleotide}("A(C+)"), dna"ACCC"))) == [dna"CCC"]
+@test captured(get(match(Regex{DNANucleotide}("(A)(C+)"), dna"ACCC"))) == [dna"A", dna"CCC"]
+
 end  # module RE
