@@ -187,7 +187,7 @@ function parse_prosite(pat)
         elseif c == '<'
             push!(args, expr(:head, []))
         elseif c == '>'
-            push!(args, expr(:tail, []))
+            push!(args, expr(:last, []))
         elseif c ∈ symbols[AminoAcid]
             push!(args, expr(:sym, [convert(AminoAcid, c)]))
         else
@@ -718,5 +718,8 @@ using Base.Test
 @test  ismatch(Regex{AminoAcid}("[AC]-x-V-x(4)-{ED}", :prosite), aa"CPVAARRK")
 @test !ismatch(Regex{AminoAcid}("[AC]-x-V-x(4)-{ED}", :prosite), aa"ADVAARRE")
 @test !ismatch(Regex{AminoAcid}("[AC]-x-V-x(4)-{ED}", :prosite), aa"CPVAARK")
+@test  ismatch(Regex{AminoAcid}("<[AC]-x-V-x(4)-{ED}>", :prosite), aa"ADVAARRK")
+@test !ismatch(Regex{AminoAcid}("<[AC]-x-V-x(4)-{ED}>", :prosite), aa"AADVAARRK")
+@test !ismatch(Regex{AminoAcid}("<[AC]-x-V-x(4)-{ED}>", :prosite), aa"ADVAARRKA")
 
 end  # module RE
