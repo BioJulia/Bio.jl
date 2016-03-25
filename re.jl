@@ -163,6 +163,98 @@ function parseset{T}(::Type{T}, pat, s)
     return expr(complement ? :compset : :set, set), s
 end
 
+function parse_prosite(pat)
+    s = start(pat)
+    args = []
+    while !done(pat, s)
+        c, s = next(pat, s)
+        if c == '['
+            set, s = parseset_prosite(pat, s, ']')
+            push!(args, set)
+        elseif c == '{'
+            set, s = parseset_prosite(pat, s, '}')
+            push!(args, set)
+        elseif c == '('
+            @check !isempty(args) ArgumentError("unexpected '('")
+            rng, s = parserange_prosite(pat, s)
+            arg = pop!(args)
+            push!(args, expr(:range, [rng, arg]))
+        elseif c == '-'
+            # concat
+            continue
+        elseif c == 'x'
+            push!(args, expr(:sym, [AA_X]))
+        elseif c == '<'
+            push!(args, expr(:head, []))
+        elseif c == '>'
+            push!(args, expr(:tail, []))
+        elseif c ∈ symbols[AminoAcid]
+            push!(args, expr(:sym, [convert(AminoAcid, c)]))
+        else
+            throw(ArgumentError("unexpected input: '$c'"))
+        end
+    end
+    return expr(:concat, args)
+end
+
+function parserange_prosite(pat, s)
+    lo = hi = -1
+    comma = false
+    while !done(pat, s)
+        c, s = next(pat, s)
+        if isdigit(c)
+            d = c - '0'
+            if comma
+                if hi < 0
+                    hi = 0
+                end
+                hi = 10hi + d
+            else
+                if lo < 0
+                    lo = 0
+                end
+                lo = 10lo + d
+            end
+        elseif c == ','
+            comma = true
+        elseif c == ')'
+            break
+        else
+            throw(ArgumentError("unexpected input: '$c'"))
+        end
+    end
+    if comma
+        if lo < 0 || hi < 0
+            throw(ArgumentError("invalid range"))
+        end
+        return (lo, hi), s
+    else
+        if lo < 0
+            throw(ArgumentError("invalid range"))
+        end
+        return lo, s
+    end
+end
+
+function parseset_prosite(pat, s, close)
+    set = AminoAcid[]
+    while !done(pat, s)
+        c, s = next(pat, s)
+        if c ∈ symbols[AminoAcid]
+            push!(set, convert(AminoAcid, c))
+        elseif c == close
+            if close == ']'
+                return expr(:set, set), s
+            elseif close == '}'
+                return expr(:compset, set), s
+            end
+            @assert false
+        else
+            throw(ArgumentError("unexpected input: '$c'"))
+        end
+    end
+end
+
 # DNA/RNA nucleotides
 const sym2bits_nuc = UInt32[
     0b0001,
@@ -450,8 +542,16 @@ immutable Regex{T}
     code::Vector{Op}  # compiled code
     nsaves::Int       # the number of `save` operations in `code`
 
-    function Regex(pat::AbstractString)
-        code = compile(desugar(T, parse(T, pat)))
+    function Regex(pat::AbstractString, syntax=:pcre)
+        if syntax == :pcre
+            ast = desugar(T, parse(T, pat))
+        elseif syntax == :prosite
+            if T != AminoAcid
+                throw(ArgumentError("alphabet must be AminoAcid for PROSITE syntax"))
+            end
+            ast = desugar(AminoAcid, parse_prosite(pat))
+        end
+        code = compile(ast)
         nsaves = 0
         for op in code
             nsaves += tag(op) == SaveTag
@@ -610,5 +710,10 @@ using Base.Test
 @test matched(get(match(Regex{DNANucleotide}("A??"), dna"AAA"))) == dna""
 @test matched(get(match(Regex{DNANucleotide}("A+?"), dna"AAA"))) == dna"A"
 @test matched(get(match(Regex{DNANucleotide}("A{2,}?"), dna"AAA"))) == dna"AA"
+
+@test  ismatch(Regex{AminoAcid}("[AC]-x-V-x(4)-{ED}", :prosite), aa"ADVAARRK")
+@test  ismatch(Regex{AminoAcid}("[AC]-x-V-x(4)-{ED}", :prosite), aa"CPVAARRK")
+@test !ismatch(Regex{AminoAcid}("[AC]-x-V-x(4)-{ED}", :prosite), aa"ADVAARRE")
+@test !ismatch(Regex{AminoAcid}("[AC]-x-V-x(4)-{ED}", :prosite), aa"CPVAARK")
 
 end  # module RE
