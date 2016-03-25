@@ -485,8 +485,10 @@ function matched(m::RegexMatch)
     return m.seq[m.captured[1]:m.captured[2]-1]
 end
 
-function captured(m::RegexMatch)
-    return [m.seq[m.captured[2k-1]:m.captured[2k]-1]
+function captured{S}(m::RegexMatch{S})
+    return [m.captured[2k-1] != 0 && m.captured[2k] != 0 ?
+            Nullable{S}(m.seq[m.captured[2k-1]:m.captured[2k]-1]) :
+            Nullable{S}()
             for k in 2:div(length(m.captured), 2)]
 end
 
@@ -528,9 +530,10 @@ function match{T}(re::Regex{T}, seq::BioSequence)
     ss = start(seq)
     # a thread is `(<program counter>, <sequence's iterator state>)`
     threads = Stack{Tuple{Int,Int}}()
-    captured = zeros(typeof(ss), re.nsaves)
+    captured = Vector{Int}(re.nsaves)
     while !done(seq, ss)
         push!(threads, (1, ss))
+        fill!(captured, 0)
         while !isempty(threads)
             pc, s = pop!(threads)
             while true
@@ -592,8 +595,11 @@ using Base.Test
 @test  ismatch(Regex{DNANucleotide}("T(A[AG]|GA)"), dna"TGA")
 
 @test  matched(get(match(Regex{DNANucleotide}("A(C+)"), dna"ACCC"))) == dna"ACCC"
-@test captured(get(match(Regex{DNANucleotide}("A(C+)"), dna"ACCC"))) == [dna"CCC"]
-@test captured(get(match(Regex{DNANucleotide}("(A)(C+)"), dna"ACCC"))) == [dna"A", dna"CCC"]
+@test get(captured(get(match(Regex{DNANucleotide}("A(C+)"), dna"ACCC")))[1]) == dna"CCC"
+@test get(captured(get(match(Regex{DNANucleotide}("(A)(C+)"), dna"ACCC")))[1]) == dna"A"
+@test get(captured(get(match(Regex{DNANucleotide}("(A)(C+)"), dna"ACCC")))[2]) == dna"CCC"
+@test    get(captured(get(match(Regex{DNANucleotide}("(A+)|(C+)"), dna"AA")))[1]) == dna"AA"
+@test isnull(captured(get(match(Regex{DNANucleotide}("(A+)|(C+)"), dna"AA")))[2])
 
 @test matched(get(match(Regex{DNANucleotide}("A*"), dna"AAA"))) == dna"AAA"
 @test matched(get(match(Regex{DNANucleotide}("A?"), dna"AAA"))) == dna"A"
