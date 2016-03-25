@@ -692,6 +692,9 @@ using Base.Test
 @test !ismatch(Regex{DNANucleotide}("A+"), dna"CC")
 @test  ismatch(Regex{DNANucleotide}("A+C+"), dna"AAC")
 @test !ismatch(Regex{DNANucleotide}("A+C+"), dna"AA")
+@test  ismatch(Regex{DNANucleotide}("^A+C+\$"), dna"AACC")
+@test !ismatch(Regex{DNANucleotide}("^A+C+\$"), dna"AACCG")
+@test !ismatch(Regex{DNANucleotide}("^A+C+\$"), dna"GAACC")
 @test  ismatch(Regex{DNANucleotide}("T(A[AG]|GA)"), dna"TGA")
 
 @test  matched(get(match(Regex{DNANucleotide}("A(C+)"), dna"ACCC"))) == dna"ACCC"
