@@ -285,31 +285,31 @@ replicate(x, n) = collect(repeated(x, n))
 # Compiler
 # --------
 
-#  tag  | operation
-# ------|-----------
-# 0b000 | match
-# 0b001 | bits b
-# 0b010 | jump l
-# 0b011 | branch l
-# 0b100 | save i
-# 0b101 | head
-# 0b110 | last
+#  tag  | operation |           meaning
+# ------|-----------|----------------------------
+# 0b000 | match     | the pattern matches
+# 0b001 | bits b    | matches b in bit-wise way
+# 0b010 | jump l    | jump to l
+# 0b011 | push l    | push l and go next
+# 0b100 | save i    | save string state to i
+# 0b101 | head      | matches the head of string
+# 0b110 | last      | matches the last of string
 
 bitstype 32 Op
 
-const MatchTag  = UInt32(0b000) << 29
-const BitsTag   = UInt32(0b001) << 29
-const JumpTag   = UInt32(0b010) << 29
-const BranchTag = UInt32(0b011) << 29
-const SaveTag   = UInt32(0b100) << 29
-const HeadTag   = UInt32(0b101) << 29
-const LastTag   = UInt32(0b110) << 29
+const MatchTag = UInt32(0b000) << 29
+const BitsTag  = UInt32(0b001) << 29
+const JumpTag  = UInt32(0b010) << 29
+const PushTag  = UInt32(0b011) << 29
+const SaveTag  = UInt32(0b100) << 29
+const HeadTag  = UInt32(0b101) << 29
+const LastTag  = UInt32(0b110) << 29
 
 # constructors
 match() = reinterpret(Op, MatchTag)
 bits(b::UInt32) = reinterpret(Op, BitsTag | b)
 jump(l::Int) = reinterpret(Op, JumpTag | UInt32(l))
-branch(l::Int) = reinterpret(Op, BranchTag | UInt32(l))
+push(l::Int) = reinterpret(Op, PushTag | UInt32(l))
 save(l::Int) = reinterpret(Op, SaveTag | UInt32(l))
 head() = reinterpret(Op, HeadTag)
 last() = reinterpret(Op, LastTag)
@@ -327,8 +327,8 @@ function Base.show(io::IO, op::Op)
         print(io, "bits ", @sprintf("0x%08x", x))
     elseif t == JumpTag
         print(io, "jump ", x)
-    elseif t == BranchTag
-        print(io, "branch ", x)
+    elseif t == PushTag
+        print(io, "push ", x)
     elseif t == SaveTag
         print(io, "save ", x)
     elseif t == HeadTag
@@ -369,17 +369,17 @@ function compilerec!(code, tree::SyntaxTree, k)
             k = compilerec!(code, arg, k)
         end
     elseif h == :*
-        push!(code, branch(0))  # placeholder
+        push!(code, push(0))  # placeholder
         l = length(code)
         k = compilerec!(code, args[1], k)
         push!(code, jump(l))
-        code[l] = branch(length(code) + 1)
+        code[l] = push(length(code) + 1)
     elseif h == :|
-        push!(code, branch(0))  # placeholder
+        push!(code, push(0))  # placeholder
         l = length(code)
         k = compilerec!(code, args[1], k)
         push!(code, jump(0))  # placeholder
-        code[l] = branch(length(code) + 1)
+        code[l] = push(length(code) + 1)
         l = length(code)
         k = compilerec!(code, args[2], k)
         code[l] = jump(length(code) + 1)
@@ -505,7 +505,7 @@ function match{T}(re::Regex{T}, seq::BioSequence)
                     end
                 elseif t == JumpTag
                     pc = convert(Int, operand(op))
-                elseif t == BranchTag
+                elseif t == PushTag
                     push!(threads, (convert(Int, operand(op)), s))
                     pc += 1
                 elseif t == SaveTag
