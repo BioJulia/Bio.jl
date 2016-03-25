@@ -635,7 +635,7 @@ function match{T}(re::Regex{T}, seq::BioSequence)
         push!(threads, (1, ss))
         fill!(captured, 0)
         while !isempty(threads)
-            pc, s = pop!(threads)
+            pc::Int, s = pop!(threads)
             while true
                 op = re.code[pc]
                 t = tag(op)
@@ -650,13 +650,13 @@ function match{T}(re::Regex{T}, seq::BioSequence)
                         break
                     end
                 elseif t == JumpTag
-                    pc = convert(Int, operand(op))
+                    pc = operand(op)
                 elseif t == PushTag
                     push!(threads, (convert(Int, operand(op)), s))
                     pc += 1
                 elseif t == ForkTag
                     push!(threads, (pc + 1, s))
-                    pc = convert(Int, operand(op))
+                    pc = operand(op)
                 elseif t == SaveTag
                     captured[operand(op)] = s
                     pc += 1
