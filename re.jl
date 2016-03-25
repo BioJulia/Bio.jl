@@ -290,10 +290,11 @@ replicate(x, n) = collect(repeated(x, n))
 # 0b000 | match     | the pattern matches
 # 0b001 | bits b    | matches b in bit-wise way
 # 0b010 | jump l    | jump to l
-# 0b011 | push l    | push l and go next
+# 0b011 | push l    | push l and go to next
 # 0b100 | save i    | save string state to i
 # 0b101 | head      | matches the head of string
 # 0b110 | last      | matches the last of string
+# 0b111 | fork l    | push next and go to l
 
 bitstype 32 Op
 
@@ -304,6 +305,7 @@ const PushTag  = UInt32(0b011) << 29
 const SaveTag  = UInt32(0b100) << 29
 const HeadTag  = UInt32(0b101) << 29
 const LastTag  = UInt32(0b110) << 29
+const ForkTag  = UInt32(0b111) << 29
 
 # constructors
 match() = reinterpret(Op, MatchTag)
@@ -313,6 +315,7 @@ push(l::Int) = reinterpret(Op, PushTag | UInt32(l))
 save(l::Int) = reinterpret(Op, SaveTag | UInt32(l))
 head() = reinterpret(Op, HeadTag)
 last() = reinterpret(Op, LastTag)
+fork(l::Int) = reinterpret(Op, ForkTag | UInt32(l))
 
 const operand_mask = (UInt32(1) << 29) - one(UInt32)
 tag(op::Op) = reinterpret(UInt32, op) & ~operand_mask
@@ -335,6 +338,8 @@ function Base.show(io::IO, op::Op)
         print(io, "head")
     elseif t == LastTag
         print(io, "last")
+    elseif t == ForkTag
+        print(io, "fork ", x)
     else
         @assert false
     end
@@ -508,6 +513,9 @@ function match{T}(re::Regex{T}, seq::BioSequence)
                 elseif t == PushTag
                     push!(threads, (convert(Int, operand(op)), s))
                     pc += 1
+                elseif t == ForkTag
+                    push!(threads, (pc + 1, s))
+                    pc = convert(Int, operand(op))
                 elseif t == SaveTag
                     captured[operand(op)] = s
                     pc += 1
