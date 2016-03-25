@@ -15,8 +15,10 @@ type SyntaxTree
 
     function SyntaxTree(head, args)
         @assert head ∈ (
-            :*, :+, :?, :|,
-            :range, :set, :compset, :sym, :bits,
+            :|,
+            :*, :+, :?, :range,
+            symbol("*?"), symbol("+?"), symbol("??"), symbol("range?"),
+            :set, :compset, :sym, :bits,
             :capture, :concat, :head, :last)
         return new(head, args)
     end
@@ -61,7 +63,13 @@ function parserec{T}(::Type{T}, pat, s)
         elseif c == '?'
             @check !isempty(args) ArgumentError("unexpected '?'")
             arg = pop!(args)
-            push!(args, expr(:?, [arg]))
+            if arg.head ∈ (:*, :+, :?, :range)
+                # lazy quantifier
+                push!(args, expr(symbol(arg.head, '?'), arg.args))
+            else
+                # zero-or-one quantifier
+                push!(args, expr(:?, [arg]))
+            end
         elseif c == '{'
             @check !isempty(args) ArgumentError("unexpected '{'")
             rng, s = parserange(pat , s)
@@ -215,10 +223,18 @@ function desugar{T}(::Type{T}, tree::SyntaxTree)
         # e+ => ee*
         head = :concat
         args = [args[1], expr(:*, [args[1]])]
+    elseif head == symbol("+?")
+        # e+? => ee*?
+        head = :concat
+        args = [args[1], expr(symbol("*?"), [args[1]])]
     elseif head == :?
         # e? => e|
         head = :|
         args = [args[1], expr(:concat, [])]
+    elseif head == symbol("??")
+        # e?? => |e
+        head = :|
+        args = [expr(:concat, []), args[1]]
     elseif head == :sym
         head = :bits
         args = [sym2bits(args[1])]
@@ -236,32 +252,48 @@ function desugar{T}(::Type{T}, tree::SyntaxTree)
         end
         head = :bits
         args = [~bits & mask(T)]
-    elseif head == :range
+    elseif head == :range || head == symbol("range?")
         rng = args[1]
         pat = args[2]
+        greedy = head == :range
         if isa(rng, Int)
             # e{m} => eee...e
             #         |<-m->|
             head = :concat
             args = replicate(pat, rng)
         elseif isa(rng, Tuple{Int})
-            # e{m,} => eee...ee*
+            # e{m,} => eee...ee*   (greedy)
+            #          |<-m->|
+            # e{m,} => eee...ee*?  (lazy)
             #          |<-m->|
             head = :concat
             args = replicate(pat, rng[1])
-            push!(args, expr(:*, [pat]))
+            if greedy
+                push!(args, expr(:*, [pat]))
+            else
+                push!(args, expr(symbol("*?"), [pat]))
+            end
         elseif isa(rng, Tuple{Int,Int})
-            # e{m,n} => eee...e|eee...ee|...|eee...eee
+            # e{m,n} => eee...eee|eee...ee|...|eee...e  (greedy)
+            #           |<- n ->|              |<-m->|
+            # e{m,n} => eee...e|eee...ee|...|eee...eee  (lazy)
             #           |<-m->|              |<- n ->|
             m, n = rng
+            @assert m ≤ n
             if m == n
                 head = :concat
                 args = replicate(pat, m)
             else
-                @assert m < n
-                tree = replicate(pat, n)
-                for k in n-1:-1:m
-                    tree = expr(:|, [replicate(pat, k), tree])
+                if greedy
+                    tree = replicate(pat, m)
+                    for k in m-1:1:n
+                        tree = expr(:|, [replicate(pat, k), tree])
+                    end
+                else
+                    tree = replicate(pat, n)
+                    for k in n-1:-1:m
+                        tree = expr(:|, [replicate(pat, k), tree])
+                    end
                 end
                 head = :|
                 args = tree.args
@@ -379,6 +411,12 @@ function compilerec!(code, tree::SyntaxTree, k)
         k = compilerec!(code, args[1], k)
         push!(code, jump(l))
         code[l] = push(length(code) + 1)
+    elseif h == symbol("*?")
+        push!(code, fork(0))  # placeholder
+        l = length(code)
+        k = compilerec!(code, args[1], k)
+        push!(code, jump(l))
+        code[l] = fork(length(code) + 1)
     elseif h == :|
         push!(code, push(0))  # placeholder
         l = length(code)
@@ -556,5 +594,15 @@ using Base.Test
 @test  matched(get(match(Regex{DNANucleotide}("A(C+)"), dna"ACCC"))) == dna"ACCC"
 @test captured(get(match(Regex{DNANucleotide}("A(C+)"), dna"ACCC"))) == [dna"CCC"]
 @test captured(get(match(Regex{DNANucleotide}("(A)(C+)"), dna"ACCC"))) == [dna"A", dna"CCC"]
+
+@test matched(get(match(Regex{DNANucleotide}("A*"), dna"AAA"))) == dna"AAA"
+@test matched(get(match(Regex{DNANucleotide}("A?"), dna"AAA"))) == dna"A"
+@test matched(get(match(Regex{DNANucleotide}("A+"), dna"AAA"))) == dna"AAA"
+@test matched(get(match(Regex{DNANucleotide}("A{2,}"), dna"AAA"))) == dna"AAA"
+
+@test matched(get(match(Regex{DNANucleotide}("A*?"), dna"AAA"))) == dna""
+@test matched(get(match(Regex{DNANucleotide}("A??"), dna"AAA"))) == dna""
+@test matched(get(match(Regex{DNANucleotide}("A+?"), dna"AAA"))) == dna"A"
+@test matched(get(match(Regex{DNANucleotide}("A{2,}?"), dna"AAA"))) == dna"AA"
 
 end  # module RE
