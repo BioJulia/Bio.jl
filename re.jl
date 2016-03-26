@@ -592,6 +592,28 @@ function captured{S}(m::RegexMatch{S})
             for k in 2:div(length(m.captured), 2)]
 end
 
+function match{T}(re::Regex{T}, seq::BioSequence)
+    if eltype(seq) != T
+        throw(ArgumentError("element type of sequence doesn't match with regex"))
+    end
+    s = start(seq)
+    # a thread is `(<program counter>, <sequence's iterator state>)`
+    threads = Stack{Tuple{Int,Int}}()
+    captured = Vector{Int}(re.nsaves)
+    while !done(seq, s)
+        empty!(threads)
+        push!(threads, (1, s))
+        fill!(captured, 0)
+        if runmatch!(threads, captured, re, seq)
+            return Nullable(RegexMatch(seq, captured))
+        end
+        _, s = next(seq, s)
+    end
+    return Nullable{RegexMatch{typeof(seq)}}()
+end
+
+ismatch{T}(re::Regex{T}, seq::BioSequence) = !isnull(match(re, seq))
+
 # simple stack
 type Stack{T}
     top::Int
@@ -623,67 +645,54 @@ end
     return stack
 end
 
-function match{T}(re::Regex{T}, seq::BioSequence)
-    if eltype(seq) != T
-        throw(ArgumentError("element type of sequence doesn't match with regex"))
-    end
-    ss = start(seq)
-    # a thread is `(<program counter>, <sequence's iterator state>)`
-    threads = Stack{Tuple{Int,Int}}()
-    captured = Vector{Int}(re.nsaves)
-    while !done(seq, ss)
-        push!(threads, (1, ss))
-        fill!(captured, 0)
-        while !isempty(threads)
-            pc::Int, s = pop!(threads)
-            while true
-                op = re.code[pc]
-                t = tag(op)
-                if t == BitsTag
-                    if done(seq, s)
-                        break
-                    end
-                    sym, s = next(seq, s)
-                    if sym2bits(sym) & operand(op) != 0
-                        pc += 1
-                    else
-                        break
-                    end
-                elseif t == JumpTag
-                    pc = operand(op)
-                elseif t == PushTag
-                    push!(threads, (convert(Int, operand(op)), s))
-                    pc += 1
-                elseif t == ForkTag
-                    push!(threads, (pc + 1, s))
-                    pc = operand(op)
-                elseif t == SaveTag
-                    captured[operand(op)] = s
-                    pc += 1
-                elseif t == HeadTag
-                    if s == start(seq)
-                        pc += 1
-                    else
-                        break
-                    end
-                elseif t == LastTag
-                    if s == endof(seq) + 1
-                        pc += 1
-                    else
-                        break
-                    end
-                elseif t == MatchTag
-                    return Nullable(RegexMatch(seq, captured))
+function runmatch!(threads::Stack{Tuple{Int,Int}},
+                   captured::Vector{Int},
+                   re::Regex, seq::BioSequence)
+    while !isempty(threads)
+        pc::Int, s = pop!(threads)
+        while true
+            op = re.code[pc]
+            t = tag(op)
+            if t == BitsTag
+                if done(seq, s)
+                    break
                 end
+                sym, s = next(seq, s)
+                if sym2bits(sym) & operand(op) != 0
+                    pc += 1
+                else
+                    break
+                end
+            elseif t == JumpTag
+                pc = operand(op)
+            elseif t == PushTag
+                push!(threads, (convert(Int, operand(op)), s))
+                pc += 1
+            elseif t == ForkTag
+                push!(threads, (pc + 1, s))
+                pc = operand(op)
+            elseif t == SaveTag
+                captured[operand(op)] = s
+                pc += 1
+            elseif t == HeadTag
+                if s == start(seq)
+                    pc += 1
+                else
+                    break
+                end
+            elseif t == LastTag
+                if s == endof(seq) + 1
+                    pc += 1
+                else
+                    break
+                end
+            elseif t == MatchTag
+                return true
             end
         end
-        empty!(threads)
-        _, ss = next(seq, ss)
     end
-    return Nullable{RegexMatch{eltype(seq)}}()
+    return false
 end
-
-ismatch{T}(re::Regex{T}, seq::BioSequence) = !isnull(match(re, seq))
 
 # inline quick tests
 using Base.Test
