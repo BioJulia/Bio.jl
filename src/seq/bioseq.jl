@@ -334,7 +334,7 @@ Base.eltype{A}(::Type{BioSequence{A}}) = eltype(A)
 end
 
 function Base.checkbounds(seq::BioSequence, range::UnitRange)
-    if 1 ≤ range.start && range.stop ≤ endof(seq)
+    if isempty(range) || (1 ≤ range.start && range.stop ≤ endof(seq))
         return true
     end
     throw(BoundsError(seq, range))

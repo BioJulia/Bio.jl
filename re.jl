@@ -550,6 +550,8 @@ immutable Regex{T}
                 throw(ArgumentError("alphabet must be AminoAcid for PROSITE syntax"))
             end
             ast = desugar(AminoAcid, parse_prosite(pat))
+        else
+            throw(ArgumentError("invalid syntax: $syntax"))
         end
         code = compile(ast)
         nsaves = 0
@@ -604,7 +606,7 @@ function match{T}(re::Regex{T}, seq::BioSequence)
     threads = Stack{Tuple{Int,Int}}()
     captured = Vector{Int}(re.nsaves)
     s = start(seq)
-    while !done(seq, s)
+    while true
         empty!(threads)
         push!(threads, (1, s))
         fill!(captured, 0)
@@ -612,6 +614,9 @@ function match{T}(re::Regex{T}, seq::BioSequence)
             return Nullable(RegexMatch(seq, captured))
         end
         _, s = next(seq, s)
+        if done(seq, s)
+            break
+        end
     end
     return Nullable{RegexMatch{typeof(seq)}}()
 end
@@ -625,39 +630,40 @@ end
 Base.eltype{T,S}(::Type{RegexMatchIterator{T,S}}) = RegexMatch{S}
 
 function Base.start(iter::RegexMatchIterator)
-    re = iter.re
-    seq = iter.seq
     threads = Stack{Tuple{Int,Int}}()
-    captured = Vector{Int}(re.nsaves)
-    s = start(seq)
-    while !done(seq, s)
-        push!(threads, (1, s))
-        fill!(captured, 0)
-        if runmatch!(threads, captured, re, seq)
-            break
-        end
-        _, s = next(seq, s)
-    end
-    return threads, captured, s
+    captured = zeros(Int, iter.re.nsaves)
+    s = start(iter.seq)
+    push!(threads, (1, s))
+    return advance!(threads, captured, iter.re, iter.seq, s)
 end
 
-Base.done(iter::RegexMatchIterator, state) = done(iter.seq, state[3])
+Base.done(iter::RegexMatchIterator, state) = state[4]
 
 function Base.next(iter::RegexMatchIterator, state)
-    re = iter.re
-    seq = iter.seq
-    threads, captured, s = state
-    ret = RegexMatch(seq, copy(captured))
-    _, s = next(seq, s)
-    while !done(seq, s)
-        push!(threads, (1, s))
-        fill!(captured, 0)
-        if runmatch!(threads, captured, re, seq)
-            break
+    threads, captured, s, _ = state
+    return (
+        # need to copy `captured` since it will be reused in the next iteration
+        RegexMatch(iter.seq, copy(captured)),
+        advance!(threads, captured, iter.re, iter.seq, s)
+    )
+end
+
+function advance!(threads, captured, re, seq, s)
+    while true
+        while !isempty(threads)
+            if runmatch!(threads, captured, re, seq)
+                return threads, captured, s, false
+            end
         end
         _, s = next(seq, s)
+        if done(seq, s)
+            break
+        else
+            push!(threads, (1, s))
+            fill!(captured, 0)
+        end
     end
-    return ret, (threads, captured, s)
+    return threads, captured, s, true
 end
 
 function eachmatch{T}(re::Regex{T}, seq::BioSequence, overlap::Bool=true)
@@ -761,6 +767,9 @@ end
 # inline quick tests
 using Base.Test
 @test  ismatch(Regex{DNANucleotide}("A"), dna"AA")
+@test  ismatch(Regex{DNANucleotide}("A*"), dna"")
+@test  ismatch(Regex{DNANucleotide}("A*"), dna"A")
+@test  ismatch(Regex{DNANucleotide}("A*"), dna"AA")
 @test  ismatch(Regex{DNANucleotide}("A+"), dna"AA")
 @test !ismatch(Regex{DNANucleotide}("A+"), dna"CC")
 @test  ismatch(Regex{DNANucleotide}("A+C+"), dna"AAC")
@@ -787,8 +796,15 @@ using Base.Test
 @test matched(get(match(Regex{DNANucleotide}("A+?"), dna"AAA"))) == dna"A"
 @test matched(get(match(Regex{DNANucleotide}("A{2,}?"), dna"AAA"))) == dna"AA"
 
-@test map(matched, eachmatch(Regex{DNANucleotide}("A+"), dna"AAA")) == [dna"AAA", dna"AA", dna"A"]
-@test matchall(Regex{DNANucleotide}("A+"), dna"AAA") == [dna"AAA", dna"AA", dna"A"]
+@test matchall(Regex{DNANucleotide}("A*"), dna"AAA") == [
+    dna"AAA", dna"AA", dna"A", dna"",
+    dna"AA",  dna"A",  dna"",
+    dna"A",   dna""]
+@test matchall(Regex{DNANucleotide}("A+"), dna"AAA") == [
+    dna"AAA", dna"AA", dna"A",
+    dna"AA",  dna"A",
+    dna"A"]
+@test matchall(Regex{DNANucleotide}("AC*G*T"), dna"ACCGGGT") == [dna"ACCGGGT"]
 
 @test  ismatch(Regex{AminoAcid}("[AC]-x-V-x(4)-{ED}", :prosite), aa"ADVAARRK")
 @test  ismatch(Regex{AminoAcid}("[AC]-x-V-x(4)-{ED}", :prosite), aa"CPVAARRK")
