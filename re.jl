@@ -592,14 +592,18 @@ function captured{S}(m::RegexMatch{S})
             for k in 2:div(length(m.captured), 2)]
 end
 
-function match{T}(re::Regex{T}, seq::BioSequence)
+function checkeltype{T}(re::Regex{T}, seq::BioSequence)
     if eltype(seq) != T
         throw(ArgumentError("element type of sequence doesn't match with regex"))
     end
-    s = start(seq)
+end
+
+function match{T}(re::Regex{T}, seq::BioSequence)
+    checkeltype(re, seq)
     # a thread is `(<program counter>, <sequence's iterator state>)`
     threads = Stack{Tuple{Int,Int}}()
     captured = Vector{Int}(re.nsaves)
+    s = start(seq)
     while !done(seq, s)
         empty!(threads)
         push!(threads, (1, s))
@@ -610,6 +614,66 @@ function match{T}(re::Regex{T}, seq::BioSequence)
         _, s = next(seq, s)
     end
     return Nullable{RegexMatch{typeof(seq)}}()
+end
+
+immutable RegexMatchIterator{T,S}
+    re::Regex{T}
+    seq::S
+    overlap::Bool
+end
+
+Base.eltype{T,S}(::Type{RegexMatchIterator{T,S}}) = RegexMatch{S}
+
+function Base.start(iter::RegexMatchIterator)
+    re = iter.re
+    seq = iter.seq
+    threads = Stack{Tuple{Int,Int}}()
+    captured = Vector{Int}(re.nsaves)
+    s = start(seq)
+    while !done(seq, s)
+        push!(threads, (1, s))
+        fill!(captured, 0)
+        if runmatch!(threads, captured, re, seq)
+            break
+        end
+        _, s = next(seq, s)
+    end
+    return threads, captured, s
+end
+
+Base.done(iter::RegexMatchIterator, state) = done(iter.seq, state[3])
+
+function Base.next(iter::RegexMatchIterator, state)
+    re = iter.re
+    seq = iter.seq
+    threads, captured, s = state
+    ret = RegexMatch(seq, copy(captured))
+    _, s = next(seq, s)
+    while !done(seq, s)
+        push!(threads, (1, s))
+        fill!(captured, 0)
+        if runmatch!(threads, captured, re, seq)
+            break
+        end
+        _, s = next(seq, s)
+    end
+    return ret, (threads, captured, s)
+end
+
+function eachmatch{T}(re::Regex{T}, seq::BioSequence, overlap::Bool=true)
+    checkeltype(re, seq)
+    @assert overlap == true  # TODO: support `overlap = false`
+    return RegexMatchIterator(re, seq, overlap)
+end
+
+function matchall{T}(re::Regex{T}, seq::BioSequence, overlap::Bool=true)
+    # this will work on v0.5
+    #   return map(matched, eachmatch(re, seq))
+    ret = Vector{typeof(seq)}()
+    for m in eachmatch(re, seq)
+        push!(ret, matched(m))
+    end
+    return ret
 end
 
 ismatch{T}(re::Regex{T}, seq::BioSequence) = !isnull(match(re, seq))
@@ -722,6 +786,9 @@ using Base.Test
 @test matched(get(match(Regex{DNANucleotide}("A??"), dna"AAA"))) == dna""
 @test matched(get(match(Regex{DNANucleotide}("A+?"), dna"AAA"))) == dna"A"
 @test matched(get(match(Regex{DNANucleotide}("A{2,}?"), dna"AAA"))) == dna"AA"
+
+@test map(matched, eachmatch(Regex{DNANucleotide}("A+"), dna"AAA")) == [dna"AAA", dna"AA", dna"A"]
+@test matchall(Regex{DNANucleotide}("A+"), dna"AAA") == [dna"AAA", dna"AA", dna"A"]
 
 @test  ismatch(Regex{AminoAcid}("[AC]-x-V-x(4)-{ED}", :prosite), aa"ADVAARRK")
 @test  ismatch(Regex{AminoAcid}("[AC]-x-V-x(4)-{ED}", :prosite), aa"CPVAARRK")
