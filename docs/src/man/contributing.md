@@ -15,7 +15,7 @@ considered it must meet the following guidelines.
     
   * In addition to documenting code in the source files through docstrings,
     we encourage contributers to create documentation which is more akin to 
-    a manual, with user guides, tutorials, or R-like vignettes. We use Lapidary.jl 
+    a manual, with user guides, tutorials, or R-like vignettes. We use Documenter.jl 
     and mkdocs, to generate such documentation and host it on our website.
     The source markdown files for such documentation, guides, and vignettes
     are located in the `docs/src/man` folder of the Bio.jl git repo.
