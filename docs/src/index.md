@@ -5,7 +5,8 @@
         "man/install.md",
         "man/seq.md",
         "man/alignments.md",
-        "man/intervals.md"
+        "man/intervals.md",
+        "man/structure.md"
     ]
     Depth = 2
 
