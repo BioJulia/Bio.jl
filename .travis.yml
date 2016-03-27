@@ -16,4 +16,4 @@ script:
 after_success:
   - julia -e 'cd(Pkg.dir("Bio")); Pkg.add("Coverage"); using Coverage; Coveralls.submit(Coveralls.process_folder())'
   - julia -e 'cd(Pkg.dir("Bio")); Pkg.add("Coverage"); using Coverage; Codecov.submit(process_folder())'
-  - julia -e 'cd(Pkg.dir("Bio")); Pkg.clone("https://github.com/MichaelHatherly/Lapidary.jl"); include(joinpath("docs", "make.jl"))'
+  - julia -e 'cd(Pkg.dir("Bio")); Pkg.clone("https://github.com/MichaelHatherly/Documenter.jl"); include(joinpath("docs", "make.jl"))'

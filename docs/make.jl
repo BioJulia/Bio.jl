@@ -1,4 +1,4 @@
-using Lapidary, Bio
+using Documenter, Bio
 
 custom_deps() = run(`pip install --user pygments mkdocs mkdocs-material`)
 makedocs()
