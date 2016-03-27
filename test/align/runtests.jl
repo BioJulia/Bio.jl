@@ -196,6 +196,22 @@ end
         @test ref2seq( 9, alnseq) == ( 4, OP_DELETE)
         @test ref2seq(10, alnseq) == ( 4, OP_DELETE)
         @test ref2seq(23, alnseq) == (15, OP_DELETE)
+
+        seq = dna"ACGG--TGAAAGGT"
+        ref = dna"-CGGGGA----TTT"
+        alnseq = AlignedSequence(seq, ref)
+        @test Bio.Align.first(alnseq) == 1
+        @test Bio.Align.last(alnseq)  == 9
+        @test alnseq.aln.anchors == [
+             AlignmentAnchor( 0, 0, '0')
+             AlignmentAnchor( 1, 0, 'I')
+             AlignmentAnchor( 4, 3, '=')
+             AlignmentAnchor( 4, 5, 'D')
+             AlignmentAnchor( 5, 6, 'X')
+             AlignmentAnchor( 9, 6, 'I')
+             AlignmentAnchor(11, 8, 'X')
+             AlignmentAnchor(12, 9, '=')
+        ]
     end
 end
 

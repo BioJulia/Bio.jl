@@ -59,6 +59,17 @@ Using anchors we would represent this as the following series of anchors:
 ]
 ```
 
+An `Alignment` object can be created from a series of anchors:
+```julia
+julia> Alignment([
+           AlignmentAnchor(0, 4, OP_START),
+           AlignmentAnchor(4, 8, OP_MATCH),
+           AlignmentAnchor(4, 12, OP_DELETE)
+       ])
+········
+····----
+```
+
 
 ### Operations
 
@@ -79,6 +90,56 @@ format](https://samtools.github.io/hts-specs/SAMv1.pdf) and are stored in the
 | `OP_SEQ_MISMATCH`    | match              | match operation with mismatching sequence positions                             |
 | `OP_BACK`            | special            | not currently supported, but present for SAM/BAM compatibility                  |
 | `OP_START`           | special            | indicate the start of an alignment within the reference and query sequence      |
+
+
+## Aligned sequence
+
+A sequence aligned to another sequence is represented by the `AlignedSequence`
+type, which is a pair of the aligned sequence and an `Alignment` object.
+
+The following example creates an aligned sequence object from a sequence and an
+alignment:
+```julia
+julia> AlignedSequence(  # pass an Alignment object
+           dna"ACGTAT",
+           Alignment([
+               AlignmentAnchor(0, 0, OP_START),
+               AlignmentAnchor(3, 3, OP_MATCH),
+               AlignmentAnchor(6, 3, OP_INSERT)
+           ])
+       )
+···---
+ACGTAT
+
+julia> AlignedSequence(  # or pass a vector of anchors
+           dna"ACGTAT",
+           [
+               AlignmentAnchor(0, 0, OP_START),
+               AlignmentAnchor(3, 3, OP_MATCH),
+               AlignmentAnchor(6, 3, OP_INSERT)
+           ]
+       )
+···---
+ACGTAT
+
+```
+
+If you already have an aligned sequence with gap symbols, it can be converted to
+an `AlignedSequence` object by passing a reference sequence with it:
+```julia
+julia> seq = dna"ACGT--AAT--"
+11nt DNA Sequence:
+ACGT--AAT--
+
+julia> ref = dna"ACGTTTAT-GG"
+11nt DNA Sequence:
+ACGTTTAT-GG
+
+julia> AlignedSequence(seq, ref)
+········-··
+ACGT--AAT--
+
+```
 
 
 ## Operating on alignments
