@@ -46,9 +46,9 @@ macro check(ex, err)
     end
 end
 
-parse{T}(::Type{T}, pat::AbstractString) = parserec(T, pat, start(pat))[1]
+parse{T}(::Type{T}, pat::AbstractString) = parserec(T, pat, start(pat), 0)[1]
 
-function parserec{T}(::Type{T}, pat, s)
+function parserec{T}(::Type{T}, pat, s, d)
     args = []
     while !done(pat, s)
         c, s = next(pat, s)
@@ -77,16 +77,17 @@ function parserec{T}(::Type{T}, pat, s)
             push!(args, expr(:range, [rng, arg]))
         elseif c == '|'
             arg1 = expr(:concat, args)
-            arg2, s = parserec(T, pat, s)
+            arg2, s = parserec(T, pat, s, d)
             args = []
             push!(args, expr(:|, [arg1, arg2]))
         elseif c == '['
             setexpr, s = parseset(T, pat, s)
             push!(args, setexpr)
         elseif c == '('
-            arg, s = parserec(T, pat, s)
+            arg, s = parserec(T, pat, s, d + 1)
             push!(args, expr(:capture, [arg]))
         elseif c == ')'
+            @check d > 0 ArgumentError("unexpected ')'")
             return expr(:concat, args), s
         elseif c == '^'
             push!(args, expr(:head, []))
