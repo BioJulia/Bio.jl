@@ -100,6 +100,8 @@ function parserec{T}(::Type{T}, pat, s, parens)
             push!(args, expr(:head, []))
         elseif c == '$'
             push!(args, expr(:last, []))
+        elseif isspace(c)
+            # skip
         elseif c ∈ symbols[T]
             push!(args, expr(:sym, [convert(T, c)]))
         else
@@ -845,6 +847,7 @@ using Base.Test
 @test  ismatch(Regex{DNANucleotide}("A+"), dna"AA")
 @test !ismatch(Regex{DNANucleotide}("A+"), dna"CC")
 @test  ismatch(Regex{DNANucleotide}("A+C+"), dna"AAC")
+@test  ismatch(Regex{DNANucleotide}("A+ C+"), dna"AAC")
 @test !ismatch(Regex{DNANucleotide}("A+C+"), dna"AA")
 @test  ismatch(Regex{DNANucleotide}("^A+C+\$"), dna"AACC")
 @test !ismatch(Regex{DNANucleotide}("^A+C+\$"), dna"AACCG")
