@@ -600,12 +600,12 @@ function checkeltype{T}(re::Regex{T}, seq::BioSequence)
     end
 end
 
-function Base.match{T}(re::Regex{T}, seq::BioSequence)
+function Base.match{T}(re::Regex{T}, seq::BioSequence, start::Integer=1)
     checkeltype(re, seq)
     # a thread is `(<program counter>, <sequence's iterator state>)`
     threads = Stack{Tuple{Int,Int}}()
     captured = Vector{Int}(re.nsaves)
-    s = start(seq)
+    s = start
     while true
         empty!(threads)
         push!(threads, (1, s))
@@ -619,6 +619,17 @@ function Base.match{T}(re::Regex{T}, seq::BioSequence)
         end
     end
     return Nullable{RegexMatch{typeof(seq)}}()
+end
+
+function Base.search{T}(seq::BioSequence, re::Regex{T}, start::Integer=1)
+    checkeltype(re, seq)
+    m = Base.match(re, seq, start)
+    if isnull(m)
+        return 0:-1
+    else
+        x = get(m)
+        return x.captured[1]:x.captured[2]-1
+    end
 end
 
 immutable RegexMatchIterator{T,S}
@@ -793,6 +804,8 @@ end
 end  # module RE
 
 # inline quick tests
+module Test
+import ..RE
 const Regex = RE.Regex
 const matched = RE.matched
 const captured = RE.captured
@@ -843,6 +856,14 @@ using Base.Test
 @test matchall(Regex{DNANucleotide}("A+"), dna"AAA", false) == [dna"AAA"]
 @test matchall(Regex{DNANucleotide}("AC*G*T"), dna"ACCGGGT", false) == [dna"ACCGGGT"]
 
+@test search(dna"", Regex{DNANucleotide}("A*")) == 1:0
+@test search(dna"", Regex{DNANucleotide}("A+")) == 0:-1
+@test search(dna"CCCCCCC", Regex{DNANucleotide}("A*")) == 1:0
+@test search(dna"ACGTAAT", Regex{DNANucleotide}("A*")) == 1:1
+@test search(dna"ACGTAAT", Regex{DNANucleotide}("A+")) == 1:1
+@test search(dna"ACGTAAT", Regex{DNANucleotide}("A+"), 2) == 5:6
+@test search(dna"ACGTAAT", Regex{DNANucleotide}("A+"), 7) == 0:-1
+
 @test  ismatch(Regex{AminoAcid}("[AC]-x-V-x(4)-{ED}", :prosite), aa"ADVAARRK")
 @test  ismatch(Regex{AminoAcid}("[AC]-x-V-x(4)-{ED}", :prosite), aa"CPVAARRK")
 @test !ismatch(Regex{AminoAcid}("[AC]-x-V-x(4)-{ED}", :prosite), aa"ADVAARRE")
@@ -850,3 +871,4 @@ using Base.Test
 @test  ismatch(Regex{AminoAcid}("<[AC]-x-V-x(4)-{ED}>", :prosite), aa"ADVAARRK")
 @test !ismatch(Regex{AminoAcid}("<[AC]-x-V-x(4)-{ED}>", :prosite), aa"AADVAARRK")
 @test !ismatch(Regex{AminoAcid}("<[AC]-x-V-x(4)-{ED}>", :prosite), aa"ADVAARRKA")
+end
