@@ -432,7 +432,7 @@ const LastTag  = UInt32(0b110) << 29
 const ForkTag  = UInt32(0b111) << 29
 
 # constructors
-match() = reinterpret(Op, MatchTag)
+_match() = reinterpret(Op, MatchTag)
 bits(b::UInt32) = reinterpret(Op, BitsTag | b)
 jump(l::Int) = reinterpret(Op, JumpTag | UInt32(l))
 push(l::Int) = reinterpret(Op, PushTag | UInt32(l))
@@ -484,7 +484,7 @@ function compile(tree::SyntaxTree)
     push!(code, save(1))
     compilerec!(code, tree, 2)
     push!(code, save(2))
-    push!(code, match())
+    push!(code, _match())
     return code
 end
 
@@ -600,7 +600,7 @@ function checkeltype{T}(re::Regex{T}, seq::BioSequence)
     end
 end
 
-function match{T}(re::Regex{T}, seq::BioSequence)
+function Base.match{T}(re::Regex{T}, seq::BioSequence)
     checkeltype(re, seq)
     # a thread is `(<program counter>, <sequence's iterator state>)`
     threads = Stack{Tuple{Int,Int}}()
@@ -625,6 +625,12 @@ immutable RegexMatchIterator{T,S}
     re::Regex{T}
     seq::S
     overlap::Bool
+
+    function RegexMatchIterator(re::Regex{T}, seq::S, overlap::Bool)
+        @assert overlap == true  # TODO: support `overlap = false`
+        checkeltype(re, seq)
+        return new(re, seq, overlap)
+    end
 end
 
 Base.eltype{T,S}(::Type{RegexMatchIterator{T,S}}) = RegexMatch{S}
@@ -666,13 +672,12 @@ function advance!(threads, captured, re, seq, s)
     return threads, captured, s, true
 end
 
-function eachmatch{T}(re::Regex{T}, seq::BioSequence, overlap::Bool=true)
+function Base.eachmatch{T}(re::Regex{T}, seq::BioSequence, overlap::Bool=true)
     checkeltype(re, seq)
-    @assert overlap == true  # TODO: support `overlap = false`
-    return RegexMatchIterator(re, seq, overlap)
+    return RegexMatchIterator{T,typeof(seq)}(re, seq, overlap)
 end
 
-function matchall{T}(re::Regex{T}, seq::BioSequence, overlap::Bool=true)
+function Base.matchall{T}(re::Regex{T}, seq::BioSequence, overlap::Bool=true)
     # this will work on v0.5
     #   return map(matched, eachmatch(re, seq))
     ret = Vector{typeof(seq)}()
@@ -682,7 +687,7 @@ function matchall{T}(re::Regex{T}, seq::BioSequence, overlap::Bool=true)
     return ret
 end
 
-ismatch{T}(re::Regex{T}, seq::BioSequence) = !isnull(match(re, seq))
+Base.ismatch{T}(re::Regex{T}, seq::BioSequence) = !isnull(match(re, seq))
 
 # simple stack
 type Stack{T}
