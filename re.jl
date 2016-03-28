@@ -146,22 +146,32 @@ function parserange(pat, s)
     end
 end
 
+function peek(pat, s)
+    if done(pat, s)
+        throw(ArgumentError("unexpected end of pattern"))
+    end
+    return next(pat, s)[1]
+end
+
 function parseset{T}(::Type{T}, pat, s)
+    if peek(pat, s) == '^'
+        head = :compset
+        _, s = next(pat, s)
+    else
+        head = :set
+    end
     set = T[]
-    complement = false
     while !done(pat, s)
         c, s = next(pat, s)
         if c ∈ symbols[T]
             push!(set, convert(T, c))
-        elseif c == '^'
-            complement = true
         elseif c == ']'
             break
         else
             throw(ArgumentError("unexpected input: '$c'"))
         end
     end
-    return expr(complement ? :compset : :set, set), s
+    return expr(head, set), s
 end
 
 function parse_prosite(pat)
