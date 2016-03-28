@@ -680,18 +680,18 @@ function Base.start(iter::RegexMatchIterator)
     captured = zeros(Int, iter.re.nsaves)
     s = start(iter.seq)
     push!(threads, (1, s))
-    return advance!(threads, captured, s, iter)
+    s, done = advance!(threads, captured, s, iter)
+    return threads, captured, s, done
 end
 
 Base.done(iter::RegexMatchIterator, state) = state[4]
 
 function Base.next(iter::RegexMatchIterator, state)
     threads, captured, s, _ = state
-    return (
-        # need to copy `captured` since it will be reused in the next iteration
-        RegexMatch(iter.seq, copy(captured)),
-        advance!(threads, captured, s, iter)
-    )
+    # need to copy `captured` since it will be reused in the next iteration
+    m = RegexMatch(iter.seq, copy(captured))
+    s, done = advance!(threads, captured, s, iter)
+    return m, (threads, captured, s, done)
 end
 
 function advance!(threads, captured, s, iter)
@@ -701,7 +701,7 @@ function advance!(threads, captured, s, iter)
         while true
             while !isempty(threads)
                 if runmatch!(threads, captured, re, seq)
-                    return threads, captured, s, false
+                    return s, false
                 end
             end
             _, s = next(seq, s)
@@ -722,7 +722,7 @@ function advance!(threads, captured, s, iter)
                 if !done(seq, s)
                     push!(threads, (1, s))
                 end
-                return threads, captured, s, false
+                return s, false
             end
             _, s = next(seq, s)
             if done(seq, s)
@@ -730,7 +730,7 @@ function advance!(threads, captured, s, iter)
             end
         end
     end
-    return threads, captured, s, true
+    return s, true
 end
 
 function Base.eachmatch{T}(re::Regex{T}, seq::BioSequence, overlap::Bool=true)
