@@ -627,7 +627,6 @@ immutable RegexMatchIterator{T,S}
     overlap::Bool
 
     function RegexMatchIterator(re::Regex{T}, seq::S, overlap::Bool)
-        @assert overlap == true  # TODO: support `overlap = false`
         checkeltype(re, seq)
         return new(re, seq, overlap)
     end
@@ -640,7 +639,7 @@ function Base.start(iter::RegexMatchIterator)
     captured = zeros(Int, iter.re.nsaves)
     s = start(iter.seq)
     push!(threads, (1, s))
-    return advance!(threads, captured, iter.re, iter.seq, s)
+    return advance!(threads, captured, s, iter)
 end
 
 Base.done(iter::RegexMatchIterator, state) = state[4]
@@ -650,23 +649,44 @@ function Base.next(iter::RegexMatchIterator, state)
     return (
         # need to copy `captured` since it will be reused in the next iteration
         RegexMatch(iter.seq, copy(captured)),
-        advance!(threads, captured, iter.re, iter.seq, s)
+        advance!(threads, captured, s, iter)
     )
 end
 
-function advance!(threads, captured, re, seq, s)
-    while true
-        while !isempty(threads)
-            if runmatch!(threads, captured, re, seq)
-                return threads, captured, s, false
+function advance!(threads, captured, s, iter)
+    re = iter.re
+    seq = iter.seq
+    if iter.overlap
+        while true
+            while !isempty(threads)
+                if runmatch!(threads, captured, re, seq)
+                    return threads, captured, s, false
+                end
+            end
+            _, s = next(seq, s)
+            if done(seq, s)
+                break
+            else
+                push!(threads, (1, s))
+                fill!(captured, 0)
             end
         end
-        _, s = next(seq, s)
-        if done(seq, s)
-            break
-        else
-            push!(threads, (1, s))
+    else
+        while true
+            @assert length(threads) ≤ 1
             fill!(captured, 0)
+            if runmatch!(threads, captured, re, seq)
+                empty!(threads)
+                s = captured[2]
+                if !done(seq, s)
+                    push!(threads, (1, s))
+                end
+                return threads, captured, s, false
+            end
+            _, s = next(seq, s)
+            if done(seq, s)
+                break
+            end
         end
     end
     return threads, captured, s, true
@@ -681,7 +701,7 @@ function Base.matchall{T}(re::Regex{T}, seq::BioSequence, overlap::Bool=true)
     # this will work on v0.5
     #   return map(matched, eachmatch(re, seq))
     ret = Vector{typeof(seq)}()
-    for m in eachmatch(re, seq)
+    for m in eachmatch(re, seq, overlap)
         push!(ret, matched(m))
     end
     return ret
@@ -697,6 +717,7 @@ type Stack{T}
     Stack(sz::Int=0) = new(0, Vector{T}(sz))
 end
 
+Base.length(stack::Stack) = stack.top
 Base.isempty(stack::Stack) = stack.top == 0
 
 @inline function Base.push!{T}(stack::Stack{T}, x::T)
@@ -801,6 +822,7 @@ using Base.Test
 @test matched(get(match(Regex{DNANucleotide}("A+?"), dna"AAA"))) == dna"A"
 @test matched(get(match(Regex{DNANucleotide}("A{2,}?"), dna"AAA"))) == dna"AA"
 
+@test matchall(Regex{DNANucleotide}("A*"), dna"") == [dna""]
 @test matchall(Regex{DNANucleotide}("A*"), dna"AAA") == [
     dna"AAA", dna"AA", dna"A", dna"",
     dna"AA",  dna"A",  dna"",
@@ -810,6 +832,10 @@ using Base.Test
     dna"AA",  dna"A",
     dna"A"]
 @test matchall(Regex{DNANucleotide}("AC*G*T"), dna"ACCGGGT") == [dna"ACCGGGT"]
+@test matchall(Regex{DNANucleotide}("A*"), dna"", false) == [dna""]
+@test matchall(Regex{DNANucleotide}("A*"), dna"AAA", false) == [dna"AAA"]
+@test matchall(Regex{DNANucleotide}("A+"), dna"AAA", false) == [dna"AAA"]
+@test matchall(Regex{DNANucleotide}("AC*G*T"), dna"ACCGGGT", false) == [dna"ACCGGGT"]
 
 @test  ismatch(Regex{AminoAcid}("[AC]-x-V-x(4)-{ED}", :prosite), aa"ADVAARRK")
 @test  ismatch(Regex{AminoAcid}("[AC]-x-V-x(4)-{ED}", :prosite), aa"CPVAARRK")
