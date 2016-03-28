@@ -24,7 +24,7 @@ extra:
     accent:  'blue'
   
 extra_css:
-  - assets/Lapidary.css
+  - assets/Documenter.css
 
 extra_javascript:
   - https://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS_HTML
