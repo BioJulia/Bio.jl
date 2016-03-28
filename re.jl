@@ -432,7 +432,7 @@ const LastTag  = UInt32(0b110) << 29
 const ForkTag  = UInt32(0b111) << 29
 
 # constructors
-_match() = reinterpret(Op, MatchTag)
+match() = reinterpret(Op, MatchTag)
 bits(b::UInt32) = reinterpret(Op, BitsTag | b)
 jump(l::Int) = reinterpret(Op, JumpTag | UInt32(l))
 push(l::Int) = reinterpret(Op, PushTag | UInt32(l))
@@ -484,7 +484,7 @@ function compile(tree::SyntaxTree)
     push!(code, save(1))
     compilerec!(code, tree, 2)
     push!(code, save(2))
-    push!(code, _match())
+    push!(code, match())
     return code
 end
 
@@ -707,7 +707,7 @@ function Base.matchall{T}(re::Regex{T}, seq::BioSequence, overlap::Bool=true)
     return ret
 end
 
-Base.ismatch{T}(re::Regex{T}, seq::BioSequence) = !isnull(match(re, seq))
+Base.ismatch{T}(re::Regex{T}, seq::BioSequence) = !isnull(Base.match(re, seq))
 
 # simple stack
 type Stack{T}
@@ -790,7 +790,13 @@ function runmatch!(threads::Stack{Tuple{Int,Int}},
     return false
 end
 
+end  # module RE
+
 # inline quick tests
+const Regex = RE.Regex
+const matched = RE.matched
+const captured = RE.captured
+using Bio.Seq
 using Base.Test
 @test  ismatch(Regex{DNANucleotide}("A"), dna"AA")
 @test  ismatch(Regex{DNANucleotide}("A*"), dna"")
@@ -805,11 +811,11 @@ using Base.Test
 @test !ismatch(Regex{DNANucleotide}("^A+C+\$"), dna"GAACC")
 @test  ismatch(Regex{DNANucleotide}("T(A[AG]|GA)"), dna"TGA")
 
-@test  matched(get(match(Regex{DNANucleotide}("A(C+)"), dna"ACCC"))) == dna"ACCC"
+@test matched(get(match(Regex{DNANucleotide}("A(C+)"), dna"ACCC"))) == dna"ACCC"
 @test get(captured(get(match(Regex{DNANucleotide}("A(C+)"), dna"ACCC")))[1]) == dna"CCC"
 @test get(captured(get(match(Regex{DNANucleotide}("(A)(C+)"), dna"ACCC")))[1]) == dna"A"
 @test get(captured(get(match(Regex{DNANucleotide}("(A)(C+)"), dna"ACCC")))[2]) == dna"CCC"
-@test    get(captured(get(match(Regex{DNANucleotide}("(A+)|(C+)"), dna"AA")))[1]) == dna"AA"
+@test get(captured(get(match(Regex{DNANucleotide}("(A+)|(C+)"), dna"AA")))[1]) == dna"AA"
 @test isnull(captured(get(match(Regex{DNANucleotide}("(A+)|(C+)"), dna"AA")))[2])
 
 @test matched(get(match(Regex{DNANucleotide}("A*"), dna"AAA"))) == dna"AAA"
@@ -844,5 +850,3 @@ using Base.Test
 @test  ismatch(Regex{AminoAcid}("<[AC]-x-V-x(4)-{ED}>", :prosite), aa"ADVAARRK")
 @test !ismatch(Regex{AminoAcid}("<[AC]-x-V-x(4)-{ED}>", :prosite), aa"AADVAARRK")
 @test !ismatch(Regex{AminoAcid}("<[AC]-x-V-x(4)-{ED}>", :prosite), aa"ADVAARRKA")
-
-end  # module RE
