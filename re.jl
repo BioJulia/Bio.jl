@@ -19,7 +19,7 @@ type SyntaxTree
             :*, :+, :?, :range,
             symbol("*?"), symbol("+?"), symbol("??"), symbol("range?"),
             :set, :compset, :sym, :bits,
-            :capture, :concat, :head, :last)
+            :capture, :nocapture, :concat, :head, :last)
         return new(head, args)
     end
 end
@@ -90,8 +90,16 @@ function parserec{T}(::Type{T}, pat, s, parens)
             push!(args, setexpr)
         elseif c == '('
             push!(parens, '(')
+            head = :capture
+            if peek(pat, s) == '?'
+                _, s = next(pat, s)
+                if peek(pat, s) == ':'
+                    head = :nocapture
+                    _, s = next(pat, s)
+                end
+            end
             arg, s = parserec(T, pat, s, parens)
-            push!(args, expr(:capture, [arg]))
+            push!(args, expr(head, [arg]))
         elseif c == ')'
             @check !isempty(parens) && parens[end] == '(' ArgumentError("unexpected ')'")
             pop!(parens)
@@ -364,6 +372,8 @@ function desugar{T}(::Type{T}, tree::SyntaxTree)
         end
         head = :bits
         args = [~bits & mask(T)]
+    elseif head == :nocapture
+        head = :concat
     elseif head == :range || head == symbol("range?")
         rng = args[1]
         pat = args[2]
@@ -837,6 +847,7 @@ using Base.Test
 @test_throws ArgumentError RE.parse(DNANucleotide, "A(()")
 @test_throws ArgumentError RE.parse(DNANucleotide, "A)")
 @test_throws ArgumentError RE.parse(DNANucleotide, "(A))")
+@test_throws ArgumentError RE.parse(DNANucleotide, "(:A)")
 @test_throws ArgumentError RE.parse(DNANucleotide, "[A^]")
 @test_throws ArgumentError RE.parse(DNANucleotide, "A{,}")
 
@@ -853,11 +864,13 @@ using Base.Test
 @test !ismatch(Regex{DNANucleotide}("^A+C+\$"), dna"AACCG")
 @test !ismatch(Regex{DNANucleotide}("^A+C+\$"), dna"GAACC")
 @test  ismatch(Regex{DNANucleotide}("T(A[AG]|GA)"), dna"TGA")
+@test  ismatch(Regex{DNANucleotide}("T(?:A[AG]|GA)"), dna"TGA")
 
 @test matched(get(match(Regex{DNANucleotide}("A(C+)"), dna"ACCC"))) == dna"ACCC"
 @test get(captured(get(match(Regex{DNANucleotide}("A(C+)"), dna"ACCC")))[1]) == dna"CCC"
 @test get(captured(get(match(Regex{DNANucleotide}("(A)(C+)"), dna"ACCC")))[1]) == dna"A"
 @test get(captured(get(match(Regex{DNANucleotide}("(A)(C+)"), dna"ACCC")))[2]) == dna"CCC"
+@test get(captured(get(match(Regex{DNANucleotide}("(?:A)(C+)"), dna"ACCC")))[1]) == dna"CCC"
 @test get(captured(get(match(Regex{DNANucleotide}("(A+)|(C+)"), dna"AA")))[1]) == dna"AA"
 @test isnull(captured(get(match(Regex{DNANucleotide}("(A+)|(C+)"), dna"AA")))[2])
 
