@@ -138,10 +138,15 @@ end
 
 Base.hash(x::Kmer, h::UInt) = hash(UInt64(x), h)
 
-function Base.getindex{T, K}(x::Kmer{T, K}, i::Integer)
-    if i < 1 || i > K
-        throw(BoundsError())
+function Base.checkbounds(x::Kmer, i::Integer)
+    if 1 ≤ i ≤ endof(x)
+        return true
     end
+    throw(BoundsError(x, i))
+end
+
+function Base.getindex{T, K}(x::Kmer{T, K}, i::Integer)
+    checkbounds(x, i)
     return unsafe_getindex(x, i)
 end
 
@@ -177,6 +182,33 @@ Base.endof(x::Kmer) = length(x)
 Base.start(x::Kmer) = 1
 Base.next(x::Kmer, i::Int) = unsafe_getindex(x, i), i + 1
 Base.done(x::Kmer, i::Int) = i > length(x)
+
+function Base.findnext{T}(kmer::Kmer{T}, val, start::Integer)
+    checkbounds(kmer, start)
+    v = convert(T, val)
+    for i in Int(start):endof(kmer)
+        x = unsafe_getindex(kmer, i)
+        if x == v
+            return i
+        end
+    end
+    return 0
+end
+
+function Base.findprev{T}(kmer::Kmer{T}, val, start::Integer)
+    checkbounds(kmer, start)
+    v = convert(T, val)
+    for i in Int(start):-1:1
+        x = unsafe_getindex(kmer, i)
+        if x == v
+            return i
+        end
+    end
+    return 0
+end
+
+Base.findfirst(kmer::Kmer, val) = findnext(kmer, val, 1)
+Base.findlast(kmer::Kmer, val)  = findprev(kmer, val, endof(kmer))
 
 
 # Other functions
