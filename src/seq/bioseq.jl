@@ -890,6 +890,7 @@ end
 # -------
 
 function Base.findnext(seq::BioSequence, val, start::Integer)
+    checkbounds(seq, start)
     v = convert(eltype(seq), val)
     for i in Int(start):endof(seq)
         x = unsafe_getindex(seq, i)
@@ -899,6 +900,21 @@ function Base.findnext(seq::BioSequence, val, start::Integer)
     end
     return 0
 end
+
+function Base.findprev(seq::BioSequence, val, start::Integer)
+    checkbounds(seq, start)
+    v = convert(eltype(seq), val)
+    for i in Int(start):-1:1
+        x = unsafe_getindex(seq, i)
+        if x == v
+            return i
+        end
+    end
+    return 0
+end
+
+Base.findfirst(seq::BioSequence, val) = findnext(seq, val, 1)
+Base.findlast(seq::BioSequence, val)  = findprev(seq, val, endof(seq))
 
 immutable AmbiguousNucleotideIterator{A<:Union{DNAAlphabet,RNAAlphabet}}
     seq::BioSequence{A}
