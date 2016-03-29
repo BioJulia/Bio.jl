@@ -637,6 +637,13 @@ function Base.match{T}(re::Regex{T}, seq::BioSequence, start::Integer=1)
     captured = Vector{Int}(re.nsaves)
     s = start
     while true
+        if tag(re.code[2]) == BitsTag && count_ones(operand(re.code[2])) == 1
+            n = trailing_zeros(operand(re.code[2]))
+            s = findnext(seq, n, s)
+            if s == 0
+                break
+            end
+        end
         empty!(threads)
         push!(threads, (1, s))
         fill!(captured, 0)
