@@ -284,56 +284,66 @@ function parseset_prosite(pat, s, close)
 end
 
 # DNA/RNA nucleotides
-const sym2bits_nuc = UInt32[
-    0b0001,
-    0b0010,
-    0b0100,
-    0b1000,
-    0b0011,
-    0b0101,
-    0b1001,
-    0b0110,
-    0b1010,
-    0b1100,
-    0b0111,
-    0b1011,
-    0b1101,
-    0b1110,
-    0b1111]
-sym2bits(nt::DNANucleotide) = sym2bits_nuc[reinterpret(Int8, nt)+1]
-sym2bits(nt::RNANucleotide) = sym2bits_nuc[reinterpret(Int8, nt)+1]
-mask(::Type{DNANucleotide}) = (UInt32(1) << 4) - one(UInt32)
-mask(::Type{RNANucleotide}) = (UInt32(1) << 4) - one(UInt32)
+const sym2bits_nuc = Vector{UInt32}(16)
+const bits2sym_nuc = Vector{UInt8}(16)
+for (sym, bits) in [
+        (DNA_A, 0b0001),
+        (DNA_C, 0b0010),
+        (DNA_G, 0b0100),
+        (DNA_T, 0b1000),
+        (DNA_M, 0b0011),
+        (DNA_R, 0b0101),
+        (DNA_W, 0b1001),
+        (DNA_S, 0b0110),
+        (DNA_Y, 0b1010),
+        (DNA_K, 0b1100),
+        (DNA_V, 0b0111),
+        (DNA_H, 0b1011),
+        (DNA_D, 0b1101),
+        (DNA_B, 0b1110),
+        (DNA_N, 0b1111)]
+    sym2bits_nuc[Int(sym)+1] = bits
+    bits2sym_nuc[bits] = UInt8(sym)
+end
+sym2bits{T<:Nucleotide}(nt::T) = sym2bits_nuc[reinterpret(Int8, nt)+1]
+bits2sym{T<:Nucleotide}(::Type{T}, bits::UInt32) = reinterpret(T, bits2sym_nuc[bits])
+mask{T<:Nucleotide}(::Type{T}) = (UInt32(1) << 4) - one(UInt32)
 
-const sym2bits_aa = UInt32[
-    0b0000000000000000000001,  # A
-    0b0000000000000000000010,  # R
-    0b0000000000000000000100,  # N
-    0b0000000000000000001000,  # D
-    0b0000000000000000010000,  # C
-    0b0000000000000000100000,  # Q
-    0b0000000000000001000000,  # E
-    0b0000000000000010000000,  # G
-    0b0000000000000100000000,  # H
-    0b0000000000001000000000,  # I
-    0b0000000000010000000000,  # L
-    0b0000000000100000000000,  # K
-    0b0000000001000000000000,  # M
-    0b0000000010000000000000,  # F
-    0b0000000100000000000000,  # P
-    0b0000001000000000000000,  # S
-    0b0000010000000000000000,  # T
-    0b0000100000000000000000,  # W
-    0b0001000000000000000000,  # Y
-    0b0010000000000000000000,  # V
-    0b0100000000000000000000,  # O
-    0b1000000000000000000000,  # U
-    0b0000000000000000001100,  # B
-    0b0000000000011000000000,  # J
-    0b0000000000000001100000,  # Z
-    0b1111111111111111111111,  # X
-]
+# Amino acids
+const sym2bits_aa = Vector{UInt32}(26)
+const bits2sym_aa = Dict{UInt32,AminoAcid}()
+for (sym, bits) in [
+        (AA_A, 0b0000000000000000000001),
+        (AA_R, 0b0000000000000000000010),
+        (AA_N, 0b0000000000000000000100),
+        (AA_D, 0b0000000000000000001000),
+        (AA_C, 0b0000000000000000010000),
+        (AA_Q, 0b0000000000000000100000),
+        (AA_E, 0b0000000000000001000000),
+        (AA_G, 0b0000000000000010000000),
+        (AA_H, 0b0000000000000100000000),
+        (AA_I, 0b0000000000001000000000),
+        (AA_L, 0b0000000000010000000000),
+        (AA_K, 0b0000000000100000000000),
+        (AA_M, 0b0000000001000000000000),
+        (AA_F, 0b0000000010000000000000),
+        (AA_P, 0b0000000100000000000000),
+        (AA_S, 0b0000001000000000000000),
+        (AA_T, 0b0000010000000000000000),
+        (AA_W, 0b0000100000000000000000),
+        (AA_Y, 0b0001000000000000000000),
+        (AA_V, 0b0010000000000000000000),
+        (AA_O, 0b0100000000000000000000),
+        (AA_U, 0b1000000000000000000000),
+        (AA_B, 0b0000000000000000001100),
+        (AA_J, 0b0000000000011000000000),
+        (AA_Z, 0b0000000000000001100000),
+        (AA_X, 0b1111111111111111111111)]
+    sym2bits_aa[Int(sym)+1] = bits
+    bits2sym_aa[bits] = sym
+end
 sym2bits(aa::AminoAcid) = sym2bits_aa[Int8(aa)+1]
+bits2sym(::Type{AminoAcid}, bits::UInt32) = bits2sym_aa[bits]
 mask(::Type{AminoAcid}) = (UInt32(1) << 22) - one(UInt32)
 
 function desugar{T}(::Type{T}, tree::SyntaxTree)
@@ -632,14 +642,22 @@ end
 
 function Base.match{T}(re::Regex{T}, seq::BioSequence, start::Integer=1)
     checkeltype(re, seq)
+
+    # use the first unambiguous symbol in the regular expression to find the
+    # next starting position of pattern matching; this improves the performance
+    if length(re.code) ≥ 2 && tag(re.code[2]) == BitsTag && count_ones(operand(re.code[2])) == 1
+        firstsym = bits2sym(T, operand(re.code[2]))
+    else
+        firstsym = gap(T)
+    end
+
     # a thread is `(<program counter>, <sequence's iterator state>)`
     threads = Stack{Tuple{Int,Int}}()
     captured = Vector{Int}(re.nsaves)
     s = start
     while true
-        if tag(re.code[2]) == BitsTag && count_ones(operand(re.code[2])) == 1
-            n = trailing_zeros(operand(re.code[2]))
-            s = findnext(seq, n, s)
+        if firstsym != gap(T)
+            s = findnext(seq, firstsym, s)
             if s == 0
                 break
             end
