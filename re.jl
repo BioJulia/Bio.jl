@@ -807,6 +807,9 @@ end
     return stack
 end
 
+# run pattern maching using the current `threads` stack. Captured positions are
+# stored in the preallocated `captured`. If match is found, this returns `true`
+# immediately; otherwise returns `false`.
 function runmatch!(threads::Stack{Tuple{Int,Int}},
                    captured::Vector{Int},
                    re::Regex, seq::BioSequence)
