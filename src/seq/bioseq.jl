@@ -886,6 +886,20 @@ function reverse_complement{A<:Union{DNAAlphabet,RNAAlphabet}}(seq::BioSequence{
 end
 
 
+# Finders
+# -------
+
+function Base.findnext(seq::BioSequence, val, start::Integer)
+    v = convert(eltype(seq), val)
+    for i in Int(start):endof(seq)
+        x = unsafe_getindex(seq, i)
+        if x == v
+            return i
+        end
+    end
+    return 0
+end
+
 immutable AmbiguousNucleotideIterator{A<:Union{DNAAlphabet,RNAAlphabet}}
     seq::BioSequence{A}
 end

@@ -1099,6 +1099,16 @@ end
         end
     end
 
+    @testset "Find" begin
+        seq = dna"ACGN"
+        @test findnext(seq, DNA_A, 1) == 1
+        @test findnext(seq, DNA_C, 1) == 2
+        @test findnext(seq, DNA_G, 1) == 3
+        @test findnext(seq, DNA_N, 1) == 4
+        @test findnext(seq, DNA_T, 1) == 0
+        @test findnext(seq, DNA_A, 2) == 0
+    end
+
     @testset "Mismatches" begin
         @test mismatches(dna"ACGT", dna"ACGT") == 0
         @test mismatches(dna"ACGT", dna"ACGTT") == 0
