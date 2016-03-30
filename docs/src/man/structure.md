@@ -4,9 +4,6 @@
     CurrentModule = Bio.Structure
     DocTestSetup = quote
         using Bio.Structure
-        # This requires an internet connection
-        # This file is deleted at the end
-        downloadpdb("1EN2")
     end
 
 The `Bio.Structure` module provides functionality to read Protein Data Bank (PDB) files and manipulate macromolecular structures.
@@ -22,13 +19,13 @@ downloadpdb("1EN2")
 
 To parse a PDB file into a Structure-Model-Chain-Residue-Atom framework:
 
-    {meta}
-    DocTestSetup = quote
-        using Bio.Structure
-    end
-
 ```julia
-julia> struc = read("1EN2.pdb", PDB)
+struc = read("1EN2.pdb", PDB)
+```
+
+This outputs a summary of the file:
+
+```
 Name                        -  1EN2.pdb
 Number of models            -  1
 Chain(s)                    -  A
@@ -149,17 +146,10 @@ collectatoms(struc, xselector)
 | `organisemodel(collectatoms(struc))`     | Organise elements into a model            |
 | `organisestructure(collectatoms(struc))` | Organise elements into a structure        |
 
-Distances can be calculated. The minimum distance between residue 10 and 20 is:
-
-    {meta}
-    DocTestSetup = quote
-        using Bio.Structure
-        struc = read("1EN2.pdb", PDB)
-    end
+Distances can be calculated. The minimum distance between residue 10 and 20 is found using:
 
 ```julia
-julia> distance(struc['A'][10], struc['A'][20])
-10.782158874733762
+distance(struc['A'][10], struc['A'][20])
 ```
 
 RMSDs/displacements between elements of the same size can also be calculated with `rmsd` and `displacements`.
@@ -205,12 +195,6 @@ end
 ```
 
 **C)** To calculate the RMSD and displacements between the heavy (non-hydrogen) atoms of two models in an NMR structure:
-
-    {meta}
-    DocTestSetup = quote
-        # This removes the downloaded file
-        rm("1EN2.pdb")
-    end
 
 ```julia
 downloadpdb("1SSU")
