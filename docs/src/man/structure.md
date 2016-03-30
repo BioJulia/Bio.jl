@@ -64,6 +64,7 @@ Properties can be retrieved as follows:
 | :----------------------- | :----------------------------------------------- |
 | `structurename(struc)`   | Name of a structure                              |
 | `modelnumbers(struc)`    | Model numbers in a structure                     |
+| `chainids(struc)`        | Chain IDs in a structure                         |
 | `modelnumber(model)`     | Number of a model                                |
 | `chainids(model)`        | Chain IDs in a model                             |
 | `chainid(chain)`         | Chain ID of a chain                              |
