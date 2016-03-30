@@ -177,6 +177,8 @@ Base.endof(x::Kmer) = length(x)
 Base.start(x::Kmer) = 1
 Base.next(x::Kmer, i::Int) = unsafe_getindex(x, i), i + 1
 Base.done(x::Kmer, i::Int) = i > length(x)
+Base.eltype{k}(::Type{DNAKmer{k}}) = DNANucleotide
+Base.eltype{k}(::Type{RNAKmer{k}}) = RNANucleotide
 
 
 # Other functions
