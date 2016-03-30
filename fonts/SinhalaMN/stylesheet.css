@@ -1,0 +1,21 @@
+@font-face {
+	font-family: 'Sinhala MN';
+	src: url('SinhalaMN-Bold.eot');
+	src: url('SinhalaMN-Bold.eot?#iefix') format('embedded-opentype'),
+		url('SinhalaMN-Bold.woff2') format('woff2'),
+		url('SinhalaMN-Bold.woff') format('woff'),
+		url('SinhalaMN-Bold.ttf') format('truetype');
+	font-weight: bold;
+	font-style: normal;
+}
+
+@font-face {
+	font-family: 'Sinhala MN';
+	src: url('SinhalaMN.eot');
+	src: url('SinhalaMN.eot?#iefix') format('embedded-opentype'),
+		url('SinhalaMN.woff2') format('woff2'),
+		url('SinhalaMN.woff') format('woff'),
+		url('SinhalaMN.ttf') format('truetype');
+	font-weight: normal;
+	font-style: normal;
+}

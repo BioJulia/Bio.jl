@@ -1,0 +1,10 @@
+name: "BioJulia"
+description: "The Bioinformatics and Computational Biology infastructure for the Julia programming language."
+
+paginate: 10
+
+url: "biojulia.github.io/Bio.jl"
+
+markdown: rdiscount
+permalink: pretty
+pygments: true

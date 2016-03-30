@@ -1,0 +1,17 @@
+<!DOCTYPE html>
+
+<html lang="en">
+    <head>
+        {% include stdhead.html %}
+    </head>
+    <body>
+        {% include navheader.html %}
+        <div class="pkglogo">
+            <img src="{{ page.logo }}" />
+        </div>
+        <div class="descpanel">
+            <h1>{{ page.subtitle }}</h1>
+            {{ content }}
+        </div>
+    </body>
+</html>

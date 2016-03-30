@@ -1,0 +1,292 @@
+.svglink {
+  pointer-events: none;
+}
+.textlink {
+  font-family: 'Sinhala MN';
+  color: #3a3a3a;
+  margin-left: 40px;
+  font-weight: 100;
+  font-size: 2.2em;
+}
+.textlink:link {
+  color: #000;
+  text-decoration: none;
+}
+.textlink:hover {
+  color: #000;
+}
+.textlink.purple:hover {
+  border-bottom: 5px solid #945bb0;
+}
+.textlink.red:hover {
+  border-bottom: 5px solid #c93d39;
+}
+.textlink.blue:hover {
+  border-bottom: 5px solid #4266d5;
+}
+.textlink.green:hover {
+  border-bottom: 5px solid #3b972e;
+}
+#navbar {
+  *zoom: 1;
+  float: left;
+  clear: none;
+  text-align: inherit;
+  width: 100%;
+  margin-left: 0%;
+  margin-right: 0%;
+  background: rgba(255,255,255,0.9);
+  border-bottom: 3px solid rgba(0,0,0,0.1);
+}
+#navbar:before,
+#navbar:after {
+  content: '';
+  display: table;
+}
+#navbar:after {
+  clear: both;
+}
+@media only screen and (min-width: 600px) {
+  #navbar {
+    position: fixed;
+    height: 100px;
+  }
+}
+#navbar #logo {
+  height: 100%;
+}
+@media only screen and (min-width: 600px) {
+  #navbar #logo {
+    *zoom: 1;
+    float: left;
+    clear: none;
+    text-align: inherit;
+    width: 20%;
+    margin-left: 0%;
+    margin-right: 0%;
+  }
+  #navbar #logo:before,
+  #navbar #logo:after {
+    content: '';
+    display: table;
+  }
+  #navbar #logo:after {
+    clear: both;
+  }
+}
+@media only screen and (max-width: 600px) {
+  #navbar #logo {
+    *zoom: 1;
+    float: left;
+    clear: none;
+    text-align: inherit;
+    width: 100%;
+    margin-left: 0%;
+    margin-right: 0%;
+  }
+  #navbar #logo:before,
+  #navbar #logo:after {
+    content: '';
+    display: table;
+  }
+  #navbar #logo:after {
+    clear: both;
+  }
+}
+#navbar #logo img {
+  *zoom: 1;
+  width: auto;
+  max-width: 1440px;
+  float: none;
+  display: block;
+  margin-right: auto;
+  margin-left: auto;
+  padding-left: 0;
+  padding-right: 0;
+  height: 100%;
+  padding-top: 5px;
+  padding-bottom: 5px;
+}
+#navbar #logo img:before,
+#navbar #logo img:after {
+  content: '';
+  display: table;
+}
+#navbar #logo img:after {
+  clear: both;
+}
+@media only screen and (min-width: 600px) {
+  #navbar #links {
+    *zoom: 1;
+    float: left;
+    clear: none;
+    text-align: inherit;
+    width: 80%;
+    margin-left: 0%;
+    margin-right: 0%;
+    padding-top: 28px;
+  }
+  #navbar #links:before,
+  #navbar #links:after {
+    content: '';
+    display: table;
+  }
+  #navbar #links:after {
+    clear: both;
+  }
+}
+@media only screen and (max-width: 600px) {
+  #navbar #links {
+    *zoom: 1;
+    width: auto;
+    max-width: 1440px;
+    float: none;
+    display: block;
+    margin-right: auto;
+    margin-left: auto;
+    padding-left: 0;
+    padding-right: 0;
+    *zoom: 1;
+    float: left;
+    clear: none;
+    text-align: inherit;
+    width: 100%;
+    margin-left: 0%;
+    margin-right: 0%;
+  }
+  #navbar #links:before,
+  #navbar #links:after {
+    content: '';
+    display: table;
+  }
+  #navbar #links:after {
+    clear: both;
+  }
+  #navbar #links:before,
+  #navbar #links:after {
+    content: '';
+    display: table;
+  }
+  #navbar #links:after {
+    clear: both;
+  }
+  #navbar #links a {
+    *zoom: 1;
+    float: left;
+    clear: none;
+    text-align: inherit;
+    width: 25%;
+    margin-left: 0%;
+    margin-right: 0%;
+    text-align: center;
+  }
+  #navbar #links a:before,
+  #navbar #links a:after {
+    content: '';
+    display: table;
+  }
+  #navbar #links a:after {
+    clear: both;
+  }
+}
+.pkglogo img {
+  *zoom: 1;
+  width: auto;
+  max-width: 1440px;
+  float: none;
+  display: block;
+  margin-right: auto;
+  margin-left: auto;
+  padding-left: 0;
+  padding-right: 0;
+}
+.pkglogo img:before,
+.pkglogo img:after {
+  content: '';
+  display: table;
+}
+.pkglogo img:after {
+  clear: both;
+}
+@media only screen and (min-width: 600px) {
+  .pkglogo {
+    *zoom: 1;
+    float: left;
+    clear: none;
+    text-align: inherit;
+    width: 31.33333333333333%;
+    margin-left: 0%;
+    margin-right: 3%;
+    position: fixed;
+    margin-top: 150px;
+  }
+  .pkglogo:before,
+  .pkglogo:after {
+    content: '';
+    display: table;
+  }
+  .pkglogo:after {
+    clear: both;
+  }
+  .pkglogo:last-child {
+    margin-right: 0%;
+  }
+  .pkglogo img {
+    width: 80%;
+  }
+}
+@media only screen and (max-width: 600px) {
+  .pkglogo {
+    margin-top: 20px;
+    *zoom: 1;
+    float: left;
+    clear: none;
+    text-align: inherit;
+    width: 100%;
+    margin-left: 0%;
+    margin-right: 3%;
+  }
+  .pkglogo:before,
+  .pkglogo:after {
+    content: '';
+    display: table;
+  }
+  .pkglogo:after {
+    clear: both;
+  }
+  .pkglogo:last-child {
+    margin-right: 0%;
+  }
+  .pkglogo img {
+    width: 50%;
+  }
+}
+.descpanel {
+  font-family: 'Sinhala MN';
+  color: #3a3a3a;
+}
+@media only screen and (min-width: 600px) {
+  .descpanel {
+    *zoom: 1;
+    float: left;
+    clear: none;
+    text-align: inherit;
+    width: 65.66666666666666%;
+    margin-left: 0%;
+    margin-right: 3%;
+    position: relative;
+    left: 34.33333333333333%;
+    margin-top: 150px;
+  }
+  .descpanel:before,
+  .descpanel:after {
+    content: '';
+    display: table;
+  }
+  .descpanel:after {
+    clear: both;
+  }
+  .descpanel:last-child {
+    margin-right: 0%;
+  }
+}

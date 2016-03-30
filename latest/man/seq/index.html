@@ -1,0 +1,1221 @@
+<!DOCTYPE html>
+<!--[if lt IE 7 ]><html class="no-js ie6"><![endif]-->
+<!--[if IE 7 ]><html class="no-js ie7"><![endif]-->
+<!--[if IE 8 ]><html class="no-js ie8"><![endif]-->
+<!--[if IE 9 ]><html class="no-js ie9"><![endif]-->
+<!--[if (gt IE 9)|!(IE)]><!--> <html class="no-js"> <!--<![endif]-->
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width,user-scalable=no,initial-scale=1,maximum-scale=1">
+    
+      
+        <title>Biological Sequences - Bio.jl</title>
+      
+      
+      
+        <link rel="canonical" href="https://biojulia.github.io/Bio.jl/man/seq/">
+      
+      
+        <meta name="author" content="The BioJulia Organisation">
+      
+    
+    <meta property="og:url" content="https://biojulia.github.io/Bio.jl/man/seq/">
+    <meta property="og:title" content="Bio.jl">
+    <meta property="og:image" content="https://biojulia.github.io/Bio.jl/man/seq//../../images/biojl.png">
+    <meta name="apple-mobile-web-app-title" content="Bio.jl">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    
+      <link rel="apple-touch-icon" href="../../images/biojl.png">
+    
+    
+    <link rel="shortcut icon" type="image/x-icon" href="../../None">
+    <link rel="icon" type="image/x-icon" href="../../None">
+    <style>
+      @font-face {
+      	font-family: 'Icon';
+      	src: url('../../assets/fonts/icon.eot?52m981');
+      	src: url('../../assets/fonts/icon.eot?#iefix52m981')
+               format('embedded-opentype'),
+      		   url('../../assets/fonts/icon.woff?52m981')
+               format('woff'),
+      		   url('../../assets/fonts/icon.ttf?52m981')
+               format('truetype'),
+      		   url('../../assets/fonts/icon.svg?52m981#icon')
+               format('svg');
+      	font-weight: normal;
+      	font-style: normal;
+      }
+    </style>
+    <link rel="stylesheet" href="../../assets/stylesheets/application-54f87043f3.css">
+    
+      <link rel="stylesheet" href="../../assets/stylesheets/palettes-05ab2406df.css">
+    
+    
+      
+      
+      
+      <link rel="stylesheet" href="//fonts.googleapis.com/css?family=Ubuntu:400,700|Ubuntu+Mono">
+      <style>
+        body, input {
+          font-family: 'Ubuntu', Helvetica, Arial, sans-serif;
+        }
+        pre, code {
+          font-family: 'Ubuntu Mono', 'Courier New', 'Courier', monospace;
+        }
+      </style>
+    
+    
+      <link rel="stylesheet" href="../../assets/Documenter.css">
+    
+    <script src="../../assets/javascripts/modernizr-4ab42b99fd.js"></script>
+    
+  </head>
+  
+  
+  
+  <body class="palette-primary-indigo palette-accent-blue">
+    
+      
+      
+    
+    <div class="backdrop">
+      <div class="backdrop-paper"></div>
+    </div>
+    <input class="toggle" type="checkbox" id="toggle-drawer">
+    <input class="toggle" type="checkbox" id="toggle-search">
+    <label class="toggle-button overlay" for="toggle-drawer"></label>
+    <header class="header">
+      <nav aria-label="Header">
+  <div class="bar default">
+    <div class="button button-menu" role="button" aria-label="Menu">
+      <label class="toggle-button icon icon-menu" for="toggle-drawer">
+        <span></span>
+      </label>
+    </div>
+    <div class="stretch">
+      <div class="title">
+        
+          <span class="path">
+            
+              
+                Manual <i class="icon icon-link"></i>
+              
+            
+          </span>
+        
+        Biological Sequences
+      </div>
+    </div>
+    
+    
+      
+      <div class="button button-github" role="button" aria-label="GitHub">
+        <a href="https://github.com/BioJulia" title="@BioJulia on GitHub" target="_blank" class="toggle-button icon icon-github"></a>
+      </div>
+    
+    <div class="button button-search" role="button" aria-label="Search">
+      <label class="toggle-button icon icon-search" title="Search" for="toggle-search"></label>
+    </div>
+  </div>
+  <div class="bar search">
+    <div class="button button-close" role="button" aria-label="Close">
+      <label class="toggle-button icon icon-back" for="toggle-search"></label>
+    </div>
+    <div class="stretch">
+      <div class="field">
+        <input class="query" type="text" placeholder="Search" autocapitalize="off" autocorrect="off" autocomplete="off" spellcheck>
+      </div>
+    </div>
+    <div class="button button-reset" role="button" aria-label="Search">
+      <button class="toggle-button icon icon-close" id="reset-search"></button>
+    </div>
+  </div>
+</nav>
+    </header>
+    <main class="main">
+      
+      <div class="drawer">
+        <nav aria-label="Navigation">
+  
+  <a href="https://github.com/BioJulia/Bio.jl" class="project">
+    <div class="banner">
+      
+        <div class="logo">
+          <img src="../../images/biojl.png">
+        </div>
+      
+      <div class="name">
+        <strong>
+          Bio.jl
+          <span class="version">
+            
+          </span>
+        </strong>
+        
+          <br>
+          BioJulia/Bio.jl
+        
+      </div>
+    </div>
+  </a>
+  <div class="scrollable">
+    <div class="wrapper">
+      
+        <ul class="repo">
+          <li class="repo-download">
+            
+            <a href="https://github.com/BioJulia/Bio.jl/archive/master.zip" target="_blank" title="Download" data-action="download">
+              <i class="icon icon-download"></i> Download
+            </a>
+          </li>
+          <li class="repo-stars">
+            <a href="https://github.com/BioJulia/Bio.jl/stargazers" target="_blank" title="Stargazers" data-action="star">
+              <i class="icon icon-star"></i> Stars
+              <span class="count">&ndash;</span>
+            </a>
+          </li>
+        </ul>
+        <hr>
+      
+      <div class="toc">
+        <ul>
+          
+            
+  <li>
+    <a class="" title="Home" href="../..">
+      Home
+    </a>
+    
+  </li>
+
+          
+            
+  <li>
+    <span class="section">Manual</span>
+    <ul>
+      
+        
+  <li>
+    <a class="" title="Installation" href="../install/">
+      Installation
+    </a>
+    
+  </li>
+
+      
+        
+  <li>
+    <a class="" title="IO API" href="../reading/">
+      IO API
+    </a>
+    
+  </li>
+
+      
+        
+  <li>
+    <a class="current" title="Biological Sequences" href="./">
+      Biological Sequences
+    </a>
+    
+      
+        
+      
+      
+        <ul>
+          
+            <li class="anchor">
+              <a title="Biological symbols" href="#biological-symbols">
+                Biological symbols
+              </a>
+            </li>
+          
+            <li class="anchor">
+              <a title="Sequences" href="#sequences">
+                Sequences
+              </a>
+            </li>
+          
+            <li class="anchor">
+              <a title="Constructing sequences" href="#constructing-sequences">
+                Constructing sequences
+              </a>
+            </li>
+          
+            <li class="anchor">
+              <a title="Indexing and modifying" href="#indexing-and-modifying">
+                Indexing and modifying
+              </a>
+            </li>
+          
+            <li class="anchor">
+              <a title="Other operations on sequences" href="#other-operations-on-sequences">
+                Other operations on sequences
+              </a>
+            </li>
+          
+            <li class="anchor">
+              <a title="Compact representation" href="#compact-representation">
+                Compact representation
+              </a>
+            </li>
+          
+            <li class="anchor">
+              <a title="Nucleotide k-mers" href="#nucleotide-k-mers">
+                Nucleotide k-mers
+              </a>
+            </li>
+          
+            <li class="anchor">
+              <a title="Sequence records" href="#sequence-records">
+                Sequence records
+              </a>
+            </li>
+          
+        </ul>
+      
+    
+  </li>
+
+      
+        
+  <li>
+    <a class="" title="Alignments" href="../alignments/">
+      Alignments
+    </a>
+    
+  </li>
+
+      
+        
+  <li>
+    <a class="" title="Intervals" href="../intervals/">
+      Intervals
+    </a>
+    
+  </li>
+
+      
+    </ul>
+  </li>
+
+          
+            
+  <li>
+    <span class="section">Reference</span>
+    <ul>
+      
+        
+  <li>
+    <a class="" title="Seq" href="../../lib/seq/">
+      Seq
+    </a>
+    
+  </li>
+
+      
+    </ul>
+  </li>
+
+          
+            
+  <li>
+    <a class="" title="Contributing" href="../contributing/">
+      Contributing
+    </a>
+    
+  </li>
+
+          
+        </ul>
+        
+          <hr>
+          <span class="section">The author</span>
+          <ul>
+            
+            
+              
+              <li>
+                <a href="https://github.com/BioJulia" target="_blank" title="@BioJulia on GitHub">
+                  @BioJulia on GitHub
+                </a>
+              </li>
+            
+          </ul>
+        
+      </div>
+    </div>
+  </div>
+</nav>
+      </div>
+      <article class="article">
+        <div class="wrapper">
+          
+          <p><a id='Bio.Seq:-Biological-Sequences-1'></a></p>
+<h1 id="bioseq-biological-sequences">Bio.Seq: Biological Sequences</h1>
+<p>The <code>Bio.Seq</code> module provides several data types for handling biological symbols and sequences.</p>
+<p><a id='Biological-symbols-1'></a></p>
+<h2 id="biological-symbols">Biological symbols</h2>
+<p>The <code>Bio.Seq</code> module provides three biological symbol (character) types:</p>
+<table>
+<thead>
+<tr>
+<th align="left">Type</th>
+<th>Meaning</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td align="left"><code>DNANucleotide</code></td>
+<td>DNA nucleotide</td>
+</tr>
+<tr>
+<td align="left"><code>RNANucleotide</code></td>
+<td>RNA nucleotide</td>
+</tr>
+<tr>
+<td align="left"><code>AminoAcid</code></td>
+<td>Amino acid</td>
+</tr>
+</tbody>
+</table>
+<p>These symbols can be elements of sequences like characters can be elements of strings.  See <a href="./#Sequences-1">Sequences</a> and <a href="./#Nucleotide-k-mers-1">Nucleotide k-mers</a> section for details.</p>
+<p><a id='DNA-and-RNA-nucleotides-1'></a></p>
+<h3 id="dna-and-rna-nucleotides">DNA and RNA nucleotides</h3>
+<p>Set of nucleotide symbols in Bio.jl covers IUPAC nucleotide base plus a gap symbol:</p>
+<table>
+<thead>
+<tr>
+<th align="left">Symbol</th>
+<th>Constant</th>
+<th>Meaning</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td align="left">'A'</td>
+<td><code>DNA_A</code> / <code>RNA_A</code></td>
+<td>A; Adenine</td>
+</tr>
+<tr>
+<td align="left">'C'</td>
+<td><code>DNA_C</code> / <code>RNA_C</code></td>
+<td>C; Cytosine</td>
+</tr>
+<tr>
+<td align="left">'G'</td>
+<td><code>DNA_G</code> / <code>RNA_G</code></td>
+<td>G; Guanine</td>
+</tr>
+<tr>
+<td align="left">'T'</td>
+<td><code>DNA_T</code></td>
+<td>T; Thymine (DNA only)</td>
+</tr>
+<tr>
+<td align="left">'U'</td>
+<td><code>RNA_U</code></td>
+<td>U; Uracil (RNA only)</td>
+</tr>
+<tr>
+<td align="left">'M'</td>
+<td><code>DNA_M</code> / <code>RNA_M</code></td>
+<td>A or C</td>
+</tr>
+<tr>
+<td align="left">'R'</td>
+<td><code>DNA_R</code> / <code>RNA_R</code></td>
+<td>A or G</td>
+</tr>
+<tr>
+<td align="left">'W'</td>
+<td><code>DNA_W</code> / <code>RNA_W</code></td>
+<td>A or T</td>
+</tr>
+<tr>
+<td align="left">'S'</td>
+<td><code>DNA_S</code> / <code>RNA_S</code></td>
+<td>C or G</td>
+</tr>
+<tr>
+<td align="left">'Y'</td>
+<td><code>DNA_Y</code> / <code>RNA_Y</code></td>
+<td>C or T</td>
+</tr>
+<tr>
+<td align="left">'K'</td>
+<td><code>DNA_K</code> / <code>RNA_K</code></td>
+<td>G or T</td>
+</tr>
+<tr>
+<td align="left">'V'</td>
+<td><code>DNA_V</code> / <code>RNA_V</code></td>
+<td>A or C or G; not T</td>
+</tr>
+<tr>
+<td align="left">'H'</td>
+<td><code>DNA_H</code> / <code>RNA_H</code></td>
+<td>A or C or T; not G</td>
+</tr>
+<tr>
+<td align="left">'D'</td>
+<td><code>DNA_D</code> / <code>RNA_D</code></td>
+<td>A or G or T; not C</td>
+</tr>
+<tr>
+<td align="left">'B'</td>
+<td><code>DNA_B</code> / <code>RNA_B</code></td>
+<td>C or G or T; not A</td>
+</tr>
+<tr>
+<td align="left">'N'</td>
+<td><code>DNA_N</code> / <code>RNA_N</code></td>
+<td>A or C or G or T</td>
+</tr>
+<tr>
+<td align="left">'-'</td>
+<td><code>DNA_Gap</code> / <code>RNA_Gap</code></td>
+<td>Gap (none of the above)</td>
+</tr>
+</tbody>
+</table>
+<p><a href="http://www.insdc.org/documents/feature_table.html#7.4.1">http://www.insdc.org/documents/feature_table.html#7.4.1</a></p>
+<p>Symbols are accessible as constants with <code>DNA_</code> or <code>RNA_</code> prefix:</p>
+<div class="codehilite"><pre><span></span><span class="n">julia</span><span class="o">&gt;</span> <span class="n">DNA_A</span>
+<span class="n">A</span>
+
+<span class="n">julia</span><span class="o">&gt;</span> <span class="n">DNA_T</span>
+<span class="n">T</span>
+
+<span class="n">julia</span><span class="o">&gt;</span> <span class="n">RNA_U</span>
+<span class="n">U</span>
+
+<span class="n">julia</span><span class="o">&gt;</span> <span class="n">DNA_Gap</span>
+<span class="o">-</span>
+
+<span class="n">julia</span><span class="o">&gt;</span> <span class="nb">typeof</span><span class="p">(</span><span class="n">DNA_A</span><span class="p">)</span>
+<span class="n">Bio</span><span class="o">.</span><span class="n">Seq</span><span class="o">.</span><span class="n">DNANucleotide</span>
+
+<span class="n">julia</span><span class="o">&gt;</span> <span class="nb">typeof</span><span class="p">(</span><span class="n">RNA_A</span><span class="p">)</span>
+<span class="n">Bio</span><span class="o">.</span><span class="n">Seq</span><span class="o">.</span><span class="n">RNANucleotide</span>
+</pre></div>
+
+
+<p>Symbols can be constructed by converting regular characters:</p>
+<div class="codehilite"><pre><span></span><span class="n">julia</span><span class="o">&gt;</span> <span class="nb">convert</span><span class="p">(</span><span class="n">DNANucleotide</span><span class="p">,</span> <span class="sc">&#39;C&#39;</span><span class="p">)</span>
+<span class="n">C</span>
+
+<span class="n">julia</span><span class="o">&gt;</span> <span class="nb">convert</span><span class="p">(</span><span class="n">DNANucleotide</span><span class="p">,</span> <span class="sc">&#39;C&#39;</span><span class="p">)</span> <span class="o">===</span> <span class="n">DNA_C</span>
+<span class="n">true</span>
+</pre></div>
+
+
+<p><a id='Amino-acids-1'></a></p>
+<h3 id="amino-acids">Amino acids</h3>
+<p>Set of amino acid symbols also covers IUPAC amino acid symbols plus a gap symbol:</p>
+<table>
+<thead>
+<tr>
+<th align="left">Symbol</th>
+<th>Constant</th>
+<th>Meaning</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td align="left">'A'</td>
+<td><code>AA_A</code></td>
+<td>Alanine</td>
+</tr>
+<tr>
+<td align="left">'R'</td>
+<td><code>AA_R</code></td>
+<td>Arginine</td>
+</tr>
+<tr>
+<td align="left">'N'</td>
+<td><code>AA_N</code></td>
+<td>Asparagine</td>
+</tr>
+<tr>
+<td align="left">'D'</td>
+<td><code>AA_D</code></td>
+<td>Aspartic acid (Aspartate)</td>
+</tr>
+<tr>
+<td align="left">'C'</td>
+<td><code>AA_C</code></td>
+<td>Cysteine</td>
+</tr>
+<tr>
+<td align="left">'Q'</td>
+<td><code>AA_Q</code></td>
+<td>Glutamine</td>
+</tr>
+<tr>
+<td align="left">'E'</td>
+<td><code>AA_E</code></td>
+<td>Glutamic acid (Glutamate)</td>
+</tr>
+<tr>
+<td align="left">'G'</td>
+<td><code>AA_G</code></td>
+<td>Glycine</td>
+</tr>
+<tr>
+<td align="left">'H'</td>
+<td><code>AA_H</code></td>
+<td>Histidine</td>
+</tr>
+<tr>
+<td align="left">'I'</td>
+<td><code>AA_I</code></td>
+<td>Isoleucine</td>
+</tr>
+<tr>
+<td align="left">'L'</td>
+<td><code>AA_L</code></td>
+<td>Leucine</td>
+</tr>
+<tr>
+<td align="left">'K'</td>
+<td><code>AA_K</code></td>
+<td>Lysine</td>
+</tr>
+<tr>
+<td align="left">'M'</td>
+<td><code>AA_M</code></td>
+<td>Methionine</td>
+</tr>
+<tr>
+<td align="left">'F'</td>
+<td><code>AA_F</code></td>
+<td>Phenylalanine</td>
+</tr>
+<tr>
+<td align="left">'P'</td>
+<td><code>AA_P</code></td>
+<td>Proline</td>
+</tr>
+<tr>
+<td align="left">'S'</td>
+<td><code>AA_S</code></td>
+<td>Serine</td>
+</tr>
+<tr>
+<td align="left">'T'</td>
+<td><code>AA_T</code></td>
+<td>Threonine</td>
+</tr>
+<tr>
+<td align="left">'W'</td>
+<td><code>AA_W</code></td>
+<td>Tryptophan</td>
+</tr>
+<tr>
+<td align="left">'Y'</td>
+<td><code>AA_Y</code></td>
+<td>Tyrosine</td>
+</tr>
+<tr>
+<td align="left">'V'</td>
+<td><code>AA_V</code></td>
+<td>Valine</td>
+</tr>
+<tr>
+<td align="left">'O'</td>
+<td><code>AA_O</code></td>
+<td>Pyrrolysine</td>
+</tr>
+<tr>
+<td align="left">'U'</td>
+<td><code>AA_U</code></td>
+<td>Selenocysteine</td>
+</tr>
+<tr>
+<td align="left">'B'</td>
+<td><code>AA_B</code></td>
+<td>Aspartic acid or Asparagine</td>
+</tr>
+<tr>
+<td align="left">'J'</td>
+<td><code>AA_J</code></td>
+<td>Leucine or Isoleucine</td>
+</tr>
+<tr>
+<td align="left">'Z'</td>
+<td><code>AA_Z</code></td>
+<td>Glutamine or Glutamic acid</td>
+</tr>
+<tr>
+<td align="left">'X'</td>
+<td><code>AA_X</code></td>
+<td>Any amino acid</td>
+</tr>
+<tr>
+<td align="left">'*'</td>
+<td><code>AA_Term</code></td>
+<td>Termination codon</td>
+</tr>
+<tr>
+<td align="left">'-'</td>
+<td><code>AA_Gap</code></td>
+<td>Gap (none of the above)</td>
+</tr>
+</tbody>
+</table>
+<p><a href="http://www.insdc.org/documents/feature_table.html#7.4.3">http://www.insdc.org/documents/feature_table.html#7.4.3</a></p>
+<p>Symbols are accessible as constants with <code>AA_</code> prefix:</p>
+<div class="codehilite"><pre><span></span><span class="n">julia</span><span class="o">&gt;</span> <span class="n">AA_A</span>
+<span class="n">A</span>
+
+<span class="n">julia</span><span class="o">&gt;</span> <span class="n">AA_Q</span>
+<span class="n">Q</span>
+
+<span class="n">julia</span><span class="o">&gt;</span> <span class="n">AA_Term</span>
+<span class="o">*</span>
+
+<span class="n">julia</span><span class="o">&gt;</span> <span class="nb">typeof</span><span class="p">(</span><span class="n">AA_A</span><span class="p">)</span>
+<span class="n">Bio</span><span class="o">.</span><span class="n">Seq</span><span class="o">.</span><span class="n">AminoAcid</span>
+</pre></div>
+
+
+<p>Symbols can be constructed by converting regular characters:</p>
+<div class="codehilite"><pre><span></span><span class="n">julia</span><span class="o">&gt;</span> <span class="nb">convert</span><span class="p">(</span><span class="n">AminoAcid</span><span class="p">,</span> <span class="sc">&#39;A&#39;</span><span class="p">)</span>
+<span class="n">A</span>
+
+<span class="n">julia</span><span class="o">&gt;</span> <span class="nb">convert</span><span class="p">(</span><span class="n">AminoAcid</span><span class="p">,</span> <span class="sc">&#39;P&#39;</span><span class="p">)</span> <span class="o">===</span> <span class="n">AA_P</span>
+<span class="n">true</span>
+</pre></div>
+
+
+<p><a id='Arithmetic-1'></a></p>
+<h3 id="arithmetic">Arithmetic</h3>
+<p>Biological symbols behaves like <code>Char</code>:</p>
+<div class="codehilite"><pre><span></span><span class="n">julia</span><span class="o">&gt;</span> <span class="n">DNA_A</span> <span class="o">==</span> <span class="n">DNA_A</span>  <span class="c"># equivalence</span>
+<span class="n">true</span>
+
+<span class="n">julia</span><span class="o">&gt;</span> <span class="n">DNA_A</span> <span class="o">&lt;</span> <span class="n">DNA_C</span> <span class="o">&lt;</span> <span class="n">DNA_G</span> <span class="o">&lt;</span> <span class="n">DNA_T</span>  <span class="c"># order</span>
+<span class="n">true</span>
+
+<span class="n">julia</span><span class="o">&gt;</span> <span class="n">DNA_A</span> <span class="o">+</span> <span class="mi">1</span>  <span class="c"># addition</span>
+<span class="n">C</span>
+
+<span class="n">julia</span><span class="o">&gt;</span> <span class="n">DNA_T</span> <span class="o">-</span> <span class="mi">3</span>  <span class="c"># subtraction</span>
+<span class="n">A</span>
+
+<span class="n">julia</span><span class="o">&gt;</span> <span class="n">DNA_T</span> <span class="o">-</span> <span class="n">DNA_C</span>  <span class="c"># difference</span>
+<span class="mi">2</span>
+</pre></div>
+
+
+<p>Note that these operations do <strong>not</strong> check bounds of valid range:</p>
+<div class="codehilite"><pre><span></span><span class="n">julia</span><span class="o">&gt;</span> <span class="n">DNA_C</span> <span class="o">-</span> <span class="mi">2</span>
+<span class="n">Invalid</span> <span class="n">DNA</span> <span class="n">Nucleotide</span>
+
+<span class="n">julia</span><span class="o">&gt;</span> <span class="n">DNA_A</span> <span class="o">+</span> <span class="mi">30</span>
+<span class="n">Invalid</span> <span class="n">DNA</span> <span class="n">Nucleotide</span>
+</pre></div>
+
+
+<p><a id='Other-functions-1'></a></p>
+<h3 id="other-functions">Other functions</h3>
+<p><a id='Bio.Seq.alphabet' href='#Bio.Seq.alphabet'>#</a>
+<strong><code>Bio.Seq.alphabet</code></strong> &mdash; <em>Function</em>.</p>
+<hr />
+<div class="codehilite"><pre><span></span>alphabet(typ)
+</pre></div>
+
+
+<p>Return an iterator of symbols of <code>typ</code>.</p>
+<p><code>typ</code> is one of <code>DNANucleotide</code>, <code>RNANucleotide</code>, or <code>AminoAcid</code>.</p>
+<p><a id='Bio.Seq.gap' href='#Bio.Seq.gap'>#</a>
+<strong><code>Bio.Seq.gap</code></strong> &mdash; <em>Function</em>.</p>
+<hr />
+<div class="codehilite"><pre><span></span>gap(typ)
+</pre></div>
+
+
+<p>Return the gap symbol of <code>typ</code>.</p>
+<p><code>typ</code> is one of <code>DNANucleotide</code>, <code>RNANucleotide</code>, <code>AminoAcid</code>, or <code>Char</code>.</p>
+<p><a id='Sequences-1'></a></p>
+<h2 id="sequences">Sequences</h2>
+<p>The <code>Bio.Seq</code> module provides representations and tools for manipulating nucleotide and amino acid sequences. Sequences in Bio.jl are more strictly typed than in many other libraries. They are special purpose types rather than simply strings. Bio.jl currently provides a single generic sequence type: <code>BioSequence{A&lt;:Alphabet}</code>. <code>BioSequence</code> is parameterized by an alphabet type <code>A</code> that defines the domain (or set) of biological symbols, and each alphabet has an associated symbol type. For example, <code>AminoAcidAlphabet</code> is associated with <code>AminoAcid</code> and hence an object of <code>BioSequence{AminoAcidAlphabet}</code> represents a sequence of amino acids.  Symbols from multiple alphabets can't be intermixed in one sequence type.</p>
+<p>The following table summarizes common sequence types that are defined in the <code>Bio.Seq</code> module:</p>
+<table>
+<thead>
+<tr>
+<th align="left">Type</th>
+<th>Symbol type</th>
+<th>Type alias</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td align="left"><code>BioSequence{DNAAlphabet{4}}</code></td>
+<td><code>DNANucleotide</code></td>
+<td><code>DNASequence</code></td>
+</tr>
+<tr>
+<td align="left"><code>BioSequence{RNAAlphabet{4}}</code></td>
+<td><code>RNANucleotide</code></td>
+<td><code>RNASequence</code></td>
+</tr>
+<tr>
+<td align="left"><code>BioSequence{AminoAcidAlphabet}</code></td>
+<td><code>AminoAcid</code></td>
+<td><code>AminoAcidSequence</code></td>
+</tr>
+<tr>
+<td align="left"><code>BioSequence{CharAlphabet}</code></td>
+<td><code>Char</code></td>
+<td><code>CharSequence</code></td>
+</tr>
+</tbody>
+</table>
+<p>Though this strictness sacrifices some convenience, it also means you can always rely on a <code>DNASequence</code> to store DNA and nothing but DNA, without having to check, or deal with lowercase versus uppercase and so on. Strict separation of sequence types also means we are free to choose the most efficient representation. DNA and RNA sequences are encoded using four bits per base by default making them memory efficient, and also allowing us to speed up many common operations like nucleotide composition, reverse complement, and <em>k</em>-mer enumeration.</p>
+<p><a id='Constructing-sequences-1'></a></p>
+<h2 id="constructing-sequences">Constructing sequences</h2>
+<p>Sequence types corresponding to these alphabets can be constructed a number of different ways. Most immediately, sequence literals can be constructed using the string macros <code>dna</code>, <code>rna</code>, <code>aa</code>, and <code>char</code>:</p>
+<div class="codehilite"><pre><span></span><span class="c"># String decorators are provided for common sequence types</span>
+<span class="n">julia</span><span class="o">&gt;</span> <span class="n">dna</span><span class="s">&quot;TACGTANNATC&quot;</span>
+<span class="mi">11</span><span class="n">nt</span> <span class="n">DNA</span> <span class="n">Sequence</span><span class="p">:</span>
+<span class="n">TACGTANNATC</span>
+
+<span class="n">julia</span><span class="o">&gt;</span> <span class="n">rna</span><span class="s">&quot;AUUUGNCCANU&quot;</span>
+<span class="mi">11</span><span class="n">nt</span> <span class="n">RNA</span> <span class="n">Sequence</span><span class="p">:</span>
+<span class="n">AUUUGNCCANU</span>
+
+<span class="n">julia</span><span class="o">&gt;</span> <span class="n">aa</span><span class="s">&quot;ARNDCQEGHILKMFPSTWYVX&quot;</span>
+<span class="mi">21</span><span class="n">aa</span> <span class="n">Amino</span> <span class="n">Acid</span> <span class="n">Sequence</span><span class="p">:</span>
+<span class="n">ARNDCQEGHILKMFPSTWYVX</span>
+
+<span class="n">julia</span><span class="o">&gt;</span> <span class="n">char</span><span class="s">&quot;αβγδϵ&quot;</span>
+<span class="mi">5</span><span class="n">char</span> <span class="n">Char</span> <span class="n">Sequence</span><span class="p">:</span>
+<span class="n">αβγδϵ</span>
+</pre></div>
+
+
+<p>Sequence can also be constructed from strings or arrays of nucleotide or amino acid symbols using constructors or the <code>convert</code> function:</p>
+<div class="codehilite"><pre><span></span><span class="n">julia</span><span class="o">&gt;</span> <span class="n">DNASequence</span><span class="p">(</span><span class="s">&quot;TTANC&quot;</span><span class="p">)</span>
+<span class="mi">5</span><span class="n">nt</span> <span class="n">DNA</span> <span class="n">Sequence</span><span class="p">:</span>
+<span class="n">TTANC</span>
+
+<span class="n">julia</span><span class="o">&gt;</span> <span class="n">DNASequence</span><span class="p">([</span><span class="n">DNA_T</span><span class="p">,</span> <span class="n">DNA_T</span><span class="p">,</span> <span class="n">DNA_A</span><span class="p">,</span> <span class="n">DNA_N</span><span class="p">,</span> <span class="n">DNA_C</span><span class="p">])</span>
+<span class="mi">5</span><span class="n">nt</span> <span class="n">DNA</span> <span class="n">Sequence</span><span class="p">:</span>
+<span class="n">TTANC</span>
+
+<span class="n">julia</span><span class="o">&gt;</span> <span class="nb">convert</span><span class="p">(</span><span class="n">DNASequence</span><span class="p">,</span> <span class="p">[</span><span class="n">DNA_T</span><span class="p">,</span> <span class="n">DNA_T</span><span class="p">,</span> <span class="n">DNA_A</span><span class="p">,</span> <span class="n">DNA_N</span><span class="p">,</span> <span class="n">DNA_C</span><span class="p">])</span>
+<span class="mi">5</span><span class="n">nt</span> <span class="n">DNA</span> <span class="n">Sequence</span><span class="p">:</span>
+<span class="n">TTANC</span>
+</pre></div>
+
+
+<p>Using <code>convert</code>, these operations are reversible: sequences can be converted to strings or arrays:</p>
+<div class="codehilite"><pre><span></span><span class="n">julia</span><span class="o">&gt;</span> <span class="nb">convert</span><span class="p">(</span><span class="n">ASCIIString</span><span class="p">,</span> <span class="n">dna</span><span class="s">&quot;TTANGTA&quot;</span><span class="p">)</span>
+<span class="s">&quot;TTANGTA&quot;</span>
+
+<span class="n">julia</span><span class="o">&gt;</span> <span class="nb">convert</span><span class="p">(</span><span class="n">Vector</span><span class="p">{</span><span class="n">DNANucleotide</span><span class="p">},</span> <span class="n">dna</span><span class="s">&quot;TTANGTA&quot;</span><span class="p">)</span>
+<span class="mi">7</span><span class="o">-</span><span class="n">element</span> <span class="n">Array</span><span class="p">{</span><span class="n">Bio</span><span class="o">.</span><span class="n">Seq</span><span class="o">.</span><span class="n">DNANucleotide</span><span class="p">,</span><span class="mi">1</span><span class="p">}:</span>
+ <span class="n">T</span>
+ <span class="n">T</span>
+ <span class="n">A</span>
+ <span class="n">N</span>
+ <span class="n">G</span>
+ <span class="n">T</span>
+ <span class="n">A</span>
+</pre></div>
+
+
+<p>Sequences can also be concatenated into longer sequences:</p>
+<div class="codehilite"><pre><span></span><span class="n">julia</span><span class="o">&gt;</span> <span class="n">DNASequence</span><span class="p">(</span><span class="n">dna</span><span class="s">&quot;ACGT&quot;</span><span class="p">,</span> <span class="n">dna</span><span class="s">&quot;NNNN&quot;</span><span class="p">,</span> <span class="n">dna</span><span class="s">&quot;TGCA&quot;</span><span class="p">)</span>
+<span class="mi">12</span><span class="n">nt</span> <span class="n">DNA</span> <span class="n">Sequence</span><span class="p">:</span>
+<span class="n">ACGTNNNNTGCA</span>
+
+<span class="n">julia</span><span class="o">&gt;</span> <span class="n">dna</span><span class="s">&quot;ACGT&quot;</span> <span class="o">*</span> <span class="n">dna</span><span class="s">&quot;TGCA&quot;</span>
+<span class="mi">8</span><span class="n">nt</span> <span class="n">DNA</span> <span class="n">Sequence</span><span class="p">:</span>
+<span class="n">ACGTTGCA</span>
+
+<span class="n">julia</span><span class="o">&gt;</span> <span class="n">repeat</span><span class="p">(</span><span class="n">dna</span><span class="s">&quot;TA&quot;</span><span class="p">,</span> <span class="mi">10</span><span class="p">)</span>
+<span class="mi">20</span><span class="n">nt</span> <span class="n">DNA</span> <span class="n">Sequence</span><span class="p">:</span>
+<span class="n">TATATATATATATATATATA</span>
+
+<span class="n">julia</span><span class="o">&gt;</span> <span class="n">dna</span><span class="s">&quot;TA&quot;</span> <span class="o">^</span> <span class="mi">10</span>
+<span class="mi">20</span><span class="n">nt</span> <span class="n">DNA</span> <span class="n">Sequence</span><span class="p">:</span>
+<span class="n">TATATATATATATATATATA</span>
+</pre></div>
+
+
+<p>Despite being separate types, <code>DNASequence</code> and <code>RNASequence</code> can freely be converted between efficiently without copying the underlying data:</p>
+<div class="codehilite"><pre><span></span><span class="n">julia</span><span class="o">&gt;</span> <span class="n">dna</span> <span class="o">=</span> <span class="n">dna</span><span class="s">&quot;TTANGTAGACCG&quot;</span>
+<span class="mi">12</span><span class="n">nt</span> <span class="n">DNA</span> <span class="n">Sequence</span><span class="p">:</span>
+<span class="n">TTANGTAGACCG</span>
+
+<span class="n">julia</span><span class="o">&gt;</span> <span class="n">rna</span> <span class="o">=</span> <span class="nb">convert</span><span class="p">(</span><span class="n">RNASequence</span><span class="p">,</span> <span class="n">dna</span><span class="p">)</span>
+<span class="mi">12</span><span class="n">nt</span> <span class="n">RNA</span> <span class="n">Sequence</span><span class="p">:</span>
+<span class="n">UUANGUAGACCG</span>
+
+<span class="n">julia</span><span class="o">&gt;</span> <span class="n">dna</span><span class="o">.</span><span class="n">data</span> <span class="o">===</span> <span class="n">rna</span><span class="o">.</span><span class="n">data</span>  <span class="c"># underlying data are same</span>
+<span class="n">true</span>
+</pre></div>
+
+
+<p>A translatable <code>RNASequence</code> can also be converted to an <code>AminoAcidSequence</code> using the <a href="./#Bio.Seq.translate"><code>translate</code></a> function described below.</p>
+<p><a id='Indexing-and-modifying-1'></a></p>
+<h2 id="indexing-and-modifying">Indexing and modifying</h2>
+<p>Sequences for the most part behave like other vector or string types. They can be indexed using integers or ranges:</p>
+<div class="codehilite"><pre><span></span><span class="n">julia</span><span class="o">&gt;</span> <span class="n">seq</span> <span class="o">=</span> <span class="n">dna</span><span class="s">&quot;ACGTTTANAGTNNAGTACC&quot;</span>
+<span class="mi">19</span><span class="n">nt</span> <span class="n">DNA</span> <span class="n">Sequence</span><span class="p">:</span>
+<span class="n">ACGTTTANAGTNNAGTACC</span>
+
+<span class="n">julia</span><span class="o">&gt;</span> <span class="n">seq</span><span class="p">[</span><span class="mi">5</span><span class="p">]</span>
+<span class="n">T</span>
+
+<span class="n">julia</span><span class="o">&gt;</span> <span class="n">seq</span><span class="p">[</span><span class="mi">6</span><span class="p">:</span><span class="k">end</span><span class="p">]</span>
+<span class="mi">14</span><span class="n">nt</span> <span class="n">DNA</span> <span class="n">Sequence</span><span class="p">:</span>
+<span class="n">TANAGTNNAGTACC</span>
+</pre></div>
+
+
+<p>Indexing by range creates a subsequence of the original sequence. Unlike <code>ASCIIString</code> and <code>Vector</code> in the standard library, creating a subsequences is copy-free: a subsequence is just a reference to the original sequence with its range.  You may think that this is unsafe because modifying subsequences propagates to the original sequence, but this doesn't happen actually:</p>
+<div class="codehilite"><pre><span></span><span class="n">julia</span><span class="o">&gt;</span> <span class="n">seq</span> <span class="o">=</span> <span class="n">dna</span><span class="s">&quot;AAAA&quot;</span>  <span class="c"># create a sequence</span>
+<span class="mi">4</span><span class="n">nt</span> <span class="n">DNA</span> <span class="n">Sequence</span><span class="p">:</span>
+<span class="n">AAAA</span>
+
+<span class="n">julia</span><span class="o">&gt;</span> <span class="n">subseq</span> <span class="o">=</span> <span class="n">seq</span><span class="p">[</span><span class="mi">1</span><span class="p">:</span><span class="mi">2</span><span class="p">]</span>  <span class="c"># create a subsequence from `seq`</span>
+<span class="mi">2</span><span class="n">nt</span> <span class="n">DNA</span> <span class="n">Sequence</span><span class="p">:</span>
+<span class="n">AA</span>
+
+<span class="n">julia</span><span class="o">&gt;</span> <span class="n">subseq</span><span class="p">[</span><span class="mi">2</span><span class="p">]</span> <span class="o">=</span> <span class="n">DNA_T</span>  <span class="c"># modify the second element of it</span>
+<span class="n">T</span>
+
+<span class="n">julia</span><span class="o">&gt;</span> <span class="n">subseq</span>  <span class="c"># the subsequence is modified</span>
+<span class="mi">2</span><span class="n">nt</span> <span class="n">DNA</span> <span class="n">Sequence</span><span class="p">:</span>
+<span class="n">AT</span>
+
+<span class="n">julia</span><span class="o">&gt;</span> <span class="n">seq</span>  <span class="c"># but the original sequence is not</span>
+<span class="mi">4</span><span class="n">nt</span> <span class="n">DNA</span> <span class="n">Sequence</span><span class="p">:</span>
+<span class="n">AAAA</span>
+</pre></div>
+
+
+<p>This is because modifying a sequence checks whether its underlying data are shared with other sequences under the hood. If and only if the data are shared, the subsequence creates a copy of itself. Any modifying operation does this check. This is called <em>copy-on-write</em> strategy and users don't need to care about it because it is transparent from outward.</p>
+<p>The following modifying operations are currently supported:</p>
+<div class="codehilite"><pre><span></span><span class="n">setindex!</span><span class="p">(</span><span class="n">seq</span><span class="p">,</span> <span class="n">item</span><span class="p">,</span> <span class="n">index</span><span class="p">)</span>
+<span class="n">push!</span><span class="p">(</span><span class="n">seq</span><span class="p">,</span> <span class="n">item</span><span class="p">)</span>
+<span class="n">pop!</span><span class="p">(</span><span class="n">seq</span><span class="p">)</span>
+<span class="n">shift!</span><span class="p">(</span><span class="n">seq</span><span class="p">)</span>
+<span class="n">unshift!</span><span class="p">(</span><span class="n">seq</span><span class="p">,</span> <span class="n">item</span><span class="p">)</span>
+<span class="n">insert!</span><span class="p">(</span><span class="n">seq</span><span class="p">,</span> <span class="n">index</span><span class="p">,</span> <span class="n">item</span><span class="p">)</span>
+<span class="n">deleteat!</span><span class="p">(</span><span class="n">seq</span><span class="p">,</span> <span class="n">index</span><span class="p">)</span>
+<span class="n">append!</span><span class="p">(</span><span class="n">seq</span><span class="p">,</span> <span class="n">other_seq</span><span class="p">)</span>
+<span class="n">copy!</span><span class="p">(</span><span class="n">dst_seq</span><span class="p">,</span> <span class="n">dest_offset</span><span class="p">,</span> <span class="n">src_seq</span><span class="p">,</span> <span class="n">src_offset</span><span class="p">,</span> <span class="n">len</span><span class="p">)</span>
+<span class="n">reverse!</span><span class="p">(</span><span class="n">seq</span><span class="p">)</span>
+</pre></div>
+
+
+<p><a id='Bio.Seq.complement!-Tuple{Any}' href='#Bio.Seq.complement!-Tuple{Any}'>#</a>
+<strong><code>Bio.Seq.complement!</code></strong> &mdash; <em>Method</em>.</p>
+<hr />
+<div class="codehilite"><pre><span></span>complement!(seq)
+</pre></div>
+
+
+<p>Make a complement sequence of <code>seq</code> in place.</p>
+<p>Ambiguous nucleotides are left as-is.</p>
+<p><a id='Bio.Seq.reverse_complement!-Tuple{Any}' href='#Bio.Seq.reverse_complement!-Tuple{Any}'>#</a>
+<strong><code>Bio.Seq.reverse_complement!</code></strong> &mdash; <em>Method</em>.</p>
+<hr />
+<div class="codehilite"><pre><span></span>reverse_complement!(seq)
+</pre></div>
+
+
+<p>Make a reversed complement sequence of <code>seq</code> in place.</p>
+<p>Ambiguous nucleotides are left as-is.</p>
+<div class="codehilite"><pre><span></span><span class="n">julia</span><span class="o">&gt;</span> <span class="n">seq</span> <span class="o">=</span> <span class="n">dna</span><span class="s">&quot;ACG&quot;</span>
+<span class="mi">3</span><span class="n">nt</span> <span class="n">DNA</span> <span class="n">Sequence</span><span class="p">:</span>
+<span class="n">ACG</span>
+
+<span class="n">julia</span><span class="o">&gt;</span> <span class="n">push!</span><span class="p">(</span><span class="n">seq</span><span class="p">,</span> <span class="n">DNA_T</span><span class="p">)</span>
+<span class="mi">4</span><span class="n">nt</span> <span class="n">DNA</span> <span class="n">Sequence</span><span class="p">:</span>
+<span class="n">ACGT</span>
+
+<span class="n">julia</span><span class="o">&gt;</span> <span class="n">append!</span><span class="p">(</span><span class="n">seq</span><span class="p">,</span> <span class="n">dna</span><span class="s">&quot;AT&quot;</span><span class="p">)</span>
+<span class="mi">6</span><span class="n">nt</span> <span class="n">DNA</span> <span class="n">Sequence</span><span class="p">:</span>
+<span class="n">ACGTAT</span>
+
+<span class="n">julia</span><span class="o">&gt;</span> <span class="n">reverse!</span><span class="p">(</span><span class="n">seq</span><span class="p">)</span>
+<span class="mi">6</span><span class="n">nt</span> <span class="n">DNA</span> <span class="n">Sequence</span><span class="p">:</span>
+<span class="n">TATGCA</span>
+
+<span class="n">julia</span><span class="o">&gt;</span> <span class="n">Seq</span><span class="o">.</span><span class="n">complement!</span><span class="p">(</span><span class="n">seq</span><span class="p">)</span>  <span class="c"># semantically differs from Base.complement!</span>
+<span class="mi">6</span><span class="n">nt</span> <span class="n">DNA</span> <span class="n">Sequence</span><span class="p">:</span>
+<span class="n">ATACGT</span>
+
+<span class="n">julia</span><span class="o">&gt;</span> <span class="n">reverse_complement!</span><span class="p">(</span><span class="n">seq</span><span class="p">)</span>
+<span class="mi">6</span><span class="n">nt</span> <span class="n">DNA</span> <span class="n">Sequence</span><span class="p">:</span>
+<span class="n">ACGTAT</span>
+</pre></div>
+
+
+<p>Sequences also work as iterators over symbols:</p>
+<div class="codehilite"><pre><span></span><span class="n">julia</span><span class="o">&gt;</span> <span class="n">n</span> <span class="o">=</span> <span class="mi">0</span>
+<span class="mi">0</span>
+
+<span class="n">julia</span><span class="o">&gt;</span> <span class="k">for</span> <span class="n">nt</span> <span class="k">in</span> <span class="n">dna</span><span class="s">&quot;ATNGNNT&quot;</span>
+           <span class="k">if</span> <span class="n">nt</span> <span class="o">==</span> <span class="n">DNA_N</span>
+               <span class="n">n</span> <span class="o">+=</span> <span class="mi">1</span>
+           <span class="k">end</span>
+       <span class="k">end</span>
+
+<span class="n">julia</span><span class="o">&gt;</span> <span class="n">n</span>
+<span class="mi">3</span>
+</pre></div>
+
+
+<p><a id='Other-operations-on-sequences-1'></a></p>
+<h2 id="other-operations-on-sequences">Other operations on sequences</h2>
+<p>A number of common sequence operations are provided in the <code>Bio.Seq</code> module:</p>
+<p><a id='Bio.Seq.complement' href='#Bio.Seq.complement'>#</a>
+<strong><code>Bio.Seq.complement</code></strong> &mdash; <em>Function</em>.</p>
+<hr />
+<p><code>complement(kmer::Kmer)</code></p>
+<p>The Kmer complement of <code>kmer</code></p>
+<div class="codehilite"><pre><span></span>complement(seq)
+</pre></div>
+
+
+<p>Make a complement sequence of <code>seq</code>.</p>
+<p>Ambiguous nucleotides are left as-is.</p>
+<p><a id='Bio.Seq.reverse_complement' href='#Bio.Seq.reverse_complement'>#</a>
+<strong><code>Bio.Seq.reverse_complement</code></strong> &mdash; <em>Function</em>.</p>
+<hr />
+<p><code>reverse_complement(kmer::Kmer)</code></p>
+<p>Reversed complement of <code>kmer</code></p>
+<div class="codehilite"><pre><span></span>reverse_complement(seq)
+</pre></div>
+
+
+<p>Make a reversed complement sequence of <code>seq</code>.</p>
+<p>Ambiguous nucleotides are left as-is.</p>
+<p><a id='Bio.Seq.mismatches' href='#Bio.Seq.mismatches'>#</a>
+<strong><code>Bio.Seq.mismatches</code></strong> &mdash; <em>Function</em>.</p>
+<hr />
+<p><code>mismatches(a::Kmer, b::Kmer)</code></p>
+<p>Return the number of mismatches between <code>a</code> and <code>b</code>.</p>
+<h3 id="arguments">Arguments</h3>
+<ul>
+<li><code>a</code>: first sequence to compare</li>
+<li><code>b</code>: second sequence to compare</li>
+</ul>
+<h3 id="returns">Returns</h3>
+<p>The number of mismatches</p>
+<p><code>mismatches(a::NucleotideSequence, b::NucleotideSequence, [nmatches=false])</code></p>
+<p>Return the number of mismatches between <code>a</code> and <code>b</code>.</p>
+<p>If <code>a</code> and <code>b</code> are of differing lengths, only the first <code>min(length(a), length(b))</code> nucleotides are compared.</p>
+<h3 id="arguments_1">Arguments</h3>
+<ul>
+<li><code>a</code>: first sequence to compare</li>
+<li><code>b</code>: second sequence to compare</li>
+<li><code>nmatches</code>: if true, N matches anything, if false, N matches only itself (false)</li>
+</ul>
+<h3 id="returns_1">Returns</h3>
+<p>The number of mismatches</p>
+<p><a id='Bio.Seq.composition' href='#Bio.Seq.composition'>#</a>
+<strong><code>Bio.Seq.composition</code></strong> &mdash; <em>Function</em>.</p>
+<hr />
+<div class="codehilite"><pre><span></span>composition(seq)
+</pre></div>
+
+
+<p>Calculate composition of biological symbols in <code>seq</code>.</p>
+<p><a id='Translation-1'></a></p>
+<h3 id="translation">Translation</h3>
+<p>The <a href="./#Bio.Seq.translate"><code>translate</code></a> funtion translates a sequence of codons in a RNA sequence to a amino acid sequence besed on a genetic code mapping.  The <code>Bio.Seq</code> module contains all NCBI defined genetic codes and they are registered in <a href="./#Bio.Seq.ncbi_trans_table"><code>ncbi_trans_table</code></a>.</p>
+<p><a id='Bio.Seq.translate' href='#Bio.Seq.translate'>#</a>
+<strong><code>Bio.Seq.translate</code></strong> &mdash; <em>Function</em>.</p>
+<hr />
+<div class="codehilite"><pre><span></span>translate(rna_seq, code=standard_genetic_code, allow_ambiguous_codons=true)
+</pre></div>
+
+
+<p>Translate an <code>RNASequence</code> to an <code>AminoAcidSequence</code>.</p>
+<p>Translation uses genetic code <code>code</code> to map codons to amino acids. See <code>ncbi_trans_table</code> for available genetic codes. If codons in the given RNA sequence cannot determine a unique amino acid, they will be translated to <code>AA_X</code> if <code>allow_ambiguous_codons</code> is <code>true</code> and otherwise result in an error.</p>
+<p><a id='Bio.Seq.ncbi_trans_table' href='#Bio.Seq.ncbi_trans_table'>#</a>
+<strong><code>Bio.Seq.ncbi_trans_table</code></strong> &mdash; <em>Constant</em>.</p>
+<hr />
+<p>Genetic code list of NCBI.</p>
+<p>The standard genetic code is <code>ncbi_trans_table[1]</code> and others can be shown by <code>show(ncbi_trans_table)</code>. For more details, consult the next link: http://www.ncbi.nlm.nih.gov/Taxonomy/taxonomyhome.html/index.cgi?chapter=cgencodes.</p>
+<div class="codehilite"><pre><span></span><span class="n">julia</span><span class="o">&gt;</span> <span class="n">ncbi_trans_table</span>
+<span class="n">Translation</span> <span class="n">Tables</span><span class="p">:</span>
+  <span class="mf">1.</span> <span class="n">The</span> <span class="n">Standard</span> <span class="n">Code</span> <span class="p">(</span><span class="n">standard_genetic_code</span><span class="p">)</span>
+  <span class="mf">2.</span> <span class="n">The</span> <span class="n">Vertebrate</span> <span class="n">Mitochondrial</span> <span class="n">Code</span> <span class="p">(</span><span class="n">vertebrate_mitochondrial_genetic_code</span><span class="p">)</span>
+  <span class="mf">3.</span> <span class="n">The</span> <span class="n">Yeast</span> <span class="n">Mitochondrial</span> <span class="n">Code</span> <span class="p">(</span><span class="n">yeast_mitochondrial_genetic_code</span><span class="p">)</span>
+  <span class="mf">4.</span> <span class="n">The</span> <span class="n">Mold</span><span class="p">,</span> <span class="n">Protozoan</span><span class="p">,</span> <span class="n">and</span> <span class="n">Coelenterate</span> <span class="n">Mitochondrial</span> <span class="n">Code</span> <span class="n">and</span> <span class="n">the</span> <span class="n">Mycoplasma</span><span class="o">/</span><span class="n">Spiroplasma</span> <span class="n">Code</span> <span class="p">(</span><span class="n">mold_mitochondrial_genetic_code</span><span class="p">)</span>
+  <span class="mf">5.</span> <span class="n">The</span> <span class="n">Invertebrate</span> <span class="n">Mitochondrial</span> <span class="n">Code</span> <span class="p">(</span><span class="n">invertebrate_mitochondrial_genetic_code</span><span class="p">)</span>
+  <span class="mf">6.</span> <span class="n">The</span> <span class="n">Ciliate</span><span class="p">,</span> <span class="n">Dasycladacean</span> <span class="n">and</span> <span class="n">Hexamita</span> <span class="n">Nuclear</span> <span class="n">Code</span> <span class="p">(</span><span class="n">ciliate_nuclear_genetic_code</span><span class="p">)</span>
+  <span class="mf">9.</span> <span class="n">The</span> <span class="n">Echinoderm</span> <span class="n">and</span> <span class="n">Flatworm</span> <span class="n">Mitochondrial</span> <span class="n">Code</span> <span class="p">(</span><span class="n">echinoderm_mitochondrial_genetic_code</span><span class="p">)</span>
+ <span class="mf">10.</span> <span class="n">The</span> <span class="n">Euplotid</span> <span class="n">Nuclear</span> <span class="n">Code</span> <span class="p">(</span><span class="n">euplotid_nuclear_genetic_code</span><span class="p">)</span>
+ <span class="mf">11.</span> <span class="n">The</span> <span class="n">Bacterial</span><span class="p">,</span> <span class="n">Archaeal</span> <span class="n">and</span> <span class="n">Plant</span> <span class="n">Plastid</span> <span class="n">Code</span> <span class="p">(</span><span class="n">bacterial_plastid_genetic_code</span><span class="p">)</span>
+ <span class="mf">12.</span> <span class="n">The</span> <span class="n">Alternative</span> <span class="n">Yeast</span> <span class="n">Nuclear</span> <span class="n">Code</span> <span class="p">(</span><span class="n">alternative_yeast_nuclear_genetic_code</span><span class="p">)</span>
+ <span class="mf">13.</span> <span class="n">The</span> <span class="n">Ascidian</span> <span class="n">Mitochondrial</span> <span class="n">Code</span> <span class="p">(</span><span class="n">ascidian_mitochondrial_genetic_code</span><span class="p">)</span>
+ <span class="mf">14.</span> <span class="n">The</span> <span class="n">Alternative</span> <span class="n">Flatworm</span> <span class="n">Mitochondrial</span> <span class="n">Code</span> <span class="p">(</span><span class="n">alternative_flatworm_mitochondrial_genetic_code</span><span class="p">)</span>
+ <span class="mf">16.</span> <span class="n">Chlorophycean</span> <span class="n">Mitochondrial</span> <span class="n">Code</span> <span class="p">(</span><span class="n">chlorophycean_mitochondrial_genetic_code</span><span class="p">)</span>
+ <span class="mf">21.</span> <span class="n">Trematode</span> <span class="n">Mitochondrial</span> <span class="n">Code</span> <span class="p">(</span><span class="n">trematode_mitochondrial_genetic_code</span><span class="p">)</span>
+ <span class="mf">22.</span> <span class="n">Scenedesmus</span> <span class="n">obliquus</span> <span class="n">Mitochondrial</span> <span class="n">Code</span> <span class="p">(</span><span class="n">scenedesmus_obliquus_mitochondrial_genetic_code</span><span class="p">)</span>
+ <span class="mf">23.</span> <span class="n">Thraustochytrium</span> <span class="n">Mitochondrial</span> <span class="n">Code</span> <span class="p">(</span><span class="n">thraustochytrium_mitochondrial_genetic_code</span><span class="p">)</span>
+ <span class="mf">24.</span> <span class="n">Pterobranchia</span> <span class="n">Mitochondrial</span> <span class="n">Code</span> <span class="p">(</span><span class="n">pterobrachia_mitochondrial_genetic_code</span><span class="p">)</span>
+ <span class="mf">25.</span> <span class="n">Candidate</span> <span class="n">Division</span> <span class="n">SR1</span> <span class="n">and</span> <span class="n">Gracilibacteria</span> <span class="n">Code</span> <span class="p">(</span><span class="n">candidate_division_sr1_genetic_code</span><span class="p">)</span>
+</pre></div>
+
+
+<p><a href="http://www.ncbi.nlm.nih.gov/Taxonomy/taxonomyhome.html/index.cgi?chapter=cgencodes">http://www.ncbi.nlm.nih.gov/Taxonomy/taxonomyhome.html/index.cgi?chapter=cgencodes</a></p>
+<p><a id='Compact-representation-1'></a></p>
+<h2 id="compact-representation">Compact representation</h2>
+<p>As we saw above, DNA and RNA sequences can store any ambiguous nucleotides like 'N'.  If you are sure that nucleotide sequences store unambiguous nucleotides only, you can save the memory space of sequences. <code>DNAAlphabet{2}</code> is an alphabet that uses two bits per base and limits to only umambiguous nucleotide symbols (ACGT in DNA and ACGU in RNA). To create a sequence of this alphabet, you need to explicitly pass <code>DNAAlphabet{2}</code> to <code>BioSequence</code> as its parametric type:</p>
+<div class="codehilite"><pre><span></span><span class="n">julia</span><span class="o">&gt;</span> <span class="n">seq</span> <span class="o">=</span> <span class="n">BioSequence</span><span class="p">{</span><span class="n">DNAAlphabet</span><span class="p">{</span><span class="mi">2</span><span class="p">}}(</span><span class="s">&quot;ACGT&quot;</span><span class="p">)</span>
+<span class="mi">4</span><span class="n">nt</span> <span class="n">DNA</span> <span class="n">Sequence</span><span class="p">:</span>
+<span class="n">ACGT</span>
+</pre></div>
+
+
+<p>Recall that <code>DNASequence</code> is a type alias of <code>BioSequence{DNAAlphabet{4}}</code>, which uses four bits per base. That is, <code>BioSequence{DNAAlphabet{2}}</code> saves half of memory footprint compared to <code>BioSequence{DNAAlphabet{4}}</code>. If you need to handle reference sequences that are composed of five nucleotides, ACGTN, consider to use <a href="https://github.com/BioJulia/ReferenceSequences.jl">ReferenceSequences.jl</a>. <code>ReferenceSequence</code>, exported from this package, compresses positions of 'N' and enables to handle long DNA sequences with the near space of two-bit encoding.</p>
+<p><a id='Nucleotide-k-mers-1'></a></p>
+<h2 id="nucleotide-k-mers">Nucleotide k-mers</h2>
+<p>A common strategy to simplify the analysis of sequence data is to operate or short k-mers, for size fixed size <code>k</code>. These can be packed into machine integers allowing extremely efficient code. The <code>Bio.Seq</code> module has built in support for representing short sequences in 64-bit integers. Besides being fixed length, <code>Kmer</code> types, unlike other sequence types cannot contain ambiguous symbols like 'N'.</p>
+<p>The <code>Kmer{T,k}</code> type parameterized on alphabet (<code>T</code>, either <code>DNANucleotide</code>, or <code>RNANucleotide</code>) and size <code>k</code>. A number of functions are provided for operating on <code>Kmers</code>.</p>
+<p><a id='Bio.Seq.each' href='#Bio.Seq.each'>#</a>
+<strong><code>Bio.Seq.each</code></strong> &mdash; <em>Function</em>.</p>
+<hr />
+<p>Initialize an iterator over all k-mers in a sequence.</p>
+<p>Any k-mer containing an N will be skipped over.</p>
+<h3 id="arguments_2">Arguments</h3>
+<ul>
+<li><code>t</code>: Kmer type to enumerate.</li>
+<li><code>seq</code>: A NucleotideSequence</li>
+<li><code>step</code>: number of positions between iterated k-mers (default: 1)</li>
+</ul>
+<h3 id="returns_2">Returns</h3>
+<p>A EachKmerIterator constructed with these parameters</p>
+<h3 id="examples">Examples</h3>
+<div class="codehilite"><pre><span></span># iterate over codons
+for (pos, codon) in each(DNAKmer{3}, dna&quot;ATCCTANAGNTACT&quot;, 3)
+    @show pos, codon
+end
+</pre></div>
+
+
+<p><a id='Bio.Seq.KmerCounts' href='#Bio.Seq.KmerCounts'>#</a>
+<strong><code>Bio.Seq.KmerCounts</code></strong> &mdash; <em>Type</em>.</p>
+<hr />
+<p>Count ocurrences of short (&lt;= 32) k-mers in a sequence.</p>
+<p>This method uses a dense table to store counts, requiring O(4^k) memory, so is not recommended for large k-mer sizes.</p>
+<h3 id="arguments_3">Arguments:</h3>
+<ul>
+<li>'seq`: A NucleotideSequence</li>
+<li><code>step</code>: K-mers counted are separated by this many nucleotides (deafult: 1)</li>
+</ul>
+<p><a id='Bio.Seq.canonical' href='#Bio.Seq.canonical'>#</a>
+<strong><code>Bio.Seq.canonical</code></strong> &mdash; <em>Function</em>.</p>
+<hr />
+<p>Canonical k-mer of <code>x</code></p>
+<p>A canonical k-mer is the numerical lesser of a k-mer and its reverse complement. This is useful in hashing/counting k-mers in data that is not strand specific, and thus observing k-mer is equivalent to observing its reverse complement.</p>
+<p><a id='Bio.Seq.neighbors' href='#Bio.Seq.neighbors'>#</a>
+<strong><code>Bio.Seq.neighbors</code></strong> &mdash; <em>Function</em>.</p>
+<hr />
+<p>Iterate through k-mers neighboring <code>x</code> on a de Bruijn graph.</p>
+<p><a id='Sequence-records-1'></a></p>
+<h2 id="sequence-records">Sequence records</h2>
+<p>The <code>SeqRecord</code> type is used to represent a named sequence, optionally with accompanying metadata. It is defined as: sequence. It is as:</p>
+<div class="codehilite"><pre><span></span><span class="k">type</span><span class="nc"> SeqRecord</span><span class="p">{</span><span class="n">S</span><span class="p">,</span> <span class="n">T</span><span class="p">}</span>
+    <span class="n">name</span><span class="p">::</span><span class="n">String</span>
+    <span class="n">seq</span><span class="p">::</span><span class="n">S</span>
+    <span class="n">metadata</span><span class="p">::</span><span class="n">T</span>
+<span class="k">end</span>
+</pre></div>
+
+
+<p>The type of the <code>metadata</code> field depends on the source of the sequence record. For example, if a record is read from a FASTA file, metadata contains the description field. If from a FASTQ file, a quality scores assigned to base calls during sequencing.</p>
+          <aside class="copyright" role="note">
+            
+              Copyright (c) 2016 The BioJulia Organisation &ndash;
+            
+            Documentation built with
+            <a href="http://www.mkdocs.org" target="_blank">MkDocs</a>
+            using the
+            <a href="http://squidfunk.github.io/mkdocs-material/" target="_blank">
+              Material
+            </a>
+            theme.
+          </aside>
+          
+            <footer class="footer">
+              
+  <nav class="pagination" aria-label="Footer">
+    <div class="previous">
+      
+        <a href="../reading/" title="IO API">
+          <span class="direction">
+            Previous
+          </span>
+          <div class="page">
+            <div class="button button-previous" role="button" aria-label="Previous">
+              <i class="icon icon-back"></i>
+            </div>
+            <div class="stretch">
+              <div class="title">
+                IO API
+              </div>
+            </div>
+          </div>
+        </a>
+      
+    </div>
+    <div class="next">
+      
+        <a href="../alignments/" title="Alignments">
+          <span class="direction">
+            Next
+          </span>
+          <div class="page">
+            <div class="stretch">
+              <div class="title">
+                Alignments
+              </div>
+            </div>
+            <div class="button button-next" role="button" aria-label="Next">
+              <i class="icon icon-forward"></i>
+            </div>
+          </div>
+        </a>
+      
+    </div>
+  </nav>
+
+            </footer>
+          
+        </div>
+      </article>
+      <div class="results" role="status" aria-live="polite">
+        <div class="scrollable">
+          <div class="wrapper">
+            <div class="meta"></div>
+            <div class="list"></div>
+          </div>
+        </div>
+      </div>
+    </main>
+    <script>
+      var base_url = '../..';
+      var repo_id  = 'BioJulia/Bio.jl';
+    </script>
+    <script src="../../assets/javascripts/application-997097ee0c.js"></script>
+    
+      <script src="https://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS_HTML"></script>
+    
+      <script src="../../assets/mathjaxhelper.js"></script>
+    
+    
+  </body>
+</html>

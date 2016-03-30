@@ -1,0 +1,64 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
+
+    
+    <url>
+     <loc>https://biojulia.github.io/Bio.jl//</loc>
+     <lastmod>2016-03-27</lastmod>
+     <changefreq>daily</changefreq>
+    </url>
+    
+
+    
+        
+    <url>
+     <loc>https://biojulia.github.io/Bio.jl//man/install/</loc>
+     <lastmod>2016-03-27</lastmod>
+     <changefreq>daily</changefreq>
+    </url>
+        
+    <url>
+     <loc>https://biojulia.github.io/Bio.jl//man/reading/</loc>
+     <lastmod>2016-03-27</lastmod>
+     <changefreq>daily</changefreq>
+    </url>
+        
+    <url>
+     <loc>https://biojulia.github.io/Bio.jl//man/seq/</loc>
+     <lastmod>2016-03-27</lastmod>
+     <changefreq>daily</changefreq>
+    </url>
+        
+    <url>
+     <loc>https://biojulia.github.io/Bio.jl//man/alignments/</loc>
+     <lastmod>2016-03-27</lastmod>
+     <changefreq>daily</changefreq>
+    </url>
+        
+    <url>
+     <loc>https://biojulia.github.io/Bio.jl//man/intervals/</loc>
+     <lastmod>2016-03-27</lastmod>
+     <changefreq>daily</changefreq>
+    </url>
+        
+    
+
+    
+        
+    <url>
+     <loc>https://biojulia.github.io/Bio.jl//lib/seq/</loc>
+     <lastmod>2016-03-27</lastmod>
+     <changefreq>daily</changefreq>
+    </url>
+        
+    
+
+    
+    <url>
+     <loc>https://biojulia.github.io/Bio.jl//man/contributing/</loc>
+     <lastmod>2016-03-27</lastmod>
+     <changefreq>daily</changefreq>
+    </url>
+    
+
+</urlset>
