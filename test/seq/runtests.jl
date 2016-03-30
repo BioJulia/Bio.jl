@@ -2038,4 +2038,81 @@ end
     end
 end
 
+@testset "Search" begin
+    @testset "Pattern match" begin
+        re = dnapat"^A(C+G*)(T{2,})N$"
+        @test !ismatch(re, dna"AC")
+        @test !ismatch(re, dna"AGTT")
+        @test !ismatch(re, dna"CCGTT")
+        @test !ismatch(re, dna"ACTT")
+        @test !ismatch(re, dna"ACTTGT")
+        @test  ismatch(re, dna"ACGTTA")
+        @test  ismatch(re, dna"ACGTTT")
+        @test  ismatch(re, dna"ACCGGTTT")
+        @test  ismatch(re, dna"ACCGGTTT")
+        @test  ismatch(re, dna"ACCGGTTTA")
+        @test  ismatch(re, dna"ACCGGTTTG")
+
+        @test matched(match(re, dna"ACCGTTTTA")) == dna"ACCGTTTTA"
+        @test get(captured(match(re, dna"ACCGTTTTA"))[1]) == dna"CCG"
+        @test get(captured(match(re, dna"ACCGTTTTA"))[2]) == dna"TTTT"
+
+        # greedy
+        @test matched(match(dnapat"A*", dna"AAA")) == dna"AAA"
+        @test matched(match(dnapat"A+", dna"AAA")) == dna"AAA"
+        @test matched(match(dnapat"A?", dna"AAA")) == dna"A"
+        @test matched(match(dnapat"A{2,}", dna"AAA")) == dna"AAA"
+
+        # lazy
+        @test matched(match(dnapat"A*?", dna"AAA")) == dna""
+        @test matched(match(dnapat"A+?", dna"AAA")) == dna"A"
+        @test matched(match(dnapat"A??", dna"AAA")) == dna""
+        @test matched(match(dnapat"A{2,}?", dna"AAA")) == dna"AA"
+
+        # search
+        @test search(dna"ACGTAAT", dnapat"A+") == 1:1
+        @test search(dna"ACGTAAT", dnapat"A+", 1) == 1:1
+        @test search(dna"ACGTAAT", dnapat"A+", 2) == 5:6
+        @test search(dna"ACGTAAT", dnapat"A+", 7) == 0:-1
+
+        # eachmatch
+        matches = [dna"CG", dna"GC", dna"GC", dna"CG"]
+        for (i, m) in enumerate(eachmatch(dnapat"GC|CG", dna"ACGTTATGCATGGCG"))
+            @test matched(m) == matches[i]
+        end
+        matches = [dna"CG", dna"GC", dna"GC"]
+        for (i, m) in enumerate(collect(eachmatch(dnapat"GC|CG", dna"ACGTTATGCATGGCG", false)))
+            @test matched(m) == matches[i]
+        end
+
+        # matchall
+        @test matchall(dnapat"A*", dna"") == [dna""]
+        @test matchall(dnapat"A*", dna"AAA") == [
+            dna"AAA", dna"AA", dna"A", dna"",
+            dna"AA",  dna"A",  dna"",
+            dna"A",   dna""]
+        @test matchall(dnapat"AC*G*T", dna"ACCGGGT") == [dna"ACCGGGT"]
+
+        @test matchall(dnapat"A*", dna"", false) == [dna""]
+        @test matchall(dnapat"A*", dna"AAA", false) == [dna"AAA"]
+        @test matchall(dnapat"AC*G*T", dna"ACCGGGT", false) == [dna"ACCGGGT"]
+
+        # RNA and Amino acid
+        @test  ismatch(rnapat"U(A[AG]|GA)$", rna"AUUGUAUGA")
+        @test !ismatch(rnapat"U(A[AG]|GA)$", rna"AUUGUAUGG")
+        @test  ismatch(aapat"T+[NQ]A?P", aa"MTTQAPMFTQPL")
+        @test  ismatch(aapat"T+[NQ]A?P", aa"MTTAAPMFTQPL")
+        @test !ismatch(aapat"T+[NQ]A?P", aa"MTTAAPMFSQPL")
+
+        # PROSITE
+        @test  ismatch(prosite"[AC]-x-V-x(4)-{ED}", aa"ADVAARRK")
+        @test  ismatch(prosite"[AC]-x-V-x(4)-{ED}", aa"CPVAARRK")
+        @test !ismatch(prosite"[AC]-x-V-x(4)-{ED}", aa"ADVAARRE")
+        @test !ismatch(prosite"[AC]-x-V-x(4)-{ED}", aa"CPVAARK")
+        @test  ismatch(prosite"<[AC]-x-V-x(4)-{ED}>", aa"ADVAARRK")
+        @test !ismatch(prosite"<[AC]-x-V-x(4)-{ED}>", aa"AADVAARRK")
+        @test !ismatch(prosite"<[AC]-x-V-x(4)-{ED}>", aa"ADVAARRKA")
+    end
+end
+
 end # TestSeq

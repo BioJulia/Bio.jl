@@ -176,6 +176,27 @@ include("fastq.jl")
 
 include("search/exact.jl")
 include("search/approx.jl")
+include("search/search.jl")
+
+# TODO: any way to write this elegantly?
+import .RE:
+    Regex,
+    RegexMatch,
+    matched,
+    captured,
+    @dnapat_str,
+    @rnapat_str,
+    @aapat_str,
+    @prosite_str
+export
+    matched,
+    captured,
+    @dnapat_str,
+    @rnapat_str,
+    @aapat_str,
+    @prosite_str
+
+>>>>>>> add moved regular expression
 
 # DEPRECATED: defined just for compatibility
 type NucleotideSequence{T<:Nucleotide} end
