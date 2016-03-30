@@ -702,60 +702,42 @@ Base.eltype{T,S}(::Type{RegexMatchIterator{T,S}}) = RegexMatch{S}
 
 function Base.start(iter::RegexMatchIterator)
     threads = Stack{Tuple{Int,Int}}()
-    captured = zeros(Int, iter.re.nsaves)
+    captured = Vector{Int}(iter.re.nsaves)
     s = start(iter.seq)
     push!(threads, (1, s))
-    s, done = advance!(threads, captured, s, iter)
-    return threads, captured, s, done
+    fill!(captured, 0)
+    return advance!(threads, captured, s, iter.re, iter.seq, iter.overlap)
 end
 
-Base.done(iter::RegexMatchIterator, state) = state[4]
-
-function Base.next(iter::RegexMatchIterator, state)
-    threads, captured, s, _ = state
-    # need to copy `captured` since it will be reused in the next iteration
-    m = RegexMatch(iter.seq, copy(captured))
-    s, done = advance!(threads, captured, s, iter)
-    return m, (threads, captured, s, done)
+function Base.done(iter::RegexMatchIterator, st)
+    return isnull(st[1])
 end
 
-function advance!(threads, captured, s, iter)
-    re = iter.re
-    seq = iter.seq
-    if iter.overlap
-        while true
-            while !isempty(threads)
-                if runmatch!(threads, captured, re, seq)
-                    return s, false
-                end
-            end
-            _, s = next(seq, s)
-            if done(seq, s)
-                break
-            else
-                push!(threads, (1, s))
-                fill!(captured, 0)
-            end
-        end
-    else
-        while true
-            @assert length(threads) ≤ 1
-            fill!(captured, 0)
-            if runmatch!(threads, captured, re, seq)
+function Base.next(iter::RegexMatchIterator, st)
+    item, threads, captured, s = st
+    return get(item), advance!(threads, captured, s, iter.re, iter.seq, iter.overlap)
+end
+
+function advance!(threads, captured, s, re, seq, overlap)
+    while true
+        if runmatch!(threads, captured, re, seq)
+            if !overlap
                 empty!(threads)
                 s = captured[2]
                 if !done(seq, s)
                     push!(threads, (1, s))
                 end
-                return s, false
             end
-            _, s = next(seq, s)
-            if done(seq, s)
-                break
-            end
+            return Nullable(RegexMatch(seq, copy(captured))), threads, captured, s
         end
+        _, s = next(seq, s)
+        if done(seq, s)
+            break
+        end
+        push!(threads, (1, s))
+        fill!(captured, 0)
     end
-    return s, true
+    return Nullable{typeof(seq)}(), threads, captured, s
 end
 
 function Base.eachmatch{T}(re::Regex{T}, seq::BioSequence, overlap::Bool=true)
