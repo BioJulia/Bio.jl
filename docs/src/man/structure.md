@@ -4,6 +4,11 @@
     CurrentModule = Bio.Structure
     DocTestSetup = quote
         using Bio.Structure
+        path = Pkg.dir("Bio", "test", "BioFmtSpecimens")
+        if !isdir(path)
+            run(`git clone --depth 1 https://github.com/BioJulia/BioFmtSpecimens.git $(path)`)
+        end
+        filepath_1EN2 = Pkg.dir("Bio", "test", "BioFmtSpecimens", "PDB", "1EN2.pdb")
     end
 
 The `Bio.Structure` module provides functionality to read Protein Data Bank (PDB) files and manipulate macromolecular structures.
@@ -20,12 +25,7 @@ downloadpdb("1EN2")
 To parse a PDB file into a Structure-Model-Chain-Residue-Atom framework:
 
 ```julia
-struc = read("1EN2.pdb", PDB)
-```
-
-This outputs a summary of the file:
-
-```
+julia> struc = read(filepath_1EN2, PDB)
 Name                        -  1EN2.pdb
 Number of models            -  1
 Chain(s)                    -  A
@@ -134,7 +134,25 @@ xselector(atom::AbstractAtom) = x(atom) < 0
 collectatoms(struc, xselector)
 ```
 
-`countmodels`, `countchains`, `countresidues` and `countatoms` can be used to count elements.
+`countmodels`, `countchains`, `countresidues` and `countatoms` can be used to count elements. For example:
+
+    {meta}
+    DocTestSetup = quote
+        using Bio.Structure
+        filepath_1EN2 = Pkg.dir("Bio", "test", "BioFmtSpecimens", "PDB", "1EN2.pdb")
+        struc = read(filepath_1EN2, PDB)
+    end
+
+```julia
+julia> countatoms(struc)
+754
+
+julia> countatoms(struc, calphaselector)
+85
+
+julia> countresidues(struc, stdresselector)
+85
+```
 
 `organise`, `organisemodel` and `organisestruc` can be used to organise sub-elements into elements:
 
@@ -147,10 +165,11 @@ collectatoms(struc, xselector)
 | `organisemodel(collectatoms(struc))`     | Organise elements into a model            |
 | `organisestructure(collectatoms(struc))` | Organise elements into a structure        |
 
-Distances can be calculated. The minimum distance between residue 10 and 20 is found using:
+Distances can be calculated. The minimum distance between residue 10 and 20 is:
 
 ```julia
-distance(struc['A'][10], struc['A'][20])
+julia> distance(struc['A'][10], struc['A'][20])
+10.782158874733762
 ```
 
 RMSDs/displacements between elements of the same size can also be calculated with `rmsd` and `displacements`.
