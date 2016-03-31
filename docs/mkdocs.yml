@@ -1,6 +1,6 @@
 # Project information
 site_name:   Bio.jl
-site_description: Bioinformatics and Computational Biology Infastructure for Julia
+site_description: Bioinformatics and Computational Biology Infrastructure for Julia
 site_author: The BioJulia Organisation
 site_url: https://biojulia.github.io/Bio.jl/
 
@@ -46,6 +46,7 @@ pages:
   - Biological Sequences: man/seq.md
   - Alignments: man/alignments.md
   - Intervals: man/intervals.md
+  - Structure: man/structure.md
 - Reference:
   - Seq: lib/seq.md
 - Contributing: man/contributing.md

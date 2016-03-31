@@ -26,7 +26,11 @@ end
 Base.showerror(io::IO, e::PDBParseError) = println(io, e.message, " at line ", e.line_number, " of file:\n", e.line)
 
 
-"Download a PDB file or biological assembly from the RCSB PDB."
+"""
+Download a PDB file or biological assembly from the RCSB PDB. By default
+downloads the PDB file; if the keyword argument `ba_number` is set the
+biological assembly with that number will be downloaded.
+"""
 function downloadpdb(pdbid::AbstractString, out_filepath::AbstractString="$pdbid.pdb"; ba_number::Integer=0)
     # Check PDB ID is 4 characters long and only consits of alphanumeric characters
     @assert length(pdbid) == 4 && !ismatch(r"[^a-zA-Z0-9]", pdbid) "Not a valid PDB ID: \"$pdbid\""
@@ -232,6 +236,8 @@ pdbline(atom::Atom) = ASCIIString[
 """
 Write a `StructuralElementOrList` to a PDB format file. Only ATOM, HETATM, MODEL
 and ENDMDL records are written - there is no header and no TER records.
+Additional arguments are `selector_functions...` - only atoms that satisfy the
+selector functions are written.
 """
 function writepdb(output::IO, element::Union{ProteinStructure, Vector{Model}}, selector_functions::Function...)
     # If there are multiple models, write out MODEL/ENDMDL lines
@@ -256,7 +262,11 @@ function writepdb(filepath::AbstractString, element::StructuralElementOrList, se
 end
 
 
-"Write a `StructuralElementOrList` to an output as lines in PDB format."
+"""
+Write a `StructuralElementOrList` to an output as lines in PDB format.
+Additional arguments are `selector_functions...` - only atoms that satisfy the
+selector functions are written.
+"""
 function writepdblines(output::IO, element::StructuralElementOrList, selector_functions::Function...)
     # Collect residues then expand out disordered residues and atoms
     for res in collectresidues(element)

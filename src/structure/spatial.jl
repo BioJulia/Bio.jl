@@ -50,10 +50,7 @@ end
 displacements(element_one::StructuralElementOrList, element_two::StructuralElementOrList, selector_functions::Function...) = displacements(coordarray(element_one, selector_functions...), coordarray(element_two, selector_functions...))
 
 
-"""
-Get the minimum distance between two `StructuralElementOrList`s. Shortcut is
-`-`.
-"""
+"Get the minimum distance between two `StructuralElementOrList`s."
 function distance(element_one::StructuralElementOrList, element_two::StructuralElementOrList, selector_functions::Function...)
     coords_one = coordarray(element_one, selector_functions...)
     coords_two = coordarray(element_two, selector_functions...)

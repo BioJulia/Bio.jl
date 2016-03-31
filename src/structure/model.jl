@@ -312,25 +312,25 @@ z(atom::Atom) = atom.coords[3]
 coords(atom::Atom) = atom.coords
 
 """
-Get the occupancy of an `AbstractAtom`. Defaults to 1.0 if not read from the PDB
-file.
+Get the occupancy of an `AbstractAtom`. Defaults to `1.0` if not read from the
+PDB file.
 """
 occupancy(atom::Atom) = atom.occupancy
 
 """
-Get the temperature factor on an `AbstractAtom`. Defaults to 0.0 if not read
+Get the temperature factor on an `AbstractAtom`. Defaults to `0.0` if not read
 from the PDB file.
 """
 tempfac(atom::Atom) = atom.temp_fac
 
 """
-Get the element of an `AbstractAtom`. Defaults to \"\" if not read from the PDB
+Get the element of an `AbstractAtom`. Defaults to `""` if not read from the PDB
 file.
 """
 element(atom::Atom) = atom.element
 
 """
-Get the charge on an `AbstractAtom`. Defaults to \"\" if not read from the PDB
+Get the charge on an `AbstractAtom`. Defaults to `""` if not read from the PDB
 file.
 """
 charge(atom::Atom) = atom.charge
@@ -705,7 +705,11 @@ function applyselectors!{T <: Union{AbstractResidue, AbstractAtom}}(element_list
 end
 
 
-"Returns a sorted `Vector` of the residues in a `StructuralElementOrList`."
+"""
+Returns a sorted `Vector` of the residues in a `StructuralElementOrList`.
+Additional arguments are `selector_functions...` - only residues that satisfy
+the selector functions are retained.
+"""
 collectresidues(struc::ProteinStructure, selector_functions::Function...) = countmodels(struc) > 0 ? collectresidues(defaultmodel(struc), selector_functions...) : AbstractResidue[]
 collectresidues(chain::Chain, selector_functions::Function...) = applyselectors(collect(chain), selector_functions...)
 collectresidues(res::AbstractResidue, selector_functions::Function...) = applyselectors(AbstractResidue[res], selector_functions...)
@@ -724,7 +728,11 @@ function collectresidues(element::Union{Model, Vector{Model}, Vector{Chain}}, se
 end
 
 
-"Return a sorted `Vector` of the atoms in a `StructuralElementOrList`."
+"""
+Returns a sorted `Vector` of the atoms in a `StructuralElementOrList`.
+Additional arguments are `selector_functions...` - only atoms that satisfy the
+selector functions are retained.
+"""
 collectatoms(struc::ProteinStructure, selector_functions::Function...) = countmodels(struc) > 0 ? collectatoms(defaultmodel(struc), selector_functions...) : AbstractAtom[]
 collectatoms(res::AbstractResidue, selector_functions::Function...) = applyselectors(collect(res), selector_functions...)
 collectatoms(atom::AbstractAtom, selector_functions::Function...) = applyselectors(AbstractAtom[atom], selector_functions...)
@@ -748,10 +756,17 @@ countmodels(struc::ProteinStructure) = length(struc)
 countchains(struc::ProteinStructure) = countmodels(struc) > 0 ? length(defaultmodel(struc)) : 0
 countchains(model::Model) = length(model)
 
-"Get the number of residues in a `StructuralElementOrList`."
+"""
+Get the number of residues in a `StructuralElementOrList`. Additional arguments
+are `selector_functions...` - only residues that satisfy the selector functions
+are counted.
+"""
 countresidues(element::StructuralElementOrList, selector_functions::Function...) = length(collectresidues(element, selector_functions...))
 
-"Get the number of atoms in a `StructuralElementOrList`."
+"""
+Get the number of atoms in a `StructuralElementOrList`. Additional arguments are `selector_functions...` - only atoms that satisfy the selector functions are
+counted.
+"""
 countatoms(element::StructuralElementOrList, selector_functions::Function...) = length(collectatoms(element, selector_functions...))
 
 
@@ -922,7 +937,10 @@ function choosedefaultaltlocid(atom_one::Atom, atom_two::Atom)
 end
 
 
-"Organise elements into a `Model`."
+"""
+Organise elements into a `Model`. The keyword argument `model_number` sets the
+model number (default `1`).
+"""
 organisemodel(chains::Vector{Chain}; model_number::Integer=1) = organise(chains; model_number=model_number)
 organisemodel{T <: AbstractResidue}(residues::Vector{T}; model_number::Integer=1) = organise(organise(residues); model_number=model_number)
 organisemodel{T <: AbstractAtom}(atoms::Vector{T}; model_number::Integer=1) = organise(organise(organise(atoms)); model_number=model_number)
@@ -931,7 +949,10 @@ organisemodel(res::AbstractResidue; model_number::Integer=1) = organisemodel(Abs
 organisemodel(atom::AbstractAtom; model_number::Integer=1) = organisemodel(AbstractAtom[atom]; model_number=model_number)
 
 
-"Organise elements into a `ProteinStructure`."
+"""
+Organise elements into a `ProteinStructure`. They keyword argument
+`structure_name` sets the structure name (default `""`).
+"""
 organisestructure(models::Vector{Model}; structure_name::AbstractString="") = organise(models; structure_name=structure_name)
 organisestructure(chains::Vector{Chain}; structure_name::AbstractString="", model_number::Integer=1) = organise(organisemodel(chains; model_number=model_number); structure_name=structure_name)
 organisestructure{T <: AbstractResidue}(residues::Vector{T}; structure_name::AbstractString="", model_number::Integer=1) = organise(organisemodel(residues; model_number=model_number); structure_name=structure_name)
