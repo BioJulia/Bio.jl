@@ -1,8 +1,10 @@
+body {
+  font-family: 'Sinhala MN';
+}
 .svglink {
   pointer-events: none;
 }
 .textlink {
-  font-family: 'Sinhala MN';
   color: #3a3a3a;
   margin-left: 40px;
   font-weight: 100;
@@ -35,7 +37,7 @@
   width: 100%;
   margin-left: 0%;
   margin-right: 0%;
-  background: rgba(255,255,255,0.9);
+  background: rgba(255,255,255,0.95);
   border-bottom: 3px solid rgba(0,0,0,0.1);
 }
 #navbar:before,
@@ -46,16 +48,17 @@
 #navbar:after {
   clear: both;
 }
-@media only screen and (min-width: 600px) {
+@media only screen and (min-width: 1050px) {
   #navbar {
     position: fixed;
     height: 100px;
+    z-index: 99;
   }
 }
 #navbar #logo {
   height: 100%;
 }
-@media only screen and (min-width: 600px) {
+@media only screen and (min-width: 1050px) {
   #navbar #logo {
     *zoom: 1;
     float: left;
@@ -74,7 +77,7 @@
     clear: both;
   }
 }
-@media only screen and (max-width: 600px) {
+@media only screen and (max-width: 400px) {
   #navbar #logo {
     *zoom: 1;
     float: left;
@@ -115,7 +118,7 @@
 #navbar #logo img:after {
   clear: both;
 }
-@media only screen and (min-width: 600px) {
+@media only screen and (min-width: 1050px) {
   #navbar #links {
     *zoom: 1;
     float: left;
@@ -135,7 +138,7 @@
     clear: both;
   }
 }
-@media only screen and (max-width: 600px) {
+@media only screen and (max-width: 400px) {
   #navbar #links {
     *zoom: 1;
     width: auto;
@@ -189,27 +192,8 @@
     clear: both;
   }
 }
-.pkglogo img {
-  *zoom: 1;
-  width: auto;
-  max-width: 1440px;
-  float: none;
-  display: block;
-  margin-right: auto;
-  margin-left: auto;
-  padding-left: 0;
-  padding-right: 0;
-}
-.pkglogo img:before,
-.pkglogo img:after {
-  content: '';
-  display: table;
-}
-.pkglogo img:after {
-  clear: both;
-}
-@media only screen and (min-width: 600px) {
-  .pkglogo {
+@media only screen and (min-width: 1050px) {
+  #pkgpanel {
     *zoom: 1;
     float: left;
     clear: none;
@@ -220,23 +204,121 @@
     position: fixed;
     margin-top: 150px;
   }
-  .pkglogo:before,
-  .pkglogo:after {
+  #pkgpanel:before,
+  #pkgpanel:after {
     content: '';
     display: table;
   }
-  .pkglogo:after {
+  #pkgpanel:after {
     clear: both;
   }
-  .pkglogo:last-child {
+  #pkgpanel:last-child {
     margin-right: 0%;
   }
-  .pkglogo img {
+  #pkgpanel center {
+    font-size: 2em;
+    margin-top: 40px;
+  }
+  #pkgpanel #logopanel {
+    *zoom: 1;
+    width: auto;
+    max-width: 1440px;
+    float: none;
+    display: block;
+    margin-right: auto;
+    margin-left: auto;
+    padding-left: 0;
+    padding-right: 0;
+  }
+  #pkgpanel #logopanel:before,
+  #pkgpanel #logopanel:after {
+    content: '';
+    display: table;
+  }
+  #pkgpanel #logopanel:after {
+    clear: both;
+  }
+  #pkgpanel #logopanel img {
+    *zoom: 1;
+    width: auto;
+    max-width: 1440px;
+    float: none;
+    display: block;
+    margin-right: auto;
+    margin-left: auto;
+    padding-left: 0;
+    padding-right: 0;
     width: 80%;
   }
+  #pkgpanel #logopanel img:before,
+  #pkgpanel #logopanel img:after {
+    content: '';
+    display: table;
+  }
+  #pkgpanel #logopanel img:after {
+    clear: both;
+  }
+  #pkgpanel #activitypanel {
+    *zoom: 1;
+    width: auto;
+    max-width: 80%;
+    float: none;
+    display: block;
+    margin-right: auto;
+    margin-left: auto;
+    padding-left: 0;
+    padding-right: 0;
+  }
+  #pkgpanel #activitypanel:before,
+  #pkgpanel #activitypanel:after {
+    content: '';
+    display: table;
+  }
+  #pkgpanel #activitypanel:after {
+    clear: both;
+  }
+  #pkgpanel #activitypanel a {
+    *zoom: 1;
+    float: left;
+    clear: none;
+    text-align: inherit;
+    width: 48.5%;
+    margin-left: 0%;
+    margin-right: 3%;
+  }
+  #pkgpanel #activitypanel a:before,
+  #pkgpanel #activitypanel a:after {
+    content: '';
+    display: table;
+  }
+  #pkgpanel #activitypanel a:after {
+    clear: both;
+  }
+  #pkgpanel #activitypanel a:last-child {
+    margin-right: 0%;
+  }
+  #pkgpanel #activitypanel a img {
+    *zoom: 1;
+    width: auto;
+    max-width: 100%;
+    float: none;
+    display: block;
+    margin-right: auto;
+    margin-left: auto;
+    padding-left: 0;
+    padding-right: 0;
+  }
+  #pkgpanel #activitypanel a img:before,
+  #pkgpanel #activitypanel a img:after {
+    content: '';
+    display: table;
+  }
+  #pkgpanel #activitypanel a img:after {
+    clear: both;
+  }
 }
-@media only screen and (max-width: 600px) {
-  .pkglogo {
+@media only screen and (max-width: 400px) {
+  #pkgpanel {
     margin-top: 20px;
     *zoom: 1;
     float: left;
@@ -246,47 +328,50 @@
     margin-left: 0%;
     margin-right: 3%;
   }
-  .pkglogo:before,
-  .pkglogo:after {
+  #pkgpanel:before,
+  #pkgpanel:after {
     content: '';
     display: table;
   }
-  .pkglogo:after {
+  #pkgpanel:after {
     clear: both;
   }
-  .pkglogo:last-child {
+  #pkgpanel:last-child {
     margin-right: 0%;
   }
-  .pkglogo img {
+  #pkgpanel .pkglogo img {
     width: 50%;
   }
 }
-.descpanel {
-  font-family: 'Sinhala MN';
+#descpanel {
+  font-size: 2em;
   color: #3a3a3a;
 }
-@media only screen and (min-width: 600px) {
-  .descpanel {
+#descpanel h1 {
+  font-size: 2em;
+}
+@media only screen and (min-width: 1050px) {
+  #descpanel {
     *zoom: 1;
     float: left;
     clear: none;
     text-align: inherit;
-    width: 65.66666666666666%;
+    width: 60.98484848484847%;
     margin-left: 0%;
-    margin-right: 3%;
+    margin-right: 17.045454545454543%;
     position: relative;
     left: 34.33333333333333%;
     margin-top: 150px;
   }
-  .descpanel:before,
-  .descpanel:after {
+  #descpanel:before,
+  #descpanel:after {
     content: '';
     display: table;
   }
-  .descpanel:after {
+  #descpanel:after {
     clear: both;
   }
-  .descpanel:last-child {
+  #descpanel:last-child {
     margin-right: 0%;
   }
 }

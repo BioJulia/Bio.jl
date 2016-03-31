@@ -1,17 +1,38 @@
 <!DOCTYPE html>
-
 <html lang="en">
     <head>
         {% include stdhead.html %}
     </head>
     <body>
         {% include navheader.html %}
-        <div class="pkglogo">
-            <img src="{{ page.logo }}" />
+        <div id="pkgpanel">
+            <div id="logopanel">
+                <a href="https://github.com/BioJulia/Bio.jl">
+                    <img src="{{ page.logo }}" />
+                </a>
+            </div>
+            <div id="activitypanel">
+                <center><strong>Repo activity</strong></center>
+                <a href="http://waffle.io/BioJulia/{{ site.pkgname }}">
+                    <img src="https://badge.waffle.io/BioJulia/{{ site.pkgname }}.svg?label=stage:%20planning&amp;title=Planned" alt="Issues Planned" />
+                </a>
+                <a href="http://waffle.io/BioJulia/{{ site.pkgname }}">
+                    <img src="https://badge.waffle.io/BioJulia/{{ site.pkgname }}.svg?label=stage:%20WIP&amp;title=In%20Progress" alt="In Progress" />
+                </a>
+            </div>
         </div>
-        <div class="descpanel">
+        <div id="descpanel">
             <h1>{{ page.subtitle }}</h1>
+            <hr />
             {{ content }}
+            <hr />
+            <strong>Contributing</strong>
+            <p>
+                If you would like to contribute to any BioJulia module, please
+                refer to the
+                <a href="https://biojulia.github.io/Contributing/latest/">
+                    contributing guidelines</a>.
+            </p>
         </div>
     </body>
 </html>
