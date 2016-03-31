@@ -1,5 +1,5 @@
 name: "BioJulia"
-description: "The Bioinformatics and Computational Biology infastructure for the Julia programming language."
+description: "The Bioinformatics and Computational Biology infrastructure for the Julia programming language."
 
 pkgname: Bio.jl
 
