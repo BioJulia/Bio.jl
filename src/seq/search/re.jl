@@ -304,67 +304,17 @@ function parseset_prosite(pat, s, close)
     end
 end
 
-# DNA/RNA nucleotides
-const sym2bits_nuc = Vector{UInt32}(16)
-const bits2sym_nuc = Vector{UInt8}(16)
-for (sym, bits) in [
-        (DNA_A, 0b0001),
-        (DNA_C, 0b0010),
-        (DNA_G, 0b0100),
-        (DNA_T, 0b1000),
-        (DNA_M, 0b0011),
-        (DNA_R, 0b0101),
-        (DNA_W, 0b1001),
-        (DNA_S, 0b0110),
-        (DNA_Y, 0b1010),
-        (DNA_K, 0b1100),
-        (DNA_V, 0b0111),
-        (DNA_H, 0b1011),
-        (DNA_D, 0b1101),
-        (DNA_B, 0b1110),
-        (DNA_N, 0b1111)]
-    sym2bits_nuc[Int(sym)+1] = bits
-    bits2sym_nuc[bits] = UInt8(sym)
+function bits2sym{T}(::Type{T}, bits::UInt32)
+    for x in alphabet(T)
+        if Seq.compatbits(x) == bits
+            return x
+        end
+    end
+    error("bits are not found")
 end
-sym2bits{T<:Nucleotide}(nt::T) = sym2bits_nuc[reinterpret(Int8, nt)+1]
-bits2sym{T<:Nucleotide}(::Type{T}, bits::UInt32) = reinterpret(T, bits2sym_nuc[bits])
-mask{T<:Nucleotide}(::Type{T}) = (UInt32(1) << 4) - one(UInt32)
 
-# Amino acids
-const sym2bits_aa = Vector{UInt32}(26)
-const bits2sym_aa = Dict{UInt32,AminoAcid}()
-for (sym, bits) in [
-        (AA_A, 0b0000000000000000000001),
-        (AA_R, 0b0000000000000000000010),
-        (AA_N, 0b0000000000000000000100),
-        (AA_D, 0b0000000000000000001000),
-        (AA_C, 0b0000000000000000010000),
-        (AA_Q, 0b0000000000000000100000),
-        (AA_E, 0b0000000000000001000000),
-        (AA_G, 0b0000000000000010000000),
-        (AA_H, 0b0000000000000100000000),
-        (AA_I, 0b0000000000001000000000),
-        (AA_L, 0b0000000000010000000000),
-        (AA_K, 0b0000000000100000000000),
-        (AA_M, 0b0000000001000000000000),
-        (AA_F, 0b0000000010000000000000),
-        (AA_P, 0b0000000100000000000000),
-        (AA_S, 0b0000001000000000000000),
-        (AA_T, 0b0000010000000000000000),
-        (AA_W, 0b0000100000000000000000),
-        (AA_Y, 0b0001000000000000000000),
-        (AA_V, 0b0010000000000000000000),
-        (AA_O, 0b0100000000000000000000),
-        (AA_U, 0b1000000000000000000000),
-        (AA_B, 0b0000000000000000001100),
-        (AA_J, 0b0000000000011000000000),
-        (AA_Z, 0b0000000000000001100000),
-        (AA_X, 0b1111111111111111111111)]
-    sym2bits_aa[Int(sym)+1] = bits
-    bits2sym_aa[bits] = sym
-end
-sym2bits(aa::AminoAcid) = sym2bits_aa[Int8(aa)+1]
-bits2sym(::Type{AminoAcid}, bits::UInt32) = bits2sym_aa[bits]
+mask{T<:Nucleotide}(::Type{T}) = (UInt32(1) << 4) - one(UInt32)
+@assert Int(AA_U) + 1 == 22  # check there are 22 unambiguous amino acids
 mask(::Type{AminoAcid}) = (UInt32(1) << 22) - one(UInt32)
 
 function desugar{T}(::Type{T}, tree::SyntaxTree)
@@ -388,18 +338,18 @@ function desugar{T}(::Type{T}, tree::SyntaxTree)
         args = [expr(:concat, []), args[1]]
     elseif head == :sym
         head = :bits
-        args = [sym2bits(args[1])]
+        args = [Seq.compatbits(args[1])]
     elseif head == :set
         bits = UInt32(0)
         for arg in args
-            bits |= sym2bits(arg)
+            bits |= Seq.compatbits(arg)
         end
         head = :bits
         args = [bits]
     elseif head == :compset
         bits = UInt32(0)
         for arg in args
-            bits |= sym2bits(arg)
+            bits |= Seq.compatbits(arg)
         end
         head = :bits
         args = [~bits & mask(T)]
@@ -553,7 +503,7 @@ function compilerec!(code, tree::SyntaxTree, k)
     h = tree.head
     args = tree.args
     if h == :bits
-        push!(code, bits(args[1]))
+        push!(code, bits(UInt32(args[1])))
     elseif h == :concat
         for arg in args
             k = compilerec!(code, arg, k)
@@ -850,7 +800,7 @@ function runmatch!(threads::Stack{Tuple{Int,Int}},
                     break
                 end
                 sym, s = next(seq, s)
-                if sym2bits(sym) & operand(op) != 0
+                if Seq.compatbits(sym) & operand(op) != 0
                     pc += 1
                 else
                     break
