@@ -1748,6 +1748,30 @@ end
 
         @test rsearchindex(dna"ACGNNCGT", dna"ACGT") == 5
     end
+
+    @testset "Approximate" begin
+        @test approxsearch(dna"ACGTAT", dna"AC", 0) == 1:2
+        @test approxsearch(dna"ACGTAT", dna"CG", 0) == 2:3
+        @test approxsearch(dna"ACGTAT", dna"AT", 0) == 5:6
+        @test approxsearch(dna"ACGTAT", dna"CG", 1) == 2:2
+        @test approxsearch(dna"ACGTAT", dna"CGT", 0) == 2:4
+        @test approxsearch(dna"ACGTAT", dna"CGTA", 0) == 2:5
+        @test approxsearch(dna"ACGTAT", dna"AGTA", 1) == 1:5
+        @test approxsearch(dna"ACGTAT", dna"CCTA", 1) == 2:5
+
+        @test approxsearchindex(dna"ACGTAT", dna"CCTA", 1) == 2
+
+        @test approxrsearch(dna"ACGTAT", dna"AC", 0) == 1:2
+        @test approxrsearch(dna"ACGTAT", dna"CG", 0) == 2:3
+        @test approxrsearch(dna"ACGTAT", dna"AT", 0) == 5:6
+        @test approxrsearch(dna"ACGTAT", dna"CG", 1) == 3:3
+        @test approxrsearch(dna"ACGTAT", dna"CGT", 0) == 2:4
+        @test approxrsearch(dna"ACGTAT", dna"CGTA", 0) == 2:5
+        @test approxrsearch(dna"ACGTAT", dna"AGTA", 1) == 3:5
+        @test approxrsearch(dna"ACGTAT", dna"CCTA", 1) == 2:5
+
+        @test approxrsearchindex(dna"ACGTAT", dna"CCTA", 1) == 2
+    end
 end
 
 @testset "Translation" begin

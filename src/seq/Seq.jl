@@ -110,7 +110,11 @@ export
     DNAAlphabet,
     RNAAlphabet,
     AminoAcidAlphabet,
-    CharAlphabet
+    CharAlphabet,
+    approxsearch,
+    approxsearchindex,
+    approxrsearch,
+    approxrsearchindex
 
 using BufferedStreams,
     Base.Intrinsics,
@@ -171,6 +175,7 @@ include("fasta.jl")
 include("fastq.jl")
 
 include("search/exact.jl")
+include("search/approx.jl")
 
 # DEPRECATED: defined just for compatibility
 type NucleotideSequence{T<:Nucleotide} end
