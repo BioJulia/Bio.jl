@@ -136,6 +136,9 @@ end
 # Basic Functions
 # ---------------
 
+alphabet{k}(::Type{DNAKmer{k}}) = DNA_A:DNA_T
+alphabet{k}(::Type{RNAKmer{k}}) = RNA_A:RNA_U
+
 for (A, N) in ((DNAAlphabet, DNANucleotide), (RNAAlphabet, RNANucleotide))
     @compat @eval begin
         function Base.:(==){A<:$A,K}(a::BioSequence{A}, b::Kmer{$N,K})
