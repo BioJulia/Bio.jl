@@ -319,6 +319,8 @@ end
 # Basic Operators
 # ---------------
 
+alphabet{A}(::Type{BioSequence{A}}) = alphabet(A)
+
 Base.length(seq::BioSequence) = length(seq.part)
 Base.endof(seq::BioSequence) = length(seq)
 Base.isempty(seq::BioSequence) = length(seq) == 0
