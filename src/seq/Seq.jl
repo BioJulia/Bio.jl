@@ -170,6 +170,8 @@ include("naivebayes.jl")
 include("fasta.jl")
 include("fastq.jl")
 
+include("search/exact.jl")
+
 # DEPRECATED: defined just for compatibility
 type NucleotideSequence{T<:Nucleotide} end
 

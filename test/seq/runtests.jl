@@ -1694,6 +1694,62 @@ end
     end
 end
 
+@testset "Search" begin
+    @testset "Exact" begin
+        @test search(dna"ACGC", DNA_C) == 2
+        @test search(dna"ACGC", DNA_T) == 0
+        @test search(dna"ACGC", DNA_C, 0) == 2
+        @test search(dna"ACGC", DNA_C, 5) == 0
+        @test search(dna"ACGT", dna"") == 1:0
+        @test search(dna"ACGT", dna"AC") == 1:2
+        @test search(dna"ACGT", dna"CG") == 2:3
+        @test search(dna"ACGT", dna"GG") == 0:-1
+        @test search(dna"ACGN", dna"GG") == 3:4
+        @test search(dna"ACGT", dna"NG") == 2:3
+        @test search(dna"ACGT", dna"GN") == 3:4
+        @test search(dna"ACGT", dna"GT", 0) == 3:4
+        @test search(dna"ACGT", dna"GT", 5) == 0:-1
+        @test search(dna"ACGT", dnakmer("G")) == 3:3
+        @test search(dna"ACGT", dnakmer("GT")) == 3:4
+        @test search(dna"ACGNAT", dna"GAA") == 3:5
+        @test search(dna"ACGNAT", dna"GGA") == 3:5
+        @test search(dna"ACGNAT", dna"GGN") == 3:5
+
+        @test search(aa"MTTQAPMF", AA_T) == 2
+        @test search(aa"MTTQAPMF", AA_V) == 0
+        @test search(aa"MTTQAPMF", aa"QAP") == 4:6
+        @test search(aa"MTTQAPMF", aa"PMP") == 0:-1
+
+        @test searchindex(dna"ACGNNCGT", dna"ACGT") == 1
+
+        @test rsearch(dna"ACGC", DNA_C) == 4
+        @test rsearch(dna"ACGC", DNA_T) == 0
+        @test rsearch(dna"ACGC", DNA_C, 0) == 0
+        @test rsearch(dna"ACGC", DNA_C, 5) == 4
+        @test rsearch(dna"ACGT", dna"") == 4:3
+        @test rsearch(dna"ACGT", dna"AC") == 1:2
+        @test rsearch(dna"ACGT", dna"CG") == 2:3
+        @test rsearch(dna"ACGT", dna"GG") == 0:-1
+        @test rsearch(dna"ACGN", dna"GG") == 3:4
+        @test rsearch(dna"ACGT", dna"NG") == 2:3
+        @test rsearch(dna"ACGT", dna"GN") == 3:4
+        @test rsearch(dna"ACGT", dna"GT", 0) == 0:-1
+        @test rsearch(dna"ACGT", dna"GT", 5) == 3:4
+        @test rsearch(dna"ACGT", dnakmer("G")) == 3:3
+        @test rsearch(dna"ACGT", dnakmer("GT")) == 3:4
+        @test rsearch(dna"ACGNAT", dna"GAA") == 3:5
+        @test rsearch(dna"ACGNAT", dna"GGA") == 3:5
+        @test rsearch(dna"ACGNAT", dna"GGN") == 3:5
+
+        @test rsearch(aa"MTTQAPMF", AA_T) == 3
+        @test rsearch(aa"MTTQAPMF", AA_V) == 0
+        @test rsearch(aa"MTTQAPMF", aa"QAP") == 4:6
+        @test rsearch(aa"MTTQAPMF", aa"PMP") == 0:-1
+
+        @test rsearchindex(dna"ACGNNCGT", dna"ACGT") == 5
+    end
+end
+
 @testset "Translation" begin
     # crummy string translation to test against
     standard_genetic_code_dict = Dict{ASCIIString,Char}(
