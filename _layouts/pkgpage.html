@@ -11,6 +11,7 @@
                     <img src="{{ page.logo }}" />
                 </a>
             </div>
+            {% include codepanel.html %}
             <div id="activitypanel">
                 <center><strong>Repo activity</strong></center>
                 <a href="http://waffle.io/BioJulia/{{ site.pkgname }}">
@@ -18,6 +19,17 @@
                 </a>
                 <a href="http://waffle.io/BioJulia/{{ site.pkgname }}">
                     <img src="https://badge.waffle.io/BioJulia/{{ site.pkgname }}.svg?label=stage:%20WIP&amp;title=In%20Progress" alt="In Progress" />
+                </a>
+            </div>
+            <div id="buttonpanel">
+                <a href="https://github.com/BioJulia/Bio.jl">
+                    <img id="ghbutton" class="iconbutton svglink" src="img/github_icons/Blue_GitHub.svg" />
+                </a>
+                <a href="#">
+                    <img id="twbutton" class="iconbutton svglink" src="img/twitter_icons/Green_Twitter.svg" />
+                </a>
+                <a href="https://gitter.im/BioJulia/Bio.jl">
+                    <img id="gtbutton" class="iconbutton svglink" src="img/gitter_icons/Red_Gitter.svg" />
                 </a>
             </div>
         </div>
@@ -34,5 +46,21 @@
                     contributing guidelines</a>.
             </p>
         </div>
+        <script type='text/javascript' src='http://ajax.googleapis.com/ajax/libs/jquery/1.8/jquery.min.js'></script>
+        <script>
+            function getRandomIndex() {
+                var randomIndex = Math.floor(Math.random() * bucket.length);
+                return bucket.splice(randomIndex, 1)[0];
+            }
+
+            var bucket = [0, 1, 2, 3]
+            var ghIcons = ['Blue_Github.svg', 'Green_Github.svg', 'Purple_Github.svg', 'Red_Github.svg'];
+            var twIcons = ['Blue_Twitter.svg', 'Green_Twitter.svg', 'Purple_Twitter.svg', 'Red_Twitter.svg'];
+            var gtIcons = ['Blue_Gitter.svg', 'Green_Gitter.svg', 'Purple_Gitter.svg', 'Red_Gitter.svg'];
+
+            $("#ghbutton").attr('src', 'img/github_icons/' + ghIcons[getRandomIndex()]);
+            $("#twbutton").attr('src', 'img/twitter_icons/' + twIcons[getRandomIndex()]);
+            $("#gtbutton").attr('src', 'img/gitter_icons/' + gtIcons[getRandomIndex()]);
+        </script>
     </body>
 </html>

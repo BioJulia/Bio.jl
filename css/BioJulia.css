@@ -4,6 +4,9 @@ body {
 .svglink {
   pointer-events: none;
 }
+.iconbutton {
+  width: 100%;
+}
 .textlink {
   color: #3a3a3a;
   margin-left: 40px;
@@ -217,7 +220,7 @@ body {
   }
   #pkgpanel center {
     font-size: 2em;
-    margin-top: 40px;
+    margin-top: 10px;
   }
   #pkgpanel #logopanel {
     *zoom: 1;
@@ -256,6 +259,134 @@ body {
     display: table;
   }
   #pkgpanel #logopanel img:after {
+    clear: both;
+  }
+  #pkgpanel #buttonpanel {
+    *zoom: 1;
+    width: auto;
+    max-width: 80%;
+    float: none;
+    display: block;
+    margin-right: auto;
+    margin-left: auto;
+    padding-left: 0;
+    padding-right: 0;
+    margin-top: 40px;
+    padding-bottom: 10px;
+    padding-top: 10px;
+    border-bottom: 3px solid rgba(0,0,0,0.1);
+    border-top: 3px solid rgba(0,0,0,0.1);
+  }
+  #pkgpanel #buttonpanel:before,
+  #pkgpanel #buttonpanel:after {
+    content: '';
+    display: table;
+  }
+  #pkgpanel #buttonpanel:after {
+    clear: both;
+  }
+  #pkgpanel #buttonpanel a {
+    *zoom: 1;
+    float: left;
+    clear: none;
+    text-align: inherit;
+    width: 22.75%;
+    margin-left: 0%;
+    margin-right: 3%;
+  }
+  #pkgpanel #buttonpanel a:before,
+  #pkgpanel #buttonpanel a:after {
+    content: '';
+    display: table;
+  }
+  #pkgpanel #buttonpanel a:after {
+    clear: both;
+  }
+  #pkgpanel #buttonpanel a:last-child {
+    margin-right: 0%;
+  }
+  #pkgpanel #codepanel {
+    border-bottom: 3px solid rgba(0,0,0,0.1);
+    padding-bottom: 10px;
+    *zoom: 1;
+    width: auto;
+    max-width: 80%;
+    float: none;
+    display: block;
+    margin-right: auto;
+    margin-left: auto;
+    padding-left: 0;
+    padding-right: 0;
+  }
+  #pkgpanel #codepanel:before,
+  #pkgpanel #codepanel:after {
+    content: '';
+    display: table;
+  }
+  #pkgpanel #codepanel:after {
+    clear: both;
+  }
+  #pkgpanel #codepanel .badgecol {
+    *zoom: 1;
+    float: left;
+    clear: none;
+    text-align: inherit;
+    width: 48.5%;
+    margin-left: 0%;
+    margin-right: 3%;
+    margin-top: 5px;
+  }
+  #pkgpanel #codepanel .badgecol:before,
+  #pkgpanel #codepanel .badgecol:after {
+    content: '';
+    display: table;
+  }
+  #pkgpanel #codepanel .badgecol:after {
+    clear: both;
+  }
+  #pkgpanel #codepanel .badgecol:last-child {
+    margin-right: 0%;
+  }
+  #pkgpanel #codepanel .badgecol p {
+    text-align: center;
+  }
+  #pkgpanel #codepanel .badgecol a {
+    *zoom: 1;
+    width: auto;
+    max-width: 80%;
+    float: none;
+    display: block;
+    margin-right: auto;
+    margin-left: auto;
+    padding-left: 0;
+    padding-right: 0;
+    margin-top: 10px;
+  }
+  #pkgpanel #codepanel .badgecol a:before,
+  #pkgpanel #codepanel .badgecol a:after {
+    content: '';
+    display: table;
+  }
+  #pkgpanel #codepanel .badgecol a:after {
+    clear: both;
+  }
+  #pkgpanel #codepanel .badgecol a img {
+    *zoom: 1;
+    width: auto;
+    max-width: 100%;
+    float: none;
+    display: block;
+    margin-right: auto;
+    margin-left: auto;
+    padding-left: 0;
+    padding-right: 0;
+  }
+  #pkgpanel #codepanel .badgecol a img:before,
+  #pkgpanel #codepanel .badgecol a img:after {
+    content: '';
+    display: table;
+  }
+  #pkgpanel #codepanel .badgecol a img:after {
     clear: both;
   }
   #pkgpanel #activitypanel {

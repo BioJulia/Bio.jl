@@ -12,6 +12,8 @@ headernav(c)
 .svglink
   pointer-events none
 
+.iconbutton
+  width 100%
 
 .textlink
   color #3a3a3aff
@@ -73,12 +75,35 @@ headernav(c)
     margin-top 150px
     center
       font-size 2em
-      margin-top 40px
+      margin-top 10px
     #logopanel
       center()
       img
         center()
         width 80%
+    #buttonpanel
+      center(80%)
+      margin-top 40px
+      padding-bottom 10px
+      padding-top 10px
+      border-bottom 3px solid rgba(0, 0, 0, 0.1)
+      border-top 3px solid rgba(0, 0, 0, 0.1)
+      a
+        col(1/4)
+    #codepanel
+      border-bottom 3px solid rgba(0, 0, 0, 0.1)
+      padding-bottom 10px
+      center(80%)
+      .badgecol
+        col(1/2)
+        margin-top 5px
+        p
+          text-align center
+        a
+          center(80%)
+          margin-top 10px
+          img
+            center(100%)
     #activitypanel
       center(80%)
       a
