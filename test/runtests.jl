@@ -26,3 +26,5 @@ include("TestFunctions.jl")
 for target in targets
     include("$target/runtests.jl")
 end
+
+include("TestAnnotations.jl")
