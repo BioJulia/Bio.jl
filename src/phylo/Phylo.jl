@@ -32,7 +32,7 @@ export
   NodeCache, cachenodes,
 
   # Phylogeny and associated methods
-  Phylogeny, isrooted, isrerootable, root!,
+  Phylogeny, isrooted, isrerootable, root, root!,
   setrerootable!, graft!, prune!, pruneregraft!, search,
   searchall, generateindex, ladderize, ladderize!,
 
