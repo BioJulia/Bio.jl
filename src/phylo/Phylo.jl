@@ -48,6 +48,5 @@ include("phylogeny.jl")
 include("treeio.jl")
 include("iteration.jl")
 include("annotation.jl")
-include("phyplot.jl")
 
 end # module Phylo
