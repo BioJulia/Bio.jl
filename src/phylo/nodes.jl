@@ -862,7 +862,7 @@ Cache the contents of the a phylogenetic node.
 """
 function cachenodes!{T}(store::NodeCache{T}, x::PhyNode, vf::Function)
     for child in x.children
-        cachenodes(child, vf, store)
+        cachenodes!(store, child, vf)
     end
     store[x] = Vector{T}()
     if haschildren(x)
@@ -878,6 +878,10 @@ end
 
 """
 Sort the descendents of a phylogenetic tree.
+
+Descendents are sorted in a consistent way, based on their
+name properties. This is important for comparisons of nodes and
+trees.
 """
 function sortdescendents!(x::PhyNode)
     cache = NodeCache{ASCIIString}()
