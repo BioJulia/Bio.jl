@@ -21,12 +21,12 @@ path = Pkg.dir("Bio", "test", "BioFmtSpecimens")
     nucldb = joinpath(path, "BLASTDB", "f002")
     nuclresults = joinpath(path, "BLASTDB", "f002.xml")
 
-    @test blastn(na1, na2)
-    @test blastn(na1, [na1, na2])
-    @test blastn([na1, na2], [na1, na2])
-    @test blastn(na1, nucldb, db=true)
-    @test blastn(na1, fna)
-    @test blastn(fna, nucldb, db=true)
+    @test typeof(blastn(na1, na2)) == Array{BlastResult, 1}
+    @test typeof(blastn(na1, [na1, na2])) == Array{BlastResult, 1}
+    @test typeof(blastn([na1, na2], [na1, na2])) == Array{BlastResult, 1}
+    @test typeof(blastn(na1, nucldb, db=true)) == Array{BlastResult, 1}
+    @test typeof(blastn(na1, fna)) == Array{BlastResult, 1}
+    @test typeof(blastn(fna, nucldb, db=true)) == Array{BlastResult, 1}
 
 end
 
@@ -37,12 +37,12 @@ end
     protdb = joinpath(path, "BLASTDB", "cysprot")
     protresults = joinpath(path, "BLASTDB", "cysprot.xml")
 
-    @test blastp(aa1, aa2)
-    @test blastp(aa1, [aa1, aa2])
-    @test blastp([aa1, aa2], [aa1, aa2])
-    @test blastp(aa1, protdb, db=true)
-    @test blastp(aa1, faa)
-    @test blastp(faa, protdb, db=true)
+    @test typeof(blastp(aa1, aa2)) == Array{BlastResult, 1}
+    @test typeof(blastp(aa1, [aa1, aa2])) == Array{BlastResult, 1}
+    @test typeof(blastp([aa1, aa2], [aa1, aa2])) == Array{BlastResult, 1}
+    @test typeof(blastp(aa1, protdb, db=true)) == Array{BlastResult, 1}
+    @test typeof(blastp(aa1, faa)) == Array{BlastResult, 1}
+    @test typeof(blastp(faa, protdb, db=true)) == Array{BlastResult, 1}
 end
 
 end # TestTools
