@@ -99,8 +99,9 @@ Test whether the node has a branchlength.
 
 * `x`:  The PhyNode to test.
 """
-hasbl{B,S,M}(x::PhyNode{B,S,M}) = true
-hasbl{Void,S,M}(x::PhyNode{Void,S,M}) = false
+has_branch{B,S,M}(x::PhyNode{B,S,M}) = true
+
+has_branch{Void,S,M}(x::PhyNode{Void,S,M}) = false
 
 
 """
@@ -142,7 +143,7 @@ Set the branch length of a PhyNode.
 branchlength!{B,S,M}(x::PhyNode{B,S,M}, bl::B) = x.branch = bl
 
 function branchlength!{B,S,M}(x::PhyNode{Nullable{B},S,M}, bl::B)
-    if bl > 0.0
+    if bl > 0
         x.branch = Nullable{B}(bl)
     else
         x.branch = Nullable{B}()
@@ -155,98 +156,56 @@ end
 
 
 """
-Test whether the confidence in the node is known (i.e. is not Null).
+Test whether the confidence in the node is known.
 
 **Parameters:**
 
 * `x`:  The PhyNode to test.
 """
-function confisknown(x::PhyNode)
-    return !isnull(x.confidence)
-end
+has_support{B,S,M}(x::PhyNode{B,S,M}) = true
+has_support{B,Void,M}(x::PhyNode{B,Void,M}) = false
 
 
 """
-Get the confidence of the node.
+Get the support value of the node.
 
 **Parameters:**
 
 * `x`:  The PhyNode to return the confidence of.
 * `replace_unknown`: The value to return if the confidence is null.
 """
-function confidence(x::PhyNode, replace_unknown::Float64)
-    return get(x.confidence, replace_unknown)
+support{B,S,M}(x::PhyNode{B,S,M}) = x.support
+
+function support{B,S,M}(x::PhyNode{B,Nullable{S},M}, replace_unknown::S)
+    return get(x.support, replace_unknown)
+end
+
+function support{B,S,M}(x::PhyNode{B,Void,M}, replace_unknown::S)
+    return replace_unknown
 end
 
 
 """
-Get the confidence of the node.
-
-**Parameters:**
-
-* `x`:  The PhyNode to return the confidence of.
-"""
-function confidence(x::PhyNode)
-    return get(x.confidence)
-end
-
-
-"""
-Set the confidence of the node.
+Set the support value of the node.
 
 **Parameters:**
 
 * `x`:    The PhyNode to set the confidence of.
 
-* `conf`: The value of the confidence to be set.
+* `support`: The value of the confidence to be set.
 """
-function confidence!(x::PhyNode, conf::Float64)
-    if conf > 0
-        x.confidence = Nullable{Float64}(conf)
+support!{B,S,M}(x::PhyNode{B,S,M}, support::S) = x.support = support
+
+function support!{B,S,M}(x::PhyNode{B,Nullable{S},M}, support::S)
+    if support > 0.0
+        x.support = Nullable{S}(support)
     else
-        x.confidence = Nullable{Float64}()
+        x.support = Nullable{S}()
     end
 end
 
-
-"""
-Set the confidence of the node.
-
-**Parameters:**
-
-* `x`:    The PhyNode to set the confidence of.
-* `conf`: The value of the confidence to be set.
-"""
-function confidence!(x::PhyNode, conf::Nullable{Float64})
-    x.confidence = conf
-end
-
-
-"""
-Set the confidence of the node.
-
-**Parameters:**
-
-* `x`:    The PhyNode to set the confidence of.
-* `conf`: The value of the confidence to set. In this case nothing / na / null.
-"""
-function confidence!(x::PhyNode, conf::Void)
-    x.confidence = Nullable{Float64}()
-end
-
-
-"""
-Set the confidence of the node.
-
-**Parameters:**
-
-* `x`: The PhyNode to set the confidence of.
-
-In this method, since there is no second argument for the confidence value provided.
-The confidence value is set to null.
-"""
-function confidence!(x::PhyNode)
-    x.confidence = Nullable{Float64}()
+function support!{B,S,M}(x::PhyNode{B,Nullable{S},M}, support::Void)
+    x.support = Nullable{S}()
 end
 
 
@@ -365,7 +324,7 @@ end
 """
 Test whether a node is empty.
 
-A node is considered empty, when the name is an empty string,
+A node is considered "empty", when the name is an empty string,
 the branch length and confidence is null, there are no children nodes,
 and the node does not have a parent.
 
