@@ -8,110 +8,59 @@
 """
 PhyNode represents a node in a phylogenetic tree.
 
-A node can have:
+It is designed to be flexible and parametric, to enable
+the creation of new kinds of nodes with different data and
+'abilities', as well as to take advantage of multiple dispatch
+and generated functions as much as possible.
 
-- `name`
-- `branchlength`
-- a reference to its `parent` PhyNode
-- reference to one or more `children`
+PhyNodes connect to parent, and children PhyNodes,
+and are parametric to contain any other type as data.
+
+- a reference to its `parent` PhyNode.
+- reference to one or more `children`.
+- A support value of some type S.
+- A branch value to some type B
+
 """
-type PhyNode
+type PhyNode{B,S,M}
     name::ASCIIString
-    branchlength::Nullable{Float64}
-    confidence::Nullable{Float64}
-    children::Vector{PhyNode}
-    parent::PhyNode
-    """
-    Create a PhyNode.
-    PhyNodes represent nodes in a phylogenetic tree. All arguments are optional
-    when creating PhyNodes:
+    parent::PhyNode{B,S,M}
+    children::Vector{PhyNode{B,S,M}}
+    branch::B
+    support::S
+    metadata::M
 
-    **Example:**
-    one = PhyNode()
-    two = PhyNode(name = "two", branchlength = 1.0, parent = one)
-
-    **Parameters:**
-    * `name`:         The name of the node (optional). Defaults to an empty string, indicating
-                      the node has no name.
-
-    * `branchlength`: The branch length of the node from its parent (optional).
-                      Because branch lengths can be not applicable (cladograms), or not known.
-                      The value is Nullable, and is null by default.
-
-    * `confidence`:   A Nullable Floating point value that can represent confidence for that clade (optional).
-                      Such confidences are usually Maximum Likelihood values or Bootstrap
-                      values.
-
-    * `children`:     A Vector containing references to the PhyNodes that are children of this node (optional).
-                      Default to an empty vector.
-
-    * `parent`:       The parent node (optional). Defaults to a self-reference, indicating
-                      the node has no parent.
-    """
-    function PhyNode(name::ASCIIString = "",
-                     branchlength::Nullable{Float64} = Nullable{Float64}(),
-                     confidence::Nullable{Float64} = Nullable{Float64}(),
-                     children::Vector{PhyNode} = PhyNode[],
+    function PhyNode{B,S,M}(name::ASCIIString,
+                     branch::B,
+                     support::S,
+                     nodedata::M,
+                     children::Vector{PhyNode{B,S,M}} = PhyNode{B,S,M}[],
                      parent = nothing)
         x = new()
-        name!(x, name)
-        branchlength!(x, branchlength)
-        confidence!(x, confidence)
+        x.name = name
+        x.branch = branch
+        x.support = support
         if parent != nothing
             graft!(parent, x)
         else
             x.parent = x
         end
-        x.children = PhyNode[]
+        x.children = PhyNode{B,S,M}[]
         for child in children
             graft!(x, child)
         end
+        x.metadata = nodedata
         return x
     end
 end
 
 
-"""
-Create a PhyNode.
-PhyNodes represent nodes in a phylogenetic tree. All arguments are optional
-when creating PhyNodes:
+# Outer constructors for Phylogenetic nodes
+#-------------------------------------------
 
-**Example:**
-one = PhyNode()
-two = PhyNode(name = "two", branchlength = 1.0, parent = one)
-
-**Parameters:**
-* `name`:         The name of the node (optional). Defaults to an empty string, indicating
-                  the node has no name.
-
-* `branchlength`: A floating point value representing the branch length of the
-                  node from its parent (optional). Because branch lengths can be
-                  not applicable (cladograms), or not known.
-                  The value is Nullable, and is null by default.
-                  If it is negative, it will be treated as NA or unknown (null).
-
-* `confidence`:   Floating point value that can represent confidence for that clade (optional).
-                  Such confidences are usually Maximum Likelihood values or Bootstrap
-                  values. If it is negative, it will be treated as NA or unknown (null).
-
-* `children`:     A Vector containing references to the PhyNodes that are children of this node (optional).
-                  Default to an empty vector.
-
-* `parent`:       The parent node (optional). Defaults to a self-reference, indicating
-                  the node has no parent.
-"""
-function PhyNode(name::ASCIIString = "",
-                 branchlength::Float64 = -1.0,
-                 confidence::Float64 = -1.0,
-                 children::Vector{PhyNode} = PhyNode[],
-                 parent = nothing)
-
-    bl = branchlength < 0 ? Nullable{Float64}() : Nullable{Float64}(branchlength)
-    conf = confidence < 0 ? Nullable{Float64}() : Nullable{Float64}(confidence)
-
-    return PhyNode(name, bl, conf, children, parent)
-end
-
+PhyNode() = PhyNode{Void, Void, Void}("", nothing, nothing, nothing)
+PhyNode(name::ASCIIString) = PhyNode{Void, Void, Void}(name, nothing, nothing, nothing)
+PhyNode{B,S}(name::ASCIIString, b::B, s::S) = PhyNode{B,S,Void}(name, b, s, nothing)
 
 
 # Basic methods, accessing and manipulating fields of individual nodes
@@ -144,15 +93,24 @@ end
 
 
 """
-Test whether the branchlength in the node is known (i.e. is not Null).
+Test whether the node has a branchlength.
 
 **Parameters:**
 
 * `x`:  The PhyNode to test.
 """
-function blisknown(x::PhyNode)
-    return !isnull(x.branchlength)
-end
+hasbl{B,S,M}(x::PhyNode{B,S,M}) = true
+hasbl{Void,S,M}(x::PhyNode{Void,S,M}) = false
+
+
+"""
+Get the branch length of a PhyNode.
+
+**Parameters:**
+
+* `x`: The PhyNode to get the branch length of.
+"""
+branchlength{B,S,M}(x::PhyNode{B,S,M}) = x.branch
 
 
 """
@@ -163,20 +121,12 @@ Get the branch length of a PhyNode.
 * `x`: The PhyNode to get the branch length of.
 * `replace_unknown`: The value to return if the branchlength is null.
 """
-function branchlength(x::PhyNode, replace_unknown::Float64)
-    return get(x.branchlength, replace_unknown)
+function branchlength{B,S,M}(x::PhyNode{Nullable{B},S,M}, replace_unknown::B)
+    return get(x.branch, replace_unknown)
 end
 
-
-"""
-Get the branch length of a PhyNode.
-
-**Parameters:**
-
-* `x`: The PhyNode to get the branch length of.
-"""
-function branchlength(x::PhyNode)
-    return get(x.branchlength)
+function branchlength{B,S,M}(x::PhyNode{Void,S,M}, replace_unknown::B)
+    return replace_unknown
 end
 
 
@@ -189,54 +139,18 @@ Set the branch length of a PhyNode.
 
 * `bl`: The branch length to give the PhyNode, as a Float64 value.
 """
-function branchlength!(x::PhyNode, bl::Float64)
-    if bl > 0
-        x.branchlength = Nullable{Float64}(bl)
+branchlength!{B,S,M}(x::PhyNode{B,S,M}, bl::B) = x.branch = bl
+
+function branchlength!{B,S,M}(x::PhyNode{Nullable{B},S,M}, bl::B)
+    if bl > 0.0
+        x.branch = Nullable{B}(bl)
     else
-        x.branchlength = Nullable{Float64}()
+        x.branch = Nullable{B}()
     end
 end
 
-
-"""
-Set the branchlength of a PhyNode.
-
-**Parameters:**
-
-* `x`:  The PhyNode to set the branchlength of.
-
-* `bl`: The branch length to give the PhyNode, as a Nullable{Float64}.
-"""
-function branchlength!(x::PhyNode, bl::Nullable{Float64})
-    x.branchlength = bl
-end
-
-
-"""
-Set the branchlength of a PhyNode.
-
-**Parameters:**
-
-* `x`:  The PhyNode to the set the branchlength of.
-
-* `bl`: The branchlength to give the PhyNode, in this case nothing.
-"""
-function branchlength!(x::PhyNode, bl::Void)
-    x.branchlength = Nullable{Float64}()
-end
-
-
-"""
-Set the branchlength of a PhyNode.
-
-**Parameters:**
-
-* `x`:  The PhyNode to the set the branchlength of.
-
-In this case, since no other value is provided, the branchlength is set as null.
-"""
-function branchlength!(x::PhyNode)
-    x.branchlength = Nullable{Float64}()
+function branchlength!{B,S,M}(x::PhyNode{Nullable{B},S,M}, bl::Void)
+    x.branch = Nullable{B}()
 end
 
 
@@ -860,9 +774,9 @@ typealias NodeCache{T} Dict{PhyNode, Vector{T}}
 """
 Cache the contents of the a phylogenetic node.
 """
-function cachenodes!{T}(store::NodeCache{T}, x::PhyNode, vf::Function)
+function cachenodes!{T}(x::PhyNode, vf::Function, store::NodeCache{T})
     for child in x.children
-        cachenodes!(store, child, vf)
+        cachenodes!(child, vf, store)
     end
     store[x] = Vector{T}()
     if haschildren(x)
@@ -880,7 +794,7 @@ end
 Sort the descendents of a phylogenetic tree.
 
 Descendents are sorted in a consistent way, based on their
-name properties. This is important for comparisons of nodes and
+names and the names of their descendents properties. This is important for comparisons of nodes and
 trees.
 """
 function sortdescendents!(x::PhyNode)
@@ -888,9 +802,7 @@ function sortdescendents!(x::PhyNode)
     cachenodes!(cache, x, name)
     for node in DepthFirst(x)
         if haschildren(node)
-            nnames = cache[node]
-            sort!(nnames)
-            sort!(node.children, by = nnames)
+            sort!(node.children, by = (n) -> string(sort!(cache[n])))
         end
     end
 end
