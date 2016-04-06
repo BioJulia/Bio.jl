@@ -30,6 +30,8 @@ type PhyNode{B,S,M}
     support::S
     metadata::M
 
+    # Internal constructor is a bit ugly, but it has to be in order to achieve
+    # incomplete initialisation to make a node point to itself.
     function PhyNode{B,S,M}(name::ASCIIString,
                      branch::B,
                      support::S,
@@ -59,8 +61,14 @@ end
 #-------------------------------------------
 
 PhyNode() = PhyNode{Void, Void, Void}("", nothing, nothing, nothing)
+
 PhyNode(name::ASCIIString) = PhyNode{Void, Void, Void}(name, nothing, nothing, nothing)
+
 PhyNode{B,S}(name::ASCIIString, b::B, s::S) = PhyNode{B,S,Void}(name, b, s, nothing)
+
+function PhyNode{B,S}(name::ASCIIString, b::B, s::S, children = Vector{PhyNode{B,S,Void}}[], parent = nothing)
+    return PhyNode{B,S,Void}(name, b, s, nothing, children = children, parent = parent)
+end
 
 
 # Basic methods, accessing and manipulating fields of individual nodes
@@ -163,6 +171,7 @@ Test whether the confidence in the node is known.
 * `x`:  The PhyNode to test.
 """
 has_support{B,S,M}(x::PhyNode{B,S,M}) = true
+
 has_support{B,Void,M}(x::PhyNode{B,Void,M}) = false
 
 
