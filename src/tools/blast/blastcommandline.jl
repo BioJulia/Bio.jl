@@ -33,8 +33,8 @@ function readblastXML(blastrun::ASCIIString; seqtype="nucl")
             hsps = get_elements_by_tagname(hit, "Hit_hsps")
             for hsp in collect(child_elements(hsps[1]))
                 if seqtype == "nucl"
-                    qseq = BioSequence{DNAAlphabet{4}}(content(find_element(hsp, "Hsp_qseq")))
-                    hseq = BioSequence{DNAAlphabet{4}}(content(find_element(hsp, "Hsp_hseq")))
+                    qseq = DNASequence(content(find_element(hsp, "Hsp_qseq")))
+                    hseq = DNASequence(content(find_element(hsp, "Hsp_hseq")))
                 elseif seqtype == "prot"
                     qseq = AminoAcidSequence(content(find_element(hsp, "Hsp_qseq")))
                     hseq = AminoAcidSequence(content(find_element(hsp, "Hsp_hseq")))
@@ -54,21 +54,25 @@ end
 
 """
 `readblastXML(blastrun::Cmd)`
-Parse command line blast query with XML output. Input is the blast command line command.
+Parse command line blast query with XML output. Input is the blast command line command, eg:
+```julia
+blastresults = `blastn -query seq1.fasta -db some_database -outfmt 5`
+readblastXML(blastresults)
+```
 
 Returns Vector{BlastResult} with the sequence of the hit, the Alignment with query sequence, bitscore and expect value
 """
 function readblastXML(blastrun::Cmd; seqtype="nucl")
     # need to use `readstring` instead of `readall` for v0.5
-    readblastXML(readall(blastrun), seqtype=seqtype)
+    return readblastXML(readall(blastrun), seqtype=seqtype)
 end
 
 
 """
 `blastn(query, subject, flags...)``
 Runs blastn on `query` against `subject`.
-    Subjects and queries may be file names (as strings), BioSequence{DNAAlphabet{4}} type or
-    Array of BioSequence{DNAAlphabet{4}}.
+    Subjects and queries may be file names (as strings), DNASequence type or
+    Array of DNASequence.
     May include optional `flag`s such as `["-perc_identity", 95,]`. Do not use `-outfmt`.
 """
 function blastn(query::AbstractString, subject::AbstractString, flags=[]; db::Bool=false)
@@ -80,28 +84,28 @@ function blastn(query::AbstractString, subject::AbstractString, flags=[]; db::Bo
     return results
 end
 
-function blastn(query::BioSequence{DNAAlphabet{4}}, subject::BioSequence{DNAAlphabet{4}}, flags=[])
+function blastn(query::DNASequence, subject::DNASequence, flags=[])
+    querypath, subjectpath = makefasta(query), makefasta(subject)
+    return blastn(querypath, subjectpath, flags)
+end
+
+function blastn(query::DNASequence, subject::Vector{DNASequence}, flags=[])
     querypath, subjectpath = makefasta(query), makefasta(subject)
     blastn(querypath, subjectpath, flags)
 end
 
-function blastn{S <: BioSequence{DNAAlphabet{4}}}(query::BioSequence{DNAAlphabet{4}}, subject::Vector{S}, flags=[])
-    querypath, subjectpath = makefasta(query), makefasta(subject)
-    blastn(querypath, subjectpath, flags)
-end
-
-function blastn(query::BioSequence{DNAAlphabet{4}}, subject::AbstractString, flags=[]; db::Bool=false)
+function blastn(query::DNASequence, subject::AbstractString, flags=[]; db::Bool=false)
     querypath = makefasta(query)
     if db
-        blastn(querypath, subject, flags, db=true)
+        return blastn(querypath, subject, flags, db=true)
     else
-        blastn(querypath, subject, flags)
+        return blastn(querypath, subject, flags)
     end
 end
 
-function blastn{S <: BioSequence{DNAAlphabet{4}}}(query::Vector{S}, subject::Vector{S}, flags=[])
+function blastn(query::Vector{DNASequence}, subject::Vector{DNASequence}, flags=[])
     querypath, subjectpath = makefasta(query), makefasta(subject)
-    blastn(querypath, subjectpath, flags)
+    return blastn(querypath, subjectpath, flags)
 end
 
 """
@@ -117,47 +121,44 @@ function blastp(query::AbstractString, subject::AbstractString, flags=[]; db::Bo
     else
         results = readblastXML(`blastp -query $query -subject $subject $flags -outfmt 5`, seqtype = "prot")
     end
+    return results
 end
 
 function blastp(query::AminoAcidSequence, subject::AminoAcidSequence, flags=[])
     querypath, subjectpath = makefasta(query), makefasta(subject)
-    blastp(querypath, subjectpath, flags)
+    return blastp(querypath, subjectpath, flags)
 end
 
-function blastp{S <: AminoAcidSequence}(query::AminoAcidSequence, subject::Vector{S}, flags=[])
+function blastp(query::AminoAcidSequence, subject::Vector{AminoAcidSequence}, flags=[])
     querypath, subjectpath = makefasta(query), makefasta(subject)
-    blastp(querypath, subjectpath, flags)
+    return blastp(querypath, subjectpath, flags)
 end
 
 function blastp(query::AminoAcidSequence, subject::AbstractString, flags=[]; db::Bool=false)
     querypath = makefasta(query)
     if db
-        blastp(querypath, subject, flags, db=true)
+        return blastp(querypath, subject, flags, db=true)
     else
-        blastp(querypath, subject, flags)
+        return blastp(querypath, subject, flags)
     end
 end
 
-function blastp{S <: AminoAcidSequence}(query::Vector{S}, subject::Vector{S}, flags=[])
+function blastp(query::Vector{AminoAcidSequence}, subject::Vector{AminoAcidSequence}, flags=[])
     querypath, subjectpath = makefasta(query), makefasta(subject)
-    blastp(querypath, subjectpath, flags)
+    return blastp(querypath, subjectpath, flags)
 end
 
-"""
-`makefasta(sequence::BioSequence)`
-Create temporary fasta-formated file for blasting.
-"""
-function makefasta{T <: BioSequence}(sequence::T)
+
+# Create temporary fasta-formated file for blasting.
+function makefasta(sequence::BioSequence)
     path, io = mktemp()
     write(io, ">$path\n$(convert(AbstractString, sequence))\n")
     close(io)
     return path
 end
 
-"""
-`makefasta(sequence::Vector{BioSequence})`
-Create temporary multi fasta-formated file for blasting.
-"""
+
+# Create temporary multi fasta-formated file for blasting.
 function makefasta{T <: BioSequence}(sequences::Vector{T})
     path, io = mktemp()
     counter = 1
