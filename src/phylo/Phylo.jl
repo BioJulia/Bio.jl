@@ -19,7 +19,7 @@ import Bio.FileFormat
 export
 
   # PhyNodes and associated methods
-  PhyNode, blisknown, confisknown, confidence, confidence!, isempty,
+  PhyNode, has_branchlength, has_support, support, support!, isempty,
   name, branchlength, isleaf, haschildren, haschild, parentisself, hasparent,
   children, siblings, parent, isroot, isunlinked, islinked, isinternal,
   ispreterminal, issemipreterminal, countchildren, descendents,

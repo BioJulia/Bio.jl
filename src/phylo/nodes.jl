@@ -6,7 +6,7 @@
 # --------------------
 
 """
-PhyNode represents a node in a phylogenetic tree.
+PhyNode represents a node or clade of a phylogenetic tree.
 
 It is designed to be flexible and parametric, to enable
 the creation of new kinds of nodes with different data and
@@ -16,10 +16,25 @@ and generated functions as much as possible.
 PhyNodes connect to parent, and children PhyNodes,
 and are parametric to contain any other type as data.
 
+**Fields**
+
 - a reference to its `parent` PhyNode.
 - reference to one or more `children`.
 - A support value of some type S.
-- A branch value to some type B
+- A branch value of some type B
+
+The branch field is any value that characterises the branch
+of the phylogeny that connects the node to its parent.
+It could be a single floating point value, in which case it would represent a
+branch length. It could also be Void, or Nullable, in which case it might mean
+the tree is a cladogram. But users and developers can use any type to represent
+a branch.
+
+Similarly, the support field is any value that describes how well this node /
+clade is supported in the phylogeny.
+Typically this is a single numeric value, a bootstrap value.
+But, like the branch field, it is parametric and so any type might be used to
+represent the support of a node.
 
 """
 type PhyNode{B,S,M}
@@ -107,23 +122,26 @@ Test whether the node has a valid (non-null / missing) branch.
 
 * `x`:  The PhyNode to test.
 """
-function has_branch(x::PhyNode)
-  error("No defined method for determining whether a $(typeof(x))'s branch is considered missing.")
+function has_branchlength(x::PhyNode)
+  error("No defined method for determining whether a $(typeof(x))'s branch length is considered missing.")
 end
 
-has_branch{S,M}(x::PhyNode{Void,S,M}) = false
+has_branchlength{S,M}(x::PhyNode{Void,S,M}) = false
 
-has_branch{B <: AbstractFloat,S,M}(x::PhyNode{B,S,M}) = x.branch > B(0)
+has_branchlength{B <: AbstractFloat,S,M}(x::PhyNode{B,S,M}) = x.branch > B(0)
 
-has_branch{B,S,M}(x::PhyNode{Nullable{B},S,M}) = isnull(x.branch)
+has_branchlength{B,S,M}(x::PhyNode{Nullable{B},S,M}) = !isnull(x.branch)
 
-function has_branch{B <: AbstractFloat, S, M}(x::PhyNode{Nullable{B}, S, M})
-  isnull(x.support) && x.support > S(0)
+function has_branchlength{B <: AbstractFloat, S, M}(x::PhyNode{Nullable{B}, S, M})
+  !isnull(x.support) && x.support > S(0)
 end
 
 
 """
-Get the branch length of a PhyNode.
+Get the branch of a PhyNode.
+
+The branch of a PhyNode characterises it's connection
+to its parent.
 
 **Parameters:**
 
