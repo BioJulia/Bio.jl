@@ -18,7 +18,7 @@ using Bio.Phylo
                 @test has_support(node) == false
                 @test isempty(node) == true
                 @test node.name == ""
-                @test typeof(nometa_one) == PhyNode{Void, Void, Void}
+                @test typeof(node) == PhyNode{Void, Void, Void}
             end
             @testset "Named nodes" begin
                 named = PhyNode("MRCA")
