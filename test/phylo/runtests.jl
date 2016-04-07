@@ -26,7 +26,7 @@ using Bio.Phylo
                 @test has_support(named) == false
                 @test isempty(named) == true
                 @test named.name == "MRCA"
-                @test typeof(nometa_one) == PhyNode{Void, Void, Void}
+                @test typeof(named) == PhyNode{Void, Void, Void}
             end
             @testset "Nodes with support and branch" begin
                 nometa_one = PhyNode("MRCA1", 0.342, 0.982)
