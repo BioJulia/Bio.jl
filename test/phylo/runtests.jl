@@ -24,7 +24,7 @@ using Bio.Phylo
                 named = PhyNode("MRCA")
                 @test has_branchlength(named) == false
                 @test has_support(named) == false
-                @test isempty(named) == true
+                @test isempty(named) == false
                 @test named.name == "MRCA"
                 @test typeof(named) == PhyNode{Void, Void, Void}
             end
