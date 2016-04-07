@@ -384,7 +384,7 @@ and the node does not have a parent.
 * `x`: The PhyNode to test.
 """
 function Base.isempty(x::PhyNode)
-    return x.name == "" && isnull(x.branchlength) && !haschildren(x) && isunlinked(x) && isnull(x.confidence)
+  return x.name == "" && !has_branchlength(x) && !has_support(x) && isunlinked(x)
 end
 
 

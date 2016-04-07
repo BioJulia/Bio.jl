@@ -10,11 +10,13 @@ end
 using Bio.Phylo
 
 @testset "Nodes" begin
-    @testset "Empty nodes" begin
-        node = PhyNode()
-        @test has_branchlength(node) == false
-        @test has_support(node) == false
-        @test isempty(node) == true
+    @testset "Node constructors" begin
+        @testset "Empty Nodes" begin
+            node = PhyNode()
+            @test has_branchlength(node) == false
+            @test has_support(node) == false
+            @test isempty(node) == true
+        end
     end
     @testset "Basic node fields" begin
         # create an empty node
