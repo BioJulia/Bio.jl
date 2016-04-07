@@ -10,13 +10,13 @@ end
 using Bio.Phylo
 
 @testset "Nodes" begin
-    @testset "Empty Nodes" begin
+    @testset "Empty nodes" begin
         node = PhyNode()
-        @test blisknown(node) == false
-        @test confisknown(node) == false
+        @test has_branch(node) == false
+        @test has_support(node) == false
         @test isempty(node) == true
     end
-    @testset "Filled nodes (basic fields)" begin
+    @testset "Basic node fields" begin
         # create an empty node
         node = PhyNode("test", 10.0, 0.99)
         @test name(node) == "test"
@@ -33,7 +33,7 @@ using Bio.Phylo
         name!(node, "")
         @test isempty(node) == true
     end
-    @testset "Relationships" begin
+    @testset "Node Relationships" begin
         @testset "Equality" begin
             a = PhyNode()
             b = PhyNode()

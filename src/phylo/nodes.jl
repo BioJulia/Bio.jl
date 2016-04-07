@@ -101,15 +101,25 @@ end
 
 
 """
-Test whether the node has a branchlength.
+Test whether the node has a valid (non-null / missing) branch.
 
 **Parameters:**
 
 * `x`:  The PhyNode to test.
 """
-has_branch{B,S,M}(x::PhyNode{B,S,M}) = true
+function has_branch(x::PhyNode)
+  error("No defined method for determining whether a $(typeof(x))'s branch is considered missing.")
+end
 
-has_branch{Void,S,M}(x::PhyNode{Void,S,M}) = false
+has_branch{S,M}(x::PhyNode{Void,S,M}) = false
+
+has_branch{B <: AbstractFloat,S,M}(x::PhyNode{B,S,M}) = x.branch > B(0)
+
+has_branch{B,S,M}(x::PhyNode{Nullable{B},S,M}) = isnull(x.branch)
+
+function has_branch{B <: AbstractFloat, S, M}(x::PhyNode{Nullable{B}, S, M})
+  isnull(x.support) && x.support > S(0)
+end
 
 
 """
@@ -128,8 +138,12 @@ Get the branch length of a PhyNode.
 **Parameters:**
 
 * `x`: The PhyNode to get the branch length of.
-* `replace_unknown`: The value to return if the branchlength is null.
+* `replace_unknown`: The value to return if the branchlength is missing/invalid.
 """
+function branchlength{B,S,M}(x::PhyNode{B,S,M}, replace_unknown::B)
+    return x.branch
+end
+
 function branchlength{B,S,M}(x::PhyNode{Nullable{B},S,M}, replace_unknown::B)
     return get(x.branch, replace_unknown)
 end
@@ -151,7 +165,7 @@ Set the branch length of a PhyNode.
 branchlength!{B,S,M}(x::PhyNode{B,S,M}, bl::B) = x.branch = bl
 
 function branchlength!{B,S,M}(x::PhyNode{Nullable{B},S,M}, bl::B)
-    if bl > 0
+    if bl > B(0)
         x.branch = Nullable{B}(bl)
     else
         x.branch = Nullable{B}()
@@ -170,9 +184,19 @@ Test whether the confidence in the node is known.
 
 * `x`:  The PhyNode to test.
 """
-has_support{B,S,M}(x::PhyNode{B,S,M}) = true
+function has_support(x::PhyNode)
+  error("No defined method for determining whether a $(typeof(x))'s support is considered missing.")
+end
 
-has_support{B,Void,M}(x::PhyNode{B,Void,M}) = false
+has_support{B,S <: AbstractFloat,M}(x::PhyNode{B,S,M}) = x.support >= S(0)
+
+has_support{B,M}(x::PhyNode{B,Void,M}) = false
+
+has_support{B,S,M}(x::PhyNode{B,Nullable{S},M}) = isnull(x.support)
+
+function has_support{B,S <: AbstractFloat,M}(x::PhyNode{B,Nullable{S},M})
+  return isnull(x.support) && x.support > S(0)
+end
 
 
 """
