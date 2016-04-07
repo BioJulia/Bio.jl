@@ -81,10 +81,6 @@ PhyNode(name::ASCIIString) = PhyNode{Void, Void, Void}(name, nothing, nothing, n
 
 PhyNode{B,S}(name::ASCIIString, b::B, s::S) = PhyNode{B,S,Void}(name, b, s, nothing)
 
-function PhyNode{B,S}(name::ASCIIString, b::B, s::S, children = Vector{PhyNode{B,S,Void}}[], parent = nothing)
-    return PhyNode{B,S,Void}(name, b, s, nothing, children = children, parent = parent)
-end
-
 
 # Basic methods, accessing and manipulating fields of individual nodes
 #----------------------------------------------------------------------
