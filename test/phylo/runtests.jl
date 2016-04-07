@@ -12,7 +12,7 @@ using Bio.Phylo
 @testset "Nodes" begin
     @testset "Empty nodes" begin
         node = PhyNode()
-        @test has_branch(node) == false
+        @test has_branchlength(node) == false
         @test has_support(node) == false
         @test isempty(node) == true
     end
