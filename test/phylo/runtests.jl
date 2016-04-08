@@ -34,14 +34,14 @@ using Bio.Phylo
                 @test has_support(nometa_one) == true
                 @test isempty(nometa_one) == false
                 @test nometa_one.name == "MRCA1"
-                @test typeof(nometa_one) == PhyNode{Float, Float, Void}
+                @test typeof(nometa_one) == PhyNode{Float64, Float64, Void}
 
                 nometa_two = PhyNode("MRCA2", true, 0.982)
                 @test has_branchlength(nometa_two) == true
                 @test has_support(nometa_two) == true
                 @test isempty(nometa_two) == false
                 @test nometa_two.name == "MRCA2"
-                @test typeof(nometa_two) == PhyNode{Bool, Float, Void}
+                @test typeof(nometa_two) == PhyNode{Bool, Float64, Void}
 
                 nometa_three = PhyNode("MRCA3", 'A', nothing)
                 @test has_branchlength(nometa_three) == false
@@ -52,21 +52,22 @@ using Bio.Phylo
             end
         end
         @testset "Basic node fields" begin
-            # create an empty node
-            node = PhyNode("test", 10.0, 0.99)
-            @test name(node) == "test"
-            @test blisknown(node) == true
-            @test branchlength(node) == 10.0
-            @test confisknown(node) == true
-            @test confidence(node) == 0.99
-            @test isempty(node) == false
+            # Create a typical Phylogenetic Node with just branchlength
+            # and bootstrap value.
+            typical_one = PhyNode("typical_one", 10.0, 0.99)
+            @test name(typical_one) == "typical_one"
+            @test has_branchlength(typical_one) == true
+            @test branchlength(typical_one) == 10.0
+            @test has_support(typical_one) == true
+            @test support(typical_one) == 0.99
+            @test isempty(typical_one) == false
             # remove the fields
-            confidence!(node, -1.0)
-            @test confisknown(node) == false
-            branchlength!(node, -1.0)
-            @test blisknown(node) == false
-            name!(node, "")
-            @test isempty(node) == true
+            support!(typical_one, -1.0)
+            @test has_support(typical_one) == false
+            branchlength!(typical_one, -1.0)
+            @test has_branchlength(typical_one) == false
+            name!(typical_one, "")
+            @test isempty(typical_one) == true
         end
         @testset "Node Relationships" begin
             @testset "Equality" begin
