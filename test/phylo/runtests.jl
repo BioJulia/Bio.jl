@@ -37,14 +37,14 @@ using Bio.Phylo
                 @test typeof(nometa_one) == PhyNode{Float64, Float64, Void}
 
                 nometa_two = PhyNode("MRCA2", true, 0.982)
-                @test has_branchlength(nometa_two) == true
+                @test_throws has_branchlength(nometa_two)
                 @test has_support(nometa_two) == true
                 @test isempty(nometa_two) == false
                 @test nometa_two.name == "MRCA2"
                 @test typeof(nometa_two) == PhyNode{Bool, Float64, Void}
 
                 nometa_three = PhyNode("MRCA3", 'A', nothing)
-                @test has_branchlength(nometa_three) == false
+                @test_throws has_branchlength(nometa_three)
                 @test has_support(nometa_three) == false
                 @test isempty(nometa_three) == true
                 @test nometa_three.name == "MRCA3"
