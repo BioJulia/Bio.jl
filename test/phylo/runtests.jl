@@ -46,7 +46,7 @@ using Bio.Phylo
                 nometa_three = PhyNode("MRCA3", 'A', nothing)
                 @test_throws ErrorException has_branchlength(nometa_three)
                 @test has_support(nometa_three) == false
-                @test isempty(nometa_three) == true
+                @test isempty(nometa_three) == false
                 @test nometa_three.name == "MRCA3"
                 @test typeof(nometa_three) == PhyNode{Char, Void, Void}
             end
