@@ -53,24 +53,24 @@ using Bio.Phylo
                     @test typeof(nometa_three) == PhyNode{Char, Void, Void}
                 end
             end
-        # @testset "Basic node fields" begin
-        #     # Create a typical Phylogenetic Node with just branchlength
-        #     # and bootstrap value.
-        #     typical_one = PhyNode("typical_one", 10.0, 0.99)
-        #     @test name(typical_one) == "typical_one"
-        #     @test has_branchlength(typical_one) == true
-        #     @test branchlength(typical_one) == 10.0
-        #     @test has_support(typical_one) == true
-        #     @test support(typical_one) == 0.99
-        #     @test isempty(typical_one) == false
-        #     # remove the fields
-        #     support!(typical_one, -1.0)
-        #     @test has_support(typical_one) == false
-        #     branchlength!(typical_one, -1.0)
-        #     @test has_branchlength(typical_one) == false
-        #     name!(typical_one, "")
-        #     @test isempty(typical_one) == true
-        # end
+            @testset "Basic node fields" begin
+                # Create a typical Phylogenetic Node with just branchlength
+                # and bootstrap value.
+                phylo_with_support = PhyNode("typical_one", 10.0, 0.99)
+                @test name(phylo_with_support) == "typical_one"
+                @test has_branchlength(phylo_with_support) == true
+                @test branchlength(phylo_with_support) == 10.0
+                @test has_support(phylo_with_support) == true
+                @test support(phylo_with_support) == 0.99
+                @test isempty(phylo_with_support) == false
+                # remove the fields
+                support!(phylo_with_support, -1.0)
+                @test has_support(phylo_with_support) == false
+                branchlength!(phylo_with_support, -1.0)
+                @test has_branchlength(phylo_with_support) == false
+                name!(phylo_with_support, "")
+                @test isempty(phylo_with_support) == true
+            end
         # @testset "Node Relationships" begin
         #     @testset "Equality" begin
         #         a = PhyNode()
