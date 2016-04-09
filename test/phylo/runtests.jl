@@ -9,48 +9,50 @@ end
 
 using Bio.Phylo
 
-@testset "PhyNodes" begin
-    @testset "Individual nodes" begin
-        @testset "Constructors" begin
-            @testset "Empty Nodes" begin
-                node = PhyNode()
-                @test has_branchlength(node) == false
-                @test has_support(node) == false
-                @test isempty(node) == true
-                @test node.name == ""
-                @test typeof(node) == PhyNode{Void, Void, Void}
-            end
-            @testset "Named nodes" begin
-                named = PhyNode("MRCA")
-                @test has_branchlength(named) == false
-                @test has_support(named) == false
-                @test isempty(named) == false
-                @test named.name == "MRCA"
-                @test typeof(named) == PhyNode{Void, Void, Void}
-            end
-            @testset "Nodes with support and branch" begin
-                nometa_one = PhyNode("MRCA1", 0.342, 0.982)
-                @test has_branchlength(nometa_one) == true
-                @test has_support(nometa_one) == true
-                @test isempty(nometa_one) == false
-                @test nometa_one.name == "MRCA1"
-                @test typeof(nometa_one) == PhyNode{Float64, Float64, Void}
+@testset "Phylo" begin
 
-                nometa_two = PhyNode("MRCA2", true, 0.982)
-                @test_throws ErrorException has_branchlength(nometa_two)
-                @test has_support(nometa_two) == true
-                @test isempty(nometa_two) == false
-                @test nometa_two.name == "MRCA2"
-                @test typeof(nometa_two) == PhyNode{Bool, Float64, Void}
+    @testset "PhyNodes" begin
+        @testset "Individual nodes" begin
+            @testset "Constructors" begin
+                @testset "Empty Nodes" begin
+                    node = PhyNode()
+                    @test has_branchlength(node) == false
+                    @test has_support(node) == false
+                    @test isempty(node) == true
+                    @test node.name == ""
+                    @test typeof(node) == PhyNode{Void, Void, Void}
+                end
+                @testset "Named nodes" begin
+                    named = PhyNode("MRCA")
+                    @test has_branchlength(named) == false
+                    @test has_support(named) == false
+                    @test isempty(named) == false
+                    @test named.name == "MRCA"
+                    @test typeof(named) == PhyNode{Void, Void, Void}
+                end
+                @testset "Nodes with support and branch" begin
+                    nometa_one = PhyNode("MRCA1", 0.342, 0.982)
+                    @test has_branchlength(nometa_one) == true
+                    @test has_support(nometa_one) == true
+                    @test isempty(nometa_one) == false
+                    @test nometa_one.name == "MRCA1"
+                    @test typeof(nometa_one) == PhyNode{Float64, Float64, Void}
 
-                nometa_three = PhyNode("MRCA3", 'A', nothing)
-                @test_throws ErrorException has_branchlength(nometa_three)
-                @test has_support(nometa_three) == false
-                @test isempty(nometa_three) == false
-                @test nometa_three.name == "MRCA3"
-                @test typeof(nometa_three) == PhyNode{Char, Void, Void}
+                    nometa_two = PhyNode("MRCA2", true, 0.982)
+                    @test_throws ErrorException has_branchlength(nometa_two)
+                    @test has_support(nometa_two) == true
+                    @test isempty(nometa_two) == false
+                    @test nometa_two.name == "MRCA2"
+                    @test typeof(nometa_two) == PhyNode{Bool, Float64, Void}
+
+                    nometa_three = PhyNode("MRCA3", 'A', nothing)
+                    @test_throws ErrorException has_branchlength(nometa_three)
+                    @test has_support(nometa_three) == false
+                    @test isempty(nometa_three) == false
+                    @test nometa_three.name == "MRCA3"
+                    @test typeof(nometa_three) == PhyNode{Char, Void, Void}
+                end
             end
-        end
         # @testset "Basic node fields" begin
         #     # Create a typical Phylogenetic Node with just branchlength
         #     # and bootstrap value.
@@ -130,8 +132,11 @@ using Bio.Phylo
         #         @test isancestral(a, [c]) == true
         #     end
         # end
+        end
     end
 end
+
+
 
 
 end # TestPhylo
