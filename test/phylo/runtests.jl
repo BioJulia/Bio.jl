@@ -51,85 +51,85 @@ using Bio.Phylo
                 @test typeof(nometa_three) == PhyNode{Char, Void, Void}
             end
         end
-        @testset "Basic node fields" begin
-            # Create a typical Phylogenetic Node with just branchlength
-            # and bootstrap value.
-            typical_one = PhyNode("typical_one", 10.0, 0.99)
-            @test name(typical_one) == "typical_one"
-            @test has_branchlength(typical_one) == true
-            @test branchlength(typical_one) == 10.0
-            @test has_support(typical_one) == true
-            @test support(typical_one) == 0.99
-            @test isempty(typical_one) == false
-            # remove the fields
-            support!(typical_one, -1.0)
-            @test has_support(typical_one) == false
-            branchlength!(typical_one, -1.0)
-            @test has_branchlength(typical_one) == false
-            name!(typical_one, "")
-            @test isempty(typical_one) == true
-        end
-        @testset "Node Relationships" begin
-            @testset "Equality" begin
-                a = PhyNode()
-                b = PhyNode()
-                @test isequal(a, b) == true
-                name!(a, "a")
-                @test isequal(a, b) == false
-                name!(b, "a")
-                @test isequal(a, b) == true
-            end
-            @testset "Parent-child" begin
-                # we start with no relationship
-                a = PhyNode()
-                b = PhyNode()
-                @test haschildren(a) == false
-                @test hasparent(b) == false
-                @test parentisself(b) == true
-                @test isunlinked(a) == true
-                @test countchildren(a) == 0
-                @test haschild(a, b) == false
-                # now create the parent-child relationship
-                graft!(a, b)
-                @test haschildren(a) == true
-                @test hasparent(b) == true
-                @test parentisself(b) == false
-                @test isunlinked(a) == false
-                @test countchildren(a) == 1
-                @test haschild(a, b) == true
-            end
-            @testset "Root" begin
-                a = PhyNode()
-                @test isroot(a) == false
-                b = PhyNode()
-                graft!(a, b)
-                @test isroot(a) == true
-                c = PhyNode()
-                graft!(c, a)
-                @test isroot(a) == false
-                @test isroot(c) == true
-            end
-            @testset "Siblings" begin
-                a = PhyNode()
-                b = PhyNode()
-                graft!(a, b)
-                @test length(siblings(b)) == 0
-                c = PhyNode()
-                graft!(a, c)
-                @test length(siblings(b)) == 1
-                @test in(c, siblings(b)) == true
-            end
-            @testset "Ancestor-descendant" begin
-                a = PhyNode()
-                b = PhyNode()
-                @test isancestral(a, [b]) == false
-                graft!(a, b)
-                @test isancestral(a, [b]) == true
-                c = PhyNode()
-                graft!(a, c)
-                @test isancestral(a, [c]) == true
-            end
-        end
+        # @testset "Basic node fields" begin
+        #     # Create a typical Phylogenetic Node with just branchlength
+        #     # and bootstrap value.
+        #     typical_one = PhyNode("typical_one", 10.0, 0.99)
+        #     @test name(typical_one) == "typical_one"
+        #     @test has_branchlength(typical_one) == true
+        #     @test branchlength(typical_one) == 10.0
+        #     @test has_support(typical_one) == true
+        #     @test support(typical_one) == 0.99
+        #     @test isempty(typical_one) == false
+        #     # remove the fields
+        #     support!(typical_one, -1.0)
+        #     @test has_support(typical_one) == false
+        #     branchlength!(typical_one, -1.0)
+        #     @test has_branchlength(typical_one) == false
+        #     name!(typical_one, "")
+        #     @test isempty(typical_one) == true
+        # end
+        # @testset "Node Relationships" begin
+        #     @testset "Equality" begin
+        #         a = PhyNode()
+        #         b = PhyNode()
+        #         @test isequal(a, b) == true
+        #         name!(a, "a")
+        #         @test isequal(a, b) == false
+        #         name!(b, "a")
+        #         @test isequal(a, b) == true
+        #     end
+        #     @testset "Parent-child" begin
+        #         # we start with no relationship
+        #         a = PhyNode()
+        #         b = PhyNode()
+        #         @test haschildren(a) == false
+        #         @test hasparent(b) == false
+        #         @test parentisself(b) == true
+        #         @test isunlinked(a) == true
+        #         @test countchildren(a) == 0
+        #         @test haschild(a, b) == false
+        #         # now create the parent-child relationship
+        #         graft!(a, b)
+        #         @test haschildren(a) == true
+        #         @test hasparent(b) == true
+        #         @test parentisself(b) == false
+        #         @test isunlinked(a) == false
+        #         @test countchildren(a) == 1
+        #         @test haschild(a, b) == true
+        #     end
+        #     @testset "Root" begin
+        #         a = PhyNode()
+        #         @test isroot(a) == false
+        #         b = PhyNode()
+        #         graft!(a, b)
+        #         @test isroot(a) == true
+        #         c = PhyNode()
+        #         graft!(c, a)
+        #         @test isroot(a) == false
+        #         @test isroot(c) == true
+        #     end
+        #     @testset "Siblings" begin
+        #         a = PhyNode()
+        #         b = PhyNode()
+        #         graft!(a, b)
+        #         @test length(siblings(b)) == 0
+        #         c = PhyNode()
+        #         graft!(a, c)
+        #         @test length(siblings(b)) == 1
+        #         @test in(c, siblings(b)) == true
+        #     end
+        #     @testset "Ancestor-descendant" begin
+        #         a = PhyNode()
+        #         b = PhyNode()
+        #         @test isancestral(a, [b]) == false
+        #         graft!(a, b)
+        #         @test isancestral(a, [b]) == true
+        #         c = PhyNode()
+        #         graft!(a, c)
+        #         @test isancestral(a, [c]) == true
+        #     end
+        # end
     end
 end
 
