@@ -92,7 +92,7 @@ using Bio.Phylo
                     @test countchildren(a) == 0
                     @test haschild(a, b) == false
                     # # now create the parent-child relationship
-                    # graft!(a, b)
+                    graft!(a, b)
                     # @test haschildren(a) == true
                     # @test hasparent(b) == true
                     # @test parentisself(b) == false
