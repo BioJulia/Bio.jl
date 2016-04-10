@@ -94,9 +94,9 @@ using Bio.Phylo
                     # # now create the parent-child relationship
                     graft!(a, b)
                     @test haschildren(a) == true
-                    # @test hasparent(b) == true
-                    # @test parentisself(b) == false
-                    # @test isunlinked(a) == false
+                    @test hasparent(b) == true
+                    @test parentisself(b) == false
+                    @test isunlinked(a) == false
                     # @test countchildren(a) == 1
                     # @test haschild(a, b) == true
                 end
