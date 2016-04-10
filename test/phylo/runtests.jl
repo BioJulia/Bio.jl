@@ -71,7 +71,7 @@ using Bio.Phylo
                 name!(phylo_with_support, "")
                 @test isempty(phylo_with_support) == true
             end
-        # @testset "Node Relationships" begin
+            @testset "Node Relationships" begin
         #     @testset "Equality" begin
         #         a = PhyNode()
         #         b = PhyNode()
@@ -81,25 +81,25 @@ using Bio.Phylo
         #         name!(b, "a")
         #         @test isequal(a, b) == true
         #     end
-        #     @testset "Parent-child" begin
-        #         # we start with no relationship
-        #         a = PhyNode()
-        #         b = PhyNode()
-        #         @test haschildren(a) == false
-        #         @test hasparent(b) == false
-        #         @test parentisself(b) == true
-        #         @test isunlinked(a) == true
-        #         @test countchildren(a) == 0
-        #         @test haschild(a, b) == false
-        #         # now create the parent-child relationship
-        #         graft!(a, b)
-        #         @test haschildren(a) == true
-        #         @test hasparent(b) == true
-        #         @test parentisself(b) == false
-        #         @test isunlinked(a) == false
-        #         @test countchildren(a) == 1
-        #         @test haschild(a, b) == true
-        #     end
+                @testset "Parent-child" begin
+                    # we start with no relationship
+                    a = PhyNode()
+                    b = PhyNode()
+                    @test haschildren(a) == false
+                    @test hasparent(b) == false
+                    @test parentisself(b) == true
+                    @test isunlinked(a) == true
+                    @test countchildren(a) == 0
+                    @test haschild(a, b) == false
+                    # now create the parent-child relationship
+                    graft!(a, b)
+                    @test haschildren(a) == true
+                    @test hasparent(b) == true
+                    @test parentisself(b) == false
+                    @test isunlinked(a) == false
+                    @test countchildren(a) == 1
+                    @test haschild(a, b) == true
+                end
         #     @testset "Root" begin
         #         a = PhyNode()
         #         @test isroot(a) == false
@@ -131,7 +131,7 @@ using Bio.Phylo
         #         graft!(a, c)
         #         @test isancestral(a, [c]) == true
         #     end
-        # end
+            end
         end
     end
 end
