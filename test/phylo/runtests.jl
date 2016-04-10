@@ -91,14 +91,14 @@ using Bio.Phylo
                     @test isunlinked(a) == true
                     @test countchildren(a) == 0
                     @test haschild(a, b) == false
-                    # now create the parent-child relationship
-                    graft!(a, b)
-                    @test haschildren(a) == true
-                    @test hasparent(b) == true
-                    @test parentisself(b) == false
-                    @test isunlinked(a) == false
-                    @test countchildren(a) == 1
-                    @test haschild(a, b) == true
+                    # # now create the parent-child relationship
+                    # graft!(a, b)
+                    # @test haschildren(a) == true
+                    # @test hasparent(b) == true
+                    # @test parentisself(b) == false
+                    # @test isunlinked(a) == false
+                    # @test countchildren(a) == 1
+                    # @test haschild(a, b) == true
                 end
         #     @testset "Root" begin
         #         a = PhyNode()
