@@ -549,8 +549,8 @@ Test whether two PhyNodes are equal.
 """
 function Base.(:(==))(x::PhyNode, y::PhyNode)
     x.name == y.name &
-    isequal(x.branchlength, y.branchlength) &
-    isequal(x.confidence, y.confidence)
+    isequal(x.branch, y.branch) &
+    isequal(x.support, y.support)
 
 end
 
