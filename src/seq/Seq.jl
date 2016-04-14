@@ -188,6 +188,7 @@ include("seqrecord.jl")
 include("predict.jl")
 include("fasta.jl")
 include("fastq.jl")
+include("twobit.jl")
 
 include("search/exact.jl")
 include("search/approx.jl")
