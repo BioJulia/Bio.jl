@@ -98,7 +98,7 @@ using Bio.Phylo
                     @test parentisself(b) == false
                     @test isunlinked(a) == false
                     @test countchildren(a) == 1
-                    #@test haschild(a, b) == true
+                    @test haschild(a, b) == true
                 end
         #     @testset "Root" begin
         #         a = PhyNode()
