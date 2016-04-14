@@ -538,22 +538,6 @@ function isancestral(posanc::PhyNode, nodes::Vector{PhyNode})
 end
 
 
-"""
-Test whether two PhyNodes are equal.
-
-**Parameters:**
-
-* `x`: The left PhyNode to compare.
-
-* `y`: The right PhyNode to compare.
-"""
-function Base.(:(==))(x::PhyNode, y::PhyNode)
-    x.name == y.name &
-    isequal(x.branch, y.branch) &
-    isequal(x.support, y.support)
-
-end
-
 
 # Manipulation of node relationships and tree structure,
 # including safe pruning and regrafting.
