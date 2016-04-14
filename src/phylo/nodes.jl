@@ -538,7 +538,6 @@ function isancestral(posanc::PhyNode, nodes::Vector{PhyNode})
 end
 
 
-
 # Manipulation of node relationships and tree structure,
 # including safe pruning and regrafting.
 #--------------------------------------------------------

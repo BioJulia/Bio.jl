@@ -71,7 +71,7 @@ using Bio.Phylo
                 name!(phylo_with_support, "")
                 @test isempty(phylo_with_support) == true
             end
-            @testset "Node Relationships" begin
+            @testset "Connected Nodes" begin
         #     @testset "Equality" begin
         #         a = PhyNode()
         #         b = PhyNode()
@@ -100,17 +100,17 @@ using Bio.Phylo
                     @test countchildren(a) == 1
                     @test haschild(a, b) == true
                 end
-        #     @testset "Root" begin
-        #         a = PhyNode()
-        #         @test isroot(a) == false
-        #         b = PhyNode()
-        #         graft!(a, b)
-        #         @test isroot(a) == true
-        #         c = PhyNode()
-        #         graft!(c, a)
-        #         @test isroot(a) == false
-        #         @test isroot(c) == true
-        #     end
+                @testset "Root" begin
+                    a = PhyNode()
+                    @test isroot(a) == false
+                    b = PhyNode()
+                    graft!(a, b)
+                    @test isroot(a) == true
+                    c = PhyNode()
+                    graft!(c, a)
+                    @test isroot(a) == false
+                    @test isroot(c) == true
+                end
         #     @testset "Siblings" begin
         #         a = PhyNode()
         #         b = PhyNode()
