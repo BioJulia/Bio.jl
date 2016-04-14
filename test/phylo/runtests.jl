@@ -96,7 +96,7 @@ using Bio.Phylo
                     @test haschildren(a) == true
                     @test hasparent(b) == true
                     @test parentisself(b) == false
-                    #@test isunlinked(a) == false
+                    @test isunlinked(a) == false
                     #@test countchildren(a) == 1
                     #@test haschild(a, b) == true
                 end
