@@ -111,16 +111,16 @@ using Bio.Phylo
                     @test isroot(a) == false
                     @test isroot(c) == true
                 end
-        #     @testset "Siblings" begin
-        #         a = PhyNode()
-        #         b = PhyNode()
-        #         graft!(a, b)
-        #         @test length(siblings(b)) == 0
-        #         c = PhyNode()
-        #         graft!(a, c)
-        #         @test length(siblings(b)) == 1
-        #         @test in(c, siblings(b)) == true
-        #     end
+                @testset "Siblings" begin
+                    a = PhyNode()
+                    b = PhyNode()
+                    graft!(a, b)
+                    @test length(siblings(b)) == 0
+                    c = PhyNode()
+                    graft!(a, c)
+                    @test length(siblings(b)) == 1
+                    @test in(c, siblings(b)) == true
+                end
         #     @testset "Ancestor-descendant" begin
         #         a = PhyNode()
         #         b = PhyNode()
