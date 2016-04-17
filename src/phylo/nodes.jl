@@ -532,7 +532,7 @@ Test whether a node is ancesteral to one or more other nodes.
 
 * `nodes`: An array of `PhyNode`s that the test node must be ancestral to.
 """
-function isancestral(posanc::PhyNode, nodes::Vector{PhyNode})
+function isancestral{B,S,M}(posanc::PhyNode{B,S,M}, nodes::Vector{PhyNode{B,S,M}})
     desc = descendants(posanc)
     return all([in(node, desc) for node in nodes])
 end
