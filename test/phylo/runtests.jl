@@ -121,16 +121,16 @@ using Bio.Phylo
                     @test length(siblings(b)) == 1
                     @test in(c, siblings(b)) == true
                 end
-        #     @testset "Ancestor-descendant" begin
-        #         a = PhyNode()
-        #         b = PhyNode()
-        #         @test isancestral(a, [b]) == false
-        #         graft!(a, b)
-        #         @test isancestral(a, [b]) == true
-        #         c = PhyNode()
-        #         graft!(a, c)
-        #         @test isancestral(a, [c]) == true
-        #     end
+                @testset "Ancestor-descendant" begin
+                    a = PhyNode()
+                    b = PhyNode()
+                    @test isancestral(a, [b]) == false
+                    graft!(a, b)
+                    @test isancestral(a, [b]) == true
+                    c = PhyNode()
+                    graft!(a, c)
+                    @test isancestral(a, [c]) == true
+                end
             end
         end
     end
