@@ -82,8 +82,8 @@ A `DepthFirst` phylogeny iterator contains:
 
 - A `PhyNode` that the iterator will `start` at.
 """
-immutable DepthFirst <: PhylogenyIterator
-    start::PhyNode
+immutable DepthFirst{B,S,M} <: PhylogenyIterator
+    start::PhyNode{B,S,M}
 end
 
 """
