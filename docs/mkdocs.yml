@@ -16,13 +16,13 @@ docs_dir: 'build'
 
 # Options
 extra:
-  logo: images/biojl.png 
+  logo: images/biojl.png
   author:
     github: BioJulia
   palette:
     primary: 'indigo'
     accent:  'blue'
-  
+
 extra_css:
   - assets/Documenter.css
 
@@ -47,6 +47,7 @@ pages:
   - Alignments: man/alignments.md
   - Intervals: man/intervals.md
   - Structure: man/structure.md
+  - Phylogenetics: man/phylo.md
 - Reference:
   - Seq: lib/seq.md
 - Contributing: man/contributing.md

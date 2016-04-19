@@ -10,5 +10,8 @@ include("util/Util.jl")
 include("intervals/Intervals.jl")
 include("align/Align.jl")
 include("structure/Structure.jl")
+include("tools/Tools.jl")
+include("phylo/Phylo.jl")
+
 
 end # module Bio
