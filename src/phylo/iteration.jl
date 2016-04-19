@@ -117,7 +117,7 @@ Step to the next node when iterating over a `Phylogeny`.
 * `x`: `Depthfirst` iterator.
 * `state`: A `Stack` that contains the nodes of a `Phylogeny` that are to be visited.
 """
-function Base.next{B,S,M}(x::DepthFirst, state::DepthFirstState{B,S,M})
+function Base.next{B,S,M}(x::DepthFirst{B,S,M}, state::DepthFirstState{B,S,M})
     current::PhyNode{B,S,M} = pop!(state)
     for i in current.children
         push!(state, i)
@@ -133,7 +133,7 @@ done iterating.
 * `x`: A `DepthFirst` `PhylogenyIterator`.
 * `state`: a `Stack` containing the nodes that are to be visited imminently.
 """
-function Base.done{B,S,M}(x::DepthFirst, state::DepthFirstState{B,S,M})
+function Base.done{B,S,M}(x::DepthFirst{B,S,M}, state::DepthFirstState{B,S,M})
     return length(state) == 0
 end
 
