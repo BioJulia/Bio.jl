@@ -104,8 +104,8 @@ Start iterating through a `Phylogeny` with a `DepthFirst` iterator.
 **Parameters**
 * `x`: A `DepthFirst` iterator to start iterating with.
 """
-function Base.start(x::DepthFirst)
-    state = Stack(PhyNode)
+function Base.start{B,S,M}(x::DepthFirst{B,S,M})
+    state = Stack(PhyNode{B,S,M})
     push!(state, x.start)
     return state
 end
