@@ -576,7 +576,7 @@ Get the descendants of a node.
 * `x`: The PhyNode to get the descendants of.
 
 """
-function descendants{B,S,M}(x::PhyNode)
+function descendants{B,S,M}(x::PhyNode{B,S,M})
     if haschildren(x)
         return collect(PhyNode{B,S,M}, DepthFirst(x))
     else
