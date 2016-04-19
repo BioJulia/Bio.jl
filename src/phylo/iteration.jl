@@ -96,7 +96,7 @@ function DepthFirst(x::Phylogeny)
     return DepthFirst(x.root)
 end
 
-typealias DepthFirstState{B,S,M} Stack{Deque{PhyNode{B,S,M}}}
+typealias DepthFirstState{B,S,M} Stack{PhyNode{B,S,M}}
 
 """
 Start iterating through a `Phylogeny` with a `DepthFirst` iterator.
