@@ -136,7 +136,7 @@ using Bio.Phylo
                     @test isinternal(a) == false
                     @test isinternal(b) == false
                     @test isinternal(d) == false
-                    @test isinternal(e) == true
+                    @test isinternal(e) == false
                     @test ispreterminal(e) == false
                     @test ispreterminal(c) == true
                     @test issemipreterminal(e) == true
