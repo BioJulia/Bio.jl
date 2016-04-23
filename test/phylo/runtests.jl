@@ -72,33 +72,28 @@ using Bio.Phylo
                 @test isempty(phylo_with_support) == true
             end
             @testset "Connected Nodes" begin
-        #     @testset "Equality" begin
-        #         a = PhyNode()
-        #         b = PhyNode()
-        #         @test isequal(a, b) == true
-        #         name!(a, "a")
-        #         @test isequal(a, b) == false
-        #         name!(b, "a")
-        #         @test isequal(a, b) == true
-        #     end
-                @testset "Parent-child" begin
+                @testset "Parents and Children" begin
                     # we start with no relationship
                     a = PhyNode()
                     b = PhyNode()
                     @test haschildren(a) == false
+                    @test isunlinked(a) == true
+                    @test islinked(a) == false
+                    @test countchildren(a) == 0
                     @test hasparent(b) == false
                     @test parentisself(b) == true
-                    @test isunlinked(a) == true
-                    @test countchildren(a) == 0
                     @test haschild(a, b) == false
                     # # now create the parent-child relationship
                     graft!(a, b)
                     @test haschildren(a) == true
-                    @test hasparent(b) == true
-                    @test parentisself(b) == false
+                    @test isleaf(a) == false
+                    @test islinked(a) == true
                     @test isunlinked(a) == false
                     @test countchildren(a) == 1
+                    @test hasparent(b) == true
+                    @test parentisself(b) == false
                     @test haschild(a, b) == true
+                    @test isleaf(b) == true
                 end
                 @testset "Root" begin
                     a = PhyNode()
@@ -110,6 +105,7 @@ using Bio.Phylo
                     graft!(c, a)
                     @test isroot(a) == false
                     @test isroot(c) == true
+                    @test isleaf(a) == false
                 end
                 @testset "Siblings" begin
                     a = PhyNode()
@@ -120,16 +116,41 @@ using Bio.Phylo
                     graft!(a, c)
                     @test length(siblings(b)) == 1
                     @test in(c, siblings(b)) == true
+                    @test siblings(b) == [c]
                 end
-                @testset "Ancestor-descendant" begin
-                    a = PhyNode()
-                    b = PhyNode()
-                    @test isancestral(a, [b]) == false
-                    graft!(a, b)
-                    @test isancestral(a, [b]) == true
-                    c = PhyNode()
-                    graft!(a, c)
-                    @test isancestral(a, [c]) == true
+                @testset "Ancestors and Descendants" begin
+                    a = PhyNode("Species A")
+                    b = PhyNode("Species B")
+                    c = PhyNode("Internal 1")
+                    d = PhyNode("Species C")
+                    e = PhyNode("Root")
+                    @test isancestral(c, [b]) == false
+                    graft!(c, a)
+                    graft!(c, b)
+                    @test isancestral(c, [b]) == true
+                    graft!(e, c)
+                    graft!(e, d)
+                    @test isancestral(c, [a, b]) == true
+                    @test isancestral(e, [a, b, d]) == true
+                    @test isinternal(c) == true
+                    @test isinternal(a) == false
+                    @test isinternal(b) == false
+                    @test isinternal(d) == false
+                    @test isinternal(e) == true
+                    @test ispreterminal(e) == false
+                    @test ispreterminal(c) == true
+                    @test issemipreterminal(e) == true
+                    @test countchildren(a) == 0
+                    @test countchildren(b) == 0
+                    @test countchildren(c) == 2
+                    @test countchildren(d) == 0
+                    @test countchildren(e) == 2
+                    @test descendants(a) == PhyNode{Void,Void,Void}[]
+                    @test descendants(b) == PhyNode{Void,Void,Void}[]
+                    @test descendants(d) == PhyNode{Void,Void,Void}[]
+                    @test descendants(c) == PhyNode{Void,Void,Void}[a, b]
+                    @test descendants(e) == PhyNode{Void,Void,Void}[c, a, b, c]
+
                 end
             end
         end

@@ -19,11 +19,11 @@ A `BreathFirst` phylogeny iterator contains:
 
 - A `PhyNode` that the iterator will `start` at.
 """
-immutable BreadthFirst <: PhylogenyIterator
-    start::PhyNode
+immutable BreadthFirst{B,S,M} <: PhylogenyIterator
+    start::PhyNode{B,S,M}
 end
 
-typealias BreadthFirstState Queue{Deque{PhyNode}}
+typealias BreadthFirstState{B,S,M} Queue{PhyNode{B,S,M}}
 
 """
 Construct a BreadthFirst iterator for a tree.
@@ -41,8 +41,8 @@ Start iterating through a `Phylogeny` with a `BreadthFirst` iterator.
 **Parameters**
 * `x`: A `BreadthFirst` iterator to start iterating with.
 """
-function Base.start(x::BreadthFirst)
-    state::BreadthFirstState = Queue(PhyNode)
+function Base.start{B,S,M}(x::BreadthFirst{B,S,M})
+    state = Queue(PhyNode{B,S,M})
     enqueue!(state, x.start)
     return state
 end
@@ -54,8 +54,8 @@ Step to the next node when iterating over a `Phylogeny`.
 * `x`: `Breadthfirst` iterator.
 * `state`: A `Queue` that contains the next nodes to be iterated over.
 """
-function Base.next(x::BreadthFirst, state::BreadthFirstState)
-    current::PhyNode = dequeue!(state)
+function Base.next{B,S,M}(x::BreadthFirst{B,S,M}, state::BreadthFirstState{B,S,M})
+    current = dequeue!(state)
     for i in current.children
         enqueue!(state, i)
     end
@@ -70,7 +70,7 @@ done iterating.
 * `x`: A `BreadthFirst` `PhylogenyIterator`.
 * `state`: a `Queue` containing the nodes that are to be visited imminently.
 """
-function Base.done(x::BreadthFirst, state::BreadthFirstState)
+function Base.done{B,S,M}(x::BreadthFirst{B,S,M}, state::BreadthFirstState{B,S,M})
     return length(state) == 0
 end
 
