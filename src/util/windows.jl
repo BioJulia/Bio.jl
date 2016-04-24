@@ -8,15 +8,17 @@
 
 module Windows
 
+using Bio.Seq
+
+using Compat
+
 export eachwindow,
     EachWindowIterator,
     missed
 
-using Compat
-using Bio.Seq:
-    Sequence
 
-typealias ArrayOrStringOrSeq Union{AbstractArray, AbstractString, Sequence}
+
+typealias ArrayOrStringOrSeq Union{AbstractArray, AbstractString, BioSequence}
 
 """
 An iterator which moves across a container, as a sliding window.
