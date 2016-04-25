@@ -6,8 +6,7 @@ available_targets = [
     "seq",
     "services",
     "structure",
-    "tools",
-    "util"
+    "tools"
 ]
 
 if isempty(ARGS)
@@ -25,4 +24,8 @@ include("TestFunctions.jl")
 
 for target in targets
     include("$target/runtests.jl")
+end
+
+for target in readdir("util")
+    include("$target")
 end
