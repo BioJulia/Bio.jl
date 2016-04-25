@@ -116,7 +116,8 @@ export
 using BufferedStreams,
     Base.Intrinsics,
     Bio.StringFields,
-    Bio.Ragel
+    Bio.Ragel,
+    Switch
 
 using Bio:
     FileFormat,

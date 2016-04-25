@@ -21,7 +21,7 @@ function FASTQMetadata()
 end
 
 
-function (==)(a::FASTQMetadata, b::FASTQMetadata)
+function Base.(:(==))(a::FASTQMetadata, b::FASTQMetadata)
     return a.description == b.description && a.quality == b.quality
 end
 
@@ -51,7 +51,7 @@ end
 """
 Slice a FASTQSeqRecord, including the quality score.
 """
-function getindex(seqrec::FASTQSeqRecord, i::UnitRange)
+function Base.getindex(seqrec::FASTQSeqRecord, i::UnitRange)
     metadata = copy(seqrec.metadata)
     metadata.quality = metadata.quality[i]
     return FASTQSeqRecord(seqrec.name, seqrec.seq[i], metadata)
@@ -60,7 +60,7 @@ end
 """
 Obtain a tuple of (nucleotide, quality) from position i of a FASTQSeqRecord.
 """
-function getindex(seqrec::FASTQSeqRecord, i::Integer)
+function Base.getindex(seqrec::FASTQSeqRecord, i::Integer)
     metadata = copy(seqrec.metadata)
     metadata.quality = metadata.quality[i:i]
     return FASTQSeqRecord(seqrec.name, seqrec.seq[i:i], metadata)
@@ -179,12 +179,12 @@ type FASTQParser <: AbstractParser
 end
 
 
-function eltype(::Type{FASTQParser})
+function Base.eltype(::Type{FASTQParser})
     return FASTQSeqRecord
 end
 
 
-function open(input::BufferedInputStream, ::Type{FASTQ};
+function Base.open(input::BufferedInputStream, ::Type{FASTQ};
                    quality_encodings::QualityEncoding=EMPTY_QUAL_ENCODING)
     return FASTQParser(input, quality_encodings)
 end

@@ -47,7 +47,7 @@ end
 """
 Find the length of a SeqRecord's sequence
 """
-function length(seqrec::SeqRecord)
+function Base.length(seqrec::SeqRecord)
     return length(seqrec.seq)
 end
 
