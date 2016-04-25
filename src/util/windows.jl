@@ -1,3 +1,21 @@
+module Windows
+
+import Base:
+    start,
+    next,
+    done,
+    show,
+    size,
+    ==
+
+using Bio.Seq:
+    Sequence
+
+export eachwindow,
+    EachWindowIterator,
+    missed
+
+
 
 typealias ArrayOrStringOrSeq Union{AbstractArray, AbstractString, Sequence}
 
@@ -89,4 +107,6 @@ function show(io::IO, it::EachWindowIterator)
     "\nWindow width: ", it.width, "\nStep distance: ", it.step,
     "\nTotal windows: ", size(it), "\nMissed elements: ",
     missed(it))
+end
+
 end
