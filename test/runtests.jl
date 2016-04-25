@@ -27,5 +27,5 @@ for target in targets
 end
 
 for target in readdir("util")
-    include("$target")
+    include("util/$target")
 end
