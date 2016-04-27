@@ -5,8 +5,8 @@
 Get Help: [![Join the chat at Gitter!](https://badges.gitter.im/BioJulia.png)](https://gitter.im/BioJulia/Bio.jl)
 [![reference docs](https://img.shields.io/badge/docs-reference-blue.svg)](http://biojulia.github.io/Bio.jl/latest/)
 
-Activity: [![Issues Planned](https://badge.waffle.io/BioJulia/Bio.jl.svg?label=stage:%20planning&amp;title=Planned)](http://waffle.io/BioJulia/Bio.jl)
-[![Issues in Progress](https://badge.waffle.io/BioJulia/Bio.jl.svg?label=stage:%20WIP&amp;title=In%20Progress)](http://waffle.io/BioJulia/Bio.jl)
+Activity: [![Planned Work](https://badge.waffle.io/BioJulia/Bio.jl.svg?label=stage:%20planning&title=Planned)](http://waffle.io/BioJulia/Bio.jl)
+[![Work In Progress](https://badge.waffle.io/BioJulia/Bio.jl.svg?label=stage:%20WIP&title=In%20Progress)](http://waffle.io/BioJulia/Bio.jl)
 
 Code Quality: [![Build Status](https://travis-ci.org/BioJulia/Bio.jl.svg?branch=master)](https://travis-ci.org/BioJulia/Bio.jl)
 [![Build status](https://ci.appveyor.com/api/projects/status/nq4w264346py8esp?svg=true)](https://ci.appveyor.com/project/Ward9250/bio-jl)
