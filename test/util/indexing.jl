@@ -52,8 +52,15 @@ using Bio.Indexing
         @test keys(e) != symbolnames
         @test keys(e) == Symbol[]
     end
+    @testset "Manipulation methods" begin
+        newnames = [:Sixth, :Seventh, :Eighth, :Ninth, :Tenth]
+        newnamestext = ["Sixth", "Seventh", "Eighth", "Ninth", "Tenth"]
+        @test names!(i, newnames) == SingleIndex(newnames)
+        @test_throws names!(i, newnames[1:4])
+        @test names!(i, newnamestext) == SingleIndex(newnamestext)
+        @test_throws names!(i, newnamestext[1:4])
 
-
+    end
 
 end
 

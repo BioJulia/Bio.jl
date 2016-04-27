@@ -10,11 +10,6 @@ export
 abstract AbstractIndex
 
 
-# Type Aliases and unions
-typealias TableRange UnitRange{Int}
-rangeOrVect = Union{TableRange, Vector{Int}}
-
-
 # Concrete Types
 type SingleIndex <: AbstractIndex
     lookup::Dict{Symbol, Int}
@@ -30,19 +25,19 @@ SingleIndex{S <: AbstractString}(names::Vector{S}) = SingleIndex(convert(Vector{
 SingleIndex() = SingleIndex(Dict{Symbol, Int}(), Symbol[])
 
 
-type GroupIndex{T <: rangeOrVect} <: AbstractIndex
+type GroupIndex{T <: AbstractVector{Int}} <: AbstractIndex
     lookup::Dict{Symbol, Int}
     names::Vector{Symbol}
     groups::Vector{T}
 end
 
-function GroupIndex{T <: rangeOrVect}(names::Vector{Symbol}, groups::Vector{T})
+function GroupIndex{T <: AbstractVector{Int}}(names::Vector{Symbol}, groups::Vector{T})
     u = make_unique(names)
     lookup = Dict{Symbol, Int}(zip(u, 1:length(u)))
     GroupIndex(lookup, u, groups)
 end
-GroupIndex{S <: AbstractString, T <: rangeOrVect}(names::Vector{S}, groups::Vector{T}) = GroupIndex(convert(Vector{Symbol}, names), groups)
-GroupIndex{T <: rangeOrVect}(::Type{T}) = GroupIndex(Dict{Symbol, Int}(), Symbol[], T[])
+GroupIndex{S <: AbstractString, T <: AbstractVector{Int}}(names::Vector{S}, groups::Vector{T}) = GroupIndex(convert(Vector{Symbol}, names), groups)
+GroupIndex{T <: AbstractVector{Int}}(::Type{T}) = GroupIndex(Dict{Symbol, Int}(), Symbol[], T[])
 
 function make_unique(names::Vector{Symbol})
     seen = Set{Symbol}()
