@@ -110,12 +110,14 @@ export
     DNAAlphabet,
     RNAAlphabet,
     AminoAcidAlphabet,
-    CharAlphabet
+    CharAlphabet,
+    trim!
 
 using BufferedStreams,
     Base.Intrinsics,
     Bio.StringFields,
-    Bio.Ragel
+    Bio.Ragel,
+    Switch
 
 using Bio:
     FileFormat,

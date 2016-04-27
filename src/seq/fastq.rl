@@ -38,6 +38,22 @@ function FASTQSeqRecord()
     return FASTQSeqRecord(StringField(), DNASequence(), FASTQMetadata())
 end
 
+"""
+Trim a FASTQSeqRecord in-place, including the quality score.
+"""
+function trim!(seqrec::FASTQSeqRecord, i::UnitRange)
+    seqrec.metadata.quality = seqrec.metadata.quality[i]
+    seqrec.seq = seqrec.seq[i]
+end
+
+"""
+Slice a FASTQSeqRecord, including the quality score.
+"""
+function getindex(seqrec::FASTQSeqRecord, i::UnitRange)
+    metadata = copy(seqrec.metadata)
+    metadata.quality = metadata.quality[i]
+    return FASTQSeqRecord(seqrec.name, seqrec.seq[i], metadata)
+end
 
 """
 Show a `FASTQSeqRecord` to `io`, with graphical display of quality scores.
@@ -74,9 +90,19 @@ end
 
 """
 Write a `FASTQSeqRecord` to `io`, as a valid FASTQ record.
+
+skipempty: If true, and the sequence is empty, then `write` becomes a no-op.
+emptytoN: If true, and the sequence is empty, a single N is printed in place of
+          the empty sequence to preserve FASTQ file validity.
 """
-function Base.write(io::IO, seqrec::FASTQSeqRecord;
-                    offset::Integer=-1, qualheader::Bool=false)
+function Base.write(io::IO, seqrec::FASTQSeqRecord; offset::Integer=-1,
+                    qualheader::Bool=false, skipempty::Bool=false,
+                    emptytoN::Bool=false)
+
+    # Skip empty records if we have been told to do so.
+    if skipempty && length(seqrec) == 0
+        return
+    end
 
     # choose offset automatically
     if offset < 0
@@ -93,6 +119,9 @@ function Base.write(io::IO, seqrec::FASTQSeqRecord;
     end
     write(io, "\n")
 
+    if emptytoN && length(seqrec) == 0
+        write(io, "N")
+    end
     for c in seqrec.seq
         show(io, c)
     end
@@ -107,6 +136,11 @@ function Base.write(io::IO, seqrec::FASTQSeqRecord;
     end
     write(io, "\n")
 
+    if emptytoN && length(seqrec) == 0
+        # Write the char the corresponds to PHRED score of 40 in current
+        # encoding.
+        write(io, Char(offset + 40))
+    end
     for q in seqrec.metadata.quality
         write(io, Char(q + offset))
     end

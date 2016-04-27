@@ -63,7 +63,7 @@ const qual_encoding_ranges = Dict{QualityEncoding, (typeof(UInt8(0):UInt8(0)), I
 # Index into this with `trailing_zeros(encoding) + 1`
 const qual_encoding_ranges = [
     (UInt8('!'), UInt8('~'), Int8(0) ),  # SANGER
-    (UInt8(';'), UInt8('~'), Int8(-5)), # SOLEXA
+    (UInt8(';'), UInt8('~'), Int8(-5)),  # SOLEXA
     (UInt8('@'), UInt8('~'), Int8(0) ),  # ILLUMINA13
     (UInt8('B'), UInt8('~'), Int8(2) ),  # ILLUMINA15
     (UInt8('!'), UInt8('~'), Int8(0) )   # ILLUMINA18

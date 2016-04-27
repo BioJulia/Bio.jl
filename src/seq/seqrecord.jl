@@ -44,6 +44,13 @@ function Base.copy{T <: SeqRecord}(seqrec::T)
     return T(copy(seqrec.name), copy(seqrec.seq), copy(seqrec.metadata))
 end
 
+"""
+Find the length of a SeqRecord's sequence
+"""
+function Base.length(seqrec::SeqRecord)
+    return length(seqrec.seq)
+end
+
 
 typealias DNASeqRecord{T}       SeqRecord{DNASequence, T}
 typealias RNASeqRecord{T}       SeqRecord{RNASequence, T}
