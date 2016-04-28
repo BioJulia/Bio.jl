@@ -53,12 +53,49 @@ using Bio.Indexing
         @test keys(e) == Symbol[]
     end
     @testset "Manipulation methods" begin
-        newnames = [:Sixth, :Seventh, :Eighth, :Ninth, :Tenth]
-        newnamestext = ["Sixth", "Seventh", "Eighth", "Ninth", "Tenth"]
-        @test names!(i, newnames) == SingleIndex(newnames)
-        @test_throws names!(i, newnames[1:4])
-        @test names!(i, newnamestext) == SingleIndex(newnamestext)
-        @test_throws names!(i, newnamestext[1:4])
+        @testset "Setting and resetting names" begin
+
+            # Ok let's give i a load of new names
+            newnames = [:Sixth, :Seventh, :Eighth, :Ninth, :Tenth]
+            newnamestext = ["Sixth", "Seventh", "Eighth", "Ninth", "Tenth"]
+            @test names!(i, newnames) == SingleIndex(newnames)
+            @test_throws names!(i, newnames[1:4])
+            @test names!(i, newnamestext) == SingleIndex(newnamestext)
+            @test_throws names!(i, newnamestext[1:4])
+
+            # Now let's manipulate some of those names by renaming them
+
+            # Make a new index by replacing name Sixth with First,
+            # and test that only :Sixth is different
+            rn = rename(i, :Sixth, :First)
+            @test rn != SingleIndex(symbolnames) && rn != SingleIndex(newnames)
+            @test rn.names[1] == :First &&
+                  rn.names[2] == :Seventh &&
+                  rn.names[3] == :Eighth &&
+                  rn.names[4] == :Ninth &&
+                  rn.names[5] == :Tenth
+
+            # Let's make a new index by replacing the names, Sixth Eights, and
+            # Tenth, with First, Third, and Fifth.
+            rntwo = rename(i, [:Sixth, :Eighth, :Tenth], [:First, :Third, :Fifth])
+            @test rntwo != SingleIndex(symbolnames) && rntwo != SingleIndex(newnames)
+            @test rn != rntwo
+
+            # Now let's test that renaming worked correctly, some names should
+            # match names in symbolnames, and some should match names in
+            # newnames.
+            @test rntwo.names[1] == newnames[1] && rntwo.names[1] != symbolnames[1] &&
+                  rntwo.names[2] != newnames[2] && rntwo.names[2] == symbolnames[2] &&
+                  rntwo.names[3] == newnames[3] && rntwo.names[3] != symbolnames[3] &&
+                  rntwo.names[4] != newnames[4] && rntwo.names[4] == symbolnames[4] &&
+                  rntwo.names[5] == newnames[5] && rntwo.names[5] != symbolnames[5]
+
+            @test rntwo.names[1] != i.names[1] && rntwo.names[1] == t.names[1] &&
+                  rntwo.names[2] == i.names[2] && rntwo.names[2] != t.names[2] &&
+                  rntwo.names[3] != i.names[3] && rntwo.names[3] == t.names[3] &&
+                  rntwo.names[4] == i.names[4] && rntwo.names[4] != t.names[4] &&
+                  rntwo.names[5] != i.names[5] && rntwo.names[5] == t.names[5]
+        end
 
     end
 

@@ -102,7 +102,9 @@ function names!(x::AbstractIndex, names::Vector{Symbol})
     return x
 end
 
-names!{T <: AbstractString}(x::AbstractIndex, names::Vector{T}) = names!(x, convert(Vector{Symbol}, names))
+function names!{T <: AbstractString}(x::AbstractIndex, names::Vector{T})
+    names!(x, convert(Vector{Symbol}, names))
+end
 
 function rename!(x::AbstractIndex, names)
     for (from, to) in names
@@ -114,12 +116,16 @@ function rename!(x::AbstractIndex, names)
     end
     return x
 end
-rename!(x::AbstractIndex, from, to) = rename!(x, zip(from, to))
+
+function rename!(x::AbstractIndex, from::Vector{Symbol}, to::Vector{Symbol})
+    return rename!(x, zip(from, to))
+end
+
 rename!(x::AbstractIndex, from::Symbol, to::Symbol) = rename!(x, ((from, to),))
 rename!(x::AbstractIndex, f::Function) = rename!(x, [(x,f(x)) for x in x.names])
 rename!(f::Function, x::AbstractIndex) = rename!(x, f)
 rename(x::AbstractIndex, args...) = rename!(copy(x), args...)
-rename(f::Function, x::AbstractIndex) = rename(x, f)
+rename(f::Function, x::AbstractIndex) = rename(copy(x), f)
 
 
 # Indexing into a single index.
