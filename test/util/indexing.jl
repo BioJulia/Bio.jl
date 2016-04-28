@@ -69,11 +69,11 @@ using Bio.Indexing
             # and test that only :Sixth is different
             rn = rename(i, :Sixth, :First)
             @test rn != SingleIndex(symbolnames) && rn != SingleIndex(newnames)
-            @test rn.names[1] == :First &&
-                  rn.names[2] == :Seventh &&
-                  rn.names[3] == :Eighth &&
-                  rn.names[4] == :Ninth &&
-                  rn.names[5] == :Tenth
+            @test rn.names[1] == :First
+            @test rn.names[2] == :Seventh
+            @test rn.names[3] == :Eighth
+            @test rn.names[4] == :Ninth
+            @test rn.names[5] == :Tenth
 
             # Let's make a new index by replacing the names, Sixth Eights, and
             # Tenth, with First, Third, and Fifth.
