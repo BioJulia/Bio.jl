@@ -143,6 +143,9 @@ Base.getindex(x::SingleIndex, idx::UnitRange{Int}) = [idx;]
 Base.getindex{T <: Real}(x::SingleIndex, idx::Vector{T}) = convert(Vector{Int}, idx)
 # Indexing with multiple names.
 Base.getindex(x::SingleIndex, idx::Vector{Symbol}) = [x.lookup[i] for i in idx]
+function Base.getindex{T <: AbstractString}(x::SingleIndex, idx::Vector{T})
+    return [x.lookup[convert(Symbol, i)] for i in idx]
+end
 
 
 # Indexing into a grouped index.

@@ -96,12 +96,18 @@ using Bio.Indexing
                   rntwo.names[4] == i.names[4] && rntwo.names[4] != t.names[4] &&
                   rntwo.names[5] != i.names[5] && rntwo.names[5] == t.names[5]
         end
-
+        @testset "getindex" begin
+            @test i[1] == 1
+            @test i[[true, false, false, true, true]] == [1, 4, 5]
+            @test i[1:3] == [1:3;]
+            @test i[:Sixth] == 1 && i[:Tenth] == 5 && i[:Eighth] == 3
+            @test i["Sixth"] == 1 && i["Tenth"] == 5 && i["Eighth"] == 3
+            @test i[[1,3,5]] = [1,3,5]
+            @test i[[:Seventh, :Eighth, :Ninth]] == [2, 3, 4]
+            @test i[["Seventh", "Eighth", "Ninth"]] == [2, 3, 4]
+        end
     end
-
 end
-
-
 
 
 end
