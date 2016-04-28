@@ -109,5 +109,29 @@ using Bio.Indexing
     end
 end
 
+@testset "GroupIndex" begin
+    groupnames = [:First, :Second, :Third]
+    textgroupnames = ["First", "Second", "Third"]
+    groupinds = [1:3, 4:6, 7:9]
+    gi = GroupIndex(groupnames, groupinds)
+    gt = GroupIndex(textgroupnames, groupinds)
+    @testset "Construction" begin
+
+    end
+
+    @testset "Basic Operators" begin
+
+    end
+
+    @testset "Manipulation Methods" begin
+        @testset "Setting and resetting names" begin
+
+        end
+        @testset "getindex" begin
+
+        end
+    end
+end
+
 
 end

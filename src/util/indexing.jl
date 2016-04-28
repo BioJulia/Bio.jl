@@ -1,43 +1,47 @@
 module Indexing
 
 export
-    AbstractIndex, SingleIndex, names!, rename!, rename
+    Indexer, names!, rename!, rename
 
 
-# Indexing datastructures
+intsAndVecs = Union{Unsigned,
+                    AbstractVector{UInt8},
+                    AbstractVector{UInt16},
+                    AbstractVector{UInt32},
+                    AbstractVector{UInt64},
+                    AbstractVector{UInt128}}
 
-# Abstract Types
-abstract AbstractIndex
-
-
-# Concrete Types
-type SingleIndex <: AbstractIndex
-    lookup::Dict{Symbol, Int}
+# The indexer Type
+type Indexer{T <: intsAndVecs}
+    lookup::Dict{Symbol, T}
     names::Vector{Symbol}
 end
 
-function SingleIndex(names::Vector{Symbol})
+# Conveinience constructors for creating Indexer that associate one name,
+# with in integer value.
+function Indexer{A <: AbstractVector, T <: Unsigned}(names::A{Symbol}, ::Type{T})
     u = make_unique(names)
-    lookup = Dict{Symbol, Int}(zip(u, 1:length(u)))
-    SingleIndex(lookup, u)
+    lookup = Dict{Symbol, Unsigned}(zip(u, UnitRange{T}(1, length(u))))
+    Indexer{T}(lookup, u)
 end
-SingleIndex{S <: AbstractString}(names::Vector{S}) = SingleIndex(convert(Vector{Symbol}, names))
-SingleIndex() = SingleIndex(Dict{Symbol, Int}(), Symbol[])
-
-
-type GroupIndex{T <: AbstractVector{Int}} <: AbstractIndex
-    lookup::Dict{Symbol, Int}
-    names::Vector{Symbol}
-    groups::Vector{T}
+function Indexer{S <: AbstractString, T <: Unsigned}(names::Vector{S}, ::Type{T})
+    Indexer(convert(Vector{Symbol}, names), T)
 end
 
-function GroupIndex{T <: AbstractVector{Int}}(names::Vector{Symbol}, groups::Vector{T})
+# Conveinience constructors for creating Indexer that associate one name,
+# with several integer values.
+function Indexer{A <: AbstractVector, E <: Unsigned}(names::Vector{Symbol}, groups::A{E})
+    @assert length(names) == length(groups)
     u = make_unique(names)
-    lookup = Dict{Symbol, Int}(zip(u, 1:length(u)))
-    GroupIndex(lookup, u, groups)
+    lookup = Dict{Symbol, A{E}}(zip(u, groups))
+    Indexer(lookup, u)
 end
-GroupIndex{S <: AbstractString, T <: AbstractVector{Int}}(names::Vector{S}, groups::Vector{T}) = GroupIndex(convert(Vector{Symbol}, names), groups)
-GroupIndex{T <: AbstractVector{Int}}(::Type{T}) = GroupIndex(Dict{Symbol, Int}(), Symbol[], T[])
+function Indexer{S <: AbstractString, A <: AbstractVector, E <: Unsigned}(names::Vector{S}, groups::A{E})
+    Indexer(convert(Vector{Symbol}, names), groups)
+end
+function Indexer{T <: intsAndVecs}(::Type{T})
+    Indexer(Dict{Symbol, T}(), Symbol[])
+end
 
 function make_unique(names::Vector{Symbol})
     seen = Set{Symbol}()
@@ -64,23 +68,20 @@ function make_unique(names::Vector{Symbol})
     return names
 end
 
-Base.length(x::AbstractIndex) = length(x.names)
-Base.names(x::AbstractIndex) = copy(x.names)
-_names(x::AbstractIndex) = x.names
-Base.copy(x::SingleIndex) = SingleIndex(copy(x.lookup), copy(x.names))
-Base.copy(x::GroupIndex) = GroupIndex(copy(x.lookup), copy(x.names), copy(x.groups))
-Base.deepcopy(x::AbstractIndex) = copy(x) # all eltypes immutable
-Base.isequal(x::SingleIndex, y::SingleIndex) = isequal(x.lookup, y.lookup) && isequal(x.names, y.names)
-Base.isequal(x::GroupIndex, y::GroupIndex) = isequal(x.lookup, y.lookup) && isequal(x.names, y.names) && isequal(x.groups, y.groups)
-Base.isequal(x::SingleIndex, y::GroupIndex) = false
-Base.isequal(x::GroupIndex, y::SingleIndex) = false
-Base.(:(==))(x::AbstractIndex, y::AbstractIndex) = isequal(x, y)
-Base.haskey(x::AbstractIndex, key::Symbol) = haskey(x.lookup, key)
-Base.haskey{T <: AbstractString}(x::AbstractIndex, key::T) = haskey(x, convert(Symbol, key))
-Base.haskey(x::AbstractIndex, key::Real) = 1 <= key <= length(x.names)
-Base.keys(x::AbstractIndex) = names(x)
+Base.length(x::Indexer) = length(x.names)
+Base.names(x::Indexer) = copy(x.names)
+_names(x::Indexer) = x.names
+Base.copy(x::Indexer) = Indexer(copy(x.lookup), copy(x.names))
 
-function names!(x::AbstractIndex, names::Vector{Symbol})
+Base.deepcopy(x::Indexer) = copy(x) # all eltypes immutable
+Base.isequal(x::Indexer, y::Indexer) = isequal(x.lookup, y.lookup) && isequal(x.names, y.names)
+Base.(:(==))(x::Indexer, y::Indexer) = isequal(x, y)
+Base.haskey(x::Indexer, key::Symbol) = haskey(x.lookup, key)
+Base.haskey{S <: AbstractString}(x::Indexer, key::S) = haskey(x, convert(Symbol, key))
+Base.haskey(x::Indexer, key::Real) = 1 <= key <= length(x.names)
+Base.keys(x::Indexer) = names(x)
+
+function names!(x::Indexer, names::Vector{Symbol})
     names = make_unique(names)
     if length(names) != length(x)
         throw(ArgumentError("Length of new names doesn't match length of Index."))
@@ -102,11 +103,11 @@ function names!(x::AbstractIndex, names::Vector{Symbol})
     return x
 end
 
-function names!{T <: AbstractString}(x::AbstractIndex, names::Vector{T})
+function names!{S <: AbstractString}(x::Indexer, names::Vector{S})
     names!(x, convert(Vector{Symbol}, names))
 end
 
-function rename!(x::AbstractIndex, names)
+function rename!(x::Indexer, names)
     for (from, to) in names
         if haskey(x, to)
             error("Tried renaming $from to $to, when $to already exists in the Index.")
@@ -117,51 +118,33 @@ function rename!(x::AbstractIndex, names)
     return x
 end
 
-function rename!(x::AbstractIndex, from::Vector{Symbol}, to::Vector{Symbol})
+function rename!(x::Indexer, from::Vector{Symbol}, to::Vector{Symbol})
     return rename!(x, zip(from, to))
 end
 
-rename!(x::AbstractIndex, from::Symbol, to::Symbol) = rename!(x, ((from, to),))
-rename!(x::AbstractIndex, f::Function) = rename!(x, [(x,f(x)) for x in x.names])
-rename!(f::Function, x::AbstractIndex) = rename!(x, f)
-rename(x::AbstractIndex, args...) = rename!(copy(x), args...)
-rename(f::Function, x::AbstractIndex) = rename(copy(x), f)
+rename!(x::Indexer, from::Symbol, to::Symbol) = rename!(x, ((from, to),))
+rename!(x::Indexer, f::Function) = rename!(x, [(x,f(x)) for x in x.names])
+rename!(f::Function, x::Indexer) = rename!(x, f)
+rename(x::Indexer, args...) = rename!(copy(x), args...)
+rename(f::Function, x::Indexer) = rename(copy(x), f)
 
 
 # Indexing into a single index.
 
 # Indexing with single name.
-Base.getindex(x::SingleIndex, idx::Symbol) = x.lookup[idx]
-Base.getindex{S <: AbstractString}(x::SingleIndex, idx::S) = x.lookup[convert(Symbol, idx)]
+Base.getindex(x::Indexer, idx::Symbol) = x.lookup[idx]
+Base.getindex{S <: AbstractString}(x::Indexer, idx::S) = x.lookup[convert(Symbol, idx)]
 # Indexing with a single integer.
-Base.getindex(x::SingleIndex, idx::Int) = idx
+Base.getindex{T <: Unsigned}(x::Indexer{T}, idx::T) = idx
 # Indexing with a vector of bools.
-Base.getindex(x::SingleIndex, idx::Vector{Bool}) = find(idx)
+Base.getindex{T <: Unsigned}(x::Indexer{T}, idx::Vector{Bool}) = T(find(idx))
 # Indexing with a range.
-Base.getindex(x::SingleIndex, idx::UnitRange{Int}) = [idx;]
-# Indexing with multiple integers.
-Base.getindex{T <: Real}(x::SingleIndex, idx::Vector{T}) = convert(Vector{Int}, idx)
+Base.getindex{T <: Unsigned}(x::Indexer, idx::UnitRange{T}) = [idx;]
 # Indexing with multiple names.
-Base.getindex(x::SingleIndex, idx::Vector{Symbol}) = [x.lookup[i] for i in idx]
-function Base.getindex{T <: AbstractString}(x::SingleIndex, idx::Vector{T})
+Base.getindex(x::Indexer, idx::Vector{Symbol}) = [x.lookup[i] for i in idx]
+function Base.getindex{S <: AbstractString}(x::Indexer, idx::Vector{S})
     return [x.lookup[convert(Symbol, i)] for i in idx]
 end
 
-
-# Indexing into a grouped index.
-
-# Indexing with a single name.
-Base.getindex(x::GroupIndex, idx::Symbol) = x.groups[x.lookup[idx]]
-Base.getindex{S <: AbstractString}(x::GroupIndex, idx::S) = x.groups[x.lookup[convert(Symbol, idx)]]
-# Indexing with a single integer.
-Base.getindex(x::GroupIndex, idx::Int) = x.groups[idx]
-# Indexing with a vector of bools.
-Base.getindex(x::GroupIndex, idx::Vector{Bool}) = x.groups[find(idx)]
-# Indexing with a range.
-Base.getindex(x::GroupIndex, idx::Range) = x.groups[[idx;]]
-# Indexing with multiple integers.
-Base.getindex{T <: Real}(x::GroupIndex, idx::Vector{T}) = x.groups[convert(Vector{Int}, idx)]
-# Indexing with multiple names.
-Base.getindex(x::GroupIndex, idx::Vector{Symbol}) = [x.groups[x.lookup[i]] for i in idx]
 
 end
