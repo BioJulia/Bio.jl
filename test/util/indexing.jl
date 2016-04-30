@@ -9,18 +9,33 @@ end
 
 using Bio.Indexing
 
-@testset "SingleIndex" begin
+@testset "Indexer" begin
     symbolnames = [:First, :Second, :Third, :Fourth, :Fifth]
     textnames = ["First", "Second", "Third", "Fourth", "Fifth"]
-    i = SingleIndex(symbolnames)
-    e = SingleIndex()
-    t = SingleIndex(textnames)
-    @testset "Construction" begin
-        @test e == SingleIndex()
-        @test t != SingleIndex()
-        @test i != SingleIndex()
-        @test i == SingleIndex(convert(Vector{Symbol}, symbolnames))
-        @test t == i
+    groups = UnitRange{UInt}[1:5, 5:10, 10:15, 15:20, 20:25]
+    groups_eight = UnitRange{UInt8}[1:5, 5:10, 10:15, 15:20, 20:25]
+    int_index_one = Indexer(symbolnames)
+    int_index_two = Indexer(symbolnames, UInt64)
+    int_index_three = Indexer(symbolnames, UInt8)
+    g_index_one = Indexer(symbolnames, groups)
+    g_index_two = Indexer(textnames, groups)
+
+    @testset "Correct Construction" begin
+        @test int_index_one == int_index_two
+        @test int_index_one != int_index_three
+        @test int_index_two != int_index_three
+        @test g_index_one != g_index_two
+        @test g_index_one.names == g_index_two.names
+        @test g_index_one.names == int_index_one.names
+        @test typeof(int_index_one) == typeof(int_index_two)
+        @test typeof(int_index_one) != typeof(int_index_three)
+        @test typeof(int_index_two) != typeof(int_index_three)
+        @test typeof(g_index_one) != typeof(g_index_two)
+        @test typeof(int_index_one) == Indexer{UInt64}
+        @test typeof(int_index_two) == Indexer{UInt64}
+        @test typeof(int_index_three) == Indexer{UInt8}
+        @test typeof(g_index_one) == Indexer{UnitRange{UInt64}}
+        @test typeof(g_index_two) == Indexer{UnitRange{UInt8}}
     end
     @testset "Basic Operators" begin
         @test length(i) == 5
@@ -108,30 +123,5 @@ using Bio.Indexing
         end
     end
 end
-
-@testset "GroupIndex" begin
-    groupnames = [:First, :Second, :Third]
-    textgroupnames = ["First", "Second", "Third"]
-    groupinds = [1:3, 4:6, 7:9]
-    gi = GroupIndex(groupnames, groupinds)
-    gt = GroupIndex(textgroupnames, groupinds)
-    @testset "Construction" begin
-
-    end
-
-    @testset "Basic Operators" begin
-
-    end
-
-    @testset "Manipulation Methods" begin
-        @testset "Setting and resetting names" begin
-
-        end
-        @testset "getindex" begin
-
-        end
-    end
-end
-
 
 end
