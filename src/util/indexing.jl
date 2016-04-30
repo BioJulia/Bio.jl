@@ -29,12 +29,21 @@ function Indexer{T <: indexerUnion}(::Type{T})
     return Indexer{T}(Dict{Symbol, T}(), Vector{Symbol}())
 end
 
+
 # Convenience constructors for creating Indexer that associate one name,
 # with in integer value.
-function Indexer{T <: Unsigned}(names::Vector{Symbol}, ::Type{T})
+function Indexer{T <: Unsigned}(names::Vector{Symbol}, inds::Vector{T})
     u = make_unique(names)
-    lookup = Dict{Symbol, T}(zip(u, UnitRange{T}(1, length(u))))
+    lookup = Dict{Symbol, T}(zip(u, inds))
     return Indexer{T}(lookup, u)
+end
+
+function Indexer{T <: Unsigned}(names::Vector{Symbol}, ::Type{T})
+    return Indexer{T}(names, collect(1:length(names)))
+end
+
+function Indexer{S <: AbstractString, T <: Unsigned}(names::Vector{S}, ::Type{T})
+    return Indexer(convert(Vector{Symbol}, names), T)
 end
 
 function Indexer(names::Vector{Symbol})
@@ -45,9 +54,6 @@ function Indexer{S <: AbstractString}(names::Vector{S})
     return Indexer(convert(Vector{Symbol}, names), UInt)
 end
 
-function Indexer{S <: AbstractString, T <: Unsigned}(names::Vector{S}, ::Type{T})
-    return Indexer(convert(Vector{Symbol}, names), T)
-end
 
 # Conveinience constructors for creating Indexer that associate one name,
 # with several integer values.

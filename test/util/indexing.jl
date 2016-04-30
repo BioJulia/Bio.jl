@@ -19,14 +19,17 @@ using Bio.Indexing
     int_index_three = Indexer(symbolnames, UInt8)
     g_index_one = Indexer(symbolnames, groups)
     g_index_two = Indexer(textnames, groups)
+    g_index_three = Indexer(textnames, groups_eight)
 
     @testset "Correct Construction" begin
         @test int_index_one == int_index_two
-        @test int_index_one != int_index_three
-        @test int_index_two != int_index_three
-        @test g_index_one != g_index_two
+        @test int_index_one == int_index_three
+        @test int_index_two == int_index_three
+        @test g_index_one == g_index_two
         @test g_index_one.names == g_index_two.names
         @test g_index_one.names == int_index_one.names
+        @test g_index_three.names == int_index_one.names
+        @test g_index_three.names == g_index_two.names
         @test typeof(int_index_one) == typeof(int_index_two)
         @test typeof(int_index_one) != typeof(int_index_three)
         @test typeof(int_index_two) != typeof(int_index_three)
@@ -35,7 +38,8 @@ using Bio.Indexing
         @test typeof(int_index_two) == Indexer{UInt64}
         @test typeof(int_index_three) == Indexer{UInt8}
         @test typeof(g_index_one) == Indexer{UnitRange{UInt64}}
-        @test typeof(g_index_two) == Indexer{UnitRange{UInt8}}
+        @test typeof(g_index_two) == Indexer{UnitRange{UInt64}}
+        @test typeof(g_index_three) == Indexer{UnitRange{UInt8}}
     end
     @testset "Basic Operators" begin
         @test length(i) == 5
