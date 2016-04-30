@@ -15,7 +15,7 @@ using Bio.Indexing
     groups = UnitRange{UInt}[1:5, 5:10, 10:15, 15:20, 20:25]
     groups_eight = UnitRange{UInt8}[1:5, 5:10, 10:15, 15:20, 20:25]
     int_index_one = Indexer(symbolnames)
-    int_index_two = Indexer(symbolnames, UInt64)
+    int_index_two = Indexer(textnames, UInt64)
     int_index_three = Indexer(symbolnames, UInt8)
     g_index_one = Indexer(symbolnames, groups)
     g_index_two = Indexer(textnames, groups)

@@ -34,13 +34,19 @@ end
 function Indexer{T <: Unsigned}(names::Vector{Symbol}, ::Type{T})
     u = make_unique(names)
     lookup = Dict{Symbol, T}(zip(u, UnitRange{T}(1, length(u))))
-    Indexer{T}(lookup, u)
+    return Indexer{T}(lookup, u)
 end
 
-Indexer(names::Vector{Symbol}) = Indexer(names, UInt)
+function Indexer(names::Vector{Symbol})
+    return Indexer(names, UInt)
+end
+
+function Indexer{S <: AbstractString}(names::Vector{S})
+    return Indexer(convert(Vector{Symbol}, names), UInt)
+end
 
 function Indexer{S <: AbstractString, T <: Unsigned}(names::Vector{S}, ::Type{T})
-    Indexer(convert(Vector{Symbol}, names), T)
+    return Indexer(convert(Vector{Symbol}, names), T)
 end
 
 # Conveinience constructors for creating Indexer that associate one name,
@@ -52,7 +58,7 @@ function Indexer{T <: vectorsUnion}(names::Vector{Symbol}, groups::Vector{T})
     Indexer{T}(lookup, u)
 end
 
-function Indexer{S <: AbstractString, T <: vectorsUnion}(names::Vector{S}, groups::T)
+function Indexer{S <: AbstractString, T <: vectorsUnion}(names::Vector{S}, groups::Vector{T})
     Indexer(convert(Vector{Symbol}, names), groups)
 end
 
