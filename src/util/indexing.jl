@@ -39,7 +39,7 @@ function Indexer{T <: Unsigned}(names::Vector{Symbol}, inds::Vector{T})
 end
 
 function Indexer{T <: Unsigned}(names::Vector{Symbol}, ::Type{T})
-    return Indexer{T}(names, collect(1:length(names)))
+    return Indexer(names, collect(T(1):T(length(names))))
 end
 
 function Indexer{S <: AbstractString, T <: Unsigned}(names::Vector{S}, ::Type{T})
@@ -53,6 +53,8 @@ end
 function Indexer{S <: AbstractString}(names::Vector{S})
     return Indexer(convert(Vector{Symbol}, names), UInt)
 end
+
+
 
 
 # Conveinience constructors for creating Indexer that associate one name,
