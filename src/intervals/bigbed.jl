@@ -466,7 +466,7 @@ function memisless(a::Vector{UInt8}, b::Vector{UInt8})
         return length(a) < length(b)
     end
     i = 1
-    while i <= length(a)
+    while i ≤ length(a)
         if a[i] != b[i]
             return a[i] < b[i]
         end
@@ -545,7 +545,7 @@ function start(bb::BigBedData)
     # read the first data block
     seek(bb.stream, bb.header.full_data_offset)
     data_count = read(bb.stream, UInt64)
-    zlib_stream = ZlibInflateInputStream(bb.stream)
+    zlib_stream = ZlibInflateInputStream(bb.stream, reset_on_end=false)
     unc_block_size = readbytes!(zlib_stream, bb.uncompressed_data,
                                length(bb.uncompressed_data))
 
@@ -574,7 +574,7 @@ function next(bb::BigBedData, state::BigBedIteratorState)
 
     if state.parser_isdone
         seek(bb.stream, bb.header.full_data_offset + state.data_offset + sizeof(UInt64))
-        zlib_stream = ZlibInflateInputStream(bb.stream)
+        zlib_stream = ZlibInflateInputStream(bb.stream, reset_on_end=false)
 
         unc_block_size = readbytes!(zlib_stream, bb.uncompressed_data,
                                     length(bb.uncompressed_data))
@@ -737,7 +737,7 @@ function find_next_intersection!(it::BigBedIntersectIterator)
 
             seek(it.bb.stream, block_offset)
             @assert block_size <= length(it.bb.uncompressed_data)
-            unc_block_size = readbytes!(ZlibInflateInputStream(it.bb.stream),
+            unc_block_size = readbytes!(ZlibInflateInputStream(it.bb.stream, reset_on_end=false),
                                         it.bb.uncompressed_data,
                                         length(it.bb.uncompressed_data))
             it.parser = BigBedDataParser(
@@ -1041,7 +1041,7 @@ function bigbed_write_blocks(out::IO, intervals::IntervalCollection,
             if compressed
                 writer = ZlibDeflateOutputStream(out)
                 write(writer, block)
-                close(writer)
+                flush(writer)
             else
                 write(out, block)
             end
@@ -1113,7 +1113,7 @@ function bigwig_write_blocks{T<:Number}(out::IO, intervals::IntervalCollection{T
                 for i in 1:item_ix-1
                     write(writer, items[i])
                 end
-                close(writer)
+                flush(writer)
             else
                 write(out, header)
                 for i in 1:item_ix-1
@@ -1658,7 +1658,6 @@ function bigbed_write_summary_and_index_comp(
 
     items_left = count
     sum_ix = 1
-    compression_buf = IOBuffer()
     i = 1
     while items_left > 0
         items_in_slot = min(items_per_slot, items_left)
@@ -1675,7 +1674,7 @@ function bigbed_write_summary_and_index_comp(
             end
         end
         items_left -= items_in_slot
-        close(writer)
+        flush(writer)
     end
     index_offset = position(out)
     bigbed_write_index(out, bounds_array, block_size, items_per_slot, false)

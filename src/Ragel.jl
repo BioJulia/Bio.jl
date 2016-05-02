@@ -210,6 +210,8 @@ macro generate_read_fuction(machine_name, input_type, output_type, ragel_body)
 
                 $(esc(ragel_body))
 
+                $(state).stream.position = $(p) + 1
+
                 if $(cs) == $(error_state) && !$(yield)
                     error(string(
                         $("Error parsing $(machine_name) input on line "),

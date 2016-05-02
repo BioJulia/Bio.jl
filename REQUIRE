@@ -1,7 +1,7 @@
 julia 0.4
-BufferedStreams
+BufferedStreams 0.1
 Colors
 IntervalTrees
 Iterators
-Libz
+Libz 0.1
 LightXML
