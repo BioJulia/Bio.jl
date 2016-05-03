@@ -20,16 +20,13 @@ using Bio.Indexing
     g_index_one = Indexer(symbolnames, groups)
     g_index_two = Indexer(textnames, groups)
     g_index_three = Indexer(textnames, groups_eight)
+    empty_index = Indexer(UInt64)
 
     @testset "Correct Construction" begin
         @test int_index_one == int_index_two
         @test int_index_one == int_index_three
         @test int_index_two == int_index_three
         @test g_index_one == g_index_two
-        @test g_index_one.names == g_index_two.names
-        @test g_index_one.names == int_index_one.names
-        @test g_index_three.names == int_index_one.names
-        @test g_index_three.names == g_index_two.names
         @test typeof(int_index_one) == typeof(int_index_two)
         @test typeof(int_index_one) != typeof(int_index_three)
         @test typeof(int_index_two) != typeof(int_index_three)
@@ -42,47 +39,77 @@ using Bio.Indexing
         @test typeof(g_index_one) == Indexer{UnitRange{UInt64}}
         @test typeof(g_index_two) == Indexer{UnitRange{UInt64}}
         @test typeof(g_index_three) == Indexer{UnitRange{UInt8}}
+        @test typeof(empty_index) == Indexer{UInt64}
     end
+
     @testset "Basic Operators" begin
-        @test length(i) == 5
-        @test length(e) == 0
-        @test length(t) == 5
-        @test names(i) == symbolnames
-        @test names(t) == symbolnames
-        @test names(e) == Symbol[]
-        @test isequal(copy(i), i) && !is(copy(i), i)
-        @test isequal(copy(e), e) && !is(copy(e), e)
-        @test isequal(copy(t), t) && !is(copy(t), t)
+        @test length(int_index_one) == 5
+        @test length(int_index_two) == 5
+        @test length(int_index_three) == 5
+        @test length(g_index_one) == 5
+        @test length(g_index_two) == 5
+        @test length(g_index_three) == 5
+        @test names(int_index_one) == symbolnames
+        @test names(int_index_two) == symbolnames
+        @test names(int_index_three) == symbolnames
+        @test names(g_index_one) == symbolnames
+        @test names(g_index_two) == symbolnames
+        @test names(g_index_three) == symbolnames
+        @test names(empty_index) == Symbol[]
+        @test isequal(copy(int_index_one), int_index_one) && !is(copy(int_index_one), int_index_one)
+        @test isequal(copy(int_index_two), int_index_two) && !is(copy(int_index_two), int_index_two)
+        @test isequal(copy(int_index_three), int_index_three) && !is(copy(int_index_three), int_index_three)
+        @test isequal(copy(g_index_one), g_index_one) && !is(copy(g_index_one), g_index_one)
+        @test isequal(copy(g_index_two), g_index_two) && !is(copy(g_index_two), g_index_two)
+        @test isequal(copy(g_index_three), g_index_three) && !is(copy(g_index_three), g_index_three)
+        @test isequal(copy(empty_index), empty_index) && !is(copy(empty_index), empty_index)
         for n in symbolnames
-            @test haskey(i, n) == true
-            @test haskey(t, n) == true
-            @test haskey(e, n) == false
+            @test haskey(int_index_one, n) == true
+            @test haskey(int_index_two, n) == true
+            @test haskey(int_index_three, n) == true
+            @test haskey(g_index_one, n) == true
+            @test haskey(g_index_two, n) == true
+            @test haskey(g_index_three, n) == true
+            @test haskey(empty_index, n) == false
         end
         for n in textnames
-            @test haskey(i, n) == true
-            @test haskey(t, n) == true
-            @test haskey(e, n) == false
+            @test haskey(int_index_one, n) == true
+            @test haskey(int_index_two, n) == true
+            @test haskey(int_index_three, n) == true
+            @test haskey(g_index_one, n) == true
+            @test haskey(g_index_two, n) == true
+            @test haskey(g_index_three, n) == true
+            @test haskey(empty_index, n) == false
         end
         for n in 1:5
-            @test haskey(i, n) == true
-            @test haskey(t, n) == true
-            @test haskey(e, n) == false
+            @test haskey(int_index_one, n) == true
+            @test haskey(int_index_two, n) == true
+            @test haskey(int_index_three, n) == true
+            @test haskey(g_index_one, n) == true
+            @test haskey(g_index_two, n) == true
+            @test haskey(g_index_three, n) == true
+            @test haskey(empty_index, n) == false
         end
-        @test keys(i) == symbolnames
-        @test keys(t) == symbolnames
-        @test keys(e) != symbolnames
-        @test keys(e) == Symbol[]
+        @test keys(int_index_one) == symbolnames
+        @test keys(int_index_two) == symbolnames
+        @test keys(int_index_three) == symbolnames
+        @test keys(g_index_one) == symbolnames
+        @test keys(g_index_two) == symbolnames
+        @test keys(g_index_three) == symbolnames
+        @test keys(empty_index) == Symbol[]
+        @test keys(empty_index) != symbolnames
     end
+
     @testset "Manipulation methods" begin
         @testset "Setting and resetting names" begin
 
             # Ok let's give i a load of new names
             newnames = [:Sixth, :Seventh, :Eighth, :Ninth, :Tenth]
             newnamestext = ["Sixth", "Seventh", "Eighth", "Ninth", "Tenth"]
-            @test names!(i, newnames) == SingleIndex(newnames)
-            @test_throws ArgumentError names!(i, newnames[1:4])
-            @test names!(i, newnamestext) == SingleIndex(newnamestext)
-            @test_throws ArgumentError names!(i, newnamestext[1:4])
+            @test names!(int_index_one, newnames) == Indexer(newnames)
+            @test_throws ArgumentError names!(int_index_one, newnames[1:4])
+            @test names!(int_index_one, newnamestext) == Indexer(newnamestext)
+            @test_throws ArgumentError names!(int_index_one, newnamestext[1:4])
 
             # Now let's manipulate some of those names by renaming them
 
