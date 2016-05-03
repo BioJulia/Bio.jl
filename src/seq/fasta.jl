@@ -80,7 +80,7 @@ const __fastaparser_nfa_pop_trans = Int8[ 0, 0 ,  ]
 "A type encapsulating the current state of a FASTA parser"
 	type FASTAParser <: AbstractParser
 	state::Ragel.State
-	seqbuf::BufferedOutputStream{	BufferedStreams.EmptyStreamSource}
+	seqbuf::BufferedOutputStream{	BufferedStreams.EmptyStream}
 
 function FASTAParser(input::BufferedInputStream)
 	begin
