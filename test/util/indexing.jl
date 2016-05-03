@@ -33,7 +33,9 @@ using Bio.Indexing
         @test typeof(int_index_one) == typeof(int_index_two)
         @test typeof(int_index_one) != typeof(int_index_three)
         @test typeof(int_index_two) != typeof(int_index_three)
-        @test typeof(g_index_one) != typeof(g_index_two)
+        @test typeof(g_index_one) == typeof(g_index_two)
+        @test typeof(g_index_one) != typeof(g_index_three)
+        @test typeof(g_index_two) != typeof(g_index_three)
         @test typeof(int_index_one) == Indexer{UInt64}
         @test typeof(int_index_two) == Indexer{UInt64}
         @test typeof(int_index_three) == Indexer{UInt8}
