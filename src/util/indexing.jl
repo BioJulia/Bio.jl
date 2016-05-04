@@ -112,10 +112,10 @@ function names!(x::Indexer, names::Vector{Symbol})
         throw(ArgumentError("Length of new names doesn't match length of Index."))
     end
     names = make_unique(names)
-    rename!(x, names, x.names)
     if length(x.names) != length(x.lookup)
         throw(ArgumentError("Index corrupted by duplicate symbols in names."))
     end
+    rename!(x, x.names, names)
     return x
 end
 
