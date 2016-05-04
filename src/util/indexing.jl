@@ -129,7 +129,7 @@ function rename!(x::Indexer, names)
             error("Tried renaming $from to $to, when $to already exists in the Index.")
         end
         # Change the name array
-        nameidx = findin(x.names, from)
+        nameidx = findfirst(x.names, from)
         names[nameidx] = to
         # Change the dictionary
         x.lookup[to] = val = pop!(x.lookup, from)
