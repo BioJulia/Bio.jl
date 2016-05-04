@@ -103,7 +103,7 @@ using Bio.Indexing
     @testset "Manipulation methods" begin
         @testset "Setting and resetting names" begin
 
-            # Ok let's give i a load of new names
+            # Ok let's give int_index_one a load of new names
             newnames = [:Sixth, :Seventh, :Eighth, :Ninth, :Tenth]
             newnamestext = ["Sixth", "Seventh", "Eighth", "Ninth", "Tenth"]
             @test names!(int_index_one, newnames) == Indexer(newnames)
@@ -113,46 +113,50 @@ using Bio.Indexing
 
             # Now let's manipulate some of those names by renaming them
 
-            # Make a new index by replacing name Sixth with First,
+            # Make a new index by replacing name :Sixth with :First,
             # and test that only :Sixth is different
-            rn = rename(i, :Sixth, :First)
-            @test (rn != SingleIndex(symbolnames)) && (rn != SingleIndex(newnames))
-            @test rn.names[1] == :First
-            @test rn.names[2] == :Seventh
-            @test rn.names[3] == :Eighth
-            @test rn.names[4] == :Ninth
-            @test rn.names[5] == :Tenth
+            rn = rename(int_index_one, :Sixth, :First)
+            @test (rn != Indexer(symbolnames)) && (rn != Indexer(newnames))
+            @test names(rn)[1] == :First
+            @test names(rn)[2] == :Seventh
+            @test names(rn)[3] == :Eighth
+            @test names(rn)[4] == :Ninth
+            @test names(rn)[5] == :Tenth
 
-            # Let's make a new index by replacing the names, Sixth Eights, and
+            # Let's modify int_index_one by replacing the names, Sixth Eights, and
             # Tenth, with First, Third, and Fifth.
-            rntwo = rename(i, [:Sixth, :Eighth, :Tenth], [:First, :Third, :Fifth])
-            @test (rntwo != SingleIndex(symbolnames)) && (rntwo != SingleIndex(newnames))
-            @test rn != rntwo
+            rename!(int_index_one, [:Sixth, :Eighth, :Tenth], [:First, :Third, :Fifth])
+            @test int_index_one != Indexer(symbolnames)
+            @test rntwo != Indexer(newnames)
+            @test rn != int_index_one
 
             # Now let's test that renaming worked correctly, some names should
             # match names in symbolnames, and some should match names in
             # newnames.
-            @test (rntwo.names[1] != newnames[1]) && (rntwo.names[1] == symbolnames[1])
-            @test (rntwo.names[2] == newnames[2]) && (rntwo.names[2] != symbolnames[2])
-            @test (rntwo.names[3] != newnames[3]) && (rntwo.names[3] == symbolnames[3])
-            @test (rntwo.names[4] == newnames[4]) && (rntwo.names[4] != symbolnames[4])
-            @test (rntwo.names[5] != newnames[5]) && (rntwo.names[5] == symbolnames[5])
-
-            @test (rntwo.names[1] != i.names[1]) && (rntwo.names[1] == t.names[1])
-            @test (rntwo.names[2] == i.names[2]) && (rntwo.names[2] != t.names[2])
-            @test (rntwo.names[3] != i.names[3]) && (rntwo.names[3] == t.names[3])
-            @test (rntwo.names[4] == i.names[4]) && (rntwo.names[4] != t.names[4])
-            @test (rntwo.names[5] != i.names[5]) && (rntwo.names[5] == t.names[5])
+            @test names(int_index_one)[1] != newnames[1]
+            @test names(int_index_one)[1] == symbolnames[1]
+            @test names(int_index_one)[2] == newnames[2]
+            @test names(int_index_one)[2] != symbolnames[2]
+            @test names(int_index_one)[3] != newnames[3]
+            @test names(int_index_one)[3] == symbolnames[3]
+            @test names(int_index_one)[4] == newnames[4]
+            @test names(int_index_one)[4] != symbolnames[4]
+            @test names(int_index_one)[5] != newnames[5]
+            @test names(int_index_one)[5] == symbolnames[5]
         end
         @testset "getindex" begin
-            @test i[1] == 1
-            @test i[[true, false, false, true, true]] == [1, 4, 5]
-            @test i[1:3] == [1:3;]
-            @test (i[:Sixth] == 1) && (i[:Tenth] == 5) && (i[:Eighth] == 3)
-            @test (i["Sixth"] == 1) && (i["Tenth"] == 5) && (i["Eighth"] == 3)
-            @test i[[1,3,5]] == [1,3,5]
-            @test i[[:Seventh, :Eighth, :Ninth]] == [2, 3, 4]
-            @test i[["Seventh", "Eighth", "Ninth"]] == [2, 3, 4]
+            @test int_index_one[1] == 1
+            @test int_index_one[[true, false, false, true, true]] == [1, 4, 5]
+            @test int_index_one[1:3] == [1:3;]
+            @test int_index_one[:Sixth] == 1
+            @test int_index_one[:Tenth] == 5
+            @test int_index_one[:Eighth] == 3
+            @test int_index_one["Sixth"] == 1
+            @test int_index_one["Tenth"] == 5
+            @test int_index_one["Eighth"] == 3
+            @test int_index_one[[1,3,5]] == [1,3,5]
+            @test int_index_one[[:Seventh, :Eighth, :Ninth]] == [2, 3, 4]
+            @test int_index_one[["Seventh", "Eighth", "Ninth"]] == [2, 3, 4]
         end
     end
 end
