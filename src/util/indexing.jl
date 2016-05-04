@@ -130,7 +130,7 @@ function rename!(x::Indexer, names)
         end
         # Change the name array
         nameidx = findfirst(x.names, from)
-        names[nameidx] = to
+        x.names[nameidx] = to
         # Change the dictionary
         x.lookup[to] = val = pop!(x.lookup, from)
     end
