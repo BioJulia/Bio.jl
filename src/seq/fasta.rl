@@ -116,7 +116,7 @@ end
 "A type encapsulating the current state of a FASTA parser"
 type FASTAParser <: AbstractParser
     state::Ragel.State
-    seqbuf::BufferedOutputStream{BufferedStreams.EmptyStreamSource}
+    seqbuf::BufferedOutputStream{BufferedStreams.EmptyStream}
 
     function FASTAParser(input::BufferedInputStream)
         %% write init;

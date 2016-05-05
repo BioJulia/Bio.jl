@@ -211,8 +211,8 @@ end
 "A type encapsulating the current state of a FASTQ parser"
 type FASTQParser <: AbstractParser
     state::Ragel.State
-    seqbuf::BufferedOutputStream{BufferedStreams.EmptyStreamSource}
-    qualbuf::BufferedOutputStream{BufferedStreams.EmptyStreamSource}
+    seqbuf::BufferedOutputStream{BufferedStreams.EmptyStream}
+    qualbuf::BufferedOutputStream{BufferedStreams.EmptyStream}
     name2buf::StringField
     desc2buf::StringField
     qualcount::Int
