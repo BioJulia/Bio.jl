@@ -53,4 +53,10 @@ function random_aa(len)
         push!(fill(0.049, 20), 0.02))
 end
 
+function assert_shows(thing, expectation::AbstractString)
+    io = IOBuffer()
+    show(io, thing)
+    return takebuf_string(result) == expectation
+end
+
 end
