@@ -7,7 +7,16 @@ julia:
   - nightly
 notifications:
   email: false
-sudo: false
+# sudo: false
+before_install:
+  - if [ `uname` = "Linux" ]; then
+      sudo apt-get -qq update;
+      sudo apt-get install -y ncbi-blast+;
+    elif [ `uname` = "Darwin" ]; then
+      brew tap homebrew/science;
+      brew update;
+      brew install blast;
+    fi
 before_script:
   - export PATH=$HOME/.local/bin:$PATH
 script:
