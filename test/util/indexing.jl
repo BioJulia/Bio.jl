@@ -145,7 +145,7 @@ using Bio.Indexing
         end
         @testset "getindex" begin
             @test int_index_one[1] == 1
-            @test int_index_one[[true, false, false, true, true]] == Uint[1, 4, 5]
+            @test int_index_one[[true, false, false, true, true]] == UInt[1, 4, 5]
             @test int_index_one[1:3] == [1:3;]
             @test int_index_one[:First] == 1
             @test int_index_one[:Fifth] == 5

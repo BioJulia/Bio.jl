@@ -160,7 +160,7 @@ function Base.getindex{T <: Unsigned, I <: Signed}(x::Indexer{T}, idx::I)
     return idx
 end
 # Indexing with a vector of bools.
-Base.getindex{T <: Unsigned}(x::Indexer{T}, idx::Vector{Bool}) = T(find(idx))
+Base.getindex{T <: Unsigned}(x::Indexer{T}, idx::Vector{Bool}) = Vector{T}(find(idx))
 # Indexing with a range.
 Base.getindex{T <: Unsigned}(x::Indexer, idx::UnitRange{T}) = [idx;]
 # Indexing with multiple names.
