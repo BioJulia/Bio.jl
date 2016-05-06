@@ -127,7 +127,6 @@ using Bio.Indexing
             # Tenth, with First, Third, and Fifth.
             rename!(int_index_one, [:Sixth, :Eighth, :Tenth], [:First, :Third, :Fifth])
             @test int_index_one != Indexer(symbolnames)
-            @test rntwo != Indexer(newnames)
             @test rn != int_index_one
 
             # Now let's test that renaming worked correctly, some names should
