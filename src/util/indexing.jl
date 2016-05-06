@@ -148,13 +148,17 @@ rename(x::Indexer, args...) = rename!(copy(x), args...)
 rename(f::Function, x::Indexer) = rename(copy(x), f)
 
 
-# Indexing into a single index.
+# Indexing into an index mapping single names to single numbers.
 
 # Indexing with single name.
 Base.getindex(x::Indexer, idx::Symbol) = x.lookup[idx]
 Base.getindex{S <: AbstractString}(x::Indexer, idx::S) = x.lookup[convert(Symbol, idx)]
 # Indexing with a single integer.
 Base.getindex{T <: Unsigned}(x::Indexer{T}, idx::T) = idx
+function Base.getindex{T <: Unsigned, I <: Signed}(x::Indexer{T}, idx::I)
+    @assert idx > 0 "Negative signed integers cannot be used"
+    return idx
+end
 # Indexing with a vector of bools.
 Base.getindex{T <: Unsigned}(x::Indexer{T}, idx::Vector{Bool}) = T(find(idx))
 # Indexing with a range.
@@ -164,6 +168,5 @@ Base.getindex(x::Indexer, idx::Vector{Symbol}) = [x.lookup[i] for i in idx]
 function Base.getindex{S <: AbstractString}(x::Indexer, idx::Vector{S})
     return [x.lookup[convert(Symbol, i)] for i in idx]
 end
-
 
 end
