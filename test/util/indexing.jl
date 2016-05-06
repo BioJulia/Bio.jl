@@ -145,14 +145,14 @@ using Bio.Indexing
         end
         @testset "getindex" begin
             @test int_index_one[1] == 1
-            @test int_index_one[[true, false, false, true, true]] == [1, 4, 5]
+            @test int_index_one[[true, false, false, true, true]] == Uint[1, 4, 5]
             @test int_index_one[1:3] == [1:3;]
-            @test int_index_one[:Sixth] == 1
-            @test int_index_one[:Tenth] == 5
-            @test int_index_one[:Eighth] == 3
-            @test int_index_one["Sixth"] == 1
-            @test int_index_one["Tenth"] == 5
-            @test int_index_one["Eighth"] == 3
+            @test int_index_one[:First] == 1
+            @test int_index_one[:Fifth] == 5
+            @test int_index_one[:Third] == 3
+            @test int_index_one["First"] == 1
+            @test int_index_one["Fifth"] == 5
+            @test int_index_one["Third"] == 3
             @test int_index_one[[1,3,5]] == [1,3,5]
             @test int_index_one[[:Seventh, :Eighth, :Ninth]] == [2, 3, 4]
             @test int_index_one[["Seventh", "Eighth", "Ninth"]] == [2, 3, 4]
