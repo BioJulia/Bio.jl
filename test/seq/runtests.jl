@@ -1946,6 +1946,14 @@ end
     end
 end
 
+@testset "FASTX show()" begin
+    @testset "FASTQ" begin
+        fqrec = Seq.FASTQSeqRecord("seq1", "ACGTACGT", Seq.FASTQMetadata("",
+                                   Int8[0, 6, 12, 18, 24, 30, 36, 40]))
+        @test shows(fqrec) ==  "@seq1 \nACGTACGT\n▁▂▃▄▅▆▇█\n"
+    end
+end
+
 @testset "Quality scores" begin
     @testset "Decoding PHRED scores" begin
         function test_decode(encoding, values, expected)
