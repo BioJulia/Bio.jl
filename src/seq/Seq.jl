@@ -112,7 +112,9 @@ export
     AminoAcidAlphabet,
     CharAlphabet
 
-using BufferedStreams,
+using
+    Compat,
+    BufferedStreams,
     Base.Intrinsics,
     Bio.StringFields,
     Bio.Ragel
