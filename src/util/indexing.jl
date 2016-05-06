@@ -19,8 +19,6 @@ vectorsUnion = Union{AbstractVector{UInt8},
                      AbstractVector{Int32}, AbstractVector{Int64},
                      AbstractVector{Int128}}
 
-allInts = Union{Signed, Unsigned}
-
 
 # The indexer Type
 immutable Indexer{T}
@@ -40,17 +38,17 @@ end
 
 # Convenience constructors for creating Indexer that associate one name,
 # with in integer value.
-function Indexer{T <: allInts}(names::Vector{Symbol}, inds::Vector{T})
+function Indexer{T <: Integer}(names::Vector{Symbol}, inds::Vector{T})
     u = make_unique(names)
     lookup = Dict{Symbol, T}(zip(u, inds))
     return Indexer{T}(lookup, u)
 end
 
-function Indexer{T <: allInts}(names::Vector{Symbol}, ::Type{T})
+function Indexer{T <: Integer}(names::Vector{Symbol}, ::Type{T})
     return Indexer(names, collect(T(1):T(length(names))))
 end
 
-function Indexer{S <: AbstractString, T <: allInts}(names::Vector{S}, ::Type{T})
+function Indexer{S <: AbstractString, T <: Integer}(names::Vector{S}, ::Type{T})
     return Indexer(convert(Vector{Symbol}, names), T)
 end
 
@@ -168,30 +166,27 @@ function Base.getindex{S <: AbstractString}(x::Indexer, idx::Vector{S})
 end
 
 ## Indexing with a single integer
-Base.getindex{T <: Unsigned}(x::Indexer{T}, idx::T) = idx
-function Base.getindex{T <: Unsigned, I <: Signed}(x::Indexer{T}, idx::I)
-    @assert idx > 0 "Negative signed integers cannot be used"
-    return convert(UInt, idx)
+function Base.getindex{I <: Integer}(x::Indexer, idx::I)
+    n = x.names[idx]
+    return x[n]
 end
 
 ## Indexing with a vector of intergers
-Base.getindex{T <: Unsigned}(x::Indexer{T}, idx::Vector{T}) = idx
-function Base.getindex{T <: Unsigned, I <: Signed}(x::Indexer{T}, idx::Vector{I})
-    for i in idx
-        @assert i > 0 "Negative signed integers cannot be used"
-    end
-    return convert(Vector{UInt}, idx)
+function Base.getindex{I <: Integer}(x::Indexer, idx::Vector{I})
+    ns = x.names[idx]
+    return x[ns]
 end
 
 ## Indexing with a range of integers
-Base.getindex{T <: Unsigned}(x::Indexer{T}, idx::UnitRange{T}) = [idx;]
-function Base.getindex{T <: Signed}(x::Indexer, idx::UnitRange{T})
-    return x[convert(UnitRange{UInt}, idx)]
+function Base.getindex{I <: Integer}(x::Indexer, idx::UnitRange{I})
+    ns = x.names[idx]
+    return x[ns]
 end
 
 ## Indexing with a vector of bools.
-Base.getindex{T <: Unsigned}(x::Indexer{T}, idx::Vector{Bool}) = Vector{T}(find(idx))
-
-
+function Base.getindex(x::Indexer, idx::Vector{Bool})
+    ns = x.names[idx]
+    return x[ns]
+end
 
 end

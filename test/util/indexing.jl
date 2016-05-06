@@ -12,8 +12,8 @@ using Bio.Indexing
 @testset "Indexer" begin
     symbolnames = [:First, :Second, :Third, :Fourth, :Fifth]
     textnames = ["First", "Second", "Third", "Fourth", "Fifth"]
-    groups = UnitRange{UInt}[1:5, 5:10, 10:15, 15:20, 20:25]
-    groups_eight = UnitRange{UInt8}[1:5, 5:10, 10:15, 15:20, 20:25]
+    groups = UnitRange{Int}[1:5, 6:10, 11:15, 16:20, 21:25]
+    groups_eight = UnitRange{UInt8}[1:5, 6:10, 11:15, 16:20, 21:25]
     int_index_one = Indexer(symbolnames)
     int_index_two = Indexer(textnames, UInt64)
     int_index_three = Indexer(symbolnames, UInt8)
@@ -27,17 +27,21 @@ using Bio.Indexing
         @test int_index_one == int_index_three
         @test int_index_two == int_index_three
         @test g_index_one == g_index_two
-        @test typeof(int_index_one) == typeof(int_index_two)
+        @test g_index_one == g_index_two
+        @test g_index_two == g_index_three
+        @test int_index_one != empty_index
+        @test g_index_one != empty_index
+        @test typeof(int_index_one) != typeof(int_index_two)
         @test typeof(int_index_one) != typeof(int_index_three)
         @test typeof(int_index_two) != typeof(int_index_three)
         @test typeof(g_index_one) == typeof(g_index_two)
         @test typeof(g_index_one) != typeof(g_index_three)
         @test typeof(g_index_two) != typeof(g_index_three)
-        @test typeof(int_index_one) == Indexer{UInt64}
+        @test typeof(int_index_one) == Indexer{Int64}
         @test typeof(int_index_two) == Indexer{UInt64}
         @test typeof(int_index_three) == Indexer{UInt8}
-        @test typeof(g_index_one) == Indexer{UnitRange{UInt64}}
-        @test typeof(g_index_two) == Indexer{UnitRange{UInt64}}
+        @test typeof(g_index_one) == Indexer{UnitRange{Int64}}
+        @test typeof(g_index_two) == Indexer{UnitRange{Int64}}
         @test typeof(g_index_three) == Indexer{UnitRange{UInt8}}
         @test typeof(empty_index) == Indexer{UInt64}
     end
@@ -144,18 +148,32 @@ using Bio.Indexing
             @test names(int_index_one)[5] == symbolnames[5]
         end
         @testset "getindex" begin
-            @test int_index_one[1] == 1
-            @test int_index_one[[true, false, false, true, true]] == UInt[1, 4, 5]
-            @test int_index_one[1:3] == [1:3;]
-            @test int_index_one[:First] == 1
-            @test int_index_one[:Fifth] == 5
-            @test int_index_one[:Third] == 3
-            @test int_index_one["First"] == 1
-            @test int_index_one["Fifth"] == 5
-            @test int_index_one["Third"] == 3
-            @test int_index_one[[1,3,5]] == [1,3,5]
-            @test int_index_one[[:Seventh, :Eighth, :Ninth]] == [2, 3, 4]
-            @test int_index_one[["Seventh", "Eighth", "Ninth"]] == [2, 3, 4]
+            @testset "single names" begin
+                @test int_index_one[:First] == 1
+                @test int_index_one[:Fifth] == 5
+                @test int_index_one[:Third] == 3
+                @test int_index_one["First"] == 1
+                @test int_index_one["Fifth"] == 5
+                @test int_index_one["Third"] == 3
+                @test g_index_one[:First] == 1:5
+                @test g_index_three[:First] == 1:5
+            end
+            @testset "vector of names" begin
+                @test int_index_one[[:Seventh, :Third, :Ninth]] == [2, 3, 4]
+                @test int_index_one[["Seventh", "Third", "Ninth"]] == [2, 3, 4]
+                @test g_index_one[[:First, :Second]] == UnitRange{Int}[1:5, 6:10]
+            end
+            @testset "single integer" begin
+                @test int_index_one[1] == 1
+                @test g_index_one[4] == 16:20
+            end
+            @testset "multiple integers" begin
+                @test int_index_one[1:3] == [1:3;]
+                @test int_index_one[[1,3,5]] == [1,3,5]
+            end
+            @testset "booleans" begin
+                @test int_index_one[[true, false, false, true, true]] == UInt[1, 4, 5]
+            end
         end
     end
 end
