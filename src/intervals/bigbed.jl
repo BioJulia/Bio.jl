@@ -388,7 +388,7 @@ immutable BigBed <: FileFormat end
 immutable BigWig <: FileFormat end
 
 
-include("bigbeddata.jl")
+include("bigbed-parser.jl")
 
 
 """
