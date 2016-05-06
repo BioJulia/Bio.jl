@@ -163,6 +163,9 @@ end
 Base.getindex{T <: Unsigned}(x::Indexer{T}, idx::Vector{Bool}) = Vector{T}(find(idx))
 # Indexing with a range.
 Base.getindex{T <: Unsigned}(x::Indexer, idx::UnitRange{T}) = [idx;]
+function Base.getindex{T <: Signed}(x::Indexer, idx::UnitRange{T})
+    return x[convert(UnitRange{UInt}, idx)]
+end
 # Indexing with multiple names.
 Base.getindex(x::Indexer, idx::Vector{Symbol}) = [x.lookup[i] for i in idx]
 function Base.getindex{S <: AbstractString}(x::Indexer, idx::Vector{S})
