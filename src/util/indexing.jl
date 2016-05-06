@@ -5,17 +5,25 @@ export
 
 
 # A bit of a clunky workaround until we get triangle dispatch in 0.5 or 0.6
-indexerUnion = Union{Unsigned, AbstractVector{UInt8}, AbstractVector{UInt16},
-                     AbstractVector{UInt32}, AbstractVector{UInt64},
-                     AbstractVector{UInt128}}
+indexerUnion = Union{Unsigned, Signed, AbstractVector{UInt8},
+                     AbstractVector{UInt16}, AbstractVector{UInt32},
+                     AbstractVector{UInt64}, AbstractVector{UInt128},
+                     AbstractVector{Int8}, AbstractVector{Int16},
+                     AbstractVector{Int32}, AbstractVector{Int64},
+                     AbstractVector{Int128}}
 
-vectorsUnion = Union{AbstractVector{UInt8}, AbstractVector{UInt16},
-                     AbstractVector{UInt32}, AbstractVector{UInt64},
-                     AbstractVector{UInt128}}
+vectorsUnion = Union{AbstractVector{UInt8},
+                     AbstractVector{UInt16}, AbstractVector{UInt32},
+                     AbstractVector{UInt64}, AbstractVector{UInt128},
+                     AbstractVector{Int8}, AbstractVector{Int16},
+                     AbstractVector{Int32}, AbstractVector{Int64},
+                     AbstractVector{Int128}}
+
+allInts = Union{Signed, Unsigned}
 
 
 # The indexer Type
-immutable Indexer{T <: indexerUnion}
+immutable Indexer{T}
     lookup::Dict{Symbol, T}
     names::Vector{Symbol}
 end
@@ -32,33 +40,32 @@ end
 
 # Convenience constructors for creating Indexer that associate one name,
 # with in integer value.
-function Indexer{T <: Unsigned}(names::Vector{Symbol}, inds::Vector{T})
+function Indexer{T <: allInts}(names::Vector{Symbol}, inds::Vector{T})
     u = make_unique(names)
     lookup = Dict{Symbol, T}(zip(u, inds))
     return Indexer{T}(lookup, u)
 end
 
-function Indexer{T <: Unsigned}(names::Vector{Symbol}, ::Type{T})
+function Indexer{T <: allInts}(names::Vector{Symbol}, ::Type{T})
     return Indexer(names, collect(T(1):T(length(names))))
 end
 
-function Indexer{S <: AbstractString, T <: Unsigned}(names::Vector{S}, ::Type{T})
+function Indexer{S <: AbstractString, T <: allInts}(names::Vector{S}, ::Type{T})
     return Indexer(convert(Vector{Symbol}, names), T)
 end
 
 function Indexer(names::Vector{Symbol})
-    return Indexer(names, UInt)
+    return Indexer(names, Int)
 end
 
 function Indexer{S <: AbstractString}(names::Vector{S})
-    return Indexer(convert(Vector{Symbol}, names), UInt)
+    return Indexer(convert(Vector{Symbol}, names), Int)
 end
-
 
 
 
 # Conveinience constructors for creating Indexer that associate one name,
-# with several integer values.
+# with several values.
 function Indexer{T <: vectorsUnion}(names::Vector{Symbol}, groups::Vector{T})
     @assert length(names) == length(groups)
     u = make_unique(names)
@@ -148,28 +155,43 @@ rename(x::Indexer, args...) = rename!(copy(x), args...)
 rename(f::Function, x::Indexer) = rename(copy(x), f)
 
 
-# Indexing into an index mapping single names to single numbers.
+# Indexing into an index mapping single names to single numbers
 
-# Indexing with single name.
+## Indexing with single name
 Base.getindex(x::Indexer, idx::Symbol) = x.lookup[idx]
 Base.getindex{S <: AbstractString}(x::Indexer, idx::S) = x.lookup[convert(Symbol, idx)]
-# Indexing with a single integer.
-Base.getindex{T <: Unsigned}(x::Indexer{T}, idx::T) = idx
-function Base.getindex{T <: Unsigned, I <: Signed}(x::Indexer{T}, idx::I)
-    @assert idx > 0 "Negative signed integers cannot be used"
-    return idx
-end
-# Indexing with a vector of bools.
-Base.getindex{T <: Unsigned}(x::Indexer{T}, idx::Vector{Bool}) = Vector{T}(find(idx))
-# Indexing with a range.
-Base.getindex{T <: Unsigned}(x::Indexer, idx::UnitRange{T}) = [idx;]
-function Base.getindex{T <: Signed}(x::Indexer, idx::UnitRange{T})
-    return x[convert(UnitRange{UInt}, idx)]
-end
-# Indexing with multiple names.
+
+## Indexing with multiple names.
 Base.getindex(x::Indexer, idx::Vector{Symbol}) = [x.lookup[i] for i in idx]
 function Base.getindex{S <: AbstractString}(x::Indexer, idx::Vector{S})
     return [x.lookup[convert(Symbol, i)] for i in idx]
 end
+
+## Indexing with a single integer
+Base.getindex{T <: Unsigned}(x::Indexer{T}, idx::T) = idx
+function Base.getindex{T <: Unsigned, I <: Signed}(x::Indexer{T}, idx::I)
+    @assert idx > 0 "Negative signed integers cannot be used"
+    return convert(UInt, idx)
+end
+
+## Indexing with a vector of intergers
+Base.getindex{T <: Unsigned}(x::Indexer{T}, idx::Vector{T}) = idx
+function Base.getindex{T <: Unsigned, I <: Signed}(x::Indexer{T}, idx::Vector{I})
+    for i in idx
+        @assert i > 0 "Negative signed integers cannot be used"
+    end
+    return convert(Vector{UInt}, idx)
+end
+
+## Indexing with a range of integers
+Base.getindex{T <: Unsigned}(x::Indexer{T}, idx::UnitRange{T}) = [idx;]
+function Base.getindex{T <: Signed}(x::Indexer, idx::UnitRange{T})
+    return x[convert(UnitRange{UInt}, idx)]
+end
+
+## Indexing with a vector of bools.
+Base.getindex{T <: Unsigned}(x::Indexer{T}, idx::Vector{Bool}) = Vector{T}(find(idx))
+
+
 
 end
