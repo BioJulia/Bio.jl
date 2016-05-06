@@ -168,7 +168,9 @@ include("seqrecord.jl")
 # Parsing file types
 include("naivebayes.jl")
 include("fasta.jl")
+include("fasta-parser.jl")
 include("fastq.jl")
+include("fastq-parser.jl")
 
 # DEPRECATED: defined just for compatibility
 type NucleotideSequence{T<:Nucleotide} end

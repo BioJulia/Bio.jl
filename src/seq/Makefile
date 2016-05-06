@@ -1,7 +1,7 @@
 
  # Run ragel to regenerate parsers after updating the .rl source file
 
-parsers=fasta.jl fastq.jl
+parsers=fasta-parser.jl fastq-parser.jl
 
 all: ${parsers}
 

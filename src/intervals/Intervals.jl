@@ -72,6 +72,7 @@ include("intervalstream.jl")
 
 # Parsing file types
 include("bed.jl")
+include("bed-parser.jl")
 include("bigbed.jl")
 
 end # module Intervals
