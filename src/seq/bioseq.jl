@@ -231,7 +231,7 @@ end
 function Base.showcompact(io::IO, seq::BioSequence)
     # don't show more than this many characters
     # to avoid filling the screen with junk
-    width = Base.tty_size()[2] - 2
+    width = displaysize()[2]
     if length(seq) > width
         half = div(width, 2)
         for i in 1:half-1
