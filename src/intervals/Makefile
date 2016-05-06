@@ -1,6 +1,6 @@
 # Run ragel to regenerate parsers after updating the .rl source file
 
-parsers=bed.jl bigbeddata.jl
+parsers=bed-parser.jl bigbeddata.jl
 
 all: ${parsers}
 
