@@ -82,34 +82,6 @@ end
 # Constructors
 # ------------
 
-# This is the body of the BioSequence constructor below. It's separated into a
-# macro so we can generate two versions depending on wether the `unsafe` flag is
-# set. In this macro, `srcdata[startpos:stoppos]` would be encoded into
-# `seqdata` as alphabet `A`.
-macro encode_seq(convert_expr)
-    quote
-        @inbounds begin
-            if isa(srcdata, AbstractVector) || isa(srcdata, ASCIIString)
-            else
-            end
-            j = startpos
-            s = start(srcdata)
-            for i in 1:endof(seqdata)
-                shift = 0
-                data_i = UInt64(0)
-                while shift < 64 && j ≤ stoppos && !done(srcdata, s)
-                    c, s = next(srcdata, s)
-                    bioc = $(convert_expr)
-                    data_i |= UInt64(encode(A, bioc)) << shift
-                    j += 1
-                    shift += bitsof(A)
-                end
-                seqdata[i] = data_i
-            end
-        end
-    end
-end
-
 seq_data_len{A}(::Type{A}, len::Integer) = cld(len, div(64, bitsof(A)))
 
 function Base.call{A<:Alphabet}(::Type{BioSequence{A}}, len::Integer)
