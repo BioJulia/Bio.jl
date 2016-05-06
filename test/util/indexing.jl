@@ -108,8 +108,8 @@ using Bio.Indexing
             newnamestext = ["Sixth", "Seventh", "Eighth", "Ninth", "Tenth"]
             @test names!(int_index_one, newnames) == Indexer(newnames)
             @test_throws ArgumentError names!(int_index_one, newnames[1:4])
-            @test names!(int_index_one, newnamestext) == Indexer(newnamestext)
-            @test_throws ArgumentError names!(int_index_one, newnamestext[1:4])
+            @test names!(int_index_two, newnamestext) == Indexer(newnamestext)
+            @test_throws ArgumentError names!(int_index_two, newnamestext[1:4])
 
             # Now let's manipulate some of those names by renaming them
 
