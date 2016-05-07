@@ -9,99 +9,101 @@ end
 
 using Bio.Indexing
 
-@testset "Indexer" begin
+@testset "Indexers" begin
+
     symbolnames = [:First, :Second, :Third, :Fourth, :Fifth]
     textnames = ["First", "Second", "Third", "Fourth", "Fifth"]
     groups = UnitRange{Int}[1:5, 6:10, 11:15, 16:20, 21:25]
     groups_eight = UnitRange{UInt8}[1:5, 6:10, 11:15, 16:20, 21:25]
-    int_index_one = Indexer(symbolnames)
-    int_index_two = Indexer(textnames, UInt64)
-    int_index_three = Indexer(symbolnames, UInt8)
-    g_index_one = Indexer(symbolnames, groups)
-    g_index_two = Indexer(textnames, groups)
-    g_index_three = Indexer(textnames, groups_eight)
+
+    int_idxes = (Indexer(symbolnames),
+                 Indexer(textnames, UInt64),
+                 Indexer(symbolnames, UInt8))
+
+    g_idxes = (Indexer(symbolnames, groups),
+               Indexer(textnames, groups),
+               Indexer(textnames, groups_eight))
+
     empty_index = Indexer(UInt64)
 
-    @testset "Correct Construction" begin
-        @test int_index_one == int_index_two
-        @test int_index_one == int_index_three
-        @test int_index_two == int_index_three
-        @test g_index_one == g_index_two
-        @test g_index_one == g_index_two
-        @test g_index_two == g_index_three
-        @test int_index_one != empty_index
-        @test g_index_one != empty_index
-        @test typeof(int_index_one) != typeof(int_index_two)
-        @test typeof(int_index_one) != typeof(int_index_three)
-        @test typeof(int_index_two) != typeof(int_index_three)
-        @test typeof(g_index_one) == typeof(g_index_two)
-        @test typeof(g_index_one) != typeof(g_index_three)
-        @test typeof(g_index_two) != typeof(g_index_three)
-        @test typeof(int_index_one) == Indexer{Int64}
-        @test typeof(int_index_two) == Indexer{UInt64}
-        @test typeof(int_index_three) == Indexer{UInt8}
-        @test typeof(g_index_one) == Indexer{UnitRange{Int64}}
-        @test typeof(g_index_two) == Indexer{UnitRange{Int64}}
-        @test typeof(g_index_three) == Indexer{UnitRange{UInt8}}
-        @test typeof(empty_index) == Indexer{UInt64}
+    @testset "Constructor Behaviour" for idxset in (int_idxes, g_idxes)
+        for idxer in idxset
+            @test idxer.names !== symbolnames && idxer.names == symbolnames
+        end
+    end
+
+    @testset "Index equality" begin
+        @testset "Single Indexes" for idxer in int_idxes
+            for idx in int_idxes
+                @test idxer == idx
+            end
+            for idx in g_idxes
+                @test idxer != g_idxes
+            end
+            @test idxer != empty_index
+        end
+        @testset "Group Indexes" for idxer in g_idxes
+            for idx in g_idxes
+                @test idxer == idx
+            end
+            for idx in int_idxes
+                @test idxer != idx
+            end
+            @test idxer != empty_index
+        end
     end
 
     @testset "Basic Operators" begin
-        @test length(int_index_one) == 5
-        @test length(int_index_two) == 5
-        @test length(int_index_three) == 5
-        @test length(g_index_one) == 5
-        @test length(g_index_two) == 5
-        @test length(g_index_three) == 5
-        @test names(int_index_one) == symbolnames
-        @test names(int_index_two) == symbolnames
-        @test names(int_index_three) == symbolnames
-        @test names(g_index_one) == symbolnames
-        @test names(g_index_two) == symbolnames
-        @test names(g_index_three) == symbolnames
+        # Tests for single indexes and group indexes.
+        for idxset in (int_idxes, g_idxes)
+            for idxer in idxset
+                @test length(idxer) == 5
+                @test names(idxer) == symbolnames
+                @test names(idxer) !== symbolnames
+                @test names(idxer) == idxer.names
+                @test names(idxer) !== idxer.names
+                @test Indexing._names(idxer) == symbolnames
+                @test Indexing._names(idxer) !== symbolnames
+                @test Indexing._names(idxer) === idxer.names
+                for i in 1:5
+                    @test haskey(idxer, symbolnames[i]) == true
+                    @test haskey(idxer, textnames[i]) == true
+                    @test haskey(idxer, i) == true
+                end
+                @test keys(idxer) == symbolnames
+                @test keys(idxer) !== symbolnames
+                idxcopy = copy(idxer)
+                @test isequal(idxcopy, idxer)
+                @test is(idxcopy, idxer) == false
+                @test idxcopy.names == idxer.names
+                @test idxcopy.names !== idxer.names
+                @test idxcopy.lookup == idxer.lookup
+                @test idxcopy.lookup !== idxer.lookup
+            end
+        end
+        # Tests for empty index seperate because they are a bit different.
         @test names(empty_index) == Symbol[]
-        @test isequal(copy(int_index_one), int_index_one) && !is(copy(int_index_one), int_index_one)
-        @test isequal(copy(int_index_two), int_index_two) && !is(copy(int_index_two), int_index_two)
-        @test isequal(copy(int_index_three), int_index_three) && !is(copy(int_index_three), int_index_three)
-        @test isequal(copy(g_index_one), g_index_one) && !is(copy(g_index_one), g_index_one)
-        @test isequal(copy(g_index_two), g_index_two) && !is(copy(g_index_two), g_index_two)
-        @test isequal(copy(g_index_three), g_index_three) && !is(copy(g_index_three), g_index_three)
-        @test isequal(copy(empty_index), empty_index) && !is(copy(empty_index), empty_index)
-        for n in symbolnames
-            @test haskey(int_index_one, n) == true
-            @test haskey(int_index_two, n) == true
-            @test haskey(int_index_three, n) == true
-            @test haskey(g_index_one, n) == true
-            @test haskey(g_index_two, n) == true
-            @test haskey(g_index_three, n) == true
-            @test haskey(empty_index, n) == false
+        @test names(empty_index) == Symbol[]
+        @test names(empty_index) !== Symbol[]
+        @test names(empty_index) !== empty_index.names
+        @test names(empty_index) == empty_index.names
+        @test Indexing._names(empty_index) == symbolnames
+        @test Indexing._names(empty_index) !== symbolnames
+        @test Indexing._names(empty_index) === empty_index.names
+        for i in 1:5
+            @test haskey(empty_index, symbolnames[i]) == false
+            @test haskey(empty_index, textnames[i]) == false
+            @test haskey(empty_index, i) == false
         end
-        for n in textnames
-            @test haskey(int_index_one, n) == true
-            @test haskey(int_index_two, n) == true
-            @test haskey(int_index_three, n) == true
-            @test haskey(g_index_one, n) == true
-            @test haskey(g_index_two, n) == true
-            @test haskey(g_index_three, n) == true
-            @test haskey(empty_index, n) == false
-        end
-        for n in 1:5
-            @test haskey(int_index_one, n) == true
-            @test haskey(int_index_two, n) == true
-            @test haskey(int_index_three, n) == true
-            @test haskey(g_index_one, n) == true
-            @test haskey(g_index_two, n) == true
-            @test haskey(g_index_three, n) == true
-            @test haskey(empty_index, n) == false
-        end
-        @test keys(int_index_one) == symbolnames
-        @test keys(int_index_two) == symbolnames
-        @test keys(int_index_three) == symbolnames
-        @test keys(g_index_one) == symbolnames
-        @test keys(g_index_two) == symbolnames
-        @test keys(g_index_three) == symbolnames
         @test keys(empty_index) == Symbol[]
-        @test keys(empty_index) != symbolnames
+        @test keys(empty_index) !== Symbol[]
+        idxcopy = copy(empty_index)
+        @test isequal(idxcopy, empty_index)
+        @test is(idxcopy, empty_index) == false
+        @test idxcopy.names == empty_index.names
+        @test idxcopy.names !== empty_index.names
+        @test idxcopy.lookup == empty_index.lookup
+        @test idxcopy.lookup !== empty_index.lookup
     end
 
     @testset "Manipulation methods" begin
