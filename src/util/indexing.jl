@@ -25,8 +25,8 @@ end
 
 
 """
-Create an index that associates names in a Vector of Symbols, with values of type
-T, in a Vector of type T.
+Create an index that associates names in a Vector of Symbols, with values of
+type T, in a Vector of type T.
 
 This constructor constructs the index such that names[1] -> vals[1],
 names[2] -> vals[2] ... and so on.
@@ -104,7 +104,7 @@ function Indexer{S <: AbstractString}(names::Vector{S})
 end
 
 
-# Internal function that makes sure all the symbols in a vector are unique.
+"Make sure all vectors in a symbol are unique."
 function make_unique(names::Vector{Symbol})
     seen = Set{Symbol}()
     names = copy(names)
@@ -129,11 +129,11 @@ function make_unique(names::Vector{Symbol})
     return names
 end
 
+
 Base.length(x::Indexer) = length(x.names)
 Base.names(x::Indexer) = copy(x.names)
 _names(x::Indexer) = x.names
 Base.copy(x::Indexer) = Indexer(copy(x.lookup), copy(x.names))
-
 Base.deepcopy(x::Indexer) = copy(x) # all eltypes immutable
 Base.isequal(x::Indexer, y::Indexer) = isequal(x.lookup, y.lookup) && isequal(x.names, y.names)
 Base.(:(==))(x::Indexer, y::Indexer) = isequal(x, y)
@@ -142,6 +142,8 @@ Base.haskey{S <: AbstractString}(x::Indexer, key::S) = haskey(x, convert(Symbol,
 Base.haskey(x::Indexer, key::Real) = 1 <= key <= length(x.names)
 Base.keys(x::Indexer) = names(x)
 
+
+"Completely replace the names in an Indexer with a new Vector of Symbols."
 function names!(x::Indexer, names::Vector{Symbol})
     if length(names) != length(x)
         throw(ArgumentError("Length of new names doesn't match length of Index."))
@@ -154,14 +156,20 @@ function names!(x::Indexer, names::Vector{Symbol})
     return x
 end
 
+
+"Completely replace the names in an Indexer with a new Vector of Strings."
 function names!{S <: AbstractString}(x::Indexer, names::Vector{S})
     names!(x, convert(Vector{Symbol}, names))
 end
 
+
 function rename!(x::Indexer, names)
     for (from, to) in names
+        if !haskey(x, from)
+            throw(ArgumentError("Cannot rename $from to $to, $from does not exist in the Indexer."))
+        end
         if haskey(x, to)
-            error("Tried renaming $from to $to, when $to already exists in the Index.")
+            throw(ArgumentError("Cannot rename $from to $to, $to already exists in the Indexer."))
         end
         # Change the name array
         nameidx = findfirst(x.names, from)
@@ -172,11 +180,30 @@ function rename!(x::Indexer, names)
     return x
 end
 
+
+"""
+Rename a set of names in an Indexer, to a new set of names.
+
+This will rename such that the name in from[1] will be renamed to to[1],
+from[2] will be renamed to to[2] and so on.
+"""
 function rename!(x::Indexer, from::Vector{Symbol}, to::Vector{Symbol})
     return rename!(x, zip(from, to))
 end
 
+
+"Rename a single name (from) in Indexer x, to a new name (to)."
 rename!(x::Indexer, from::Symbol, to::Symbol) = rename!(x, ((from, to),))
+
+
+"""
+Rename a indexer according to some function, f, that accepts one argument.
+
+Each name in the Indexer x, will be input to, f, and the output will be
+what that name will be renamed to.
+
+Therefore the function, f, will need to return Symbols or Strings.
+"""
 rename!(x::Indexer, f::Function) = rename!(x, [(x,f(x)) for x in x.names])
 rename!(f::Function, x::Indexer) = rename!(x, f)
 rename(x::Indexer, args...) = rename!(copy(x), args...)
