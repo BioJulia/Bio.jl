@@ -4,77 +4,107 @@ export
     Indexer, names!, rename!, rename
 
 
-# A bit of a clunky workaround until we get triangle dispatch in 0.5 or 0.6
-indexerUnion = Union{Unsigned, Signed, AbstractVector{UInt8},
-                     AbstractVector{UInt16}, AbstractVector{UInt32},
-                     AbstractVector{UInt64}, AbstractVector{UInt128},
-                     AbstractVector{Int8}, AbstractVector{Int16},
-                     AbstractVector{Int32}, AbstractVector{Int64},
-                     AbstractVector{Int128}}
+"""
+The Indexer type
 
-vectorsUnion = Union{AbstractVector{UInt8},
-                     AbstractVector{UInt16}, AbstractVector{UInt32},
-                     AbstractVector{UInt64}, AbstractVector{UInt128},
-                     AbstractVector{Int8}, AbstractVector{Int16},
-                     AbstractVector{Int32}, AbstractVector{Int64},
-                     AbstractVector{Int128}}
-
-
-# The indexer Type
+The type is parametric and contains a dictionary that maps
+names (Symbols) to objects, as well as a vector of names
+(Symbols) that enables indexers to have order (i.e.
+The user should be able to push and pop and insert with indexes).
+"""
 immutable Indexer{T}
     lookup::Dict{Symbol, T}
     names::Vector{Symbol}
 end
 
-# The reason the indexer has a names field as well as a Dict is because
-# we can concieve of cases in which the indexer could be considered ordered,
-# and so operations like pushing, poping, and inserting may be applicable.
-# mostly in cases where the indexer is used with genotype matrices.
 
-function Indexer{T <: indexerUnion}(::Type{T})
+"Construct an empty Indexer that maps Symbols to a given Type T"
+function Indexer{T}(::Type{T})
     return Indexer{T}(Dict{Symbol, T}(), Vector{Symbol}())
 end
 
 
-# Convenience constructors for creating Indexer that associate one name,
-# with in integer value.
-function Indexer{T <: Integer}(names::Vector{Symbol}, inds::Vector{T})
+"""
+Create an index that associates names in a Vector of Symbols, with values of type
+T, in a Vector of type T.
+
+This constructor constructs the index such that names[1] -> vals[1],
+names[2] -> vals[2] ... and so on.
+"""
+function Indexer{T}(names::Vector{Symbol}, vals::Vector{T})
     u = make_unique(names)
-    lookup = Dict{Symbol, T}(zip(u, inds))
+    lookup = Dict{Symbol, T}(zip(u, vals))
     return Indexer{T}(lookup, u)
 end
 
+
+"""
+Create an index that associates names in a Vector of Strings, with values of
+type T, in a Vector of type T.
+
+This constructor constructs the index such that names[1] -> vals[1],
+names[2] -> vals[2] ... and so on.
+"""
+function Indexer{S <: AbstractString, T}(names::Vector{S}, vals::Vector{T})
+    Indexer(convert(Vector{Symbol}, names), vals)
+end
+
+
+"""
+Construct an Indexer that maps a Vector of Symbols (names), to a set of
+values of type T <: Integer.
+
+Provide this constructor a vector of Symbols as names, and a type that is a
+subtype of Integer, and it will construct an index such that
+names[1] -> 1, names[2] -> 2, ..., names[length(names)] -> length(names).
+"""
 function Indexer{T <: Integer}(names::Vector{Symbol}, ::Type{T})
     return Indexer(names, collect(T(1):T(length(names))))
 end
 
+
+"""
+Construct an Indexer that maps a Vector of Strings (names), to a set of
+values of type T <: Integer.
+
+Provide this constructor a vector of Strings as names, and a type that is a
+subtype of Integer, and it will construct an index such that
+names[1] -> 1, names[2] -> 2, ..., names[length(names)] -> length(names).
+"""
 function Indexer{S <: AbstractString, T <: Integer}(names::Vector{S}, ::Type{T})
     return Indexer(convert(Vector{Symbol}, names), T)
 end
 
+
+"""
+Construct an Indexer that maps a Vector of Symbols (names), to a set of
+values of type Int, where Int is the default integer encoding on you machine
+(usually Int32 or Int64).
+
+Provide this constructor a vector of Symbols as names, and it will construct
+an index such that names[1] -> 1, names[2] -> 2, ...,
+names[length(names)] -> length(names).
+"""
 function Indexer(names::Vector{Symbol})
     return Indexer(names, Int)
 end
 
+
+"""
+Construct an Indexer that maps a Vector of Strings (names), to a set of
+values of type Int, where Int is the default integer encoding on you machine
+(usually Int32 or Int64).
+
+Provide this constructor a vector of Strings as names, and it will construct
+an index such that names[1] -> 1, names[2] -> 2, ...,
+names[length(names)] -> length(names).
+"""
 function Indexer{S <: AbstractString}(names::Vector{S})
     return Indexer(convert(Vector{Symbol}, names), Int)
 end
 
 
-
-# Conveinience constructors for creating Indexer that associate one name,
-# with several values.
-function Indexer{T <: vectorsUnion}(names::Vector{Symbol}, groups::Vector{T})
-    @assert length(names) == length(groups)
-    u = make_unique(names)
-    lookup = Dict{Symbol, T}(zip(u, groups))
-    Indexer{T}(lookup, u)
-end
-
-function Indexer{S <: AbstractString, T <: vectorsUnion}(names::Vector{S}, groups::Vector{T})
-    Indexer(convert(Vector{Symbol}, names), groups)
-end
-
+# Internal function that makes sure all the symbols in a vector are unique.
 function make_unique(names::Vector{Symbol})
     seen = Set{Symbol}()
     names = copy(names)
