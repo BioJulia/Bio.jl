@@ -78,7 +78,7 @@ end
 
 """
 Construct an Indexer that maps a Vector of Symbols (names), to a set of
-values of type Int, where Int is the default integer encoding on you machine
+values of type Int, where Int is the default integer encoding on your machine
 (usually Int32 or Int64).
 
 Provide this constructor a vector of Symbols as names, and it will construct
@@ -192,8 +192,24 @@ function rename!(x::Indexer, from::Vector{Symbol}, to::Vector{Symbol})
 end
 
 
+"""
+Rename a set of names in an Indexer, to a new set of names.
+
+This will rename such that the name in from[1] will be renamed to to[1],
+from[2] will be renamed to to[2] and so on.
+"""
+function rename!{S <: AbstractString}(x::Indexer, from::Vector{S}, to::Vector{S})
+    return rename!(x, convert(Vector{Symbol}, from), convert(Vector{Symbol}, to))
+end
+
+
 "Rename a single name (from) in Indexer x, to a new name (to)."
 rename!(x::Indexer, from::Symbol, to::Symbol) = rename!(x, ((from, to),))
+
+"Rename a single name (from) in Indexer x, to a new name (to)."
+function rename!{S <: AbstractString}(x::Indexer, from::S, to::S)
+    return rename!(x, ((convert(Symbol, from), convert(Symbol, to)),))
+end
 
 
 """
@@ -205,9 +221,7 @@ what that name will be renamed to.
 Therefore the function, f, will need to return Symbols or Strings.
 """
 rename!(x::Indexer, f::Function) = rename!(x, [(x,f(x)) for x in x.names])
-rename!(f::Function, x::Indexer) = rename!(x, f)
 rename(x::Indexer, args...) = rename!(copy(x), args...)
-rename(f::Function, x::Indexer) = rename(copy(x), f)
 
 
 # Indexing into an index mapping single names to single numbers
