@@ -110,7 +110,21 @@ export
     DNAAlphabet,
     RNAAlphabet,
     AminoAcidAlphabet,
-    CharAlphabet
+    CharAlphabet,
+    SeqTrie,
+    DNATrie,
+    RNATrie,
+    AminoAcidTrie,
+    keys,
+    keys_with_prefix,
+    setindex!,
+    getindex,
+    get,
+    haskey,
+    hasprefix,
+    path
+
+
 
 using
     Compat,

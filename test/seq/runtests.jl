@@ -2007,4 +2007,62 @@ end
     end
 end
 
+@testset "SeqTrie" begin
+    seqs = Dict(
+        DNAAlphabet => [dna"ACGT", dna"ACGTACGT", dna"TGCA"],
+        RNAAlphabet => [rna"ACGU", rna"ACGUACGU", rna"UGCA"],
+        AminoAcidAlphabet => [aa"PWFS", aa"PWFSPWFS", aa"WCATDWG"],
+    )
+
+    @testset "Constructors" begin
+        # Alphabet aliases
+        @test DNATrie() == SeqTrie{DNAAlphabet, Any}
+        @test RNATrie() == SeqTrie{RNAAlphabet, Any}
+        @test AminoAcidTrie() == SeqTrie{AminoAcidAlphabet, Any}
+
+        # key/value list ctors
+        ks = [dna"ACGT", dna"ACGTACGT", dna"TGCA"],
+        vs = [1, 2, 3]
+        kvs = collect(zip(ks, vs))
+        @test typeof(Trie(ks, vs)) == Trie{DNAAlphabet, Int}
+        @test typeof(Trie(kvs)) == Trie{DNAAlphabet, Int}
+        @test typeof(Trie(Dict(kvs))) == Trie{DNAAlphabet, Int}
+        @test typeof(Trie(ks)) == Trie{DNAAlphabet, Void}
+    end
+
+    @testset "Basic Operations" for AB in [DNAAlphabet, RNAAlphabet, AminoAcidAlphabet]
+        t = SeqTrie{AB}()
+
+        for (i, seq) in seqs[AB]
+            t[seq] = i
+        end
+
+        for (i, seq) in seqs[AB]
+            @test haskey(t, seq)
+            @test get(t, seq, nothing) == i
+        end
+
+        @test sort(keys(t)) == seqs[AB]
+        @test sort(keys_with_prefix(t, seqs[AB][1])) == seqs[AB][1:2]
+    end
+
+    @testset "Prefix iterator" begin
+        for (i, seq) in seqs[DNAAlphabet]
+            t[seq] = i
+        end
+        t0 = t
+        t1 = t0.children[DNA_A]
+        t2 = t1.children[DNA_C]
+        t3 = t2.children[DNA_G]
+        # empty => root
+        @test collect(path(t, dna"")) == [t0]
+        # not present => root
+        @test collect(path(t, dna"G")) == [t0]
+        # prefix => correct nodes
+        @test collect(path(t, dna"ACG")) == [t0, t1, t2, t3]
+        # prefix present, key absent => correct nodes of prefix
+        @test collect(path(t, dna"ACGG")) == [t0, t1, t2, t3]
+    end
+end
+
 end # TestSeq
