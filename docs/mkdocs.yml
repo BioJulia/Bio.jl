@@ -47,6 +47,7 @@ pages:
   - Alignments: man/alignments.md
   - Intervals: man/intervals.md
   - Structure: man/structure.md
+  - Tools: man/tools.md
 - Reference:
   - Seq: lib/seq.md
 - Contributing: man/contributing.md
