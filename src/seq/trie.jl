@@ -1,6 +1,6 @@
 type SeqTrie{A<:Alphabet, T}
     value::T
-    children::Dict{A,SeqTrie{A, T}}
+    children::Dict{eltype(A),SeqTrie{A, T}}
     is_key::Bool
 
     function SeqTrie()
@@ -10,33 +10,25 @@ type SeqTrie{A<:Alphabet, T}
         return self
     end
 
-    function SeqTrie(kv)
+    function SeqTrie(kv::Dict{BioSequence{A}, T})
         t = SeqTrie{A, T}()
         for (k,v) in kv
             t[k] = v
         end
         return t
     end
-    SeqTrie(ks, vs) = SeqTrie(zip(ks, vs))
 end
 
-# Extra ctors
-## Typed values, aliased keys
-DNATrie{T}() = SeqTrie{DNAAlphabet, T}()
-RNATrie{T}() = SeqTrie{RNAAlphabet, T}()
-AminoAcidTrie{T}() = SeqTrie{AminoAcidAlphabet, T}()
+typealias DNATrie SeqTrie{DNAAlphabet{4}, Any} 
+typealias RNATrie SeqTrie{RNAAlphabet{4}, Any}
+typealias AminoAcidTrie SeqTrie{AminoAcidAlphabet, Any}
 
-## Any values, aliased keys
-SeqTrie{A}() = SeqTrie{A, Any}()
-DNATrie() = SeqTrie{DNAAlphabet, Any}()
-RNATrie() = SeqTrie{RNAAlphabet, Any}()
-AminoAcidTrie() = SeqTrie{AminoAcidAlphabet, Any}()
 
-function setindex!{A, T}(t::SeqTrie{A, T}, val::T, key::BioSequence{A})
+function Base.setindex!{A, T}(t::SeqTrie{A, T}, val::T, key::BioSequence{A})
     node = t
     for char in key
         if !haskey(node.children, char)
-            node.children[char] = SeqTrie{T}()
+            node.children[char] = SeqTrie{A, T}()
         end
         node = node.children[char]
     end
@@ -44,7 +36,7 @@ function setindex!{A, T}(t::SeqTrie{A, T}, val::T, key::BioSequence{A})
     node.value = val
 end
 
-function getindex{A, T}(t::SeqTrie{A, T}, key::BioSequence{A})
+function Base.getindex{A, T}(t::SeqTrie{A, T}, key::BioSequence{A})
     node = subtrie(t, key)
     if node != nothing && node.is_key
         return node.value
@@ -64,7 +56,7 @@ function subtrie{A, T}(t::SeqTrie{A, T}, prefix::BioSequence{A})
     node
 end
 
-function haskey{A, T}(t::SeqTrie{A, T}, key::BioSequence{A})
+function Base.haskey{A, T}(t::SeqTrie{A, T}, key::BioSequence{A})
     node = subtrie(t, key)
     return node != nothing && node.is_key
 end
@@ -74,7 +66,7 @@ function hasprefix{A, T}(t::SeqTrie{A, T}, prefix::BioSequence{A})
     return node != nothing
 end
 
-function get{A, T}(t::SeqTrie{A, T}, key::BioSequence{A}, notfound)
+function Base.get{A, T}(t::SeqTrie{A, T}, key::BioSequence{A}, notfound)
     node = subtrie(t, key)
     if node != nothing && node.is_key
         return node.value
@@ -82,13 +74,14 @@ function get{A, T}(t::SeqTrie{A, T}, key::BioSequence{A}, notfound)
     notfound
 end
 
-function keys{A, T}(t::SeqTrie{A, T}, prefix::BioSequence{A}=BioSequence{A}(),
-                    found=BioSequence{A}[])
+function Base.keys{A, T}(t::SeqTrie{A, T}, prefix::BioSequence{A}=BioSequence{A}(),
+                         found=BioSequence{A}[])
     if t.is_key
         push!(found, prefix)
     end
     for (char,child) in t.children
-        newprefix = prefix * BioSequence{A}(char)
+        newprefix = copy(prefix)
+        push!(newprefix, char)
         keys(child, newprefix, found)
     end
     return found
@@ -108,6 +101,8 @@ immutable SeqTrieIterator{A, T}
     t::SeqTrie{A, T}
     seq::BioSequence{A}
 end
+
+export start, next, done
 
 # At the start, there is no previous iteration,
 # so the first element of the state is undefined.
@@ -131,7 +126,7 @@ function done(it::SeqTrieIterator, state)
     return !(it.seq[i] in keys(t.children))
 end
 
-path(t::SeqTrie, seq::BioSequence) = SeqTrieIterator(t, seq)
+path{A, T}(t::SeqTrie{A, T}, seq::BioSequence{A}) = SeqTrieIterator{A, T}(t, seq)
 if VERSION >= v"0.5.0-dev+3294"
     Base.iteratorsize(::Type{SeqTrieIterator}) = Base.SizeUnknown()
 end

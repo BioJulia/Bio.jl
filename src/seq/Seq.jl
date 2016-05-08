@@ -117,8 +117,6 @@ export
     AminoAcidTrie,
     keys,
     keys_with_prefix,
-    setindex!,
-    getindex,
     get,
     haskey,
     hasprefix,
@@ -180,6 +178,7 @@ include("geneticcode.jl")
 include("util.jl")
 include("quality.jl")
 include("seqrecord.jl")
+include("trie.jl")
 
 # Parsing file types
 include("naivebayes.jl")
