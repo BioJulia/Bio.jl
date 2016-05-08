@@ -132,14 +132,11 @@ end
 
 Base.length(x::Indexer) = length(x.names)
 Base.names(x::Indexer) = copy(x.names)
-_names(x::Indexer) = x.names
 Base.copy(x::Indexer) = Indexer(copy(x.lookup), copy(x.names))
-Base.deepcopy(x::Indexer) = copy(x) # all eltypes immutable
-Base.isequal(x::Indexer, y::Indexer) = isequal(x.lookup, y.lookup) && isequal(x.names, y.names)
-Base.(:(==))(x::Indexer, y::Indexer) = isequal(x, y)
+Base.(:(==))(x::Indexer, y::Indexer) = (x.lookup == y.lookup) && (x.names == y.names)
 Base.haskey(x::Indexer, key::Symbol) = haskey(x.lookup, key)
-Base.haskey{S <: AbstractString}(x::Indexer, key::S) = haskey(x, convert(Symbol, key))
-Base.haskey(x::Indexer, key::Real) = 1 <= key <= length(x.names)
+Base.haskey(x::Indexer, key::AbstractString) = haskey(x, convert(Symbol, key))
+Base.haskey(x::Indexer, key::Integer) = 1 <= key <= length(x.names)
 Base.keys(x::Indexer) = names(x)
 
 
@@ -220,43 +217,37 @@ what that name will be renamed to.
 
 Therefore the function, f, will need to return Symbols or Strings.
 """
-rename!(x::Indexer, f::Function) = rename!(x, [(x,f(x)) for x in x.names])
+rename!(f::Function, x::Indexer) = rename!(x, [(x,f(x)) for x in x.names])
 rename(x::Indexer, args...) = rename!(copy(x), args...)
 
 
 # Indexing into an index mapping single names to single numbers
 
 ## Indexing with single name
-Base.getindex(x::Indexer, idx::Symbol) = x.lookup[idx]
-Base.getindex{S <: AbstractString}(x::Indexer, idx::S) = x.lookup[convert(Symbol, idx)]
+Base.getindex(x::Indexer, key::Symbol) = x.lookup[key]
+Base.getindex(x::Indexer, key::AbstractString) = x.lookup[convert(Symbol, key)]
 
 ## Indexing with multiple names.
-Base.getindex(x::Indexer, idx::Vector{Symbol}) = [x.lookup[i] for i in idx]
-function Base.getindex{S <: AbstractString}(x::Indexer, idx::Vector{S})
-    return [x.lookup[convert(Symbol, i)] for i in idx]
+Base.getindex(x::Indexer, keys::Vector{Symbol}) = [x.lookup[key] for key in keys]
+function Base.getindex{S <: AbstractString}(x::Indexer, keys::Vector{S})
+    return [x.lookup[convert(Symbol, key)] for key in keys]
 end
 
 ## Indexing with a single integer
-function Base.getindex{I <: Integer}(x::Indexer, idx::I)
-    n = x.names[idx]
+function Base.getindex{I <: Integer}(x::Indexer, key::I)
+    n = x.names[key]
     return x[n]
 end
 
-## Indexing with a vector of intergers
-function Base.getindex{I <: Integer}(x::Indexer, idx::Vector{I})
-    ns = x.names[idx]
-    return x[ns]
-end
-
 ## Indexing with a range of integers
-function Base.getindex{I <: Integer}(x::Indexer, idx::UnitRange{I})
-    ns = x.names[idx]
+function Base.getindex{I <: Integer}(x::Indexer, keys::AbstractVector{I})
+    ns = x.names[keys]
     return x[ns]
 end
 
 ## Indexing with a vector of bools.
-function Base.getindex(x::Indexer, idx::Vector{Bool})
-    ns = x.names[idx]
+function Base.getindex(x::Indexer, keys::Vector{Bool})
+    ns = x.names[keys]
     return x[ns]
 end
 

@@ -62,9 +62,6 @@ using Bio.Indexing
                 @test names(idxer) !== symbolnames
                 @test names(idxer) == idxer.names
                 @test names(idxer) !== idxer.names
-                @test Indexing._names(idxer) == symbolnames
-                @test Indexing._names(idxer) !== symbolnames
-                @test Indexing._names(idxer) === idxer.names
                 for i in 1:5
                     @test haskey(idxer, symbolnames[i]) == true
                     @test haskey(idxer, textnames[i]) == true
@@ -87,9 +84,6 @@ using Bio.Indexing
         @test names(empty_index) !== Symbol[]
         @test names(empty_index) !== empty_index.names
         @test names(empty_index) == empty_index.names
-        @test Indexing._names(empty_index) == symbolnames
-        @test Indexing._names(empty_index) !== symbolnames
-        @test Indexing._names(empty_index) === empty_index.names
         for i in 1:5
             @test haskey(empty_index, symbolnames[i]) == false
             @test haskey(empty_index, textnames[i]) == false
@@ -112,16 +106,16 @@ using Bio.Indexing
             # Ok let's give int_index_one a load of new names
             newnames = [:Sixth, :Seventh, :Eighth, :Ninth, :Tenth]
             newnamestext = ["Sixth", "Seventh", "Eighth", "Ninth", "Tenth"]
-            @test names!(int_index_one, newnames) == Indexer(newnames)
-            @test_throws ArgumentError names!(int_index_one, newnames[1:4])
-            @test names!(int_index_two, newnamestext) == Indexer(newnamestext)
-            @test_throws ArgumentError names!(int_index_two, newnamestext[1:4])
+            @test names!(int_idxes[1], newnames) == Indexer(newnames)
+            @test_throws ArgumentError names!(int_idxes[1], newnames[1:4])
+            @test names!(int_idxes[2], newnamestext) == Indexer(newnamestext)
+            @test_throws ArgumentError names!(int_idxes[2], newnamestext[1:4])
 
             # Now let's manipulate some of those names by renaming them
 
             # Make a new index by replacing name :Sixth with :First,
             # and test that only :Sixth is different
-            rn = rename(int_index_one, :Sixth, :First)
+            rn = rename(int_idxes[1], :Sixth, :First)
             @test (rn != Indexer(symbolnames)) && (rn != Indexer(newnames))
             @test names(rn)[1] == :First
             @test names(rn)[2] == :Seventh
@@ -131,50 +125,52 @@ using Bio.Indexing
 
             # Let's modify int_index_one by replacing the names, Sixth Eights, and
             # Tenth, with First, Third, and Fifth.
-            rename!(int_index_one, [:Sixth, :Eighth, :Tenth], [:First, :Third, :Fifth])
-            @test int_index_one != Indexer(symbolnames)
-            @test rn != int_index_one
+            rename!(int_idxes[1], [:Sixth, :Eighth, :Tenth], [:First, :Third, :Fifth])
+            @test int_idxes[1] != Indexer(symbolnames)
+            @test rn != int_idxes[1]
+            @test rn !== int_idxes[1]
 
             # Now let's test that renaming worked correctly, some names should
             # match names in symbolnames, and some should match names in
             # newnames.
-            @test names(int_index_one)[1] != newnames[1]
-            @test names(int_index_one)[1] == symbolnames[1]
-            @test names(int_index_one)[2] == newnames[2]
-            @test names(int_index_one)[2] != symbolnames[2]
-            @test names(int_index_one)[3] != newnames[3]
-            @test names(int_index_one)[3] == symbolnames[3]
-            @test names(int_index_one)[4] == newnames[4]
-            @test names(int_index_one)[4] != symbolnames[4]
-            @test names(int_index_one)[5] != newnames[5]
-            @test names(int_index_one)[5] == symbolnames[5]
+            @test names(int_idxes[1])[1] != newnames[1]
+            @test names(int_idxes[1])[1] == symbolnames[1]
+            @test names(int_idxes[1])[2] == newnames[2]
+            @test names(int_idxes[1])[2] != symbolnames[2]
+            @test names(int_idxes[1])[3] != newnames[3]
+            @test names(int_idxes[1])[3] == symbolnames[3]
+            @test names(int_idxes[1])[4] == newnames[4]
+            @test names(int_idxes[1])[4] != symbolnames[4]
+            @test names(int_idxes[1])[5] != newnames[5]
+            @test names(int_idxes[1])[5] == symbolnames[5]
         end
         @testset "getindex" begin
+            idxer_one = int_idxes[1]
             @testset "single names" begin
-                @test int_index_one[:First] == 1
-                @test int_index_one[:Fifth] == 5
-                @test int_index_one[:Third] == 3
-                @test int_index_one["First"] == 1
-                @test int_index_one["Fifth"] == 5
-                @test int_index_one["Third"] == 3
-                @test g_index_one[:First] == 1:5
-                @test g_index_three[:First] == 1:5
+                @test idxer_one[:First] == 1
+                @test idxer_one[:Fifth] == 5
+                @test idxer_one[:Third] == 3
+                @test idxer_one["First"] == 1
+                @test idxer_one["Fifth"] == 5
+                @test idxer_one["Third"] == 3
+                @test g_idxes[1][:First] == 1:5
+                @test g_idxes[3][:First] == 1:5
             end
             @testset "vector of names" begin
-                @test int_index_one[[:Seventh, :Third, :Ninth]] == [2, 3, 4]
-                @test int_index_one[["Seventh", "Third", "Ninth"]] == [2, 3, 4]
-                @test g_index_one[[:First, :Second]] == UnitRange{Int}[1:5, 6:10]
+                @test idxer_one[[:Seventh, :Third, :Ninth]] == [2, 3, 4]
+                @test idxer_one[["Seventh", "Third", "Ninth"]] == [2, 3, 4]
+                @test g_idxes[1][[:First, :Second]] == UnitRange{Int}[1:5, 6:10]
             end
             @testset "single integer" begin
-                @test int_index_one[1] == 1
-                @test g_index_one[4] == 16:20
+                @test idxer_one[1] == 1
+                @test g_idxes[1][4] == 16:20
             end
             @testset "multiple integers" begin
-                @test int_index_one[1:3] == [1:3;]
-                @test int_index_one[[1,3,5]] == [1,3,5]
+                @test idxer_one[1:3] == [1:3;]
+                @test idxer_one[[1,3,5]] == [1,3,5]
             end
             @testset "booleans" begin
-                @test int_index_one[[true, false, false, true, true]] == UInt[1, 4, 5]
+                @test idxer_one[[true, false, false, true, true]] == UInt[1, 4, 5]
             end
         end
     end
