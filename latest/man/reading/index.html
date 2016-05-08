@@ -355,12 +355,13 @@
 
 <p><a id='In-place-parsing-1'></a></p>
 <h2 id="in-place-parsing">In-place parsing</h2>
-<p>Iterating through entries in a file is convenient, but for each entry in the file, the parser must allocate , and ultimately the garbage collector must spend time to deallocate it. For performance critical applications, a separate lower level parsing interface can be used that avoid unnecessary allocation by overwriting one entry. For files with a large number of small entries, this can greatly speed up reading.</p>
-<p>Instead of looping over a parser stream <code>read!</code> is called with a preallocated entry. It will then attempt to read one entry, returning <code>true</code> if successful and <code>false</code> if the end of the input has been reached.</p>
+<p>Iterating through entries in a file is convenient, but for each entry in the file, the parser must allocate, and ultimately the garbage collector must spend time to deallocate it. For performance critical applications, a separate lower level parsing interface can be used that avoid unnecessary allocation by overwriting one entry. For files with a large number of small entries, this can greatly speed up reading.</p>
+<p>Instead of looping over a parser stream <code>read!</code> is called with a preallocated entry.</p>
 <div class="codehilite"><pre><span></span><span class="n">stream</span> <span class="o">=</span> <span class="n">open</span><span class="p">(</span><span class="s">&quot;input.bed&quot;</span><span class="p">,</span> <span class="n">BED</span><span class="p">)</span>
 <span class="n">entry</span> <span class="o">=</span> <span class="n">BEDInterval</span><span class="p">()</span>
-<span class="k">while</span> <span class="n">read!</span><span class="p">(</span><span class="n">stream</span><span class="p">,</span> <span class="n">entry</span><span class="p">)</span>
-    <span class="c"># perform some operation on entry</span>
+<span class="k">while</span> <span class="o">!</span><span class="n">eof</span><span class="p">(</span><span class="n">stream</span><span class="p">)</span>
+    <span class="n">read!</span><span class="p">(</span><span class="n">input</span><span class="p">,</span> <span class="n">entry</span><span class="p">)</span>
+    <span class="c"># perform some operation on `entry`</span>
 <span class="k">end</span>
 </pre></div>
 
