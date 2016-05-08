@@ -9,19 +9,19 @@
     <meta name="viewport" content="width=device-width,user-scalable=no,initial-scale=1,maximum-scale=1">
     
       
-        <title>IO API - Bio.jl</title>
+        <title>Tools - Bio.jl</title>
       
       
       
-        <link rel="canonical" href="https://biojulia.github.io/Bio.jl/man/reading/">
+        <link rel="canonical" href="https://biojulia.github.io/Bio.jl/man/tools/">
       
       
         <meta name="author" content="The BioJulia Organisation">
       
     
-    <meta property="og:url" content="https://biojulia.github.io/Bio.jl/man/reading/">
+    <meta property="og:url" content="https://biojulia.github.io/Bio.jl/man/tools/">
     <meta property="og:title" content="Bio.jl">
-    <meta property="og:image" content="https://biojulia.github.io/Bio.jl/man/reading//../../images/biojl.png">
+    <meta property="og:image" content="https://biojulia.github.io/Bio.jl/man/tools//../../images/biojl.png">
     <meta name="apple-mobile-web-app-title" content="Bio.jl">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
@@ -104,7 +104,7 @@
             
           </span>
         
-        IO API
+        Tools
       </div>
     </div>
     
@@ -206,30 +206,9 @@
       
         
   <li>
-    <a class="current" title="IO API" href="./">
+    <a class="" title="IO API" href="../reading/">
       IO API
     </a>
-    
-      
-        
-      
-      
-        <ul>
-          
-            <li class="anchor">
-              <a title="Parsing by iteration" href="#parsing-by-iteration">
-                Parsing by iteration
-              </a>
-            </li>
-          
-            <li class="anchor">
-              <a title="In-place parsing" href="#in-place-parsing">
-                In-place parsing
-              </a>
-            </li>
-          
-        </ul>
-      
     
   </li>
 
@@ -272,9 +251,24 @@
       
         
   <li>
-    <a class="" title="Tools" href="../tools/">
+    <a class="current" title="Tools" href="./">
       Tools
     </a>
+    
+      
+        
+      
+      
+        <ul>
+          
+            <li class="anchor">
+              <a title="Blast wrapper" href="#blast-wrapper">
+                Blast wrapper
+              </a>
+            </li>
+          
+        </ul>
+      
     
   </li>
 
@@ -334,40 +328,60 @@
       <article class="article">
         <div class="wrapper">
           
-          <p><a id='Reading-and-writing-data-1'></a></p>
-<h1 id="reading-and-writing-data">Reading and writing data</h1>
-<p>Bio.jl has a unified interface for reading and writing files in a variety of formats. To initialize a parser for a particular format, the <code>open</code> method is extended with a file format type parameter (currently supported formats types are <code>BED</code>, <code>FASTQ</code>, and <code>FASTA</code>).</p>
-<div class="codehilite"><pre><span></span><span class="n">open</span><span class="p">{</span><span class="n">T</span> <span class="o">&lt;:</span> <span class="n">FileFormat</span><span class="p">}(</span><span class="n">filename</span><span class="p">::</span><span class="n">String</span><span class="p">,</span> <span class="p">::</span><span class="n">Type</span><span class="p">{</span><span class="n">T</span><span class="p">};</span> <span class="n">memory_map</span><span class="p">::</span><span class="kt">Bool</span><span class="o">=</span><span class="n">false</span><span class="p">)</span>
-<span class="n">open</span><span class="p">{</span><span class="n">T</span> <span class="o">&lt;:</span> <span class="n">FileFormat</span><span class="p">}(</span><span class="n">source</span><span class="p">::</span><span class="n">IO</span><span class="p">,</span> <span class="p">::</span><span class="n">Type</span><span class="p">{</span><span class="n">T</span><span class="p">})</span>
-<span class="n">open</span><span class="p">{</span><span class="n">T</span> <span class="o">&lt;:</span> <span class="n">FileFormat</span><span class="p">}(</span><span class="n">data</span><span class="p">::</span><span class="n">Vector</span><span class="p">{</span><span class="n">UInt8</span><span class="p">},</span> <span class="p">::</span><span class="n">Type</span><span class="p">{</span><span class="n">T</span><span class="p">})</span>
+          <p><a id='Tools:-Misc-tools-and-function-wrappers-1'></a></p>
+<h1 id="tools-misc-tools-and-function-wrappers">Tools: Misc tools and function wrappers</h1>
+<p>{meta} CurrentModule = Bio.Blast</p>
+<p><a id='Blast-wrapper-1'></a></p>
+<h2 id="blast-wrapper">Blast wrapper</h2>
+<p>The <code>Blast</code> module is a wrapper for the command line interface of <a href="https://www.ncbi.nlm.nih.gov/books/NBK279690/">BLAST+</a> from NCBI. It requires that you have Blast+ <a href="https://www.ncbi.nlm.nih.gov/books/NBK279671/">installed</a> and accessible in your PATH (eg. you should be able to execute <code>$ blastn -h</code> from the command line).</p>
+<p><a id='The-Basics-1'></a></p>
+<h3 id="the-basics">The Basics</h3>
+<p>This module allows you to run protein and nucleotide BLAST (<code>blastp</code> and <code>blastn</code> respectively) within julia and to parse BLAST results into Bio.jl types.</p>
+<div class="codehilite"><pre><span></span><span class="k">using</span> <span class="n">Bio</span><span class="o">.</span><span class="n">Seq</span><span class="p">,</span>
+      <span class="n">Bio</span><span class="o">.</span><span class="n">Blast</span>
+
+<span class="n">seq1</span> <span class="o">=</span> <span class="n">dna</span><span class="s">&quot;CGGACCAGACGGACACAGGGAGAAGCTAGTTTCTTTCATGTGATTGANATNATGACTCTACTCCTAAAAGGGAAAAANCAATATCCTTGTTTACAGAAGAGAAACAAACAAGCCCCACTCAGCTCAGTCACAGGAGAGAN&quot;</span>
+<span class="n">seq2</span> <span class="o">=</span> <span class="n">dna</span><span class="s">&quot;CGGAGCCAGCGAGCATATGCTGCATGAGGACCTTTCTATCTTACATTATGGCTGGGAATCTTACTCTTTCATCTGATACCTTGTTCAGATTTCAAAATAGTTGTAGCCTTATCCTGGTTTTACAGATGTGAAACTTTCAA&quot;</span>
+
+<span class="n">blastn</span><span class="p">(</span><span class="n">seq1</span><span class="p">,</span> <span class="n">seq2</span><span class="p">)</span>
 </pre></div>
 
 
-<p><a id='Parsing-by-iteration-1'></a></p>
-<h2 id="parsing-by-iteration">Parsing by iteration</h2>
-<p>Parsers in Bio.jl all read and return entries one at a time. The most convenient way to do this by iteration.</p>
-<div class="codehilite"><pre><span></span><span class="n">stream</span> <span class="o">=</span> <span class="n">open</span><span class="p">(</span><span class="s">&quot;input.bed&quot;</span><span class="p">,</span> <span class="n">BED</span><span class="p">)</span>
-<span class="k">for</span> <span class="n">entry</span> <span class="k">in</span> <span class="n">stream</span>
-    <span class="c"># perform some operation on entry</span>
+<p>These functions return a <code>Vector{BlastResult}</code>. Each element is a hit which includes the sequence of the hit, an <a href="http://biojulia.github.io/Bio.jl/latest/man/alignments/"><code>AlignedSequence</code></a> using the original query as a reference and some additional information (expect vaue, bitscore) for the hit.</p>
+<div class="codehilite"><pre><span></span><span class="k">immutable</span> <span class="n">BlastResult</span>
+    <span class="n">bitscore</span><span class="p">::</span><span class="kt">Float64</span>
+    <span class="n">expect</span><span class="p">::</span><span class="kt">Float64</span>
+    <span class="n">queryname</span><span class="p">::</span><span class="n">ASCIIString</span>
+    <span class="n">hitname</span><span class="p">::</span><span class="n">ASCIIString</span>
+    <span class="n">hit</span><span class="p">::</span><span class="n">BioSequence</span>
+    <span class="n">alignment</span><span class="p">::</span><span class="n">AlignedSequence</span>
 <span class="k">end</span>
 </pre></div>
 
 
-<p><a id='In-place-parsing-1'></a></p>
-<h2 id="in-place-parsing">In-place parsing</h2>
-<p>Iterating through entries in a file is convenient, but for each entry in the file, the parser must allocate , and ultimately the garbage collector must spend time to deallocate it. For performance critical applications, a separate lower level parsing interface can be used that avoid unnecessary allocation by overwriting one entry. For files with a large number of small entries, this can greatly speed up reading.</p>
-<p>Instead of looping over a parser stream <code>read!</code> is called with a preallocated entry. It will then attempt to read one entry, returning <code>true</code> if successful and <code>false</code> if the end of the input has been reached.</p>
-<div class="codehilite"><pre><span></span><span class="n">stream</span> <span class="o">=</span> <span class="n">open</span><span class="p">(</span><span class="s">&quot;input.bed&quot;</span><span class="p">,</span> <span class="n">BED</span><span class="p">)</span>
-<span class="n">entry</span> <span class="o">=</span> <span class="n">BEDInterval</span><span class="p">()</span>
-<span class="k">while</span> <span class="n">read!</span><span class="p">(</span><span class="n">stream</span><span class="p">,</span> <span class="n">entry</span><span class="p">)</span>
-    <span class="c"># perform some operation on entry</span>
-<span class="k">end</span>
+<p>If you've already run a blast analysis or have downloaded blast results in XML format from NCBI you can also pass an XML string to <code>readblastXML()</code> in order to obtain an array of <code>BlastResult</code>s.</p>
+<div class="codehilite"><pre><span></span><span class="n">results</span> <span class="o">=</span> <span class="n">readall</span><span class="p">(</span><span class="n">open</span><span class="p">(</span><span class="s">&quot;blast_results.xml&quot;</span><span class="p">))</span> <span class="c"># need to use `readstring` instead of `readall` for v0.5</span>
+<span class="n">readblastXML</span><span class="p">(</span><span class="n">results</span><span class="p">)</span>
 </pre></div>
 
 
-<p>Some care is necessary when using this interface. Because <code>entry</code> is completely overwritten on each iteration, one must manually copy any field from <code>entry</code> that should be preserved. For example, if we wish to save the <code>seqname</code> field from <code>entry</code> when parsing BED, we must call <code>copy(entry.seqname)</code>.</p>
-<p>Empty entry types that correspond to the file format be found using <code>eltype</code>, making it easy to allocate an empty entry for any parser stream.</p>
-<div class="codehilite"><pre><span></span><span class="n">entry</span> <span class="o">=</span> <span class="n">eltype</span><span class="p">(</span><span class="n">stream</span><span class="p">)()</span>
+<p>When parsing protein blast results, you must include the argument <code>seqtype="prot"</code>, eg. <code>readblastXML("results, seqtype="prot")</code></p>
+<p><a id='Options-for-blastn-and-blastp-1'></a></p>
+<h3 id="options-for-blastn-and-blastp">Options for <code>blastn</code> and <code>blastp</code></h3>
+<p>Both of the basic BLAST+ commands can accept a single <code>BioSequence</code>, a <code>Vector{BioSequence}</code> or a sting representing a file path to a fasta formatted file as arguments for both <code>query</code> and <code>subject</code>.</p>
+<div class="codehilite"><pre><span></span><span class="n">blastn</span><span class="p">([</span><span class="n">seq1</span><span class="p">,</span> <span class="n">seq2</span><span class="p">],</span> <span class="p">[</span><span class="n">seq2</span><span class="p">,</span> <span class="n">seq3</span><span class="p">])</span>
+
+<span class="n">blastp</span><span class="p">(</span><span class="n">aaseq</span><span class="p">,</span> <span class="s">&quot;path/to/sequences.fasta&quot;</span><span class="p">)</span>
+</pre></div>
+
+
+<p>If you have a local blast database (eg through the use of <code>$ makeblastdb</code>), you can use this database as the <code>subject</code></p>
+<div class="codehilite"><pre><span></span><span class="n">blastn</span><span class="p">(</span><span class="n">seq1</span><span class="p">,</span> <span class="s">&quot;path/to/blast_db&quot;</span><span class="p">,</span> <span class="n">db</span><span class="o">=</span><span class="n">true</span><span class="p">)</span>
+</pre></div>
+
+
+<p>If you want to modify the search using additional options (eg. return only results with greater than 90% identity), you may pass a <code>Vector</code> of flags (see <a href="http://www.ncbi.nlm.nih.gov/books/NBK279675/">here</a> for valid arguments - do not use flags that will alter file handling such as <code>-outfmt</code>)</p>
+<div class="codehilite"><pre><span></span><span class="n">blastn</span><span class="p">(</span><span class="n">seq1</span><span class="p">,</span> <span class="n">seq2</span><span class="p">,</span> <span class="p">[</span><span class="s">&quot;-perc_identity&quot;</span><span class="p">,</span> <span class="mi">90</span><span class="p">,</span> <span class="s">&quot;-evalue&quot;</span><span class="p">,</span> <span class="s">&quot;9.0&quot;</span><span class="p">])</span>
 </pre></div>
           <aside class="copyright" role="note">
             
@@ -387,7 +401,7 @@
   <nav class="pagination" aria-label="Footer">
     <div class="previous">
       
-        <a href="../install/" title="Installation">
+        <a href="../structure/" title="Structure">
           <span class="direction">
             Previous
           </span>
@@ -397,7 +411,7 @@
             </div>
             <div class="stretch">
               <div class="title">
-                Installation
+                Structure
               </div>
             </div>
           </div>
@@ -406,14 +420,14 @@
     </div>
     <div class="next">
       
-        <a href="../seq/" title="Biological Sequences">
+        <a href="../../lib/seq/" title="Seq">
           <span class="direction">
             Next
           </span>
           <div class="page">
             <div class="stretch">
               <div class="title">
-                Biological Sequences
+                Seq
               </div>
             </div>
             <div class="button button-next" role="button" aria-label="Next">

@@ -47,6 +47,12 @@
      <changefreq>daily</changefreq>
     </url>
         
+    <url>
+     <loc>https://biojulia.github.io/Bio.jl//man/tools/</loc>
+     <lastmod>2016-05-08</lastmod>
+     <changefreq>daily</changefreq>
+    </url>
+        
     
 
     
