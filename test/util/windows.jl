@@ -1,4 +1,4 @@
-module TestUtil
+module TestWindows
 
 if VERSION >= v"0.5-"
     using Base.Test
@@ -7,7 +7,7 @@ else
     const Test = BaseTestNext
 end
 
-using Bio.Util,
+using Bio.Windows,
     Bio.Seq,
     TestFunctions
 
