@@ -7,7 +7,7 @@ export
 """
 The Indexer type
 
-The type is parametric and contains a dictionary that maps
+The type is parametric and contains a dictionary mapping
 names (Symbols) to objects, as well as a vector of names
 (Symbols) that enables indexers to have order (i.e.
 The user should be able to push and pop and insert with indexes).
@@ -18,18 +18,36 @@ immutable Indexer{T}
 end
 
 
-"Construct an empty Indexer that maps Symbols to a given Type T"
+"""
+    Indexer{T}(::Type{T})
+
+Construct an empty Indexer mapping Symbols to a given Type T.
+
+# Examples
+```julia
+Indexer(Int64)
+Indexer(Int8)
+Indexer(UInt32)
+```
+"""
 function Indexer{T}(::Type{T})
     return Indexer{T}(Dict{Symbol, T}(), Vector{Symbol}())
 end
 
 
 """
-Create an index that associates names in a Vector of Symbols, with values of
-type T, in a Vector of type T.
+    Indexer{T}(names::Vector{Symbol}, vals::Vector{T})
+
+Create an index that associates a Vector of Symbols with a vector of values.
 
 This constructor constructs the index such that names[1] -> vals[1],
 names[2] -> vals[2] ... and so on.
+
+# Examples
+```julia
+Indexer([:Hello, :Bye], [1, 2])
+Indexer([:Hello, :Bye], [1:10, 11:20])
+```
 """
 function Indexer{T}(names::Vector{Symbol}, vals::Vector{T})
     u = make_unique(names)
@@ -39,11 +57,19 @@ end
 
 
 """
-Create an index that associates names in a Vector of Strings, with values of
-type T, in a Vector of type T.
+    Indexer{S <: AbstractString, T}(names::Vector{S}, vals::Vector{T})
+
+Create an index that associates names in a Vector of Strings with a vector of
+values.
 
 This constructor constructs the index such that names[1] -> vals[1],
 names[2] -> vals[2] ... and so on.
+
+# Examples
+```julia
+Indexer(["Hi", "Bye", "Sup"], [1, 2, 3])
+Indexer(["Hi", "Bye", "Sup"], [1:5, 6:10, 11:15])
+```
 """
 function Indexer{S <: AbstractString, T}(names::Vector{S}, vals::Vector{T})
     Indexer(convert(Vector{Symbol}, names), vals)
@@ -51,12 +77,20 @@ end
 
 
 """
-Construct an Indexer that maps a Vector of Symbols (names), to a set of
-values of type T <: Integer.
+    Indexer(names::Vector{Symbol}, ::Type{T})
+
+Construct an Indexer mapping a Vector of Symbols (names), to a set of
+values of type T.
 
 Provide this constructor a vector of Symbols as names, and a type that is a
 subtype of Integer, and it will construct an index such that
 names[1] -> 1, names[2] -> 2, ..., names[length(names)] -> length(names).
+
+# Examples
+```julia
+Indexer([:First, :Second, :Third], Int64)
+Indexer([:First, :Second, :Third], UInt32)
+```
 """
 function Indexer{T <: Integer}(names::Vector{Symbol}, ::Type{T})
     return Indexer(names, collect(T(1):T(length(names))))
@@ -64,12 +98,20 @@ end
 
 
 """
-Construct an Indexer that maps a Vector of Strings (names), to a set of
+    Indexer{S <: AbstractString, T <: Integer}(names::Vector{S}, ::Type{T})
+
+Construct an Indexer mapping a Vector of Strings (names), to a set of
 values of type T <: Integer.
 
 Provide this constructor a vector of Strings as names, and a type that is a
 subtype of Integer, and it will construct an index such that
 names[1] -> 1, names[2] -> 2, ..., names[length(names)] -> length(names).
+
+# Examples
+```julia
+Indexer(["First", "Second", "Third"], Int64)
+Indexer(["First", "Second", "Third"], UInt32)
+```
 """
 function Indexer{S <: AbstractString, T <: Integer}(names::Vector{S}, ::Type{T})
     return Indexer(convert(Vector{Symbol}, names), T)
@@ -77,13 +119,20 @@ end
 
 
 """
-Construct an Indexer that maps a Vector of Symbols (names), to a set of
+    Indexer(names::Vector{Symbol})
+
+Construct an Indexer mapping a Vector of Symbols (names), to a set of
 values of type Int, where Int is the default integer encoding on your machine
 (usually Int32 or Int64).
 
 Provide this constructor a vector of Symbols as names, and it will construct
 an index such that names[1] -> 1, names[2] -> 2, ...,
 names[length(names)] -> length(names).
+
+# Examples
+```julia
+Indexer([:First, :Second, :Third])
+```
 """
 function Indexer(names::Vector{Symbol})
     return Indexer(names, Int)
@@ -91,20 +140,38 @@ end
 
 
 """
-Construct an Indexer that maps a Vector of Strings (names), to a set of
+    Indexer{S <: AbstractString}(names::Vector{S})
+
+Construct an Indexer mapping a Vector of Strings (names), to a set of
 values of type Int, where Int is the default integer encoding on you machine
 (usually Int32 or Int64).
 
 Provide this constructor a vector of Strings as names, and it will construct
 an index such that names[1] -> 1, names[2] -> 2, ...,
 names[length(names)] -> length(names).
+
+# Examples
+```julia
+Indexer(["First", "Second", "Third"])
+```
 """
 function Indexer{S <: AbstractString}(names::Vector{S})
     return Indexer(convert(Vector{Symbol}, names), Int)
 end
 
 
-"Make sure all vectors in a symbol are unique."
+"""
+    make_unique(names::Vector{Symbol})
+
+Make sure all vectors in a symbol are unique.
+
+# Examples
+```julia
+make_unique([:First, :Second, :Third])
+make_unique([:First, :First, :First])
+make_unique([:First, :Third, :Third])
+```
+"""
 function make_unique(names::Vector{Symbol})
     seen = Set{Symbol}()
     names = copy(names)
@@ -140,7 +207,16 @@ Base.haskey(x::Indexer, key::Integer) = 1 <= key <= length(x.names)
 Base.keys(x::Indexer) = names(x)
 
 
-"Completely replace the names in an Indexer with a new Vector of Symbols."
+"""
+    names!(x::Indexer, names::Vector{Symbol})
+
+Completely replace the names in an Indexer with a new Vector of Symbols.
+
+# Examples
+```julia
+names!(my_indexer, [:First, :NewName, :Third])
+```
+"""
 function names!(x::Indexer, names::Vector{Symbol})
     if length(names) != length(x)
         throw(ArgumentError("Length of new names doesn't match length of Index."))
@@ -154,7 +230,16 @@ function names!(x::Indexer, names::Vector{Symbol})
 end
 
 
-"Completely replace the names in an Indexer with a new Vector of Strings."
+"""
+    names!{S <: AbstractString}(x::Indexer, names::Vector{S})
+
+Completely replace the names in an Indexer with a new Vector of Strings.
+
+# Examples
+```julia
+names!(my_indexer, ["First", "NewName", "Third"])
+```
+"""
 function names!{S <: AbstractString}(x::Indexer, names::Vector{S})
     names!(x, convert(Vector{Symbol}, names))
 end
@@ -179,10 +264,17 @@ end
 
 
 """
+    rename!(x::Indexer, from::Vector{Symbol}, to::Vector{Symbol})
+
 Rename a set of names in an Indexer, to a new set of names.
 
 This will rename such that the name in from[1] will be renamed to to[1],
 from[2] will be renamed to to[2] and so on.
+
+# Examples
+```julia
+rename!(my_indexer, [:First, :Third], [:NewFirst, :NewThird])
+```
 """
 function rename!(x::Indexer, from::Vector{Symbol}, to::Vector{Symbol})
     return rename!(x, zip(from, to))
@@ -190,31 +282,57 @@ end
 
 
 """
+    rename!{S <: AbstractString}(x::Indexer, from::Vector{S}, to::Vector{S})
+
 Rename a set of names in an Indexer, to a new set of names.
 
 This will rename such that the name in from[1] will be renamed to to[1],
 from[2] will be renamed to to[2] and so on.
+
+# Examples
+```julia
+rename!(my_indexer, ["First", "Third"], ["NewFirst", "NewThird"])
+```
 """
 function rename!{S <: AbstractString}(x::Indexer, from::Vector{S}, to::Vector{S})
     return rename!(x, convert(Vector{Symbol}, from), convert(Vector{Symbol}, to))
 end
 
 
-"Rename a single name (from) in Indexer x, to a new name (to)."
+"""
+    rename!(x::Indexer, from::Symbol, to::Symbol)
+
+Rename a single name (from) in Indexer x, to a new name (to).
+
+# Examples
+```julia
+rename!(my_indexer, :First, :NewFirst)
+```
+"""
 rename!(x::Indexer, from::Symbol, to::Symbol) = rename!(x, ((from, to),))
 
-"Rename a single name (from) in Indexer x, to a new name (to)."
+"""
+    rename!{S <: AbstractString}(x::Indexer, from::S, to::S)
+
+Rename a single name (from) in Indexer x, to a new name (to).
+
+# Examples
+```julia
+rename!(my_indexer, "First", "NewFirst")
+```
+"""
 function rename!{S <: AbstractString}(x::Indexer, from::S, to::S)
     return rename!(x, ((convert(Symbol, from), convert(Symbol, to)),))
 end
 
 
 """
+    rename!(f::Function, x::Indexer)
+
 Rename a indexer according to some function, f, that accepts one argument.
 
 Each name in the Indexer x, will be input to, f, and the output will be
 what that name will be renamed to.
-
 Therefore the function, f, will need to return Symbols or Strings.
 """
 rename!(f::Function, x::Indexer) = rename!(x, [(x,f(x)) for x in x.names])
