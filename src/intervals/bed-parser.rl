@@ -1,19 +1,15 @@
 %%{
-    machine _bedparser;
+    machine bedparser;
 
     action finish_match {
         input.block_size_idx = 1
         input.block_first_idx = 1
-
-        yield = true
-        # // fbreak causes will cause the pushmark action for the next seqname
-        # // to be skipped, so we do it here
         Ragel.@anchor!
-        fbreak;
+        Ragel.@yield ftargs
     }
 
     action count_line { input.state.linenum += 1 }
-    action anchor { Ragel.anchor!(state, p) }
+    action anchor { Ragel.@anchor! }
     action optional_field { output.metadata.used_fields += 1 }
 
     action seqname     { output.metadata.used_fields = 0; Ragel.@copy_from_anchor!(output.seqname) }
@@ -107,106 +103,32 @@ type BEDParser <: AbstractParser
     block_first_idx::Int
 
     function BEDParser(input::BufferedInputStream)
-        %% write init;
-
-        return new(Ragel.State(cs, input), 0.0, 0.0, 0.0, 1, 1)
+        return new(Ragel.State(bedparser_start, input), 0, 0, 0, 1, 1)
     end
 end
-
 
 function Intervals.metadatatype(::BEDParser)
     return BEDMetadata
 end
 
-
-function eltype(::Type{BEDParser})
+function Base.eltype(::Type{BEDParser})
     return BEDInterval
 end
 
+function Base.eof(parser::BEDParser)
+    return eof(parser.state.stream)
+end
 
-function open(input::BufferedInputStream, ::Type{BED})
+function Base.open(input::BufferedInputStream, ::Type{BED})
     return BEDParser(input)
 end
-
-
-Ragel.@generate_read_fuction("_bedparser", BEDParser, BEDInterval,
-    begin
-        %% write exec;
-    end)
-
-
-
-# TODO: Rewrite this stuff
-
-"""
-Write a BEDInterval in BED format.
-"""
-function write(out::IO, interval::BEDInterval)
-    print(out, interval.seqname, '\t', interval.first - 1, '\t', interval.last)
-    write_optional_fields(out, interval)
-    write(out, '\n')
-end
-
-
-function write_optional_fields(out::IO, interval::BEDInterval, leadingtab::Bool=true)
-    if interval.metadata.used_fields >= 1
-        if leadingtab
-            write(out, '\t')
-        end
-        print(out, interval.metadata.name)
-    else return end
-
-    if interval.metadata.used_fields >= 2
-        print(out, '\t', interval.metadata.score)
-    else return end
-
-    if interval.metadata.used_fields >= 3
-        print(out, '\t', interval.strand)
-    else return end
-
-    if interval.metadata.used_fields >= 4
-        print(out, '\t', interval.metadata.thick_first - 1)
-    else return end
-
-    if interval.metadata.used_fields >= 5
-        print(out, '\t', interval.metadata.thick_last)
-    else return end
-
-    if interval.metadata.used_fields >= 6
-        item_rgb = interval.metadata.item_rgb
-        print(out, '\t',
-              round(Int, 255 * item_rgb.r), ',',
-              round(Int, 255 * item_rgb.g), ',',
-              round(Int, 255 * item_rgb.b))
-    else return end
-
-    if interval.metadata.used_fields >= 7
-        print(out, '\t', interval.metadata.block_count)
-    else return end
-
-    if interval.metadata.used_fields >= 8
-        block_sizes = interval.metadata.block_sizes
-        if !isempty(block_sizes)
-            print(out, '\t', block_sizes[1])
-            for i in 2:length(block_sizes)
-                print(out, ',', block_sizes[i])
-            end
-        end
-    else return end
-
-    if interval.metadata.used_fields >= 9
-        block_firsts = interval.metadata.block_firsts
-        if !isempty(block_firsts)
-            print(out, '\t', block_firsts[1] - 1)
-            for i in 2:length(block_firsts)
-                print(out, ',', block_firsts[i] - 1)
-            end
-        end
-    end
-end
-
 
 function IntervalCollection(interval_stream::BEDParser)
     intervals = collect(BEDInterval, interval_stream)
     return IntervalCollection{BEDMetadata}(intervals, true)
 end
+
+Ragel.@generate_read_fuction("bedparser", BEDParser, BEDInterval,
+    begin
+        %% write exec;
+    end)

@@ -8,24 +8,20 @@ type FASTAMetadata
     description::StringField
 end
 
-
 function FASTAMetadata()
     return FASTAMetadata(StringField())
 end
-
 
 function Base.(:(==))(a::FASTAMetadata, b::FASTAMetadata)
     return a.description == b.description
 end
 
-
 function Base.copy(metadata::FASTAMetadata)
     return FASTAMetadata(copy(metadata.description))
 end
 
-
 "FASTASeqRecord{S} is a `SeqRecord` for FASTA sequences of type `S`"
-typealias FASTASeqRecord          SeqRecord{Sequence, FASTAMetadata}
+typealias FASTASeqRecord          SeqRecord{Sequence,FASTAMetadata}
 
 "A `SeqRecord` type for FASTA DNA sequences"
 typealias FASTADNASeqRecord       DNASeqRecord{FASTAMetadata}
@@ -36,16 +32,14 @@ typealias FASTARNASeqRecord       RNASeqRecord{FASTAMetadata}
 "A `SeqRecord` type for FASTA amino acid sequences"
 typealias FASTAAminoAcidSeqRecord AminoAcidSeqRecord{FASTAMetadata}
 
-function Base.show{S}(io::IO, seqrec::SeqRecord{S, FASTAMetadata})
-    write(io, ">", seqrec.name, " ", seqrec.metadata.description, "\n")
-    show(io, seqrec.seq)
-end
-
-function Base.print{S}(io::IO, seqrec::SeqRecord{S,FASTAMetadata})
-    write(io, ">", seqrec.name, " ", seqrec.metadata.description, "\n")
+function Base.show{S}(io::IO, seqrec::SeqRecord{S,FASTAMetadata})
+    print(io, ">", seqrec.name)
+    if !isempty(seqrec.metadata.description)
+        print(io, " ", seqrec.metadata.description)
+    end
+    print(io, '\n')
     print(io, seqrec.seq)
 end
-
 
 "Writes a FASTASeqRecord to an IO-stream (and obeys FASTAs max character constraint)"
 function Base.write{T}(io::IO, seqrec::SeqRecord{T, FASTAMetadata})

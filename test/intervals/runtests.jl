@@ -368,6 +368,13 @@ end
             for interval in open(filename, BED, memory_map=false)
             end
 
+            # in-place parsing
+            stream = open(filename, BED)
+            entry = eltype(stream)()
+            while !eof(stream)
+                read!(stream, entry)
+            end
+
             # Check round trip
             output = IOBuffer()
             expected_entries = Any[]

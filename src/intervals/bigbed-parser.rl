@@ -32,11 +32,10 @@ end
         input.block_size_idx = 1
         input.block_first_idx = 1
 
-        yield = true
         # // fbreak causes will cause the pushmark action for the next seqname
         # // to be skipped, so we do it here
         Ragel.@anchor!
-        fbreak;
+        Ragel.@yield ftargs
     }
 
     action anchor { Ragel.@anchor! }
@@ -131,7 +130,7 @@ typealias StringFieldVector Vector{StringField}
 typealias NullableStringFieldVector Nullable{StringFieldVector}
 typealias NullableStringField Nullable{StringField}
 
-type BigBedDataParser
+type BigBedDataParser <: AbstractParser
     state::Ragel.State
 
     # intermediate values used during parsing

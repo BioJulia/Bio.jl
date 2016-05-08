@@ -119,6 +119,9 @@ using
     Bio.StringFields,
     Bio.Ragel
 
+import ..Ragel: tryread!
+export tryread!
+
 using Bio:
     FileFormat,
     AbstractParser

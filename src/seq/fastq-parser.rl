@@ -1,5 +1,5 @@
 %%{
-    machine _fastqparser;
+    machine fastqparser;
 
     action count_line {
         state.linenum += 1
@@ -60,8 +60,8 @@
         empty!(input.seqbuf)
         empty!(input.name2buf)
         empty!(input.desc2buf)
-        yield = true;
-        fbreak;
+
+        Ragel.@yield ftargs
     }
 
     newline     = '\r'? '\n'     >count_line;
@@ -104,9 +104,7 @@ type FASTQParser <: AbstractParser
 
     function FASTQParser(input::BufferedInputStream,
                          quality_encodings::QualityEncoding)
-        %% write init;
-
-        return new(Ragel.State(cs, input),
+        return new(Ragel.State(fastqparser_start, input),
                    BufferedOutputStream(), BufferedOutputStream(),
                    StringField(), StringField(), 0, quality_encodings)
     end
@@ -117,6 +115,10 @@ function Base.eltype(::Type{FASTQParser})
     return FASTQSeqRecord
 end
 
+function Base.eof(parser::FASTQParser)
+    return eof(parser.state.stream)
+end
+
 
 function Base.open(input::BufferedInputStream, ::Type{FASTQ};
                    quality_encodings::QualityEncoding=EMPTY_QUAL_ENCODING)
@@ -124,7 +126,7 @@ function Base.open(input::BufferedInputStream, ::Type{FASTQ};
 end
 
 
-Ragel.@generate_read_fuction("_fastqparser", FASTQParser, FASTQSeqRecord,
+Ragel.@generate_read_fuction("fastqparser", FASTQParser, FASTQSeqRecord,
     begin
         %% write exec;
     end)
