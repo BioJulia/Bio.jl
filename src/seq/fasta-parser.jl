@@ -8,7 +8,7 @@ const _fastaparser_nfa_offsets = Int8[ 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 ,  ]
 const _fastaparser_nfa_push_actions = Int8[ 0, 0 ,  ]
 const _fastaparser_nfa_pop_trans = Int8[ 0, 0 ,  ]
 "A type encapsulating the current state of a FASTA parser"
-type FASTAParser <: AbstractParser
+type FASTAParser{S<:Sequence} <: AbstractParser
 state::Ragel.State
 seqbuf::BufferedOutputStream{BufferedStreams.EmptyStream}
 
@@ -17,22 +17,24 @@ function FASTAParser(input::BufferedInputStream)
 end
 end
 
-	function 	Base.eltype(::Type{FASTAParser})
-	return FASTASeqRecord
+	function 	Base.eltype{S}(::Type{FASTAParser{S}})
+	return SeqRecord{S,FASTAMetadata}
 end
 
 function Base.eof(parser::FASTAParser)
 	return eof(parser.state.stream)
 end
 
-function Base.open(input::BufferedInputStream, ::Type{FASTA})
-	return FASTAParser(input)
+function Base.open{S}(input::BufferedInputStream, ::Type{FASTA},
+	::Type{S}=BioSequence)
+	return FASTAParser{S}(input)
 end
 
+# FIXME: output type
 Ragel.@generate_read_fuction(
 "fastaparser",
 FASTAParser,
-FASTASeqRecord,
+SeqRecord,
 begin
 begin
 if ( p == pe  )
@@ -104,9 +106,8 @@ cs = 0;
 @goto _out
 @label ctr17
 begin
-if seqtype(typeof(output)) == Sequence
-		alphabet = predict(input.seqbuf.buffer, 1, length(input.seqbuf))
-		ET = alphabet_type[alphabet]
+if seqtype(typeof(output)) == BioSequence
+		ET = predict(input.seqbuf.buffer, 1, length(input.seqbuf))
 		if 	ET == typeof(output.seq)
 	resize!(output.seq, length(input.seqbuf))
 	encode_copy!(output.seq, 1, input.seqbuf.buffer, 1, length(input.seqbuf))
@@ -126,9 +127,8 @@ begin
 	Ragel.@append_from_anchor!(input.seqbuf)
 end
 begin
-if seqtype(typeof(output)) == Sequence
-		alphabet = predict(input.seqbuf.buffer, 1, length(input.seqbuf))
-		ET = alphabet_type[alphabet]
+if seqtype(typeof(output)) == BioSequence
+		ET = predict(input.seqbuf.buffer, 1, length(input.seqbuf))
 		if 	ET == typeof(output.seq)
 	resize!(output.seq, length(input.seqbuf))
 	encode_copy!(output.seq, 1, input.seqbuf.buffer, 1, length(input.seqbuf))
@@ -439,9 +439,8 @@ if ( p == eof  )
 begin
 if ( cs  == 7 )
 begin
-if seqtype(typeof(output)) == Sequence
-alphabet = predict(input.seqbuf.buffer, 1, length(input.seqbuf))
-ET = alphabet_type[alphabet]
+if seqtype(typeof(output)) == BioSequence
+ET = predict(input.seqbuf.buffer, 1, length(input.seqbuf))
 if ET == typeof(output.seq)
 resize!(output.seq, length(input.seqbuf))
 encode_copy!(output.seq, 1, input.seqbuf.buffer, 1, length(input.seqbuf))
@@ -462,9 +461,8 @@ begin
 Ragel.@append_from_anchor!(input.seqbuf)
 end
 begin
-if seqtype(typeof(output)) == Sequence
-alphabet = predict(input.seqbuf.buffer, 1, length(input.seqbuf))
-ET = alphabet_type[alphabet]
+if seqtype(typeof(output)) == BioSequence
+ET = predict(input.seqbuf.buffer, 1, length(input.seqbuf))
 if ET == typeof(output.seq)
 resize!(output.seq, length(input.seqbuf))
 encode_copy!(output.seq, 1, input.seqbuf.buffer, 1, length(input.seqbuf))

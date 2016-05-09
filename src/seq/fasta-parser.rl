@@ -2,9 +2,8 @@
     machine fastaparser;
 
     action finish_match {
-        if seqtype(typeof(output)) == Sequence
-            alphabet = predict(input.seqbuf.buffer, 1, length(input.seqbuf))
-            ET = alphabet_type[alphabet]
+        if seqtype(typeof(output)) == BioSequence
+            ET = predict(input.seqbuf.buffer, 1, length(input.seqbuf))
             if ET == typeof(output.seq)
                 resize!(output.seq, length(input.seqbuf))
                 encode_copy!(output.seq, 1, input.seqbuf.buffer, 1, length(input.seqbuf))
@@ -43,7 +42,7 @@
 
 
 "A type encapsulating the current state of a FASTA parser"
-type FASTAParser <: AbstractParser
+type FASTAParser{S<:Sequence} <: AbstractParser
     state::Ragel.State
     seqbuf::BufferedOutputStream{BufferedStreams.EmptyStream}
 
@@ -52,22 +51,24 @@ type FASTAParser <: AbstractParser
     end
 end
 
-function Base.eltype(::Type{FASTAParser})
-    return FASTASeqRecord
+function Base.eltype{S}(::Type{FASTAParser{S}})
+    return SeqRecord{S,FASTAMetadata}
 end
 
 function Base.eof(parser::FASTAParser)
     return eof(parser.state.stream)
 end
 
-function Base.open(input::BufferedInputStream, ::Type{FASTA})
-    return FASTAParser(input)
+function Base.open{S}(input::BufferedInputStream, ::Type{FASTA},
+                      ::Type{S}=BioSequence)
+    return FASTAParser{S}(input)
 end
 
+# FIXME: output type may be too loose
 Ragel.@generate_read_fuction(
     "fastaparser",
     FASTAParser,
-    FASTASeqRecord,
+    SeqRecord,
     begin
         %% write exec;
     end)

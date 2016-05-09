@@ -1,9 +1,9 @@
 # A sequence record is a named sequence with attached metadata.
 """
-`SeqRecord{S, T}` is a type holding a named sequence of type `S`, along with
+`SeqRecord{S,T}` is a type holding a named sequence of type `S`, along with
 some arbitrary metadata of type `T`.
 """
-type SeqRecord{S <: Sequence, T}
+type SeqRecord{S<:Sequence,T}
     name::StringField
     seq::S
     metadata::T
@@ -18,7 +18,7 @@ type SeqRecord{S <: Sequence, T}
 end
 
 
-function seqtype{S, T}(::Type{SeqRecord{S, T}})
+function seqtype{S,T}(::Type{SeqRecord{S,T}})
     return S
 end
 

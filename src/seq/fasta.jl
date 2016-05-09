@@ -42,7 +42,7 @@ function Base.show{S}(io::IO, seqrec::SeqRecord{S,FASTAMetadata})
 end
 
 "Writes a FASTASeqRecord to an IO-stream (and obeys FASTAs max character constraint)"
-function Base.write{T}(io::IO, seqrec::SeqRecord{T, FASTAMetadata})
+function Base.write{T}(io::IO, seqrec::SeqRecord{T,FASTAMetadata})
     write(io, ">", seqrec.name)
     if !isempty(seqrec.metadata.description)
         write(io, " ", seqrec.metadata.description)

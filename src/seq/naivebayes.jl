@@ -3,11 +3,7 @@
 
 # A/C/G/T/U/N/Other
 const n_features = 7
-const alphabets = [DNAAlphabet, RNAAlphabet, AminoAcidAlphabet]
-const alphabet_type = Dict(
-    DNAAlphabet => DNASequence,
-    RNAAlphabet => RNASequence,
-    AminoAcidAlphabet => AminoAcidSequence)
+const seqtypes = [DNASequence, RNASequence, AminoAcidSequence]
 
 # logarithmic likelihood and prior for each character given an alphabet
 # NOTE: Likelihood was trained with the train function.
@@ -58,7 +54,7 @@ function predict(seq::Vector{UInt8}, start, stop)
             loglikelihood[6,k] * n +
             loglikelihood[7,k] * other
     end
-    return alphabets[indmax(logposterior)]
+    return seqtypes[indmax(logposterior)]
 end
 
 predict(seq::ASCIIString) = predict(seq.data)
