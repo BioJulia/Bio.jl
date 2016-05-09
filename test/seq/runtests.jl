@@ -1866,10 +1866,12 @@ end
             >xxx
             ACG
             """)
-            for T in [DNASequence, RNASequence, AminoAcidSequence]
+            for A in (DNAAlphabet{2}, DNAAlphabet{4},
+                      RNAAlphabet{2}, RNAAlphabet{4},
+                      AminoAcidAlphabet)
                 seekstart(input)
-                seq = first(open(input, FASTA, T)).seq
-                @test typeof(seq) == T
+                seq = first(open(input, FASTA, BioSequence{A})).seq
+                @test typeof(seq) == BioSequence{A}
             end
         end
     end
