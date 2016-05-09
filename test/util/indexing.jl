@@ -1,4 +1,4 @@
-module TestIndexing
+module TestIndexers
 
 if VERSION >= v"0.5-"
     using Base.Test
