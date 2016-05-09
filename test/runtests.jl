@@ -23,10 +23,6 @@ end
 
 include("TestFunctions.jl")
 
-for target in readdir("util")
-    include("util/$target")
-end
-
 for target in targets
     include("$target/runtests.jl")
 end
