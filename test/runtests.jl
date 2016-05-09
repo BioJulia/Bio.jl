@@ -6,7 +6,8 @@ available_targets = [
     "seq",
     "services",
     "structure",
-    "tools"
+    "tools",
+    "util"
 ]
 
 if isempty(ARGS)
