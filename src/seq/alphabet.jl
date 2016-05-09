@@ -33,6 +33,11 @@ General character alphabet.
 immutable CharAlphabet <: Alphabet end
 
 """
+Void alphabet (internal use only).
+"""
+immutable VoidAlphabet <: Alphabet end
+
+"""
 The number of bits to represent the alphabet.
 """
 function bitsof end
@@ -45,6 +50,7 @@ for n in (2, 4)
 end
 bitsof(::Type{AminoAcidAlphabet}) = 8
 bitsof(::Type{CharAlphabet}) = 32
+bitsof(::Type{VoidAlphabet}) = 0
 
 Base.eltype(::Type{DNAAlphabet}) = DNANucleotide
 Base.eltype(::Type{RNAAlphabet}) = RNANucleotide
@@ -52,6 +58,7 @@ Base.eltype{n}(::Type{DNAAlphabet{n}}) = DNANucleotide
 Base.eltype{n}(::Type{RNAAlphabet{n}}) = RNANucleotide
 Base.eltype(::Type{AminoAcidAlphabet}) = AminoAcid
 Base.eltype(::Type{CharAlphabet}) = Char
+Base.eltype(::Type{VoidAlphabet}) = Void
 
 alphabet(::Type{DNAAlphabet{2}}) = DNA_A:DNA_T
 alphabet(::Type{RNAAlphabet{2}}) = RNA_A:RNA_U
@@ -60,6 +67,7 @@ alphabet(::Type{RNAAlphabet{4}}) = alphabet(RNANucleotide)
 alphabet(::Type{AminoAcidAlphabet}) = alphabet(AminoAcid)
 # TODO: this alphabet includes invalid Unicode scalar values
 alphabet(::Type{CharAlphabet}) = typemin(Char):typemax(Char)
+alphabet(::Type{VoidAlphabet}) = nothing
 
 
 # Encoders & Decoders
