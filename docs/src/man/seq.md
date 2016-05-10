@@ -496,7 +496,7 @@ Translation Tables:
 As we saw above, DNA and RNA sequences can store any ambiguous nucleotides like
 'N'.  If you are sure that nucleotide sequences store unambiguous nucleotides
 only, you can save the memory space of sequences. `DNAAlphabet{2}` is an
-alphabet that uses two bits per base and limits to only umambiguous nucleotide
+alphabet that uses two bits per base and limits to only unambiguous nucleotide
 symbols (ACGT in DNA and ACGU in RNA). To create a sequence of this
 alphabet, you need to explicitly pass `DNAAlphabet{2}` to `BioSequence` as its
 parametric type:
@@ -554,4 +554,3 @@ The type of the `metadata` field depends on the source of the sequence record.
 For example, if a record is read from a FASTA file, metadata contains the
 description field. If from a FASTQ file, a quality scores assigned to base calls
 during sequencing.
-
