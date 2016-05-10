@@ -1926,6 +1926,20 @@ end
                 @test_throws Exception check_fastq_parse(joinpath(path, specimen["filename"]))
             end
         end
+
+        @testset "specified sequence type" begin
+            input = IOBuffer("""
+            @foobar
+            TTCTAAATT
+            +
+            HHFHEHHDF
+            """)
+            for A in (DNAAlphabet{2}, DNAAlphabet{4})
+                seekstart(input)
+                seq = first(open(input, FASTQ, BioSequence{A})).seq
+                @test typeof(seq) == BioSequence{A}
+            end
+        end
     end
 end
 

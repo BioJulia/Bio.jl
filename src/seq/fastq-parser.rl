@@ -93,7 +93,7 @@
 
 
 "A type encapsulating the current state of a FASTQ parser"
-type FASTQParser <: AbstractParser
+type FASTQParser{S<:Sequence} <: AbstractParser
     state::Ragel.State
     seqbuf::BufferedOutputStream{BufferedStreams.EmptyStream}
     qualbuf::BufferedOutputStream{BufferedStreams.EmptyStream}
@@ -110,23 +110,25 @@ type FASTQParser <: AbstractParser
     end
 end
 
-
-function Base.eltype(::Type{FASTQParser})
-    return FASTQSeqRecord
+function Base.eltype{S}(::Type{FASTQParser{S}})
+    return SeqRecord{S,FASTQMetadata}
 end
 
 function Base.eof(parser::FASTQParser)
     return eof(parser.state.stream)
 end
 
-
-function Base.open(input::BufferedInputStream, ::Type{FASTQ};
-                   quality_encodings::QualityEncoding=EMPTY_QUAL_ENCODING)
-    return FASTQParser(input, quality_encodings)
+function Base.open{S}(input::BufferedInputStream, ::Type{FASTQ},
+                      ::Type{S}=DNASequence;
+                      qualenc::QualityEncoding=EMPTY_QUAL_ENCODING)
+    return FASTQParser{S}(input, qualenc)
 end
 
-
-Ragel.@generate_read_fuction("fastqparser", FASTQParser, FASTQSeqRecord,
+# FIXME: output type may be too loose
+Ragel.@generate_read_fuction(
+    "fastqparser",
+    FASTQParser,
+    SeqRecord,
     begin
         %% write exec;
     end)
