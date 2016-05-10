@@ -93,6 +93,10 @@ BioSequence(::Type{RNANucleotide}) = RNASequence()
 BioSequence(::Type{AminoAcid}) = AminoAcidSequence()
 BioSequence(::Type{Char}) = CharSequence()
 
+function BioSequence()
+    return BioSequence{VoidAlphabet}(Vector{UInt64}(0), 0:-1, false)
+end
+
 function Base.call{A<:Alphabet}(::Type{BioSequence{A}},
                                 src::Union{AbstractString,AbstractVector},
                                 startpos::Integer=1,

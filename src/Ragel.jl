@@ -229,10 +229,10 @@ end
 # Open functions for various sources
 # ----------------------------------
 
-function Base.open{T<:FileFormat}(filename::AbstractString, ::Type{T}; args...)
+function Base.open{T<:FileFormat}(filename::AbstractString, ::Type{T}, args...; kwargs...)
     memory_map = false
     i = 0
-    for arg in args
+    for arg in kwargs
         i += 1
         if arg[1] == :memory_map
             memory_map = arg[2]
@@ -240,7 +240,7 @@ function Base.open{T<:FileFormat}(filename::AbstractString, ::Type{T}; args...)
         end
     end
     if i > 0
-        splice!(args, i)
+        splice!(kwargs, i)
     end
 
     if memory_map
@@ -249,11 +249,11 @@ function Base.open{T<:FileFormat}(filename::AbstractString, ::Type{T}; args...)
         source = open(filename)
     end
 
-    return open(BufferedInputStream(source), T; args...)
+    return open(BufferedInputStream(source), T, args...; kwargs...)
 end
 
-function Base.open{T<:FileFormat}(source::Union{IO,Vector{UInt8}}, ::Type{T}; args...)
-    return open(BufferedInputStream(source), T; args...)
+function Base.open{T<:FileFormat}(source::Union{IO,Vector{UInt8}}, ::Type{T}, args...; kwargs...)
+    return open(BufferedInputStream(source), T, args...; kwargs...)
 end
 
 
