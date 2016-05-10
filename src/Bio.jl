@@ -14,5 +14,6 @@ include("structure/Structure.jl")
 include("tools/blast/Blast.jl")
 include("util/indexing.jl")
 include("util/windows.jl")
+include("precompile.jl")
 
 end # module Bio
