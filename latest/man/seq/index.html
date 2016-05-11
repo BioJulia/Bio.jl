@@ -741,7 +741,6 @@
 <h3 id="other-functions">Other functions</h3>
 <p><a id='Bio.Seq.alphabet' href='#Bio.Seq.alphabet'>#</a>
 <strong><code>Bio.Seq.alphabet</code></strong> &mdash; <em>Function</em>.</p>
-<hr />
 <div class="codehilite"><pre><span></span>alphabet(typ)
 </pre></div>
 
@@ -750,7 +749,6 @@
 <p><code>typ</code> is one of <code>DNANucleotide</code>, <code>RNANucleotide</code>, or <code>AminoAcid</code>.</p>
 <p><a id='Bio.Seq.gap' href='#Bio.Seq.gap'>#</a>
 <strong><code>Bio.Seq.gap</code></strong> &mdash; <em>Function</em>.</p>
-<hr />
 <div class="codehilite"><pre><span></span>gap(typ)
 </pre></div>
 
@@ -935,7 +933,6 @@
 
 <p><a id='Bio.Seq.complement!-Tuple{Any}' href='#Bio.Seq.complement!-Tuple{Any}'>#</a>
 <strong><code>Bio.Seq.complement!</code></strong> &mdash; <em>Method</em>.</p>
-<hr />
 <div class="codehilite"><pre><span></span>complement!(seq)
 </pre></div>
 
@@ -944,7 +941,6 @@
 <p>Ambiguous nucleotides are left as-is.</p>
 <p><a id='Bio.Seq.reverse_complement!-Tuple{Any}' href='#Bio.Seq.reverse_complement!-Tuple{Any}'>#</a>
 <strong><code>Bio.Seq.reverse_complement!</code></strong> &mdash; <em>Method</em>.</p>
-<hr />
 <div class="codehilite"><pre><span></span>reverse_complement!(seq)
 </pre></div>
 
@@ -997,7 +993,6 @@
 <p>A number of common sequence operations are provided in the <code>Bio.Seq</code> module:</p>
 <p><a id='Bio.Seq.complement' href='#Bio.Seq.complement'>#</a>
 <strong><code>Bio.Seq.complement</code></strong> &mdash; <em>Function</em>.</p>
-<hr />
 <p><code>complement(kmer::Kmer)</code></p>
 <p>The Kmer complement of <code>kmer</code></p>
 <div class="codehilite"><pre><span></span>complement(seq)
@@ -1008,7 +1003,6 @@
 <p>Ambiguous nucleotides are left as-is.</p>
 <p><a id='Bio.Seq.reverse_complement' href='#Bio.Seq.reverse_complement'>#</a>
 <strong><code>Bio.Seq.reverse_complement</code></strong> &mdash; <em>Function</em>.</p>
-<hr />
 <p><code>reverse_complement(kmer::Kmer)</code></p>
 <p>Reversed complement of <code>kmer</code></p>
 <div class="codehilite"><pre><span></span>reverse_complement(seq)
@@ -1019,7 +1013,6 @@
 <p>Ambiguous nucleotides are left as-is.</p>
 <p><a id='Bio.Seq.mismatches' href='#Bio.Seq.mismatches'>#</a>
 <strong><code>Bio.Seq.mismatches</code></strong> &mdash; <em>Function</em>.</p>
-<hr />
 <p><code>mismatches(a::Kmer, b::Kmer)</code></p>
 <p>Return the number of mismatches between <code>a</code> and <code>b</code>.</p>
 <h3 id="arguments">Arguments</h3>
@@ -1042,7 +1035,6 @@
 <p>The number of mismatches</p>
 <p><a id='Bio.Seq.composition' href='#Bio.Seq.composition'>#</a>
 <strong><code>Bio.Seq.composition</code></strong> &mdash; <em>Function</em>.</p>
-<hr />
 <div class="codehilite"><pre><span></span>composition(seq)
 </pre></div>
 
@@ -1053,7 +1045,6 @@
 <p>The <a href="./#Bio.Seq.translate"><code>translate</code></a> funtion translates a sequence of codons in a RNA sequence to a amino acid sequence besed on a genetic code mapping.  The <code>Bio.Seq</code> module contains all NCBI defined genetic codes and they are registered in <a href="./#Bio.Seq.ncbi_trans_table"><code>ncbi_trans_table</code></a>.</p>
 <p><a id='Bio.Seq.translate' href='#Bio.Seq.translate'>#</a>
 <strong><code>Bio.Seq.translate</code></strong> &mdash; <em>Function</em>.</p>
-<hr />
 <div class="codehilite"><pre><span></span>translate(rna_seq, code=standard_genetic_code, allow_ambiguous_codons=true)
 </pre></div>
 
@@ -1062,7 +1053,6 @@
 <p>Translation uses genetic code <code>code</code> to map codons to amino acids. See <code>ncbi_trans_table</code> for available genetic codes. If codons in the given RNA sequence cannot determine a unique amino acid, they will be translated to <code>AA_X</code> if <code>allow_ambiguous_codons</code> is <code>true</code> and otherwise result in an error.</p>
 <p><a id='Bio.Seq.ncbi_trans_table' href='#Bio.Seq.ncbi_trans_table'>#</a>
 <strong><code>Bio.Seq.ncbi_trans_table</code></strong> &mdash; <em>Constant</em>.</p>
-<hr />
 <p>Genetic code list of NCBI.</p>
 <p>The standard genetic code is <code>ncbi_trans_table[1]</code> and others can be shown by <code>show(ncbi_trans_table)</code>. For more details, consult the next link: http://www.ncbi.nlm.nih.gov/Taxonomy/taxonomyhome.html/index.cgi?chapter=cgencodes.</p>
 <div class="codehilite"><pre><span></span><span class="n">julia</span><span class="o">&gt;</span> <span class="n">ncbi_trans_table</span>
@@ -1105,7 +1095,6 @@
 <p>The <code>Kmer{T,k}</code> type parameterized on alphabet (<code>T</code>, either <code>DNANucleotide</code>, or <code>RNANucleotide</code>) and size <code>k</code>. A number of functions are provided for operating on <code>Kmers</code>.</p>
 <p><a id='Bio.Seq.each' href='#Bio.Seq.each'>#</a>
 <strong><code>Bio.Seq.each</code></strong> &mdash; <em>Function</em>.</p>
-<hr />
 <p>Initialize an iterator over all k-mers in a sequence.</p>
 <p>Any k-mer containing an N will be skipped over.</p>
 <h3 id="arguments_2">Arguments</h3>
@@ -1126,7 +1115,6 @@ end
 
 <p><a id='Bio.Seq.KmerCounts' href='#Bio.Seq.KmerCounts'>#</a>
 <strong><code>Bio.Seq.KmerCounts</code></strong> &mdash; <em>Type</em>.</p>
-<hr />
 <p>Count ocurrences of short (&lt;= 32) k-mers in a sequence.</p>
 <p>This method uses a dense table to store counts, requiring O(4^k) memory, so is not recommended for large k-mer sizes.</p>
 <h3 id="arguments_3">Arguments:</h3>
@@ -1136,12 +1124,10 @@ end
 </ul>
 <p><a id='Bio.Seq.canonical' href='#Bio.Seq.canonical'>#</a>
 <strong><code>Bio.Seq.canonical</code></strong> &mdash; <em>Function</em>.</p>
-<hr />
 <p>Canonical k-mer of <code>x</code></p>
 <p>A canonical k-mer is the numerical lesser of a k-mer and its reverse complement. This is useful in hashing/counting k-mers in data that is not strand specific, and thus observing k-mer is equivalent to observing its reverse complement.</p>
 <p><a id='Bio.Seq.neighbors' href='#Bio.Seq.neighbors'>#</a>
 <strong><code>Bio.Seq.neighbors</code></strong> &mdash; <em>Function</em>.</p>
-<hr />
 <p>Iterate through k-mers neighboring <code>x</code> on a de Bruijn graph.</p>
 <p><a id='Sequence-records-1'></a></p>
 <h2 id="sequence-records">Sequence records</h2>

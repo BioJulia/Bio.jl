@@ -519,7 +519,6 @@ reference: AGGGTGGCATTTATCAG---ACGTTTCGAGAC
 <h2 id="operating-on-alignments">Operating on alignments</h2>
 <p><a id='Base.first' href='#Base.first'>#</a>
 <strong><code>Base.first</code></strong> &mdash; <em>Function</em>.</p>
-<hr />
 <div class="codehilite"><pre><span></span><span class="cp">..  first(coll)</span>
 
 Get the first element of an iterable collection. Returns the start point of a <span class="na">:obj:</span><span class="nv">`Range`</span>
@@ -530,7 +529,6 @@ even if it is empty.
 <p>First position in the reference sequence.</p>
 <p><a id='Base.last' href='#Base.last'>#</a>
 <strong><code>Base.last</code></strong> &mdash; <em>Function</em>.</p>
-<hr />
 <div class="codehilite"><pre><span></span><span class="cp">..  last(coll)</span>
 
 Get the last element of an ordered collection, if it can be computed in O(1) time.
@@ -542,7 +540,6 @@ Returns the end point of a <span class="na">:obj:</span><span class="nv">`Range`
 <p>Last position in the reference sequence.</p>
 <p><a id='Bio.Align.seq2ref' href='#Bio.Align.seq2ref'>#</a>
 <strong><code>Bio.Align.seq2ref</code></strong> &mdash; <em>Function</em>.</p>
-<hr />
 <div class="codehilite"><pre><span></span>seq2ref(i, aln)
 </pre></div>
 
@@ -550,7 +547,6 @@ Returns the end point of a <span class="na">:obj:</span><span class="nv">`Range`
 <p>Map a position from sequence to reference.</p>
 <p><a id='Bio.Align.ref2seq' href='#Bio.Align.ref2seq'>#</a>
 <strong><code>Bio.Align.ref2seq</code></strong> &mdash; <em>Function</em>.</p>
-<hr />
 <div class="codehilite"><pre><span></span>ref2seq(i, aln)
 </pre></div>
 
@@ -558,7 +554,6 @@ Returns the end point of a <span class="na">:obj:</span><span class="nv">`Range`
 <p>Map a position from reference to sequence.</p>
 <p><a id='Bio.Align.cigar' href='#Bio.Align.cigar'>#</a>
 <strong><code>Bio.Align.cigar</code></strong> &mdash; <em>Function</em>.</p>
-<hr />
 <p>Output a CIGAR string encoding of an <code>Alignment</code>. This is not entirely lossless as it discards the alignments start positions.</p>
 <p><a id='Pairwise-alignment-1'></a></p>
 <h2 id="pairwise-alignment">Pairwise alignment</h2>
@@ -619,7 +614,6 @@ Returns the end point of a <span class="na">:obj:</span><span class="nv">`Range`
 <p><code>pairalign</code> returns a <code>PairwiseAlignmentResult</code> object and some accessors are provided for it.</p>
 <p><a id='Bio.Align.score' href='#Bio.Align.score'>#</a>
 <strong><code>Bio.Align.score</code></strong> &mdash; <em>Function</em>.</p>
-<hr />
 <div class="codehilite"><pre><span></span>score(alignment_result)
 </pre></div>
 
@@ -627,7 +621,6 @@ Returns the end point of a <span class="na">:obj:</span><span class="nv">`Range`
 <p>Return score of alignment.</p>
 <p><a id='Bio.Align.distance' href='#Bio.Align.distance'>#</a>
 <strong><code>Bio.Align.distance</code></strong> &mdash; <em>Function</em>.</p>
-<hr />
 <div class="codehilite"><pre><span></span>distance(alignment_result)
 </pre></div>
 
@@ -635,7 +628,6 @@ Returns the end point of a <span class="na">:obj:</span><span class="nv">`Range`
 <p>Retrun distance of alignment.</p>
 <p><a id='Bio.Align.hasalignment' href='#Bio.Align.hasalignment'>#</a>
 <strong><code>Bio.Align.hasalignment</code></strong> &mdash; <em>Function</em>.</p>
-<hr />
 <div class="codehilite"><pre><span></span>hasalignment(alignment_result)
 </pre></div>
 
@@ -643,7 +635,6 @@ Returns the end point of a <span class="na">:obj:</span><span class="nv">`Range`
 <p>Check if alignment is stored or not.</p>
 <p><a id='Bio.Align.alignment' href='#Bio.Align.alignment'>#</a>
 <strong><code>Bio.Align.alignment</code></strong> &mdash; <em>Function</em>.</p>
-<hr />
 <div class="codehilite"><pre><span></span>alignment(alignment_result)
 </pre></div>
 
@@ -653,7 +644,6 @@ Returns the end point of a <span class="na">:obj:</span><span class="nv">`Range`
 <p>Pairwise alignment also implements some useful operations on it.</p>
 <p><a id='Bio.Align.count_matches' href='#Bio.Align.count_matches'>#</a>
 <strong><code>Bio.Align.count_matches</code></strong> &mdash; <em>Function</em>.</p>
-<hr />
 <div class="codehilite"><pre><span></span>count_matches(aln)
 </pre></div>
 
@@ -661,7 +651,6 @@ Returns the end point of a <span class="na">:obj:</span><span class="nv">`Range`
 <p>Count the number of matching positions.</p>
 <p><a id='Bio.Align.count_mismatches' href='#Bio.Align.count_mismatches'>#</a>
 <strong><code>Bio.Align.count_mismatches</code></strong> &mdash; <em>Function</em>.</p>
-<hr />
 <div class="codehilite"><pre><span></span>count_mismatches(aln)
 </pre></div>
 
@@ -669,7 +658,6 @@ Returns the end point of a <span class="na">:obj:</span><span class="nv">`Range`
 <p>Count the number of mismatching positions.</p>
 <p><a id='Bio.Align.count_insertions' href='#Bio.Align.count_insertions'>#</a>
 <strong><code>Bio.Align.count_insertions</code></strong> &mdash; <em>Function</em>.</p>
-<hr />
 <div class="codehilite"><pre><span></span>count_insertions(aln)
 </pre></div>
 
@@ -677,7 +665,6 @@ Returns the end point of a <span class="na">:obj:</span><span class="nv">`Range`
 <p>Count the number of inserting positions.</p>
 <p><a id='Bio.Align.count_deletions' href='#Bio.Align.count_deletions'>#</a>
 <strong><code>Bio.Align.count_deletions</code></strong> &mdash; <em>Function</em>.</p>
-<hr />
 <div class="codehilite"><pre><span></span>count_deletions(aln)
 </pre></div>
 
@@ -685,7 +672,6 @@ Returns the end point of a <span class="na">:obj:</span><span class="nv">`Range`
 <p>Count the number of deleting positions.</p>
 <p><a id='Bio.Align.count_aligned' href='#Bio.Align.count_aligned'>#</a>
 <strong><code>Bio.Align.count_aligned</code></strong> &mdash; <em>Function</em>.</p>
-<hr />
 <div class="codehilite"><pre><span></span>count_aligned(aln)
 </pre></div>
 
