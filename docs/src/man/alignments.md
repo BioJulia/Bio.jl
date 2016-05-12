@@ -60,7 +60,7 @@ Using anchors we would represent this as the following series of anchors:
 ```
 
 An `Alignment` object can be created from a series of anchors:
-```julia
+```jlcon
 julia> Alignment([
            AlignmentAnchor(0, 4, OP_START),
            AlignmentAnchor(4, 8, OP_MATCH),
@@ -99,7 +99,7 @@ type, which is a pair of the aligned sequence and an `Alignment` object.
 
 The following example creates an aligned sequence object from a sequence and an
 alignment:
-```julia
+```jlcon
 julia> AlignedSequence(  # pass an Alignment object
            dna"ACGTAT",
            Alignment([
@@ -126,7 +126,7 @@ ACGTAT
 
 If you already have an aligned sequence with gap symbols, it can be converted to
 an `AlignedSequence` object by passing a reference sequence with it:
-```julia
+```jlcon
 julia> seq = dna"ACGT--AAT--"
 11nt DNA Sequence:
 ACGT--AAT--
@@ -162,7 +162,7 @@ A pair of optimization type and score (or cost) model determines the best
 alignments between two sequences. The next example uses a pair of
 `GlobalAlignment` and `AffineGapScoreModel` to obtain the best alignment:
 
-```julia
+```jlcon
 julia> problem = GlobalAlignment()
 Bio.Align.GlobalAlignment()
 
@@ -214,7 +214,7 @@ Alignment type can also be a distance of two sequences:
 
 In this alignment, `CostModel` is used instead of `AffineGapScoreModel` to define
 cost of substitution, insertion, and deletion:
-```julia
+```jlcon
 julia> costmodel = CostModel(match=0, mismatch=1, insertion=1, deletion=1);
 
 julia> pairalign(EditDistance(), "abcd", "adcde", costmodel)
@@ -247,7 +247,7 @@ Pairwise alignment also implements some useful operations on it.
     count_aligned
 
 The example below shows a use case of these operations:
-```julia
+```jlcon
 julia> s1 = dna"CCTAGGAGGG";
 
 julia> s2 = dna"ACCTGGTATGATAGCG";
@@ -331,7 +331,7 @@ wrapper of regular matrix.
 Some common substitution matrices are provided. For DNA and RNA, `EDNAFULL` is
 defined:
 
-```julia
+```jlcon
 julia> EDNAFULL
 Bio.Align.SubstitutionMatrix{Bio.Seq.DNANucleotide,Int64}:
      A  C  G  T  M  R  W  S  Y  K  V  H  D  B  N
@@ -356,7 +356,7 @@ Bio.Align.SubstitutionMatrix{Bio.Seq.DNANucleotide,Int64}:
 
 For amino acids, PAM (Point Accepted Mutation) and BLOSUM (BLOcks SUbstitution Matrix) matrices are defined:
 
-```julia
+```jlcon
 julia> BLOSUM62
 Bio.Align.SubstitutionMatrix{Bio.Seq.AminoAcid,Int64}:
      A  R  N  D  C  Q  E  G  H  I  L  K  M  F  P  S  T  W  Y  V  O  U  B  J  Z  X  *
@@ -400,7 +400,7 @@ These matrices are downloaded from: <ftp://ftp.ncbi.nih.gov/blast/matrices/>.
 
 `SubstitutionMatrix` can be modified like a regular matrix:
 
-```julia
+```jlcon
 julia> mysubmat = copy(BLOSUM62);  # create a copy
 
 julia> mysubmat[AA_A,AA_R]  # score of AA_A => AA_R substitution is -1
@@ -423,7 +423,7 @@ mismatching substitution.  This is a preferable choice when performance is more
 important than flexibility because looking up score is faster than
 `SubstitutionMatrix`.
 
-```julia
+```jlcon
 julia> submat = DichotomousSubstitutionMatrix(1, -1)
 Bio.Align.DichotomousSubstitutionMatrix{Int64}:
      match =  1
