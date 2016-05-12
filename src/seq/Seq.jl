@@ -115,7 +115,6 @@ export
 using
     Compat,
     BufferedStreams,
-    Base.Intrinsics,
     Bio.StringFields,
     Bio.Ragel
 

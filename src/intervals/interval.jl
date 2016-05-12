@@ -1,18 +1,16 @@
-
 # Base interval types and utilities
 # ---------------------------------
 bitstype 8 Strand
 
-convert(::Type{Strand}, strand::UInt8) = box(Strand, unbox(UInt8, strand))
-convert(::Type{UInt8}, strand::Strand) = box(UInt8, unbox(Strand, strand))
-
+Base.convert(::Type{Strand}, strand::UInt8) = reinterpret(Strand, strand)
+Base.convert(::Type{UInt8}, strand::Strand) = reinterpret(UInt8, strand)
 
 const STRAND_NA   = convert(Strand, 0b000)
 const STRAND_POS  = convert(Strand, 0b001)
 const STRAND_NEG  = convert(Strand, 0b010)
 const STRAND_BOTH = convert(Strand, 0b011)
 
-function show(io::IO, strand::Strand)
+function Base.show(io::IO, strand::Strand)
     if strand == STRAND_NA
         print(io, "?")
     elseif strand == STRAND_POS
@@ -26,11 +24,9 @@ function show(io::IO, strand::Strand)
     end
 end
 
+Base.isless(a::Strand, b::Strand) = convert(UInt8, a) < convert(UInt8, b)
 
-isless(a::Strand, b::Strand) = convert(UInt8, a) < convert(UInt8, b)
-
-
-function convert(::Type{Strand}, strand::Char)
+function Base.convert(::Type{Strand}, strand::Char)
     if strand == '+'
         return STRAND_POS
     elseif strand == '-'

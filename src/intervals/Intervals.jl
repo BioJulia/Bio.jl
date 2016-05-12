@@ -21,7 +21,7 @@ export Strand,
 import ..Ragel: tryread!
 export tryread!
 
-using Base.Intrinsics,
+using
     Bio.Ragel,
     Bio.StringFields,
     BufferedStreams,

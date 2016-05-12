@@ -1,25 +1,14 @@
-
 # A representation of positions-specific integer quality scores, as in FASTQ.
-
-
 
 "A `QualityEncoding` value holds a set of encoding compatible with a string"
 bitstype 16 QualityEncoding
 
-function Base.convert(::Type{QualityEncoding}, nt::UInt16)
-    return box(QualityEncoding, unbox(UInt16, nt))
-end
-
-
-function Base.convert(::Type{UInt16}, nt::QualityEncoding)
-    return box(UInt16, unbox(QualityEncoding, nt))
-end
-
+Base.convert(::Type{QualityEncoding}, nt::UInt16) = reinterpret(QualityEncoding, nt)
+Base.convert(::Type{UInt16}, nt::QualityEncoding) = reinterpret(UInt16, nt)
 
 function Base.(:|)(a::QualityEncoding, b::QualityEncoding)
     return convert(QualityEncoding, convert(UInt16, a) | convert(UInt16, b))
 end
-
 
 function Base.(:&)(a::QualityEncoding, b::QualityEncoding)
     return convert(QualityEncoding, convert(UInt16, a) & convert(UInt16, b))
