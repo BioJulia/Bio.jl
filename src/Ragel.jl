@@ -7,7 +7,6 @@ using Bio:
     FileFormat,
     AbstractParser
 
-
 # A type keeping track of a ragel-based parser's state.
 type State{T<:BufferedInputStream}
     # input stream

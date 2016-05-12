@@ -79,6 +79,7 @@ Base.convert{A<:DNAAlphabet,K}(::Type{BioSequence{A}}, x::DNAKmer{K}) = BioSeque
 Base.convert{A<:RNAAlphabet,K}(::Type{BioSequence{A}}, x::RNAKmer{K}) = BioSequence{A}([nt for nt in x])
 Base.convert{S<:AbstractString}(::Type{S}, seq::Kmer) = convert(S, [Char(x) for x in seq])
 
+
 # Constructors
 # ------------
 

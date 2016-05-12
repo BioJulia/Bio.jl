@@ -40,7 +40,6 @@ function Base.convert(::Type{Strand}, strand::Char)
     end
 end
 
-
 # Note, just to be clear: this shadows IntervalTrees.Interval
 "A genomic interval specifies interval with some associated metadata"
 type Interval{T} <: AbstractInterval{Int64}
@@ -200,7 +199,6 @@ function alphanum_isless(a::AbstractString, b::AbstractString)
 
     return j <= length(b)
 end
-
 
 """
 A type deriving `IntervalStream{T}` must be iterable and produce

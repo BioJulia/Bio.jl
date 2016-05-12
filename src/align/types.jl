@@ -1,7 +1,11 @@
 # Alignment Types
-# ---------------
+# ===============
 
 abstract AbstractAlignment
+
+
+# Alignment
+# ---------
 
 """Global-global alignment with end gap penalties."""
 immutable GlobalAlignment <: AbstractAlignment end
@@ -16,7 +20,8 @@ immutable OverlapAlignment <: AbstractAlignment end
 immutable LocalAlignment <: AbstractAlignment end
 
 
-# distances
+# Distances
+# ---------
 
 """Edit distance."""
 immutable EditDistance <: AbstractAlignment end

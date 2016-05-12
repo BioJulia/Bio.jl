@@ -7,7 +7,6 @@ immutable EachKmerIterator{T,K,S}
     step::Int
 end
 
-
 # Maybe this function should replace the default constructor.
 # Is the (unsafe) default constructor used throughout our code?
 """

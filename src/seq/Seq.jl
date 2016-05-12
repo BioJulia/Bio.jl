@@ -125,7 +125,6 @@ using Bio:
     FileFormat,
     AbstractParser
 
-
 abstract Sequence
 
 # This is useful for obscure reasons. We use SeqRecord{Sequence} for reading

@@ -18,7 +18,6 @@ import Base:
     show,
     writemime
 
-
 """
 A simplistic mutable, utf8 encoded string.
 """
@@ -29,16 +28,13 @@ type StringField <: AbstractString
     part::UnitRange{Int}
 end
 
-
 function StringField()
     return StringField(UInt8[], 1:0)
 end
 
-
 function StringField(data::Vector{UInt8})
     return StringField(data, 1:length(data))
 end
-
 
 # From base unicode/utf8.jl
 function endof(s::StringField)
@@ -52,13 +48,11 @@ function endof(s::StringField)
     return i - s.part.start + 1
 end
 
-
 # From base unicode/utf8.jl
 function isvalid(s::StringField, i::Integer)
     return (1 <= i <= endof(s.data)) &&
         !Base.is_valid_continuation(s.data[s.part.start + i - 1])
 end
-
 
 # From base unicode/utf8.jl
 function next(s::StringField, i::Int)
@@ -82,7 +76,6 @@ function next(s::StringField, i::Int)
     return Char(c), i
 end
 
-
 function copy!(field::StringField, data::Vector{UInt8},
                start::Integer, stop::Integer)
     if length(field.data) < length(data)
@@ -94,57 +87,46 @@ function copy!(field::StringField, data::Vector{UInt8},
     return n
 end
 
-
 function empty!(field::StringField)
     field.part = 1:0
 end
-
 
 function isempty(field::StringField)
     return field.part.start > field.part.stop
 end
 
-
 function convert(::Type{StringField}, str::ASCIIString)
     return StringField(copy(str.data), 1:length(str.data))
 end
-
 
 function convert(::Type{StringField}, str::UTF8String)
     return StringField(copy(str.data), 1:length(str.data))
 end
 
-
 function convert(::Type{UTF8String}, field::StringField)
     return UTF8String(field.data[field.part])
 end
-
 
 function convert(::Type{AbstractString}, field::StringField)
     return convert(UTF8String, field::StringField)
 end
 
-
 function write(io::IO, field::StringField)
     write(io, convert(UTF8String, field))
 end
-
 
 function show(io::IO, field::StringField)
     print(io, convert(UTF8String, field))
 end
 
-
 function writemime(io::IO, T::MIME"text/plain", field::StringField)
     writemime(io, T, convert(UTF8String, field))
 end
-
 
 function copy(field::StringField)
     data = field.data[field.part]
     return StringField(data, 1:length(data))
 end
-
 
 # From Base.hash over strings in hashing2.jl
 function hash(field::StringField, h::UInt64)
@@ -154,13 +136,11 @@ function hash(field::StringField, h::UInt64)
                  length(field.part), h % UInt32) + h
 end
 
-
 function (==)(a::StringField, b::StringField)
     return length(a) == length(b) &&
         ccall(:memcmp, Cint, (Ptr{Void}, Ptr{Void}, Csize_t),
               pointer(a.data, a.part.start), pointer(b.data, b.part.start), length(a)) == 0
 end
-
 
 function (==)(a::StringField, b::BufferedStreams.BufferedOutputStream)
     if a === b
@@ -172,6 +152,5 @@ function (==)(a::StringField, b::BufferedStreams.BufferedOutputStream)
         return false
     end
 end
-
 
 end # module StringFields

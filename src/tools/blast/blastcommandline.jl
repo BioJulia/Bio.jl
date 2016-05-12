@@ -148,7 +148,6 @@ function blastp(query::Vector{AminoAcidSequence}, subject::Vector{AminoAcidSeque
     return blastp(querypath, subjectpath, flags)
 end
 
-
 # Create temporary fasta-formated file for blasting.
 function makefasta(sequence::BioSequence)
     path, io = mktemp()
@@ -156,7 +155,6 @@ function makefasta(sequence::BioSequence)
     close(io)
     return path
 end
-
 
 # Create temporary multi fasta-formated file for blasting.
 function makefasta{T <: BioSequence}(sequences::Vector{T})

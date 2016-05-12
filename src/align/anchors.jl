@@ -19,10 +19,6 @@ function AlignmentAnchor(pos::Tuple{Int,Int}, op)
     return AlignmentAnchor(pos[1], pos[2], op)
 end
 
-
-# Basic operators for AlignmentAnchors
-# -------------------------------------
-
 function Base.show(io::IO, anc::AlignmentAnchor)
     print(io, "AlignmentAnchor(", anc.seqpos, ", ", anc.refpos, ", '", anc.op, "')")
 end
@@ -98,7 +94,6 @@ immutable Alignment
     end
 end
 
-
 """
 Construct an `Alignment`
 """
@@ -136,11 +131,9 @@ function Alignment(cigar::AbstractString, seqpos::Int=1, refpos::Int=1)
     return Alignment(anchors)
 end
 
-
 function Base.(:(==))(a::Alignment, b::Alignment)
     return a.anchors == b.anchors && a.firstref == b.firstref && a.lastref == b.lastref
 end
-
 
 function Base.show(io::IO, aln::Alignment)
     # print a representation of the reference sequence
@@ -250,6 +243,9 @@ function ref2seq(i::Integer, aln::Alignment)
 end
 
 
+# AlignedSequence
+# ---------------
+
 immutable AlignedSequence{S}
     seq::S
     aln::Alignment
@@ -311,7 +307,6 @@ function IntervalTrees.first(alnseq::AlignedSequence)
     return alnseq.aln.firstref
 end
 
-
 """
 Last position in the reference sequence.
 """
@@ -364,7 +359,6 @@ function Base.show(io::IO, alnseq::AlignedSequence)
         end
     end
 end
-
 
 """
 Output a CIGAR string encoding of an `Alignment`. This is not entirely lossless as

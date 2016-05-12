@@ -2,7 +2,6 @@
 
 immutable FASTA <: FileFormat end
 
-
 "Metadata for FASTA sequence records containing just a `description` field"
 type FASTAMetadata
     description::StringField

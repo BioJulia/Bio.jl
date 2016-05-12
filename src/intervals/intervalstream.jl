@@ -1,10 +1,9 @@
 # IntervalStreams
-# ---------------
-
+# ===============
+#
 # Often we'd rather avoid reading a large interval dataset into an
 # IntervalCollection. We can still do efficient intersections if we can assume
 # the data is sorted
-
 
 type IntervalStreamIntersectIterator{S, T, SS, TS}
     a::SS
@@ -22,13 +21,11 @@ type IntervalStreamIntersectIterator{S, T, SS, TS}
     end
 end
 
-
 immutable IntervalStreamIntersectIteratorState{U, V}
     a_buffer_pos::Int
     a_state::U
     b_state::V
 end
-
 
 """
 Intersect two `IntervalStreams` returning an iterator over all pairs of
@@ -40,7 +37,6 @@ function Base.intersect{SS<:IntervalStreamOrArray,TS<:IntervalStreamOrArray}(
     T = metadatatype(b)
     return IntervalStreamIntersectIterator{S, T, SS, TS}(a, b, seqname_isless)
 end
-
 
 function first_intersection{S, T, SS, TS, U, V}(
                                         a::SS,
@@ -72,7 +68,6 @@ function first_intersection{S, T, SS, TS, U, V}(
     return a_interval, b_interval, a_state, b_state
 end
 
-
 function Base.start{S,T,SS,TS}(it::IntervalStreamIntersectIterator{S,T,SS,TS})
     a_state = start(it.a)
     b_state = start(it.b)
@@ -93,7 +88,6 @@ function Base.start{S,T,SS,TS}(it::IntervalStreamIntersectIterator{S,T,SS,TS})
 
     return IntervalStreamIntersectIteratorState(1, a_state, b_state)
 end
-
 
 # Do we need a state if this is going to be stateful. State can maybe just
 # be the current interval in b
@@ -181,15 +175,12 @@ function Base.next{S,T,SS,TS,U,V}(it::IntervalStreamIntersectIterator{S,T,SS,TS}
                         a_buffer_pos, a_state, b_state)
 end
 
-
 function Base.done{S,T,SS,TS,U,V}(it::IntervalStreamIntersectIterator{S,T,SS,TS},
                                   state::IntervalStreamIntersectIteratorState{U,V})
     return state.a_buffer_pos > length(it.a_buffer)
 end
 
-
 # TODO: IntervalCollection(stream::IntervalStream) constructor.
-
 
 # Helper function for coverage. Process remaining interval end points after
 # all intervals have been read.
@@ -313,7 +304,6 @@ function coverage(stream::Union{IntervalStreamOrArray, IntervalTree},
 
     return cov
 end
-
 
 function coverage(ic::IntervalCollection)
     return coverage(ic, alphanum_isless)

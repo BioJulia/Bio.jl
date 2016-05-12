@@ -1,5 +1,5 @@
 # BigBed
-# ------
+# ======
 
 # The BigBed format is documented in
 #   Kent, W. James, et al. "BigWig and BigBed: # enabling browsing of large
@@ -17,7 +17,6 @@ const BIGBED_RTREE_MAGIC = 0x2468ACE0
 const BIGBED_MAX_ZOOM_LEVELS = 10
 const BIGBED_CURRENT_VERSION = 4
 
-
 # See Supplemental Table 5
 immutable BigBedHeader
     magic::UInt32
@@ -34,7 +33,6 @@ immutable BigBedHeader
     reserved::UInt64
 end
 
-
 function Base.read(io::IO, ::Type{BigBedHeader})
     return BigBedHeader(
         read(io, UInt32), read(io, UInt16), read(io, UInt16),
@@ -42,7 +40,6 @@ function Base.read(io::IO, ::Type{BigBedHeader})
         read(io, UInt16), read(io, UInt16), read(io, UInt64),
         read(io, UInt64), read(io, UInt32), read(io, UInt64))
 end
-
 
 function Base.write(io::IO, header::BigBedHeader)
     write(io, header.magic)
@@ -59,7 +56,6 @@ function Base.write(io::IO, header::BigBedHeader)
     write(io, header.reserved)
 end
 
-
 # See Supplemental Table 6
 immutable BigBedZoomHeader
     reduction_level::UInt32
@@ -68,12 +64,10 @@ immutable BigBedZoomHeader
     index_offset::UInt64
 end
 
-
 function Base.read(io::IO, ::Type{BigBedZoomHeader})
     return BigBedZoomHeader(
         read(io, UInt32), read(io, UInt32), read(io, UInt64), read(io, UInt64))
 end
-
 
 function Base.write(io::IO, header::BigBedZoomHeader)
     write(io, header.reduction_level)
@@ -81,7 +75,6 @@ function Base.write(io::IO, header::BigBedZoomHeader)
     write(io, header.data_offset)
     write(io, header.index_offset)
 end
-
 
 # Supplemental Table 7
 immutable BigBedTotalSummary
@@ -92,13 +85,11 @@ immutable BigBedTotalSummary
     sum_squares::Float64
 end
 
-
 function Base.read(io::IO, ::Type{BigBedTotalSummary})
     return BigBedTotalSummary(
         read(io, UInt64), read(io, UInt64), read(io, UInt64),
         read(io, UInt64), read(io, UInt64))
 end
-
 
 function Base.write(io::IO, summary::BigBedTotalSummary)
     write(io, summary.bases_covered)
@@ -107,7 +98,6 @@ function Base.write(io::IO, summary::BigBedTotalSummary)
     write(io, summary.sum_data)
     write(io, summary.sum_squares)
 end
-
 
 # Supplemental Table 19
 immutable BigBedZoomData
@@ -121,13 +111,11 @@ immutable BigBedZoomData
     sum_squares::Float32
 end
 
-
 function Base.read(io::IO, ::Type{BigBedZoomData})
     return BigBedZoomData(
         read(io, UInt32), read(io, UInt32), read(io, UInt32), read(io, UInt32),
         read(io, Float32), read(io, Float32), read(Float32), read(Float32))
 end
-
 
 function Base.write(io::IO, data::BigBedZoomData)
     write(io, data.chrom_id)
@@ -140,7 +128,6 @@ function Base.write(io::IO, data::BigBedZoomData)
     write(io, data.sum_squares)
 end
 
-
 # Supplemental Table 8
 immutable BigBedBTreeHeader
     magic::UInt32
@@ -151,19 +138,16 @@ immutable BigBedBTreeHeader
     reserved::UInt64
 end
 
-
 function Base.read(io::IO, ::Type{BigBedBTreeHeader})
     return BigBedBTreeHeader(
         read(io, UInt32), read(io, UInt32), read(io, UInt32),
         read(io, UInt32), read(io, UInt64), read(io, UInt64))
 end
 
-
 function Base.write(io::IO, header::BigBedBTreeHeader)
     write(io, header.magic, header.block_size, header.key_size,
           header.val_size, header.item_count, header.reserved)
 end
-
 
 # Supplementary Table 9
 immutable BigBedBTreeNode
@@ -172,18 +156,15 @@ immutable BigBedBTreeNode
     count::UInt16
 end
 
-
 function Base.read(io::IO, ::Type{BigBedBTreeNode})
     return BigBedBTreeNode(read(io, UInt8), read(io, UInt8), read(io, UInt16))
 end
-
 
 function Base.write(io::IO, node::BigBedBTreeNode)
     write(io, node.isleaf)
     write(io, node.reserved)
     write(io, node.count)
 end
-
 
 # Supplemental Table 10
 type BigBedBTreeLeafNode
@@ -192,11 +173,9 @@ type BigBedBTreeLeafNode
     chrom_size::UInt32
 end
 
-
 function BigBedBTreeLeafNode(keysize::Integer)
     BigBedBTreeLeafNode(Array(UInt8, keysize), 0, 0)
 end
-
 
 function Base.read!(io::IO, node::BigBedBTreeLeafNode)
     nb = readbytes!(io, node.key, length(node.key))
@@ -208,18 +187,15 @@ function Base.read!(io::IO, node::BigBedBTreeLeafNode)
     return nb + 8
 end
 
-
 # Supplemental Table 11
 type BigBedBTreeInternalNode
     key::Vector{UInt8}
     child_offset::UInt64
 end
 
-
 function BigBedBTreeInternalNode(keysize::Integer)
     BigBedBTreeInternalNode(Array(UInt8, keysize), 0)
 end
-
 
 function Base.read!(io::IO, node::BigBedBTreeInternalNode)
     if readbytes!(io, node.key, length(node.key)) < length(node.key)
@@ -227,7 +203,6 @@ function Base.read!(io::IO, node::BigBedBTreeInternalNode)
     end
     node.child_offset = read(io, UInt64)
 end
-
 
 # Supplemental Table 13
 immutable BigWigSectionHeader
@@ -241,11 +216,9 @@ immutable BigWigSectionHeader
     item_count::UInt16
 end
 
-
 const BIGWIG_DATATYPE_BEDGRAPH  = UInt8(1)
 const BIGWIG_DATATYPE_VARSTEP   = UInt8(2)
 const BIGWIG_DATATYPE_FIXEDSTEP = UInt8(3)
-
 
 function Base.write(io::IO, header::BigWigSectionHeader)
     write(io, header.chrom_id)
@@ -258,20 +231,17 @@ function Base.write(io::IO, header::BigWigSectionHeader)
     write(io, header.item_count)
 end
 
-
 immutable BedGraphItem
     chrom_start::UInt32
     chrom_end::UInt32
     val::Float32
 end
 
-
 function Base.write(io::IO, item::BedGraphItem)
     write(io, item.chrom_start)
     write(io, item.chrom_end)
     write(io, item.val)
 end
-
 
 # Supplemental Table 14
 immutable BigBedRTreeHeader
@@ -287,14 +257,12 @@ immutable BigBedRTreeHeader
     reserved::UInt32
 end
 
-
 function Base.read(io::IO, ::Type{BigBedRTreeHeader})
     return BigBedRTreeHeader(
         read(io, UInt32), read(io, UInt32), read(io, UInt64), read(io, UInt32),
         read(io, UInt32), read(io, UInt32), read(io, UInt32), read(io, UInt64),
         read(io, UInt32), read(io, UInt32))
 end
-
 
 function Base.write(io::IO, header::BigBedRTreeHeader)
     write(io, header.magic)
@@ -309,7 +277,6 @@ function Base.write(io::IO, header::BigBedRTreeHeader)
     write(io, header.reserved)
 end
 
-
 # Supplemental Table 15
 immutable BigBedRTreeNode
     isleaf::UInt8
@@ -317,18 +284,15 @@ immutable BigBedRTreeNode
     count::UInt16
 end
 
-
 function Base.read(io::IO, ::Type{BigBedRTreeNode})
     return BigBedRTreeNode(read(io, UInt8), read(io, UInt8), read(io, UInt16))
 end
-
 
 function Base.write(io::IO, node::BigBedRTreeNode)
     write(io, node.isleaf)
     write(io, node.reserved)
     write(io, node.count)
 end
-
 
 # Supplemental Table 16
 immutable BigBedRTreeLeafNode
@@ -340,13 +304,11 @@ immutable BigBedRTreeLeafNode
     data_size::UInt64
 end
 
-
 function Base.read(io::IO, ::Type{BigBedRTreeLeafNode})
     return BigBedRTreeLeafNode(
         read(io, UInt32), read(io, UInt32), read(io, UInt32), read(io, UInt32),
         read(io, UInt64), read(io, UInt64))
 end
-
 
 function Base.write(io::IO, node::BigBedRTreeLeafNode)
     write(io, node.start_chrom_ix)
@@ -357,7 +319,6 @@ function Base.write(io::IO, node::BigBedRTreeLeafNode)
     write(io, node.data_size)
 end
 
-
 # Supplemental Table 17
 immutable BigBedRTreeInternalNode
     start_chrom_ix::UInt32
@@ -367,13 +328,11 @@ immutable BigBedRTreeInternalNode
     data_offset::UInt64
 end
 
-
 function Base.read(io::IO, ::Type{BigBedRTreeInternalNode})
     return BigBedRTreeInternalNode(
         read(io, UInt32), read(io, UInt32), read(io, UInt32), read(io, UInt32),
         read(io, UInt64))
 end
-
 
 function Base.write(io::IO, node::BigBedRTreeInternalNode)
     write(io, node.start_chrom_ix)
@@ -383,13 +342,10 @@ function Base.write(io::IO, node::BigBedRTreeInternalNode)
     write(io, node.data_offset)
 end
 
-
 immutable BigBed <: FileFormat end
 immutable BigWig <: FileFormat end
 
-
 include("bigbed-parser.jl")
-
 
 """
 Open a BigBed file for reading.
@@ -460,7 +416,6 @@ function Base.open(stream::BufferedInputStream, ::Type{BigBed})
                       Array(UInt8, header.uncompress_buf_size))
 end
 
-
 function memisless(a::Vector{UInt8}, b::Vector{UInt8})
     if length(a) != length(b)
         return length(a) < length(b)
@@ -474,7 +429,6 @@ function memisless(a::Vector{UInt8}, b::Vector{UInt8})
     end
     return false
 end
-
 
 """
 Return all sequence (name, id, size) tuples in a BigBed B-tree.
@@ -506,7 +460,6 @@ function first_btree_leaf_position(bb::BigBedData)
     return leafpos
 end
 
-
 """
 An iterator over all entries in a BigBed file.
 """
@@ -519,7 +472,6 @@ type BigBedIteratorState
     parser_isdone::Bool
     next_interval::Interval{BEDMetadata}
 end
-
 
 function Base.start(bb::BigBedData)
     # read sequence names
@@ -561,7 +513,6 @@ function Base.start(bb::BigBedData)
                                parser, parser_isdone, next_interval)
 end
 
-
 function Base.next(bb::BigBedData, state::BigBedIteratorState)
     value = copy(state.next_interval)
 
@@ -590,11 +541,9 @@ function Base.next(bb::BigBedData, state::BigBedIteratorState)
     return value, state
 end
 
-
 function Base.done(bb::BigBedData, state::BigBedIteratorState)
     return state.data_num > state.data_count
 end
-
 
 """
 An iterator over entries in a BigBed file that intersect a given interval.
@@ -621,7 +570,6 @@ type BigBedIntersectIterator
     nextinterval::BEDInterval
     done::Bool
 end
-
 
 """
 Find the given seqname in the BigBed file's index and read the corresponding
@@ -663,7 +611,6 @@ function lookup_seqname(bb::BigBedData, seqname::AbstractString)
     end
     error(string("Seqname \"", seqname, "\" is not present in the BigBed file."))
 end
-
 
 function Base.intersect(bb::BigBedData, query::Interval)
     seqname, first, last = query.seqname, query.first, query.last
@@ -708,7 +655,6 @@ function Base.intersect(bb::BigBedData, query::Interval)
                                    BEDInterval(), false)
 end
 
-
 function find_next_intersection!(it::BigBedIntersectIterator)
     it.done = true
     while !isnull(it.parser) || it.block_num < length(it.blocks)
@@ -750,19 +696,16 @@ function find_next_intersection!(it::BigBedIntersectIterator)
     end
 end
 
-
 function Base.start(it::BigBedIntersectIterator)
     find_next_intersection!(it)
     return nothing
 end
-
 
 function Base.next(it::BigBedIntersectIterator, ::Void)
     value = copy(it.nextinterval)
     find_next_intersection!(it)
     return value, nothing
 end
-
 
 function Base.done(it::BigBedIntersectIterator, ::Void)
     return it.done
@@ -772,13 +715,11 @@ end
 # BigBed Output
 # -------------
 
-
 function write_zeros(out::IO, n::Integer)
     for i in 1:n
         write(out, 0x00)
     end
 end
-
 
 immutable BigBedChromInfo
     name::StringField   # chromosome name
@@ -787,14 +728,12 @@ immutable BigBedChromInfo
     item_count::UInt64  # number of items
 end
 
-
 immutable BigBedBounds
     offset::UInt64
     chrom_ix::UInt32
     start::UInt32
     stop::UInt32
 end
-
 
 function bigbed_chrom_info(intervals::IntervalCollection, chrom_sizes::Dict)
     info = Array(BigBedChromInfo, length(intervals.trees))
@@ -810,7 +749,6 @@ function bigbed_chrom_info(intervals::IntervalCollection, chrom_sizes::Dict)
     return info
 end
 
-
 function bigbed_btree_count_levels(max_block_size, item_count)
     levels = 1
     while item_count > max_block_size
@@ -819,7 +757,6 @@ function bigbed_btree_count_levels(max_block_size, item_count)
     end
     return levels
 end
-
 
 function bigbed_btree_write_index_level(out::IO, block_size,
                                         items::Vector{BigBedChromInfo},
@@ -876,7 +813,6 @@ function bigbed_btree_write_index_level(out::IO, block_size,
     return end_level
 end
 
-
 function bigbed_btree_write_leaf_level(out::IO, block_size,
                                        items::Vector{BigBedChromInfo},
                                        key_size, val_size)
@@ -916,7 +852,6 @@ function bigbed_btree_write_leaf_level(out::IO, block_size,
         i += count_one
     end
 end
-
 
 function bigbed_write_chrom_tree(out::IO, intervals::IntervalCollection,
                                  block_size,
@@ -968,7 +903,6 @@ function bigbed_write_chrom_tree(out::IO, intervals::IntervalCollection,
     return info
 end
 
-
 function bigbed_count_sections_needed(items::Vector{BigBedChromInfo}, items_per_slot)
     count = 0
     for item in items
@@ -977,7 +911,6 @@ function bigbed_count_sections_needed(items::Vector{BigBedChromInfo}, items_per_
     end
     return count
 end
-
 
 function bigbed_write_blocks(out::IO, intervals::IntervalCollection,
                              chrom_info::Vector{BigBedChromInfo},
@@ -1056,7 +989,6 @@ function bigbed_write_blocks(out::IO, intervals::IntervalCollection,
     return max_block_size
 end
 
-
 function bigwig_write_blocks{T<:Number}(out::IO, intervals::IntervalCollection{T},
                                         chrom_info::Vector{BigBedChromInfo},
                                         items_per_slot, bounds::Vector{BigBedBounds},
@@ -1133,7 +1065,6 @@ function bigwig_write_blocks{T<:Number}(out::IO, intervals::IntervalCollection{T
     return max_section_size
 end
 
-
 type BigBedRTree
     next::Nullable{BigBedRTree}
     children::Nullable{BigBedRTree}
@@ -1156,14 +1087,12 @@ type BigBedRTree
     end
 end
 
-
 function Base.copy(tree::BigBedRTree)
     return BigBedRTree(tree.next, tree.children, tree.parent,
                        tree.start_chrom_ix, tree.start_base,
                        tree.end_chrom_ix, tree.end_base,
                        tree.start_file_offset, tree.end_file_offset)
 end
-
 
 function Base.length(list::Nullable{BigBedRTree})
     count = 0
@@ -1173,7 +1102,6 @@ function Base.length(list::Nullable{BigBedRTree})
     end
     return count
 end
-
 
 function bigbed_calc_rtree_level_sizes!(level_sizes, tree::Nullable{BigBedRTree},
                                         level, max_level)
@@ -1189,7 +1117,6 @@ function bigbed_calc_rtree_level_sizes!(level_sizes, tree::Nullable{BigBedRTree}
         el = get(el).next
     end
 end
-
 
 function bigbed_rtree_write_index_level(out::IO, block_size, child_node_size,
                                         tree::BigBedRTree, offset_of_first_child,
@@ -1232,7 +1159,6 @@ function bigbed_rtree_write_index_level(out::IO, block_size, child_node_size,
     return offset
 end
 
-
 function bigbed_rtree_write_leaf_level(out::IO, items_per_slot, leaf_node_size,
                                        tree::BigBedRTree, cur_level, leaf_level)
     if cur_level == leaf_level
@@ -1268,7 +1194,6 @@ function bigbed_rtree_write_leaf_level(out::IO, items_per_slot, leaf_node_size,
     end
 end
 
-
 function Base.write(out::IO, tree::BigBedRTree, block_size, level_count)
     # See writeTreeToOpenFile in cirTree.c
 
@@ -1299,7 +1224,6 @@ function Base.write(out::IO, tree::BigBedRTree, block_size, level_count)
                                   1, leaf_level)
 end
 
-
 function Base.reverse!(tree::Nullable{BigBedRTree})
     if isnull(tree)
         return tree
@@ -1318,7 +1242,6 @@ function Base.reverse!(tree::Nullable{BigBedRTree})
     nodes[1].next = Nullable{BigBedRTree}()
     return Nullable{BigBedRTree}(nodes[end])
 end
-
 
 function bigbed_build_rtree(bounds::Vector{BigBedBounds}, block_size,
                             items_per_slot, end_file_offset)
@@ -1433,7 +1356,6 @@ function bigbed_build_rtree(bounds::Vector{BigBedBounds}, block_size,
     (get(tree), level_count)
 end
 
-
 function bigbed_write_index(out::IO, bounds::Vector{BigBedBounds},
                             block_size, items_per_slot, end_file_offset)
     # See cirTreeFileBulkIndexToOpenFile in cirTree.c
@@ -1446,7 +1368,6 @@ function bigbed_write_index(out::IO, bounds::Vector{BigBedBounds},
                                  end_file_offset, items_per_slot, 0))
     write(out, rtree, block_size, level_count)
 end
-
 
 # Write out sum to file, keeping track of minimal info on it in, and also adding
 # it to second level summary
@@ -1482,7 +1403,6 @@ function output_one_summary_further_reduce(out::IO, sum::BigBedZoomData,
 
     return bounds_array_idx + 1
 end
-
 
 # Write out data reduced by factor of initialReduction.  Also calculate and keep
 # in memory next reduction level.  This is more work than some ways, but it
@@ -1616,7 +1536,6 @@ function bigbed_write_reduced_once_return_reduced_twice(
                                                   sum_data, sum_squares)
 end
 
-
 function bigbed_write_summary_and_index(
         out::IO, summary_list::Vector{BigBedZoomData}, block_size,
         items_per_slot, compressed)
@@ -1627,7 +1546,6 @@ function bigbed_write_summary_and_index(
         bigbed_write_summary_and_index_unc(out, summary_list, block_size, items_per_slot)
     end
 end
-
 
 function bigbed_write_summary_and_index_unc(
         out::IO, summary_list::Vector{BigBedZoomData}, block_size,
@@ -1646,7 +1564,6 @@ function bigbed_write_summary_and_index_unc(
     bigbed_write_index(out, bounds_array, block_size, items_per_slot, false)
     return index_offset
 end
-
 
 function bigbed_write_summary_and_index_comp(
         out::IO, summary_list::Vector{BigBedZoomData}, block_size,
@@ -1681,7 +1598,6 @@ function bigbed_write_summary_and_index_comp(
     return index_offset
 end
 
-
 function bigbed_summary_simple_reduce(summary_list::Vector{BigBedZoomData}, reduction)
     new_summary_list = BigBedZoomData[]
     for summary in summary_list
@@ -1705,7 +1621,6 @@ function bigbed_summary_simple_reduce(summary_list::Vector{BigBedZoomData}, redu
     return new_summary_list
 end
 
-
 function bed_field_count(intervals::IntervalCollection{BEDMetadata})
     num_fields = 0
     for interval in intervals
@@ -1717,20 +1632,17 @@ function bed_field_count(intervals::IntervalCollection{BEDMetadata})
     return num_fields
 end
 
-
 function Base.write(out::IO, ::Type{BigBed}, intervals::IntervalCollection{BEDMetadata};
                     block_size::Int=256, items_per_slot::Int=512,
                     compressed::Bool=true)
     write_bigbed_bigwig(out, BigBed, intervals, block_size, items_per_slot, compressed)
 end
 
-
 function Base.write{T<:Number}(out::IO, ::Type{BigWig}, intervals::IntervalCollection{T};
                                block_size::Int=256, items_per_slot::Int=512,
                                compressed::Bool=true)
     write_bigbed_bigwig(out, BigWig, intervals, block_size, items_per_slot, compressed)
 end
-
 
 # Unified write function for bigwig and bigbed
 function write_bigbed_bigwig(out::IO, fmt::Union{Type{BigBed}, Type{BigWig}},

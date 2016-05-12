@@ -1,3 +1,6 @@
+# Base Quality
+# ============
+#
 # A representation of positions-specific integer quality scores, as in FASTQ.
 
 "A `QualityEncoding` value holds a set of encoding compatible with a string"
@@ -37,18 +40,6 @@ const ALL_QUAL_ENCODINGS =
     SANGER_QUAL_ENCODING | SOLEXA_QUAL_ENCODING | ILLUMINA13_QUAL_ENCODING |
     ILLUMINA15_QUAL_ENCODING | ILLUMINA18_QUAL_ENCODING
 
-
-# Ranges and score of the first character in the range.
-#=
-const qual_encoding_ranges = Dict{QualityEncoding, (typeof(UInt8(0):UInt8(0)), Int8)}(
-    SANGER_QUAL_ENCODING     => (UInt8('!'):UInt8('~'), Int8(0)),
-    SOLEXA_QUAL_ENCODING     => (UInt8(';'):UInt8('~'), Int8(-5)),
-    ILLUMINA13_QUAL_ENCODING => (UInt8('@'):UInt8('~'), Int8(0)),
-    ILLUMINA15_QUAL_ENCODING => (UInt8('B'):UInt8('~'), Int8(2)),
-    ILLUMINA18_QUAL_ENCODING => (UInt8('!'):UInt8('~'), Int8(0)),
-)
-=#
-
 # Index into this with `trailing_zeros(encoding) + 1`
 const qual_encoding_ranges = [
     (UInt8('!'), UInt8('~'), Int8(0) ),  # SANGER
@@ -57,7 +48,6 @@ const qual_encoding_ranges = [
     (UInt8('B'), UInt8('~'), Int8(2) ),  # ILLUMINA15
     (UInt8('!'), UInt8('~'), Int8(0) )   # ILLUMINA18
 ]
-
 
 # Build an encoding lookup table
 const compatible_qual_encoding = fill(EMPTY_QUAL_ENCODING, length('!':'~'))
@@ -125,7 +115,6 @@ function infer_quality_encoding(data::Vector{UInt8}, start, stop,
     return (default, encodings)
 end
 
-
 """
 Decode a quality string in place into integer Phred scores.
 
@@ -157,7 +146,6 @@ function decode_quality_string!(encoding::QualityEncoding, input::Vector{UInt8},
 
     return output
 end
-
 
 """
 Decode a quality string in place into integer Phred scores.
