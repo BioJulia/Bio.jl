@@ -1,5 +1,3 @@
-
-
 # An IntervalCollection is an efficiently stored and indexed set of annotated
 # genomic intervals. It looks something like this.
 #
@@ -102,7 +100,7 @@ function update_ordered_trees!{T}(ic::IntervalCollection{T})
 end
 
 
-function push!{T}(ic::IntervalCollection{T}, i::Interval{T})
+function Base.push!{T}(ic::IntervalCollection{T}, i::Interval{T})
     if !haskey(ic.trees, i.seqname)
         tree = IntervalCollectionTree{T}()
         ic.trees[i.seqname] = tree
@@ -116,7 +114,7 @@ function push!{T}(ic::IntervalCollection{T}, i::Interval{T})
 end
 
 
-function show(io::IO, ic::IntervalCollection)
+function Base.show(io::IO, ic::IntervalCollection)
     const max_entries = 8
     n_entries = length(ic)
     println(io, "IntervalCollection with $(n_entries) intervals:")
@@ -134,7 +132,7 @@ function show(io::IO, ic::IntervalCollection)
 end
 
 
-length(ic::IntervalCollection) = ic.length
+Base.length(ic::IntervalCollection) = ic.length
 
 
 typealias IntervalCollectionTreeIteratorState{T} IntervalTrees.IntervalBTreeIteratorState{Int64, Interval{T}, 64}
@@ -154,7 +152,7 @@ immutable IntervalCollectionIteratorState{T}
 end
 
 
-function start{T}(ic::IntervalCollection{T})
+function Base.start{T}(ic::IntervalCollection{T})
     update_ordered_trees!(ic)
     i = 1
     while i <= length(ic.ordered_trees)
@@ -169,7 +167,7 @@ function start{T}(ic::IntervalCollection{T})
 end
 
 
-function next{T}(ic::IntervalCollection{T},
+function Base.next{T}(ic::IntervalCollection{T},
                       state::IntervalCollectionIteratorState{T})
     i = state.i
     value, tree_state = next(ic.ordered_trees[i], state.tree_state)
@@ -189,7 +187,7 @@ function next{T}(ic::IntervalCollection{T},
 end
 
 
-function done{T}(ic::IntervalCollection{T},
+function Base.done{T}(ic::IntervalCollection{T},
                       state::IntervalCollectionIteratorState{T})
     return state.i > length(ic.ordered_trees)
 end
@@ -199,7 +197,7 @@ end
 """
 Return an iterator over all intervals in the collection that overlap the query interval.
 """
-function intersect{T}(a::IntervalCollection{T}, b::Interval)
+function Base.intersect{T}(a::IntervalCollection{T}, b::Interval)
     if haskey(a.trees, b.seqname)
         return intersect(a.trees[b.seqname], b)
     else
@@ -222,7 +220,7 @@ end
 
 
 "Iterate over pairs of intersecting intervals in two IntervalCollections"
-function intersect{S, T}(a::IntervalCollection{S}, b::IntervalCollection{T})
+function Base.intersect{S, T}(a::IntervalCollection{S}, b::IntervalCollection{T})
     seqnames = collect(AbstractString, keys(a.trees) ∩ keys(b.trees))
     sort!(seqnames, lt=alphanum_isless)
 
@@ -233,7 +231,7 @@ function intersect{S, T}(a::IntervalCollection{S}, b::IntervalCollection{T})
 end
 
 
-function start{S, T}(it::IntersectIterator{S, T})
+function Base.start{S,T}(it::IntersectIterator{S,T})
     i = 1
     while i <= length(it.a_trees)
         intersect_iterator = intersect(it.a_trees[i], it.b_trees[i])
@@ -251,7 +249,7 @@ function start{S, T}(it::IntersectIterator{S, T})
 end
 
 
-function next{S, T}(it::IntersectIterator{S, T}, nothing)
+function Base.next{S,T}(it::IntersectIterator{S, T}, ::Void)
     intersect_iterator = it.intersect_iterator
     value, intersect_iterator_state = next(intersect_iterator, nothing)
     i = it.i
@@ -273,7 +271,7 @@ function next{S, T}(it::IntersectIterator{S, T}, nothing)
 end
 
 
-function done{S, T}(it::IntersectIterator{S, T}, state)
+function Base.done{S, T}(it::IntersectIterator{S, T}, state)
     return it.i > length(it.a_trees)
 end
 
@@ -282,7 +280,7 @@ end
 Iterate over pairs of intersections in an IntervalCollection versus an
 IntervalStream.
 """
-function intersect(a::IntervalCollection, b::IntervalStreamOrArray)
+function Base.intersect(a::IntervalCollection, b::IntervalStreamOrArray)
     return IntervalCollectionStreamIterator(metadatatype(b), a, b)
 end
 
@@ -313,7 +311,7 @@ immutable IntervalCollectionStreamIteratorState{S, TS, TV}
 end
 
 
-function (==){T}(a::IntervalCollection{T}, b::IntervalCollection{T})
+function Base.(:(==)){T}(a::IntervalCollection{T}, b::IntervalCollection{T})
     if length(a) != length(b)
         return false
     end
@@ -329,7 +327,7 @@ end
 
 
 # This mostly follows from SuccessiveTreeIntersectionIterator in IntervalTrees
-function start{S, T, TV}(it::IntervalCollectionStreamIterator{S, T, TV})
+function Base.start{S,T,TV}(it::IntervalCollectionStreamIterator{S,T,TV})
     b_state = start(it.b)
 
     # TODO: We need to figure out a way to know these types at compile time.
@@ -352,8 +350,8 @@ function start{S, T, TV}(it::IntervalCollectionStreamIterator{S, T, TV})
 end
 
 
-function next{S, T, TS, TV}(it::IntervalCollectionStreamIterator{S, T, TV},
-                            state::IntervalCollectionStreamIteratorState{S, TS, TV})
+function Base.next{S,T,TS,TV}(it::IntervalCollectionStreamIterator{S,T,TV},
+                              state::IntervalCollectionStreamIteratorState{S,TS,TV})
     intersection = state.intersection
     entry = intersection.node.entries[intersection.index]
     return_value = (entry, state.b_value)
@@ -374,7 +372,7 @@ function next{S, T, TS, TV}(it::IntervalCollectionStreamIterator{S, T, TV},
 end
 
 
-function done{S, T, TS, TV}(it::IntervalCollectionStreamIterator{S, T, TV},
-                            state::IntervalCollectionStreamIteratorState{S, TS, TV})
+function Base.done{S,T,TS,TV}(it::IntervalCollectionStreamIterator{S,T,TV},
+                              state::IntervalCollectionStreamIteratorState{S,TS,TV})
     return state.intersection.index == 0
 end

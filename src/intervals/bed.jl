@@ -1,6 +1,5 @@
 immutable BED <: FileFormat end
 
-
 """Metadata for BED interval records"""
 type BEDMetadata
     used_fields::Int # how many of the first n fields are used
@@ -14,14 +13,12 @@ type BEDMetadata
     block_firsts::Vector{Int}
 end
 
-
 function BEDMetadata()
     return BEDMetadata(0, StringField(), 0, 0, 0, RGB{Float32}(0.0, 0.0, 0.0),
                        0, Int[], Int[])
 end
 
-
-function copy(metadata::BEDMetadata)
+function Base.copy(metadata::BEDMetadata)
     return BEDMetadata(
         metadata.used_fields, copy(metadata.name),
         metadata.score, metadata.thick_first, metadata.thick_last,
@@ -30,8 +27,7 @@ function copy(metadata::BEDMetadata)
         metadata.block_firsts[1:metadata.block_count])
 end
 
-
-function (==)(a::BEDMetadata, b::BEDMetadata)
+function Base.(:(==))(a::BEDMetadata, b::BEDMetadata)
     if a.used_fields != b.used_fields
         return false
     end

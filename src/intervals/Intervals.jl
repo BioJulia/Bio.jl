@@ -39,35 +39,6 @@ using Bio:
 
 import Iterators
 
-import Base:
-    show,
-    isless,
-    push!,
-    shift!,
-    intersect,
-    start,
-    next,
-    done,
-    length,
-    convert,
-    read,
-    read!,
-    write,
-    getindex,
-    get,
-    isempty,
-    endof,
-    ==,
-    reverse!,
-    open,
-    eltype,
-    copy
-
-import IntervalTrees:
-    first,
-    last
-
-
 include("interval.jl")
 include("stream_buffer.jl")
 include("intervalcollection.jl")

@@ -59,46 +59,29 @@ type Interval{T} <: AbstractInterval{Int64}
     end
 end
 
-
 function Interval{T}(seqname::AbstractString, first::Integer, last::Integer,
                     strand::Union{Strand,Char}, metadata::T)
     return Interval{T}(convert(StringField, seqname), first, last, strand, metadata)
 end
-
 
 function Interval(seqname::AbstractString, first::Integer, last::Integer,
                   strand::Union{Strand,Char}=STRAND_BOTH)
     return Interval{Void}(seqname, first, last, strand, nothing)
 end
 
-
-function copy{T}(interval::Interval{T})
+function Base.copy{T}(interval::Interval{T})
     return Interval{T}(copy(interval.seqname), interval.first, interval.last,
                        interval.strand, copy(interval.metadata))
 end
 
-function seqname(i::Interval)
-    return i.seqname
-end
+seqname(i::Interval) = i.seqname
+strand(i::Interval) = i.strand
 
+IntervalTrees.first(i::Interval) = i.first
+IntervalTrees.last(i::Interval) = i.last
 
-function first(i::Interval)
-    return i.first
-end
-
-
-function last(i::Interval)
-    return i.last
-end
-
-
-function strand(i::Interval)
-    return i.strand
-end
-
-
-function isless{T}(a::Interval{T}, b::Interval{T},
-                   seqname_isless::Function=alphanum_isless)
+function Base.isless{T}(a::Interval{T}, b::Interval{T},
+                        seqname_isless::Function=alphanum_isless)
     if a.seqname != b.seqname
         return seqname_isless(a.seqname, b.seqname)::Bool
     elseif a.first != b.first
@@ -111,7 +94,6 @@ function isless{T}(a::Interval{T}, b::Interval{T},
         return false
     end
 end
-
 
 """
 Check if two intervals are well ordered.
@@ -130,7 +112,6 @@ function isordered{T}(a::Interval{T}, b::Interval{T},
     end
 end
 
-
 """
 Return true if interval `a` entirely precedes `b`.
 """
@@ -140,8 +121,7 @@ function precedes{T}(a::Interval{T}, b::Interval{T},
         seqname_isless(a.seqname, b.seqname)::Bool
 end
 
-
-function =={T}(a::Interval{T}, b::Interval{T})
+function Base.(:(==)){T}(a::Interval{T}, b::Interval{T})
     return a.seqname  == b.seqname &&
            a.first    == b.first &&
            a.last     == b.last &&
@@ -149,18 +129,14 @@ function =={T}(a::Interval{T}, b::Interval{T})
            a.metadata == b.metadata
 end
 
-
 "Return true if interval `a` overlaps interval `b`, with no consideration to strand"
 function isoverlapping{S, T}(a::Interval{S}, b::Interval{T})
     return a.first <= b.last && b.first <= a.last && a.seqname == b.seqname
 end
 
-
-function show(io::IO, i::Interval)
+function Base.show(io::IO, i::Interval)
     print(io, i.seqname, ":", i.first, "-", i.last, "    ", i.strand, "    ", i.metadata)
 end
-
-
 
 """
 A comparison function used to sort on numbers within text.
@@ -232,9 +208,7 @@ Interval{T} objects in sorted order.
 """
 abstract IntervalStream{T}
 
-
-typealias IntervalStreamOrArray{T} Union{Vector{Interval{T}}, IntervalStream{T}, AbstractParser}
-
+typealias IntervalStreamOrArray{T} Union{Vector{Interval{T}},IntervalStream{T},AbstractParser}
 
 function metadatatype{T}(::IntervalStream{T})
     return T
