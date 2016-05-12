@@ -1,36 +1,7 @@
 module Align
 
-using Base.Intrinsics
-using Base.Order: Ordering
-using Bio.Seq
-
-import Base: convert,
-    getindex,
-    show,
-    length,
-    start,
-    next,
-    done,
-    copy,
-    reverse,
-    show,
-    endof,
-    ==,
-    !=,
-    <,
-    >,
-    <=,
-    >=,
-    *
-
-import IntervalTrees:
-    first,
-    last
-
-import Base.Order: lt
-import Base.Multimedia: MIME, writemime
-
-export Operation,
+export
+    Operation,
     AlignmentAnchor,
     hasop,
     Alignment,
@@ -51,9 +22,7 @@ export Operation,
     OP_SEQ_MATCH,
     OP_SEQ_MISMATCH,
     OP_BACK,
-    OP_START
-
-export
+    OP_START,
     # alignment types
     GlobalAlignment,
     SemiGlobalAlignment,
@@ -94,6 +63,8 @@ export
     alignment,
     hasalignment
 
+using Bio.Seq
+import IntervalTrees
 
 include("operations.jl")
 include("anchors.jl")

@@ -23,7 +23,7 @@ end
 # Basic operators for AlignmentAnchors
 # -------------------------------------
 
-function show(io::IO, anc::AlignmentAnchor)
+function Base.show(io::IO, anc::AlignmentAnchor)
     print(io, "AlignmentAnchor(", anc.seqpos, ", ", anc.refpos, ", '", anc.op, "')")
 end
 
@@ -137,12 +137,12 @@ function Alignment(cigar::AbstractString, seqpos::Int=1, refpos::Int=1)
 end
 
 
-function ==(a::Alignment, b::Alignment)
+function Base.(:(==))(a::Alignment, b::Alignment)
     return a.anchors == b.anchors && a.firstref == b.firstref && a.lastref == b.lastref
 end
 
 
-function show(io::IO, aln::Alignment)
+function Base.show(io::IO, aln::Alignment)
     # print a representation of the reference sequence
     anchors = aln.anchors
     for i in 2:length(anchors)
@@ -307,7 +307,7 @@ end
 """
 First position in the reference sequence.
 """
-function first(alnseq::AlignedSequence)
+function IntervalTrees.first(alnseq::AlignedSequence)
     return alnseq.aln.firstref
 end
 
@@ -315,7 +315,7 @@ end
 """
 Last position in the reference sequence.
 """
-function last(alnseq::AlignedSequence)
+function IntervalTrees.last(alnseq::AlignedSequence)
     return alnseq.aln.lastref
 end
 
