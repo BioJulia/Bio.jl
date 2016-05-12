@@ -1,4 +1,4 @@
-<p align="center"><img src="https://raw.githubusercontent.com/BioJulia/assets/master/branding/bio.jl.png" width="50%" alt="Bio.jl" /></p>
+<p align="center"><img src="https://raw.githubusercontent.com/BioJulia/assets/master/branding/bio/BioJl_Design_1.png" width="50%" alt="Bio.jl" /></p>
 
 # Bioinformatics and Computational Biology infrastructure for [Julia](http://julialang.org)
 
