@@ -1,3 +1,11 @@
+# StringFields
+# ============
+#
+# UTF8-encoded mutable string type.
+#
+# This file is a part of BioJulia.
+# License is MIT: https://github.com/BioJulia/Bio.jl/blob/master/LICENSE.md
+
 module StringFields
 
 export StringField

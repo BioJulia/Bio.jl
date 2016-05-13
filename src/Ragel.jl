@@ -1,3 +1,11 @@
+# Ragel
+# =====
+#
+# Utilities for the Ragel state machine compiler.
+#
+# This file is a part of BioJulia.
+# License is MIT: https://github.com/BioJulia/Bio.jl/blob/master/LICENSE.md
+
 module Ragel
 
 export tryread!
