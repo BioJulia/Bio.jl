@@ -1,6 +1,15 @@
+# Bio.Intervals
+# =============
+#
+# Module for genomic intervals.
+#
+# This file is a part of BioJulia.
+# License is MIT: https://github.com/BioJulia/Bio.jl/blob/master/LICENSE.md
+
 module Intervals
 
-export Strand,
+export
+    Strand,
     Interval,
     IntervalCollection,
     IntervalStream,
@@ -39,6 +48,7 @@ using Bio:
 
 import Iterators
 
+include("strand.jl")
 include("interval.jl")
 include("stream_buffer.jl")
 include("intervalcollection.jl")

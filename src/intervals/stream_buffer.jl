@@ -1,4 +1,10 @@
 # Steam Buffer
+# ============
+#
+# Stream buffer type.
+#
+# This file is a part of BioJulia.
+# License is MIT: https://github.com/BioJulia/Bio.jl/blob/master/LICENSE.md
 
 """
 A buffer in which pushing to the back, popping from the front (shift),

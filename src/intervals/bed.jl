@@ -1,3 +1,11 @@
+# BED
+# ===
+#
+# Reader and writer of the BED file format.
+#
+# This file is a part of BioJulia.
+# License is MIT: https://github.com/BioJulia/Bio.jl/blob/master/LICENSE.md
+
 immutable BED <: FileFormat end
 
 """Metadata for BED interval records"""
