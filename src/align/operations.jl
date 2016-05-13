@@ -1,6 +1,10 @@
-# Alignment operations
+# Alignment Operations
 # ====================
-
+#
+# Alignment operation type.
+#
+# This file is a part of BioJulia.
+# License is MIT: https://github.com/BioJulia/Bio.jl/blob/master/LICENSE.md
 
 # Single operations are encoded in one byte each
 # ----------------------------------------------

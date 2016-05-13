@@ -1,5 +1,11 @@
-# Anchor definition
-# ------------------
+# Alignment Anchor
+# ================
+#
+# Sequence alignment anchor type and alignment data data structures.
+#
+# This file is a part of BioJulia.
+# License is MIT: https://github.com/BioJulia/Bio.jl/blob/master/LICENSE.md
+
 """
 A type to store the operation enocded in an alignment (CIGAR Operations).
 Also stores the position in the alignment view of the sequences, and the

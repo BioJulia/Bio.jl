@@ -1,10 +1,19 @@
-# utils shared among algorithms
+# Common Utils
+# ============
+#
+# Common utilities shared among several algorithms (internal use only).
+#
+# This file is a part of BioJulia.
+# License is MIT: https://github.com/BioJulia/Bio.jl/blob/master/LICENSE.md
 
 # k: gap length
 function affinegap_score(k, gap_open_penalty, gap_extend_penalty)
     return -(gap_open_penalty + gap_extend_penalty * k)
 end
 
+
+# Trace type
+# ----------
 
 # trace type for pairwise alignment
 typealias Trace UInt8
@@ -18,7 +27,8 @@ const TRACE_EXTDEL = 0b01000
 const TRACE_EXTINS = 0b10000
 
 
-# utils for tracing back
+# Traceback
+# ---------
 
 macro start_traceback()
     esc(quote

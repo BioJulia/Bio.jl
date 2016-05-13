@@ -1,3 +1,11 @@
+# Smith-Waterman Algorithm
+# ========================
+#
+# The Smith-Waterman algorithm.
+#
+# This file is a part of BioJulia.
+# License is MIT: https://github.com/BioJulia/Bio.jl/blob/master/LICENSE.md
+
 type SmithWaterman{T<:Union{Signed,AbstractFloat}}
     trace::Matrix{Trace}
     H::Vector{T}

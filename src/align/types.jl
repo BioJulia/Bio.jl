@@ -1,11 +1,16 @@
 # Alignment Types
 # ===============
+#
+# Types for sequence alignments.
+#
+# This file is a part of BioJulia.
+# License is MIT: https://github.com/BioJulia/Bio.jl/blob/master/LICENSE.md
 
 abstract AbstractAlignment
 
 
-# Alignment
-# ---------
+# Alignments
+# ----------
 
 """Global-global alignment with end gap penalties."""
 immutable GlobalAlignment <: AbstractAlignment end
