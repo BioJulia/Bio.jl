@@ -1,4 +1,10 @@
-# wrapper for BLAST+ command line functions
+# BLAST+ Wrapper
+# ==============
+#
+# Wrapper for BLAST+ command line functions.
+#
+# This file is a part of BioJulia.
+# License is MIT: https://github.com/BioJulia/Bio.jl/blob/master/LICENSE.md
 
 immutable BlastResult
     bitscore::Float64

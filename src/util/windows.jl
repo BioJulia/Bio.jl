@@ -1,24 +1,21 @@
+# Windows
+# =======
+#
+# Sliding window iterator.
+#
+# This file is a part of BioJulia.
+# License is MIT: https://github.com/BioJulia/Bio.jl/blob/master/LICENSE.md
+
 module Windows
-
-import Base:
-    start,
-    next,
-    done,
-    show,
-    size,
-    ==
-
-using Bio.Seq:
-    Sequence
 
 export eachwindow,
     EachWindowIterator,
     missed
 
-
+using Bio.Seq:
+    Sequence
 
 typealias ArrayOrStringOrSeq Union{AbstractArray, AbstractString, Sequence}
-
 
 """
 An iterator which moves across a container, as a sliding window.
@@ -46,7 +43,7 @@ Calculate the number of windows that will result from iterating across the conta
 
 Accepts one variable of type EachWindowIterator.
 """
-function size(winitr::EachWindowIterator)
+function Base.size(winitr::EachWindowIterator)
     return length(StepRange(winitr.width, winitr.step, length(winitr.data)))
 end
 
@@ -65,7 +62,7 @@ A sliding window iterator is considered equal to another
 sliding window iterator if the data is considered equal, and the
 width and step of the iterator is also equivalent.
 """
-function ==(x::EachWindowIterator, y::EachWindowIterator)
+function Base.(:(==))(x::EachWindowIterator, y::EachWindowIterator)
     return (x.data == y.data) && (x.width == y.width) && (x.step == y.step)
 end
 
@@ -78,11 +75,11 @@ function eachwindow{T <: ArrayOrStringOrSeq}(data::T, width::Int, step::Int = 1)
     EachWindowIterator{T}(data, width, step)
 end
 
-@inline function start(it::EachWindowIterator)
+@inline function Base.start(it::EachWindowIterator)
     return 1
 end
 
-@inline function next(it::EachWindowIterator, state::Integer)
+@inline function Base.next(it::EachWindowIterator, state::Integer)
     i = state
     window = sub(it.data, i:i + it.width - 1)
     return window, i + it.step
@@ -92,17 +89,17 @@ end
 # like arrays and Nucleotide sequences do.
 # The operation is an indexing operation, rather than a "proper"
 # substring or subarray operation.
-@inline function next{T <: AbstractString}(it::EachWindowIterator{T}, state::Integer)
+@inline function Base.next{T <: AbstractString}(it::EachWindowIterator{T}, state::Integer)
     i = state
     window = it.data[i:i + it.width - 1]
     return window, i + it.step
 end
 
-@inline function done(it::EachWindowIterator, state::Integer)
+@inline function Base.done(it::EachWindowIterator, state::Integer)
     return (state + it.width - 1) > length(it.data)
 end
 
-function show(io::IO, it::EachWindowIterator)
+function Base.show(io::IO, it::EachWindowIterator)
     print(io, "Sliding window iterator.\nContainer size: ", length(it.data), " elements.",
     "\nWindow width: ", it.width, "\nStep distance: ", it.step,
     "\nTotal windows: ", size(it), "\nMissed elements: ",
