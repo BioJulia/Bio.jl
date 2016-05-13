@@ -1,7 +1,10 @@
 # Sequence Record
 # ===============
 #
-# A sequence record is a named sequence with attached metadata.
+# Sequence record with name and attached metadata.
+#
+# This file is a part of BioJulia.
+# License is MIT: https://github.com/BioJulia/Bio.jl/blob/master/LICENSE.md
 
 """
 `SeqRecord{S,T}` is a type holding a named sequence of type `S`, along with

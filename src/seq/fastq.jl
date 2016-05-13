@@ -1,4 +1,10 @@
-# FASTQ sequence types
+# FASTQ
+# =====
+#
+# Reader and writer of the FASTQ file format.
+#
+# This file is a part of BioJulia.
+# License is MIT: https://github.com/BioJulia/Bio.jl/blob/master/LICENSE.md
 
 immutable FASTQ <: FileFormat end
 

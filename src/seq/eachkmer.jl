@@ -1,5 +1,10 @@
-# EachKmerIterator
-# ================
+# Kmer Iterator
+# =============
+#
+# Iterator over all k-mers in a biological sequence.
+#
+# This file is a part of BioJulia.
+# License is MIT: https://github.com/BioJulia/Bio.jl/blob/master/LICENSE.md
 
 # Iterate through every k-mer in a nucleotide sequence
 immutable EachKmerIterator{T,K,S}

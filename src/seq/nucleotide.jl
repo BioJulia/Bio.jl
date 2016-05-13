@@ -1,6 +1,10 @@
 # Nucleotides
 # ===========
-
+#
+# DNA and RNA nucleotide types.
+#
+# This file is a part of BioJulia.
+# License is MIT: https://github.com/BioJulia/Bio.jl/blob/master/LICENSE.md
 
 # Valid nucleotides are represented in bytes using just the four low-order bits
 abstract Nucleotide

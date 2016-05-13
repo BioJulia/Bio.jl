@@ -1,11 +1,16 @@
 # Alphabet
 # ========
 #
+# Alphabet of biological symbols.
+#
 # Subtypes of `Alphabet` represent a domain of biological characters. For
 # example, `DNAAlphabet{2}` has a domain of unambiguous nucleotides (i.e. A, C,
 # G, and T). These types are used for parameterizing biological sequences and so
 # on. A pair of encoder and decoder is associated with an alphabet, which maps
 # values between binary and Julia-level representation.
+#
+# This file is a part of BioJulia.
+# License is MIT: https://github.com/BioJulia/Bio.jl/blob/master/LICENSE.md
 
 """
 Alphabet of biological characters.

@@ -1,3 +1,11 @@
+# Miscellaneous Utilities
+# =======================
+#
+# Miscellaneous utilities for interactive tools.
+#
+# This file is a part of BioJulia.
+# License is MIT: https://github.com/BioJulia/Bio.jl/blob/master/LICENSE.md
+
 """
 Copy a whole NucleotideSequence into the user's clipboard.
 

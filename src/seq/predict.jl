@@ -1,3 +1,11 @@
+# Prediction
+# ==========
+#
+# Sequence type predictor.
+#
+# This file is a part of BioJulia.
+# License is MIT: https://github.com/BioJulia/Bio.jl/blob/master/LICENSE.md
+
 # predict sequence type based on character frequencies in `seq[start:stop]`
 function predict(seq::Vector{UInt8}, start, stop)
     # count characters

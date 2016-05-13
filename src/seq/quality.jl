@@ -2,6 +2,9 @@
 # ============
 #
 # A representation of positions-specific integer quality scores, as in FASTQ.
+#
+# This file is a part of BioJulia.
+# License is MIT: https://github.com/BioJulia/Bio.jl/blob/master/LICENSE.md
 
 "A `QualityEncoding` value holds a set of encoding compatible with a string"
 bitstype 16 QualityEncoding
