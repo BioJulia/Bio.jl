@@ -1,3 +1,11 @@
+# Bio.Seq
+# =======
+#
+# Module for biological sequences.
+#
+# This file is a part of BioJulia.
+# License is MIT: https://github.com/BioJulia/Bio.jl/blob/master/LICENSE.md
+
 module Seq
 
 export
@@ -115,7 +123,6 @@ export
 using
     Compat,
     BufferedStreams,
-    Base.Intrinsics,
     Bio.StringFields,
     Bio.Ragel
 
@@ -125,7 +132,6 @@ export tryread!
 using Bio:
     FileFormat,
     AbstractParser
-
 
 abstract Sequence
 

@@ -1,5 +1,10 @@
 # Genetic Code
 # ============
+#
+# Genetic code table and translator from RNA to amino acid sequence.
+#
+# This file is a part of BioJulia.
+# License is MIT: https://github.com/BioJulia/Bio.jl/blob/master/LICENSE.md
 
 # A genetic code is a table mapping RNA 3-mers (i.e. RNAKmer{3}) to AminoAcids.
 "Type representing a Genetic Code"

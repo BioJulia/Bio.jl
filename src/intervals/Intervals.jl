@@ -1,6 +1,15 @@
+# Bio.Intervals
+# =============
+#
+# Module for genomic intervals.
+#
+# This file is a part of BioJulia.
+# License is MIT: https://github.com/BioJulia/Bio.jl/blob/master/LICENSE.md
+
 module Intervals
 
-export Strand,
+export
+    Strand,
     Interval,
     IntervalCollection,
     IntervalStream,
@@ -21,7 +30,7 @@ export Strand,
 import ..Ragel: tryread!
 export tryread!
 
-using Base.Intrinsics,
+using
     Bio.Ragel,
     Bio.StringFields,
     BufferedStreams,
@@ -39,35 +48,7 @@ using Bio:
 
 import Iterators
 
-import Base:
-    show,
-    isless,
-    push!,
-    shift!,
-    intersect,
-    start,
-    next,
-    done,
-    length,
-    convert,
-    read,
-    read!,
-    write,
-    getindex,
-    get,
-    isempty,
-    endof,
-    ==,
-    reverse!,
-    open,
-    eltype,
-    copy
-
-import IntervalTrees:
-    first,
-    last
-
-
+include("strand.jl")
 include("interval.jl")
 include("stream_buffer.jl")
 include("intervalcollection.jl")

@@ -1,4 +1,10 @@
-# wrapper for BLAST+ command line functions
+# BLAST+ Wrapper
+# ==============
+#
+# Wrapper for BLAST+ command line functions.
+#
+# This file is a part of BioJulia.
+# License is MIT: https://github.com/BioJulia/Bio.jl/blob/master/LICENSE.md
 
 immutable BlastResult
     bitscore::Float64
@@ -148,7 +154,6 @@ function blastp(query::Vector{AminoAcidSequence}, subject::Vector{AminoAcidSeque
     return blastp(querypath, subjectpath, flags)
 end
 
-
 # Create temporary fasta-formated file for blasting.
 function makefasta(sequence::BioSequence)
     path, io = mktemp()
@@ -156,7 +161,6 @@ function makefasta(sequence::BioSequence)
     close(io)
     return path
 end
-
 
 # Create temporary multi fasta-formated file for blasting.
 function makefasta{T <: BioSequence}(sequences::Vector{T})

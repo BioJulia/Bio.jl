@@ -10,7 +10,9 @@
 # is shared between (sub)sequences. This is often called as copy-on-write
 # strategy in computer science and should be transparent to the user.
 #
-#
+# This file is a part of BioJulia.
+# License is MIT: https://github.com/BioJulia/Bio.jl/blob/master/LICENSE.md
+
 # About Internals
 # ---------------
 #
@@ -28,15 +30,14 @@
 #     j = bitindex(seq, i)
 #     decode(A, (seq.data[index(j)] >> offset(j)) & mask(A))
 #
-#  index :           j - 1              j               j + 1
+#  index :        index(j) - 1       index(j)       index(j) + 1
 #   data : ....|xxxxx...........|xxXxxxxxxxxxxxxx|............xxxx|....
-# offset :                          |<--- r ----|
+# offset :                          |<-offset(j)-|
 #  width :      |<---- 64 ---->| |<---- 64 ---->| |<---- 64 ---->|
 #
 #  * '.' : unused (4 bits/char)
 #  * 'x' : used
-#  * 'X' : used and pointed by (j, r)
-
+#  * 'X' : used and pointed by index `i`
 
 """
 Biological sequence data structure indexed by an alphabet type `A`.

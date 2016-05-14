@@ -1,5 +1,11 @@
-# Anchor definition
-# ------------------
+# Alignment Anchor
+# ================
+#
+# Sequence alignment anchor type and alignment data data structures.
+#
+# This file is a part of BioJulia.
+# License is MIT: https://github.com/BioJulia/Bio.jl/blob/master/LICENSE.md
+
 """
 A type to store the operation enocded in an alignment (CIGAR Operations).
 Also stores the position in the alignment view of the sequences, and the
@@ -19,11 +25,7 @@ function AlignmentAnchor(pos::Tuple{Int,Int}, op)
     return AlignmentAnchor(pos[1], pos[2], op)
 end
 
-
-# Basic operators for AlignmentAnchors
-# -------------------------------------
-
-function show(io::IO, anc::AlignmentAnchor)
+function Base.show(io::IO, anc::AlignmentAnchor)
     print(io, "AlignmentAnchor(", anc.seqpos, ", ", anc.refpos, ", '", anc.op, "')")
 end
 
@@ -98,7 +100,6 @@ immutable Alignment
     end
 end
 
-
 """
 Construct an `Alignment`
 """
@@ -136,13 +137,11 @@ function Alignment(cigar::AbstractString, seqpos::Int=1, refpos::Int=1)
     return Alignment(anchors)
 end
 
-
-function ==(a::Alignment, b::Alignment)
+function Base.(:(==))(a::Alignment, b::Alignment)
     return a.anchors == b.anchors && a.firstref == b.firstref && a.lastref == b.lastref
 end
 
-
-function show(io::IO, aln::Alignment)
+function Base.show(io::IO, aln::Alignment)
     # print a representation of the reference sequence
     anchors = aln.anchors
     for i in 2:length(anchors)
@@ -250,6 +249,9 @@ function ref2seq(i::Integer, aln::Alignment)
 end
 
 
+# AlignedSequence
+# ---------------
+
 immutable AlignedSequence{S}
     seq::S
     aln::Alignment
@@ -307,15 +309,14 @@ end
 """
 First position in the reference sequence.
 """
-function first(alnseq::AlignedSequence)
+function IntervalTrees.first(alnseq::AlignedSequence)
     return alnseq.aln.firstref
 end
-
 
 """
 Last position in the reference sequence.
 """
-function last(alnseq::AlignedSequence)
+function IntervalTrees.last(alnseq::AlignedSequence)
     return alnseq.aln.lastref
 end
 
@@ -364,7 +365,6 @@ function Base.show(io::IO, alnseq::AlignedSequence)
         end
     end
 end
-
 
 """
 Output a CIGAR string encoding of an `Alignment`. This is not entirely lossless as

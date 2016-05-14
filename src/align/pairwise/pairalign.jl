@@ -1,5 +1,10 @@
 # Interfaces
-# ----------
+# ==========
+#
+# Interface functions for pairwise sequence alignment algorithms.
+#
+# This file is a part of BioJulia.
+# License is MIT: https://github.com/BioJulia/Bio.jl/blob/master/LICENSE.md
 
 # include algorithms
 include("alignment.jl")

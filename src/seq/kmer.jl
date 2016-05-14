@@ -1,15 +1,31 @@
 # K-mer
 # =====
-
-# A Kmer is a sequence <= 32nt, without any 'N's, packed in a single 64 bit value.
 #
-# While NucleotideSequence is an efficient general-purpose sequence
+# Compact k-mer sequence type.
+#
+# A Kmer is a sequence ≤ 32nt, without any 'N's, packed in a single 64 bit
+# value.  While BioSequence is an efficient general-purpose sequence
 # representation, Kmer is useful for applications like assembly, k-mer counting,
 # k-mer based quantification in RNA-Seq, etc that rely on manipulating many
 # short sequences as efficiently (space and time) as possible.
 #
-# Nucleotides are filled from MSBs to LSBs and right-aligned.
-# For example, the memory layout of "TACG" is:
+# This file is a part of BioJulia.
+# License is MIT: https://github.com/BioJulia/Bio.jl/blob/master/LICENSE.md
+
+# Representation
+# --------------
+#
+# Four kinds of nucleotides are encoded as follows:
+#
+#   nucleotide | binary
+#   ---------- | ------
+#       A      |   00
+#       C      |   01
+#       G      |   10
+#     T / U    |   11
+#
+# Nucleotides are filled from MSBs to LSBs and right-aligned so that all k-mers
+# are lexicographically ordered. For example, the memory layout of "TACG" is:
 #   64-bit: 0b 00 00 … 00 11 00 01 10
 #    4-mer:                T  A  C  G
 
@@ -78,6 +94,7 @@ Base.convert{K}(::Type{BioSequence}, x::RNAKmer{K}) = RNASequence(x)
 Base.convert{A<:DNAAlphabet,K}(::Type{BioSequence{A}}, x::DNAKmer{K}) = BioSequence{A}([nt for nt in x])
 Base.convert{A<:RNAAlphabet,K}(::Type{BioSequence{A}}, x::RNAKmer{K}) = BioSequence{A}([nt for nt in x])
 Base.convert{S<:AbstractString}(::Type{S}, seq::Kmer) = convert(S, [Char(x) for x in seq])
+
 
 # Constructors
 # ------------

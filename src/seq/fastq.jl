@@ -1,7 +1,12 @@
-# FASTQ sequence types
+# FASTQ
+# =====
+#
+# Reader and writer of the FASTQ file format.
+#
+# This file is a part of BioJulia.
+# License is MIT: https://github.com/BioJulia/Bio.jl/blob/master/LICENSE.md
 
 immutable FASTQ <: FileFormat end
-
 
 """
 Metadata for FASTQ sequence records containing a `description` field,
@@ -14,30 +19,24 @@ type FASTQMetadata
     quality::Vector{Int8}
 end
 
-
 function FASTQMetadata()
     return FASTQMetadata(StringField(), Int8[])
 end
-
 
 function Base.(:(==))(a::FASTQMetadata, b::FASTQMetadata)
     return a.description == b.description && a.quality == b.quality
 end
 
-
 function Base.copy(metadata::FASTQMetadata)
     return FASTQMetadata(copy(metadata.description), copy(metadata.quality))
 end
 
-
 "A `SeqRecord` for FASTQ sequences"
 typealias FASTQSeqRecord DNASeqRecord{FASTQMetadata}
-
 
 function FASTQSeqRecord()
     return FASTQSeqRecord(StringField(), DNASequence(), FASTQMetadata())
 end
-
 
 """
 Show a `FASTQSeqRecord` to `io`, with graphical display of quality scores.
@@ -70,7 +69,6 @@ function Base.show(io::IO, seqrec::FASTQSeqRecord)
     end
     write(io, '\n')
 end
-
 
 """
 Write a `FASTQSeqRecord` to `io`, as a valid FASTQ record.

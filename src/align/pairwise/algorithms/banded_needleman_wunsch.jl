@@ -1,3 +1,15 @@
+# Banded Needleman-Wunsch Algorithm
+# =================================
+#
+# Banded counterpart of the Needleman-Wunsch algorithm.
+#
+# The banded Needleman-Wunsch algorithm is similar to the normal
+# Needleman-Wunsch algorithm but search space is limited to specific cells that
+# form a lower and upper bounded band in the dynamic programming matrix.
+#
+# This file is a part of BioJulia.
+# License is MIT: https://github.com/BioJulia/Bio.jl/blob/master/LICENSE.md
+
 type BandedNeedlemanWunsch{T<:Union{Signed,AbstractFloat}}
     trace::Matrix{Trace}
     H::Vector{T}

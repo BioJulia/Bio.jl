@@ -1,3 +1,11 @@
+# Hamming Distance
+# ================
+#
+# The Hamming distance algorithm.
+#
+# This file is a part of BioJulia.
+# License is MIT: https://github.com/BioJulia/Bio.jl/blob/master/LICENSE.md
+
 function hamming_distance{T}(::Type{T}, a, b)
     m = length(a)
     @assert m == length(b)

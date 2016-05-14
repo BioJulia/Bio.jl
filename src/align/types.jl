@@ -1,7 +1,16 @@
 # Alignment Types
-# ---------------
+# ===============
+#
+# Types for sequence alignments.
+#
+# This file is a part of BioJulia.
+# License is MIT: https://github.com/BioJulia/Bio.jl/blob/master/LICENSE.md
 
 abstract AbstractAlignment
+
+
+# Alignments
+# ----------
 
 """Global-global alignment with end gap penalties."""
 immutable GlobalAlignment <: AbstractAlignment end
@@ -16,7 +25,8 @@ immutable OverlapAlignment <: AbstractAlignment end
 immutable LocalAlignment <: AbstractAlignment end
 
 
-# distances
+# Distances
+# ---------
 
 """Edit distance."""
 immutable EditDistance <: AbstractAlignment end
