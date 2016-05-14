@@ -92,28 +92,8 @@
         }, 
         {
             "location": "/man/seq/#other-operations-on-sequences", 
-            "text": "A number of common sequence operations are provided in the  Bio.Seq  module:  #  Bio.Seq.complement     Function .  complement(kmer::Kmer)  The Kmer complement of  kmer  complement(seq)  Make a complement sequence of  seq .  Ambiguous nucleotides are left as-is.  #  Bio.Seq.reverse_complement     Function .  reverse_complement(kmer::Kmer)  Reversed complement of  kmer  reverse_complement(seq)  Make a reversed complement sequence of  seq .  Ambiguous nucleotides are left as-is.  #  Bio.Seq.mismatches     Function .  mismatches(a::Kmer, b::Kmer)  Return the number of mismatches between  a  and  b .", 
+            "text": "A number of common sequence operations are provided in the  Bio.Seq  module:  #  Bio.Seq.complement     Function .  complement(kmer::Kmer)  The Kmer complement of  kmer  complement(seq)  Make a complement sequence of  seq .  Ambiguous nucleotides are left as-is.  #  Bio.Seq.reverse_complement     Function .  reverse_complement(kmer::Kmer)  Reversed complement of  kmer  reverse_complement(seq)  Make a reversed complement sequence of  seq .  Ambiguous nucleotides are left as-is.  #  Bio.Seq.mismatches     Function .  mismatches(a::Kmer, b::Kmer)  Return the number of mismatches between  a  and  b .  Arguments   a : first sequence to compare  b : second sequence to compare   Returns  The number of mismatches  mismatches(a::NucleotideSequence, b::NucleotideSequence, [nmatches=false])  Return the number of mismatches between  a  and  b .  If  a  and  b  are of differing lengths, only the first  min(length(a), length(b))  nucleotides are compared.  Arguments   a : first sequence to compare  b : second sequence to compare  nmatches : if true, N matches anything, if false, N matches only itself (false)   Returns  The number of mismatches  #  Bio.Seq.composition     Function .  composition(seq)  Calculate composition of biological symbols in  seq .", 
             "title": "Other operations on sequences"
-        }, 
-        {
-            "location": "/man/seq/#arguments", 
-            "text": "a : first sequence to compare  b : second sequence to compare", 
-            "title": "Arguments"
-        }, 
-        {
-            "location": "/man/seq/#returns", 
-            "text": "The number of mismatches  mismatches(a::NucleotideSequence, b::NucleotideSequence, [nmatches=false])  Return the number of mismatches between  a  and  b .  If  a  and  b  are of differing lengths, only the first  min(length(a), length(b))  nucleotides are compared.", 
-            "title": "Returns"
-        }, 
-        {
-            "location": "/man/seq/#arguments_1", 
-            "text": "a : first sequence to compare  b : second sequence to compare  nmatches : if true, N matches anything, if false, N matches only itself (false)", 
-            "title": "Arguments"
-        }, 
-        {
-            "location": "/man/seq/#returns_1", 
-            "text": "The number of mismatches  #  Bio.Seq.composition     Function .  composition(seq)  Calculate composition of biological symbols in  seq .", 
-            "title": "Returns"
         }, 
         {
             "location": "/man/seq/#translation", 
@@ -127,28 +107,8 @@
         }, 
         {
             "location": "/man/seq/#nucleotide-k-mers", 
-            "text": "A common strategy to simplify the analysis of sequence data is to operate or short k-mers, for size fixed size  k . These can be packed into machine integers allowing extremely efficient code. The  Bio.Seq  module has built in support for representing short sequences in 64-bit integers. Besides being fixed length,  Kmer  types, unlike other sequence types cannot contain ambiguous symbols like 'N'.  The  Kmer{T,k}  type parameterized on alphabet ( T , either  DNANucleotide , or  RNANucleotide ) and size  k . A number of functions are provided for operating on  Kmers .  #  Bio.Seq.each     Function .  Initialize an iterator over all k-mers in a sequence.  Any k-mer containing an N will be skipped over.", 
+            "text": "A common strategy to simplify the analysis of sequence data is to operate or short k-mers, for size fixed size  k . These can be packed into machine integers allowing extremely efficient code. The  Bio.Seq  module has built in support for representing short sequences in 64-bit integers. Besides being fixed length,  Kmer  types, unlike other sequence types cannot contain ambiguous symbols like 'N'.  The  Kmer{T,k}  type parameterized on alphabet ( T , either  DNANucleotide , or  RNANucleotide ) and size  k . A number of functions are provided for operating on  Kmers .  #  Bio.Seq.each     Function .  Initialize an iterator over all k-mers in a sequence.  Any k-mer containing an N will be skipped over.  Arguments   t : Kmer type to enumerate.  seq : A NucleotideSequence  step : number of positions between iterated k-mers (default: 1)   Returns  A EachKmerIterator constructed with these parameters  Examples  # iterate over codons\nfor (pos, codon) in each(DNAKmer{3}, dna ATCCTANAGNTACT , 3)\n    @show pos, codon\nend  #  Bio.Seq.KmerCounts     Type .  Count ocurrences of short ( = 32) k-mers in a sequence.  This method uses a dense table to store counts, requiring O(4^k) memory, so is not recommended for large k-mer sizes.  Arguments:   'seq`: A NucleotideSequence  step : K-mers counted are separated by this many nucleotides (deafult: 1)   #  Bio.Seq.canonical     Function .  Canonical k-mer of  x  A canonical k-mer is the numerical lesser of a k-mer and its reverse complement. This is useful in hashing/counting k-mers in data that is not strand specific, and thus observing k-mer is equivalent to observing its reverse complement.  #  Bio.Seq.neighbors     Function .  Iterate through k-mers neighboring  x  on a de Bruijn graph.", 
             "title": "Nucleotide k-mers"
-        }, 
-        {
-            "location": "/man/seq/#arguments_2", 
-            "text": "t : Kmer type to enumerate.  seq : A NucleotideSequence  step : number of positions between iterated k-mers (default: 1)", 
-            "title": "Arguments"
-        }, 
-        {
-            "location": "/man/seq/#returns_2", 
-            "text": "A EachKmerIterator constructed with these parameters", 
-            "title": "Returns"
-        }, 
-        {
-            "location": "/man/seq/#examples", 
-            "text": "# iterate over codons\nfor (pos, codon) in each(DNAKmer{3}, dna ATCCTANAGNTACT , 3)\n    @show pos, codon\nend  #  Bio.Seq.KmerCounts     Type .  Count ocurrences of short ( = 32) k-mers in a sequence.  This method uses a dense table to store counts, requiring O(4^k) memory, so is not recommended for large k-mer sizes.", 
-            "title": "Examples"
-        }, 
-        {
-            "location": "/man/seq/#arguments_3", 
-            "text": "'seq`: A NucleotideSequence  step : K-mers counted are separated by this many nucleotides (deafult: 1)   #  Bio.Seq.canonical     Function .  Canonical k-mer of  x  A canonical k-mer is the numerical lesser of a k-mer and its reverse complement. This is useful in hashing/counting k-mers in data that is not strand specific, and thus observing k-mer is equivalent to observing its reverse complement.  #  Bio.Seq.neighbors     Function .  Iterate through k-mers neighboring  x  on a de Bruijn graph.", 
-            "title": "Arguments:"
         }, 
         {
             "location": "/man/seq/#sequence-records", 
@@ -227,18 +187,8 @@
         }, 
         {
             "location": "/man/intervals/#interval-streams", 
-            "text": "Intervals need not necessarily stored in an indexed data structure for efficient intersection to be practical. Two collections of intervals need only be both sorted to compute all intersecting pairs. This is particularly useful in genomics where datasets are sometimes so large that loading them entirely into memory is not practical.  The Intervals module is able to intersect any two iterators that yield intervals in sorted order, which we refer to as \"interval streams\". An  IntervalCollection  is also a interval stream, but so is a sorted array of intervals, and parsers over interval file formats. This allows for a very general notion of intersection.  for   ( x ,   y )   in   intersect ( open ( x_features.bed ,   BED ),   open ( y_features.bed ,   BED )) \n     println ( Intersection found between  ,   x ,    and  ,   y )  end   An exception will be thrown if an interval in encountered out of order while processing an interval stream. Ordering of intervals has one complication: there is not necessarily a standardized way to order sequence names. By default in Bio.jl intervals are sorted using a special  alphanum_isless  comparison function that compares numbers numerically if they exist in string, so that names like  chr1, chr2, chr10  end up in their natural order.  The  intersect  function takes as an optional parameter an  isless  function to use to compare sequence names to account for arbitrary sequence name orderings.  # assume lexigraphic ordering for sequence names  for   ( x ,   y )   in   intersect ( xs ,   ys ,   isless ) \n     println ( Intersection found between  ,   a ,    and  ,   b )  end   A special sort of intersection can also be performed on a  IntervalStreams  against itself to produce \"coverage intervals\".  #  Bio.Intervals.coverage     Function .  Compute the coverage of a collection of intervals.", 
+            "text": "Intervals need not necessarily stored in an indexed data structure for efficient intersection to be practical. Two collections of intervals need only be both sorted to compute all intersecting pairs. This is particularly useful in genomics where datasets are sometimes so large that loading them entirely into memory is not practical.  The Intervals module is able to intersect any two iterators that yield intervals in sorted order, which we refer to as \"interval streams\". An  IntervalCollection  is also a interval stream, but so is a sorted array of intervals, and parsers over interval file formats. This allows for a very general notion of intersection.  for   ( x ,   y )   in   intersect ( open ( x_features.bed ,   BED ),   open ( y_features.bed ,   BED )) \n     println ( Intersection found between  ,   x ,    and  ,   y )  end   An exception will be thrown if an interval in encountered out of order while processing an interval stream. Ordering of intervals has one complication: there is not necessarily a standardized way to order sequence names. By default in Bio.jl intervals are sorted using a special  alphanum_isless  comparison function that compares numbers numerically if they exist in string, so that names like  chr1, chr2, chr10  end up in their natural order.  The  intersect  function takes as an optional parameter an  isless  function to use to compare sequence names to account for arbitrary sequence name orderings.  # assume lexigraphic ordering for sequence names  for   ( x ,   y )   in   intersect ( xs ,   ys ,   isless ) \n     println ( Intersection found between  ,   a ,    and  ,   b )  end   A special sort of intersection can also be performed on a  IntervalStreams  against itself to produce \"coverage intervals\".  #  Bio.Intervals.coverage     Function .  Compute the coverage of a collection of intervals.  Arguments   intervals : any IntervalStream   Returns  An IntervalCollection that contains run-length encoded coverage data.  E.g. for intervals like  ```{execute=\"false\"}\n    [------]     [------------]\n       [---------------]  this function would return a new set of disjoint intervals with annotated coverage like:\n\n```{execute= false }\n    [1][-2-][-1-][--2--][--1--]", 
             "title": "Interval streams"
-        }, 
-        {
-            "location": "/man/intervals/#arguments", 
-            "text": "intervals : any IntervalStream", 
-            "title": "Arguments"
-        }, 
-        {
-            "location": "/man/intervals/#returns", 
-            "text": "An IntervalCollection that contains run-length encoded coverage data.  E.g. for intervals like  ```{execute=\"false\"}\n    [------]     [------------]\n       [---------------]  this function would return a new set of disjoint intervals with annotated coverage like:\n\n```{execute= false }\n    [1][-2-][-1-][--2--][--1--]", 
-            "title": "Returns"
         }, 
         {
             "location": "/man/structure/", 

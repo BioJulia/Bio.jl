@@ -1015,23 +1015,23 @@
 <strong><code>Bio.Seq.mismatches</code></strong> &mdash; <em>Function</em>.</p>
 <p><code>mismatches(a::Kmer, b::Kmer)</code></p>
 <p>Return the number of mismatches between <code>a</code> and <code>b</code>.</p>
-<h3 id="arguments">Arguments</h3>
+<p><strong>Arguments</strong></p>
 <ul>
 <li><code>a</code>: first sequence to compare</li>
 <li><code>b</code>: second sequence to compare</li>
 </ul>
-<h3 id="returns">Returns</h3>
+<p><strong>Returns</strong></p>
 <p>The number of mismatches</p>
 <p><code>mismatches(a::NucleotideSequence, b::NucleotideSequence, [nmatches=false])</code></p>
 <p>Return the number of mismatches between <code>a</code> and <code>b</code>.</p>
 <p>If <code>a</code> and <code>b</code> are of differing lengths, only the first <code>min(length(a), length(b))</code> nucleotides are compared.</p>
-<h3 id="arguments_1">Arguments</h3>
+<p><strong>Arguments</strong></p>
 <ul>
 <li><code>a</code>: first sequence to compare</li>
 <li><code>b</code>: second sequence to compare</li>
 <li><code>nmatches</code>: if true, N matches anything, if false, N matches only itself (false)</li>
 </ul>
-<h3 id="returns_1">Returns</h3>
+<p><strong>Returns</strong></p>
 <p>The number of mismatches</p>
 <p><a id='Bio.Seq.composition' href='#Bio.Seq.composition'>#</a>
 <strong><code>Bio.Seq.composition</code></strong> &mdash; <em>Function</em>.</p>
@@ -1097,15 +1097,15 @@
 <strong><code>Bio.Seq.each</code></strong> &mdash; <em>Function</em>.</p>
 <p>Initialize an iterator over all k-mers in a sequence.</p>
 <p>Any k-mer containing an N will be skipped over.</p>
-<h3 id="arguments_2">Arguments</h3>
+<p><strong>Arguments</strong></p>
 <ul>
 <li><code>t</code>: Kmer type to enumerate.</li>
 <li><code>seq</code>: A NucleotideSequence</li>
 <li><code>step</code>: number of positions between iterated k-mers (default: 1)</li>
 </ul>
-<h3 id="returns_2">Returns</h3>
+<p><strong>Returns</strong></p>
 <p>A EachKmerIterator constructed with these parameters</p>
-<h3 id="examples">Examples</h3>
+<p><strong>Examples</strong></p>
 <div class="codehilite"><pre><span></span># iterate over codons
 for (pos, codon) in each(DNAKmer{3}, dna&quot;ATCCTANAGNTACT&quot;, 3)
     @show pos, codon
@@ -1117,7 +1117,7 @@ end
 <strong><code>Bio.Seq.KmerCounts</code></strong> &mdash; <em>Type</em>.</p>
 <p>Count ocurrences of short (&lt;= 32) k-mers in a sequence.</p>
 <p>This method uses a dense table to store counts, requiring O(4^k) memory, so is not recommended for large k-mer sizes.</p>
-<h3 id="arguments_3">Arguments:</h3>
+<p><strong>Arguments:</strong></p>
 <ul>
 <li>'seq`: A NucleotideSequence</li>
 <li><code>step</code>: K-mers counted are separated by this many nucleotides (deafult: 1)</li>
