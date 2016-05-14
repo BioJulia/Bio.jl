@@ -102,7 +102,7 @@ macro register_ncbi_gencode(id, bind, tbl)
         gencode = parse_gencode($tbl)
         const $(esc(bind)) = gencode
         ncbi_trans_table.tables[$id] = gencode
-        ncbi_trans_table.bindings[$id] = symbol($(string(bind)))
+        ncbi_trans_table.bindings[$id] = Symbol($(string(bind)))
     end
 end
 

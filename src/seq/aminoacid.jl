@@ -71,7 +71,7 @@ for (aa, doc, code) in [
         ('J', "Leucine or Isoleucine",             0x17),  # ambiguous
         ('Z', "Glutamine or Glutamic Acid",        0x18),  # ambiguous
         ('X', "Unspecified or Unknown Amino Acid", 0x19)]  # ambiguous
-    var = symbol("AA_", aa)
+    var = Symbol("AA_", aa)
     @eval begin
         @doc $doc const $var = convert(AminoAcid, $code)
         char_to_aa[$(Int(aa)+1)] = char_to_aa[$(Int(lowercase(aa))+1)] = $var

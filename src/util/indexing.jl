@@ -191,7 +191,7 @@ function make_unique(names::Vector{Symbol})
         nm = names[i]
         k = 1
         while true
-            newnm = symbol("$(nm)_$k")
+            newnm = Symbol("$(nm)_$k")
             if !in(newnm, seen)
                 warn("Trying to build an index with duplicate names. Changing $(names[i]) to $(newnm)")
                 names[i] = newnm
