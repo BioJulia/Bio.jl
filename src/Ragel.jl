@@ -11,6 +11,7 @@ module Ragel
 export tryread!
 
 using BufferedStreams
+using Compat
 using Bio:
     FileFormat,
     AbstractParser
@@ -103,7 +104,7 @@ macro ascii_from_anchor!()
         n = $(esc(:p)) - firstpos + 1
         dst = Vector{UInt8}(n)
         copy!(dst, 1, $(esc(:state)).stream.buffer, firstpos, n)
-        ASCIIString(dst)
+        Compat.ASCIIString(dst)
     end
 end
 

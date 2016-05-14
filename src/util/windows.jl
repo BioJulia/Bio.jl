@@ -12,6 +12,7 @@ export eachwindow,
     EachWindowIterator,
     missed
 
+using Compat
 using Bio.Seq:
     Sequence
 
@@ -38,6 +39,7 @@ immutable EachWindowIterator{T <: ArrayOrStringOrSeq}
     end
 end
 
+
 """
 Calculate the number of windows that will result from iterating across the container.
 
@@ -62,7 +64,7 @@ A sliding window iterator is considered equal to another
 sliding window iterator if the data is considered equal, and the
 width and step of the iterator is also equivalent.
 """
-function Base.(:(==))(x::EachWindowIterator, y::EachWindowIterator)
+@compat function Base.:(==)(x::EachWindowIterator, y::EachWindowIterator)
     return (x.data == y.data) && (x.width == y.width) && (x.step == y.step)
 end
 

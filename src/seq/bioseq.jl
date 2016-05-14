@@ -85,7 +85,7 @@ end
 
 seq_data_len{A}(::Type{A}, len::Integer) = cld(len, div(64, bitsof(A)))
 
-function Base.call{A<:Alphabet}(::Type{BioSequence{A}}, len::Integer)
+@compat function (::Type{BioSequence{A}}){A<:Alphabet}(len::Integer)
     return BioSequence{A}(Vector{UInt64}(seq_data_len(A, len)), 1:len, false)
 end
 
@@ -98,10 +98,10 @@ function BioSequence()
     return BioSequence{VoidAlphabet}(Vector{UInt64}(0), 0:-1, false)
 end
 
-function Base.call{A<:Alphabet}(::Type{BioSequence{A}},
-                                src::Union{AbstractString,AbstractVector},
-                                startpos::Integer=1,
-                                stoppos::Integer=length(src))
+@compat function (::Type{BioSequence{A}}){A<:Alphabet}(
+        src::Union{AbstractString,AbstractVector},
+        startpos::Integer=1,
+        stoppos::Integer=length(src))
     len = stoppos - startpos + 1
     seq = BioSequence{A}(len)
     return encode_copy!(seq, 1, src, startpos, len)
@@ -117,14 +117,12 @@ function BioSequence{A,T<:Integer}(other::BioSequence{A}, part::UnitRange{T})
     return subseq
 end
 
-function Base.call{A}(::Type{BioSequence{A}},
-                      other::BioSequence{A},
-                      part::UnitRange)
+@compat function (::Type{BioSequence{A}}){A}(other::BioSequence{A}, part::UnitRange)
     return BioSequence(other, part)
 end
 
 # concatenate chunks
-function Base.call{A}(::Type{BioSequence{A}}, chunks::BioSequence{A}...)
+@compat function (::Type{BioSequence{A}}){A}(chunks::BioSequence{A}...)
     len = 0
     for chunk in chunks
         len += length(chunk)
@@ -138,10 +136,6 @@ function Base.call{A}(::Type{BioSequence{A}}, chunks::BioSequence{A}...)
     return seq
 end
 
-function Base.(:*){A}(chunk::BioSequence{A}, chunks::BioSequence{A}...)
-    return BioSequence{A}(chunk, chunks...)
-end
-
 function Base.repeat{A}(chunk::BioSequence{A}, n::Integer)
     seq = BioSequence{A}(length(chunk) * n)
     offset = 1
@@ -152,7 +146,12 @@ function Base.repeat{A}(chunk::BioSequence{A}, n::Integer)
     return seq
 end
 
-Base.(:^)(chunk::BioSequence, n::Integer) = repeat(chunk, n)
+# operators for concat and repeat
+@compat begin
+    Base.:*{A}(chunk::BioSequence{A}, chunks::BioSequence{A}...) =
+        BioSequence{A}(chunk, chunks...)
+    Base.:^(chunk::BioSequence, n::Integer) = repeat(chunk, n)
+end
 
 # conversion between different alphabet size
 for A in [DNAAlphabet, RNAAlphabet]
@@ -277,10 +276,12 @@ end
 
 index(i::BitIndex) = (i.val >> 6) + 1
 offset(i::BitIndex) = i.val & 0b111111
-Base.(:+)(i::BitIndex, n::Int) = BitIndex(i.val + n)
-Base.(:-)(i::BitIndex, n::Int) = BitIndex(i.val - n)
-Base.(:-)(i1::BitIndex, i2::BitIndex) = i1.val - i2.val
-Base.(:(==))(i1::BitIndex, i2::BitIndex) = i1.val == i2.val
+@compat begin
+    Base.:+(i::BitIndex, n::Int) = BitIndex(i.val + n)
+    Base.:-(i::BitIndex, n::Int) = BitIndex(i.val - n)
+    Base.:-(i1::BitIndex, i2::BitIndex) = i1.val - i2.val
+    Base.:(==)(i1::BitIndex, i2::BitIndex) = i1.val == i2.val
+end
 Base.isless(i1::BitIndex, i2::BitIndex) = isless(i1.val, i2.val)
 Base.show(io::IO, i::BitIndex) = print(io, '(', index(i), ", ", offset(i), ')')
 Base.start(i::BitIndex) = 1
@@ -530,14 +531,13 @@ end
 
 function encode_copy!{A}(dst::BioSequence{A},
                          doff::Integer,
-                         # these types support random access
-                         src::Union{AbstractVector,
-                                    ASCIIString,
-                                    UTF32String,
-                                    SubString{ASCIIString},
-                                    SubString{UTF32String}},
+                         src::Union{AbstractVector,AbstractString},
                          soff::Integer,
                          len::Integer)
+    if soff != 1 && !isascii(src)
+        throw(ArgumentError("source offset ≠ 1 is not supported for non-ASCII string"))
+    end
+
     checkbounds(dst, doff:doff+len-1)
     if length(src) < soff + len - 1
         throw(ArgumentError("source string does not contain $len elements from $soff"))
@@ -551,8 +551,8 @@ function encode_copy!{A}(dst::BioSequence{A},
         x = UInt64(0)
         j = index(next)
         while index(next) == j && next < stop
-            x |= enc64(dst, convert(Char, src[i])) << offset(next)
-            i += 1
+            char, i = Base.next(src, i)
+            x |= enc64(dst, convert(Char, char)) << offset(next)
             next += bitsof(A)
         end
         dst.data[j] = x
@@ -560,6 +560,7 @@ function encode_copy!{A}(dst::BioSequence{A},
     return dst
 end
 
+#=
 function encode_copy!{A}(dst::BioSequence{A},
                          doff::Integer,
                          src::AbstractString,
@@ -594,6 +595,7 @@ function encode_copy!{A}(dst::BioSequence{A},
     end
     return dst
 end
+=#
 
 function Base.copy!{A}(seq::BioSequence{A}, doff::Integer,
                        src::Vector{UInt8},  soff::Integer, len::Integer)
@@ -696,7 +698,7 @@ Base.next(seq::BioSequence, i) = unsafe_getindex(seq, i), i + 1
 
 Base.eachindex(seq::BioSequence) = 1:endof(seq)
 
-function Base.(:(==)){A1,A2}(s1::BioSequence{A1}, s2::BioSequence{A2})
+@compat function Base.:(==){A1,A2}(s1::BioSequence{A1}, s2::BioSequence{A2})
     if s1.data === s2.data && s1.part === s2.part && A1 === A2
         return true
     elseif length(s1) != length(s2)
@@ -901,6 +903,10 @@ Base.start(it::AmbiguousNucleotideIterator) = find_next_ambiguous(it.seq, 1)
 Base.done(it::AmbiguousNucleotideIterator, nextpos) = nextpos == 0
 function Base.next(it::AmbiguousNucleotideIterator, nextpos)
     return nextpos, find_next_ambiguous(it.seq, nextpos + 1)
+end
+
+if VERSION > v"0.5-"
+    Base.iteratorsize(::AmbiguousNucleotideIterator) = Base.SizeUnknown()
 end
 
 function find_next_ambiguous{A<:Union{DNAAlphabet{2},RNAAlphabet{2}}}(

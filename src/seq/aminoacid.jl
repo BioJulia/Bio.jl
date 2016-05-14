@@ -24,10 +24,12 @@ Base.convert{T<:Number}(::Type{AminoAcid}, aa::T) = convert(AminoAcid, UInt8(aa)
 
 # These methods are necessary when deriving some algorithims
 # like iteration, sort, comparison, and so on.
-Base.(:-)(x::AminoAcid, y::AminoAcid) = Int(x) - Int(y)
-Base.(:-)(x::AminoAcid, y::Integer) = reinterpret(AminoAcid, UInt8(x) - UInt8(y))
-Base.(:+)(x::AminoAcid, y::Integer) = reinterpret(AminoAcid, UInt8(x) + UInt8(y))
-Base.(:+)(x::Integer, y::AminoAcid) = y + x
+@compat begin
+    Base.:-(x::AminoAcid, y::AminoAcid) = Int(x) - Int(y)
+    Base.:-(x::AminoAcid, y::Integer) = reinterpret(AminoAcid, UInt8(x) - UInt8(y))
+    Base.:+(x::AminoAcid, y::Integer) = reinterpret(AminoAcid, UInt8(x) + UInt8(y))
+    Base.:+(x::Integer, y::AminoAcid) = y + x
+end
 Base.isless(x::AminoAcid, y::AminoAcid) = isless(UInt8(x), UInt8(y))
 
 

@@ -17,9 +17,9 @@ immutable PDB <: FileFormat end
 
 "Error arising from parsing a PDB file."
 type PDBParseError <: Exception
-    message::ASCIIString
+    message::Compat.ASCIIString
     line_number::Int
-    line::ASCIIString
+    line::Compat.ASCIIString
 end
 
 
@@ -98,14 +98,14 @@ end
 
 
 "Parse a PDB ATOM or HETATM record and return an `Atom`."
-function parseatomrecord(line::ASCIIString, line_number::Integer=1)
+function parseatomrecord(line::Compat.ASCIIString, line_number::Integer=1)
     @assert startswith(line, "ATOM  ") || startswith(line, "HETATM") "Line does not appear to be an ATOM/HETATM record: \"$line\""
     return Atom(
         line[1:6] == "HETATM",
         parsestrict(line, (7,11), Int, "Could not read atom serial number", line_number),
-        strip(parsestrict(line, (13,16), ASCIIString, "Could not read atom name", line_number)),
+        strip(parsestrict(line, (13,16), Compat.ASCIIString, "Could not read atom name", line_number)),
         parsestrict(line, (17,17), Char, "Could not read alt loc identifier", line_number),
-        strip(parsestrict(line, (18,20), ASCIIString, "Could not read residue name", line_number)),
+        strip(parsestrict(line, (18,20), Compat.ASCIIString, "Could not read residue name", line_number)),
         parsestrict(line, (22,22), Char, "Could not read chain ID", line_number),
         parsestrict(line, (23,26), Int, "Could not read residue number", line_number),
         parsestrict(line, (27,27), Char, "Could not read insertion code", line_number),
@@ -116,14 +116,14 @@ function parseatomrecord(line::ASCIIString, line_number::Integer=1)
         ],
         parselenient(line, (55,60), Float64, 1.0),
         parselenient(line, (61,66), Float64, 0.0),
-        strip(parselenient(line, (77,78), ASCIIString, "")),
-        strip(parselenient(line, (79,80), ASCIIString, ""))
+        strip(parselenient(line, (77,78), Compat.ASCIIString, "")),
+        strip(parselenient(line, (79,80), Compat.ASCIIString, ""))
     )
 end
 
 
 "Parse columns from a line and return the value or throw a `PDBParseError`."
-function parsestrict(line::ASCIIString,
+function parsestrict(line::Compat.ASCIIString,
                     cols::Tuple{Integer, Integer},
                     out_type::Type,
                     error_message::AbstractString,
@@ -137,7 +137,7 @@ end
 
 
 "Parse columns from a line and return the value or a default value."
-function parselenient(line::ASCIIString,
+function parselenient(line::Compat.ASCIIString,
                     cols::Tuple{Integer, Integer},
                     out_type::Type,
                     default)
@@ -150,13 +150,13 @@ end
 
 
 "Parse columns from a line."
-function parsevalue(line::ASCIIString, cols::Tuple{Integer, Integer}, out_type::Type)
+function parsevalue(line::Compat.ASCIIString, cols::Tuple{Integer, Integer}, out_type::Type)
     try
         if out_type == Int
             return parse(Int, line[cols[1]:cols[2]])
         elseif out_type == Float64
             return parse(Float64, line[cols[1]:cols[2]])
-        elseif out_type == ASCIIString
+        elseif out_type == Compat.ASCIIString
             return line[cols[1]:cols[2]]
         elseif out_type == Char
             return line[cols[1]]
@@ -208,7 +208,7 @@ end
 
 
 "Form a Protein Data Bank (PDB) format ATOM or HETATM record from an `Atom`."
-pdbline(atom::Atom) = ASCIIString[
+pdbline(atom::Atom) = Compat.ASCIIString[
         ishetatom(atom) ? "HETATM" : "ATOM  ",
         spacestring(serial(atom), 5),
         " ",

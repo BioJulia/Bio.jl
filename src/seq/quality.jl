@@ -12,11 +12,11 @@ bitstype 16 QualityEncoding
 Base.convert(::Type{QualityEncoding}, nt::UInt16) = reinterpret(QualityEncoding, nt)
 Base.convert(::Type{UInt16}, nt::QualityEncoding) = reinterpret(UInt16, nt)
 
-function Base.(:|)(a::QualityEncoding, b::QualityEncoding)
+@compat function Base.:|(a::QualityEncoding, b::QualityEncoding)
     return convert(QualityEncoding, convert(UInt16, a) | convert(UInt16, b))
 end
 
-function Base.(:&)(a::QualityEncoding, b::QualityEncoding)
+@compat function Base.:&(a::QualityEncoding, b::QualityEncoding)
     return convert(QualityEncoding, convert(UInt16, a) & convert(UInt16, b))
 end
 

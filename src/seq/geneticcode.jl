@@ -9,7 +9,7 @@
 # A genetic code is a table mapping RNA 3-mers (i.e. RNAKmer{3}) to AminoAcids.
 "Type representing a Genetic Code"
 immutable GeneticCode <: Associative{RNAKmer{3}, AminoAcid}
-    name::ASCIIString
+    name::Compat.String
     tbl::Vector{AminoAcid}
 end
 
@@ -325,9 +325,7 @@ function translate(seq::RNASequence;
     return translate(seq, code, allow_ambiguous_codons)
 end
 
-function translate(seq::RNASequence,
-                   code::GeneticCode=standard_genetic_code,
-                   allow_ambiguous_codons::Bool=true)
+function translate(seq::RNASequence, code::GeneticCode, allow_ambiguous_codons::Bool)
     aaseqlen, r = divrem(length(seq), 3)
     if r != 0
         error("RNASequence length is not divisible by three. Cannot translate.")

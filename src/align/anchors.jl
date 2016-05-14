@@ -137,7 +137,7 @@ function Alignment(cigar::AbstractString, seqpos::Int=1, refpos::Int=1)
     return Alignment(anchors)
 end
 
-function Base.(:(==))(a::Alignment, b::Alignment)
+@compat function Base.:(==)(a::Alignment, b::Alignment)
     return a.anchors == b.anchors && a.firstref == b.firstref && a.lastref == b.lastref
 end
 

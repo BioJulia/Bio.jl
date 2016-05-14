@@ -137,8 +137,8 @@ end
 # ---------------
 
 for (A, N) in ((DNAAlphabet, DNANucleotide), (RNAAlphabet, RNANucleotide))
-    @eval begin
-        function Base.(:(==)){A<:$A,K}(a::BioSequence{A}, b::Kmer{$N,K})
+    @compat @eval begin
+        function Base.:(==){A<:$A,K}(a::BioSequence{A}, b::Kmer{$N,K})
             if length(a) != K
                 return false
             end
@@ -149,7 +149,7 @@ for (A, N) in ((DNAAlphabet, DNANucleotide), (RNAAlphabet, RNANucleotide))
             end
             return true
         end
-        Base.(:(==)){A<:$A,K}(a::Kmer{$N,K}, b::BioSequence{A}) = b == a
+        Base.:(==){A<:$A,K}(a::Kmer{$N,K}, b::BioSequence{A}) = b == a
     end
 end
 
@@ -187,9 +187,11 @@ function Base.showcompact{T,k}(io::IO, x::Kmer{T,k})
     end
 end
 
-Base.(:-){T,K}(x::Kmer{T,K}, y::Integer)   = Kmer{T,K}(UInt64(x) - reinterpret(UInt64, y))
-Base.(:+){T,K}(x::Kmer{T,K}, y::Integer)   = Kmer{T,K}(UInt64(x) + reinterpret(UInt64, y))
-Base.(:+){T,K}(x::Integer,   y::Kmer{T,K}) = y + x
+@compat begin
+    Base.:-{T,K}(x::Kmer{T,K}, y::Integer) = Kmer{T,K}(UInt64(x) - reinterpret(UInt64, y))
+    Base.:+{T,K}(x::Kmer{T,K}, y::Integer) = Kmer{T,K}(UInt64(x) + reinterpret(UInt64, y))
+    Base.:+{T,K}(x::Integer, y::Kmer{T,K}) = y + x
+end
 Base.isless{T,K}(x::Kmer{T,K}, y::Kmer{T,K}) = isless(UInt64(x), UInt64(y))
 
 Base.length{T, K}(x::Kmer{T, K}) = K

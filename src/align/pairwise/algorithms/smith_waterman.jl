@@ -10,18 +10,18 @@ type SmithWaterman{T<:Union{Signed,AbstractFloat}}
     trace::Matrix{Trace}
     H::Vector{T}
     E::Vector{T}
-end
 
-function Base.call{T}(::Type{SmithWaterman{T}}, m, n)
-    trace = Matrix{Trace}(m + 1, n + 1)
-    fill!(trace, 0xff)
-    H = Vector{T}(m + 1)
-    E = Vector{T}(m)
-    return SmithWaterman(trace, H, E)
-end
+    function SmithWaterman(m::Integer, n::Integer)
+        trace = Matrix{Trace}(m + 1, n + 1)
+        fill!(trace, 0xff)
+        H = Vector{T}(m + 1)
+        E = Vector{T}(m)
+        return new(trace, H, E)
+    end
 
-function Base.call{T}(::Type{SmithWaterman{T}})
-    return SmithWaterman{T}(0, 0)
+    function SmithWaterman()
+        return SmithWaterman{T}(0, 0)
+    end
 end
 
 function ensureroom!(sw::SmithWaterman, m, n)

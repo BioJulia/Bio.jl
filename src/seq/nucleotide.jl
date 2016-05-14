@@ -28,10 +28,12 @@ Base.convert{T<:Number,S<:Nucleotide}(::Type{S}, nt::T) = convert(S, UInt8(nt))
 
 # These methods are necessary when deriving some algorithims
 # like iteration, sort, comparison, and so on.
-Base.(:-){N<:Nucleotide}(x::N, y::N) = Int(x) - Int(y)
-Base.(:-){N<:Nucleotide}(x::N, y::Integer) = reinterpret(N, UInt8(x) - UInt8(y))
-Base.(:+){N<:Nucleotide}(x::N, y::Integer) = reinterpret(N, UInt8(x) + UInt8(y))
-Base.(:+){N<:Nucleotide}(x::Integer, y::N) = y + x
+@compat begin
+    Base.:-{N<:Nucleotide}(x::N, y::N) = Int(x) - Int(y)
+    Base.:-{N<:Nucleotide}(x::N, y::Integer) = reinterpret(N, UInt8(x) - UInt8(y))
+    Base.:+{N<:Nucleotide}(x::N, y::Integer) = reinterpret(N, UInt8(x) + UInt8(y))
+    Base.:+{N<:Nucleotide}(x::Integer, y::N) = y + x
+end
 Base.isless{N<:Nucleotide}(x::N, y::N) = isless(UInt8(x), UInt8(y))
 
 

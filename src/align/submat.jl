@@ -100,7 +100,7 @@ Base.maximum(submat::SubstitutionMatrix) = maximum(submat.data)
 
 function Base.show{T,S}(io::IO, submat::SubstitutionMatrix{T,S})
     n = size(submat.data, 1)
-    mat = Matrix{UTF8String}(n, n)
+    mat = Matrix{Compat.String}(n, n)
     for i in 1:n, j in 1:n
         mat[i,j] = string(submat.data[i,j])
         if !submat.defined[i,j]

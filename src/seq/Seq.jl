@@ -186,12 +186,16 @@ include("fastq-parser.jl")
 # DEPRECATED: defined just for compatibility
 type NucleotideSequence{T<:Nucleotide} end
 
-Base.call(::Type{NucleotideSequence{DNANucleotide}}) = DNASequence()
-Base.call(::Type{NucleotideSequence{RNANucleotide}}) = RNASequence()
-Base.call(::Type{NucleotideSequence}, ::Type{DNANucleotide}) = DNASequence()
-Base.call(::Type{NucleotideSequence}, ::Type{RNANucleotide}) = RNASequence()
-Base.call(::Type{NucleotideSequence{DNANucleotide}}, seq::Union{AbstractVector{DNANucleotide},AbstractString}) = DNASequence(seq)
-Base.call(::Type{NucleotideSequence{RNANucleotide}}, seq::Union{AbstractVector{RNANucleotide},AbstractString}) = RNASequence(seq)
+NucleotideSequence(::Type{DNANucleotide}) = DNASequence()
+NucleotideSequence(::Type{RNANucleotide}) = RNASequence()
+@compat begin
+    (::Type{NucleotideSequence{DNANucleotide}})() = DNASequence()
+    (::Type{NucleotideSequence{RNANucleotide}})() = RNASequence()
+    (::Type{NucleotideSequence{DNANucleotide}})(
+        seq::Union{AbstractVector{DNANucleotide},AbstractString}) = DNASequence(seq)
+    (::Type{NucleotideSequence{RNANucleotide}})(
+        seq::Union{AbstractVector{RNANucleotide},AbstractString}) = RNASequence(seq)
+end
 
 Base.convert(::Type{NucleotideSequence}, seq::DNAKmer) = DNASequence(seq)
 Base.convert(::Type{NucleotideSequence}, seq::RNAKmer) = RNASequence(seq)

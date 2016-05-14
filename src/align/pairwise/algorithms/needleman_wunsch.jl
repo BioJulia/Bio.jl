@@ -10,18 +10,18 @@ type NeedlemanWunsch{T<:Union{Signed,AbstractFloat}}
     trace::Matrix{Trace}
     H::Vector{T}
     E::Vector{T}
-end
 
-function Base.call{T}(::Type{NeedlemanWunsch{T}}, m, n)
-    trace = Matrix{Trace}(m + 1, n + 1)
-    fill!(trace, 0xff)
-    H = Vector{T}(m + 1)
-    E = Vector{T}(m)
-    return NeedlemanWunsch(trace, H, E)
-end
+    function NeedlemanWunsch(m::Integer, n::Integer)
+        trace = Matrix{Trace}(m + 1, n + 1)
+        fill!(trace, 0xff)
+        H = Vector{T}(m + 1)
+        E = Vector{T}(m)
+        return new(trace, H, E)
+    end
 
-function Base.call{T}(::Type{NeedlemanWunsch{T}})
-    return NeedlemanWunsch{T}(0, 0)
+    function NeedlemanWunsch()
+        return NeedlemanWunsch{T}(m, n)
+    end
 end
 
 function ensureroom!(nw::NeedlemanWunsch, m, n)

@@ -36,7 +36,8 @@ using
     BufferedStreams,
     IntervalTrees,
     Libz,
-    Colors
+    Colors,
+    Compat
 
 using Base.Collections:
     heappush!,

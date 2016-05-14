@@ -39,7 +39,7 @@ end
 function Base.show{T,K}(io::IO, counts::KmerCounts{T,K})
     println(io, (T == DNANucleotide ? "DNA" : "RNA"), "KmerCounts{", K, "}:")
     for x in UInt64(1):UInt64(4^K)
-        s = ASCIIString(Kmer{T,K}(x - 1))
+        s = string(Kmer{T,K}(x - 1))
         println(io, "  ", s, " => ", counts.data[x])
     end
 end

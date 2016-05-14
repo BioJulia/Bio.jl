@@ -46,6 +46,10 @@ eachkmer{A<:RNAAlphabet}(seq::BioSequence{A}, K::Integer, step::Integer=1) = eac
 
 Base.eltype{T,k,S}(::Type{EachKmerIterator{T,k,S}}) = Tuple{Int,Kmer{T,k}}
 
+if VERSION > v"0.5-"
+    Base.iteratorsize(::EachKmerIterator) = Base.SizeUnknown()
+end
+
 @inline function Base.start{T,K}(it::EachKmerIterator{T,K})
     nextn = find_next_ambiguous(it.seq, it.seq.part.start)
     pair = Nullable{Tuple{Int,Kmer{T,K}}}()
