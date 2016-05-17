@@ -201,6 +201,7 @@ Base.endof(x::Kmer) = length(x)
 Base.start(x::Kmer) = 1
 Base.next(x::Kmer, i::Int) = unsafe_getindex(x, i), i + 1
 Base.done(x::Kmer, i::Int) = i > length(x)
+Base.eltype{T,k}(::Type{Kmer{T,k}}) = T
 
 function Base.findnext{T}(kmer::Kmer{T}, val, start::Integer)
     checkbounds(kmer, start)
