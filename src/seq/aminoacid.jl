@@ -43,6 +43,9 @@ const AA_INVALID = convert(AminoAcid, 0x1c)  # Used during conversion from strin
 const char_to_aa = [AA_INVALID for _ in 0x00:0x7f]
 const aa_to_char = Vector{Char}(0x1c)
 
+# compatibility bits
+const compatbits_aa = Vector{UInt32}(28)
+
 # This set of amino acids is defined by IUPAC-IUB Joint Commission on Biochemical Nomenclature.
 # Reference: http://www.insdc.org/documents/feature_table.html#7.4.3
 
@@ -79,22 +82,38 @@ for (aa, doc, code) in [
         char_to_aa[$(Int(aa)+1)] = char_to_aa[$(Int(lowercase(aa))+1)] = $var
         aa_to_char[$(code)+1] = $aa
     end
+    if code ≤ 0x15
+        compatbits_aa[code+1] = 1 << code
+    elseif code == 0x16
+        compatbits_aa[code+1] = 1 << 0x02 | 1 << 0x03
+    elseif code == 0x17
+        compatbits_aa[code+1] = 1 << 0x09 | 1 << 0x0a
+    elseif code == 0x18
+        compatbits_aa[code+1] = 1 << 0x05 | 1 << 0x06
+    elseif code == 0x19
+        compatbits_aa[code+1] = (1 << 0x16) - 1
+    end
 end
 
 "Terminal"
 const AA_Term = convert(AminoAcid, 0x1a)
 char_to_aa[Int('*')+1] = AA_Term
 aa_to_char[0x1a+1] = '*'
+compatbits_aa[0x1a+1] = 1 << 0x1a
 
 "Amino Acid Gap"
 const AA_Gap = convert(AminoAcid, 0x1b)
 char_to_aa[Int('-') + 1] = AA_Gap
 aa_to_char[0x1b+1] = '-'
+compatbits_aa[0x1b+1] = 0
 
 Base.isvalid(::Type{AminoAcid}, x::Integer) = 0 ≤ x ≤ 0x1b
 Base.isvalid(aa::AminoAcid) = aa ≤ AA_Gap
+isambiguous(aa::AminoAcid) = AA_B ≤ aa ≤ AA_X
 alphabet(::Type{AminoAcid}) = AA_A:AA_Gap
 gap(::Type{AminoAcid}) = AA_Gap
+
+compatbits(aa::AminoAcid) = compatbits_aa[reinterpret(UInt8, aa)+1]
 
 
 # Conversion from/to Char

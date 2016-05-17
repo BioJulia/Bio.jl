@@ -192,6 +192,7 @@ Invalid DNA Nucleotide
     {docs}
     alphabet
     gap
+    iscompatible
 
 
 ## Sequences

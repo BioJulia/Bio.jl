@@ -284,6 +284,28 @@ end
         end
     end
 
+    @testset "iscompatible" begin
+        @test  iscompatible(DNA_A, DNA_A)
+        @test  iscompatible(DNA_A, DNA_R)
+        @test !iscompatible(DNA_C, DNA_A)
+        @test !iscompatible(DNA_C, DNA_R)
+
+        for x in alphabet(DNANucleotide)
+            @test iscompatible(x, DNA_N) == (x != DNA_Gap)
+            @test iscompatible(DNA_N, x) == (x != DNA_Gap)
+        end
+
+        @test  iscompatible(RNA_A, RNA_A)
+        @test  iscompatible(RNA_A, RNA_R)
+        @test !iscompatible(RNA_C, RNA_A)
+        @test !iscompatible(RNA_C, RNA_R)
+
+        for x in alphabet(RNANucleotide)
+            @test iscompatible(x, RNA_N) == (x != RNA_Gap)
+            @test iscompatible(RNA_N, x) == (x != RNA_Gap)
+        end
+    end
+
     @testset "Encoder" begin
         @testset "DNA" begin
             encode = Seq.encode
@@ -454,6 +476,18 @@ end
             @test decode(AminoAcidAlphabet, x) === convert(AminoAcid, x)
         end
         @test_throws Seq.DecodeError decode(AminoAcidAlphabet, 0x1c)
+    end
+
+    @testset "iscompatible" begin
+        @test  iscompatible(AA_A, AA_A)
+        @test !iscompatible(AA_A, AA_R)
+
+        for x in alphabet(AminoAcid)
+            @test iscompatible(x, AA_B) == (x ∈ (AA_D, AA_N, AA_B, AA_X))
+            @test iscompatible(x, AA_J) == (x ∈ (AA_I, AA_L, AA_J, AA_X))
+            @test iscompatible(x, AA_Z) == (x ∈ (AA_E, AA_Q, AA_Z, AA_X))
+            @test iscompatible(x, AA_X) == (x ∉ (AA_Term, AA_Gap))
+        end
     end
 
     @testset "Parsers" begin

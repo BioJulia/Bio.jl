@@ -50,7 +50,7 @@ const char_to_dna = [DNA_INVALID for _ in 0x00:0x7f]
 const dna_to_char = Vector{Char}(16)
 
 # compatibility bits
-const compatbits = zeros(UInt8, 16)
+const compatbits_nuc = zeros(UInt8, 16)
 
 # derived from "The DDBJ/ENA/GenBank Feature Table Definition"
 # §7.4.1 Nucleotide base code (IUPAC)
@@ -76,7 +76,7 @@ for (code, (nt, doc, compat)) in enumerate([
         @doc $doc const $var = convert(DNANucleotide, $(UInt8(code - 1)))
         char_to_dna[$(Int(nt + 1))] = char_to_dna[$(Int(lowercase(nt) + 1))] = $var
         dna_to_char[$(code)] = $nt
-        compatbits[$(code)] = $compat
+        compatbits_nuc[$(code)] = $compat
     end
 end
 
@@ -84,7 +84,7 @@ end
 const DNA_Gap = convert(DNANucleotide, 0b1111)
 char_to_dna[Int('-') + 1] = DNA_Gap
 dna_to_char[0b1111 + 1] = '-'
-compatbits[0b1111 + 1] = 0b0000
+compatbits_nuc[0b1111 + 1] = 0b0000
 
 "Returns Any DNA Nucleotide (DNA_N)"
 nnucleotide(::Type{DNANucleotide}) = DNA_N
@@ -95,11 +95,6 @@ Base.isvalid(nt::DNANucleotide) = nt ≤ DNA_Gap
 isambiguous(nt::DNANucleotide) = nt > DNA_T
 alphabet(::Type{DNANucleotide}) = DNA_A:DNA_Gap
 gap(::Type{DNANucleotide}) = DNA_Gap
-
-# check if two nucleotides are compatible (no contradiction) with each other
-function iscompatible(x::Nucleotide, y::Nucleotide)
-    return (compatbits[Int8(x)+1] & compatbits[Int8(y)+1]) != 0
-end
 
 # RNA Nucleotides
 
@@ -148,6 +143,39 @@ Base.isvalid(nt::RNANucleotide) = nt ≤ RNA_Gap
 isambiguous(nt::RNANucleotide) = nt > RNA_U
 alphabet(::Type{RNANucleotide}) = RNA_A:RNA_Gap
 gap(::Type{RNANucleotide}) = RNA_Gap
+
+
+# Compatibility
+# -------------
+
+compatbits(nt::Nucleotide) = compatbits_nuc[reinterpret(UInt8, nt)+1]
+
+"""
+    iscompatible(x, y)
+
+Return `true` if and only if `x` and `y` are compatible with each other (i.e.
+`x` and `y` can be the same symbol).
+
+`x` and `y` must be the same type (`DNANucleotide`, `RNANucleotide` or `AminoAcid`).
+
+# Examples
+
+```julia
+julia> iscompatible(DNA_A, DNA_A)
+true
+
+julia> iscompatible(DNA_C, DNA_N)  # DNA_N can be DNA_C
+true
+
+julia> iscompatible(DNA_C, DNA_R)  # DNA_R (A or G) cannot be DNA_C
+false
+
+julia> iscompatible(AA_A, AA_X)    # AA_X can be AA_A
+true
+
+```
+"""
+iscompatible{T}(x::T, y::T) = compatbits(x) & compatbits(y) != 0
 
 
 # Conversion from Char
