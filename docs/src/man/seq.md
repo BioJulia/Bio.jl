@@ -538,6 +538,70 @@ on `Kmers`.
     neighbors
 
 
+## Sequence search
+
+Several kinds of on-line search functions are provided.
+
+### Exact search
+
+Exact search functions search for the first occurrence of the query symbol or
+sequence. Four functions, `search`, `searchindex`, `rsearch`, and
+`rsearchindex`, are available:
+```julia
+julia> seq = dna"ACAGCGTAGCT";
+
+julia> search(seq, DNA_G)  # search a query symbol
+4:4
+
+julia> query = dna"AGC";
+
+julia> search(seq, query)  # search a query sequence
+3:5
+
+julia> searchindex(seq, query)
+3
+
+julia> rsearch(seq, query)  # similar to `search` but in the reverse direction
+8:10
+
+julia> rsearchindex(seq, query)  # similar to `searchindex` but in the reverse direction
+8
+
+```
+
+These search functions take ambiguous symbols into account. That is, if two
+symbols are compatible (e.g. `DNA_A` and `DNA_N`), they match when searching an
+occurrence. In the following example, 'N' is a wild card that matches any
+symbols:
+```julia
+julia> search(dna"ACNT", DNA_N)  # 'A' matches 'N'
+1:1
+
+julia> search(dna"ACNT", dna"CGT")  # 'N' matches 'G'
+2:4
+
+julia> search(dna"ACGT", dna"CNT")  # 'G' matches 'N'
+2:4
+
+```
+
+The exact sequence search needs preprocessing phase of query sequence before
+searching phase. This would be enough fast for most search applications. But
+when searching a query sequence to large amounts of target sequences, caching
+the result of preprocessing may save time. The `ExactSearchQuery` creates such
+a preprocessed query object and is applicable to the search functions:
+```julia
+julia> query = ExactSearchQuery(dna"ATT");
+
+julia> search(dna"ATTTATT", query)
+1:3
+
+julia> rsearch(dna"ATTTATT", query)
+5:7
+
+```
+
+
 ## Sequence records
 
 The `SeqRecord` type is used to represent a named sequence, optionally with
