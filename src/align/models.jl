@@ -91,8 +91,8 @@ function AffineGapScoreModel{T}(submat::AbstractMatrix{T}; gaps...)
     return AffineGapScoreModel(SubstitutionMatrix(submat); gaps...)
 end
 
-# easy interface
-function Base.call(::Type{AffineGapScoreModel}; scores...)
+# handy interface
+function AffineGapScoreModel(; scores...)
     scores = Dict(scores)
     match = scores[:match]
     mismatch = scores[:mismatch]
@@ -190,7 +190,8 @@ function CostModel{T}(submat::AbstractMatrix{T}; indels...)
     return CostModel(SubstitutionMatrix(submat); indels...)
 end
 
-function Base.call(::Type{CostModel}; costs...)
+# handy interface
+function CostModel(; costs...)
     costs = Dict(costs)
     match = costs[:match]
     mismatch = costs[:mismatch]

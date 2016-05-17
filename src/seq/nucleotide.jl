@@ -28,10 +28,12 @@ Base.convert{T<:Number,S<:Nucleotide}(::Type{S}, nt::T) = convert(S, UInt8(nt))
 
 # These methods are necessary when deriving some algorithims
 # like iteration, sort, comparison, and so on.
-Base.(:-){N<:Nucleotide}(x::N, y::N) = Int(x) - Int(y)
-Base.(:-){N<:Nucleotide}(x::N, y::Integer) = reinterpret(N, UInt8(x) - UInt8(y))
-Base.(:+){N<:Nucleotide}(x::N, y::Integer) = reinterpret(N, UInt8(x) + UInt8(y))
-Base.(:+){N<:Nucleotide}(x::Integer, y::N) = y + x
+@compat begin
+    Base.:-{N<:Nucleotide}(x::N, y::N) = Int(x) - Int(y)
+    Base.:-{N<:Nucleotide}(x::N, y::Integer) = reinterpret(N, UInt8(x) - UInt8(y))
+    Base.:+{N<:Nucleotide}(x::N, y::Integer) = reinterpret(N, UInt8(x) + UInt8(y))
+    Base.:+{N<:Nucleotide}(x::Integer, y::N) = y + x
+end
 Base.isless{N<:Nucleotide}(x::N, y::N) = isless(UInt8(x), UInt8(y))
 
 
@@ -69,7 +71,7 @@ for (code, (nt, doc, compat)) in enumerate([
         ('D', "DNA Adenine, Guanine or Thymine",           0b1101),
         ('B', "DNA Cytosine, Guanine or Thymine",          0b1110),
         ('N', "DNA Adenine, Cytosine, Guanine or Thymine", 0b1111)])
-    var = symbol("DNA_", nt)
+    var = Symbol("DNA_", nt)
     @eval begin
         @doc $doc const $var = convert(DNANucleotide, $(UInt8(code - 1)))
         char_to_dna[$(Int(nt + 1))] = char_to_dna[$(Int(lowercase(nt) + 1))] = $var
@@ -124,7 +126,7 @@ for (code, (nt, doc)) in enumerate([
         ('D', "RNA Adenine, Guanine or Uracil"          ),
         ('B', "RNA Cytosine, Guanine or Uracil"         ),
         ('N', "RNA Adenine, Cytosine, Guanine or Uracil")])
-    var = symbol("RNA_", nt)
+    var = Symbol("RNA_", nt)
     @eval begin
         @doc $doc const $var = convert(RNANucleotide, $(UInt8(code - 1)))
         char_to_rna[$(Int(nt + 1))] = char_to_rna[$(Int(lowercase(nt) + 1))] = $var

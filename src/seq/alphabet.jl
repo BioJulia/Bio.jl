@@ -87,7 +87,7 @@ immutable EncodeError{A<:Alphabet,T} <: Exception
     val::T
 end
 
-Base.call{A,T}(::Type{EncodeError{A}}, val::T) = EncodeError{A,T}(val)
+EncodeError{A,T}(::Type{A}, val::T) = EncodeError{A,T}(val)
 
 function Base.showerror{A}(io::IO, err::EncodeError{A})
     print(io, "cannot encode ", err.val, " in ", A)
@@ -102,7 +102,7 @@ immutable DecodeError{A<:Alphabet,T} <: Exception
     val::T
 end
 
-Base.call{A,T}(::Type{DecodeError{A}}, val::T) = DecodeError{A,T}(val)
+DecodeError{A,T}(::Type{A}, val::T) = DecodeError{A,T}(val)
 
 function Base.showerror{A}(io::IO, err::DecodeError{A})
     print(io, "cannot decode ", err.val, " in ", A)
@@ -120,13 +120,13 @@ for (A, T, U, ub) in [
     @eval begin
         @inline function encode(::Type{$A}, x::$T)
             if x > $ub
-                throw(EncodeError{$A}(x))
+                throw(EncodeError($A, x))
             end
             return reinterpret($U, x)
         end
         @inline function decode(::Type{$A}, x::$U)
             if x > $(reinterpret(U, ub))
-                throw(DecodeError{$A}(x))
+                throw(DecodeError($A, x))
             end
             return reinterpret($T, x)
         end

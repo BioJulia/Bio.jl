@@ -24,10 +24,12 @@ Base.convert{T<:Number}(::Type{AminoAcid}, aa::T) = convert(AminoAcid, UInt8(aa)
 
 # These methods are necessary when deriving some algorithims
 # like iteration, sort, comparison, and so on.
-Base.(:-)(x::AminoAcid, y::AminoAcid) = Int(x) - Int(y)
-Base.(:-)(x::AminoAcid, y::Integer) = reinterpret(AminoAcid, UInt8(x) - UInt8(y))
-Base.(:+)(x::AminoAcid, y::Integer) = reinterpret(AminoAcid, UInt8(x) + UInt8(y))
-Base.(:+)(x::Integer, y::AminoAcid) = y + x
+@compat begin
+    Base.:-(x::AminoAcid, y::AminoAcid) = Int(x) - Int(y)
+    Base.:-(x::AminoAcid, y::Integer) = reinterpret(AminoAcid, UInt8(x) - UInt8(y))
+    Base.:+(x::AminoAcid, y::Integer) = reinterpret(AminoAcid, UInt8(x) + UInt8(y))
+    Base.:+(x::Integer, y::AminoAcid) = y + x
+end
 Base.isless(x::AminoAcid, y::AminoAcid) = isless(UInt8(x), UInt8(y))
 
 
@@ -71,7 +73,7 @@ for (aa, doc, code) in [
         ('J', "Leucine or Isoleucine",             0x17),  # ambiguous
         ('Z', "Glutamine or Glutamic Acid",        0x18),  # ambiguous
         ('X', "Unspecified or Unknown Amino Acid", 0x19)]  # ambiguous
-    var = symbol("AA_", aa)
+    var = Symbol("AA_", aa)
     @eval begin
         @doc $doc const $var = convert(AminoAcid, $code)
         char_to_aa[$(Int(aa)+1)] = char_to_aa[$(Int(lowercase(aa))+1)] = $var

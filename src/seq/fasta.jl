@@ -17,7 +17,7 @@ function FASTAMetadata()
     return FASTAMetadata(StringField())
 end
 
-function Base.(:(==))(a::FASTAMetadata, b::FASTAMetadata)
+@compat function Base.:(==)(a::FASTAMetadata, b::FASTAMetadata)
     return a.description == b.description
 end
 

@@ -39,7 +39,7 @@ function Base.getindex(seqrec::SeqRecord, r::UnitRange)
     return SeqRecord(seqrec.name, seqrec.seq[r], seqrec.metadata)
 end
 
-function Base.(:(==)){T <: SeqRecord}(a::T, b::T)
+@compat function Base.:(==){T<:SeqRecord}(a::T, b::T)
     return a.name == b.name && a.seq == b.seq && a.metadata == b.metadata
 end
 

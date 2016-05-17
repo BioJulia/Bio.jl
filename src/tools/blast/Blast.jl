@@ -1,13 +1,14 @@
 module Blast
 
-using Bio.Seq,
-      Bio.Align,
-      LightXML
-
 export blastn,
        blastp,
        readblastXML,
        BlastResult
+
+using Bio.Seq,
+      Bio.Align,
+      LightXML,
+      Compat
 
 include("blastcommandline.jl")
 

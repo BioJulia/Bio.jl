@@ -27,4 +27,4 @@ Copy a Kmer into the user's clipboard.
 
 Useful for pasting a query sequence in web services like BLAST.
 """
-Base.clipboard(x::Kmer) = clipboard(ASCIIString(x))
+Base.clipboard(x::Kmer) = clipboard(string(x))

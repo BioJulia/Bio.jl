@@ -11,6 +11,7 @@ module Ragel
 export tryread!
 
 using BufferedStreams
+using Compat
 using Bio:
     FileFormat,
     AbstractParser
@@ -103,7 +104,7 @@ macro ascii_from_anchor!()
         n = $(esc(:p)) - firstpos + 1
         dst = Vector{UInt8}(n)
         copy!(dst, 1, $(esc(:state)).stream.buffer, firstpos, n)
-        ASCIIString(dst)
+        Compat.ASCIIString(dst)
     end
 end
 
@@ -135,8 +136,8 @@ end
 # Define a read! function wrapping ragel-generated parser.  This macro handles
 # some the dirty work of maintaining state, refilling buffers, etc.
 macro generate_read_fuction(machine_name, input_type, output_type, ragel_body)
-    accept_state = symbol(machine_name, "_first_final")
-    error_state = symbol(machine_name, "_error")
+    accept_state = Symbol(machine_name, "_first_final")
+    error_state = Symbol(machine_name, "_error")
 
     esc(quote
         function Base.read!(input::$(input_type),

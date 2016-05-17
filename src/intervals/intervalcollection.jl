@@ -293,7 +293,7 @@ immutable IntervalCollectionStreamIteratorState{S, TS, TV}
     end
 end
 
-function Base.(:(==)){T}(a::IntervalCollection{T}, b::IntervalCollection{T})
+@compat function Base.:(==){T}(a::IntervalCollection{T}, b::IntervalCollection{T})
     if length(a) != length(b)
         return false
     end

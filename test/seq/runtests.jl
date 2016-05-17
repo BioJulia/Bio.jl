@@ -7,7 +7,7 @@ else
     const Test = BaseTestNext
 end
 
-import Bio
+import Compat
 using Bio.Seq,
     YAML,
     TestFunctions
@@ -85,7 +85,7 @@ function dna_complement(seq::AbstractString)
             seqc[i] = seq[i]
         end
     end
-    return convert(ASCIIString, seqc)
+    return convert(AbstractString, seqc)
 end
 
 function rna_complement(seq::AbstractString)
@@ -103,7 +103,7 @@ function rna_complement(seq::AbstractString)
             seqc[i] = seq[i]
         end
     end
-    return convert(ASCIIString, seqc)
+    return convert(AbstractString, seqc)
 end
 
 function random_interval(minstart, maxstop)
@@ -286,8 +286,8 @@ end
 
     @testset "Encoder" begin
         @testset "DNA" begin
-            encode = Bio.Seq.encode
-            EncodeError = Bio.Seq.EncodeError
+            encode = Seq.encode
+            EncodeError = Seq.EncodeError
 
             # 2 bits
             @test encode(DNAAlphabet{2}, DNA_A) === convert(UInt8, DNA_A) === 0b00
@@ -301,11 +301,11 @@ end
             for nt in alphabet(DNANucleotide)
                 @test encode(DNAAlphabet{4}, nt) === convert(UInt8, nt)
             end
-            @test_throws EncodeError encode(DNAAlphabet{4}, Bio.Seq.DNA_INVALID)
+            @test_throws EncodeError encode(DNAAlphabet{4}, Seq.DNA_INVALID)
         end
         @testset "RNA" begin
-            encode = Bio.Seq.encode
-            EncodeError = Bio.Seq.EncodeError
+            encode = Seq.encode
+            EncodeError = Seq.EncodeError
 
             # 2 bits
             @test encode(RNAAlphabet{2}, RNA_A) === convert(UInt8, RNA_A) === 0b00
@@ -319,14 +319,14 @@ end
             for nt in alphabet(RNANucleotide)
                 @test encode(RNAAlphabet{4}, nt) === convert(UInt8, nt)
             end
-            @test_throws EncodeError encode(RNAAlphabet{4}, Bio.Seq.RNA_INVALID)
+            @test_throws EncodeError encode(RNAAlphabet{4}, Seq.RNA_INVALID)
         end
     end
 
     @testset "Decoder" begin
         @testset "DNA" begin
-            decode = Bio.Seq.decode
-            DecodeError = Bio.Seq.DecodeError
+            decode = Seq.decode
+            DecodeError = Seq.DecodeError
 
             # 2 bits
             @test decode(DNAAlphabet{2}, 0b00) === convert(DNANucleotide, 0b00) === DNA_A
@@ -343,8 +343,8 @@ end
             @test_throws DecodeError decode(DNAAlphabet{4}, 0b10000)
         end
         @testset "RNA" begin
-            decode = Bio.Seq.decode
-            DecodeError = Bio.Seq.DecodeError
+            decode = Seq.decode
+            DecodeError = Seq.DecodeError
 
             # 2 bits
             @test decode(RNAAlphabet{2}, 0b00) === convert(RNANucleotide, 0b00) === RNA_A
@@ -439,21 +439,21 @@ end
     end
 
     @testset "Encoder" begin
-        encode = Bio.Seq.encode
+        encode = Seq.encode
         @test encode(AminoAcidAlphabet, AA_A) === 0x00
         for aa in alphabet(AminoAcid)
             @test encode(AminoAcidAlphabet, aa) === convert(UInt8, aa)
         end
-        @test_throws Bio.Seq.EncodeError encode(AminoAcidAlphabet, Bio.Seq.AA_INVALID)
+        @test_throws Seq.EncodeError encode(AminoAcidAlphabet, Seq.AA_INVALID)
     end
 
     @testset "Decoder" begin
-        decode = Bio.Seq.decode
+        decode = Seq.decode
         @test decode(AminoAcidAlphabet, 0x00) === AA_A
         for x in 0x00:0x1b
             @test decode(AminoAcidAlphabet, x) === convert(AminoAcid, x)
         end
-        @test_throws Bio.Seq.DecodeError decode(AminoAcidAlphabet, 0x1c)
+        @test_throws Seq.DecodeError decode(AminoAcidAlphabet, 0x1c)
     end
 
     @testset "Parsers" begin
@@ -601,7 +601,7 @@ end
         test_conversion(RNAAlphabet{2}, RNAAlphabet{4}, "ACGU"^100)
 
         # ambiguous nucleotides cannot be stored in 2-bit encoding
-        EncodeError = Bio.Seq.EncodeError
+        EncodeError = Seq.EncodeError
         @test_throws EncodeError convert(BioSequence{DNAAlphabet{2}}, dna"AN")
         @test_throws EncodeError convert(BioSequence{RNAAlphabet{2}}, rna"AN")
     end
@@ -637,7 +637,7 @@ end
             end
             str = string([chunk[parts[i]] for (i, chunk) in enumerate(chunks)]...)
             seq = *([BioSequence{A}(chunk)[parts[i]] for (i, chunk) in enumerate(chunks)]...)
-            @test convert(ASCIIString, seq) == uppercase(str)
+            @test convert(AbstractString, seq) == uppercase(str)
         end
 
         for _ in 1:100
@@ -667,7 +667,7 @@ end
             n = rand(1:10)
             str = chunk[start:stop] ^ n
             seq = BioSequence{A}(chunk)[start:stop] ^ n
-            @test convert(ASCIIString, seq) == uppercase(str)
+            @test convert(AbstractString, seq) == uppercase(str)
         end
 
         for _ in 1:10
@@ -846,7 +846,7 @@ end
             bioseq = BioSequence{A}(seq)
             for _ in 1:100
                 part = random_interval(1, endof(seq))
-                @test convert(ASCIIString, bioseq[part]) == seq[part]
+                @test convert(AbstractString, bioseq[part]) == seq[part]
             end
         end
 
@@ -1041,27 +1041,27 @@ end
     @testset "Transformations" begin
         function test_reverse(A, seq)
             revseq = reverse(BioSequence{A}(seq))
-            @test convert(ASCIIString, revseq) == reverse(seq)
+            @test convert(AbstractString, revseq) == reverse(seq)
         end
 
         function test_dna_complement(A, seq)
             comp = Seq.complement(BioSequence{A}(seq))
-            @test convert(ASCIIString, comp) == dna_complement(seq)
+            @test convert(AbstractString, comp) == dna_complement(seq)
         end
 
         function test_rna_complement(A, seq)
             comp = Seq.complement(BioSequence{A}(seq))
-            @test convert(ASCIIString, comp) == rna_complement(seq)
+            @test convert(AbstractString, comp) == rna_complement(seq)
         end
 
         function test_dna_revcomp(A, seq)
             revcomp = reverse_complement(BioSequence{A}(seq))
-            @test convert(ASCIIString, revcomp) == reverse(dna_complement(seq))
+            @test convert(AbstractString, revcomp) == reverse(dna_complement(seq))
         end
 
         function test_rna_revcomp(A, seq)
             revcomp = reverse_complement(BioSequence{A}(seq))
-            @test convert(ASCIIString, revcomp) == reverse(rna_complement(seq))
+            @test convert(AbstractString, revcomp) == reverse(rna_complement(seq))
         end
 
         @testset "Reverse" begin
@@ -1606,27 +1606,27 @@ end
     @testset "Transformations" begin
         function test_reverse(T, seq)
             revseq = reverse(Kmer{T,length(seq)}(seq))
-            @test convert(ASCIIString, revseq) == reverse(seq)
+            @test convert(AbstractString, revseq) == reverse(seq)
         end
 
         function test_dna_complement(seq)
             comp = Seq.complement(DNAKmer{length(seq)}(seq))
-            @test convert(ASCIIString, comp) == dna_complement(seq)
+            @test convert(AbstractString, comp) == dna_complement(seq)
         end
 
         function test_rna_complement(seq)
             comp = Seq.complement(RNAKmer{length(seq)}(seq))
-            @test convert(ASCIIString, comp) == rna_complement(seq)
+            @test convert(AbstractString, comp) == rna_complement(seq)
         end
 
         function test_dna_revcomp(seq)
             revcomp = reverse_complement(DNAKmer{length(seq)}(seq))
-            @test convert(ASCIIString, revcomp) == reverse(dna_complement(seq))
+            @test convert(AbstractString, revcomp) == reverse(dna_complement(seq))
         end
 
         function test_rna_revcomp(seq)
             revcomp = reverse_complement(RNAKmer{length(seq)}(seq))
-            @test convert(ASCIIString, revcomp) == reverse(rna_complement(seq))
+            @test convert(AbstractString, revcomp) == reverse(rna_complement(seq))
         end
 
         @testset "Reverse" begin
@@ -1673,7 +1673,7 @@ end
 
     @testset "EachKmer" begin
         function string_eachkmer(seq::AbstractString, k, step)
-            kmers = ASCIIString[]
+            kmers = Compat.String[]
             i = 1
             for i in 1:step:length(seq) - k + 1
                 subseq = seq[i:i + k - 1]
@@ -1755,7 +1755,7 @@ end
 
 @testset "Translation" begin
     # crummy string translation to test against
-    standard_genetic_code_dict = Dict{ASCIIString,Char}(
+    standard_genetic_code_dict = Dict{Compat.String,Char}(
         "AAA" => 'K', "AAC" => 'N', "AAG" => 'K', "AAU" => 'N',
         "ACA" => 'T', "ACC" => 'T', "ACG" => 'T', "ACU" => 'T',
         "AGA" => 'R', "AGC" => 'S', "AGG" => 'R', "AGU" => 'S',

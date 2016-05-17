@@ -23,7 +23,7 @@ function FASTQMetadata()
     return FASTQMetadata(StringField(), Int8[])
 end
 
-function Base.(:(==))(a::FASTQMetadata, b::FASTQMetadata)
+@compat function Base.:(==)(a::FASTQMetadata, b::FASTQMetadata)
     return a.description == b.description && a.quality == b.quality
 end
 

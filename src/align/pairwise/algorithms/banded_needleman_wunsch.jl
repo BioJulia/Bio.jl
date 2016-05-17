@@ -16,20 +16,22 @@ type BandedNeedlemanWunsch{T<:Union{Signed,AbstractFloat}}
     E::Vector{T}
     lower::Int
     upper::Int
-end
 
-function Base.call{T}(::Type{BandedNeedlemanWunsch{T}}, m, n, lower, upper)
-    lower = min(lower, m)
-    upper = min(upper, n)
-    width = lower + upper + 1
-    trace = Matrix{Trace}(width, n + 1)
-    H = Vector{T}(width)
-    E = Vector{T}(width)
-    return BandedNeedlemanWunsch(trace, H, E, lower, upper)
-end
+    function BandedNeedlemanWunsch(
+            m::Integer, n::Integer,
+            lower::Integer, upper::Integer)
+        lower = min(lower, m)
+        upper = min(upper, n)
+        width = lower + upper + 1
+        trace = Matrix{Trace}(width, n + 1)
+        H = Vector{T}(width)
+        E = Vector{T}(width)
+        return new(trace, H, E, lower, upper)
+    end
 
-function Base.call{T}(::Type{BandedNeedlemanWunsch{T}})
-    return BandedNeedlemanWunsch{T}(0, 0, 0, 0)
+    function BandedNeedlemanWunsch()
+        return BandedNeedlemanWunsch{T}(0, 0, 0, 0)
+    end
 end
 
 function ensureroom!(nw::BandedNeedlemanWunsch, m, n, lower, upper)

@@ -11,6 +11,7 @@ module Indexing
 export
     Indexer, names!, rename!, rename
 
+using Compat
 
 """
 The Indexer type
@@ -191,7 +192,7 @@ function make_unique(names::Vector{Symbol})
         nm = names[i]
         k = 1
         while true
-            newnm = symbol("$(nm)_$k")
+            newnm = Symbol("$(nm)_$k")
             if !in(newnm, seen)
                 warn("Trying to build an index with duplicate names. Changing $(names[i]) to $(newnm)")
                 names[i] = newnm
@@ -208,7 +209,7 @@ end
 Base.length(x::Indexer) = length(x.names)
 Base.names(x::Indexer) = copy(x.names)
 Base.copy(x::Indexer) = Indexer(copy(x.lookup), copy(x.names))
-Base.(:(==))(x::Indexer, y::Indexer) = (x.lookup == y.lookup) && (x.names == y.names)
+@compat Base.:(==)(x::Indexer, y::Indexer) = (x.lookup == y.lookup) && (x.names == y.names)
 Base.haskey(x::Indexer, key::Symbol) = haskey(x.lookup, key)
 Base.haskey(x::Indexer, key::AbstractString) = haskey(x, convert(Symbol, key))
 Base.haskey(x::Indexer, key::Integer) = 1 <= key <= length(x.names)
