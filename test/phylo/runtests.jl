@@ -1,6 +1,5 @@
 module TestPhylo
 
-
 if VERSION >= v"0.5-"
     using Base.Test
 else
@@ -10,6 +9,7 @@ end
 
 using Bio.Phylo
 using LightGraphs
+using Bio.Phylo.Dating
 
 @testset "Phylogenies" begin
 
@@ -147,5 +147,13 @@ end
     @test n_possible_unrooted(4) == 3
     @test n_possible_unrooted(5) == 15
 end
+
+
+tests = [(10, 3), (100, 2), (1000, 37), (50000, 1023)]
+
+@testset "Dating algorithms" begin
+
+end
+
 
 end # TestPhylo
