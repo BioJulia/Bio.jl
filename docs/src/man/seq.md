@@ -1,10 +1,11 @@
 # Bio.Seq: Biological Sequences
 
-    {meta}
-    CurrentModule = Bio.Seq
-    DocTestSetup = quote
-        using Bio.Seq
-    end
+```@meta
+CurrentModule = Bio.Seq
+DocTestSetup = quote
+    using Bio.Seq
+end
+```
 
 The `Bio.Seq` module provides several data types for handling biological symbols
 and sequences.
@@ -12,11 +13,12 @@ and sequences.
 
 ## Biological symbols
 
-    {meta}
-    CurrentModule = Bio.Seq
-    DocTestSetup = quote
-        using Bio.Seq
-    end
+```@meta
+CurrentModule = Bio.Seq
+DocTestSetup = quote
+    using Bio.Seq
+end
+```
 
 The `Bio.Seq` module provides three biological symbol (character) types:
 
@@ -27,7 +29,7 @@ The `Bio.Seq` module provides three biological symbol (character) types:
 | `AminoAcid`     | Amino acid     |
 
 These symbols can be elements of sequences like characters can be elements of
-strings.  See [Sequences]({ref}) and [Nucleotide k-mers]({ref}) section for
+strings.  See [Sequences](@ref) and [Nucleotide k-mers](@ref) section for
 details.
 
 
@@ -189,10 +191,11 @@ Invalid DNA Nucleotide
 
 ### Other functions
 
-    {docs}
-    alphabet
-    gap
-    iscompatible
+```@docs
+alphabet
+gap
+iscompatible
+```
 
 
 ## Sequences
@@ -326,7 +329,7 @@ true
 ```
 
 A translatable `RNASequence` can also be converted to an `AminoAcidSequence`
-using the [`translate`]({ref}) function described below.
+using the [`translate`](@ref) function described below.
 
 
 ## Indexing and modifying
@@ -394,9 +397,10 @@ copy!(dst_seq, dest_offset, src_seq, src_offset, len)
 reverse!(seq)
 ```
 
-    {docs}
-    complement!(seq)
-    reverse_complement!(seq)
+```@docs
+complement!(seq)
+reverse_complement!(seq)
+```
 
 
 ```jlcon
@@ -447,23 +451,25 @@ julia> n
 
 A number of common sequence operations are provided in the `Bio.Seq` module:
 
-    {docs}
-    complement
-    reverse_complement
-    mismatches
-    composition
+```@docs
+complement
+reverse_complement
+mismatches
+composition
+```
 
 
 ### Translation
 
-The [`translate`]({ref}) funtion translates a sequence of codons in a RNA sequence
+The [`translate`](@ref) funtion translates a sequence of codons in a RNA sequence
 to a amino acid sequence besed on a genetic code mapping.  The `Bio.Seq` module
 contains all NCBI defined genetic codes and they are registered in
-[`ncbi_trans_table`]({ref}).
+[`ncbi_trans_table`](@ref).
 
-    {docs}
-    translate
-    ncbi_trans_table
+```@docs
+translate
+ncbi_trans_table
+```
 
 ```julia
 julia> ncbi_trans_table
@@ -531,11 +537,12 @@ The `Kmer{T,k}` type parameterized on alphabet (`T`, either `DNANucleotide`, or
 `RNANucleotide`) and size `k`. A number of functions are provided for operating
 on `Kmers`.
 
-    {docs}
-    each
-    KmerCounts
-    canonical
-    neighbors
+```@docs
+each
+KmerCounts
+canonical
+neighbors
+```
 
 
 ## Sequence search

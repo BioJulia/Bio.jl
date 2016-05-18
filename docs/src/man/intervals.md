@@ -1,7 +1,8 @@
 # Intervals: Genomic Interval Manipulation
 
-    {meta}
-    CurrentModule = Bio.Intervals
+```@meta
+CurrentModule = Bio.Intervals
+```
 
 The `Intervals` module consists of tools for working efficiently with genomic
 intervals.
@@ -74,8 +75,9 @@ two patterns: interval versus collection queries which return an iterator over
 intervals in the collection that intersect the query, and collection versus
 collection queries which iterate over all pairs of intersecting intervals.
 
-    {docs}
-    intersect
+```@docs
+intersect
+```
 
 
 ## Interval streams
@@ -118,6 +120,6 @@ end
 A special sort of intersection can also be performed on a `IntervalStreams`
 against itself to produce "coverage intervals".
 
-    {docs}
-    coverage
-
+```@docs
+coverage
+```
