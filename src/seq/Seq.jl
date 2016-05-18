@@ -119,7 +119,8 @@ export
     DNAAlphabet,
     RNAAlphabet,
     AminoAcidAlphabet,
-    CharAlphabet
+    CharAlphabet,
+    ExactSearchQuery
 
 using
     Compat,
@@ -183,6 +184,8 @@ include("fasta.jl")
 include("fasta-parser.jl")
 include("fastq.jl")
 include("fastq-parser.jl")
+
+include("search/exact.jl")
 
 # DEPRECATED: defined just for compatibility
 type NucleotideSequence{T<:Nucleotide} end
