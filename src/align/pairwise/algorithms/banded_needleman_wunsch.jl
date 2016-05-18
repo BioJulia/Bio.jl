@@ -64,7 +64,7 @@ Base.max(x) = x
 #     f == h && (t |= TRACE_INSERT)
 #     g == h && (t |= TRACE_MATCH)
 #     trace[i-j+U+1,j+1] = t
-macro update(args...)
+macro update2(args...)
     @assert :g in args && length(args) ≤ 3
 
     ex = Expr(:block)
@@ -103,7 +103,7 @@ macro update(args...)
     return esc(ex)
 end
 
-macro update_nextcol(args...)
+macro update2_nextcol(args...)
     if length(args) == 1
         gap_init, = args
         return esc(quote
@@ -126,7 +126,7 @@ macro update_nextcol(args...)
     @assert false
 end
 
-macro update_nextrow(gap_init, gap_extend)
+macro update2_nextrow(gap_init, gap_extend)
     esc(quote
         f′ = f + $gap_extend
         f = max(f′, h + $gap_init)
@@ -218,17 +218,17 @@ function run!{T}(
                     h = H[i-j+U+1] = start_gap_open_a + start_gap_extend_a * j
                     trace[i-j+U+1,j+1] = TRACE_DELETE
                 elseif islowerbound(i, j, L)
-                    @update g
+                    @update2 g
                 else
-                    @update e g
+                    @update2 e g
                 end
                 h + middle_gap_init_b, TRACE_NONE
             end
 
             for i in lo+1:hi-1
-                @update e f g
-                @update_nextcol middle_gap_init_a middle_gap_extend_a
-                @update_nextrow middle_gap_init_b middle_gap_extend_b
+                @update2 e f g
+                @update2_nextcol middle_gap_init_a middle_gap_extend_a
+                @update2_nextrow middle_gap_init_b middle_gap_extend_b
             end
 
             # fill the last cell of the column
@@ -236,11 +236,11 @@ function run!{T}(
                 let i = hi
                     et = TRACE_NONE
                     if islowerbound(i, j, L)
-                        @update f g
-                        @update_nextcol (i == m ? end_gap_init_a : middle_gap_init_a)
+                        @update2 f g
+                        @update2_nextcol (i == m ? end_gap_init_a : middle_gap_init_a)
                     else
-                        @update e f g
-                        @update_nextcol (i == m ? end_gap_init_a : middle_gap_init_a) (i == m ? end_gap_extend_a : middle_gap_extend_a)
+                        @update2 e f g
+                        @update2_nextcol (i == m ? end_gap_init_a : middle_gap_init_a) (i == m ? end_gap_extend_a : middle_gap_extend_a)
                     end
                 end
             end
@@ -259,24 +259,24 @@ function run!{T}(
                     h = H[i-j+U+1] = start_gap_open_a + start_gap_extend_a * j
                     trace[i-j+U+1,j+1] = TRACE_DELETE
                 elseif islowerbound(i, j, L)
-                    @update g
+                    @update2 g
                 else
-                    @update e g
+                    @update2 e g
                 end
                 h + end_gap_init_b, TRACE_NONE
             end
 
             @inbounds for i in lo+1:hi-1
-                @update e f g
-                @update_nextcol end_gap_init_b end_gap_extend_b
+                @update2 e f g
+                @update2_nextcol end_gap_init_b end_gap_extend_b
             end
 
             if hi > lo
                 let i = hi
                     if islowerbound(i, j, L)
-                        @update f g
+                        @update2 f g
                     else
-                        @update e f g
+                        @update2 e f g
                     end
                 end
             end
