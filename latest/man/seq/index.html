@@ -755,6 +755,29 @@
 
 <p>Return the gap symbol of <code>typ</code>.</p>
 <p><code>typ</code> is one of <code>DNANucleotide</code>, <code>RNANucleotide</code>, <code>AminoAcid</code>, or <code>Char</code>.</p>
+<p><a id='Bio.Seq.iscompatible' href='#Bio.Seq.iscompatible'>#</a>
+<strong><code>Bio.Seq.iscompatible</code></strong> &mdash; <em>Function</em>.</p>
+<div class="codehilite"><pre><span></span>iscompatible(x, y)
+</pre></div>
+
+
+<p>Return <code>true</code> if and only if <code>x</code> and <code>y</code> are compatible with each other (i.e. <code>x</code> and <code>y</code> can be the same symbol).</p>
+<p><code>x</code> and <code>y</code> must be the same type (<code>DNANucleotide</code>, <code>RNANucleotide</code> or <code>AminoAcid</code>).</p>
+<p><strong>Examples</strong></p>
+<div class="codehilite"><pre><span></span><span class="n">julia</span><span class="o">&gt;</span> <span class="n">iscompatible</span><span class="p">(</span><span class="n">DNA_A</span><span class="p">,</span> <span class="n">DNA_A</span><span class="p">)</span>
+<span class="n">true</span>
+
+<span class="n">julia</span><span class="o">&gt;</span> <span class="n">iscompatible</span><span class="p">(</span><span class="n">DNA_C</span><span class="p">,</span> <span class="n">DNA_N</span><span class="p">)</span>  <span class="c"># DNA_N can be DNA_C</span>
+<span class="n">true</span>
+
+<span class="n">julia</span><span class="o">&gt;</span> <span class="n">iscompatible</span><span class="p">(</span><span class="n">DNA_C</span><span class="p">,</span> <span class="n">DNA_R</span><span class="p">)</span>  <span class="c"># DNA_R (A or G) cannot be DNA_C</span>
+<span class="n">false</span>
+
+<span class="n">julia</span><span class="o">&gt;</span> <span class="n">iscompatible</span><span class="p">(</span><span class="n">AA_A</span><span class="p">,</span> <span class="n">AA_X</span><span class="p">)</span>    <span class="c"># AA_X can be AA_A</span>
+<span class="n">true</span>
+</pre></div>
+
+
 <p><a id='Sequences-1'></a></p>
 <h2 id="sequences">Sequences</h2>
 <p>The <code>Bio.Seq</code> module provides representations and tools for manipulating nucleotide and amino acid sequences. Sequences in Bio.jl are more strictly typed than in many other libraries. They are special purpose types rather than simply strings. Bio.jl currently provides a single generic sequence type: <code>BioSequence{A&lt;:Alphabet}</code>. <code>BioSequence</code> is parameterized by an alphabet type <code>A</code> that defines the domain (or set) of biological symbols, and each alphabet has an associated symbol type. For example, <code>AminoAcidAlphabet</code> is associated with <code>AminoAcid</code> and hence an object of <code>BioSequence{AminoAcidAlphabet}</code> represents a sequence of amino acids.  Symbols from multiple alphabets can't be intermixed in one sequence type.</p>
