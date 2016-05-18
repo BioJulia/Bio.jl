@@ -1144,12 +1144,17 @@ end
 
 <p><a id='Bio.Seq.KmerCounts' href='#Bio.Seq.KmerCounts'>#</a>
 <strong><code>Bio.Seq.KmerCounts</code></strong> &mdash; <em>Type</em>.</p>
-<p>Count ocurrences of short (&lt;= 32) k-mers in a sequence.</p>
+<div class="codehilite"><pre><span></span>DNAKmerCounts{k}(seq::BioSequence[, step=1])
+RNAKmerCounts{k}(seq::BioSequence[, step=1])
+</pre></div>
+
+
+<p>Count ocurrences of short (≤ 32) <code>k</code>-mers in a sequence.</p>
 <p>This method uses a dense table to store counts, requiring O(4^k) memory, so is not recommended for large k-mer sizes.</p>
-<p><strong>Arguments:</strong></p>
+<p><strong>Arguments</strong></p>
 <ul>
-<li>'seq`: A NucleotideSequence</li>
-<li><code>step</code>: K-mers counted are separated by this many nucleotides (deafult: 1)</li>
+<li><code>seq</code>: A nucleotide sequence.</li>
+<li><code>step</code>: K-mers counted are separated by this many nucleotides (deafult: 1).</li>
 </ul>
 <p><a id='Bio.Seq.canonical' href='#Bio.Seq.canonical'>#</a>
 <strong><code>Bio.Seq.canonical</code></strong> &mdash; <em>Function</em>.</p>
