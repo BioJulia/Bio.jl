@@ -59,7 +59,7 @@ Set of nucleotide symbols in Bio.jl covers IUPAC nucleotide base plus a gap symb
 
 Symbols are accessible as constants with `DNA_` or `RNA_` prefix:
 
-```julia
+```jlcon
 julia> DNA_A
 A
 
@@ -82,7 +82,7 @@ Bio.Seq.RNANucleotide
 
 Symbols can be constructed by converting regular characters:
 
-```julia
+```jlcon
 julia> convert(DNANucleotide, 'C')
 C
 
@@ -130,7 +130,7 @@ Set of amino acid symbols also covers IUPAC amino acid symbols plus a gap symbol
 <http://www.insdc.org/documents/feature_table.html#7.4.3>
 
 Symbols are accessible as constants with `AA_` prefix:
-```julia
+```jlcon
 julia> AA_A
 A
 
@@ -146,7 +146,7 @@ Bio.Seq.AminoAcid
 ```
 
 Symbols can be constructed by converting regular characters:
-```julia
+```jlcon
 julia> convert(AminoAcid, 'A')
 A
 
@@ -159,7 +159,7 @@ true
 ### Arithmetic
 
 Biological symbols behaves like `Char`:
-```julia
+```jlcon
 julia> DNA_A == DNA_A  # equivalence
 true
 
@@ -178,7 +178,7 @@ julia> DNA_T - DNA_C  # difference
 ```
 
 Note that these operations do **not** check bounds of valid range:
-```julia
+```jlcon
 julia> DNA_C - 2
 Invalid DNA Nucleotide
 
@@ -234,7 +234,7 @@ enumeration.
 Sequence types corresponding to these alphabets can be constructed a number of
 different ways. Most immediately, sequence literals can be constructed using
 the string macros `dna`, `rna`, `aa`, and `char`:
-```julia
+```jlcon
 # String decorators are provided for common sequence types
 julia> dna"TACGTANNATC"
 11nt DNA Sequence:
@@ -256,7 +256,7 @@ julia> char"αβγδϵ"
 
 Sequence can also be constructed from strings or arrays of nucleotide or amino
 acid symbols using constructors or the `convert` function:
-```julia
+```jlcon
 julia> DNASequence("TTANC")
 5nt DNA Sequence:
 TTANC
@@ -273,7 +273,7 @@ TTANC
 
 Using `convert`, these operations are reversible: sequences can be converted to
 strings or arrays:
-```julia
+```jlcon
 julia> convert(ASCIIString, dna"TTANGTA")
 "TTANGTA"
 
@@ -290,7 +290,7 @@ julia> convert(Vector{DNANucleotide}, dna"TTANGTA")
 ```
 
 Sequences can also be concatenated into longer sequences:
-```julia
+```jlcon
 julia> DNASequence(dna"ACGT", dna"NNNN", dna"TGCA")
 12nt DNA Sequence:
 ACGTNNNNTGCA
@@ -311,7 +311,7 @@ TATATATATATATATATATA
 
 Despite being separate types, `DNASequence` and `RNASequence` can freely be
 converted between efficiently without copying the underlying data:
-```julia
+```jlcon
 julia> dna = dna"TTANGTAGACCG"
 12nt DNA Sequence:
 TTANGTAGACCG
@@ -333,7 +333,7 @@ using the [`translate`]({ref}) function described below.
 
 Sequences for the most part behave like other vector or string types. They can
 be indexed using integers or ranges:
-```julia
+```jlcon
 julia> seq = dna"ACGTTTANAGTNNAGTACC"
 19nt DNA Sequence:
 ACGTTTANAGTNNAGTACC
@@ -352,7 +352,7 @@ Indexing by range creates a subsequence of the original sequence. Unlike
 copy-free: a subsequence is just a reference to the original sequence with its
 range.  You may think that this is unsafe because modifying subsequences
 propagates to the original sequence, but this doesn't happen actually:
-```julia
+```jlcon
 julia> seq = dna"AAAA"  # create a sequence
 4nt DNA Sequence:
 AAAA
@@ -399,7 +399,7 @@ reverse!(seq)
     reverse_complement!(seq)
 
 
-```julia
+```jlcon
 julia> seq = dna"ACG"
 3nt DNA Sequence:
 ACG
@@ -427,7 +427,7 @@ ACGTAT
 ```
 
 Sequences also work as iterators over symbols:
-```julia
+```jlcon
 julia> n = 0
 0
 
@@ -501,7 +501,7 @@ alphabet that uses two bits per base and limits to only unambiguous nucleotide
 symbols (ACGT in DNA and ACGU in RNA). To create a sequence of this
 alphabet, you need to explicitly pass `DNAAlphabet{2}` to `BioSequence` as its
 parametric type:
-```julia
+```jlcon
 julia> seq = BioSequence{DNAAlphabet{2}}("ACGT")
 4nt DNA Sequence:
 ACGT
