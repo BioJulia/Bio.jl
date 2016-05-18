@@ -119,7 +119,19 @@ export
     DNAAlphabet,
     RNAAlphabet,
     AminoAcidAlphabet,
-    CharAlphabet
+    CharAlphabet,
+    SeqTrie,
+    DNATrie,
+    RNATrie,
+    AminoAcidTrie,
+    keys,
+    keys_with_prefix,
+    get,
+    haskey,
+    hasprefix,
+    path
+
+
 
 using
     Compat,
@@ -176,6 +188,7 @@ include("geneticcode.jl")
 include("util.jl")
 include("quality.jl")
 include("seqrecord.jl")
+include("trie.jl")
 
 # Parsing file types
 include("predict.jl")

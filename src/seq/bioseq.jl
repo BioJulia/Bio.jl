@@ -517,6 +517,7 @@ function Base.append!{A}(seq::BioSequence{A}, other::BioSequence{A})
     return seq
 end
 
+
 function encode_copy!{A}(dst::BioSequence{A},
                          src::Union{AbstractVector,AbstractString})
     return encode_copy!(dst, 1, src, 1)

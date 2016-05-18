@@ -111,6 +111,8 @@ function random_interval(minstart, maxstop)
     return start:rand(start:maxstop)
 end
 
+include("test-seqtrie.jl")
+
 @testset "Nucleotides" begin
     @testset "Conversions" begin
         @testset "UInt8" begin
@@ -2053,5 +2055,6 @@ end
                     UInt8['!', '#', '$', '%', '&', 'I', '~'])
     end
 end
+
 
 end # TestSeq
