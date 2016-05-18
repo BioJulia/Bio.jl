@@ -1,11 +1,12 @@
 # Align: Sequence Alignments
 
-    {meta}
-    CurrentModule = Bio.Align
-    DocTestSetup = quote
-        using Bio.Seq
-        using Bio.Align
-    end
+```@meta
+CurrentModule = Bio.Align
+DocTestSetup = quote
+    using Bio.Seq
+    using Bio.Align
+end
+```
 
 The `Align` module contains tools for computing and working with sequence
 alignments.
@@ -144,12 +145,13 @@ ACGT--AAT--
 
 ## Operating on alignments
 
-    {docs}
-    first
-    last
-    seq2ref
-    ref2seq
-    cigar
+```@docs
+first
+last
+seq2ref
+ref2seq
+cigar
+```
 
 
 ## Pairwise alignment
@@ -204,7 +206,7 @@ flexible enough to create a constant and linear scoring model. Setting
 linear gap penalty, respectively.
 The first argument of `AffineGapScoreModel` can be a substitution matrix like
 `AffineGapScoreModel(BLOSUM62, gap_open=-10, gap_extend=-1)`. For details on
-substitution matrices, see the [Substitution matrices]({ref}) section.
+substitution matrices, see the [Substitution matrices](@ref) section.
 
 Alignment type can also be a distance of two sequences:
 
@@ -231,20 +233,22 @@ Bio.Align.PairwiseAlignmentResult{Int64,ASCIIString,ASCIIString}:
 `pairalign` returns a `PairwiseAlignmentResult` object and some accessors are
 provided for it.
 
-    {docs}
-    score
-    distance
-    hasalignment
-    alignment
+```@docs
+score
+distance
+hasalignment
+alignment
+```
 
 Pairwise alignment also implements some useful operations on it.
 
-    {docs}
-    count_matches
-    count_mismatches
-    count_insertions
-    count_deletions
-    count_aligned
+```@docs
+count_matches
+count_mismatches
+count_insertions
+count_deletions
+count_aligned
+```
 
 The example below shows a use case of these operations:
 ```jlcon

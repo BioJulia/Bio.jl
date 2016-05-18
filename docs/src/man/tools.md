@@ -1,8 +1,9 @@
 # Tools: Misc tools and function wrappers
 
-    {meta}
-    CurrentModule = Bio.Blast
-    
+```@meta
+CurrentModule = Bio.Blast
+```
+
 ## Blast wrapper
 The `Blast` module is a wrapper for the command line interface of [BLAST+](https://www.ncbi.nlm.nih.gov/books/NBK279690/) from NCBI. It requires that you have Blast+ [installed](https://www.ncbi.nlm.nih.gov/books/NBK279671/) and accessible in your PATH (eg. you should be able to execute `$ blastn -h` from the command line).
 

@@ -1,15 +1,16 @@
 # Bio.Structure: Macromolecular Structures
 
-    {meta}
-    CurrentModule = Bio.Structure
-    DocTestSetup = quote
-        using Bio.Structure
-        path = Pkg.dir("Bio", "test", "BioFmtSpecimens")
-        if !isdir(path)
-            run(`git clone --depth 1 https://github.com/BioJulia/BioFmtSpecimens.git $(path)`)
-        end
-        filepath_1EN2 = Pkg.dir("Bio", "test", "BioFmtSpecimens", "PDB", "1EN2.pdb")
+```@meta
+CurrentModule = Bio.Structure
+DocTestSetup = quote
+    using Bio.Structure
+    path = Pkg.dir("Bio", "test", "BioFmtSpecimens")
+    if !isdir(path)
+        run(`git clone --depth 1 https://github.com/BioJulia/BioFmtSpecimens.git $(path)`)
     end
+    filepath_1EN2 = Pkg.dir("Bio", "test", "BioFmtSpecimens", "PDB", "1EN2.pdb")
+end
+```
 
 The `Bio.Structure` module provides functionality to read Protein Data Bank (PDB) files and manipulate macromolecular structures.
 
@@ -136,12 +137,13 @@ collectatoms(struc, xselector)
 
 `countmodels`, `countchains`, `countresidues` and `countatoms` can be used to count elements. For example:
 
-    {meta}
-    DocTestSetup = quote
-        using Bio.Structure
-        filepath_1EN2 = Pkg.dir("Bio", "test", "BioFmtSpecimens", "PDB", "1EN2.pdb")
-        struc = read(filepath_1EN2, PDB)
-    end
+```@meta
+DocTestSetup = quote
+    using Bio.Structure
+    filepath_1EN2 = Pkg.dir("Bio", "test", "BioFmtSpecimens", "PDB", "1EN2.pdb")
+    struc = read(filepath_1EN2, PDB)
+end
+```
 
 ```julia
 julia> countatoms(struc)
