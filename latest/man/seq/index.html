@@ -1,382 +1,242 @@
 <!DOCTYPE html>
-<!--[if lt IE 7 ]><html class="no-js ie6"><![endif]-->
-<!--[if IE 7 ]><html class="no-js ie7"><![endif]-->
-<!--[if IE 8 ]><html class="no-js ie8"><![endif]-->
-<!--[if IE 9 ]><html class="no-js ie9"><![endif]-->
-<!--[if (gt IE 9)|!(IE)]><!--> <html class="no-js"> <!--<![endif]-->
-  <head>
+<html lang="en">
+
+<head>
     <meta charset="utf-8">
-    <meta name="viewport" content="width=device-width,user-scalable=no,initial-scale=1,maximum-scale=1">
-    
-      
-        <title>Biological Sequences - Bio.jl</title>
-      
-      
-      
-        <link rel="canonical" href="https://biojulia.github.io/Bio.jl/man/seq/">
-      
-      
-        <meta name="author" content="The BioJulia Organisation">
-      
-    
-    <meta property="og:url" content="https://biojulia.github.io/Bio.jl/man/seq/">
-    <meta property="og:title" content="Bio.jl">
-    <meta property="og:image" content="https://biojulia.github.io/Bio.jl/man/seq//../../images/biojl.png">
-    <meta name="apple-mobile-web-app-title" content="Bio.jl">
-    <meta name="apple-mobile-web-app-capable" content="yes">
-    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-    
-      <link rel="apple-touch-icon" href="../../images/biojl.png">
-    
-    
-    <link rel="shortcut icon" type="image/x-icon" href="../../None">
-    <link rel="icon" type="image/x-icon" href="../../None">
-    <style>
-      @font-face {
-      	font-family: 'Icon';
-      	src: url('../../assets/fonts/icon.eot?52m981');
-      	src: url('../../assets/fonts/icon.eot?#iefix52m981')
-               format('embedded-opentype'),
-      		   url('../../assets/fonts/icon.woff?52m981')
-               format('woff'),
-      		   url('../../assets/fonts/icon.ttf?52m981')
-               format('truetype'),
-      		   url('../../assets/fonts/icon.svg?52m981#icon')
-               format('svg');
-      	font-weight: normal;
-      	font-style: normal;
-      }
-    </style>
-    <link rel="stylesheet" href="../../assets/stylesheets/application-0dac3e5884.css">
-    
-      <link rel="stylesheet" href="../../assets/stylesheets/palettes-05ab2406df.css">
-    
-    
-      
-      
-      
-      <link rel="stylesheet" href="//fonts.googleapis.com/css?family=Ubuntu:400,700|Ubuntu+Mono">
-      <style>
-        body, input {
-          font-family: 'Ubuntu', Helvetica, Arial, sans-serif;
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0"> 
+    <meta name="author" content="The BioJulia Organisation"> 
+    <link rel="canonical" href="https://biojulia.github.io/Bio.jl/man/seq/"> 
+    <link rel="shortcut icon" href="../../img/favicon.ico">
+
+    <title>Biological Sequences - Bio.jl</title>
+
+    <link href="../../css/bootstrap-custom.min.css" rel="stylesheet">
+    <link href="//maxcdn.bootstrapcdn.com/font-awesome/4.4.0/css/font-awesome.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="//cdn.jsdelivr.net/font-hack/2.018/css/hack.min.css">
+    <link href='//fonts.googleapis.com/css?family=PT+Sans:400,400italic,700,700italic&subset=latin-ext,latin' rel='stylesheet' type='text/css'>
+    <link href='//fonts.googleapis.com/css?family=Open+Sans:300italic,400italic,700italic,400,300,600,700&subset=latin-ext,latin' rel='stylesheet' type='text/css'>
+    <link href="../../css/base.css" rel="stylesheet">
+    <link href="../../css/cinder.css" rel="stylesheet">
+    <link rel="stylesheet" href="../../css/highlight.css">
+
+
+    <link href="../../assets/Documenter.css" rel="stylesheet">
+
+
+    <link href="../../assets/friendly.css" rel="stylesheet">
+
+    <!-- HTML5 shim and Respond.js IE8 support of HTML5 elements and media queries -->
+    <!--[if lt IE 9]>
+            <script src="https://oss.maxcdn.com/libs/html5shiv/3.7.0/html5shiv.js"></script>
+            <script src="https://oss.maxcdn.com/libs/respond.js/1.3.0/respond.min.js"></script>
+        <![endif]-->
+
+    <script src="https://ajax.googleapis.com/ajax/libs/webfont/1.5.18/webfont.js"></script>
+    <script>
+    WebFont.load({
+        google: {
+            families: ['Open Sans', 'PT Sans']
         }
-        pre, code {
-          font-family: 'Ubuntu Mono', 'Courier New', 'Courier', monospace;
-        }
-      </style>
+    });
+    </script>
+
     
-    
-      <link rel="stylesheet" href="../../assets/Documenter.css">
-    
-    <script src="../../assets/javascripts/modernizr-4ab42b99fd.js"></script>
-    
-  </head>
-  
-  
-  
-  <body class="palette-primary-indigo palette-accent-blue">
-    
-      
-      
-    
-    <div class="backdrop">
-      <div class="backdrop-paper"></div>
-    </div>
-    <input class="toggle" type="checkbox" id="toggle-drawer">
-    <input class="toggle" type="checkbox" id="toggle-search">
-    <label class="toggle-button overlay" for="toggle-drawer"></label>
-    <header class="header">
-      <nav aria-label="Header">
-  <div class="bar default">
-    <div class="button button-menu" role="button" aria-label="Menu">
-      <label class="toggle-button icon icon-menu" for="toggle-drawer">
-        <span></span>
-      </label>
-    </div>
-    <div class="stretch">
-      <div class="title">
-        
-          <span class="path">
+</head>
+
+<body>
+
+    <div class="navbar navbar-default navbar-fixed-top" role="navigation">
+    <div class="container">
+
+        <!-- Collapsed navigation -->
+        <div class="navbar-header">
             
-              
-                Manual <i class="icon icon-link"></i>
-              
+            <!-- Expander button -->
+            <button type="button" class="navbar-toggle" data-toggle="collapse" data-target=".navbar-collapse">
+                <span class="sr-only">Toggle navigation</span>
+                <span class="icon-bar"></span>
+                <span class="icon-bar"></span>
+                <span class="icon-bar"></span>
+            </button>
             
-          </span>
-        
-        Biological Sequences
-      </div>
-    </div>
-    
-    
-      
-      <div class="button button-github" role="button" aria-label="GitHub">
-        <a href="https://github.com/BioJulia" title="@BioJulia on GitHub" target="_blank" class="toggle-button icon icon-github"></a>
-      </div>
-    
-    <div class="button button-search" role="button" aria-label="Search">
-      <label class="toggle-button icon icon-search" title="Search" for="toggle-search"></label>
-    </div>
-  </div>
-  <div class="bar search">
-    <div class="button button-close" role="button" aria-label="Close">
-      <label class="toggle-button icon icon-back" for="toggle-search"></label>
-    </div>
-    <div class="stretch">
-      <div class="field">
-        <input class="query" type="text" placeholder="Search" autocapitalize="off" autocorrect="off" autocomplete="off" spellcheck>
-      </div>
-    </div>
-    <div class="button button-reset" role="button" aria-label="Search">
-      <button class="toggle-button icon icon-close" id="reset-search"></button>
-    </div>
-  </div>
-</nav>
-    </header>
-    <main class="main">
-      
-      <div class="drawer">
-        <nav aria-label="Navigation">
-  
-  <a href="https://github.com/BioJulia/Bio.jl" class="project">
-    <div class="banner">
-      
-        <div class="logo">
-          <img src="../../images/biojl.png">
+
+            <!-- Main title -->
+            <a class="navbar-brand" href="../..">Bio.jl</a>
         </div>
-      
-      <div class="name">
-        <strong>
-          Bio.jl
-          <span class="version">
+
+        <!-- Expanded navigation -->
+        <div class="navbar-collapse collapse">
             
-          </span>
-        </strong>
-        
-          <br>
-          BioJulia/Bio.jl
-        
-      </div>
+                <!-- Main navigation -->
+                <ul class="nav navbar-nav">
+                
+                
+                    <li >
+                        <a href="../..">Home</a>
+                    </li>
+                
+                
+                
+                    <li class="dropdown active">
+                        <a href="#" class="dropdown-toggle" data-toggle="dropdown">Manual <b class="caret"></b></a>
+                        <ul class="dropdown-menu">
+                        
+                            
+<li >
+    <a href="../install/">Installation</a>
+</li>
+
+                        
+                            
+<li >
+    <a href="../reading/">IO API</a>
+</li>
+
+                        
+                            
+<li class="active">
+    <a href="./">Biological Sequences</a>
+</li>
+
+                        
+                            
+<li >
+    <a href="../alignments/">Alignments</a>
+</li>
+
+                        
+                            
+<li >
+    <a href="../intervals/">Intervals</a>
+</li>
+
+                        
+                            
+<li >
+    <a href="../structure/">Structure</a>
+</li>
+
+                        
+                            
+<li >
+    <a href="../tools/">Tools</a>
+</li>
+
+                        
+                        </ul>
+                    </li>
+                
+                
+                
+                    <li class="dropdown">
+                        <a href="#" class="dropdown-toggle" data-toggle="dropdown">Reference <b class="caret"></b></a>
+                        <ul class="dropdown-menu">
+                        
+                            
+<li >
+    <a href="../../lib/seq/">Seq</a>
+</li>
+
+                        
+                        </ul>
+                    </li>
+                
+                
+                
+                    <li >
+                        <a href="../contributing/">Contributing</a>
+                    </li>
+                
+                
+                </ul>
+            
+
+            <ul class="nav navbar-nav navbar-right">
+                <li>
+                    <a href="#" data-toggle="modal" data-target="#mkdocs_search_modal">
+                        <i class="fa fa-search"></i> Search
+                    </a>
+                </li>
+                
+                    <li >
+                        <a rel="next" href="../reading/">
+                            <i class="fa fa-arrow-left"></i> Previous
+                        </a>
+                    </li>
+                    <li >
+                        <a rel="prev" href="../alignments/">
+                            Next <i class="fa fa-arrow-right"></i>
+                        </a>
+                    </li>
+                
+                
+                    <li>
+                        <a href="https://github.com/BioJulia/Bio.jl">
+                            
+                                <i class="fa fa-github"></i>
+                            
+                            GitHub
+                        </a>
+                    </li>
+                
+            </ul>
+        </div>
     </div>
-  </a>
-  <div class="scrollable">
-    <div class="wrapper">
-      
-        <ul class="repo">
-          <li class="repo-download">
+</div>
+
+    <div class="container">
+        
+        <div class="col-md-3"><div class="bs-sidebar hidden-print affix well" role="complementary">
+    <ul class="nav bs-sidenav">
+    
+        <li class="first-level active"><a href="#bioseq-biological-sequences">Bio.Seq: Biological Sequences</a></li>
+        
+            <li class="second-level"><a href="#biological-symbols">Biological symbols</a></li>
             
-            <a href="https://github.com/BioJulia/Bio.jl/archive/master.zip" target="_blank" title="Download" data-action="download">
-              <i class="icon icon-download"></i> Download
-            </a>
-          </li>
-          <li class="repo-stars">
-            <a href="https://github.com/BioJulia/Bio.jl/stargazers" target="_blank" title="Stargazers" data-action="star">
-              <i class="icon icon-star"></i> Stars
-              <span class="count">&ndash;</span>
-            </a>
-          </li>
-        </ul>
-        <hr>
-      
-      <div class="toc">
-        <ul>
-          
+                <li class="third-level"><a href="#dna-and-rna-nucleotides">DNA and RNA nucleotides</a></li>
             
-  <li>
-    <a class="" title="Home" href="../..">
-      Home
-    </a>
-    
-  </li>
-
-          
+                <li class="third-level"><a href="#amino-acids">Amino acids</a></li>
             
-  <li>
-    <span class="section">Manual</span>
-    <ul>
-      
+                <li class="third-level"><a href="#arithmetic">Arithmetic</a></li>
+            
+                <li class="third-level"><a href="#other-functions">Other functions</a></li>
+            
         
-  <li>
-    <a class="" title="Installation" href="../install/">
-      Installation
-    </a>
-    
-  </li>
-
-      
+            <li class="second-level"><a href="#sequences">Sequences</a></li>
+            
         
-  <li>
-    <a class="" title="IO API" href="../reading/">
-      IO API
-    </a>
-    
-  </li>
-
-      
+            <li class="second-level"><a href="#constructing-sequences">Constructing sequences</a></li>
+            
         
-  <li>
-    <a class="current" title="Biological Sequences" href="./">
-      Biological Sequences
-    </a>
-    
-      
+            <li class="second-level"><a href="#indexing-and-modifying">Indexing and modifying</a></li>
+            
         
-      
-      
-        <ul>
-          
-            <li class="anchor">
-              <a title="Biological symbols" href="#biological-symbols">
-                Biological symbols
-              </a>
-            </li>
-          
-            <li class="anchor">
-              <a title="Sequences" href="#sequences">
-                Sequences
-              </a>
-            </li>
-          
-            <li class="anchor">
-              <a title="Constructing sequences" href="#constructing-sequences">
-                Constructing sequences
-              </a>
-            </li>
-          
-            <li class="anchor">
-              <a title="Indexing and modifying" href="#indexing-and-modifying">
-                Indexing and modifying
-              </a>
-            </li>
-          
-            <li class="anchor">
-              <a title="Other operations on sequences" href="#other-operations-on-sequences">
-                Other operations on sequences
-              </a>
-            </li>
-          
-            <li class="anchor">
-              <a title="Compact representation" href="#compact-representation">
-                Compact representation
-              </a>
-            </li>
-          
-            <li class="anchor">
-              <a title="Nucleotide k-mers" href="#nucleotide-k-mers">
-                Nucleotide k-mers
-              </a>
-            </li>
-          
-            <li class="anchor">
-              <a title="Sequence search" href="#sequence-search">
-                Sequence search
-              </a>
-            </li>
-          
-            <li class="anchor">
-              <a title="Sequence records" href="#sequence-records">
-                Sequence records
-              </a>
-            </li>
-          
-        </ul>
-      
-    
-  </li>
-
-      
+            <li class="second-level"><a href="#other-operations-on-sequences">Other operations on sequences</a></li>
+            
+                <li class="third-level"><a href="#translation">Translation</a></li>
+            
         
-  <li>
-    <a class="" title="Alignments" href="../alignments/">
-      Alignments
-    </a>
-    
-  </li>
-
-      
+            <li class="second-level"><a href="#compact-representation">Compact representation</a></li>
+            
         
-  <li>
-    <a class="" title="Intervals" href="../intervals/">
-      Intervals
-    </a>
-    
-  </li>
-
-      
+            <li class="second-level"><a href="#nucleotide-k-mers">Nucleotide k-mers</a></li>
+            
         
-  <li>
-    <a class="" title="Structure" href="../structure/">
-      Structure
-    </a>
-    
-  </li>
-
-      
+            <li class="second-level"><a href="#sequence-search">Sequence search</a></li>
+            
+                <li class="third-level"><a href="#exact-search">Exact search</a></li>
+            
         
-  <li>
-    <a class="" title="Tools" href="../tools/">
-      Tools
-    </a>
+            <li class="second-level"><a href="#sequence-records">Sequence records</a></li>
+            
+        
     
-  </li>
-
-      
     </ul>
-  </li>
+</div></div>
+        <div class="col-md-9" role="main">
 
-          
-            
-  <li>
-    <span class="section">Reference</span>
-    <ul>
-      
-        
-  <li>
-    <a class="" title="Seq" href="../../lib/seq/">
-      Seq
-    </a>
-    
-  </li>
-
-      
-    </ul>
-  </li>
-
-          
-            
-  <li>
-    <a class="" title="Contributing" href="../contributing/">
-      Contributing
-    </a>
-    
-  </li>
-
-          
-        </ul>
-        
-          <hr>
-          <span class="section">The author</span>
-          <ul>
-            
-            
-              
-              <li>
-                <a href="https://github.com/BioJulia" target="_blank" title="@BioJulia on GitHub">
-                  @BioJulia on GitHub
-                </a>
-              </li>
-            
-          </ul>
-        
-      </div>
-    </div>
-  </div>
-</nav>
-      </div>
-      <article class="article">
-        <div class="wrapper">
-          
-          <p><a id='Bio.Seq:-Biological-Sequences-1'></a></p>
+<p><a id='Bio.Seq:-Biological-Sequences-1'></a></p>
 <h1 id="bioseq-biological-sequences">Bio.Seq: Biological Sequences</h1>
 <p>The <code>Bio.Seq</code> module provides several data types for handling biological symbols and sequences.</p>
 <p><a id='Biological-symbols-1'></a></p>
@@ -506,32 +366,32 @@
 </table>
 <p><a href="http://www.insdc.org/documents/feature_table.html#7.4.1">http://www.insdc.org/documents/feature_table.html#7.4.1</a></p>
 <p>Symbols are accessible as constants with <code>DNA_</code> or <code>RNA_</code> prefix:</p>
-<div class="codehilite"><pre><span></span><span class="n">julia</span><span class="o">&gt;</span> <span class="n">DNA_A</span>
-<span class="n">A</span>
+<div class="codehilite"><pre><span></span><span class="gp">julia&gt;</span> <span class="n">DNA_A</span>
+<span class="go">A</span>
 
-<span class="n">julia</span><span class="o">&gt;</span> <span class="n">DNA_T</span>
-<span class="n">T</span>
+<span class="gp">julia&gt;</span> <span class="n">DNA_T</span>
+<span class="go">T</span>
 
-<span class="n">julia</span><span class="o">&gt;</span> <span class="n">RNA_U</span>
-<span class="n">U</span>
+<span class="gp">julia&gt;</span> <span class="n">RNA_U</span>
+<span class="go">U</span>
 
-<span class="n">julia</span><span class="o">&gt;</span> <span class="n">DNA_Gap</span>
-<span class="o">-</span>
+<span class="gp">julia&gt;</span> <span class="n">DNA_Gap</span>
+<span class="go">-</span>
 
-<span class="n">julia</span><span class="o">&gt;</span> <span class="nb">typeof</span><span class="p">(</span><span class="n">DNA_A</span><span class="p">)</span>
-<span class="n">Bio</span><span class="o">.</span><span class="n">Seq</span><span class="o">.</span><span class="n">DNANucleotide</span>
+<span class="gp">julia&gt;</span> <span class="nb">typeof</span><span class="p">(</span><span class="n">DNA_A</span><span class="p">)</span>
+<span class="go">Bio.Seq.DNANucleotide</span>
 
-<span class="n">julia</span><span class="o">&gt;</span> <span class="nb">typeof</span><span class="p">(</span><span class="n">RNA_A</span><span class="p">)</span>
-<span class="n">Bio</span><span class="o">.</span><span class="n">Seq</span><span class="o">.</span><span class="n">RNANucleotide</span>
+<span class="gp">julia&gt;</span> <span class="nb">typeof</span><span class="p">(</span><span class="n">RNA_A</span><span class="p">)</span>
+<span class="go">Bio.Seq.RNANucleotide</span>
 </pre></div>
 
 
 <p>Symbols can be constructed by converting regular characters:</p>
-<div class="codehilite"><pre><span></span><span class="n">julia</span><span class="o">&gt;</span> <span class="nb">convert</span><span class="p">(</span><span class="n">DNANucleotide</span><span class="p">,</span> <span class="sc">&#39;C&#39;</span><span class="p">)</span>
-<span class="n">C</span>
+<div class="codehilite"><pre><span></span><span class="gp">julia&gt;</span> <span class="nb">convert</span><span class="p">(</span><span class="n">DNANucleotide</span><span class="p">,</span> <span class="sc">&#39;C&#39;</span><span class="p">)</span>
+<span class="go">C</span>
 
-<span class="n">julia</span><span class="o">&gt;</span> <span class="nb">convert</span><span class="p">(</span><span class="n">DNANucleotide</span><span class="p">,</span> <span class="sc">&#39;C&#39;</span><span class="p">)</span> <span class="o">===</span> <span class="n">DNA_C</span>
-<span class="n">true</span>
+<span class="gp">julia&gt;</span> <span class="nb">convert</span><span class="p">(</span><span class="n">DNANucleotide</span><span class="p">,</span> <span class="sc">&#39;C&#39;</span><span class="p">)</span> <span class="o">===</span> <span class="n">DNA_C</span>
+<span class="go">true</span>
 </pre></div>
 
 
@@ -691,55 +551,55 @@
 </table>
 <p><a href="http://www.insdc.org/documents/feature_table.html#7.4.3">http://www.insdc.org/documents/feature_table.html#7.4.3</a></p>
 <p>Symbols are accessible as constants with <code>AA_</code> prefix:</p>
-<div class="codehilite"><pre><span></span><span class="n">julia</span><span class="o">&gt;</span> <span class="n">AA_A</span>
-<span class="n">A</span>
+<div class="codehilite"><pre><span></span><span class="gp">julia&gt;</span> <span class="n">AA_A</span>
+<span class="go">A</span>
 
-<span class="n">julia</span><span class="o">&gt;</span> <span class="n">AA_Q</span>
-<span class="n">Q</span>
+<span class="gp">julia&gt;</span> <span class="n">AA_Q</span>
+<span class="go">Q</span>
 
-<span class="n">julia</span><span class="o">&gt;</span> <span class="n">AA_Term</span>
-<span class="o">*</span>
+<span class="gp">julia&gt;</span> <span class="n">AA_Term</span>
+<span class="go">*</span>
 
-<span class="n">julia</span><span class="o">&gt;</span> <span class="nb">typeof</span><span class="p">(</span><span class="n">AA_A</span><span class="p">)</span>
-<span class="n">Bio</span><span class="o">.</span><span class="n">Seq</span><span class="o">.</span><span class="n">AminoAcid</span>
+<span class="gp">julia&gt;</span> <span class="nb">typeof</span><span class="p">(</span><span class="n">AA_A</span><span class="p">)</span>
+<span class="go">Bio.Seq.AminoAcid</span>
 </pre></div>
 
 
 <p>Symbols can be constructed by converting regular characters:</p>
-<div class="codehilite"><pre><span></span><span class="n">julia</span><span class="o">&gt;</span> <span class="nb">convert</span><span class="p">(</span><span class="n">AminoAcid</span><span class="p">,</span> <span class="sc">&#39;A&#39;</span><span class="p">)</span>
-<span class="n">A</span>
+<div class="codehilite"><pre><span></span><span class="gp">julia&gt;</span> <span class="nb">convert</span><span class="p">(</span><span class="n">AminoAcid</span><span class="p">,</span> <span class="sc">&#39;A&#39;</span><span class="p">)</span>
+<span class="go">A</span>
 
-<span class="n">julia</span><span class="o">&gt;</span> <span class="nb">convert</span><span class="p">(</span><span class="n">AminoAcid</span><span class="p">,</span> <span class="sc">&#39;P&#39;</span><span class="p">)</span> <span class="o">===</span> <span class="n">AA_P</span>
-<span class="n">true</span>
+<span class="gp">julia&gt;</span> <span class="nb">convert</span><span class="p">(</span><span class="n">AminoAcid</span><span class="p">,</span> <span class="sc">&#39;P&#39;</span><span class="p">)</span> <span class="o">===</span> <span class="n">AA_P</span>
+<span class="go">true</span>
 </pre></div>
 
 
 <p><a id='Arithmetic-1'></a></p>
 <h3 id="arithmetic">Arithmetic</h3>
 <p>Biological symbols behaves like <code>Char</code>:</p>
-<div class="codehilite"><pre><span></span><span class="n">julia</span><span class="o">&gt;</span> <span class="n">DNA_A</span> <span class="o">==</span> <span class="n">DNA_A</span>  <span class="c"># equivalence</span>
-<span class="n">true</span>
+<div class="codehilite"><pre><span></span><span class="gp">julia&gt;</span> <span class="n">DNA_A</span> <span class="o">==</span> <span class="n">DNA_A</span>  <span class="c"># equivalence</span>
+<span class="go">true</span>
 
-<span class="n">julia</span><span class="o">&gt;</span> <span class="n">DNA_A</span> <span class="o">&lt;</span> <span class="n">DNA_C</span> <span class="o">&lt;</span> <span class="n">DNA_G</span> <span class="o">&lt;</span> <span class="n">DNA_T</span>  <span class="c"># order</span>
-<span class="n">true</span>
+<span class="gp">julia&gt;</span> <span class="n">DNA_A</span> <span class="o">&lt;</span> <span class="n">DNA_C</span> <span class="o">&lt;</span> <span class="n">DNA_G</span> <span class="o">&lt;</span> <span class="n">DNA_T</span>  <span class="c"># order</span>
+<span class="go">true</span>
 
-<span class="n">julia</span><span class="o">&gt;</span> <span class="n">DNA_A</span> <span class="o">+</span> <span class="mi">1</span>  <span class="c"># addition</span>
-<span class="n">C</span>
+<span class="gp">julia&gt;</span> <span class="n">DNA_A</span> <span class="o">+</span> <span class="mi">1</span>  <span class="c"># addition</span>
+<span class="go">C</span>
 
-<span class="n">julia</span><span class="o">&gt;</span> <span class="n">DNA_T</span> <span class="o">-</span> <span class="mi">3</span>  <span class="c"># subtraction</span>
-<span class="n">A</span>
+<span class="gp">julia&gt;</span> <span class="n">DNA_T</span> <span class="o">-</span> <span class="mi">3</span>  <span class="c"># subtraction</span>
+<span class="go">A</span>
 
-<span class="n">julia</span><span class="o">&gt;</span> <span class="n">DNA_T</span> <span class="o">-</span> <span class="n">DNA_C</span>  <span class="c"># difference</span>
-<span class="mi">2</span>
+<span class="gp">julia&gt;</span> <span class="n">DNA_T</span> <span class="o">-</span> <span class="n">DNA_C</span>  <span class="c"># difference</span>
+<span class="go">2</span>
 </pre></div>
 
 
 <p>Note that these operations do <strong>not</strong> check bounds of valid range:</p>
-<div class="codehilite"><pre><span></span><span class="n">julia</span><span class="o">&gt;</span> <span class="n">DNA_C</span> <span class="o">-</span> <span class="mi">2</span>
-<span class="n">Invalid</span> <span class="n">DNA</span> <span class="n">Nucleotide</span>
+<div class="codehilite"><pre><span></span><span class="gp">julia&gt;</span> <span class="n">DNA_C</span> <span class="o">-</span> <span class="mi">2</span>
+<span class="go">Invalid DNA Nucleotide</span>
 
-<span class="n">julia</span><span class="o">&gt;</span> <span class="n">DNA_A</span> <span class="o">+</span> <span class="mi">30</span>
-<span class="n">Invalid</span> <span class="n">DNA</span> <span class="n">Nucleotide</span>
+<span class="gp">julia&gt;</span> <span class="n">DNA_A</span> <span class="o">+</span> <span class="mi">30</span>
+<span class="go">Invalid DNA Nucleotide</span>
 </pre></div>
 
 
@@ -823,86 +683,86 @@
 <p><a id='Constructing-sequences-1'></a></p>
 <h2 id="constructing-sequences">Constructing sequences</h2>
 <p>Sequence types corresponding to these alphabets can be constructed a number of different ways. Most immediately, sequence literals can be constructed using the string macros <code>dna</code>, <code>rna</code>, <code>aa</code>, and <code>char</code>:</p>
-<div class="codehilite"><pre><span></span><span class="c"># String decorators are provided for common sequence types</span>
-<span class="n">julia</span><span class="o">&gt;</span> <span class="n">dna</span><span class="s">&quot;TACGTANNATC&quot;</span>
-<span class="mi">11</span><span class="n">nt</span> <span class="n">DNA</span> <span class="n">Sequence</span><span class="p">:</span>
-<span class="n">TACGTANNATC</span>
+<div class="codehilite"><pre><span></span><span class="go"># String decorators are provided for common sequence types</span>
+<span class="gp">julia&gt;</span> <span class="n">dna</span><span class="s">&quot;TACGTANNATC&quot;</span>
+<span class="go">11nt DNA Sequence:</span>
+<span class="go">TACGTANNATC</span>
 
-<span class="n">julia</span><span class="o">&gt;</span> <span class="n">rna</span><span class="s">&quot;AUUUGNCCANU&quot;</span>
-<span class="mi">11</span><span class="n">nt</span> <span class="n">RNA</span> <span class="n">Sequence</span><span class="p">:</span>
-<span class="n">AUUUGNCCANU</span>
+<span class="gp">julia&gt;</span> <span class="n">rna</span><span class="s">&quot;AUUUGNCCANU&quot;</span>
+<span class="go">11nt RNA Sequence:</span>
+<span class="go">AUUUGNCCANU</span>
 
-<span class="n">julia</span><span class="o">&gt;</span> <span class="n">aa</span><span class="s">&quot;ARNDCQEGHILKMFPSTWYVX&quot;</span>
-<span class="mi">21</span><span class="n">aa</span> <span class="n">Amino</span> <span class="n">Acid</span> <span class="n">Sequence</span><span class="p">:</span>
-<span class="n">ARNDCQEGHILKMFPSTWYVX</span>
+<span class="gp">julia&gt;</span> <span class="n">aa</span><span class="s">&quot;ARNDCQEGHILKMFPSTWYVX&quot;</span>
+<span class="go">21aa Amino Acid Sequence:</span>
+<span class="go">ARNDCQEGHILKMFPSTWYVX</span>
 
-<span class="n">julia</span><span class="o">&gt;</span> <span class="n">char</span><span class="s">&quot;αβγδϵ&quot;</span>
-<span class="mi">5</span><span class="n">char</span> <span class="n">Char</span> <span class="n">Sequence</span><span class="p">:</span>
-<span class="n">αβγδϵ</span>
+<span class="gp">julia&gt;</span> <span class="n">char</span><span class="s">&quot;αβγδϵ&quot;</span>
+<span class="go">5char Char Sequence:</span>
+<span class="go">αβγδϵ</span>
 </pre></div>
 
 
 <p>Sequence can also be constructed from strings or arrays of nucleotide or amino acid symbols using constructors or the <code>convert</code> function:</p>
-<div class="codehilite"><pre><span></span><span class="n">julia</span><span class="o">&gt;</span> <span class="n">DNASequence</span><span class="p">(</span><span class="s">&quot;TTANC&quot;</span><span class="p">)</span>
-<span class="mi">5</span><span class="n">nt</span> <span class="n">DNA</span> <span class="n">Sequence</span><span class="p">:</span>
-<span class="n">TTANC</span>
+<div class="codehilite"><pre><span></span><span class="gp">julia&gt;</span> <span class="n">DNASequence</span><span class="p">(</span><span class="s">&quot;TTANC&quot;</span><span class="p">)</span>
+<span class="go">5nt DNA Sequence:</span>
+<span class="go">TTANC</span>
 
-<span class="n">julia</span><span class="o">&gt;</span> <span class="n">DNASequence</span><span class="p">([</span><span class="n">DNA_T</span><span class="p">,</span> <span class="n">DNA_T</span><span class="p">,</span> <span class="n">DNA_A</span><span class="p">,</span> <span class="n">DNA_N</span><span class="p">,</span> <span class="n">DNA_C</span><span class="p">])</span>
-<span class="mi">5</span><span class="n">nt</span> <span class="n">DNA</span> <span class="n">Sequence</span><span class="p">:</span>
-<span class="n">TTANC</span>
+<span class="gp">julia&gt;</span> <span class="n">DNASequence</span><span class="p">([</span><span class="n">DNA_T</span><span class="p">,</span> <span class="n">DNA_T</span><span class="p">,</span> <span class="n">DNA_A</span><span class="p">,</span> <span class="n">DNA_N</span><span class="p">,</span> <span class="n">DNA_C</span><span class="p">])</span>
+<span class="go">5nt DNA Sequence:</span>
+<span class="go">TTANC</span>
 
-<span class="n">julia</span><span class="o">&gt;</span> <span class="nb">convert</span><span class="p">(</span><span class="n">DNASequence</span><span class="p">,</span> <span class="p">[</span><span class="n">DNA_T</span><span class="p">,</span> <span class="n">DNA_T</span><span class="p">,</span> <span class="n">DNA_A</span><span class="p">,</span> <span class="n">DNA_N</span><span class="p">,</span> <span class="n">DNA_C</span><span class="p">])</span>
-<span class="mi">5</span><span class="n">nt</span> <span class="n">DNA</span> <span class="n">Sequence</span><span class="p">:</span>
-<span class="n">TTANC</span>
+<span class="gp">julia&gt;</span> <span class="nb">convert</span><span class="p">(</span><span class="n">DNASequence</span><span class="p">,</span> <span class="p">[</span><span class="n">DNA_T</span><span class="p">,</span> <span class="n">DNA_T</span><span class="p">,</span> <span class="n">DNA_A</span><span class="p">,</span> <span class="n">DNA_N</span><span class="p">,</span> <span class="n">DNA_C</span><span class="p">])</span>
+<span class="go">5nt DNA Sequence:</span>
+<span class="go">TTANC</span>
 </pre></div>
 
 
 <p>Using <code>convert</code>, these operations are reversible: sequences can be converted to strings or arrays:</p>
-<div class="codehilite"><pre><span></span><span class="n">julia</span><span class="o">&gt;</span> <span class="nb">convert</span><span class="p">(</span><span class="n">ASCIIString</span><span class="p">,</span> <span class="n">dna</span><span class="s">&quot;TTANGTA&quot;</span><span class="p">)</span>
-<span class="s">&quot;TTANGTA&quot;</span>
+<div class="codehilite"><pre><span></span><span class="gp">julia&gt;</span> <span class="nb">convert</span><span class="p">(</span><span class="n">ASCIIString</span><span class="p">,</span> <span class="n">dna</span><span class="s">&quot;TTANGTA&quot;</span><span class="p">)</span>
+<span class="go">&quot;TTANGTA&quot;</span>
 
-<span class="n">julia</span><span class="o">&gt;</span> <span class="nb">convert</span><span class="p">(</span><span class="n">Vector</span><span class="p">{</span><span class="n">DNANucleotide</span><span class="p">},</span> <span class="n">dna</span><span class="s">&quot;TTANGTA&quot;</span><span class="p">)</span>
-<span class="mi">7</span><span class="o">-</span><span class="n">element</span> <span class="n">Array</span><span class="p">{</span><span class="n">Bio</span><span class="o">.</span><span class="n">Seq</span><span class="o">.</span><span class="n">DNANucleotide</span><span class="p">,</span><span class="mi">1</span><span class="p">}:</span>
- <span class="n">T</span>
- <span class="n">T</span>
- <span class="n">A</span>
- <span class="n">N</span>
- <span class="n">G</span>
- <span class="n">T</span>
- <span class="n">A</span>
+<span class="gp">julia&gt;</span> <span class="nb">convert</span><span class="p">(</span><span class="n">Vector</span><span class="p">{</span><span class="n">DNANucleotide</span><span class="p">},</span> <span class="n">dna</span><span class="s">&quot;TTANGTA&quot;</span><span class="p">)</span>
+<span class="go">7-element Array{Bio.Seq.DNANucleotide,1}:</span>
+<span class="go"> T</span>
+<span class="go"> T</span>
+<span class="go"> A</span>
+<span class="go"> N</span>
+<span class="go"> G</span>
+<span class="go"> T</span>
+<span class="go"> A</span>
 </pre></div>
 
 
 <p>Sequences can also be concatenated into longer sequences:</p>
-<div class="codehilite"><pre><span></span><span class="n">julia</span><span class="o">&gt;</span> <span class="n">DNASequence</span><span class="p">(</span><span class="n">dna</span><span class="s">&quot;ACGT&quot;</span><span class="p">,</span> <span class="n">dna</span><span class="s">&quot;NNNN&quot;</span><span class="p">,</span> <span class="n">dna</span><span class="s">&quot;TGCA&quot;</span><span class="p">)</span>
-<span class="mi">12</span><span class="n">nt</span> <span class="n">DNA</span> <span class="n">Sequence</span><span class="p">:</span>
-<span class="n">ACGTNNNNTGCA</span>
+<div class="codehilite"><pre><span></span><span class="gp">julia&gt;</span> <span class="n">DNASequence</span><span class="p">(</span><span class="n">dna</span><span class="s">&quot;ACGT&quot;</span><span class="p">,</span> <span class="n">dna</span><span class="s">&quot;NNNN&quot;</span><span class="p">,</span> <span class="n">dna</span><span class="s">&quot;TGCA&quot;</span><span class="p">)</span>
+<span class="go">12nt DNA Sequence:</span>
+<span class="go">ACGTNNNNTGCA</span>
 
-<span class="n">julia</span><span class="o">&gt;</span> <span class="n">dna</span><span class="s">&quot;ACGT&quot;</span> <span class="o">*</span> <span class="n">dna</span><span class="s">&quot;TGCA&quot;</span>
-<span class="mi">8</span><span class="n">nt</span> <span class="n">DNA</span> <span class="n">Sequence</span><span class="p">:</span>
-<span class="n">ACGTTGCA</span>
+<span class="gp">julia&gt;</span> <span class="n">dna</span><span class="s">&quot;ACGT&quot;</span> <span class="o">*</span> <span class="n">dna</span><span class="s">&quot;TGCA&quot;</span>
+<span class="go">8nt DNA Sequence:</span>
+<span class="go">ACGTTGCA</span>
 
-<span class="n">julia</span><span class="o">&gt;</span> <span class="n">repeat</span><span class="p">(</span><span class="n">dna</span><span class="s">&quot;TA&quot;</span><span class="p">,</span> <span class="mi">10</span><span class="p">)</span>
-<span class="mi">20</span><span class="n">nt</span> <span class="n">DNA</span> <span class="n">Sequence</span><span class="p">:</span>
-<span class="n">TATATATATATATATATATA</span>
+<span class="gp">julia&gt;</span> <span class="n">repeat</span><span class="p">(</span><span class="n">dna</span><span class="s">&quot;TA&quot;</span><span class="p">,</span> <span class="mi">10</span><span class="p">)</span>
+<span class="go">20nt DNA Sequence:</span>
+<span class="go">TATATATATATATATATATA</span>
 
-<span class="n">julia</span><span class="o">&gt;</span> <span class="n">dna</span><span class="s">&quot;TA&quot;</span> <span class="o">^</span> <span class="mi">10</span>
-<span class="mi">20</span><span class="n">nt</span> <span class="n">DNA</span> <span class="n">Sequence</span><span class="p">:</span>
-<span class="n">TATATATATATATATATATA</span>
+<span class="gp">julia&gt;</span> <span class="n">dna</span><span class="s">&quot;TA&quot;</span> <span class="o">^</span> <span class="mi">10</span>
+<span class="go">20nt DNA Sequence:</span>
+<span class="go">TATATATATATATATATATA</span>
 </pre></div>
 
 
 <p>Despite being separate types, <code>DNASequence</code> and <code>RNASequence</code> can freely be converted between efficiently without copying the underlying data:</p>
-<div class="codehilite"><pre><span></span><span class="n">julia</span><span class="o">&gt;</span> <span class="n">dna</span> <span class="o">=</span> <span class="n">dna</span><span class="s">&quot;TTANGTAGACCG&quot;</span>
-<span class="mi">12</span><span class="n">nt</span> <span class="n">DNA</span> <span class="n">Sequence</span><span class="p">:</span>
-<span class="n">TTANGTAGACCG</span>
+<div class="codehilite"><pre><span></span><span class="gp">julia&gt;</span> <span class="n">dna</span> <span class="o">=</span> <span class="n">dna</span><span class="s">&quot;TTANGTAGACCG&quot;</span>
+<span class="go">12nt DNA Sequence:</span>
+<span class="go">TTANGTAGACCG</span>
 
-<span class="n">julia</span><span class="o">&gt;</span> <span class="n">rna</span> <span class="o">=</span> <span class="nb">convert</span><span class="p">(</span><span class="n">RNASequence</span><span class="p">,</span> <span class="n">dna</span><span class="p">)</span>
-<span class="mi">12</span><span class="n">nt</span> <span class="n">RNA</span> <span class="n">Sequence</span><span class="p">:</span>
-<span class="n">UUANGUAGACCG</span>
+<span class="gp">julia&gt;</span> <span class="n">rna</span> <span class="o">=</span> <span class="nb">convert</span><span class="p">(</span><span class="n">RNASequence</span><span class="p">,</span> <span class="n">dna</span><span class="p">)</span>
+<span class="go">12nt RNA Sequence:</span>
+<span class="go">UUANGUAGACCG</span>
 
-<span class="n">julia</span><span class="o">&gt;</span> <span class="n">dna</span><span class="o">.</span><span class="n">data</span> <span class="o">===</span> <span class="n">rna</span><span class="o">.</span><span class="n">data</span>  <span class="c"># underlying data are same</span>
-<span class="n">true</span>
+<span class="gp">julia&gt;</span> <span class="n">dna</span><span class="o">.</span><span class="n">data</span> <span class="o">===</span> <span class="n">rna</span><span class="o">.</span><span class="n">data</span>  <span class="c"># underlying data are same</span>
+<span class="go">true</span>
 </pre></div>
 
 
@@ -910,38 +770,38 @@
 <p><a id='Indexing-and-modifying-1'></a></p>
 <h2 id="indexing-and-modifying">Indexing and modifying</h2>
 <p>Sequences for the most part behave like other vector or string types. They can be indexed using integers or ranges:</p>
-<div class="codehilite"><pre><span></span><span class="n">julia</span><span class="o">&gt;</span> <span class="n">seq</span> <span class="o">=</span> <span class="n">dna</span><span class="s">&quot;ACGTTTANAGTNNAGTACC&quot;</span>
-<span class="mi">19</span><span class="n">nt</span> <span class="n">DNA</span> <span class="n">Sequence</span><span class="p">:</span>
-<span class="n">ACGTTTANAGTNNAGTACC</span>
+<div class="codehilite"><pre><span></span><span class="gp">julia&gt;</span> <span class="n">seq</span> <span class="o">=</span> <span class="n">dna</span><span class="s">&quot;ACGTTTANAGTNNAGTACC&quot;</span>
+<span class="go">19nt DNA Sequence:</span>
+<span class="go">ACGTTTANAGTNNAGTACC</span>
 
-<span class="n">julia</span><span class="o">&gt;</span> <span class="n">seq</span><span class="p">[</span><span class="mi">5</span><span class="p">]</span>
-<span class="n">T</span>
+<span class="gp">julia&gt;</span> <span class="n">seq</span><span class="p">[</span><span class="mi">5</span><span class="p">]</span>
+<span class="go">T</span>
 
-<span class="n">julia</span><span class="o">&gt;</span> <span class="n">seq</span><span class="p">[</span><span class="mi">6</span><span class="p">:</span><span class="k">end</span><span class="p">]</span>
-<span class="mi">14</span><span class="n">nt</span> <span class="n">DNA</span> <span class="n">Sequence</span><span class="p">:</span>
-<span class="n">TANAGTNNAGTACC</span>
+<span class="gp">julia&gt;</span> <span class="n">seq</span><span class="p">[</span><span class="mi">6</span><span class="p">:</span><span class="k">end</span><span class="p">]</span>
+<span class="go">14nt DNA Sequence:</span>
+<span class="go">TANAGTNNAGTACC</span>
 </pre></div>
 
 
 <p>Indexing by range creates a subsequence of the original sequence. Unlike <code>ASCIIString</code> and <code>Vector</code> in the standard library, creating a subsequences is copy-free: a subsequence is just a reference to the original sequence with its range.  You may think that this is unsafe because modifying subsequences propagates to the original sequence, but this doesn't happen actually:</p>
-<div class="codehilite"><pre><span></span><span class="n">julia</span><span class="o">&gt;</span> <span class="n">seq</span> <span class="o">=</span> <span class="n">dna</span><span class="s">&quot;AAAA&quot;</span>  <span class="c"># create a sequence</span>
-<span class="mi">4</span><span class="n">nt</span> <span class="n">DNA</span> <span class="n">Sequence</span><span class="p">:</span>
-<span class="n">AAAA</span>
+<div class="codehilite"><pre><span></span><span class="gp">julia&gt;</span> <span class="n">seq</span> <span class="o">=</span> <span class="n">dna</span><span class="s">&quot;AAAA&quot;</span>  <span class="c"># create a sequence</span>
+<span class="go">4nt DNA Sequence:</span>
+<span class="go">AAAA</span>
 
-<span class="n">julia</span><span class="o">&gt;</span> <span class="n">subseq</span> <span class="o">=</span> <span class="n">seq</span><span class="p">[</span><span class="mi">1</span><span class="p">:</span><span class="mi">2</span><span class="p">]</span>  <span class="c"># create a subsequence from `seq`</span>
-<span class="mi">2</span><span class="n">nt</span> <span class="n">DNA</span> <span class="n">Sequence</span><span class="p">:</span>
-<span class="n">AA</span>
+<span class="gp">julia&gt;</span> <span class="n">subseq</span> <span class="o">=</span> <span class="n">seq</span><span class="p">[</span><span class="mi">1</span><span class="p">:</span><span class="mi">2</span><span class="p">]</span>  <span class="c"># create a subsequence from `seq`</span>
+<span class="go">2nt DNA Sequence:</span>
+<span class="go">AA</span>
 
-<span class="n">julia</span><span class="o">&gt;</span> <span class="n">subseq</span><span class="p">[</span><span class="mi">2</span><span class="p">]</span> <span class="o">=</span> <span class="n">DNA_T</span>  <span class="c"># modify the second element of it</span>
-<span class="n">T</span>
+<span class="gp">julia&gt;</span> <span class="n">subseq</span><span class="p">[</span><span class="mi">2</span><span class="p">]</span> <span class="o">=</span> <span class="n">DNA_T</span>  <span class="c"># modify the second element of it</span>
+<span class="go">T</span>
 
-<span class="n">julia</span><span class="o">&gt;</span> <span class="n">subseq</span>  <span class="c"># the subsequence is modified</span>
-<span class="mi">2</span><span class="n">nt</span> <span class="n">DNA</span> <span class="n">Sequence</span><span class="p">:</span>
-<span class="n">AT</span>
+<span class="gp">julia&gt;</span> <span class="n">subseq</span>  <span class="c"># the subsequence is modified</span>
+<span class="go">2nt DNA Sequence:</span>
+<span class="go">AT</span>
 
-<span class="n">julia</span><span class="o">&gt;</span> <span class="n">seq</span>  <span class="c"># but the original sequence is not</span>
-<span class="mi">4</span><span class="n">nt</span> <span class="n">DNA</span> <span class="n">Sequence</span><span class="p">:</span>
-<span class="n">AAAA</span>
+<span class="gp">julia&gt;</span> <span class="n">seq</span>  <span class="c"># but the original sequence is not</span>
+<span class="go">4nt DNA Sequence:</span>
+<span class="go">AAAA</span>
 </pre></div>
 
 
@@ -976,44 +836,48 @@
 
 <p>Make a reversed complement sequence of <code>seq</code> in place.</p>
 <p>Ambiguous nucleotides are left as-is.</p>
-<div class="codehilite"><pre><span></span><span class="n">julia</span><span class="o">&gt;</span> <span class="n">seq</span> <span class="o">=</span> <span class="n">dna</span><span class="s">&quot;ACG&quot;</span>
-<span class="mi">3</span><span class="n">nt</span> <span class="n">DNA</span> <span class="n">Sequence</span><span class="p">:</span>
-<span class="n">ACG</span>
+<div class="codehilite"><pre><span></span><span class="gp">julia&gt;</span> <span class="n">seq</span> <span class="o">=</span> <span class="n">dna</span><span class="s">&quot;ACG&quot;</span>
+<span class="go">3nt DNA Sequence:</span>
+<span class="go">ACG</span>
 
-<span class="n">julia</span><span class="o">&gt;</span> <span class="n">push!</span><span class="p">(</span><span class="n">seq</span><span class="p">,</span> <span class="n">DNA_T</span><span class="p">)</span>
-<span class="mi">4</span><span class="n">nt</span> <span class="n">DNA</span> <span class="n">Sequence</span><span class="p">:</span>
-<span class="n">ACGT</span>
+<span class="gp">julia&gt;</span> <span class="n">push!</span><span class="p">(</span><span class="n">seq</span><span class="p">,</span> <span class="n">DNA_T</span><span class="p">)</span>
+<span class="go">4nt DNA Sequence:</span>
+<span class="go">ACGT</span>
 
-<span class="n">julia</span><span class="o">&gt;</span> <span class="n">append!</span><span class="p">(</span><span class="n">seq</span><span class="p">,</span> <span class="n">dna</span><span class="s">&quot;AT&quot;</span><span class="p">)</span>
-<span class="mi">6</span><span class="n">nt</span> <span class="n">DNA</span> <span class="n">Sequence</span><span class="p">:</span>
-<span class="n">ACGTAT</span>
+<span class="gp">julia&gt;</span> <span class="n">append!</span><span class="p">(</span><span class="n">seq</span><span class="p">,</span> <span class="n">dna</span><span class="s">&quot;AT&quot;</span><span class="p">)</span>
+<span class="go">6nt DNA Sequence:</span>
+<span class="go">ACGTAT</span>
 
-<span class="n">julia</span><span class="o">&gt;</span> <span class="n">reverse!</span><span class="p">(</span><span class="n">seq</span><span class="p">)</span>
-<span class="mi">6</span><span class="n">nt</span> <span class="n">DNA</span> <span class="n">Sequence</span><span class="p">:</span>
-<span class="n">TATGCA</span>
+<span class="gp">julia&gt;</span> <span class="n">reverse!</span><span class="p">(</span><span class="n">seq</span><span class="p">)</span>
+<span class="go">6nt DNA Sequence:</span>
+<span class="go">TATGCA</span>
 
-<span class="n">julia</span><span class="o">&gt;</span> <span class="n">Seq</span><span class="o">.</span><span class="n">complement!</span><span class="p">(</span><span class="n">seq</span><span class="p">)</span>  <span class="c"># semantically differs from Base.complement!</span>
-<span class="mi">6</span><span class="n">nt</span> <span class="n">DNA</span> <span class="n">Sequence</span><span class="p">:</span>
-<span class="n">ATACGT</span>
+<span class="gp">julia&gt;</span> <span class="n">Seq</span><span class="o">.</span><span class="n">complement!</span><span class="p">(</span><span class="n">seq</span><span class="p">)</span>  <span class="c"># semantically differs from Base.complement!</span>
+<span class="go">6nt DNA Sequence:</span>
+<span class="go">ATACGT</span>
 
-<span class="n">julia</span><span class="o">&gt;</span> <span class="n">reverse_complement!</span><span class="p">(</span><span class="n">seq</span><span class="p">)</span>
-<span class="mi">6</span><span class="n">nt</span> <span class="n">DNA</span> <span class="n">Sequence</span><span class="p">:</span>
-<span class="n">ACGTAT</span>
+<span class="gp">julia&gt;</span> <span class="n">reverse_complement!</span><span class="p">(</span><span class="n">seq</span><span class="p">)</span>
+<span class="go">6nt DNA Sequence:</span>
+<span class="go">ACGTAT</span>
 </pre></div>
 
 
 <p>Sequences also work as iterators over symbols:</p>
-<div class="codehilite"><pre><span></span><span class="n">julia</span><span class="o">&gt;</span> <span class="n">n</span> <span class="o">=</span> <span class="mi">0</span>
-<span class="mi">0</span>
+<div class="codehilite"><pre><span></span><span class="gp">julia&gt;</span> <span class="n">n</span> <span class="o">=</span> <span class="mi">0</span>
+<span class="go">0</span>
 
-<span class="n">julia</span><span class="o">&gt;</span> <span class="k">for</span> <span class="n">nt</span> <span class="k">in</span> <span class="n">dna</span><span class="s">&quot;ATNGNNT&quot;</span>
-           <span class="k">if</span> <span class="n">nt</span> <span class="o">==</span> <span class="n">DNA_N</span>
-               <span class="n">n</span> <span class="o">+=</span> <span class="mi">1</span>
-           <span class="k">end</span>
-       <span class="k">end</span>
+<span class="gp">julia&gt;</span> <span class="k">for</span> <span class="n">nt</span> <span class="k">in</span> <span class="n">dna</span><span class="s">&quot;ATNGNNT&quot;</span>
 
-<span class="n">julia</span><span class="o">&gt;</span> <span class="n">n</span>
-<span class="mi">3</span>
+<span class="gt">           if nt == DNA_N</span>
+
+<span class="gt">               n += 1</span>
+
+<span class="gt">           end</span>
+
+<span class="gt">       end</span>
+
+<span class="gp">julia&gt;</span> <span class="n">n</span>
+<span class="go">3</span>
 </pre></div>
 
 
@@ -1111,9 +975,9 @@
 <p><a id='Compact-representation-1'></a></p>
 <h2 id="compact-representation">Compact representation</h2>
 <p>As we saw above, DNA and RNA sequences can store any ambiguous nucleotides like 'N'.  If you are sure that nucleotide sequences store unambiguous nucleotides only, you can save the memory space of sequences. <code>DNAAlphabet{2}</code> is an alphabet that uses two bits per base and limits to only unambiguous nucleotide symbols (ACGT in DNA and ACGU in RNA). To create a sequence of this alphabet, you need to explicitly pass <code>DNAAlphabet{2}</code> to <code>BioSequence</code> as its parametric type:</p>
-<div class="codehilite"><pre><span></span><span class="n">julia</span><span class="o">&gt;</span> <span class="n">seq</span> <span class="o">=</span> <span class="n">BioSequence</span><span class="p">{</span><span class="n">DNAAlphabet</span><span class="p">{</span><span class="mi">2</span><span class="p">}}(</span><span class="s">&quot;ACGT&quot;</span><span class="p">)</span>
-<span class="mi">4</span><span class="n">nt</span> <span class="n">DNA</span> <span class="n">Sequence</span><span class="p">:</span>
-<span class="n">ACGT</span>
+<div class="codehilite"><pre><span></span><span class="gp">julia&gt;</span> <span class="n">seq</span> <span class="o">=</span> <span class="n">BioSequence</span><span class="p">{</span><span class="n">DNAAlphabet</span><span class="p">{</span><span class="mi">2</span><span class="p">}}(</span><span class="s">&quot;ACGT&quot;</span><span class="p">)</span>
+<span class="go">4nt DNA Sequence:</span>
+<span class="go">ACGT</span>
 </pre></div>
 
 
@@ -1224,86 +1088,57 @@ RNAKmerCounts{k}(seq::BioSequence[, step=1])
 </pre></div>
 
 
-<p>The type of the <code>metadata</code> field depends on the source of the sequence record. For example, if a record is read from a FASTA file, metadata contains the description field. If from a FASTQ file, a quality scores assigned to base calls during sequencing.</p>
-          <aside class="copyright" role="note">
-            
-              Copyright (c) 2016 The BioJulia Organisation &ndash;
-            
-            Documentation built with
-            <a href="http://www.mkdocs.org" target="_blank">MkDocs</a>
-            using the
-            <a href="http://squidfunk.github.io/mkdocs-material/" target="_blank">
-              Material
-            </a>
-            theme.
-          </aside>
-          
-            <footer class="footer">
-              
-  <nav class="pagination" aria-label="Footer">
-    <div class="previous">
-      
-        <a href="../reading/" title="IO API">
-          <span class="direction">
-            Previous
-          </span>
-          <div class="page">
-            <div class="button button-previous" role="button" aria-label="Previous">
-              <i class="icon icon-back"></i>
-            </div>
-            <div class="stretch">
-              <div class="title">
-                IO API
-              </div>
-            </div>
-          </div>
-        </a>
-      
+<p>The type of the <code>metadata</code> field depends on the source of the sequence record. For example, if a record is read from a FASTA file, metadata contains the description field. If from a FASTQ file, a quality scores assigned to base calls during sequencing.</p></div>
+        
     </div>
-    <div class="next">
-      
-        <a href="../alignments/" title="Alignments">
-          <span class="direction">
-            Next
-          </span>
-          <div class="page">
-            <div class="stretch">
-              <div class="title">
-                Alignments
-              </div>
-            </div>
-            <div class="button button-next" role="button" aria-label="Next">
-              <i class="icon icon-forward"></i>
-            </div>
-          </div>
-        </a>
-      
-    </div>
-  </nav>
 
-            </footer>
-          
-        </div>
-      </article>
-      <div class="results" role="status" aria-live="polite">
-        <div class="scrollable">
-          <div class="wrapper">
-            <div class="meta"></div>
-            <div class="list"></div>
-          </div>
-        </div>
-      </div>
-    </main>
+    <footer class="col-md-12 text-center">
+        <hr>
+        <p>
+        <small>Copyright (c) 2016 The BioJulia Organisation<br></small>
+        
+        <small>Documentation built with <a href="http://www.mkdocs.org/">MkDocs</a>.</p></small>
+    </footer>
+
+    <script src="../../js/jquery-1.10.2.min.js"></script>
+    <script src="../../js/bootstrap-3.0.3.min.js"></script>
+    <script src="../../js/highlight.pack.js"></script>
+    <script>hljs.initHighlightingOnLoad();</script>
     <script>
-      var base_url = '../..';
-      var repo_id  = 'BioJulia/Bio.jl';
+    var base_url = '../..';
     </script>
-    <script src="../../assets/javascripts/application-997097ee0c.js"></script>
-    
-      <script src="https://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS_HTML"></script>
-    
-      <script src="../../assets/mathjaxhelper.js"></script>
-    
-    
-  </body>
+    <script data-main="../../mkdocs/js/search.js" src="../../mkdocs/js/require.js"></script>
+    <script src="../../js/base.js"></script>
+    <script src="https://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS_HTML"></script>
+    <script src="../../assets/mathjaxhelper.js"></script>
+
+    <div class="modal" id="mkdocs_search_modal" tabindex="-1" role="dialog" aria-labelledby="Search Modal" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <button type="button" class="close" data-dismiss="modal">
+                        <span aria-hidden="true">&times;</span>
+                        <span class="sr-only">Close</span>
+                    </button>
+                    <h4 class="modal-title" id="exampleModalLabel">Search</h4>
+                </div>
+                <div class="modal-body">
+                    <p>
+                        From here you can search these documents. Enter your search terms below.
+                    </p>
+                    <form role="form">
+                        <div class="form-group">
+                            <input type="text" class="form-control" placeholder="Search..." id="mkdocs-search-query">
+                        </div>
+                    </form>
+                    <div id="mkdocs-search-results"></div>
+                </div>
+                <div class="modal-footer">
+                </div>
+            </div>
+        </div>
+    </div>
+
+    </body>
+
 </html>

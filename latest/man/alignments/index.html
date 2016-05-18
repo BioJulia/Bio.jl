@@ -1,358 +1,222 @@
 <!DOCTYPE html>
-<!--[if lt IE 7 ]><html class="no-js ie6"><![endif]-->
-<!--[if IE 7 ]><html class="no-js ie7"><![endif]-->
-<!--[if IE 8 ]><html class="no-js ie8"><![endif]-->
-<!--[if IE 9 ]><html class="no-js ie9"><![endif]-->
-<!--[if (gt IE 9)|!(IE)]><!--> <html class="no-js"> <!--<![endif]-->
-  <head>
+<html lang="en">
+
+<head>
     <meta charset="utf-8">
-    <meta name="viewport" content="width=device-width,user-scalable=no,initial-scale=1,maximum-scale=1">
-    
-      
-        <title>Alignments - Bio.jl</title>
-      
-      
-      
-        <link rel="canonical" href="https://biojulia.github.io/Bio.jl/man/alignments/">
-      
-      
-        <meta name="author" content="The BioJulia Organisation">
-      
-    
-    <meta property="og:url" content="https://biojulia.github.io/Bio.jl/man/alignments/">
-    <meta property="og:title" content="Bio.jl">
-    <meta property="og:image" content="https://biojulia.github.io/Bio.jl/man/alignments//../../images/biojl.png">
-    <meta name="apple-mobile-web-app-title" content="Bio.jl">
-    <meta name="apple-mobile-web-app-capable" content="yes">
-    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-    
-      <link rel="apple-touch-icon" href="../../images/biojl.png">
-    
-    
-    <link rel="shortcut icon" type="image/x-icon" href="../../None">
-    <link rel="icon" type="image/x-icon" href="../../None">
-    <style>
-      @font-face {
-      	font-family: 'Icon';
-      	src: url('../../assets/fonts/icon.eot?52m981');
-      	src: url('../../assets/fonts/icon.eot?#iefix52m981')
-               format('embedded-opentype'),
-      		   url('../../assets/fonts/icon.woff?52m981')
-               format('woff'),
-      		   url('../../assets/fonts/icon.ttf?52m981')
-               format('truetype'),
-      		   url('../../assets/fonts/icon.svg?52m981#icon')
-               format('svg');
-      	font-weight: normal;
-      	font-style: normal;
-      }
-    </style>
-    <link rel="stylesheet" href="../../assets/stylesheets/application-0dac3e5884.css">
-    
-      <link rel="stylesheet" href="../../assets/stylesheets/palettes-05ab2406df.css">
-    
-    
-      
-      
-      
-      <link rel="stylesheet" href="//fonts.googleapis.com/css?family=Ubuntu:400,700|Ubuntu+Mono">
-      <style>
-        body, input {
-          font-family: 'Ubuntu', Helvetica, Arial, sans-serif;
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0"> 
+    <meta name="author" content="The BioJulia Organisation"> 
+    <link rel="canonical" href="https://biojulia.github.io/Bio.jl/man/alignments/"> 
+    <link rel="shortcut icon" href="../../img/favicon.ico">
+
+    <title>Alignments - Bio.jl</title>
+
+    <link href="../../css/bootstrap-custom.min.css" rel="stylesheet">
+    <link href="//maxcdn.bootstrapcdn.com/font-awesome/4.4.0/css/font-awesome.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="//cdn.jsdelivr.net/font-hack/2.018/css/hack.min.css">
+    <link href='//fonts.googleapis.com/css?family=PT+Sans:400,400italic,700,700italic&subset=latin-ext,latin' rel='stylesheet' type='text/css'>
+    <link href='//fonts.googleapis.com/css?family=Open+Sans:300italic,400italic,700italic,400,300,600,700&subset=latin-ext,latin' rel='stylesheet' type='text/css'>
+    <link href="../../css/base.css" rel="stylesheet">
+    <link href="../../css/cinder.css" rel="stylesheet">
+    <link rel="stylesheet" href="../../css/highlight.css">
+
+
+    <link href="../../assets/Documenter.css" rel="stylesheet">
+
+
+    <link href="../../assets/friendly.css" rel="stylesheet">
+
+    <!-- HTML5 shim and Respond.js IE8 support of HTML5 elements and media queries -->
+    <!--[if lt IE 9]>
+            <script src="https://oss.maxcdn.com/libs/html5shiv/3.7.0/html5shiv.js"></script>
+            <script src="https://oss.maxcdn.com/libs/respond.js/1.3.0/respond.min.js"></script>
+        <![endif]-->
+
+    <script src="https://ajax.googleapis.com/ajax/libs/webfont/1.5.18/webfont.js"></script>
+    <script>
+    WebFont.load({
+        google: {
+            families: ['Open Sans', 'PT Sans']
         }
-        pre, code {
-          font-family: 'Ubuntu Mono', 'Courier New', 'Courier', monospace;
-        }
-      </style>
+    });
+    </script>
+
     
-    
-      <link rel="stylesheet" href="../../assets/Documenter.css">
-    
-    <script src="../../assets/javascripts/modernizr-4ab42b99fd.js"></script>
-    
-  </head>
-  
-  
-  
-  <body class="palette-primary-indigo palette-accent-blue">
-    
-      
-      
-    
-    <div class="backdrop">
-      <div class="backdrop-paper"></div>
-    </div>
-    <input class="toggle" type="checkbox" id="toggle-drawer">
-    <input class="toggle" type="checkbox" id="toggle-search">
-    <label class="toggle-button overlay" for="toggle-drawer"></label>
-    <header class="header">
-      <nav aria-label="Header">
-  <div class="bar default">
-    <div class="button button-menu" role="button" aria-label="Menu">
-      <label class="toggle-button icon icon-menu" for="toggle-drawer">
-        <span></span>
-      </label>
-    </div>
-    <div class="stretch">
-      <div class="title">
-        
-          <span class="path">
+</head>
+
+<body>
+
+    <div class="navbar navbar-default navbar-fixed-top" role="navigation">
+    <div class="container">
+
+        <!-- Collapsed navigation -->
+        <div class="navbar-header">
             
-              
-                Manual <i class="icon icon-link"></i>
-              
+            <!-- Expander button -->
+            <button type="button" class="navbar-toggle" data-toggle="collapse" data-target=".navbar-collapse">
+                <span class="sr-only">Toggle navigation</span>
+                <span class="icon-bar"></span>
+                <span class="icon-bar"></span>
+                <span class="icon-bar"></span>
+            </button>
             
-          </span>
-        
-        Alignments
-      </div>
-    </div>
-    
-    
-      
-      <div class="button button-github" role="button" aria-label="GitHub">
-        <a href="https://github.com/BioJulia" title="@BioJulia on GitHub" target="_blank" class="toggle-button icon icon-github"></a>
-      </div>
-    
-    <div class="button button-search" role="button" aria-label="Search">
-      <label class="toggle-button icon icon-search" title="Search" for="toggle-search"></label>
-    </div>
-  </div>
-  <div class="bar search">
-    <div class="button button-close" role="button" aria-label="Close">
-      <label class="toggle-button icon icon-back" for="toggle-search"></label>
-    </div>
-    <div class="stretch">
-      <div class="field">
-        <input class="query" type="text" placeholder="Search" autocapitalize="off" autocorrect="off" autocomplete="off" spellcheck>
-      </div>
-    </div>
-    <div class="button button-reset" role="button" aria-label="Search">
-      <button class="toggle-button icon icon-close" id="reset-search"></button>
-    </div>
-  </div>
-</nav>
-    </header>
-    <main class="main">
-      
-      <div class="drawer">
-        <nav aria-label="Navigation">
-  
-  <a href="https://github.com/BioJulia/Bio.jl" class="project">
-    <div class="banner">
-      
-        <div class="logo">
-          <img src="../../images/biojl.png">
+
+            <!-- Main title -->
+            <a class="navbar-brand" href="../..">Bio.jl</a>
         </div>
-      
-      <div class="name">
-        <strong>
-          Bio.jl
-          <span class="version">
+
+        <!-- Expanded navigation -->
+        <div class="navbar-collapse collapse">
             
-          </span>
-        </strong>
-        
-          <br>
-          BioJulia/Bio.jl
-        
-      </div>
+                <!-- Main navigation -->
+                <ul class="nav navbar-nav">
+                
+                
+                    <li >
+                        <a href="../..">Home</a>
+                    </li>
+                
+                
+                
+                    <li class="dropdown active">
+                        <a href="#" class="dropdown-toggle" data-toggle="dropdown">Manual <b class="caret"></b></a>
+                        <ul class="dropdown-menu">
+                        
+                            
+<li >
+    <a href="../install/">Installation</a>
+</li>
+
+                        
+                            
+<li >
+    <a href="../reading/">IO API</a>
+</li>
+
+                        
+                            
+<li >
+    <a href="../seq/">Biological Sequences</a>
+</li>
+
+                        
+                            
+<li class="active">
+    <a href="./">Alignments</a>
+</li>
+
+                        
+                            
+<li >
+    <a href="../intervals/">Intervals</a>
+</li>
+
+                        
+                            
+<li >
+    <a href="../structure/">Structure</a>
+</li>
+
+                        
+                            
+<li >
+    <a href="../tools/">Tools</a>
+</li>
+
+                        
+                        </ul>
+                    </li>
+                
+                
+                
+                    <li class="dropdown">
+                        <a href="#" class="dropdown-toggle" data-toggle="dropdown">Reference <b class="caret"></b></a>
+                        <ul class="dropdown-menu">
+                        
+                            
+<li >
+    <a href="../../lib/seq/">Seq</a>
+</li>
+
+                        
+                        </ul>
+                    </li>
+                
+                
+                
+                    <li >
+                        <a href="../contributing/">Contributing</a>
+                    </li>
+                
+                
+                </ul>
+            
+
+            <ul class="nav navbar-nav navbar-right">
+                <li>
+                    <a href="#" data-toggle="modal" data-target="#mkdocs_search_modal">
+                        <i class="fa fa-search"></i> Search
+                    </a>
+                </li>
+                
+                    <li >
+                        <a rel="next" href="../seq/">
+                            <i class="fa fa-arrow-left"></i> Previous
+                        </a>
+                    </li>
+                    <li >
+                        <a rel="prev" href="../intervals/">
+                            Next <i class="fa fa-arrow-right"></i>
+                        </a>
+                    </li>
+                
+                
+                    <li>
+                        <a href="https://github.com/BioJulia/Bio.jl">
+                            
+                                <i class="fa fa-github"></i>
+                            
+                            GitHub
+                        </a>
+                    </li>
+                
+            </ul>
+        </div>
     </div>
-  </a>
-  <div class="scrollable">
-    <div class="wrapper">
-      
-        <ul class="repo">
-          <li class="repo-download">
+</div>
+
+    <div class="container">
+        
+        <div class="col-md-3"><div class="bs-sidebar hidden-print affix well" role="complementary">
+    <ul class="nav bs-sidenav">
+    
+        <li class="first-level active"><a href="#align-sequence-alignments">Align: Sequence Alignments</a></li>
+        
+            <li class="second-level"><a href="#representing-alignments">Representing alignments</a></li>
             
-            <a href="https://github.com/BioJulia/Bio.jl/archive/master.zip" target="_blank" title="Download" data-action="download">
-              <i class="icon icon-download"></i> Download
-            </a>
-          </li>
-          <li class="repo-stars">
-            <a href="https://github.com/BioJulia/Bio.jl/stargazers" target="_blank" title="Stargazers" data-action="star">
-              <i class="icon icon-star"></i> Stars
-              <span class="count">&ndash;</span>
-            </a>
-          </li>
-        </ul>
-        <hr>
-      
-      <div class="toc">
-        <ul>
-          
+                <li class="third-level"><a href="#operations">Operations</a></li>
             
-  <li>
-    <a class="" title="Home" href="../..">
-      Home
-    </a>
-    
-  </li>
-
-          
+        
+            <li class="second-level"><a href="#aligned-sequence">Aligned sequence</a></li>
             
-  <li>
-    <span class="section">Manual</span>
-    <ul>
-      
         
-  <li>
-    <a class="" title="Installation" href="../install/">
-      Installation
-    </a>
-    
-  </li>
-
-      
+            <li class="second-level"><a href="#operating-on-alignments">Operating on alignments</a></li>
+            
         
-  <li>
-    <a class="" title="IO API" href="../reading/">
-      IO API
-    </a>
-    
-  </li>
-
-      
+            <li class="second-level"><a href="#pairwise-alignment">Pairwise alignment</a></li>
+            
+                <li class="third-level"><a href="#operations-on-pairwise-alignment">Operations on pairwise alignment</a></li>
+            
         
-  <li>
-    <a class="" title="Biological Sequences" href="../seq/">
-      Biological Sequences
-    </a>
-    
-  </li>
-
-      
+            <li class="second-level"><a href="#substitution-matrices">Substitution matrices</a></li>
+            
         
-  <li>
-    <a class="current" title="Alignments" href="./">
-      Alignments
-    </a>
     
-      
-        
-      
-      
-        <ul>
-          
-            <li class="anchor">
-              <a title="Representing alignments" href="#representing-alignments">
-                Representing alignments
-              </a>
-            </li>
-          
-            <li class="anchor">
-              <a title="Aligned sequence" href="#aligned-sequence">
-                Aligned sequence
-              </a>
-            </li>
-          
-            <li class="anchor">
-              <a title="Operating on alignments" href="#operating-on-alignments">
-                Operating on alignments
-              </a>
-            </li>
-          
-            <li class="anchor">
-              <a title="Pairwise alignment" href="#pairwise-alignment">
-                Pairwise alignment
-              </a>
-            </li>
-          
-            <li class="anchor">
-              <a title="Substitution matrices" href="#substitution-matrices">
-                Substitution matrices
-              </a>
-            </li>
-          
-        </ul>
-      
-    
-  </li>
-
-      
-        
-  <li>
-    <a class="" title="Intervals" href="../intervals/">
-      Intervals
-    </a>
-    
-  </li>
-
-      
-        
-  <li>
-    <a class="" title="Structure" href="../structure/">
-      Structure
-    </a>
-    
-  </li>
-
-      
-        
-  <li>
-    <a class="" title="Tools" href="../tools/">
-      Tools
-    </a>
-    
-  </li>
-
-      
     </ul>
-  </li>
+</div></div>
+        <div class="col-md-9" role="main">
 
-          
-            
-  <li>
-    <span class="section">Reference</span>
-    <ul>
-      
-        
-  <li>
-    <a class="" title="Seq" href="../../lib/seq/">
-      Seq
-    </a>
-    
-  </li>
-
-      
-    </ul>
-  </li>
-
-          
-            
-  <li>
-    <a class="" title="Contributing" href="../contributing/">
-      Contributing
-    </a>
-    
-  </li>
-
-          
-        </ul>
-        
-          <hr>
-          <span class="section">The author</span>
-          <ul>
-            
-            
-              
-              <li>
-                <a href="https://github.com/BioJulia" target="_blank" title="@BioJulia on GitHub">
-                  @BioJulia on GitHub
-                </a>
-              </li>
-            
-          </ul>
-        
-      </div>
-    </div>
-  </div>
-</nav>
-      </div>
-      <article class="article">
-        <div class="wrapper">
-          
-          <p><a id='Align:-Sequence-Alignments-1'></a></p>
+<p><a id='Align:-Sequence-Alignments-1'></a></p>
 <h1 id="align-sequence-alignments">Align: Sequence Alignments</h1>
 <p>The <code>Align</code> module contains tools for computing and working with sequence alignments.</p>
 <p><a id='Representing-alignments-1'></a></p>
@@ -393,13 +257,17 @@ reference: AGGGTGGCATTTATCAG---ACGTTTCGAGAC
 
 
 <p>An <code>Alignment</code> object can be created from a series of anchors:</p>
-<div class="codehilite"><pre><span></span><span class="n">julia</span><span class="o">&gt;</span> <span class="n">Alignment</span><span class="p">([</span>
-           <span class="n">AlignmentAnchor</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">4</span><span class="p">,</span> <span class="n">OP_START</span><span class="p">),</span>
-           <span class="n">AlignmentAnchor</span><span class="p">(</span><span class="mi">4</span><span class="p">,</span> <span class="mi">8</span><span class="p">,</span> <span class="n">OP_MATCH</span><span class="p">),</span>
-           <span class="n">AlignmentAnchor</span><span class="p">(</span><span class="mi">4</span><span class="p">,</span> <span class="mi">12</span><span class="p">,</span> <span class="n">OP_DELETE</span><span class="p">)</span>
-       <span class="p">])</span>
-<span class="n">········</span>
-<span class="n">····</span><span class="o">----</span>
+<div class="codehilite"><pre><span></span><span class="gp">julia&gt;</span> <span class="n">Alignment</span><span class="p">([</span>
+
+<span class="gt">           AlignmentAnchor(0, 4, OP_START),</span>
+
+<span class="gt">           AlignmentAnchor(4, 8, OP_MATCH),</span>
+
+<span class="gt">           AlignmentAnchor(4, 12, OP_DELETE)</span>
+
+<span class="gt">       ])</span>
+<span class="go">········</span>
+<span class="go">····----</span>
 </pre></div>
 
 
@@ -476,42 +344,56 @@ reference: AGGGTGGCATTTATCAG---ACGTTTCGAGAC
 <h2 id="aligned-sequence">Aligned sequence</h2>
 <p>A sequence aligned to another sequence is represented by the <code>AlignedSequence</code> type, which is a pair of the aligned sequence and an <code>Alignment</code> object.</p>
 <p>The following example creates an aligned sequence object from a sequence and an alignment:</p>
-<div class="codehilite"><pre><span></span><span class="n">julia</span><span class="o">&gt;</span> <span class="n">AlignedSequence</span><span class="p">(</span>  <span class="c"># pass an Alignment object</span>
-           <span class="n">dna</span><span class="s">&quot;ACGTAT&quot;</span><span class="p">,</span>
-           <span class="n">Alignment</span><span class="p">([</span>
-               <span class="n">AlignmentAnchor</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="n">OP_START</span><span class="p">),</span>
-               <span class="n">AlignmentAnchor</span><span class="p">(</span><span class="mi">3</span><span class="p">,</span> <span class="mi">3</span><span class="p">,</span> <span class="n">OP_MATCH</span><span class="p">),</span>
-               <span class="n">AlignmentAnchor</span><span class="p">(</span><span class="mi">6</span><span class="p">,</span> <span class="mi">3</span><span class="p">,</span> <span class="n">OP_INSERT</span><span class="p">)</span>
-           <span class="p">])</span>
-       <span class="p">)</span>
-<span class="n">···</span><span class="o">---</span>
-<span class="n">ACGTAT</span>
+<div class="codehilite"><pre><span></span><span class="gp">julia&gt;</span> <span class="n">AlignedSequence</span><span class="p">(</span>  <span class="c"># pass an Alignment object</span>
 
-<span class="n">julia</span><span class="o">&gt;</span> <span class="n">AlignedSequence</span><span class="p">(</span>  <span class="c"># or pass a vector of anchors</span>
-           <span class="n">dna</span><span class="s">&quot;ACGTAT&quot;</span><span class="p">,</span>
-           <span class="p">[</span>
-               <span class="n">AlignmentAnchor</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="n">OP_START</span><span class="p">),</span>
-               <span class="n">AlignmentAnchor</span><span class="p">(</span><span class="mi">3</span><span class="p">,</span> <span class="mi">3</span><span class="p">,</span> <span class="n">OP_MATCH</span><span class="p">),</span>
-               <span class="n">AlignmentAnchor</span><span class="p">(</span><span class="mi">6</span><span class="p">,</span> <span class="mi">3</span><span class="p">,</span> <span class="n">OP_INSERT</span><span class="p">)</span>
-           <span class="p">]</span>
-       <span class="p">)</span>
-<span class="n">···</span><span class="o">---</span>
-<span class="n">ACGTAT</span>
+<span class="gt">           dna&quot;ACGTAT&quot;,</span>
+
+<span class="gt">           Alignment([</span>
+
+<span class="gt">               AlignmentAnchor(0, 0, OP_START),</span>
+
+<span class="gt">               AlignmentAnchor(3, 3, OP_MATCH),</span>
+
+<span class="gt">               AlignmentAnchor(6, 3, OP_INSERT)</span>
+
+<span class="gt">           ])</span>
+
+<span class="gt">       )</span>
+<span class="go">···---</span>
+<span class="go">ACGTAT</span>
+
+<span class="gp">julia&gt;</span> <span class="n">AlignedSequence</span><span class="p">(</span>  <span class="c"># or pass a vector of anchors</span>
+
+<span class="gt">           dna&quot;ACGTAT&quot;,</span>
+
+<span class="gt">           [</span>
+
+<span class="gt">               AlignmentAnchor(0, 0, OP_START),</span>
+
+<span class="gt">               AlignmentAnchor(3, 3, OP_MATCH),</span>
+
+<span class="gt">               AlignmentAnchor(6, 3, OP_INSERT)</span>
+
+<span class="gt">           ]</span>
+
+<span class="gt">       )</span>
+<span class="go">···---</span>
+<span class="go">ACGTAT</span>
 </pre></div>
 
 
 <p>If you already have an aligned sequence with gap symbols, it can be converted to an <code>AlignedSequence</code> object by passing a reference sequence with it:</p>
-<div class="codehilite"><pre><span></span><span class="n">julia</span><span class="o">&gt;</span> <span class="n">seq</span> <span class="o">=</span> <span class="n">dna</span><span class="s">&quot;ACGT--AAT--&quot;</span>
-<span class="mi">11</span><span class="n">nt</span> <span class="n">DNA</span> <span class="n">Sequence</span><span class="p">:</span>
-<span class="n">ACGT</span><span class="o">--</span><span class="n">AAT</span><span class="o">--</span>
+<div class="codehilite"><pre><span></span><span class="gp">julia&gt;</span> <span class="n">seq</span> <span class="o">=</span> <span class="n">dna</span><span class="s">&quot;ACGT--AAT--&quot;</span>
+<span class="go">11nt DNA Sequence:</span>
+<span class="go">ACGT--AAT--</span>
 
-<span class="n">julia</span><span class="o">&gt;</span> <span class="n">ref</span> <span class="o">=</span> <span class="n">dna</span><span class="s">&quot;ACGTTTAT-GG&quot;</span>
-<span class="mi">11</span><span class="n">nt</span> <span class="n">DNA</span> <span class="n">Sequence</span><span class="p">:</span>
-<span class="n">ACGTTTAT</span><span class="o">-</span><span class="n">GG</span>
+<span class="gp">julia&gt;</span> <span class="n">ref</span> <span class="o">=</span> <span class="n">dna</span><span class="s">&quot;ACGTTTAT-GG&quot;</span>
+<span class="go">11nt DNA Sequence:</span>
+<span class="go">ACGTTTAT-GG</span>
 
-<span class="n">julia</span><span class="o">&gt;</span> <span class="n">AlignedSequence</span><span class="p">(</span><span class="n">seq</span><span class="p">,</span> <span class="n">ref</span><span class="p">)</span>
-<span class="n">········</span><span class="o">-</span><span class="n">··</span>
-<span class="n">ACGT</span><span class="o">--</span><span class="n">AAT</span><span class="o">--</span>
+<span class="gp">julia&gt;</span> <span class="n">AlignedSequence</span><span class="p">(</span><span class="n">seq</span><span class="p">,</span> <span class="n">ref</span><span class="p">)</span>
+<span class="go">········-··</span>
+<span class="go">ACGT--AAT--</span>
 </pre></div>
 
 
@@ -559,27 +441,32 @@ Returns the end point of a <span class="na">:obj:</span><span class="nv">`Range`
 <h2 id="pairwise-alignment">Pairwise alignment</h2>
 <p>Pairwise alignment is a sequence alignment between two sequences.  The <code>Bio.Align</code> module implements several pairwise alignment methods that maximize alignment score or minimize alignment cost.</p>
 <p>A pair of optimization type and score (or cost) model determines the best alignments between two sequences. The next example uses a pair of <code>GlobalAlignment</code> and <code>AffineGapScoreModel</code> to obtain the best alignment:</p>
-<div class="codehilite"><pre><span></span><span class="n">julia</span><span class="o">&gt;</span> <span class="n">problem</span> <span class="o">=</span> <span class="n">GlobalAlignment</span><span class="p">()</span>
-<span class="n">Bio</span><span class="o">.</span><span class="n">Align</span><span class="o">.</span><span class="n">GlobalAlignment</span><span class="p">()</span>
+<div class="codehilite"><pre><span></span><span class="gp">julia&gt;</span> <span class="n">problem</span> <span class="o">=</span> <span class="n">GlobalAlignment</span><span class="p">()</span>
+<span class="go">Bio.Align.GlobalAlignment()</span>
 
-<span class="n">julia</span><span class="o">&gt;</span> <span class="n">scoremodel</span> <span class="o">=</span> <span class="n">AffineGapScoreModel</span><span class="p">(</span>
-                  <span class="n">match</span><span class="o">=</span><span class="mi">5</span><span class="p">,</span>
-                  <span class="n">mismatch</span><span class="o">=-</span><span class="mi">4</span><span class="p">,</span>
-                  <span class="n">gap_open</span><span class="o">=-</span><span class="mi">4</span><span class="p">,</span>
-                  <span class="n">gap_extend</span><span class="o">=-</span><span class="mi">1</span>
-              <span class="p">)</span>
-<span class="n">Bio</span><span class="o">.</span><span class="n">Align</span><span class="o">.</span><span class="n">AffineGapScoreModel</span><span class="p">{</span><span class="kt">Int64</span><span class="p">}:</span>
-       <span class="n">match</span> <span class="o">=</span> <span class="mi">5</span>
-    <span class="n">mismatch</span> <span class="o">=</span> <span class="o">-</span><span class="mi">4</span>
-    <span class="n">gap_open</span> <span class="o">=</span> <span class="o">-</span><span class="mi">4</span>
-  <span class="n">gap_extend</span> <span class="o">=</span> <span class="o">-</span><span class="mi">1</span>
+<span class="gp">julia&gt;</span> <span class="n">scoremodel</span> <span class="o">=</span> <span class="n">AffineGapScoreModel</span><span class="p">(</span>
 
-<span class="n">julia</span><span class="o">&gt;</span> <span class="n">pairalign</span><span class="p">(</span><span class="n">problem</span><span class="p">,</span> <span class="n">dna</span><span class="s">&quot;CGGATTA&quot;</span><span class="p">,</span> <span class="n">dna</span><span class="s">&quot;GGTTTAC&quot;</span><span class="p">,</span> <span class="n">scoremodel</span><span class="p">)</span>
-<span class="n">Bio</span><span class="o">.</span><span class="n">Align</span><span class="o">.</span><span class="n">PairwiseAlignmentResult</span><span class="p">{</span><span class="kt">Int64</span><span class="p">,</span><span class="n">Bio</span><span class="o">.</span><span class="n">Seq</span><span class="o">.</span><span class="n">BioSequence</span><span class="p">{</span><span class="n">Bio</span><span class="o">.</span><span class="n">Seq</span><span class="o">.</span><span class="n">DNAAlphabet</span><span class="p">{</span><span class="mi">4</span><span class="p">}},</span><span class="n">Bio</span><span class="o">.</span><span class="n">Seq</span><span class="o">.</span><span class="n">BioSequence</span><span class="p">{</span><span class="n">Bio</span><span class="o">.</span><span class="n">Seq</span><span class="o">.</span><span class="n">DNAAlphabet</span><span class="p">{</span><span class="mi">4</span><span class="p">}}}:</span>
-  <span class="n">score</span><span class="p">:</span> <span class="mi">11</span>
-  <span class="n">seq</span><span class="p">:</span> <span class="mi">1</span> <span class="n">CGGATTA</span><span class="o">-</span> <span class="mi">7</span>
-          <span class="o">||</span> <span class="o">|||</span>
-  <span class="n">ref</span><span class="p">:</span> <span class="mi">0</span> <span class="o">-</span><span class="n">GGTTTAC</span> <span class="mi">7</span>
+<span class="gt">                  match=5,</span>
+
+<span class="gt">                  mismatch=-4,</span>
+
+<span class="gt">                  gap_open=-4,</span>
+
+<span class="gt">                  gap_extend=-1</span>
+
+<span class="gt">              )</span>
+<span class="go">Bio.Align.AffineGapScoreModel{Int64}:</span>
+<span class="go">    mismatch = -4</span>
+<span class="go">    gap_open = -4</span>
+<span class="go">  gap_extend = -1</span>
+
+
+<span class="gt">       match = 5</span>
+<span class="gp">julia&gt;</span> <span class="n">pairalign</span><span class="p">(</span><span class="n">problem</span><span class="p">,</span> <span class="n">dna</span><span class="s">&quot;CGGATTA&quot;</span><span class="p">,</span> <span class="n">dna</span><span class="s">&quot;GGTTTAC&quot;</span><span class="p">,</span> <span class="n">scoremodel</span><span class="p">)</span>
+<span class="go">Bio.Align.PairwiseAlignmentResult{Int64,Bio.Seq.BioSequence{Bio.Seq.DNAAlphabet{4}},Bio.Seq.BioSequence{Bio.Seq.DNAAlphabet{4}}}:</span>
+<span class="go">  score: 11</span>
+<span class="go">  seq: 1 CGGATTA- 7</span>
+<span class="go">  ref: 0 -GGTTTAC 7</span>
 </pre></div>
 
 
@@ -598,14 +485,13 @@ Returns the end point of a <span class="na">:obj:</span><span class="nv">`Range`
 <li><code>HammingDistance</code></li>
 </ul>
 <p>In this alignment, <code>CostModel</code> is used instead of <code>AffineGapScoreModel</code> to define cost of substitution, insertion, and deletion:</p>
-<div class="codehilite"><pre><span></span><span class="n">julia</span><span class="o">&gt;</span> <span class="n">costmodel</span> <span class="o">=</span> <span class="n">CostModel</span><span class="p">(</span><span class="n">match</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">mismatch</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">insertion</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">deletion</span><span class="o">=</span><span class="mi">1</span><span class="p">);</span>
+<div class="codehilite"><pre><span></span><span class="gp">julia&gt;</span> <span class="n">costmodel</span> <span class="o">=</span> <span class="n">CostModel</span><span class="p">(</span><span class="n">match</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">mismatch</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">insertion</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">deletion</span><span class="o">=</span><span class="mi">1</span><span class="p">);</span>
 
-<span class="n">julia</span><span class="o">&gt;</span> <span class="n">pairalign</span><span class="p">(</span><span class="n">EditDistance</span><span class="p">(),</span> <span class="s">&quot;abcd&quot;</span><span class="p">,</span> <span class="s">&quot;adcde&quot;</span><span class="p">,</span> <span class="n">costmodel</span><span class="p">)</span>
-<span class="n">Bio</span><span class="o">.</span><span class="n">Align</span><span class="o">.</span><span class="n">PairwiseAlignmentResult</span><span class="p">{</span><span class="kt">Int64</span><span class="p">,</span><span class="n">ASCIIString</span><span class="p">,</span><span class="n">ASCIIString</span><span class="p">}:</span>
-  <span class="n">distance</span><span class="p">:</span> <span class="mi">2</span>
-  <span class="n">seq</span><span class="p">:</span> <span class="mi">1</span> <span class="n">abcd</span><span class="o">-</span> <span class="mi">4</span>
-         <span class="o">|</span> <span class="o">||</span>
-  <span class="n">ref</span><span class="p">:</span> <span class="mi">1</span> <span class="n">adcde</span> <span class="mi">5</span>
+<span class="gp">julia&gt;</span> <span class="n">pairalign</span><span class="p">(</span><span class="n">EditDistance</span><span class="p">(),</span> <span class="s">&quot;abcd&quot;</span><span class="p">,</span> <span class="s">&quot;adcde&quot;</span><span class="p">,</span> <span class="n">costmodel</span><span class="p">)</span>
+<span class="go">Bio.Align.PairwiseAlignmentResult{Int64,ASCIIString,ASCIIString}:</span>
+<span class="go">  distance: 2</span>
+<span class="go">  seq: 1 abcd- 4</span>
+<span class="go">  ref: 1 adcde 5</span>
 </pre></div>
 
 
@@ -678,72 +564,74 @@ Returns the end point of a <span class="na">:obj:</span><span class="nv">`Range`
 
 <p>Count the number of aligned positions.</p>
 <p>The example below shows a use case of these operations:</p>
-<div class="codehilite"><pre><span></span><span class="n">julia</span><span class="o">&gt;</span> <span class="n">s1</span> <span class="o">=</span> <span class="n">dna</span><span class="s">&quot;CCTAGGAGGG&quot;</span><span class="p">;</span>
+<div class="codehilite"><pre><span></span><span class="gp">julia&gt;</span> <span class="n">s1</span> <span class="o">=</span> <span class="n">dna</span><span class="s">&quot;CCTAGGAGGG&quot;</span><span class="p">;</span>
 
-<span class="n">julia</span><span class="o">&gt;</span> <span class="n">s2</span> <span class="o">=</span> <span class="n">dna</span><span class="s">&quot;ACCTGGTATGATAGCG&quot;</span><span class="p">;</span>
+<span class="gp">julia&gt;</span> <span class="n">s2</span> <span class="o">=</span> <span class="n">dna</span><span class="s">&quot;ACCTGGTATGATAGCG&quot;</span><span class="p">;</span>
 
-<span class="n">julia</span><span class="o">&gt;</span> <span class="n">scoremodel</span> <span class="o">=</span> <span class="n">AffineGapScoreModel</span><span class="p">(</span><span class="n">EDNAFULL</span><span class="p">,</span> <span class="n">gap_open</span><span class="o">=-</span><span class="mi">5</span><span class="p">,</span> <span class="n">gap_extend</span><span class="o">=-</span><span class="mi">1</span><span class="p">);</span>
+<span class="gp">julia&gt;</span> <span class="n">scoremodel</span> <span class="o">=</span> <span class="n">AffineGapScoreModel</span><span class="p">(</span><span class="n">EDNAFULL</span><span class="p">,</span> <span class="n">gap_open</span><span class="o">=-</span><span class="mi">5</span><span class="p">,</span> <span class="n">gap_extend</span><span class="o">=-</span><span class="mi">1</span><span class="p">);</span>
 
-<span class="n">julia</span><span class="o">&gt;</span> <span class="n">res</span> <span class="o">=</span> <span class="n">pairalign</span><span class="p">(</span><span class="n">GlobalAlignment</span><span class="p">(),</span> <span class="n">s1</span><span class="p">,</span> <span class="n">s2</span><span class="p">,</span> <span class="n">scoremodel</span><span class="p">)</span>  <span class="c"># run pairwise alignment</span>
-<span class="n">Bio</span><span class="o">.</span><span class="n">Align</span><span class="o">.</span><span class="n">PairwiseAlignmentResult</span><span class="p">{</span><span class="kt">Int64</span><span class="p">,</span><span class="n">Bio</span><span class="o">.</span><span class="n">Seq</span><span class="o">.</span><span class="n">BioSequence</span><span class="p">{</span><span class="n">Bio</span><span class="o">.</span><span class="n">Seq</span><span class="o">.</span><span class="n">DNAAlphabet</span><span class="p">{</span><span class="mi">4</span><span class="p">}},</span><span class="n">Bio</span><span class="o">.</span><span class="n">Seq</span><span class="o">.</span><span class="n">BioSequence</span><span class="p">{</span><span class="n">Bio</span><span class="o">.</span><span class="n">Seq</span><span class="o">.</span><span class="n">DNAAlphabet</span><span class="p">{</span><span class="mi">4</span><span class="p">}}}:</span>
-  <span class="n">score</span><span class="p">:</span> <span class="mi">13</span>
-  <span class="n">seq</span><span class="p">:</span>  <span class="mi">0</span> <span class="o">-</span><span class="n">CCTAGG</span><span class="o">------</span><span class="n">AGGG</span> <span class="mi">10</span>
-           <span class="o">|||</span> <span class="o">||</span>      <span class="o">||</span> <span class="o">|</span>
-  <span class="n">ref</span><span class="p">:</span>  <span class="mi">1</span> <span class="n">ACCT</span><span class="o">-</span><span class="n">GGTATGATAGCG</span> <span class="mi">16</span>
-
-
-<span class="n">julia</span><span class="o">&gt;</span> <span class="n">score</span><span class="p">(</span><span class="n">res</span><span class="p">)</span>  <span class="c"># get the achieved score of this alignment</span>
-<span class="mi">13</span>
-
-<span class="n">julia</span><span class="o">&gt;</span> <span class="n">aln</span> <span class="o">=</span> <span class="n">alignment</span><span class="p">(</span><span class="n">res</span><span class="p">)</span>
-<span class="n">PairwiseAlignment</span><span class="p">{</span><span class="n">Bio</span><span class="o">.</span><span class="n">Seq</span><span class="o">.</span><span class="n">BioSequence</span><span class="p">{</span><span class="n">Bio</span><span class="o">.</span><span class="n">Seq</span><span class="o">.</span><span class="n">DNAAlphabet</span><span class="p">{</span><span class="mi">4</span><span class="p">}},</span><span class="n">Bio</span><span class="o">.</span><span class="n">Seq</span><span class="o">.</span><span class="n">BioSequence</span><span class="p">{</span><span class="n">Bio</span><span class="o">.</span><span class="n">Seq</span><span class="o">.</span><span class="n">DNAAlphabet</span><span class="p">{</span><span class="mi">4</span><span class="p">}}}:</span>
-  <span class="n">seq</span><span class="p">:</span>  <span class="mi">0</span> <span class="o">-</span><span class="n">CCTAGG</span><span class="o">------</span><span class="n">AGGG</span> <span class="mi">10</span>
-           <span class="o">|||</span> <span class="o">||</span>      <span class="o">||</span> <span class="o">|</span>
-  <span class="n">ref</span><span class="p">:</span>  <span class="mi">1</span> <span class="n">ACCT</span><span class="o">-</span><span class="n">GGTATGATAGCG</span> <span class="mi">16</span>
+<span class="gp">julia&gt;</span> <span class="n">res</span> <span class="o">=</span> <span class="n">pairalign</span><span class="p">(</span><span class="n">GlobalAlignment</span><span class="p">(),</span> <span class="n">s1</span><span class="p">,</span> <span class="n">s2</span><span class="p">,</span> <span class="n">scoremodel</span><span class="p">)</span>  <span class="c"># run pairwise alignment</span>
+<span class="go">Bio.Align.PairwiseAlignmentResult{Int64,Bio.Seq.BioSequence{Bio.Seq.DNAAlphabet{4}},Bio.Seq.BioSequence{Bio.Seq.DNAAlphabet{4}}}:</span>
+<span class="go">  score: 13</span>
+<span class="go">  seq:  0 -CCTAGG------AGGG 10</span>
+<span class="go">  ref:  1 ACCT-GGTATGATAGCG 16</span>
 
 
-<span class="n">julia</span><span class="o">&gt;</span> <span class="n">count_matches</span><span class="p">(</span><span class="n">aln</span><span class="p">)</span>
-<span class="mi">8</span>
 
-<span class="n">julia</span><span class="o">&gt;</span> <span class="n">count_mismatches</span><span class="p">(</span><span class="n">aln</span><span class="p">)</span>
-<span class="mi">1</span>
+<span class="gt">           ||| ||      || |</span>
+<span class="gp">julia&gt;</span> <span class="n">score</span><span class="p">(</span><span class="n">res</span><span class="p">)</span>  <span class="c"># get the achieved score of this alignment</span>
+<span class="go">13</span>
 
-<span class="n">julia</span><span class="o">&gt;</span> <span class="n">count_insertions</span><span class="p">(</span><span class="n">aln</span><span class="p">)</span>
-<span class="mi">1</span>
+<span class="gp">julia&gt;</span> <span class="n">aln</span> <span class="o">=</span> <span class="n">alignment</span><span class="p">(</span><span class="n">res</span><span class="p">)</span>
+<span class="go">PairwiseAlignment{Bio.Seq.BioSequence{Bio.Seq.DNAAlphabet{4}},Bio.Seq.BioSequence{Bio.Seq.DNAAlphabet{4}}}:</span>
+<span class="go">  seq:  0 -CCTAGG------AGGG 10</span>
+<span class="go">  ref:  1 ACCT-GGTATGATAGCG 16</span>
 
-<span class="n">julia</span><span class="o">&gt;</span> <span class="n">count_deletions</span><span class="p">(</span><span class="n">aln</span><span class="p">)</span>
-<span class="mi">7</span>
 
-<span class="n">julia</span><span class="o">&gt;</span> <span class="n">count_aligned</span><span class="p">(</span><span class="n">aln</span><span class="p">)</span>
-<span class="mi">17</span>
 
-<span class="n">julia</span><span class="o">&gt;</span> <span class="n">collect</span><span class="p">(</span><span class="n">aln</span><span class="p">)</span>  <span class="c"># pairwise alignment is iterable</span>
-<span class="mi">17</span><span class="o">-</span><span class="n">element</span> <span class="n">Array</span><span class="p">{</span><span class="n">Tuple</span><span class="p">{</span><span class="n">Bio</span><span class="o">.</span><span class="n">Seq</span><span class="o">.</span><span class="n">DNANucleotide</span><span class="p">,</span><span class="n">Bio</span><span class="o">.</span><span class="n">Seq</span><span class="o">.</span><span class="n">DNANucleotide</span><span class="p">},</span><span class="mi">1</span><span class="p">}:</span>
- <span class="p">(</span><span class="o">-</span><span class="p">,</span><span class="n">A</span><span class="p">)</span>
- <span class="p">(</span><span class="n">C</span><span class="p">,</span><span class="n">C</span><span class="p">)</span>
- <span class="p">(</span><span class="n">C</span><span class="p">,</span><span class="n">C</span><span class="p">)</span>
- <span class="p">(</span><span class="n">T</span><span class="p">,</span><span class="n">T</span><span class="p">)</span>
- <span class="p">(</span><span class="n">A</span><span class="p">,</span><span class="o">-</span><span class="p">)</span>
- <span class="p">(</span><span class="n">G</span><span class="p">,</span><span class="n">G</span><span class="p">)</span>
- <span class="p">(</span><span class="n">G</span><span class="p">,</span><span class="n">G</span><span class="p">)</span>
- <span class="p">(</span><span class="o">-</span><span class="p">,</span><span class="n">T</span><span class="p">)</span>
- <span class="p">(</span><span class="o">-</span><span class="p">,</span><span class="n">A</span><span class="p">)</span>
- <span class="p">(</span><span class="o">-</span><span class="p">,</span><span class="n">T</span><span class="p">)</span>
- <span class="p">(</span><span class="o">-</span><span class="p">,</span><span class="n">G</span><span class="p">)</span>
- <span class="p">(</span><span class="o">-</span><span class="p">,</span><span class="n">A</span><span class="p">)</span>
- <span class="p">(</span><span class="o">-</span><span class="p">,</span><span class="n">T</span><span class="p">)</span>
- <span class="p">(</span><span class="n">A</span><span class="p">,</span><span class="n">A</span><span class="p">)</span>
- <span class="p">(</span><span class="n">G</span><span class="p">,</span><span class="n">G</span><span class="p">)</span>
- <span class="p">(</span><span class="n">G</span><span class="p">,</span><span class="n">C</span><span class="p">)</span>
- <span class="p">(</span><span class="n">G</span><span class="p">,</span><span class="n">G</span><span class="p">)</span>
+<span class="gt">           ||| ||      || |</span>
+<span class="gp">julia&gt;</span> <span class="n">count_matches</span><span class="p">(</span><span class="n">aln</span><span class="p">)</span>
+<span class="go">8</span>
 
-<span class="n">julia</span><span class="o">&gt;</span> <span class="n">DNASequence</span><span class="p">([</span><span class="n">x</span> <span class="k">for</span> <span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">_</span><span class="p">)</span> <span class="k">in</span> <span class="n">aln</span><span class="p">])</span>  <span class="c"># create aligned `s1` with gaps</span>
-<span class="mi">17</span><span class="n">nt</span> <span class="n">DNA</span> <span class="n">Sequence</span><span class="p">:</span>
-<span class="o">-</span><span class="n">CCTAGG</span><span class="o">------</span><span class="n">AGGG</span>
+<span class="gp">julia&gt;</span> <span class="n">count_mismatches</span><span class="p">(</span><span class="n">aln</span><span class="p">)</span>
+<span class="go">1</span>
 
-<span class="n">julia</span><span class="o">&gt;</span> <span class="n">DNASequence</span><span class="p">([</span><span class="n">y</span> <span class="k">for</span> <span class="p">(</span><span class="n">_</span><span class="p">,</span> <span class="n">y</span><span class="p">)</span> <span class="k">in</span> <span class="n">aln</span><span class="p">])</span>  <span class="c"># create aligned `s2` with gaps</span>
-<span class="mi">17</span><span class="n">nt</span> <span class="n">DNA</span> <span class="n">Sequence</span><span class="p">:</span>
-<span class="n">ACCT</span><span class="o">-</span><span class="n">GGTATGATAGCG</span>
+<span class="gp">julia&gt;</span> <span class="n">count_insertions</span><span class="p">(</span><span class="n">aln</span><span class="p">)</span>
+<span class="go">1</span>
+
+<span class="gp">julia&gt;</span> <span class="n">count_deletions</span><span class="p">(</span><span class="n">aln</span><span class="p">)</span>
+<span class="go">7</span>
+
+<span class="gp">julia&gt;</span> <span class="n">count_aligned</span><span class="p">(</span><span class="n">aln</span><span class="p">)</span>
+<span class="go">17</span>
+
+<span class="gp">julia&gt;</span> <span class="n">collect</span><span class="p">(</span><span class="n">aln</span><span class="p">)</span>  <span class="c"># pairwise alignment is iterable</span>
+<span class="go">17-element Array{Tuple{Bio.Seq.DNANucleotide,Bio.Seq.DNANucleotide},1}:</span>
+<span class="go"> (-,A)</span>
+<span class="go"> (C,C)</span>
+<span class="go"> (C,C)</span>
+<span class="go"> (T,T)</span>
+<span class="go"> (A,-)</span>
+<span class="go"> (G,G)</span>
+<span class="go"> (G,G)</span>
+<span class="go"> (-,T)</span>
+<span class="go"> (-,A)</span>
+<span class="go"> (-,T)</span>
+<span class="go"> (-,G)</span>
+<span class="go"> (-,A)</span>
+<span class="go"> (-,T)</span>
+<span class="go"> (A,A)</span>
+<span class="go"> (G,G)</span>
+<span class="go"> (G,C)</span>
+<span class="go"> (G,G)</span>
+
+<span class="gp">julia&gt;</span> <span class="n">DNASequence</span><span class="p">([</span><span class="n">x</span> <span class="k">for</span> <span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">_</span><span class="p">)</span> <span class="k">in</span> <span class="n">aln</span><span class="p">])</span>  <span class="c"># create aligned `s1` with gaps</span>
+<span class="go">17nt DNA Sequence:</span>
+<span class="go">-CCTAGG------AGGG</span>
+
+<span class="gp">julia&gt;</span> <span class="n">DNASequence</span><span class="p">([</span><span class="n">y</span> <span class="k">for</span> <span class="p">(</span><span class="n">_</span><span class="p">,</span> <span class="n">y</span><span class="p">)</span> <span class="k">in</span> <span class="n">aln</span><span class="p">])</span>  <span class="c"># create aligned `s2` with gaps</span>
+<span class="go">17nt DNA Sequence:</span>
+<span class="go">ACCT-GGTATGATAGCG</span>
 </pre></div>
 
 
@@ -752,60 +640,60 @@ Returns the end point of a <span class="na">:obj:</span><span class="nv">`Range`
 <p>A substitution matrix is a function of substitution score (or cost) from one symbol to other. Substitution value of <code>submat</code> from <code>x</code> to <code>y</code> can be obtained by writing <code>submat[x,y]</code>. In <code>Bio.Align</code>, <code>SubstitutionMatrix</code> and <code>DichotomousSubstitutionMatrix</code> are two distinct types representing substitution matrices.</p>
 <p><code>SubstitutionMatrix</code> is a general substitution matrix type that is a thin wrapper of regular matrix.</p>
 <p>Some common substitution matrices are provided. For DNA and RNA, <code>EDNAFULL</code> is defined:</p>
-<div class="codehilite"><pre><span></span><span class="n">julia</span><span class="o">&gt;</span> <span class="n">EDNAFULL</span>
-<span class="n">Bio</span><span class="o">.</span><span class="n">Align</span><span class="o">.</span><span class="n">SubstitutionMatrix</span><span class="p">{</span><span class="n">Bio</span><span class="o">.</span><span class="n">Seq</span><span class="o">.</span><span class="n">DNANucleotide</span><span class="p">,</span><span class="kt">Int64</span><span class="p">}:</span>
-     <span class="n">A</span>  <span class="n">C</span>  <span class="n">G</span>  <span class="n">T</span>  <span class="n">M</span>  <span class="n">R</span>  <span class="n">W</span>  <span class="n">S</span>  <span class="n">Y</span>  <span class="n">K</span>  <span class="n">V</span>  <span class="n">H</span>  <span class="n">D</span>  <span class="n">B</span>  <span class="n">N</span>
-  <span class="n">A</span>  <span class="mi">5</span> <span class="o">-</span><span class="mi">4</span> <span class="o">-</span><span class="mi">4</span> <span class="o">-</span><span class="mi">4</span>  <span class="mi">1</span>  <span class="mi">1</span>  <span class="mi">1</span> <span class="o">-</span><span class="mi">4</span> <span class="o">-</span><span class="mi">4</span> <span class="o">-</span><span class="mi">4</span> <span class="o">-</span><span class="mi">1</span> <span class="o">-</span><span class="mi">1</span> <span class="o">-</span><span class="mi">1</span> <span class="o">-</span><span class="mi">4</span> <span class="o">-</span><span class="mi">2</span>
-  <span class="n">C</span> <span class="o">-</span><span class="mi">4</span>  <span class="mi">5</span> <span class="o">-</span><span class="mi">4</span> <span class="o">-</span><span class="mi">4</span>  <span class="mi">1</span> <span class="o">-</span><span class="mi">4</span> <span class="o">-</span><span class="mi">4</span>  <span class="mi">1</span>  <span class="mi">1</span> <span class="o">-</span><span class="mi">4</span> <span class="o">-</span><span class="mi">1</span> <span class="o">-</span><span class="mi">1</span> <span class="o">-</span><span class="mi">4</span> <span class="o">-</span><span class="mi">1</span> <span class="o">-</span><span class="mi">2</span>
-  <span class="n">G</span> <span class="o">-</span><span class="mi">4</span> <span class="o">-</span><span class="mi">4</span>  <span class="mi">5</span> <span class="o">-</span><span class="mi">4</span> <span class="o">-</span><span class="mi">4</span>  <span class="mi">1</span> <span class="o">-</span><span class="mi">4</span>  <span class="mi">1</span> <span class="o">-</span><span class="mi">4</span>  <span class="mi">1</span> <span class="o">-</span><span class="mi">1</span> <span class="o">-</span><span class="mi">4</span> <span class="o">-</span><span class="mi">1</span> <span class="o">-</span><span class="mi">1</span> <span class="o">-</span><span class="mi">2</span>
-  <span class="n">T</span> <span class="o">-</span><span class="mi">4</span> <span class="o">-</span><span class="mi">4</span> <span class="o">-</span><span class="mi">4</span>  <span class="mi">5</span> <span class="o">-</span><span class="mi">4</span> <span class="o">-</span><span class="mi">4</span>  <span class="mi">1</span> <span class="o">-</span><span class="mi">4</span>  <span class="mi">1</span>  <span class="mi">1</span> <span class="o">-</span><span class="mi">4</span> <span class="o">-</span><span class="mi">1</span> <span class="o">-</span><span class="mi">1</span> <span class="o">-</span><span class="mi">1</span> <span class="o">-</span><span class="mi">2</span>
-  <span class="n">M</span>  <span class="mi">1</span>  <span class="mi">1</span> <span class="o">-</span><span class="mi">4</span> <span class="o">-</span><span class="mi">4</span> <span class="o">-</span><span class="mi">1</span> <span class="o">-</span><span class="mi">2</span> <span class="o">-</span><span class="mi">2</span> <span class="o">-</span><span class="mi">2</span> <span class="o">-</span><span class="mi">2</span> <span class="o">-</span><span class="mi">4</span> <span class="o">-</span><span class="mi">1</span> <span class="o">-</span><span class="mi">1</span> <span class="o">-</span><span class="mi">3</span> <span class="o">-</span><span class="mi">3</span> <span class="o">-</span><span class="mi">1</span>
-  <span class="n">R</span>  <span class="mi">1</span> <span class="o">-</span><span class="mi">4</span>  <span class="mi">1</span> <span class="o">-</span><span class="mi">4</span> <span class="o">-</span><span class="mi">2</span> <span class="o">-</span><span class="mi">1</span> <span class="o">-</span><span class="mi">2</span> <span class="o">-</span><span class="mi">2</span> <span class="o">-</span><span class="mi">4</span> <span class="o">-</span><span class="mi">2</span> <span class="o">-</span><span class="mi">1</span> <span class="o">-</span><span class="mi">3</span> <span class="o">-</span><span class="mi">1</span> <span class="o">-</span><span class="mi">3</span> <span class="o">-</span><span class="mi">1</span>
-  <span class="n">W</span>  <span class="mi">1</span> <span class="o">-</span><span class="mi">4</span> <span class="o">-</span><span class="mi">4</span>  <span class="mi">1</span> <span class="o">-</span><span class="mi">2</span> <span class="o">-</span><span class="mi">2</span> <span class="o">-</span><span class="mi">1</span> <span class="o">-</span><span class="mi">4</span> <span class="o">-</span><span class="mi">2</span> <span class="o">-</span><span class="mi">2</span> <span class="o">-</span><span class="mi">3</span> <span class="o">-</span><span class="mi">1</span> <span class="o">-</span><span class="mi">1</span> <span class="o">-</span><span class="mi">3</span> <span class="o">-</span><span class="mi">1</span>
-  <span class="n">S</span> <span class="o">-</span><span class="mi">4</span>  <span class="mi">1</span>  <span class="mi">1</span> <span class="o">-</span><span class="mi">4</span> <span class="o">-</span><span class="mi">2</span> <span class="o">-</span><span class="mi">2</span> <span class="o">-</span><span class="mi">4</span> <span class="o">-</span><span class="mi">1</span> <span class="o">-</span><span class="mi">2</span> <span class="o">-</span><span class="mi">2</span> <span class="o">-</span><span class="mi">1</span> <span class="o">-</span><span class="mi">3</span> <span class="o">-</span><span class="mi">3</span> <span class="o">-</span><span class="mi">1</span> <span class="o">-</span><span class="mi">1</span>
-  <span class="n">Y</span> <span class="o">-</span><span class="mi">4</span>  <span class="mi">1</span> <span class="o">-</span><span class="mi">4</span>  <span class="mi">1</span> <span class="o">-</span><span class="mi">2</span> <span class="o">-</span><span class="mi">4</span> <span class="o">-</span><span class="mi">2</span> <span class="o">-</span><span class="mi">2</span> <span class="o">-</span><span class="mi">1</span> <span class="o">-</span><span class="mi">2</span> <span class="o">-</span><span class="mi">3</span> <span class="o">-</span><span class="mi">1</span> <span class="o">-</span><span class="mi">3</span> <span class="o">-</span><span class="mi">1</span> <span class="o">-</span><span class="mi">1</span>
-  <span class="n">K</span> <span class="o">-</span><span class="mi">4</span> <span class="o">-</span><span class="mi">4</span>  <span class="mi">1</span>  <span class="mi">1</span> <span class="o">-</span><span class="mi">4</span> <span class="o">-</span><span class="mi">2</span> <span class="o">-</span><span class="mi">2</span> <span class="o">-</span><span class="mi">2</span> <span class="o">-</span><span class="mi">2</span> <span class="o">-</span><span class="mi">1</span> <span class="o">-</span><span class="mi">3</span> <span class="o">-</span><span class="mi">3</span> <span class="o">-</span><span class="mi">1</span> <span class="o">-</span><span class="mi">1</span> <span class="o">-</span><span class="mi">1</span>
-  <span class="n">V</span> <span class="o">-</span><span class="mi">1</span> <span class="o">-</span><span class="mi">1</span> <span class="o">-</span><span class="mi">1</span> <span class="o">-</span><span class="mi">4</span> <span class="o">-</span><span class="mi">1</span> <span class="o">-</span><span class="mi">1</span> <span class="o">-</span><span class="mi">3</span> <span class="o">-</span><span class="mi">1</span> <span class="o">-</span><span class="mi">3</span> <span class="o">-</span><span class="mi">3</span> <span class="o">-</span><span class="mi">1</span> <span class="o">-</span><span class="mi">2</span> <span class="o">-</span><span class="mi">2</span> <span class="o">-</span><span class="mi">2</span> <span class="o">-</span><span class="mi">1</span>
-  <span class="n">H</span> <span class="o">-</span><span class="mi">1</span> <span class="o">-</span><span class="mi">1</span> <span class="o">-</span><span class="mi">4</span> <span class="o">-</span><span class="mi">1</span> <span class="o">-</span><span class="mi">1</span> <span class="o">-</span><span class="mi">3</span> <span class="o">-</span><span class="mi">1</span> <span class="o">-</span><span class="mi">3</span> <span class="o">-</span><span class="mi">1</span> <span class="o">-</span><span class="mi">3</span> <span class="o">-</span><span class="mi">2</span> <span class="o">-</span><span class="mi">1</span> <span class="o">-</span><span class="mi">2</span> <span class="o">-</span><span class="mi">2</span> <span class="o">-</span><span class="mi">1</span>
-  <span class="n">D</span> <span class="o">-</span><span class="mi">1</span> <span class="o">-</span><span class="mi">4</span> <span class="o">-</span><span class="mi">1</span> <span class="o">-</span><span class="mi">1</span> <span class="o">-</span><span class="mi">3</span> <span class="o">-</span><span class="mi">1</span> <span class="o">-</span><span class="mi">1</span> <span class="o">-</span><span class="mi">3</span> <span class="o">-</span><span class="mi">3</span> <span class="o">-</span><span class="mi">1</span> <span class="o">-</span><span class="mi">2</span> <span class="o">-</span><span class="mi">2</span> <span class="o">-</span><span class="mi">1</span> <span class="o">-</span><span class="mi">2</span> <span class="o">-</span><span class="mi">1</span>
-  <span class="n">B</span> <span class="o">-</span><span class="mi">4</span> <span class="o">-</span><span class="mi">1</span> <span class="o">-</span><span class="mi">1</span> <span class="o">-</span><span class="mi">1</span> <span class="o">-</span><span class="mi">3</span> <span class="o">-</span><span class="mi">3</span> <span class="o">-</span><span class="mi">3</span> <span class="o">-</span><span class="mi">1</span> <span class="o">-</span><span class="mi">1</span> <span class="o">-</span><span class="mi">1</span> <span class="o">-</span><span class="mi">2</span> <span class="o">-</span><span class="mi">2</span> <span class="o">-</span><span class="mi">2</span> <span class="o">-</span><span class="mi">1</span> <span class="o">-</span><span class="mi">1</span>
-  <span class="n">N</span> <span class="o">-</span><span class="mi">2</span> <span class="o">-</span><span class="mi">2</span> <span class="o">-</span><span class="mi">2</span> <span class="o">-</span><span class="mi">2</span> <span class="o">-</span><span class="mi">1</span> <span class="o">-</span><span class="mi">1</span> <span class="o">-</span><span class="mi">1</span> <span class="o">-</span><span class="mi">1</span> <span class="o">-</span><span class="mi">1</span> <span class="o">-</span><span class="mi">1</span> <span class="o">-</span><span class="mi">1</span> <span class="o">-</span><span class="mi">1</span> <span class="o">-</span><span class="mi">1</span> <span class="o">-</span><span class="mi">1</span> <span class="o">-</span><span class="mi">1</span>
-<span class="p">(</span><span class="n">underlined</span> <span class="n">values</span> <span class="n">are</span> <span class="n">default</span> <span class="n">ones</span><span class="p">)</span>
+<div class="codehilite"><pre><span></span><span class="gp">julia&gt;</span> <span class="n">EDNAFULL</span>
+<span class="go">Bio.Align.SubstitutionMatrix{Bio.Seq.DNANucleotide,Int64}:</span>
+<span class="go">     A  C  G  T  M  R  W  S  Y  K  V  H  D  B  N</span>
+<span class="go">  A  5 -4 -4 -4  1  1  1 -4 -4 -4 -1 -1 -1 -4 -2</span>
+<span class="go">  C -4  5 -4 -4  1 -4 -4  1  1 -4 -1 -1 -4 -1 -2</span>
+<span class="go">  G -4 -4  5 -4 -4  1 -4  1 -4  1 -1 -4 -1 -1 -2</span>
+<span class="go">  T -4 -4 -4  5 -4 -4  1 -4  1  1 -4 -1 -1 -1 -2</span>
+<span class="go">  M  1  1 -4 -4 -1 -2 -2 -2 -2 -4 -1 -1 -3 -3 -1</span>
+<span class="go">  R  1 -4  1 -4 -2 -1 -2 -2 -4 -2 -1 -3 -1 -3 -1</span>
+<span class="go">  W  1 -4 -4  1 -2 -2 -1 -4 -2 -2 -3 -1 -1 -3 -1</span>
+<span class="go">  S -4  1  1 -4 -2 -2 -4 -1 -2 -2 -1 -3 -3 -1 -1</span>
+<span class="go">  Y -4  1 -4  1 -2 -4 -2 -2 -1 -2 -3 -1 -3 -1 -1</span>
+<span class="go">  K -4 -4  1  1 -4 -2 -2 -2 -2 -1 -3 -3 -1 -1 -1</span>
+<span class="go">  V -1 -1 -1 -4 -1 -1 -3 -1 -3 -3 -1 -2 -2 -2 -1</span>
+<span class="go">  H -1 -1 -4 -1 -1 -3 -1 -3 -1 -3 -2 -1 -2 -2 -1</span>
+<span class="go">  D -1 -4 -1 -1 -3 -1 -1 -3 -3 -1 -2 -2 -1 -2 -1</span>
+<span class="go">  B -4 -1 -1 -1 -3 -3 -3 -1 -1 -1 -2 -2 -2 -1 -1</span>
+<span class="go">  N -2 -2 -2 -2 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1</span>
+<span class="go">(underlined values are default ones)</span>
 </pre></div>
 
 
 <p>For amino acids, PAM (Point Accepted Mutation) and BLOSUM (BLOcks SUbstitution Matrix) matrices are defined:</p>
-<div class="codehilite"><pre><span></span><span class="n">julia</span><span class="o">&gt;</span> <span class="n">BLOSUM62</span>
-<span class="n">Bio</span><span class="o">.</span><span class="n">Align</span><span class="o">.</span><span class="n">SubstitutionMatrix</span><span class="p">{</span><span class="n">Bio</span><span class="o">.</span><span class="n">Seq</span><span class="o">.</span><span class="n">AminoAcid</span><span class="p">,</span><span class="kt">Int64</span><span class="p">}:</span>
-     <span class="n">A</span>  <span class="n">R</span>  <span class="n">N</span>  <span class="n">D</span>  <span class="n">C</span>  <span class="n">Q</span>  <span class="n">E</span>  <span class="n">G</span>  <span class="n">H</span>  <span class="n">I</span>  <span class="n">L</span>  <span class="n">K</span>  <span class="n">M</span>  <span class="n">F</span>  <span class="n">P</span>  <span class="n">S</span>  <span class="n">T</span>  <span class="n">W</span>  <span class="n">Y</span>  <span class="n">V</span>  <span class="n">O</span>  <span class="n">U</span>  <span class="n">B</span>  <span class="n">J</span>  <span class="n">Z</span>  <span class="n">X</span>  <span class="o">*</span>
-  <span class="n">A</span>  <span class="mi">4</span> <span class="o">-</span><span class="mi">1</span> <span class="o">-</span><span class="mi">2</span> <span class="o">-</span><span class="mi">2</span>  <span class="mi">0</span> <span class="o">-</span><span class="mi">1</span> <span class="o">-</span><span class="mi">1</span>  <span class="mi">0</span> <span class="o">-</span><span class="mi">2</span> <span class="o">-</span><span class="mi">1</span> <span class="o">-</span><span class="mi">1</span> <span class="o">-</span><span class="mi">1</span> <span class="o">-</span><span class="mi">1</span> <span class="o">-</span><span class="mi">2</span> <span class="o">-</span><span class="mi">1</span>  <span class="mi">1</span>  <span class="mi">0</span> <span class="o">-</span><span class="mi">3</span> <span class="o">-</span><span class="mi">2</span>  <span class="mi">0</span>  <span class="mi">0</span><span class="n">̲</span>  <span class="mi">0</span><span class="n">̲</span> <span class="o">-</span><span class="mi">2</span>  <span class="mi">0</span><span class="n">̲</span> <span class="o">-</span><span class="mi">1</span>  <span class="mi">0</span> <span class="o">-</span><span class="mi">4</span>
-  <span class="n">R</span> <span class="o">-</span><span class="mi">1</span>  <span class="mi">5</span>  <span class="mi">0</span> <span class="o">-</span><span class="mi">2</span> <span class="o">-</span><span class="mi">3</span>  <span class="mi">1</span>  <span class="mi">0</span> <span class="o">-</span><span class="mi">2</span>  <span class="mi">0</span> <span class="o">-</span><span class="mi">3</span> <span class="o">-</span><span class="mi">2</span>  <span class="mi">2</span> <span class="o">-</span><span class="mi">1</span> <span class="o">-</span><span class="mi">3</span> <span class="o">-</span><span class="mi">2</span> <span class="o">-</span><span class="mi">1</span> <span class="o">-</span><span class="mi">1</span> <span class="o">-</span><span class="mi">3</span> <span class="o">-</span><span class="mi">2</span> <span class="o">-</span><span class="mi">3</span>  <span class="mi">0</span><span class="n">̲</span>  <span class="mi">0</span><span class="n">̲</span> <span class="o">-</span><span class="mi">1</span>  <span class="mi">0</span><span class="n">̲</span>  <span class="mi">0</span> <span class="o">-</span><span class="mi">1</span> <span class="o">-</span><span class="mi">4</span>
-  <span class="n">N</span> <span class="o">-</span><span class="mi">2</span>  <span class="mi">0</span>  <span class="mi">6</span>  <span class="mi">1</span> <span class="o">-</span><span class="mi">3</span>  <span class="mi">0</span>  <span class="mi">0</span>  <span class="mi">0</span>  <span class="mi">1</span> <span class="o">-</span><span class="mi">3</span> <span class="o">-</span><span class="mi">3</span>  <span class="mi">0</span> <span class="o">-</span><span class="mi">2</span> <span class="o">-</span><span class="mi">3</span> <span class="o">-</span><span class="mi">2</span>  <span class="mi">1</span>  <span class="mi">0</span> <span class="o">-</span><span class="mi">4</span> <span class="o">-</span><span class="mi">2</span> <span class="o">-</span><span class="mi">3</span>  <span class="mi">0</span><span class="n">̲</span>  <span class="mi">0</span><span class="n">̲</span>  <span class="mi">3</span>  <span class="mi">0</span><span class="n">̲</span>  <span class="mi">0</span> <span class="o">-</span><span class="mi">1</span> <span class="o">-</span><span class="mi">4</span>
-  <span class="n">D</span> <span class="o">-</span><span class="mi">2</span> <span class="o">-</span><span class="mi">2</span>  <span class="mi">1</span>  <span class="mi">6</span> <span class="o">-</span><span class="mi">3</span>  <span class="mi">0</span>  <span class="mi">2</span> <span class="o">-</span><span class="mi">1</span> <span class="o">-</span><span class="mi">1</span> <span class="o">-</span><span class="mi">3</span> <span class="o">-</span><span class="mi">4</span> <span class="o">-</span><span class="mi">1</span> <span class="o">-</span><span class="mi">3</span> <span class="o">-</span><span class="mi">3</span> <span class="o">-</span><span class="mi">1</span>  <span class="mi">0</span> <span class="o">-</span><span class="mi">1</span> <span class="o">-</span><span class="mi">4</span> <span class="o">-</span><span class="mi">3</span> <span class="o">-</span><span class="mi">3</span>  <span class="mi">0</span><span class="n">̲</span>  <span class="mi">0</span><span class="n">̲</span>  <span class="mi">4</span>  <span class="mi">0</span><span class="n">̲</span>  <span class="mi">1</span> <span class="o">-</span><span class="mi">1</span> <span class="o">-</span><span class="mi">4</span>
-  <span class="n">C</span>  <span class="mi">0</span> <span class="o">-</span><span class="mi">3</span> <span class="o">-</span><span class="mi">3</span> <span class="o">-</span><span class="mi">3</span>  <span class="mi">9</span> <span class="o">-</span><span class="mi">3</span> <span class="o">-</span><span class="mi">4</span> <span class="o">-</span><span class="mi">3</span> <span class="o">-</span><span class="mi">3</span> <span class="o">-</span><span class="mi">1</span> <span class="o">-</span><span class="mi">1</span> <span class="o">-</span><span class="mi">3</span> <span class="o">-</span><span class="mi">1</span> <span class="o">-</span><span class="mi">2</span> <span class="o">-</span><span class="mi">3</span> <span class="o">-</span><span class="mi">1</span> <span class="o">-</span><span class="mi">1</span> <span class="o">-</span><span class="mi">2</span> <span class="o">-</span><span class="mi">2</span> <span class="o">-</span><span class="mi">1</span>  <span class="mi">0</span><span class="n">̲</span>  <span class="mi">0</span><span class="n">̲</span> <span class="o">-</span><span class="mi">3</span>  <span class="mi">0</span><span class="n">̲</span> <span class="o">-</span><span class="mi">3</span> <span class="o">-</span><span class="mi">2</span> <span class="o">-</span><span class="mi">4</span>
-  <span class="n">Q</span> <span class="o">-</span><span class="mi">1</span>  <span class="mi">1</span>  <span class="mi">0</span>  <span class="mi">0</span> <span class="o">-</span><span class="mi">3</span>  <span class="mi">5</span>  <span class="mi">2</span> <span class="o">-</span><span class="mi">2</span>  <span class="mi">0</span> <span class="o">-</span><span class="mi">3</span> <span class="o">-</span><span class="mi">2</span>  <span class="mi">1</span>  <span class="mi">0</span> <span class="o">-</span><span class="mi">3</span> <span class="o">-</span><span class="mi">1</span>  <span class="mi">0</span> <span class="o">-</span><span class="mi">1</span> <span class="o">-</span><span class="mi">2</span> <span class="o">-</span><span class="mi">1</span> <span class="o">-</span><span class="mi">2</span>  <span class="mi">0</span><span class="n">̲</span>  <span class="mi">0</span><span class="n">̲</span>  <span class="mi">0</span>  <span class="mi">0</span><span class="n">̲</span>  <span class="mi">3</span> <span class="o">-</span><span class="mi">1</span> <span class="o">-</span><span class="mi">4</span>
-  <span class="n">E</span> <span class="o">-</span><span class="mi">1</span>  <span class="mi">0</span>  <span class="mi">0</span>  <span class="mi">2</span> <span class="o">-</span><span class="mi">4</span>  <span class="mi">2</span>  <span class="mi">5</span> <span class="o">-</span><span class="mi">2</span>  <span class="mi">0</span> <span class="o">-</span><span class="mi">3</span> <span class="o">-</span><span class="mi">3</span>  <span class="mi">1</span> <span class="o">-</span><span class="mi">2</span> <span class="o">-</span><span class="mi">3</span> <span class="o">-</span><span class="mi">1</span>  <span class="mi">0</span> <span class="o">-</span><span class="mi">1</span> <span class="o">-</span><span class="mi">3</span> <span class="o">-</span><span class="mi">2</span> <span class="o">-</span><span class="mi">2</span>  <span class="mi">0</span><span class="n">̲</span>  <span class="mi">0</span><span class="n">̲</span>  <span class="mi">1</span>  <span class="mi">0</span><span class="n">̲</span>  <span class="mi">4</span> <span class="o">-</span><span class="mi">1</span> <span class="o">-</span><span class="mi">4</span>
-  <span class="n">G</span>  <span class="mi">0</span> <span class="o">-</span><span class="mi">2</span>  <span class="mi">0</span> <span class="o">-</span><span class="mi">1</span> <span class="o">-</span><span class="mi">3</span> <span class="o">-</span><span class="mi">2</span> <span class="o">-</span><span class="mi">2</span>  <span class="mi">6</span> <span class="o">-</span><span class="mi">2</span> <span class="o">-</span><span class="mi">4</span> <span class="o">-</span><span class="mi">4</span> <span class="o">-</span><span class="mi">2</span> <span class="o">-</span><span class="mi">3</span> <span class="o">-</span><span class="mi">3</span> <span class="o">-</span><span class="mi">2</span>  <span class="mi">0</span> <span class="o">-</span><span class="mi">2</span> <span class="o">-</span><span class="mi">2</span> <span class="o">-</span><span class="mi">3</span> <span class="o">-</span><span class="mi">3</span>  <span class="mi">0</span><span class="n">̲</span>  <span class="mi">0</span><span class="n">̲</span> <span class="o">-</span><span class="mi">1</span>  <span class="mi">0</span><span class="n">̲</span> <span class="o">-</span><span class="mi">2</span> <span class="o">-</span><span class="mi">1</span> <span class="o">-</span><span class="mi">4</span>
-  <span class="n">H</span> <span class="o">-</span><span class="mi">2</span>  <span class="mi">0</span>  <span class="mi">1</span> <span class="o">-</span><span class="mi">1</span> <span class="o">-</span><span class="mi">3</span>  <span class="mi">0</span>  <span class="mi">0</span> <span class="o">-</span><span class="mi">2</span>  <span class="mi">8</span> <span class="o">-</span><span class="mi">3</span> <span class="o">-</span><span class="mi">3</span> <span class="o">-</span><span class="mi">1</span> <span class="o">-</span><span class="mi">2</span> <span class="o">-</span><span class="mi">1</span> <span class="o">-</span><span class="mi">2</span> <span class="o">-</span><span class="mi">1</span> <span class="o">-</span><span class="mi">2</span> <span class="o">-</span><span class="mi">2</span>  <span class="mi">2</span> <span class="o">-</span><span class="mi">3</span>  <span class="mi">0</span><span class="n">̲</span>  <span class="mi">0</span><span class="n">̲</span>  <span class="mi">0</span>  <span class="mi">0</span><span class="n">̲</span>  <span class="mi">0</span> <span class="o">-</span><span class="mi">1</span> <span class="o">-</span><span class="mi">4</span>
-  <span class="n">I</span> <span class="o">-</span><span class="mi">1</span> <span class="o">-</span><span class="mi">3</span> <span class="o">-</span><span class="mi">3</span> <span class="o">-</span><span class="mi">3</span> <span class="o">-</span><span class="mi">1</span> <span class="o">-</span><span class="mi">3</span> <span class="o">-</span><span class="mi">3</span> <span class="o">-</span><span class="mi">4</span> <span class="o">-</span><span class="mi">3</span>  <span class="mi">4</span>  <span class="mi">2</span> <span class="o">-</span><span class="mi">3</span>  <span class="mi">1</span>  <span class="mi">0</span> <span class="o">-</span><span class="mi">3</span> <span class="o">-</span><span class="mi">2</span> <span class="o">-</span><span class="mi">1</span> <span class="o">-</span><span class="mi">3</span> <span class="o">-</span><span class="mi">1</span>  <span class="mi">3</span>  <span class="mi">0</span><span class="n">̲</span>  <span class="mi">0</span><span class="n">̲</span> <span class="o">-</span><span class="mi">3</span>  <span class="mi">0</span><span class="n">̲</span> <span class="o">-</span><span class="mi">3</span> <span class="o">-</span><span class="mi">1</span> <span class="o">-</span><span class="mi">4</span>
-  <span class="n">L</span> <span class="o">-</span><span class="mi">1</span> <span class="o">-</span><span class="mi">2</span> <span class="o">-</span><span class="mi">3</span> <span class="o">-</span><span class="mi">4</span> <span class="o">-</span><span class="mi">1</span> <span class="o">-</span><span class="mi">2</span> <span class="o">-</span><span class="mi">3</span> <span class="o">-</span><span class="mi">4</span> <span class="o">-</span><span class="mi">3</span>  <span class="mi">2</span>  <span class="mi">4</span> <span class="o">-</span><span class="mi">2</span>  <span class="mi">2</span>  <span class="mi">0</span> <span class="o">-</span><span class="mi">3</span> <span class="o">-</span><span class="mi">2</span> <span class="o">-</span><span class="mi">1</span> <span class="o">-</span><span class="mi">2</span> <span class="o">-</span><span class="mi">1</span>  <span class="mi">1</span>  <span class="mi">0</span><span class="n">̲</span>  <span class="mi">0</span><span class="n">̲</span> <span class="o">-</span><span class="mi">4</span>  <span class="mi">0</span><span class="n">̲</span> <span class="o">-</span><span class="mi">3</span> <span class="o">-</span><span class="mi">1</span> <span class="o">-</span><span class="mi">4</span>
-  <span class="n">K</span> <span class="o">-</span><span class="mi">1</span>  <span class="mi">2</span>  <span class="mi">0</span> <span class="o">-</span><span class="mi">1</span> <span class="o">-</span><span class="mi">3</span>  <span class="mi">1</span>  <span class="mi">1</span> <span class="o">-</span><span class="mi">2</span> <span class="o">-</span><span class="mi">1</span> <span class="o">-</span><span class="mi">3</span> <span class="o">-</span><span class="mi">2</span>  <span class="mi">5</span> <span class="o">-</span><span class="mi">1</span> <span class="o">-</span><span class="mi">3</span> <span class="o">-</span><span class="mi">1</span>  <span class="mi">0</span> <span class="o">-</span><span class="mi">1</span> <span class="o">-</span><span class="mi">3</span> <span class="o">-</span><span class="mi">2</span> <span class="o">-</span><span class="mi">2</span>  <span class="mi">0</span><span class="n">̲</span>  <span class="mi">0</span><span class="n">̲</span>  <span class="mi">0</span>  <span class="mi">0</span><span class="n">̲</span>  <span class="mi">1</span> <span class="o">-</span><span class="mi">1</span> <span class="o">-</span><span class="mi">4</span>
-  <span class="n">M</span> <span class="o">-</span><span class="mi">1</span> <span class="o">-</span><span class="mi">1</span> <span class="o">-</span><span class="mi">2</span> <span class="o">-</span><span class="mi">3</span> <span class="o">-</span><span class="mi">1</span>  <span class="mi">0</span> <span class="o">-</span><span class="mi">2</span> <span class="o">-</span><span class="mi">3</span> <span class="o">-</span><span class="mi">2</span>  <span class="mi">1</span>  <span class="mi">2</span> <span class="o">-</span><span class="mi">1</span>  <span class="mi">5</span>  <span class="mi">0</span> <span class="o">-</span><span class="mi">2</span> <span class="o">-</span><span class="mi">1</span> <span class="o">-</span><span class="mi">1</span> <span class="o">-</span><span class="mi">1</span> <span class="o">-</span><span class="mi">1</span>  <span class="mi">1</span>  <span class="mi">0</span><span class="n">̲</span>  <span class="mi">0</span><span class="n">̲</span> <span class="o">-</span><span class="mi">3</span>  <span class="mi">0</span><span class="n">̲</span> <span class="o">-</span><span class="mi">1</span> <span class="o">-</span><span class="mi">1</span> <span class="o">-</span><span class="mi">4</span>
-  <span class="n">F</span> <span class="o">-</span><span class="mi">2</span> <span class="o">-</span><span class="mi">3</span> <span class="o">-</span><span class="mi">3</span> <span class="o">-</span><span class="mi">3</span> <span class="o">-</span><span class="mi">2</span> <span class="o">-</span><span class="mi">3</span> <span class="o">-</span><span class="mi">3</span> <span class="o">-</span><span class="mi">3</span> <span class="o">-</span><span class="mi">1</span>  <span class="mi">0</span>  <span class="mi">0</span> <span class="o">-</span><span class="mi">3</span>  <span class="mi">0</span>  <span class="mi">6</span> <span class="o">-</span><span class="mi">4</span> <span class="o">-</span><span class="mi">2</span> <span class="o">-</span><span class="mi">2</span>  <span class="mi">1</span>  <span class="mi">3</span> <span class="o">-</span><span class="mi">1</span>  <span class="mi">0</span><span class="n">̲</span>  <span class="mi">0</span><span class="n">̲</span> <span class="o">-</span><span class="mi">3</span>  <span class="mi">0</span><span class="n">̲</span> <span class="o">-</span><span class="mi">3</span> <span class="o">-</span><span class="mi">1</span> <span class="o">-</span><span class="mi">4</span>
-  <span class="n">P</span> <span class="o">-</span><span class="mi">1</span> <span class="o">-</span><span class="mi">2</span> <span class="o">-</span><span class="mi">2</span> <span class="o">-</span><span class="mi">1</span> <span class="o">-</span><span class="mi">3</span> <span class="o">-</span><span class="mi">1</span> <span class="o">-</span><span class="mi">1</span> <span class="o">-</span><span class="mi">2</span> <span class="o">-</span><span class="mi">2</span> <span class="o">-</span><span class="mi">3</span> <span class="o">-</span><span class="mi">3</span> <span class="o">-</span><span class="mi">1</span> <span class="o">-</span><span class="mi">2</span> <span class="o">-</span><span class="mi">4</span>  <span class="mi">7</span> <span class="o">-</span><span class="mi">1</span> <span class="o">-</span><span class="mi">1</span> <span class="o">-</span><span class="mi">4</span> <span class="o">-</span><span class="mi">3</span> <span class="o">-</span><span class="mi">2</span>  <span class="mi">0</span><span class="n">̲</span>  <span class="mi">0</span><span class="n">̲</span> <span class="o">-</span><span class="mi">2</span>  <span class="mi">0</span><span class="n">̲</span> <span class="o">-</span><span class="mi">1</span> <span class="o">-</span><span class="mi">2</span> <span class="o">-</span><span class="mi">4</span>
-  <span class="n">S</span>  <span class="mi">1</span> <span class="o">-</span><span class="mi">1</span>  <span class="mi">1</span>  <span class="mi">0</span> <span class="o">-</span><span class="mi">1</span>  <span class="mi">0</span>  <span class="mi">0</span>  <span class="mi">0</span> <span class="o">-</span><span class="mi">1</span> <span class="o">-</span><span class="mi">2</span> <span class="o">-</span><span class="mi">2</span>  <span class="mi">0</span> <span class="o">-</span><span class="mi">1</span> <span class="o">-</span><span class="mi">2</span> <span class="o">-</span><span class="mi">1</span>  <span class="mi">4</span>  <span class="mi">1</span> <span class="o">-</span><span class="mi">3</span> <span class="o">-</span><span class="mi">2</span> <span class="o">-</span><span class="mi">2</span>  <span class="mi">0</span><span class="n">̲</span>  <span class="mi">0</span><span class="n">̲</span>  <span class="mi">0</span>  <span class="mi">0</span><span class="n">̲</span>  <span class="mi">0</span>  <span class="mi">0</span> <span class="o">-</span><span class="mi">4</span>
-  <span class="n">T</span>  <span class="mi">0</span> <span class="o">-</span><span class="mi">1</span>  <span class="mi">0</span> <span class="o">-</span><span class="mi">1</span> <span class="o">-</span><span class="mi">1</span> <span class="o">-</span><span class="mi">1</span> <span class="o">-</span><span class="mi">1</span> <span class="o">-</span><span class="mi">2</span> <span class="o">-</span><span class="mi">2</span> <span class="o">-</span><span class="mi">1</span> <span class="o">-</span><span class="mi">1</span> <span class="o">-</span><span class="mi">1</span> <span class="o">-</span><span class="mi">1</span> <span class="o">-</span><span class="mi">2</span> <span class="o">-</span><span class="mi">1</span>  <span class="mi">1</span>  <span class="mi">5</span> <span class="o">-</span><span class="mi">2</span> <span class="o">-</span><span class="mi">2</span>  <span class="mi">0</span>  <span class="mi">0</span><span class="n">̲</span>  <span class="mi">0</span><span class="n">̲</span> <span class="o">-</span><span class="mi">1</span>  <span class="mi">0</span><span class="n">̲</span> <span class="o">-</span><span class="mi">1</span>  <span class="mi">0</span> <span class="o">-</span><span class="mi">4</span>
-  <span class="n">W</span> <span class="o">-</span><span class="mi">3</span> <span class="o">-</span><span class="mi">3</span> <span class="o">-</span><span class="mi">4</span> <span class="o">-</span><span class="mi">4</span> <span class="o">-</span><span class="mi">2</span> <span class="o">-</span><span class="mi">2</span> <span class="o">-</span><span class="mi">3</span> <span class="o">-</span><span class="mi">2</span> <span class="o">-</span><span class="mi">2</span> <span class="o">-</span><span class="mi">3</span> <span class="o">-</span><span class="mi">2</span> <span class="o">-</span><span class="mi">3</span> <span class="o">-</span><span class="mi">1</span>  <span class="mi">1</span> <span class="o">-</span><span class="mi">4</span> <span class="o">-</span><span class="mi">3</span> <span class="o">-</span><span class="mi">2</span> <span class="mi">11</span>  <span class="mi">2</span> <span class="o">-</span><span class="mi">3</span>  <span class="mi">0</span><span class="n">̲</span>  <span class="mi">0</span><span class="n">̲</span> <span class="o">-</span><span class="mi">4</span>  <span class="mi">0</span><span class="n">̲</span> <span class="o">-</span><span class="mi">3</span> <span class="o">-</span><span class="mi">2</span> <span class="o">-</span><span class="mi">4</span>
-  <span class="n">Y</span> <span class="o">-</span><span class="mi">2</span> <span class="o">-</span><span class="mi">2</span> <span class="o">-</span><span class="mi">2</span> <span class="o">-</span><span class="mi">3</span> <span class="o">-</span><span class="mi">2</span> <span class="o">-</span><span class="mi">1</span> <span class="o">-</span><span class="mi">2</span> <span class="o">-</span><span class="mi">3</span>  <span class="mi">2</span> <span class="o">-</span><span class="mi">1</span> <span class="o">-</span><span class="mi">1</span> <span class="o">-</span><span class="mi">2</span> <span class="o">-</span><span class="mi">1</span>  <span class="mi">3</span> <span class="o">-</span><span class="mi">3</span> <span class="o">-</span><span class="mi">2</span> <span class="o">-</span><span class="mi">2</span>  <span class="mi">2</span>  <span class="mi">7</span> <span class="o">-</span><span class="mi">1</span>  <span class="mi">0</span><span class="n">̲</span>  <span class="mi">0</span><span class="n">̲</span> <span class="o">-</span><span class="mi">3</span>  <span class="mi">0</span><span class="n">̲</span> <span class="o">-</span><span class="mi">2</span> <span class="o">-</span><span class="mi">1</span> <span class="o">-</span><span class="mi">4</span>
-  <span class="n">V</span>  <span class="mi">0</span> <span class="o">-</span><span class="mi">3</span> <span class="o">-</span><span class="mi">3</span> <span class="o">-</span><span class="mi">3</span> <span class="o">-</span><span class="mi">1</span> <span class="o">-</span><span class="mi">2</span> <span class="o">-</span><span class="mi">2</span> <span class="o">-</span><span class="mi">3</span> <span class="o">-</span><span class="mi">3</span>  <span class="mi">3</span>  <span class="mi">1</span> <span class="o">-</span><span class="mi">2</span>  <span class="mi">1</span> <span class="o">-</span><span class="mi">1</span> <span class="o">-</span><span class="mi">2</span> <span class="o">-</span><span class="mi">2</span>  <span class="mi">0</span> <span class="o">-</span><span class="mi">3</span> <span class="o">-</span><span class="mi">1</span>  <span class="mi">4</span>  <span class="mi">0</span><span class="n">̲</span>  <span class="mi">0</span><span class="n">̲</span> <span class="o">-</span><span class="mi">3</span>  <span class="mi">0</span><span class="n">̲</span> <span class="o">-</span><span class="mi">2</span> <span class="o">-</span><span class="mi">1</span> <span class="o">-</span><span class="mi">4</span>
-  <span class="n">O</span>  <span class="mi">0</span><span class="n">̲</span>  <span class="mi">0</span><span class="n">̲</span>  <span class="mi">0</span><span class="n">̲</span>  <span class="mi">0</span><span class="n">̲</span>  <span class="mi">0</span><span class="n">̲</span>  <span class="mi">0</span><span class="n">̲</span>  <span class="mi">0</span><span class="n">̲</span>  <span class="mi">0</span><span class="n">̲</span>  <span class="mi">0</span><span class="n">̲</span>  <span class="mi">0</span><span class="n">̲</span>  <span class="mi">0</span><span class="n">̲</span>  <span class="mi">0</span><span class="n">̲</span>  <span class="mi">0</span><span class="n">̲</span>  <span class="mi">0</span><span class="n">̲</span>  <span class="mi">0</span><span class="n">̲</span>  <span class="mi">0</span><span class="n">̲</span>  <span class="mi">0</span><span class="n">̲</span>  <span class="mi">0</span><span class="n">̲</span>  <span class="mi">0</span><span class="n">̲</span>  <span class="mi">0</span><span class="n">̲</span>  <span class="mi">0</span><span class="n">̲</span>  <span class="mi">0</span><span class="n">̲</span>  <span class="mi">0</span><span class="n">̲</span>  <span class="mi">0</span><span class="n">̲</span>  <span class="mi">0</span><span class="n">̲</span>  <span class="mi">0</span><span class="n">̲</span>  <span class="mi">0</span><span class="n">̲</span>
-  <span class="n">U</span>  <span class="mi">0</span><span class="n">̲</span>  <span class="mi">0</span><span class="n">̲</span>  <span class="mi">0</span><span class="n">̲</span>  <span class="mi">0</span><span class="n">̲</span>  <span class="mi">0</span><span class="n">̲</span>  <span class="mi">0</span><span class="n">̲</span>  <span class="mi">0</span><span class="n">̲</span>  <span class="mi">0</span><span class="n">̲</span>  <span class="mi">0</span><span class="n">̲</span>  <span class="mi">0</span><span class="n">̲</span>  <span class="mi">0</span><span class="n">̲</span>  <span class="mi">0</span><span class="n">̲</span>  <span class="mi">0</span><span class="n">̲</span>  <span class="mi">0</span><span class="n">̲</span>  <span class="mi">0</span><span class="n">̲</span>  <span class="mi">0</span><span class="n">̲</span>  <span class="mi">0</span><span class="n">̲</span>  <span class="mi">0</span><span class="n">̲</span>  <span class="mi">0</span><span class="n">̲</span>  <span class="mi">0</span><span class="n">̲</span>  <span class="mi">0</span><span class="n">̲</span>  <span class="mi">0</span><span class="n">̲</span>  <span class="mi">0</span><span class="n">̲</span>  <span class="mi">0</span><span class="n">̲</span>  <span class="mi">0</span><span class="n">̲</span>  <span class="mi">0</span><span class="n">̲</span>  <span class="mi">0</span><span class="n">̲</span>
-  <span class="n">B</span> <span class="o">-</span><span class="mi">2</span> <span class="o">-</span><span class="mi">1</span>  <span class="mi">3</span>  <span class="mi">4</span> <span class="o">-</span><span class="mi">3</span>  <span class="mi">0</span>  <span class="mi">1</span> <span class="o">-</span><span class="mi">1</span>  <span class="mi">0</span> <span class="o">-</span><span class="mi">3</span> <span class="o">-</span><span class="mi">4</span>  <span class="mi">0</span> <span class="o">-</span><span class="mi">3</span> <span class="o">-</span><span class="mi">3</span> <span class="o">-</span><span class="mi">2</span>  <span class="mi">0</span> <span class="o">-</span><span class="mi">1</span> <span class="o">-</span><span class="mi">4</span> <span class="o">-</span><span class="mi">3</span> <span class="o">-</span><span class="mi">3</span>  <span class="mi">0</span><span class="n">̲</span>  <span class="mi">0</span><span class="n">̲</span>  <span class="mi">4</span>  <span class="mi">0</span><span class="n">̲</span>  <span class="mi">1</span> <span class="o">-</span><span class="mi">1</span> <span class="o">-</span><span class="mi">4</span>
-  <span class="n">J</span>  <span class="mi">0</span><span class="n">̲</span>  <span class="mi">0</span><span class="n">̲</span>  <span class="mi">0</span><span class="n">̲</span>  <span class="mi">0</span><span class="n">̲</span>  <span class="mi">0</span><span class="n">̲</span>  <span class="mi">0</span><span class="n">̲</span>  <span class="mi">0</span><span class="n">̲</span>  <span class="mi">0</span><span class="n">̲</span>  <span class="mi">0</span><span class="n">̲</span>  <span class="mi">0</span><span class="n">̲</span>  <span class="mi">0</span><span class="n">̲</span>  <span class="mi">0</span><span class="n">̲</span>  <span class="mi">0</span><span class="n">̲</span>  <span class="mi">0</span><span class="n">̲</span>  <span class="mi">0</span><span class="n">̲</span>  <span class="mi">0</span><span class="n">̲</span>  <span class="mi">0</span><span class="n">̲</span>  <span class="mi">0</span><span class="n">̲</span>  <span class="mi">0</span><span class="n">̲</span>  <span class="mi">0</span><span class="n">̲</span>  <span class="mi">0</span><span class="n">̲</span>  <span class="mi">0</span><span class="n">̲</span>  <span class="mi">0</span><span class="n">̲</span>  <span class="mi">0</span><span class="n">̲</span>  <span class="mi">0</span><span class="n">̲</span>  <span class="mi">0</span><span class="n">̲</span>  <span class="mi">0</span><span class="n">̲</span>
-  <span class="n">Z</span> <span class="o">-</span><span class="mi">1</span>  <span class="mi">0</span>  <span class="mi">0</span>  <span class="mi">1</span> <span class="o">-</span><span class="mi">3</span>  <span class="mi">3</span>  <span class="mi">4</span> <span class="o">-</span><span class="mi">2</span>  <span class="mi">0</span> <span class="o">-</span><span class="mi">3</span> <span class="o">-</span><span class="mi">3</span>  <span class="mi">1</span> <span class="o">-</span><span class="mi">1</span> <span class="o">-</span><span class="mi">3</span> <span class="o">-</span><span class="mi">1</span>  <span class="mi">0</span> <span class="o">-</span><span class="mi">1</span> <span class="o">-</span><span class="mi">3</span> <span class="o">-</span><span class="mi">2</span> <span class="o">-</span><span class="mi">2</span>  <span class="mi">0</span><span class="n">̲</span>  <span class="mi">0</span><span class="n">̲</span>  <span class="mi">1</span>  <span class="mi">0</span><span class="n">̲</span>  <span class="mi">4</span> <span class="o">-</span><span class="mi">1</span> <span class="o">-</span><span class="mi">4</span>
-  <span class="n">X</span>  <span class="mi">0</span> <span class="o">-</span><span class="mi">1</span> <span class="o">-</span><span class="mi">1</span> <span class="o">-</span><span class="mi">1</span> <span class="o">-</span><span class="mi">2</span> <span class="o">-</span><span class="mi">1</span> <span class="o">-</span><span class="mi">1</span> <span class="o">-</span><span class="mi">1</span> <span class="o">-</span><span class="mi">1</span> <span class="o">-</span><span class="mi">1</span> <span class="o">-</span><span class="mi">1</span> <span class="o">-</span><span class="mi">1</span> <span class="o">-</span><span class="mi">1</span> <span class="o">-</span><span class="mi">1</span> <span class="o">-</span><span class="mi">2</span>  <span class="mi">0</span>  <span class="mi">0</span> <span class="o">-</span><span class="mi">2</span> <span class="o">-</span><span class="mi">1</span> <span class="o">-</span><span class="mi">1</span>  <span class="mi">0</span><span class="n">̲</span>  <span class="mi">0</span><span class="n">̲</span> <span class="o">-</span><span class="mi">1</span>  <span class="mi">0</span><span class="n">̲</span> <span class="o">-</span><span class="mi">1</span> <span class="o">-</span><span class="mi">1</span> <span class="o">-</span><span class="mi">4</span>
-  <span class="o">*</span> <span class="o">-</span><span class="mi">4</span> <span class="o">-</span><span class="mi">4</span> <span class="o">-</span><span class="mi">4</span> <span class="o">-</span><span class="mi">4</span> <span class="o">-</span><span class="mi">4</span> <span class="o">-</span><span class="mi">4</span> <span class="o">-</span><span class="mi">4</span> <span class="o">-</span><span class="mi">4</span> <span class="o">-</span><span class="mi">4</span> <span class="o">-</span><span class="mi">4</span> <span class="o">-</span><span class="mi">4</span> <span class="o">-</span><span class="mi">4</span> <span class="o">-</span><span class="mi">4</span> <span class="o">-</span><span class="mi">4</span> <span class="o">-</span><span class="mi">4</span> <span class="o">-</span><span class="mi">4</span> <span class="o">-</span><span class="mi">4</span> <span class="o">-</span><span class="mi">4</span> <span class="o">-</span><span class="mi">4</span> <span class="o">-</span><span class="mi">4</span>  <span class="mi">0</span><span class="n">̲</span>  <span class="mi">0</span><span class="n">̲</span> <span class="o">-</span><span class="mi">4</span>  <span class="mi">0</span><span class="n">̲</span> <span class="o">-</span><span class="mi">4</span> <span class="o">-</span><span class="mi">4</span>  <span class="mi">1</span>
-<span class="p">(</span><span class="n">underlined</span> <span class="n">values</span> <span class="n">are</span> <span class="n">default</span> <span class="n">ones</span><span class="p">)</span>
+<div class="codehilite"><pre><span></span><span class="gp">julia&gt;</span> <span class="n">BLOSUM62</span>
+<span class="go">Bio.Align.SubstitutionMatrix{Bio.Seq.AminoAcid,Int64}:</span>
+<span class="go">     A  R  N  D  C  Q  E  G  H  I  L  K  M  F  P  S  T  W  Y  V  O  U  B  J  Z  X  *</span>
+<span class="go">  A  4 -1 -2 -2  0 -1 -1  0 -2 -1 -1 -1 -1 -2 -1  1  0 -3 -2  0  0̲  0̲ -2  0̲ -1  0 -4</span>
+<span class="go">  R -1  5  0 -2 -3  1  0 -2  0 -3 -2  2 -1 -3 -2 -1 -1 -3 -2 -3  0̲  0̲ -1  0̲  0 -1 -4</span>
+<span class="go">  N -2  0  6  1 -3  0  0  0  1 -3 -3  0 -2 -3 -2  1  0 -4 -2 -3  0̲  0̲  3  0̲  0 -1 -4</span>
+<span class="go">  D -2 -2  1  6 -3  0  2 -1 -1 -3 -4 -1 -3 -3 -1  0 -1 -4 -3 -3  0̲  0̲  4  0̲  1 -1 -4</span>
+<span class="go">  C  0 -3 -3 -3  9 -3 -4 -3 -3 -1 -1 -3 -1 -2 -3 -1 -1 -2 -2 -1  0̲  0̲ -3  0̲ -3 -2 -4</span>
+<span class="go">  Q -1  1  0  0 -3  5  2 -2  0 -3 -2  1  0 -3 -1  0 -1 -2 -1 -2  0̲  0̲  0  0̲  3 -1 -4</span>
+<span class="go">  E -1  0  0  2 -4  2  5 -2  0 -3 -3  1 -2 -3 -1  0 -1 -3 -2 -2  0̲  0̲  1  0̲  4 -1 -4</span>
+<span class="go">  G  0 -2  0 -1 -3 -2 -2  6 -2 -4 -4 -2 -3 -3 -2  0 -2 -2 -3 -3  0̲  0̲ -1  0̲ -2 -1 -4</span>
+<span class="go">  H -2  0  1 -1 -3  0  0 -2  8 -3 -3 -1 -2 -1 -2 -1 -2 -2  2 -3  0̲  0̲  0  0̲  0 -1 -4</span>
+<span class="go">  I -1 -3 -3 -3 -1 -3 -3 -4 -3  4  2 -3  1  0 -3 -2 -1 -3 -1  3  0̲  0̲ -3  0̲ -3 -1 -4</span>
+<span class="go">  L -1 -2 -3 -4 -1 -2 -3 -4 -3  2  4 -2  2  0 -3 -2 -1 -2 -1  1  0̲  0̲ -4  0̲ -3 -1 -4</span>
+<span class="go">  K -1  2  0 -1 -3  1  1 -2 -1 -3 -2  5 -1 -3 -1  0 -1 -3 -2 -2  0̲  0̲  0  0̲  1 -1 -4</span>
+<span class="go">  M -1 -1 -2 -3 -1  0 -2 -3 -2  1  2 -1  5  0 -2 -1 -1 -1 -1  1  0̲  0̲ -3  0̲ -1 -1 -4</span>
+<span class="go">  F -2 -3 -3 -3 -2 -3 -3 -3 -1  0  0 -3  0  6 -4 -2 -2  1  3 -1  0̲  0̲ -3  0̲ -3 -1 -4</span>
+<span class="go">  P -1 -2 -2 -1 -3 -1 -1 -2 -2 -3 -3 -1 -2 -4  7 -1 -1 -4 -3 -2  0̲  0̲ -2  0̲ -1 -2 -4</span>
+<span class="go">  S  1 -1  1  0 -1  0  0  0 -1 -2 -2  0 -1 -2 -1  4  1 -3 -2 -2  0̲  0̲  0  0̲  0  0 -4</span>
+<span class="go">  T  0 -1  0 -1 -1 -1 -1 -2 -2 -1 -1 -1 -1 -2 -1  1  5 -2 -2  0  0̲  0̲ -1  0̲ -1  0 -4</span>
+<span class="go">  W -3 -3 -4 -4 -2 -2 -3 -2 -2 -3 -2 -3 -1  1 -4 -3 -2 11  2 -3  0̲  0̲ -4  0̲ -3 -2 -4</span>
+<span class="go">  Y -2 -2 -2 -3 -2 -1 -2 -3  2 -1 -1 -2 -1  3 -3 -2 -2  2  7 -1  0̲  0̲ -3  0̲ -2 -1 -4</span>
+<span class="go">  V  0 -3 -3 -3 -1 -2 -2 -3 -3  3  1 -2  1 -1 -2 -2  0 -3 -1  4  0̲  0̲ -3  0̲ -2 -1 -4</span>
+<span class="go">  O  0̲  0̲  0̲  0̲  0̲  0̲  0̲  0̲  0̲  0̲  0̲  0̲  0̲  0̲  0̲  0̲  0̲  0̲  0̲  0̲  0̲  0̲  0̲  0̲  0̲  0̲  0̲</span>
+<span class="go">  U  0̲  0̲  0̲  0̲  0̲  0̲  0̲  0̲  0̲  0̲  0̲  0̲  0̲  0̲  0̲  0̲  0̲  0̲  0̲  0̲  0̲  0̲  0̲  0̲  0̲  0̲  0̲</span>
+<span class="go">  B -2 -1  3  4 -3  0  1 -1  0 -3 -4  0 -3 -3 -2  0 -1 -4 -3 -3  0̲  0̲  4  0̲  1 -1 -4</span>
+<span class="go">  J  0̲  0̲  0̲  0̲  0̲  0̲  0̲  0̲  0̲  0̲  0̲  0̲  0̲  0̲  0̲  0̲  0̲  0̲  0̲  0̲  0̲  0̲  0̲  0̲  0̲  0̲  0̲</span>
+<span class="go">  Z -1  0  0  1 -3  3  4 -2  0 -3 -3  1 -1 -3 -1  0 -1 -3 -2 -2  0̲  0̲  1  0̲  4 -1 -4</span>
+<span class="go">  X  0 -1 -1 -1 -2 -1 -1 -1 -1 -1 -1 -1 -1 -1 -2  0  0 -2 -1 -1  0̲  0̲ -1  0̲ -1 -1 -4</span>
+<span class="go">  * -4 -4 -4 -4 -4 -4 -4 -4 -4 -4 -4 -4 -4 -4 -4 -4 -4 -4 -4 -4  0̲  0̲ -4  0̲ -4 -4  1</span>
+<span class="go">(underlined values are default ones)</span>
 </pre></div>
 
 
@@ -829,111 +717,82 @@ Returns the end point of a <span class="na">:obj:</span><span class="nv">`Range`
 </table>
 <p>These matrices are downloaded from: <a href="ftp://ftp.ncbi.nih.gov/blast/matrices/">ftp://ftp.ncbi.nih.gov/blast/matrices/</a>.</p>
 <p><code>SubstitutionMatrix</code> can be modified like a regular matrix:</p>
-<div class="codehilite"><pre><span></span><span class="n">julia</span><span class="o">&gt;</span> <span class="n">mysubmat</span> <span class="o">=</span> <span class="n">copy</span><span class="p">(</span><span class="n">BLOSUM62</span><span class="p">);</span>  <span class="c"># create a copy</span>
+<div class="codehilite"><pre><span></span><span class="gp">julia&gt;</span> <span class="n">mysubmat</span> <span class="o">=</span> <span class="n">copy</span><span class="p">(</span><span class="n">BLOSUM62</span><span class="p">);</span>  <span class="c"># create a copy</span>
 
-<span class="n">julia</span><span class="o">&gt;</span> <span class="n">mysubmat</span><span class="p">[</span><span class="n">AA_A</span><span class="p">,</span><span class="n">AA_R</span><span class="p">]</span>  <span class="c"># score of AA_A =&gt; AA_R substitution is -1</span>
-<span class="o">-</span><span class="mi">1</span>
+<span class="gp">julia&gt;</span> <span class="n">mysubmat</span><span class="p">[</span><span class="n">AA_A</span><span class="p">,</span><span class="n">AA_R</span><span class="p">]</span>  <span class="c"># score of AA_A =&gt; AA_R substitution is -1</span>
+<span class="go">-1</span>
 
-<span class="n">julia</span><span class="o">&gt;</span> <span class="n">mysubmat</span><span class="p">[</span><span class="n">AA_A</span><span class="p">,</span><span class="n">AA_R</span><span class="p">]</span> <span class="o">=</span> <span class="o">-</span><span class="mi">3</span>  <span class="c"># set the score to -3</span>
-<span class="o">-</span><span class="mi">3</span>
+<span class="gp">julia&gt;</span> <span class="n">mysubmat</span><span class="p">[</span><span class="n">AA_A</span><span class="p">,</span><span class="n">AA_R</span><span class="p">]</span> <span class="o">=</span> <span class="o">-</span><span class="mi">3</span>  <span class="c"># set the score to -3</span>
+<span class="go">-3</span>
 
-<span class="n">julia</span><span class="o">&gt;</span> <span class="n">mysubmat</span><span class="p">[</span><span class="n">AA_A</span><span class="p">,</span><span class="n">AA_R</span><span class="p">]</span>  <span class="c"># the score is modified</span>
-<span class="o">-</span><span class="mi">3</span>
+<span class="gp">julia&gt;</span> <span class="n">mysubmat</span><span class="p">[</span><span class="n">AA_A</span><span class="p">,</span><span class="n">AA_R</span><span class="p">]</span>  <span class="c"># the score is modified</span>
+<span class="go">-3</span>
 </pre></div>
 
 
 <p>Make sure to create a copy of the original matrix when you create a matrix from a predefined matrix. In the above case, <code>BLOSUM62</code> is shared in the whole program and modification on it will affect any result that uses <code>BLOSUM62</code>.</p>
 <p><code>DichotomousSubstitutionMatrix</code> is a specialized matrix for matching or mismatching substitution.  This is a preferable choice when performance is more important than flexibility because looking up score is faster than <code>SubstitutionMatrix</code>.</p>
-<div class="codehilite"><pre><span></span><span class="n">julia</span><span class="o">&gt;</span> <span class="n">submat</span> <span class="o">=</span> <span class="n">DichotomousSubstitutionMatrix</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="o">-</span><span class="mi">1</span><span class="p">)</span>
-<span class="n">Bio</span><span class="o">.</span><span class="n">Align</span><span class="o">.</span><span class="n">DichotomousSubstitutionMatrix</span><span class="p">{</span><span class="kt">Int64</span><span class="p">}:</span>
-     <span class="n">match</span> <span class="o">=</span>  <span class="mi">1</span>
-  <span class="n">mismatch</span> <span class="o">=</span> <span class="o">-</span><span class="mi">1</span>
+<div class="codehilite"><pre><span></span><span class="gp">julia&gt;</span> <span class="n">submat</span> <span class="o">=</span> <span class="n">DichotomousSubstitutionMatrix</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="o">-</span><span class="mi">1</span><span class="p">)</span>
+<span class="go">Bio.Align.DichotomousSubstitutionMatrix{Int64}:</span>
+<span class="go">     match =  1</span>
+<span class="go">  mismatch = -1</span>
 
-<span class="n">julia</span><span class="o">&gt;</span> <span class="n">submat</span><span class="p">[</span><span class="sc">&#39;A&#39;</span><span class="p">,</span><span class="sc">&#39;A&#39;</span><span class="p">]</span>  <span class="c"># match</span>
-<span class="mi">1</span>
+<span class="gp">julia&gt;</span> <span class="n">submat</span><span class="p">[</span><span class="sc">&#39;A&#39;</span><span class="p">,</span><span class="sc">&#39;A&#39;</span><span class="p">]</span>  <span class="c"># match</span>
+<span class="go">1</span>
 
-<span class="n">julia</span><span class="o">&gt;</span> <span class="n">submat</span><span class="p">[</span><span class="sc">&#39;A&#39;</span><span class="p">,</span><span class="sc">&#39;B&#39;</span><span class="p">]</span>  <span class="c"># mismatch</span>
-<span class="o">-</span><span class="mi">1</span>
-</pre></div>
-          <aside class="copyright" role="note">
-            
-              Copyright (c) 2016 The BioJulia Organisation &ndash;
-            
-            Documentation built with
-            <a href="http://www.mkdocs.org" target="_blank">MkDocs</a>
-            using the
-            <a href="http://squidfunk.github.io/mkdocs-material/" target="_blank">
-              Material
-            </a>
-            theme.
-          </aside>
-          
-            <footer class="footer">
-              
-  <nav class="pagination" aria-label="Footer">
-    <div class="previous">
-      
-        <a href="../seq/" title="Biological Sequences">
-          <span class="direction">
-            Previous
-          </span>
-          <div class="page">
-            <div class="button button-previous" role="button" aria-label="Previous">
-              <i class="icon icon-back"></i>
-            </div>
-            <div class="stretch">
-              <div class="title">
-                Biological Sequences
-              </div>
-            </div>
-          </div>
-        </a>
-      
+<span class="gp">julia&gt;</span> <span class="n">submat</span><span class="p">[</span><span class="sc">&#39;A&#39;</span><span class="p">,</span><span class="sc">&#39;B&#39;</span><span class="p">]</span>  <span class="c"># mismatch</span>
+<span class="go">-1</span>
+</pre></div></div>
+        
     </div>
-    <div class="next">
-      
-        <a href="../intervals/" title="Intervals">
-          <span class="direction">
-            Next
-          </span>
-          <div class="page">
-            <div class="stretch">
-              <div class="title">
-                Intervals
-              </div>
-            </div>
-            <div class="button button-next" role="button" aria-label="Next">
-              <i class="icon icon-forward"></i>
-            </div>
-          </div>
-        </a>
-      
-    </div>
-  </nav>
 
-            </footer>
-          
-        </div>
-      </article>
-      <div class="results" role="status" aria-live="polite">
-        <div class="scrollable">
-          <div class="wrapper">
-            <div class="meta"></div>
-            <div class="list"></div>
-          </div>
-        </div>
-      </div>
-    </main>
+    <footer class="col-md-12 text-center">
+        <hr>
+        <p>
+        <small>Copyright (c) 2016 The BioJulia Organisation<br></small>
+        
+        <small>Documentation built with <a href="http://www.mkdocs.org/">MkDocs</a>.</p></small>
+    </footer>
+
+    <script src="../../js/jquery-1.10.2.min.js"></script>
+    <script src="../../js/bootstrap-3.0.3.min.js"></script>
+    <script src="../../js/highlight.pack.js"></script>
+    <script>hljs.initHighlightingOnLoad();</script>
     <script>
-      var base_url = '../..';
-      var repo_id  = 'BioJulia/Bio.jl';
+    var base_url = '../..';
     </script>
-    <script src="../../assets/javascripts/application-997097ee0c.js"></script>
-    
-      <script src="https://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS_HTML"></script>
-    
-      <script src="../../assets/mathjaxhelper.js"></script>
-    
-    
-  </body>
+    <script data-main="../../mkdocs/js/search.js" src="../../mkdocs/js/require.js"></script>
+    <script src="../../js/base.js"></script>
+    <script src="https://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS_HTML"></script>
+    <script src="../../assets/mathjaxhelper.js"></script>
+
+    <div class="modal" id="mkdocs_search_modal" tabindex="-1" role="dialog" aria-labelledby="Search Modal" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <button type="button" class="close" data-dismiss="modal">
+                        <span aria-hidden="true">&times;</span>
+                        <span class="sr-only">Close</span>
+                    </button>
+                    <h4 class="modal-title" id="exampleModalLabel">Search</h4>
+                </div>
+                <div class="modal-body">
+                    <p>
+                        From here you can search these documents. Enter your search terms below.
+                    </p>
+                    <form role="form">
+                        <div class="form-group">
+                            <input type="text" class="form-control" placeholder="Search..." id="mkdocs-search-query">
+                        </div>
+                    </form>
+                    <div id="mkdocs-search-results"></div>
+                </div>
+                <div class="modal-footer">
+                </div>
+            </div>
+        </div>
+    </div>
+
+    </body>
+
 </html>
