@@ -268,6 +268,12 @@
             </li>
           
             <li class="anchor">
+              <a title="Sequence search" href="#sequence-search">
+                Sequence search
+              </a>
+            </li>
+          
+            <li class="anchor">
               <a title="Sequence records" href="#sequence-records">
                 Sequence records
               </a>
@@ -1152,6 +1158,56 @@ end
 <p><a id='Bio.Seq.neighbors' href='#Bio.Seq.neighbors'>#</a>
 <strong><code>Bio.Seq.neighbors</code></strong> &mdash; <em>Function</em>.</p>
 <p>Iterate through k-mers neighboring <code>x</code> on a de Bruijn graph.</p>
+<p><a id='Sequence-search-1'></a></p>
+<h2 id="sequence-search">Sequence search</h2>
+<p>Several kinds of on-line search functions are provided.</p>
+<p><a id='Exact-search-1'></a></p>
+<h3 id="exact-search">Exact search</h3>
+<p>Exact search functions search for the first occurrence of the query symbol or sequence. Four functions, <code>search</code>, <code>searchindex</code>, <code>rsearch</code>, and <code>rsearchindex</code>, are available:</p>
+<div class="codehilite"><pre><span></span><span class="n">julia</span><span class="o">&gt;</span> <span class="n">seq</span> <span class="o">=</span> <span class="n">dna</span><span class="s">&quot;ACAGCGTAGCT&quot;</span><span class="p">;</span>
+
+<span class="n">julia</span><span class="o">&gt;</span> <span class="n">search</span><span class="p">(</span><span class="n">seq</span><span class="p">,</span> <span class="n">DNA_G</span><span class="p">)</span>  <span class="c"># search a query symbol</span>
+<span class="mi">4</span><span class="p">:</span><span class="mi">4</span>
+
+<span class="n">julia</span><span class="o">&gt;</span> <span class="n">query</span> <span class="o">=</span> <span class="n">dna</span><span class="s">&quot;AGC&quot;</span><span class="p">;</span>
+
+<span class="n">julia</span><span class="o">&gt;</span> <span class="n">search</span><span class="p">(</span><span class="n">seq</span><span class="p">,</span> <span class="n">query</span><span class="p">)</span>  <span class="c"># search a query sequence</span>
+<span class="mi">3</span><span class="p">:</span><span class="mi">5</span>
+
+<span class="n">julia</span><span class="o">&gt;</span> <span class="n">searchindex</span><span class="p">(</span><span class="n">seq</span><span class="p">,</span> <span class="n">query</span><span class="p">)</span>
+<span class="mi">3</span>
+
+<span class="n">julia</span><span class="o">&gt;</span> <span class="n">rsearch</span><span class="p">(</span><span class="n">seq</span><span class="p">,</span> <span class="n">query</span><span class="p">)</span>  <span class="c"># similar to `search` but in the reverse direction</span>
+<span class="mi">8</span><span class="p">:</span><span class="mi">10</span>
+
+<span class="n">julia</span><span class="o">&gt;</span> <span class="n">rsearchindex</span><span class="p">(</span><span class="n">seq</span><span class="p">,</span> <span class="n">query</span><span class="p">)</span>  <span class="c"># similar to `searchindex` but in the reverse direction</span>
+<span class="mi">8</span>
+</pre></div>
+
+
+<p>These search functions take ambiguous symbols into account. That is, if two symbols are compatible (e.g. <code>DNA_A</code> and <code>DNA_N</code>), they match when searching an occurrence. In the following example, 'N' is a wild card that matches any symbols:</p>
+<div class="codehilite"><pre><span></span><span class="n">julia</span><span class="o">&gt;</span> <span class="n">search</span><span class="p">(</span><span class="n">dna</span><span class="s">&quot;ACNT&quot;</span><span class="p">,</span> <span class="n">DNA_N</span><span class="p">)</span>  <span class="c"># &#39;A&#39; matches &#39;N&#39;</span>
+<span class="mi">1</span><span class="p">:</span><span class="mi">1</span>
+
+<span class="n">julia</span><span class="o">&gt;</span> <span class="n">search</span><span class="p">(</span><span class="n">dna</span><span class="s">&quot;ACNT&quot;</span><span class="p">,</span> <span class="n">dna</span><span class="s">&quot;CGT&quot;</span><span class="p">)</span>  <span class="c"># &#39;N&#39; matches &#39;G&#39;</span>
+<span class="mi">2</span><span class="p">:</span><span class="mi">4</span>
+
+<span class="n">julia</span><span class="o">&gt;</span> <span class="n">search</span><span class="p">(</span><span class="n">dna</span><span class="s">&quot;ACGT&quot;</span><span class="p">,</span> <span class="n">dna</span><span class="s">&quot;CNT&quot;</span><span class="p">)</span>  <span class="c"># &#39;G&#39; matches &#39;N&#39;</span>
+<span class="mi">2</span><span class="p">:</span><span class="mi">4</span>
+</pre></div>
+
+
+<p>The exact sequence search needs preprocessing phase of query sequence before searching phase. This would be enough fast for most search applications. But when searching a query sequence to large amounts of target sequences, caching the result of preprocessing may save time. The <code>ExactSearchQuery</code> creates such a preprocessed query object and is applicable to the search functions:</p>
+<div class="codehilite"><pre><span></span><span class="n">julia</span><span class="o">&gt;</span> <span class="n">query</span> <span class="o">=</span> <span class="n">ExactSearchQuery</span><span class="p">(</span><span class="n">dna</span><span class="s">&quot;ATT&quot;</span><span class="p">);</span>
+
+<span class="n">julia</span><span class="o">&gt;</span> <span class="n">search</span><span class="p">(</span><span class="n">dna</span><span class="s">&quot;ATTTATT&quot;</span><span class="p">,</span> <span class="n">query</span><span class="p">)</span>
+<span class="mi">1</span><span class="p">:</span><span class="mi">3</span>
+
+<span class="n">julia</span><span class="o">&gt;</span> <span class="n">rsearch</span><span class="p">(</span><span class="n">dna</span><span class="s">&quot;ATTTATT&quot;</span><span class="p">,</span> <span class="n">query</span><span class="p">)</span>
+<span class="mi">5</span><span class="p">:</span><span class="mi">7</span>
+</pre></div>
+
+
 <p><a id='Sequence-records-1'></a></p>
 <h2 id="sequence-records">Sequence records</h2>
 <p>The <code>SeqRecord</code> type is used to represent a named sequence, optionally with accompanying metadata. It is defined as: sequence. It is as:</p>
