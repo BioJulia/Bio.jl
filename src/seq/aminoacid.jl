@@ -26,8 +26,9 @@ Base.convert{T<:Number}(::Type{AminoAcid}, aa::T) = convert(AminoAcid, UInt8(aa)
 # like iteration, sort, comparison, and so on.
 @compat begin
     Base.:-(x::AminoAcid, y::AminoAcid) = Int(x) - Int(y)
-    Base.:-(x::AminoAcid, y::Integer) = reinterpret(AminoAcid, UInt8(x) - UInt8(y))
-    Base.:+(x::AminoAcid, y::Integer) = reinterpret(AminoAcid, UInt8(x) + UInt8(y))
+    # 0x1c is the size of the amino acid alphabet
+    Base.:-(x::AminoAcid, y::Integer) = x + mod(-y, 0x1c)
+    Base.:+(x::AminoAcid, y::Integer) = reinterpret(AminoAcid, mod((UInt8(x) + y) % UInt8, 0x1c))
     Base.:+(x::Integer, y::AminoAcid) = y + x
 end
 Base.isless(x::AminoAcid, y::AminoAcid) = isless(UInt8(x), UInt8(y))

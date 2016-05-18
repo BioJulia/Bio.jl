@@ -388,8 +388,10 @@ end
         @testset "DNA" begin
             @test DNA_A + 1 == DNA_C
             @test DNA_A + 2 == DNA_G
+            @test DNA_A + 16 == DNA_A
             @test DNA_T - 1 == DNA_G
             @test DNA_T - 2 == DNA_C
+            @test DNA_T - 16 == DNA_T
             @test DNA_T - DNA_A == 3
             @test DNA_T - DNA_C == 2
             @test DNA_A < DNA_C < DNA_G < DNA_T < DNA_M < DNA_N < DNA_Gap
@@ -406,8 +408,10 @@ end
         @testset "RNA" begin
             @test RNA_A + 1 == RNA_C
             @test RNA_A + 2 == RNA_G
+            @test RNA_A + 16 == RNA_A
             @test RNA_U - 1 == RNA_G
             @test RNA_U - 2 == RNA_C
+            @test RNA_U - 16 == RNA_U
             @test RNA_U - RNA_A == 3
             @test RNA_U - RNA_C == 2
             @test RNA_A < RNA_C < RNA_G < RNA_U < RNA_M < RNA_N < RNA_Gap
@@ -459,8 +463,10 @@ end
         @test AA_A + 1 == AA_R
         @test AA_R + 1 == AA_N
         @test AA_A + 2 == AA_N
+        @test AA_A + 28 == AA_A
         @test AA_R - 1 == AA_A
         @test AA_N - 2 == AA_A
+        @test AA_A - 28 == AA_A
         @test AA_D - AA_A ==  3
         @test AA_A - AA_D == -3
         @test (AA_A < AA_R < AA_N < AA_V < AA_O < AA_U <

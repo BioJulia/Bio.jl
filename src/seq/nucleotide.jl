@@ -30,8 +30,8 @@ Base.convert{T<:Number,S<:Nucleotide}(::Type{S}, nt::T) = convert(S, UInt8(nt))
 # like iteration, sort, comparison, and so on.
 @compat begin
     Base.:-{N<:Nucleotide}(x::N, y::N) = Int(x) - Int(y)
-    Base.:-{N<:Nucleotide}(x::N, y::Integer) = reinterpret(N, UInt8(x) - UInt8(y))
-    Base.:+{N<:Nucleotide}(x::N, y::Integer) = reinterpret(N, UInt8(x) + UInt8(y))
+    Base.:-{N<:Nucleotide}(x::N, y::Integer) = x + (-y)
+    Base.:+{N<:Nucleotide}(x::N, y::Integer) = reinterpret(N, (UInt8(x) + y % UInt8) & 0b1111)
     Base.:+{N<:Nucleotide}(x::Integer, y::N) = y + x
 end
 Base.isless{N<:Nucleotide}(x::N, y::N) = isless(UInt8(x), UInt8(y))
