@@ -423,6 +423,20 @@ end
         end
     end
 
+    @testset "Range" begin
+        @test   DNA_A in DNA_A:DNA_G
+        @test   DNA_C in DNA_A:DNA_G
+        @test   DNA_G in DNA_A:DNA_G
+        @test !(DNA_T in DNA_A:DNA_G)
+        @test collect(DNA_C:DNA_T) == [DNA_C, DNA_G, DNA_T]
+
+        @test   RNA_A in RNA_A:RNA_G
+        @test   RNA_C in RNA_A:RNA_G
+        @test   RNA_G in RNA_A:RNA_G
+        @test !(RNA_U in RNA_A:RNA_G)
+        @test collect(RNA_C:RNA_U) == [RNA_C, RNA_G, RNA_U]
+    end
+
     @testset "Show DNA" begin
         buf = IOBuffer()
         for nt in [DNA_A, DNA_C, DNA_G, DNA_T, DNA_N]
@@ -458,6 +472,17 @@ end
         @test AA_A in alphabet(AminoAcid)
         @test AA_I in alphabet(AminoAcid)
         @test AA_U in alphabet(AminoAcid)
+    end
+
+    @testset "Range" begin
+        @test !(AA_C in AA_Q:AA_H)
+        @test   AA_Q in AA_Q:AA_H
+        @test   AA_E in AA_Q:AA_H
+        @test   AA_G in AA_Q:AA_H
+        @test   AA_H in AA_Q:AA_H
+        @test !(AA_I in AA_Q:AA_H)
+
+        @test collect(AA_W:AA_V) == [AA_W, AA_Y, AA_V]
     end
 
     @testset "Encoder" begin

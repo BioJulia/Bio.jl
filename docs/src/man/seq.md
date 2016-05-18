@@ -179,13 +179,13 @@ julia> DNA_T - DNA_C  # difference
 
 ```
 
-Note that these operations do **not** check bounds of valid range:
+Note that these operations are cyclic:
 ```jlcon
-julia> DNA_C - 2
-Invalid DNA Nucleotide
+julia> DNA_C + 15
+A
 
-julia> DNA_A + 30
-Invalid DNA Nucleotide
+julia> DNA_A - 1
+-
 
 ```
 

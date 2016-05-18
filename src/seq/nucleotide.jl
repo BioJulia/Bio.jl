@@ -90,6 +90,8 @@ compatbits_nuc[0b1111 + 1] = 0b0000
 nnucleotide(::Type{DNANucleotide}) = DNA_N
 invalid_nucleotide(::Type{DNANucleotide}) = DNA_INVALID
 
+Base.colon(start::DNANucleotide, stop::DNANucleotide) = SymbolRange(start, stop)
+
 Base.isvalid(::Type{DNANucleotide}, x::Integer) = 0 ≤ x < 16
 Base.isvalid(nt::DNANucleotide) = nt ≤ DNA_Gap
 isambiguous(nt::DNANucleotide) = nt > DNA_T
@@ -137,6 +139,8 @@ rna_to_char[0b1111 + 1] = '-'
 "Returns Any RNA Nucleotide (RNA_N)"
 nnucleotide(::Type{RNANucleotide}) = RNA_N
 invalid_nucleotide(::Type{RNANucleotide}) = RNA_INVALID
+
+Base.colon(start::RNANucleotide, stop::RNANucleotide) = SymbolRange(start, stop)
 
 Base.isvalid(::Type{RNANucleotide}, x::Integer) = 0 ≤ x < 16
 Base.isvalid(nt::RNANucleotide) = nt ≤ RNA_Gap
