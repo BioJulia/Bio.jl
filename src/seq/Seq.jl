@@ -121,6 +121,7 @@ export
     AminoAcidAlphabet,
     CharAlphabet,
     ExactSearchQuery,
+    ApproximateSearchQuery,
     approxsearch,
     approxsearchindex,
     approxrsearch,

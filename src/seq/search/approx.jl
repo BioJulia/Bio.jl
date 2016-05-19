@@ -6,42 +6,141 @@
 # This file is a part of BioJulia.
 # License is MIT: https://github.com/BioJulia/Bio.jl/blob/master/LICENSE.md
 
-function approxsearch(seq::Sequence, pat::Sequence, k::Integer,
-                      start::Integer=1, stop::Integer=endof(seq))
-    return _approxsearch(seq, pat, k, start, stop, true)
+"""
+Query type for approximate sequence search.
+"""
+immutable ApproximateSearchQuery{S<:Sequence,T}
+    seq::S            # query sequence
+    fPcom::Vector{T}  # compatibility vector for forward search
+    bPcom::Vector{T}  # compatibility vector for backward search
+    H::Vector{Int}    # distance vector for alignback function
+
+    function ApproximateSearchQuery(seq::Sequence, direction::Symbol)
+        if direction == :forward
+            fPcom = approx_preprocess(T, seq, true)
+            bPcom = T[]
+        elseif direction == :backward
+            fPcom = T[]
+            bPcom = approx_preprocess(T, seq, false)
+        elseif direction == :both
+            fPcom = approx_preprocess(T, seq, true)
+            bPcom = approx_preprocess(T, seq, false)
+        else
+            throw(ArgumentError("direction '$direction' is invalid"))
+        end
+        H = Vector{Int}(length(seq) + 1)
+        return new(seq, fPcom, bPcom, H)
+    end
 end
 
-function approxsearchindex(seq::Sequence, pat::Sequence, k::Integer,
-                           start::Integer=1, stop::Integer=endof(seq))
-    return first(_approxsearch(seq, pat, k, start, stop, true))
-end
+"""
+    ApproximateSearchQuery(pat::Sequence[, direction=:both])
 
-function approxrsearch(seq::Sequence, pat::Sequence, k::Integer,
-                       start::Integer=endof(seq), stop::Integer=1)
-    return _approxsearch(seq, pat, k, start, stop, false)
-end
+Create an query object for approximate sequence search from the `pat` sequence.
 
-function approxrsearchindex(seq::Sequence, pat::Sequence, k::Integer,
-                            start::Integer=endof(seq), stop::Integer=1)
-    return first(_approxsearch(seq, pat, k, start, stop, false))
-end
-
-function _approxsearch(seq, pat, k, start, stop, forward)
+# Arguments
+* `pat`: Query sequence.
+* `direction=:both`: Search direction (`:forward`, `:backward`, or `:both`).
+"""
+function ApproximateSearchQuery(pat::Sequence, direction::Symbol=:both)
     # select a bit vector type
     # TODO: BigInt is very slow, consider implementing "4.2 THE BLOCKS MODEL"
     m = length(pat)
     T = m ≤ 64 ? UInt64 : m ≤ 128 ? UInt128 : BigInt
+    return ApproximateSearchQuery{typeof(pat),T}(pat, direction)
+end
 
-    if k ≥ m
+function approx_preprocess{T}(::Type{T}, pat, forward)
+    Σ = alphabet(eltype(pat))
+    Pcom = zeros(T, length(Σ))
+    for i in 1:endof(pat)
+        y = forward ? pat[i] : pat[end-i+1]
+        for x in Σ
+            if Seq.iscompatible(x, y)
+                Pcom[UInt8(x)+1] |= one(T) << (i - 1)
+            end
+        end
+    end
+    return Pcom
+end
+
+"""
+    approxsearch(seq, pat, k[, start=1[, stop=endof(seq)]])
+
+Return the range of the first occurrence of `pat` in `seq[start:stop]` allowing
+up to `k` errors; symbol comparison is done using `Bio.Seq.iscompatible`.
+"""
+function approxsearch(seq::Sequence, pat::Sequence, k::Integer,
+                      start::Integer=1, stop::Integer=endof(seq))
+    return approxsearch(seq, ApproximateSearchQuery(pat, :forward), k, start, stop)
+end
+
+function approxsearch(seq::Sequence, query::ApproximateSearchQuery, k::Integer,
+                      start::Integer=1, stop::Integer=endof(seq))
+    return _approxsearch(query, seq, k, start, stop, true)
+end
+
+"""
+    approxrsearch(seq, pat, k[, start=endof(seq)[, stop=1]])
+
+Return the range of the last occurrence of `pat` in `seq[stop:start]` allowing
+up to `k` errors; symbol comparison is done using `Bio.Seq.iscompatible`.
+"""
+function approxrsearch(seq::Sequence, pat::Sequence, k::Integer,
+                       start::Integer=endof(seq), stop::Integer=1)
+    return approxrsearch(seq, ApproximateSearchQuery(pat, :backward), k, start, stop)
+end
+
+function approxrsearch(seq::Sequence, query::ApproximateSearchQuery, k::Integer,
+                       start::Integer=endof(seq), stop::Integer=1)
+    return _approxsearch(query, seq, k, start, stop, false)
+end
+
+"""
+    approxsearchindex(seq, pat, k[, start=1[, stop=endof(seq)]])
+
+Return the index of the first occurrence of `pat` in `seq[start:stop]` allowing
+up to `k` errors; symbol comparison is done using `Bio.Seq.iscompatible`.
+"""
+function approxsearchindex(seq::Sequence, pat::Sequence, k::Integer,
+                           start::Integer=1, stop::Integer=endof(seq))
+    return first(approxsearch(seq, pat, k, start, stop))
+end
+
+function approxsearchindex(seq::Sequence, query::ApproximateSearchQuery, k::Integer,
+                           start::Integer=1, stop::Integer=endof(seq))
+    return first(approxsearch(seq, query, k, start, stop))
+end
+
+"""
+    approxrsearchindex(seq, pat, k[, start=endof(seq)[, stop=1]])
+
+Return the index of the last occurrence of `pat` in `seq[stop:start]` allowing
+up to `k` errors; symbol comparison is done using `Bio.Seq.iscompatible`.
+"""
+function approxrsearchindex(seq::Sequence, pat::Sequence, k::Integer,
+                            start::Integer=endof(seq), stop::Integer=1)
+    return first(approxrsearch(seq, pat, k, start, stop))
+end
+
+function approxrsearchindex(seq::Sequence, query::ApproximateSearchQuery, k::Integer,
+                            start::Integer=endof(seq), stop::Integer=1)
+    return first(approxrsearch(seq, query, k, start, stop))
+end
+
+function _approxsearch(query, seq, k, start, stop, forward)
+    if k ≥ length(query.seq)
         return start:start-1
     end
 
-    matchstop, dist = _approxsearch(T, seq, pat, k, start, stop, forward)
+    # search the approximate suffix
+    matchstop, dist = search_approx_suffix(query, seq, k, start, stop, forward)
     if matchstop == 0
         return 0:-1
     end
 
-    matchstart = alignback(seq, pat, dist, start, matchstop, forward)
+    # locate the starting position of the match
+    matchstart = alignback(query, seq, dist, start, matchstop, forward)
     if forward
         return matchstart:matchstop
     else
@@ -55,27 +154,25 @@ end
 # distance between `s` and `t` sequences. See Myers' paper for details:
 # Myers, Gene. "A fast bit-vector algorithm for approximate string matching
 # based on dynamic programming." Journal of the ACM (JACM) 46.3 (1999): 395-415.
-function _approxsearch{T}(::Type{T}, seq, pat, k, start, stop, forward)
+function search_approx_suffix{S,T}(query::ApproximateSearchQuery{S,T},
+                                   seq, k, start, stop, forward)
     if k < 0
         throw(ArgumentError("the number of errors must be non-negative"))
     end
+    if forward && isempty(query.fPcom)
+        throw(ArgumentError("query is not preprocessed for forward search"))
+    end
+    if !forward && isempty(query.bPcom)
+        throw(ArgumentError("query is not preprocessed for backward search"))
+    end
 
+    pat = query.seq
     m = length(pat)
     n = length(seq)
     @assert T == BigInt || m ≤ sizeof(T) * 8
 
-    # preprocess
-    Σ = alphabet(typeof(seq))
-    Peq = zeros(T, length(Σ))
-    for i in 1:m
-        y = forward ? pat[i] : pat[end-i+1]
-        for x in Σ
-            if Seq.iscompatible(x, y)
-                Peq[UInt8(x)+1] |= one(T) << (i - 1)
-            end
-        end
-    end
-
+    # `Pcom` corresponds to `Peq` in the orignal paper.
+    Pcom = forward ? query.fPcom : query.bPcom
     Pv::T = (one(T) << m) - one(T)
     Mv::T = zero(T)
     dist = m
@@ -86,7 +183,7 @@ function _approxsearch{T}(::Type{T}, seq, pat, k, start, stop, forward)
     end
 
     while (forward && j ≤ min(stop, n)) || (!forward && j ≥ max(stop, 1))
-        Eq = Peq[UInt8(seq[j])+1]
+        Eq = Pcom[UInt8(seq[j])+1]
         Xv = Eq | Mv
         Xh = (((Eq & Pv) + Pv) $ Pv) | Eq
 
@@ -113,11 +210,13 @@ function _approxsearch{T}(::Type{T}, seq, pat, k, start, stop, forward)
 end
 
 # run dynamic programming to get the starting position of the alignment
-function alignback(seq, pat, dist, start, matchstop, forward)
+function alignback(query, seq, dist, start, matchstop, forward)
+    pat = query.seq
     m = length(pat)
     n = length(seq)
+    H = query.H
 
-    H = Vector{Int}(m + 1)
+    # initialize the cost column
     H[1] = 0
     for i in 1:m
         H[i+1] = i
