@@ -135,11 +135,26 @@ Base.convert(::Type{Char}, aa::AminoAcid) = aa_to_char[convert(UInt8, aa) + 1]
 # ---------------
 
 function Base.show(io::IO, aa::AminoAcid)
-    if aa == AA_INVALID
-        write(io, "Invalid Amino Acid")
+    if isvalid(aa)
+        if aa == AA_Term
+            write(io, "AA_Term")
+        elseif aa == AA_Gap
+            write(io, "AA_Gap")
+        else
+            write(io, "AA_", Char(aa))
+        end
     else
-        write(io, Char(aa))
+        write(io, "Invalid Amino Acid")
     end
+    return
+end
+
+function Base.print(io::IO, aa::AminoAcid)
+    if !isvalid(aa)
+        throw(ArgumentError("invalid amino acid"))
+    end
+    write(io, Char(aa))
+    return
 end
 
 # lookup table of 20 standard amino acids

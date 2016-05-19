@@ -442,19 +442,41 @@ end
     end
 
     @testset "Show DNA" begin
-        buf = IOBuffer()
-        for nt in [DNA_A, DNA_C, DNA_G, DNA_T, DNA_N]
-            show(buf, nt)
+        @testset "print" begin
+            buf = IOBuffer()
+            for nt in [DNA_A, DNA_C, DNA_G, DNA_T, DNA_N, DNA_Gap]
+                print(buf, nt)
+            end
+            @test takebuf_string(buf) == "ACGTN-"
         end
-        @test takebuf_string(buf) == "ACGTN"
+
+        @testset "show" begin
+            buf = IOBuffer()
+            for nt in [DNA_A, DNA_C, DNA_G, DNA_T, DNA_N, DNA_Gap]
+                show(buf, nt)
+                write(buf, ' ')
+            end
+            @test takebuf_string(buf) == "DNA_A DNA_C DNA_G DNA_T DNA_N DNA_Gap "
+        end
     end
 
     @testset "Show RNA" begin
-        buf = IOBuffer()
-        for nt in [RNA_A, RNA_C, RNA_G, RNA_U, RNA_N]
-            show(buf, nt)
+        @testset "print" begin
+            buf = IOBuffer()
+            for nt in [RNA_A, RNA_C, RNA_G, RNA_U, RNA_N, RNA_Gap]
+                print(buf, nt)
+            end
+            @test takebuf_string(buf) == "ACGUN-"
         end
-        @test takebuf_string(buf) == "ACGUN"
+
+        @testset "show" begin
+            buf = IOBuffer()
+            for nt in [RNA_A, RNA_C, RNA_G, RNA_U, RNA_N, RNA_Gap]
+                show(buf, nt)
+                write(buf, ' ')
+            end
+            @test takebuf_string(buf) == "RNA_A RNA_C RNA_G RNA_U RNA_N RNA_Gap "
+        end
     end
 end
 
@@ -518,6 +540,25 @@ end
             @test iscompatible(x, AA_J) == (x ∈ (AA_I, AA_L, AA_J, AA_X))
             @test iscompatible(x, AA_Z) == (x ∈ (AA_E, AA_Q, AA_Z, AA_X))
             @test iscompatible(x, AA_X) == (x ∉ (AA_Term, AA_Gap))
+        end
+    end
+
+    @testset "Show amino acid" begin
+        @testset "print" begin
+            buf = IOBuffer()
+            for aa in [AA_A, AA_D, AA_B, AA_X, AA_Term, AA_Gap]
+                print(buf, aa)
+            end
+            @test takebuf_string(buf) == "ADBX*-"
+        end
+
+        @testset "show" begin
+            buf = IOBuffer()
+            for aa in [AA_A, AA_D, AA_B, AA_X, AA_Term, AA_Gap]
+                show(buf, aa)
+                write(buf, ' ')
+            end
+            @test takebuf_string(buf) == "AA_A AA_D AA_B AA_X AA_Term AA_Gap "
         end
     end
 

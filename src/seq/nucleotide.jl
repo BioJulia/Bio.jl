@@ -213,17 +213,35 @@ Base.convert(::Type{Char}, nt::RNANucleotide) = rna_to_char[convert(UInt8, nt) +
 # ---------------
 
 function Base.show(io::IO, nt::DNANucleotide)
-    if !isvalid(nt)
-        write(io, "Invalid DNA Nucleotide")
+    if isvalid(nt)
+        if nt == DNA_Gap
+            write(io, "DNA_Gap")
+        else
+            write(io, "DNA_", Char(nt))
+        end
     else
-        write(io, Char(nt))
+        write(io, "Invalid DNA Nucleotide")
     end
+    return
 end
 
 function Base.show(io::IO, nt::RNANucleotide)
-    if !isvalid(nt)
-        write(io, "Invalid RNA Nucleotide")
+    if isvalid(nt)
+        if nt == RNA_Gap
+            write(io, "RNA_Gap")
+        else
+            write(io, "RNA_", Char(nt))
+        end
     else
-        write(io, Char(nt))
+        write(io, "Invalid RNA Nucleotide")
     end
+    return
+end
+
+function Base.print(io::IO, nt::Nucleotide)
+    if !isvalid(nt)
+        throw(ArgumentError("nucleotide is invalid"))
+    end
+    write(io, Char(nt))
+    return
 end
