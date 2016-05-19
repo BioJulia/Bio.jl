@@ -63,16 +63,16 @@ Symbols are accessible as constants with `DNA_` or `RNA_` prefix:
 
 ```jlcon
 julia> DNA_A
-A
+DNA_A
 
 julia> DNA_T
-T
+DNA_T
 
 julia> RNA_U
-U
+RNA_U
 
 julia> DNA_Gap
--
+DNA_Gap
 
 julia> typeof(DNA_A)
 Bio.Seq.DNANucleotide
@@ -86,7 +86,7 @@ Symbols can be constructed by converting regular characters:
 
 ```jlcon
 julia> convert(DNANucleotide, 'C')
-C
+DNA_C
 
 julia> convert(DNANucleotide, 'C') === DNA_C
 true
@@ -134,13 +134,13 @@ Set of amino acid symbols also covers IUPAC amino acid symbols plus a gap symbol
 Symbols are accessible as constants with `AA_` prefix:
 ```jlcon
 julia> AA_A
-A
+AA_A
 
 julia> AA_Q
-Q
+AA_Q
 
 julia> AA_Term
-*
+AA_Term
 
 julia> typeof(AA_A)
 Bio.Seq.AminoAcid
@@ -150,7 +150,7 @@ Bio.Seq.AminoAcid
 Symbols can be constructed by converting regular characters:
 ```jlcon
 julia> convert(AminoAcid, 'A')
-A
+AA_A
 
 julia> convert(AminoAcid, 'P') === AA_P
 true
@@ -169,10 +169,10 @@ julia> DNA_A < DNA_C < DNA_G < DNA_T  # order
 true
 
 julia> DNA_A + 1  # addition
-C
+DNA_C
 
 julia> DNA_T - 3  # subtraction
-A
+DNA_A
 
 julia> DNA_T - DNA_C  # difference
 2
@@ -182,12 +182,58 @@ julia> DNA_T - DNA_C  # difference
 Note that these operations are cyclic:
 ```jlcon
 julia> DNA_C + 15
-A
+DNA_A
 
 julia> DNA_A - 1
--
+DNA_Gap
 
 ```
+
+
+### Symbol Ranges
+
+Consecutive symbol sets can be created using a colon like integer ranges:
+```jlcon
+julia> DNA_A:DNA_T    # unambiguous DNA nucleotides (A, C, G, T)
+DNA_A:DNA_T
+
+julia> DNA_A:DNA_N    # all DNA nucleotides except gap
+DNA_A:DNA_N
+
+julia> DNA_A:DNA_Gap  # all DNA nucleotides including gap
+DNA_A:DNA_Gap
+
+julia> AA_A:AA_V      # standard amino acids
+AA_A:AA_V
+
+julia> AA_A:AA_U      # standard amino acids + pyrrolysine (O) + selenocysteine (U)
+AA_A:AA_U
+
+julia> AA_A:AA_X      # all amino acids except teminal codon (*) and gap
+AA_A:AA_X
+
+julia> AA_A:AA_Gap    # all amino acids including teminal codon (*) and gap
+AA_A:AA_Gap
+
+```
+
+Most range operations are supported, especially the iterator interface and the
+membership operator (`in` or `∈`) will be useful in many situations:
+```jlcon
+julia> for nt in DNA_A:DNA_T; println(nt); end
+A
+C
+G
+T
+
+julia> DNA_C in DNA_A:DNA_T  # DNA_C is in the range of unambiguous DNA nucleotides
+true
+
+julia> DNA_N in DNA_A:DNA_T  # DNA_N is not in it
+false
+
+```
+
 
 ### Other functions
 
@@ -282,13 +328,13 @@ julia> convert(ASCIIString, dna"TTANGTA")
 
 julia> convert(Vector{DNANucleotide}, dna"TTANGTA")
 7-element Array{Bio.Seq.DNANucleotide,1}:
- T
- T
- A
- N
- G
- T
- A
+ DNA_T
+ DNA_T
+ DNA_A
+ DNA_N
+ DNA_G
+ DNA_T
+ DNA_A
 
 ```
 
@@ -342,7 +388,7 @@ julia> seq = dna"ACGTTTANAGTNNAGTACC"
 ACGTTTANAGTNNAGTACC
 
 julia> seq[5]
-T
+DNA_T
 
 julia> seq[6:end]
 14nt DNA Sequence:
@@ -365,7 +411,7 @@ julia> subseq = seq[1:2]  # create a subsequence from `seq`
 AA
 
 julia> subseq[2] = DNA_T  # modify the second element of it
-T
+DNA_T
 
 julia> subseq  # the subsequence is modified
 2nt DNA Sequence:
