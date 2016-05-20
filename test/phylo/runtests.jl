@@ -67,6 +67,20 @@ using LightGraphs
         @test tree.graph == g
         @test tree.ntaxa == 3
         @test nv(tree.graph) == 5
+
+        @testset "Copying" begin
+            @test copy(tree) == tree
+            @test copy(tree) !== tree
+        end
+    end
+
+    @testset "Misc Functions" begin
+        @test n_possible_rooted(3) == 3
+        @test n_possible_rooted(4) == 15
+        @test n_possible_rooted(5) == 105
+        @test n_possible_unrooted(3) == 1
+        @test n_possible_unrooted(4) == 3
+        @test n_possible_unrooted(5) == 15
     end
 
 end
