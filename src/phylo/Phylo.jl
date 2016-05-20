@@ -11,9 +11,11 @@
 
 module Phylo
 
-using Bio.Tokenize
+using Compat
 
 using LightGraphs
+
+using Bio.Tokenize
 
 using Bio.Indexers
 
