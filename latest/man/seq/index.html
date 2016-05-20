@@ -203,6 +203,8 @@
             
                 <li class="third-level"><a href="#arithmetic">Arithmetic</a></li>
             
+                <li class="third-level"><a href="#symbol-ranges">Symbol Ranges</a></li>
+            
                 <li class="third-level"><a href="#other-functions">Other functions</a></li>
             
         
@@ -370,16 +372,16 @@
 <p><a href="http://www.insdc.org/documents/feature_table.html#7.4.1">http://www.insdc.org/documents/feature_table.html#7.4.1</a></p>
 <p>Symbols are accessible as constants with <code>DNA_</code> or <code>RNA_</code> prefix:</p>
 <div class="codehilite"><pre><span></span><span class="gp">julia&gt;</span> <span class="n">DNA_A</span>
-<span class="go">A</span>
+<span class="go">DNA_A</span>
 
 <span class="gp">julia&gt;</span> <span class="n">DNA_T</span>
-<span class="go">T</span>
+<span class="go">DNA_T</span>
 
 <span class="gp">julia&gt;</span> <span class="n">RNA_U</span>
-<span class="go">U</span>
+<span class="go">RNA_U</span>
 
 <span class="gp">julia&gt;</span> <span class="n">DNA_Gap</span>
-<span class="go">-</span>
+<span class="go">DNA_Gap</span>
 
 <span class="gp">julia&gt;</span> <span class="nb">typeof</span><span class="p">(</span><span class="n">DNA_A</span><span class="p">)</span>
 <span class="go">Bio.Seq.DNANucleotide</span>
@@ -391,7 +393,7 @@
 
 <p>Symbols can be constructed by converting regular characters:</p>
 <div class="codehilite"><pre><span></span><span class="gp">julia&gt;</span> <span class="nb">convert</span><span class="p">(</span><span class="n">DNANucleotide</span><span class="p">,</span> <span class="sc">&#39;C&#39;</span><span class="p">)</span>
-<span class="go">C</span>
+<span class="go">DNA_C</span>
 
 <span class="gp">julia&gt;</span> <span class="nb">convert</span><span class="p">(</span><span class="n">DNANucleotide</span><span class="p">,</span> <span class="sc">&#39;C&#39;</span><span class="p">)</span> <span class="o">===</span> <span class="n">DNA_C</span>
 <span class="go">true</span>
@@ -555,13 +557,13 @@
 <p><a href="http://www.insdc.org/documents/feature_table.html#7.4.3">http://www.insdc.org/documents/feature_table.html#7.4.3</a></p>
 <p>Symbols are accessible as constants with <code>AA_</code> prefix:</p>
 <div class="codehilite"><pre><span></span><span class="gp">julia&gt;</span> <span class="n">AA_A</span>
-<span class="go">A</span>
+<span class="go">AA_A</span>
 
 <span class="gp">julia&gt;</span> <span class="n">AA_Q</span>
-<span class="go">Q</span>
+<span class="go">AA_Q</span>
 
 <span class="gp">julia&gt;</span> <span class="n">AA_Term</span>
-<span class="go">*</span>
+<span class="go">AA_Term</span>
 
 <span class="gp">julia&gt;</span> <span class="nb">typeof</span><span class="p">(</span><span class="n">AA_A</span><span class="p">)</span>
 <span class="go">Bio.Seq.AminoAcid</span>
@@ -570,7 +572,7 @@
 
 <p>Symbols can be constructed by converting regular characters:</p>
 <div class="codehilite"><pre><span></span><span class="gp">julia&gt;</span> <span class="nb">convert</span><span class="p">(</span><span class="n">AminoAcid</span><span class="p">,</span> <span class="sc">&#39;A&#39;</span><span class="p">)</span>
-<span class="go">A</span>
+<span class="go">AA_A</span>
 
 <span class="gp">julia&gt;</span> <span class="nb">convert</span><span class="p">(</span><span class="n">AminoAcid</span><span class="p">,</span> <span class="sc">&#39;P&#39;</span><span class="p">)</span> <span class="o">===</span> <span class="n">AA_P</span>
 <span class="go">true</span>
@@ -587,22 +589,63 @@
 <span class="go">true</span>
 
 <span class="gp">julia&gt;</span> <span class="n">DNA_A</span> <span class="o">+</span> <span class="mi">1</span>  <span class="c"># addition</span>
-<span class="go">C</span>
+<span class="go">DNA_C</span>
 
 <span class="gp">julia&gt;</span> <span class="n">DNA_T</span> <span class="o">-</span> <span class="mi">3</span>  <span class="c"># subtraction</span>
-<span class="go">A</span>
+<span class="go">DNA_A</span>
 
 <span class="gp">julia&gt;</span> <span class="n">DNA_T</span> <span class="o">-</span> <span class="n">DNA_C</span>  <span class="c"># difference</span>
 <span class="go">2</span>
 </pre></div>
 
 
-<p>Note that these operations do <strong>not</strong> check bounds of valid range:</p>
-<div class="codehilite"><pre><span></span><span class="gp">julia&gt;</span> <span class="n">DNA_C</span> <span class="o">-</span> <span class="mi">2</span>
-<span class="go">Invalid DNA Nucleotide</span>
+<p>Note that these operations are cyclic:</p>
+<div class="codehilite"><pre><span></span><span class="gp">julia&gt;</span> <span class="n">DNA_C</span> <span class="o">+</span> <span class="mi">15</span>
+<span class="go">DNA_A</span>
 
-<span class="gp">julia&gt;</span> <span class="n">DNA_A</span> <span class="o">+</span> <span class="mi">30</span>
-<span class="go">Invalid DNA Nucleotide</span>
+<span class="gp">julia&gt;</span> <span class="n">DNA_A</span> <span class="o">-</span> <span class="mi">1</span>
+<span class="go">DNA_Gap</span>
+</pre></div>
+
+
+<p><a id='Symbol-Ranges-1'></a></p>
+<h3 id="symbol-ranges">Symbol Ranges</h3>
+<p>Consecutive symbol sets can be created using a colon like integer ranges:</p>
+<div class="codehilite"><pre><span></span><span class="gp">julia&gt;</span> <span class="n">DNA_A</span><span class="p">:</span><span class="n">DNA_T</span>    <span class="c"># unambiguous DNA nucleotides (A, C, G, T)</span>
+<span class="go">DNA_A:DNA_T</span>
+
+<span class="gp">julia&gt;</span> <span class="n">DNA_A</span><span class="p">:</span><span class="n">DNA_N</span>    <span class="c"># all DNA nucleotides except gap</span>
+<span class="go">DNA_A:DNA_N</span>
+
+<span class="gp">julia&gt;</span> <span class="n">DNA_A</span><span class="p">:</span><span class="n">DNA_Gap</span>  <span class="c"># all DNA nucleotides including gap</span>
+<span class="go">DNA_A:DNA_Gap</span>
+
+<span class="gp">julia&gt;</span> <span class="n">AA_A</span><span class="p">:</span><span class="n">AA_V</span>      <span class="c"># standard amino acids</span>
+<span class="go">AA_A:AA_V</span>
+
+<span class="gp">julia&gt;</span> <span class="n">AA_A</span><span class="p">:</span><span class="n">AA_U</span>      <span class="c"># standard amino acids + pyrrolysine (O) + selenocysteine (U)</span>
+<span class="go">AA_A:AA_U</span>
+
+<span class="gp">julia&gt;</span> <span class="n">AA_A</span><span class="p">:</span><span class="n">AA_X</span>      <span class="c"># all amino acids except teminal codon (*) and gap</span>
+<span class="go">AA_A:AA_X</span>
+
+<span class="gp">julia&gt;</span> <span class="n">AA_A</span><span class="p">:</span><span class="n">AA_Gap</span>    <span class="c"># all amino acids including teminal codon (*) and gap</span>
+<span class="go">AA_A:AA_Gap</span>
+</pre></div>
+
+
+<p>Most range operations are supported, especially the iterator interface and the membership operator (<code>in</code> or <code>∈</code>) will be useful in many situations:</p>
+<div class="codehilite"><pre><span></span><span class="gp">julia&gt;</span> <span class="k">for</span> <span class="n">nt</span> <span class="k">in</span> <span class="n">DNA_A</span><span class="p">:</span><span class="n">DNA_T</span><span class="p">;</span> <span class="n">println</span><span class="p">(</span><span class="n">nt</span><span class="p">);</span> <span class="k">end</span>
+<span class="go">A</span>
+<span class="go">C</span>
+<span class="go">G</span>
+<span class="go">T</span>
+
+<span class="gp">julia&gt;</span> <span class="n">DNA_C</span> <span class="k">in</span> <span class="n">DNA_A</span><span class="p">:</span><span class="n">DNA_T</span>  <span class="c"># DNA_C is in the range of unambiguous DNA nucleotides</span>
+<span class="go">true</span>
+
+<span class="gp">julia&gt;</span> <span class="n">DNA_N</span> <span class="k">in</span> <span class="n">DNA_A</span><span class="p">:</span><span class="n">DNA_T</span>  <span class="c"># DNA_N is not in it</span>
+<span class="go">false</span>
 </pre></div>
 
 
@@ -726,13 +769,13 @@
 
 <span class="gp">julia&gt;</span> <span class="nb">convert</span><span class="p">(</span><span class="n">Vector</span><span class="p">{</span><span class="n">DNANucleotide</span><span class="p">},</span> <span class="n">dna</span><span class="s">&quot;TTANGTA&quot;</span><span class="p">)</span>
 <span class="go">7-element Array{Bio.Seq.DNANucleotide,1}:</span>
-<span class="go"> T</span>
-<span class="go"> T</span>
-<span class="go"> A</span>
-<span class="go"> N</span>
-<span class="go"> G</span>
-<span class="go"> T</span>
-<span class="go"> A</span>
+<span class="go"> DNA_T</span>
+<span class="go"> DNA_T</span>
+<span class="go"> DNA_A</span>
+<span class="go"> DNA_N</span>
+<span class="go"> DNA_G</span>
+<span class="go"> DNA_T</span>
+<span class="go"> DNA_A</span>
 </pre></div>
 
 
@@ -778,7 +821,7 @@
 <span class="go">ACGTTTANAGTNNAGTACC</span>
 
 <span class="gp">julia&gt;</span> <span class="n">seq</span><span class="p">[</span><span class="mi">5</span><span class="p">]</span>
-<span class="go">T</span>
+<span class="go">DNA_T</span>
 
 <span class="gp">julia&gt;</span> <span class="n">seq</span><span class="p">[</span><span class="mi">6</span><span class="p">:</span><span class="k">end</span><span class="p">]</span>
 <span class="go">14nt DNA Sequence:</span>
@@ -796,7 +839,7 @@
 <span class="go">AA</span>
 
 <span class="gp">julia&gt;</span> <span class="n">subseq</span><span class="p">[</span><span class="mi">2</span><span class="p">]</span> <span class="o">=</span> <span class="n">DNA_T</span>  <span class="c"># modify the second element of it</span>
-<span class="go">T</span>
+<span class="go">DNA_T</span>
 
 <span class="gp">julia&gt;</span> <span class="n">subseq</span>  <span class="c"># the subsequence is modified</span>
 <span class="go">2nt DNA Sequence:</span>
