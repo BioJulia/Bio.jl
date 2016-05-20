@@ -7,7 +7,7 @@ else
     const Test = BaseTestNext
 end
 
-using Bio.Indexing
+using Bio.Indexers
 
 @testset "Indexers" begin
 
