@@ -9,22 +9,22 @@
 """
 Query type for approximate sequence search.
 """
-immutable ApproximateSearchQuery{S<:Sequence,T}
-    seq::S            # query sequence
-    fPcom::Vector{T}  # compatibility vector for forward search
-    bPcom::Vector{T}  # compatibility vector for backward search
-    H::Vector{Int}    # distance vector for alignback function
+immutable ApproximateSearchQuery{S<:Sequence}
+    seq::S          # query sequence
+    fPcom::Vector   # compatibility vector for forward search
+    bPcom::Vector   # compatibility vector for backward search
+    H::Vector{Int}  # distance vector for alignback function
 
     function ApproximateSearchQuery(seq::Sequence, direction::Symbol)
         if direction == :forward
-            fPcom = approx_preprocess(T, seq, true)
-            bPcom = T[]
+            fPcom = approx_preprocess(seq, true)
+            bPcom = []
         elseif direction == :backward
-            fPcom = T[]
-            bPcom = approx_preprocess(T, seq, false)
+            fPcom = []
+            bPcom = approx_preprocess(seq, false)
         elseif direction == :both
-            fPcom = approx_preprocess(T, seq, true)
-            bPcom = approx_preprocess(T, seq, false)
+            fPcom = approx_preprocess(seq, true)
+            bPcom = approx_preprocess(seq, false)
         else
             throw(ArgumentError("direction '$direction' is invalid"))
         end
@@ -43,17 +43,17 @@ Create an query object for approximate sequence search from the `pat` sequence.
 * `direction=:both`: Search direction (`:forward`, `:backward`, or `:both`).
 """
 function ApproximateSearchQuery(pat::Sequence, direction::Symbol=:both)
+    return ApproximateSearchQuery{typeof(pat)}(pat, direction)
+end
+
+function approx_preprocess(pat, forward)
     # select a bit vector type
     # TODO: BigInt is very slow, consider implementing "4.2 THE BLOCKS MODEL"
     m = length(pat)
     T = m ≤ 64 ? UInt64 : m ≤ 128 ? UInt128 : BigInt
-    return ApproximateSearchQuery{typeof(pat),T}(pat, direction)
-end
-
-function approx_preprocess{T}(::Type{T}, pat, forward)
     Σ = alphabet(eltype(pat))
     Pcom = zeros(T, length(Σ))
-    for i in 1:endof(pat)
+    for i in 1:m
         y = forward ? pat[i] : pat[end-i+1]
         for x in Σ
             if Seq.iscompatible(x, y)
@@ -129,18 +129,27 @@ function approxrsearchindex(seq::Sequence, query::ApproximateSearchQuery, k::Int
 end
 
 function _approxsearch(query, seq, k, start, stop, forward)
+    if forward && isempty(query.fPcom)
+        throw(ArgumentError("query is not preprocessed for forward search"))
+    end
+    if !forward && isempty(query.bPcom)
+        throw(ArgumentError("query is not preprocessed for backward search"))
+    end
+
     if k ≥ length(query.seq)
         return start:start-1
     end
 
     # search the approximate suffix
-    matchstop, dist = search_approx_suffix(query, seq, k, start, stop, forward)
+    matchstop, dist = search_approx_suffix(
+        forward ? query.fPcom : query.bPcom,
+        query.seq, seq, k, start, stop, forward)
     if matchstop == 0
         return 0:-1
     end
 
     # locate the starting position of the match
-    matchstart = alignback(query, seq, dist, start, matchstop, forward)
+    matchstart = alignback!(query.H, query.seq, seq, dist, start, matchstop, forward)
     if forward
         return matchstart:matchstop
     else
@@ -154,25 +163,16 @@ end
 # distance between `s` and `t` sequences. See Myers' paper for details:
 # Myers, Gene. "A fast bit-vector algorithm for approximate string matching
 # based on dynamic programming." Journal of the ACM (JACM) 46.3 (1999): 395-415.
-function search_approx_suffix{S,T}(query::ApproximateSearchQuery{S,T},
-                                   seq, k, start, stop, forward)
+# NOTE: `Pcom` corresponds to `Peq` in the paper.
+function search_approx_suffix{T}(Pcom::Vector{T}, pat, seq, k, start, stop, forward)
     if k < 0
         throw(ArgumentError("the number of errors must be non-negative"))
     end
-    if forward && isempty(query.fPcom)
-        throw(ArgumentError("query is not preprocessed for forward search"))
-    end
-    if !forward && isempty(query.bPcom)
-        throw(ArgumentError("query is not preprocessed for backward search"))
-    end
 
-    pat = query.seq
     m = length(pat)
     n = length(seq)
     @assert T == BigInt || m ≤ sizeof(T) * 8
 
-    # `Pcom` corresponds to `Peq` in the orignal paper.
-    Pcom = forward ? query.fPcom : query.bPcom
     Pv::T = (one(T) << m) - one(T)
     Mv::T = zero(T)
     dist = m
@@ -210,15 +210,12 @@ function search_approx_suffix{S,T}(query::ApproximateSearchQuery{S,T},
 end
 
 # run dynamic programming to get the starting position of the alignment
-function alignback(query, seq, dist, start, matchstop, forward)
-    pat = query.seq
+function alignback!(H, pat, seq, dist, start, matchstop, forward)
     m = length(pat)
     n = length(seq)
-    H = query.H
 
     # initialize the cost column
-    H[1] = 0
-    for i in 1:m
+    for i in 0:m
         H[i+1] = i
     end
 
