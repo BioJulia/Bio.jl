@@ -23,6 +23,7 @@ extra:
 extra_css:
   - assets/Documenter.css
   - assets/friendly.css
+  - assets/custom.css
 
 extra_javascript:
   - https://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS_HTML
