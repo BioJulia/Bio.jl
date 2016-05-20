@@ -388,8 +388,10 @@ end
         @testset "DNA" begin
             @test DNA_A + 1 == DNA_C
             @test DNA_A + 2 == DNA_G
+            @test DNA_A + 16 == DNA_A
             @test DNA_T - 1 == DNA_G
             @test DNA_T - 2 == DNA_C
+            @test DNA_T - 16 == DNA_T
             @test DNA_T - DNA_A == 3
             @test DNA_T - DNA_C == 2
             @test DNA_A < DNA_C < DNA_G < DNA_T < DNA_M < DNA_N < DNA_Gap
@@ -406,8 +408,10 @@ end
         @testset "RNA" begin
             @test RNA_A + 1 == RNA_C
             @test RNA_A + 2 == RNA_G
+            @test RNA_A + 16 == RNA_A
             @test RNA_U - 1 == RNA_G
             @test RNA_U - 2 == RNA_C
+            @test RNA_U - 16 == RNA_U
             @test RNA_U - RNA_A == 3
             @test RNA_U - RNA_C == 2
             @test RNA_A < RNA_C < RNA_G < RNA_U < RNA_M < RNA_N < RNA_Gap
@@ -423,20 +427,56 @@ end
         end
     end
 
+    @testset "Range" begin
+        @test   DNA_A in DNA_A:DNA_G
+        @test   DNA_C in DNA_A:DNA_G
+        @test   DNA_G in DNA_A:DNA_G
+        @test !(DNA_T in DNA_A:DNA_G)
+        @test collect(DNA_C:DNA_T) == [DNA_C, DNA_G, DNA_T]
+
+        @test   RNA_A in RNA_A:RNA_G
+        @test   RNA_C in RNA_A:RNA_G
+        @test   RNA_G in RNA_A:RNA_G
+        @test !(RNA_U in RNA_A:RNA_G)
+        @test collect(RNA_C:RNA_U) == [RNA_C, RNA_G, RNA_U]
+    end
+
     @testset "Show DNA" begin
-        buf = IOBuffer()
-        for nt in [DNA_A, DNA_C, DNA_G, DNA_T, DNA_N]
-            show(buf, nt)
+        @testset "print" begin
+            buf = IOBuffer()
+            for nt in [DNA_A, DNA_C, DNA_G, DNA_T, DNA_N, DNA_Gap]
+                print(buf, nt)
+            end
+            @test takebuf_string(buf) == "ACGTN-"
         end
-        @test takebuf_string(buf) == "ACGTN"
+
+        @testset "show" begin
+            buf = IOBuffer()
+            for nt in [DNA_A, DNA_C, DNA_G, DNA_T, DNA_N, DNA_Gap]
+                show(buf, nt)
+                write(buf, ' ')
+            end
+            @test takebuf_string(buf) == "DNA_A DNA_C DNA_G DNA_T DNA_N DNA_Gap "
+        end
     end
 
     @testset "Show RNA" begin
-        buf = IOBuffer()
-        for nt in [RNA_A, RNA_C, RNA_G, RNA_U, RNA_N]
-            show(buf, nt)
+        @testset "print" begin
+            buf = IOBuffer()
+            for nt in [RNA_A, RNA_C, RNA_G, RNA_U, RNA_N, RNA_Gap]
+                print(buf, nt)
+            end
+            @test takebuf_string(buf) == "ACGUN-"
         end
-        @test takebuf_string(buf) == "ACGUN"
+
+        @testset "show" begin
+            buf = IOBuffer()
+            for nt in [RNA_A, RNA_C, RNA_G, RNA_U, RNA_N, RNA_Gap]
+                show(buf, nt)
+                write(buf, ' ')
+            end
+            @test takebuf_string(buf) == "RNA_A RNA_C RNA_G RNA_U RNA_N RNA_Gap "
+        end
     end
 end
 
@@ -445,8 +485,10 @@ end
         @test AA_A + 1 == AA_R
         @test AA_R + 1 == AA_N
         @test AA_A + 2 == AA_N
+        @test AA_A + 28 == AA_A
         @test AA_R - 1 == AA_A
         @test AA_N - 2 == AA_A
+        @test AA_A - 28 == AA_A
         @test AA_D - AA_A ==  3
         @test AA_A - AA_D == -3
         @test (AA_A < AA_R < AA_N < AA_V < AA_O < AA_U <
@@ -458,6 +500,17 @@ end
         @test AA_A in alphabet(AminoAcid)
         @test AA_I in alphabet(AminoAcid)
         @test AA_U in alphabet(AminoAcid)
+    end
+
+    @testset "Range" begin
+        @test !(AA_C in AA_Q:AA_H)
+        @test   AA_Q in AA_Q:AA_H
+        @test   AA_E in AA_Q:AA_H
+        @test   AA_G in AA_Q:AA_H
+        @test   AA_H in AA_Q:AA_H
+        @test !(AA_I in AA_Q:AA_H)
+
+        @test collect(AA_W:AA_V) == [AA_W, AA_Y, AA_V]
     end
 
     @testset "Encoder" begin
@@ -487,6 +540,25 @@ end
             @test iscompatible(x, AA_J) == (x ∈ (AA_I, AA_L, AA_J, AA_X))
             @test iscompatible(x, AA_Z) == (x ∈ (AA_E, AA_Q, AA_Z, AA_X))
             @test iscompatible(x, AA_X) == (x ∉ (AA_Term, AA_Gap))
+        end
+    end
+
+    @testset "Show amino acid" begin
+        @testset "print" begin
+            buf = IOBuffer()
+            for aa in [AA_A, AA_D, AA_B, AA_X, AA_Term, AA_Gap]
+                print(buf, aa)
+            end
+            @test takebuf_string(buf) == "ADBX*-"
+        end
+
+        @testset "show" begin
+            buf = IOBuffer()
+            for aa in [AA_A, AA_D, AA_B, AA_X, AA_Term, AA_Gap]
+                show(buf, aa)
+                write(buf, ' ')
+            end
+            @test takebuf_string(buf) == "AA_A AA_D AA_B AA_X AA_Term AA_Gap "
         end
     end
 

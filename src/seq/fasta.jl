@@ -57,7 +57,7 @@ function Base.write{T}(io::IO, seqrec::SeqRecord{T,FASTAMetadata})
     counter = 1
     len = length(seqrec.seq)
     for nt in seqrec.seq
-        show(io, nt)
+        print(io, nt)
         if counter % maxchars == 0 && counter < len
             write(io, "\n")
         end

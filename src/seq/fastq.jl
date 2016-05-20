@@ -44,7 +44,7 @@ Show a `FASTQSeqRecord` to `io`, with graphical display of quality scores.
 function Base.show(io::IO, seqrec::FASTQSeqRecord)
     write(io, "@", seqrec.name, " ", seqrec.metadata.description, "\n")
     for c in seqrec.seq
-        show(io, c)
+        print(io, c)
     end
     write(io, '\n')
     # print quality scores as a unicode bar chart
@@ -92,7 +92,7 @@ function Base.write(io::IO, seqrec::FASTQSeqRecord;
     write(io, "\n")
 
     for c in seqrec.seq
-        show(io, c)
+        print(io, c)
     end
     write(io, "\n")
 

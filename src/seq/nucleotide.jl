@@ -30,8 +30,8 @@ Base.convert{T<:Number,S<:Nucleotide}(::Type{S}, nt::T) = convert(S, UInt8(nt))
 # like iteration, sort, comparison, and so on.
 @compat begin
     Base.:-{N<:Nucleotide}(x::N, y::N) = Int(x) - Int(y)
-    Base.:-{N<:Nucleotide}(x::N, y::Integer) = reinterpret(N, UInt8(x) - UInt8(y))
-    Base.:+{N<:Nucleotide}(x::N, y::Integer) = reinterpret(N, UInt8(x) + UInt8(y))
+    Base.:-{N<:Nucleotide}(x::N, y::Integer) = x + (-y)
+    Base.:+{N<:Nucleotide}(x::N, y::Integer) = reinterpret(N, (UInt8(x) + y % UInt8) & 0b1111)
     Base.:+{N<:Nucleotide}(x::Integer, y::N) = y + x
 end
 Base.isless{N<:Nucleotide}(x::N, y::N) = isless(UInt8(x), UInt8(y))
@@ -90,6 +90,8 @@ compatbits_nuc[0b1111 + 1] = 0b0000
 nnucleotide(::Type{DNANucleotide}) = DNA_N
 invalid_nucleotide(::Type{DNANucleotide}) = DNA_INVALID
 
+Base.colon(start::DNANucleotide, stop::DNANucleotide) = SymbolRange(start, stop)
+
 Base.isvalid(::Type{DNANucleotide}, x::Integer) = 0 ≤ x < 16
 Base.isvalid(nt::DNANucleotide) = nt ≤ DNA_Gap
 isambiguous(nt::DNANucleotide) = nt > DNA_T
@@ -137,6 +139,8 @@ rna_to_char[0b1111 + 1] = '-'
 "Returns Any RNA Nucleotide (RNA_N)"
 nnucleotide(::Type{RNANucleotide}) = RNA_N
 invalid_nucleotide(::Type{RNANucleotide}) = RNA_INVALID
+
+Base.colon(start::RNANucleotide, stop::RNANucleotide) = SymbolRange(start, stop)
 
 Base.isvalid(::Type{RNANucleotide}, x::Integer) = 0 ≤ x < 16
 Base.isvalid(nt::RNANucleotide) = nt ≤ RNA_Gap
@@ -209,17 +213,35 @@ Base.convert(::Type{Char}, nt::RNANucleotide) = rna_to_char[convert(UInt8, nt) +
 # ---------------
 
 function Base.show(io::IO, nt::DNANucleotide)
-    if !isvalid(nt)
-        write(io, "Invalid DNA Nucleotide")
+    if isvalid(nt)
+        if nt == DNA_Gap
+            write(io, "DNA_Gap")
+        else
+            write(io, "DNA_", Char(nt))
+        end
     else
-        write(io, Char(nt))
+        write(io, "Invalid DNA Nucleotide")
     end
+    return
 end
 
 function Base.show(io::IO, nt::RNANucleotide)
-    if !isvalid(nt)
-        write(io, "Invalid RNA Nucleotide")
+    if isvalid(nt)
+        if nt == RNA_Gap
+            write(io, "RNA_Gap")
+        else
+            write(io, "RNA_", Char(nt))
+        end
     else
-        write(io, Char(nt))
+        write(io, "Invalid RNA Nucleotide")
     end
+    return
+end
+
+function Base.print(io::IO, nt::Nucleotide)
+    if !isvalid(nt)
+        throw(ArgumentError("nucleotide is invalid"))
+    end
+    write(io, Char(nt))
+    return
 end

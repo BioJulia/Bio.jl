@@ -26,8 +26,9 @@ Base.convert{T<:Number}(::Type{AminoAcid}, aa::T) = convert(AminoAcid, UInt8(aa)
 # like iteration, sort, comparison, and so on.
 @compat begin
     Base.:-(x::AminoAcid, y::AminoAcid) = Int(x) - Int(y)
-    Base.:-(x::AminoAcid, y::Integer) = reinterpret(AminoAcid, UInt8(x) - UInt8(y))
-    Base.:+(x::AminoAcid, y::Integer) = reinterpret(AminoAcid, UInt8(x) + UInt8(y))
+    # 0x1c is the size of the amino acid alphabet
+    Base.:-(x::AminoAcid, y::Integer) = x + mod(-y, 0x1c)
+    Base.:+(x::AminoAcid, y::Integer) = reinterpret(AminoAcid, mod((UInt8(x) + y) % UInt8, 0x1c))
     Base.:+(x::Integer, y::AminoAcid) = y + x
 end
 Base.isless(x::AminoAcid, y::AminoAcid) = isless(UInt8(x), UInt8(y))
@@ -107,6 +108,8 @@ char_to_aa[Int('-') + 1] = AA_Gap
 aa_to_char[0x1b+1] = '-'
 compatbits_aa[0x1b+1] = 0
 
+Base.colon(start::AminoAcid, stop::AminoAcid) = SymbolRange(start, stop)
+
 Base.isvalid(::Type{AminoAcid}, x::Integer) = 0 ≤ x ≤ 0x1b
 Base.isvalid(aa::AminoAcid) = aa ≤ AA_Gap
 isambiguous(aa::AminoAcid) = AA_B ≤ aa ≤ AA_X
@@ -132,11 +135,26 @@ Base.convert(::Type{Char}, aa::AminoAcid) = aa_to_char[convert(UInt8, aa) + 1]
 # ---------------
 
 function Base.show(io::IO, aa::AminoAcid)
-    if aa == AA_INVALID
-        write(io, "Invalid Amino Acid")
+    if isvalid(aa)
+        if aa == AA_Term
+            write(io, "AA_Term")
+        elseif aa == AA_Gap
+            write(io, "AA_Gap")
+        else
+            write(io, "AA_", Char(aa))
+        end
     else
-        write(io, Char(aa))
+        write(io, "Invalid Amino Acid")
     end
+    return
+end
+
+function Base.print(io::IO, aa::AminoAcid)
+    if !isvalid(aa)
+        throw(ArgumentError("invalid amino acid"))
+    end
+    write(io, Char(aa))
+    return
 end
 
 # lookup table of 20 standard amino acids
