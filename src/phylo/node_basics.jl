@@ -37,7 +37,7 @@ isroot(my_tree, :Root)
 isroot(my_tree, :A)
 ```
 """
-function isroot(tree::Phylogeny, vertex::SymString)
+function isroot(tree::Phylogeny, name::SymString)
     isroot(tree, tree.vertexindex[name])
 end
 
@@ -104,10 +104,6 @@ function isleaf(tree::Phylogeny, name::SymString)
     return isleaf(tree, tree.vertexindex[name])
 end
 
-function isclade(tree::Phylogeny, vertex::Int)
-    return vertex > tree.ntaxa
-end
-
 """
     hasparent(tree::Phylogeny, vertex::Int)
 
@@ -148,7 +144,7 @@ parent(my_tree, 2)
 """
 function parent(tree::Phylogeny, vertex::Int)
     @assert hasparent(tree, vertex) error("Vertex does not have a parent.")
-    return in_neighbours(tree.graph, vertex)[1]
+    return in_neighbors(tree.graph, vertex)[1]
 end
 
 """
@@ -156,7 +152,7 @@ end
 
 Test if a vertex of a phylogeny is the parent of another vertex.
 """
-function hasparent(tree::Phylogeny, parent::Int, child::Int)
+function hasparent(tree::Phylogeny, child::Int, parent::Int)
     return has_edge(tree.graph, parent, child)
 end
 
@@ -210,8 +206,8 @@ end
 
 Test if a vertex of a phylogeny is the child of another vertex.
 """
-function haschild(tree::Phylogeny, child::Int, parent::Int)
-    return has_edge(tree, parent, child)
+function haschild(tree::Phylogeny, parent::Int, child::Int)
+    return has_edge(tree.graph, parent, child)
 end
 
 """
@@ -220,7 +216,7 @@ end
 Get the children vertices of a vertex in the phylogeny.
 """
 function children(tree::Phylogeny, vertex::Int)
-    return copy(out_neighbours(tree.graph, vertex))
+    return copy(out_neighbors(tree.graph, vertex))
 end
 
 """
@@ -229,10 +225,12 @@ end
 Test whether a node is preterminal i.e. It's children are all leaves.
 """
 function ispreterminal(tree::Phylogeny, vertex::Int)
-    if isleaf(tree, vertex)
+    if !haschildren(tree, vertex)
         return false
     end
-    return all([isleaf(tree, i) for i in out_neighbours(tree.graph, vertex)])
+    # We use out_neighbours below as it returns a reference, rather than a copy
+    # as the children method above does, so we save unnessecery copy ops.
+    return all([isleaf(tree, i) for i in out_neighbors(tree.graph, vertex)])
 end
 
 """
@@ -242,10 +240,12 @@ Test whether a node is semi-preterminal i.e. Some of it's children are leaves,
 but not all are.
 """
 function issemipreterminal(tree::Phylogeny, vertex::Int)
-    if isleaf(tree, vertex)
+    if !haschildren(tree, vertex)
         return false
     end
-    areleaves = [isleaf(tree, i) for i in out_neighbours(tree.graph, vertex)]
+    # We use out_neighbours below as it returns a reference, rather than a copy
+    # as the children method above does, so we save unnessecery copy ops.
+    areleaves = [isleaf(tree, i) for i in out_neighbors(tree.graph, vertex)]
     return any(areleaves) && !all(areleaves)
 end
 

@@ -32,7 +32,6 @@ like dictate aesthetic values when plotting.
 Type parameter `C` dictates what datatype can be stored in the phylogeny to annotate
 clades and tips. Type parameter `B` dictates what datatype can be stored in the
 phylogeny to annotate branches. Think `C` for clades and `B` for branches.
-
 """
 type Phylogeny{C, B}
     graph::DiGraph
@@ -199,7 +198,7 @@ end
 root(tree::Phylogeny) = tree.ntaxa + 1
 
 "Get the range of vertices which represent the internal clades of the tree."
-clades(tree::Phylogeny) = (root(tree) + 1):nv(tree.graph)
+clades(tree::Phylogeny) = root(tree):nv(tree.graph)
 
 "Get the range of vertices which represent the leaves of the tree."
 leaves(tree::Phylogeny) = 1:tree.ntaxa
