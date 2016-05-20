@@ -551,10 +551,10 @@ Several kinds of on-line search functions are provided.
 
 ### Exact search
 
-Exact search functions search for the first occurrence of the query symbol or
+Exact search functions search for an occurrence of the query symbol or
 sequence. Four functions, `search`, `searchindex`, `rsearch`, and
-`rsearchindex`, are available:
-```julia
+`rsearchindex` are available:
+```jlcon
 julia> seq = dna"ACAGCGTAGCT";
 
 julia> search(seq, DNA_G)  # search a query symbol
@@ -580,7 +580,7 @@ These search functions take ambiguous symbols into account. That is, if two
 symbols are compatible (e.g. `DNA_A` and `DNA_N`), they match when searching an
 occurrence. In the following example, 'N' is a wild card that matches any
 symbols:
-```julia
+```jlcon
 julia> search(dna"ACNT", DNA_N)  # 'A' matches 'N'
 1:1
 
@@ -597,7 +597,7 @@ searching phase. This would be enough fast for most search applications. But
 when searching a query sequence to large amounts of target sequences, caching
 the result of preprocessing may save time. The `ExactSearchQuery` creates such
 a preprocessed query object and is applicable to the search functions:
-```julia
+```jlcon
 julia> query = ExactSearchQuery(dna"ATT");
 
 julia> search(dna"ATTTATT", query)
@@ -605,6 +605,59 @@ julia> search(dna"ATTTATT", query)
 
 julia> rsearch(dna"ATTTATT", query)
 5:7
+
+```
+
+
+### Approximate search
+
+The approximate search is similar to the exact search but allows a specific
+number of errors. That is, it tries to find a subsequence of the target sequence
+within a specific [Levenshtein
+distance](https://en.wikipedia.org/wiki/Levenshtein_distance) of the query
+sequence:
+```jlcon
+julia> seq = dna"ACAGCGTAGCT";
+
+julia> approxsearch(seq, dna"AGGG", 0)  # nothing matches with no errors
+0:-1
+
+julia> approxsearch(seq, dna"AGGG", 1)  # seq[3:5] matches with one error
+3:6
+
+julia> approxsearch(seq, dna"AGGG", 2)  # seq[1:4] matches with two errors
+1:4
+
+```
+
+Like the exact search functions, four kinds of functions (`approxsearch`,
+`approxsearchindex`, `approxrsearch`, and `approxrsearchindex`) are available:
+```jlcon
+julia> seq = dna"ACAGCGTAGCT"; pat = dna"AGGG";
+
+julia> approxsearch(seq, pat, 2)        # return the range (forward)
+1:4
+
+julia> approxsearchindex(seq, pat, 2)   # return the starting index (forward)
+1
+
+julia> approxrsearch(seq, pat, 2)       # return the range (backward)
+8:11
+
+julia> approxrsearchindex(seq, pat, 2)  # return the starting index (backward)
+8
+
+```
+
+Preprocessing can be cached in an `ApproximateSearchQuery` object:
+```jlcon
+julia> query = ApproximateSearchQuery(dna"AGGG");
+
+julia> approxsearch(dna"AAGAGG", query, 1)
+2:5
+
+julia> approxsearch(dna"ACTACGT", query, 2)
+4:6
 
 ```
 

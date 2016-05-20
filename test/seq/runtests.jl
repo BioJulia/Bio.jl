@@ -1888,6 +1888,14 @@ end
             @test approxsearchindex(seq, dna"AC", 0) === 1
             @test approxsearchindex(seq, dna"AC", 0, 2) === 5
             @test approxsearchindex(seq, dna"AC", 0, 2, 5) === 0
+
+            query = ApproximateSearchQuery(dna"ACG")
+            @test approxsearch(seq, query, 1) === 1:2
+            @test approxsearch(seq, query, 1, 2) === 2:3
+            @test approxsearch(seq, query, 1, 2, 2) === 0:-1
+            @test approxsearchindex(seq, query, 1) === 1
+            @test approxsearchindex(seq, query, 1, 2) === 2
+            @test approxsearchindex(seq, query, 1, 2, 2) === 0
         end
 
         @testset "backward" begin
@@ -1916,6 +1924,14 @@ end
             @test approxrsearchindex(seq, dna"AC", 0) === 5
             @test approxrsearchindex(seq, dna"AC", 0, 5) === 1
             @test approxrsearchindex(seq, dna"AC", 0, 5, 2) === 0
+
+            query = ApproximateSearchQuery(dna"ACG")
+            @test approxrsearch(seq, query, 1, 7) === 6:7
+            @test approxrsearch(seq, query, 1, 6) === 5:6
+            @test approxrsearch(seq, query, 1, 6, 6) === 0:-1
+            @test approxrsearchindex(seq, query, 1, 7) === 6
+            @test approxrsearchindex(seq, query, 1, 6) === 5
+            @test approxrsearchindex(seq, query, 1, 6, 6) === 0
         end
     end
 end
