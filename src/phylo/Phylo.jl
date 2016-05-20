@@ -47,6 +47,7 @@ export
     nchildren,
     haschild,
     children,
+    isredundant,
     ispreterminal,
     issemipreterminal,
 

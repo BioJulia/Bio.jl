@@ -16,7 +16,9 @@ using LightGraphs
     @testset "Creation" begin
         # Create an unresolved star phylogeny.
         tips = [:A, :B, :C]
+        stringtips = ["A", "B", "C"]
         tree = Phylogeny(tips)
+        tree2 = Phylogeny(stringtips)
 
         @testset "Roots" begin
             @test isrooted(tree) == false
@@ -43,11 +45,18 @@ using LightGraphs
                 nchild = i == 4 ? 3 : 0
                 hasc = i == 4 ? true : false
                 noc = i == 4 ? false : true
+                r = i == 4 ? true : false
+                isc = i >= 4 ? true : false
+                isl = i <= 3 ? true : false
                 @test hasparent(tree, i) == hasp
                 @test !hasparent(tree, i) == nop
                 @test nchildren(tree, i) == nchild
                 @test haschildren(tree, i) == hasc
                 @test !haschildren(tree, i) == noc
+                @test isredundant(tree, i) == false
+                @test isroot(tree, i) == r
+                @test isclade(tree, i) == isc
+                @test isleaf(tree, i) == isl
             end
             @test hasparent(tree, collect(1:5)) == [true, true, true, false, false]
             @test hasparent(tree) == [true, true, true, false, false]
@@ -59,6 +68,8 @@ using LightGraphs
             @test haschildren(tree) == [false, false, false, true, false]
             @test !haschildren(tree, collect(1:5)) == [true, true, true, false, true]
             @test !haschildren(tree) == [true, true, true, false, true]
+            @test isredundant(tree, collect(1:5)) == [false, false, false, false, false]
+            @test isredundant(tree) == [false, false, false, false, false]
         end
         g = DiGraph(5)
         for i in 1:3
