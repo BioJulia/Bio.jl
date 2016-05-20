@@ -7,42 +7,44 @@
 # License is MIT: https://github.com/BioJulia/Bio.jl/blob/master/LICENSE.md
 
 # Iterate through every k-mer in a nucleotide sequence
-immutable EachKmerIterator{T,K,S}
+immutable EachKmerIterator{T,K,S<:Sequence}
     seq::S
     step::Int
 end
 
-# Maybe this function should replace the default constructor.
-# Is the (unsafe) default constructor used throughout our code?
 """
-Initialize an iterator over all k-mers in a sequence.
+    each(::Type{Kmer{T,k}}, seq::Sequence[, step=1])
 
-Any k-mer containing an N will be skipped over.
+Initialize an iterator over all k-mers in a sequence `seq` skipping ambiguous
+nucleotides without changing the reading frame.
 
-### Arguments
-  * `t`: Kmer type to enumerate.
-  * `seq`: A NucleotideSequence
-  * `step`: number of positions between iterated k-mers (default: 1)
+# Arguments
+* `Kmer{T,k}`: k-mer type to enumerate.
+* `seq`: a nucleotide sequence.
+* `step=1`: the number of positions between iterated k-mers
 
-### Returns
-A EachKmerIterator constructed with these parameters
-
-### Examples
-
-    # iterate over codons
-    for (pos, codon) in each(DNAKmer{3}, dna"ATCCTANAGNTACT", 3)
-        @show pos, codon
+# Examples
+```
+# iterate over DNA codons
+for (pos, codon) in each(DNAKmer{3}, dna"ATCCTANAGNTACT", 3)
+    @show pos, codon
+end
+```
+"""
+function each{T,K}(::Type{Kmer{T,K}}, seq::Sequence, step::Integer=1)
+    if eltype(seq) ∉ (DNANucleotide, RNANucleotide)
+        throw(ArgumentError("element type must be either DNA or RNA nucleotide"))
+    elseif !(0 ≤ K ≤ 32)
+        throw(ArgumentError("k-mer length must be between 0 and 32"))
+    elseif step < 1
+        throw(ArgumentError("step size must be positive"))
     end
-"""
-function each{T,K,A<:Union{DNAAlphabet,RNAAlphabet}}(t::Type{Kmer{T,K}}, seq::BioSequence{A}, step::Integer=1)
-    @assert K ≥ 0 "K must be ≥ 0 in EachKmer"
-    @assert K ≤ 32 "K must be ≤ 32 in EachKmer"
-    @assert step ≥ 1 "step must be ≥ 1"
-    return EachKmerIterator{T,K,BioSequence{A}}(seq, step)
+    return EachKmerIterator{T,K,typeof(seq)}(seq, step)
 end
 
 eachkmer{A<:DNAAlphabet}(seq::BioSequence{A}, K::Integer, step::Integer=1) = each(DNAKmer{Int(K)}, seq, step)
 eachkmer{A<:RNAAlphabet}(seq::BioSequence{A}, K::Integer, step::Integer=1) = each(RNAKmer{Int(K)}, seq, step)
+eachkmer(seq::ReferenceSequence, K::Integer, step::Integer=1) = each(DNAKmer{Int(K)}, seq, step)
 
 Base.eltype{T,k,S}(::Type{EachKmerIterator{T,k,S}}) = Tuple{Int,Kmer{T,k}}
 
@@ -51,7 +53,7 @@ if VERSION > v"0.5-"
 end
 
 @inline function Base.start{T,K}(it::EachKmerIterator{T,K})
-    nextn = find_next_ambiguous(it.seq, it.seq.part.start)
+    nextn = find_next_ambiguous(it.seq, first(it.seq.part))
     pair = Nullable{Tuple{Int,Kmer{T,K}}}()
     pair, nextn = nextkmer(Kmer{T,K}, it.seq, 1, it.step, nextn, pair)
     return pair, nextn
@@ -99,7 +101,7 @@ end
         # the last kmer doesn't overlap the extracting one
         x = UInt64(0)
         for k in 1:K
-            nt = unsafe_getindex(seq, from + k - 1)
+            nt = inbounds_getindex(seq, from + k - 1)
             x = x << 2 | UInt8(nt)
         end
     else
@@ -113,7 +115,7 @@ end
         from += K - n
         x = UInt64(kmer)
         for k in 1:n
-            nt = unsafe_getindex(seq, from + k - 1)
+            nt = inbounds_getindex(seq, from + k - 1)
             x = x << 2 | UInt8(nt)
         end
     end

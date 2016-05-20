@@ -118,56 +118,17 @@ Base.convert{S<:AbstractString}(::Type{S}, seq::Kmer) = convert(S, [Char(x) for 
 alphabet{k}(::Type{DNAKmer{k}}) = DNA_A:DNA_T
 alphabet{k}(::Type{RNAKmer{k}}) = RNA_A:RNA_U
 
-for (A, N) in ((DNAAlphabet, DNANucleotide), (RNAAlphabet, RNANucleotide))
-    @compat @eval begin
-        function Base.:(==){A<:$A,K}(a::BioSequence{A}, b::Kmer{$N,K})
-            if length(a) != K
-                return false
-            end
-            for (u, v) in zip(a, b)
-                if u != v
-                    return false
-                end
-            end
-            return true
-        end
-        Base.:(==){A<:$A,K}(a::Kmer{$N,K}, b::BioSequence{A}) = b == a
-    end
-end
-
 Base.hash(x::Kmer, h::UInt) = hash(UInt64(x), h)
 
-function Base.checkbounds(x::Kmer, i::Integer)
-    if 1 ≤ i ≤ endof(x)
-        return true
-    end
-    throw(BoundsError(x, i))
-end
+Base.length{T,K}(x::Kmer{T, K}) = K
+Base.eltype{T,k}(::Type{Kmer{T,k}}) = T
 
-function Base.getindex{T, K}(x::Kmer{T, K}, i::Integer)
-    checkbounds(x, i)
-    return unsafe_getindex(x, i)
-end
-
-@inline function unsafe_getindex{T,K}(x::Kmer{T,K}, i::Integer)
+@inline function inbounds_getindex{T,K}(x::Kmer{T,K}, i::Integer)
     return convert(T, (UInt64(x) >> (2K - 2i)) & 0b11)
 end
 
 Base.summary{k}(x::DNAKmer{k}) = string("DNA ", k, "-mer")
 Base.summary{k}(x::RNAKmer{k}) = string("RNA ", k, "-mer")
-
-function Base.show(io::IO, x::Kmer)
-    println(io, summary(x), ':')
-    print(io, x)
-end
-
-Base.print(io::IO, x::Kmer) = showcompact(io, x)
-
-function Base.showcompact{T,k}(io::IO, x::Kmer{T,k})
-    for i in 1:k
-        write(io, convert(Char, x[i]))
-    end
-end
 
 @compat begin
     Base.:-{T,K}(x::Kmer{T,K}, y::Integer) =
@@ -175,44 +136,9 @@ end
     Base.:+{T,K}(x::Kmer{T,K}, y::Integer) =
         Kmer{T,K}(UInt64(x) + reinterpret(UInt64, Int64(y)))
     Base.:+{T,K}(x::Integer, y::Kmer{T,K}) = y + x
+    Base.:(==){T,k}(x::Kmer{T,k}, y::Kmer{T,k}) = UInt64(x) == UInt64(y)
 end
 Base.isless{T,K}(x::Kmer{T,K}, y::Kmer{T,K}) = isless(UInt64(x), UInt64(y))
-
-Base.length{T, K}(x::Kmer{T, K}) = K
-Base.endof(x::Kmer) = length(x)
-
-# Iterating over nucleotides
-Base.start(x::Kmer) = 1
-Base.next(x::Kmer, i::Int) = unsafe_getindex(x, i), i + 1
-Base.done(x::Kmer, i::Int) = i > length(x)
-Base.eltype{T,k}(::Type{Kmer{T,k}}) = T
-
-function Base.findnext{T}(kmer::Kmer{T}, val, start::Integer)
-    checkbounds(kmer, start)
-    v = convert(T, val)
-    for i in Int(start):endof(kmer)
-        x = unsafe_getindex(kmer, i)
-        if x == v
-            return i
-        end
-    end
-    return 0
-end
-
-function Base.findprev{T}(kmer::Kmer{T}, val, start::Integer)
-    checkbounds(kmer, start)
-    v = convert(T, val)
-    for i in Int(start):-1:1
-        x = unsafe_getindex(kmer, i)
-        if x == v
-            return i
-        end
-    end
-    return 0
-end
-
-Base.findfirst(kmer::Kmer, val) = findnext(kmer, val, 1)
-Base.findlast(kmer::Kmer, val)  = findprev(kmer, val, endof(kmer))
 
 
 # Other functions

@@ -18,12 +18,9 @@ using Bio:
 
 # A type keeping track of a ragel-based parser's state.
 type State{T<:BufferedInputStream}
-    # input stream
-    stream::T
-    # current DFA state of Ragel
-    cs::Int
-    # line number: parser is responsible for updating this
-    linenum::Int
+    stream::T     # input stream
+    cs::Int       # current DFA state of Ragel
+    linenum::Int  # line number: parser is responsible for updating this
 end
 
 function State(initstate::Int, input::BufferedInputStream)
@@ -133,16 +130,20 @@ macro yield(ts)
     end)
 end
 
-# Define a read! function wrapping ragel-generated parser.  This macro handles
-# some the dirty work of maintaining state, refilling buffers, etc.
-macro generate_read_fuction(machine_name, input_type, output_type, ragel_body)
+
+# read/read! function generators
+# ------------------------------
+
+# Define a read!/read function wrapping ragel-generated parser.  These macros
+# handle some the dirty work of maintaining state, refilling buffers, etc.
+macro generate_read!_function(machine_name, input_type, output_type, ragel_body)
     accept_state = Symbol(machine_name, "_first_final")
     error_state = Symbol(machine_name, "_error")
 
-    esc(quote
-        function Base.read!(input::$(input_type),
-                            state::Ragel.State,
-                            output::$(output_type))
+    return esc(quote
+        function Base.read!(input::$(input_type), output::$(output_type))
+            state = input.state
+
             # restore state variables used by Ragel (`p` is 0-based)
             cs = state.cs
             p = state.stream.position - 1
@@ -201,10 +202,6 @@ macro generate_read_fuction(machine_name, input_type, output_type, ragel_body)
             state.stream.position = p + 1
 
             return output
-        end
-
-        function Base.read!(input::$(input_type), output::$(output_type))
-            return read!(input, input.state, output)
         end
     end)
 end

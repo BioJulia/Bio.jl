@@ -1326,6 +1326,58 @@ end
     end
 end
 
+@testset "ReferenceSequence" begin
+    @testset "Construction" begin
+        @test isa(ReferenceSequence(dna""), ReferenceSequence)
+        @test isa(ReferenceSequence(dna"ACGTN"^30), ReferenceSequence)
+        @test isa(ReferenceSequence("ACGTN"^30), ReferenceSequence)
+        @test_throws Exception ReferenceSequence(dna"ACGRT")
+        @test_throws Exception ReferenceSequence("ACGRT")
+    end
+
+    @testset "Conversion" begin
+        seq = DNASequence(random_dna(100))
+        refseq = ReferenceSequence(seq)
+        @test refseq == seq
+        @test convert(DNASequence, refseq) == seq
+    end
+
+    @testset "Basic Operations" begin
+        seq = ReferenceSequence(dna"")
+        @test length(seq) === endof(seq) === 0
+        @test isempty(seq)
+        @test ReferenceSequence(dna"") == seq
+        @test_throws BoundsError seq[0]
+        @test_throws BoundsError seq[1]
+        @test_throws BoundsError seq[2:3]
+        @test collect(seq) == DNANucleotide[]
+
+        seq = ReferenceSequence(dna"ACGTN")
+        @test length(seq) === endof(seq) === 5
+        @test !isempty(seq)
+        @test seq[1] === DNA_A
+        @test seq[2] === DNA_C
+        @test seq[3] === DNA_G
+        @test seq[4] === DNA_T
+        @test seq[5] === DNA_N
+        @test seq[2:3] == dna"CG"
+        @test seq[3:5] == dna"GTN"
+        @test seq[5:4] == dna""
+        @test_throws BoundsError seq[0]
+        @test_throws BoundsError seq[6]
+        @test_throws BoundsError seq[0:2]
+        @test_throws BoundsError seq[5:6]
+        @test collect(seq) == [DNA_A, DNA_C, DNA_G, DNA_T, DNA_N]
+    end
+
+    @testset "Long Sequence" begin
+        str = random_dna(50000)
+        @test ReferenceSequence(str) == DNASequence(str)
+        str = ("N"^300 * random_dna(1000))^5 * "N"^300
+        @test ReferenceSequence(str) == DNASequence(str)
+    end
+end
+
 @testset "Composition" begin
     function string_nucleotide_count(::Type{DNANucleotide}, seq::AbstractString)
         counts = Dict{DNANucleotide, Int}(
@@ -1782,7 +1834,7 @@ end
         end
     end
 
-    @testset "EachKmer" begin
+    @testset "Each k-mer" begin
         function string_eachkmer(seq::AbstractString, k, step)
             kmers = Compat.String[]
             i = 1
@@ -1795,23 +1847,23 @@ end
             return kmers
         end
 
-        function test_eachkmer(A, seq::AbstractString, k, step)
-            T = eltype(A)
-            xs = [convert(AbstractString, x) for (i, x) in collect(each(Kmer{T,k}, BioSequence{A}(seq), step))]
-            ys = [convert(AbstractString, x) for (i, x) in collect(eachkmer(BioSequence{A}(seq), k, step))]
+        function test_eachkmer(S, seq::AbstractString, k, step)
+            xs = [convert(AbstractString, x)
+                  for (i, x) in collect(each(Kmer{eltype(S),k}, S(seq), step))]
+            ys = [convert(AbstractString, x)
+                  for (i, x) in collect(eachkmer(S(seq), k, step))]
             zs = string_eachkmer(seq, k, step)
             @test xs == ys == zs
         end
 
-        len = 10000
-
-        for k in [0, 1, 3, 16, 32], step in 1:3, _ in 1:10
-            test_eachkmer(DNAAlphabet{4}, random_dna(len), k, step)
-            test_eachkmer(RNAAlphabet{4}, random_rna(len), k, step)
+        for k in [0, 1, 3, 16, 32], step in 1:3, len in [1, 2, 3, 5, 10, 100, 1000]
+            test_eachkmer(BioSequence{DNAAlphabet{4}}, random_dna(len), k, step)
+            test_eachkmer(BioSequence{RNAAlphabet{4}}, random_rna(len), k, step)
+            test_eachkmer(ReferenceSequence, random_dna(len), k, step)
 
             probs = [0.25, 0.25, 0.25, 0.25, 0.00]
-            test_eachkmer(DNAAlphabet{2}, random_dna(len, probs), k, step)
-            test_eachkmer(RNAAlphabet{2}, random_rna(len, probs), k, step)
+            test_eachkmer(BioSequence{DNAAlphabet{2}}, random_dna(len, probs), k, step)
+            test_eachkmer(BioSequence{RNAAlphabet{2}}, random_rna(len, probs), k, step)
         end
 
         @test isempty(collect(each(DNAKmer{1}, dna"")))
@@ -1821,7 +1873,7 @@ end
     end
 
     @testset "Kmer Counting" begin
-        function string_kmer_count{T <: Nucleotide}(::Type{T}, seq::AbstractString, k, step)
+        function string_kmer_count{T}(::Type{T}, seq::AbstractString, k, step)
             counts = Dict{Kmer{T, k}, Int}()
             for x in UInt64(0):UInt64(4^k-1)
                 counts[convert(Kmer{T, k}, x)] = 0
@@ -1838,10 +1890,10 @@ end
             return counts
         end
 
-        function test_kmer_count(A, seq::AbstractString, k, step)
-            T = eltype(A)
+        function test_kmer_count(S, seq::AbstractString, k, step)
+            T = eltype(S)
             string_counts = string_kmer_count(T, seq, k, step)
-            kmer_counts = KmerCounts{T,k}(BioSequence{A}(seq), step)
+            kmer_counts = KmerCounts{T,k}(S(seq), step)
             ok = true
             for y in UInt64(0):UInt64(4^k-1)
                 x = convert(Kmer{T,k}, y)
@@ -1853,13 +1905,16 @@ end
             @test ok
         end
 
-        for len in [1, 10, 32, 1000, 10000], k in [1, 2, 5], step in 1:3, _ in 1:10
-            test_kmer_count(DNAAlphabet{4}, random_dna(len), k, step)
-            test_kmer_count(RNAAlphabet{4}, random_rna(len), k, step)
+        for k in [1, 2, 5], step in 1:3, len in [1, 2, 3, 5, 10, 100, 1000]
+            test_kmer_count(BioSequence{DNAAlphabet{4}}, random_dna(len), k, step)
+            test_kmer_count(BioSequence{RNAAlphabet{4}}, random_rna(len), k, step)
+            test_kmer_count(ReferenceSequence, random_dna(len), k, step)
 
             probs = [0.25, 0.25, 0.25, 0.25, 0.00]
-            test_kmer_count(DNAAlphabet{2}, random_dna(len, probs), k, step)
-            test_kmer_count(RNAAlphabet{2}, random_rna(len, probs), k, step)
+            test_kmer_count(BioSequence{DNAAlphabet{2}},
+                            random_dna(len, probs), k, step)
+            test_kmer_count(BioSequence{RNAAlphabet{2}},
+                            random_rna(len, probs), k, step)
         end
     end
 
@@ -2144,6 +2199,24 @@ end
                 seq = first(open(input, FASTA, BioSequence{A})).seq
                 @test typeof(seq) == BioSequence{A}
             end
+
+            input = IOBuffer("""
+            >chr1
+            NNNAAACGTATN
+            NNNTTACGGNNN
+            """)
+            record = first(collect(open(input, FASTA, ReferenceSequence)))
+            @test record.name == "chr1"
+            @test record.seq == dna"NNNAAACGTATNNNNTTACGGNNN"
+            @test isa(record.seq, ReferenceSequence)
+        end
+
+        @testset "genomic sequence" begin
+            path = Pkg.dir("Bio", "test", "BioFmtSpecimens",
+                           "FASTA", "genomic-seq.fasta")
+            dnaseq = first(open(path, FASTA, DNASequence)).seq
+            refseq = first(open(path, FASTA, ReferenceSequence)).seq
+            @test dnaseq == refseq
         end
     end
 

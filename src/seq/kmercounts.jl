@@ -7,8 +7,8 @@
 # License is MIT: https://github.com/BioJulia/Bio.jl/blob/master/LICENSE.md
 
 """
-    DNAKmerCounts{k}(seq::BioSequence[, step=1])
-    RNAKmerCounts{k}(seq::BioSequence[, step=1])
+    DNAKmerCounts{k}(seq::Sequence[, step=1])
+    RNAKmerCounts{k}(seq::Sequence[, step=1])
 
 Count ocurrences of short (≤ 32) `k`-mers in a sequence.
 
@@ -17,14 +17,14 @@ not recommended for large k-mer sizes.
 
 # Arguments
 * `seq`: A nucleotide sequence.
-* `step`: K-mers counted are separated by this many nucleotides (deafult: 1).
+* `step=1`: K-mers counted are separated by this many nucleotides.
 """
 immutable KmerCounts{T,K}
     data::Vector{UInt32}
 
-    function KmerCounts{A<:Union{DNAAlphabet,RNAAlphabet}}(seq::BioSequence{A}, step::Integer=1)
+    function KmerCounts(seq::Sequence, step::Integer=1)
         data = zeros(UInt32, 4^K)
-        @inbounds for (_, x) in each(Kmer{eltype(A),K}, seq, step)
+        @inbounds for (_, x) in each(Kmer{T,K}, seq, step)
             data[convert(UInt64, x) + 1] += 1
         end
         return new(data)

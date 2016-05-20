@@ -2,7 +2,9 @@
     machine fastaparser;
 
     action finish_match {
-        if seqtype(typeof(output)) == BioSequence
+        if seqtype(typeof(output)) == ReferenceSequence
+            output.seq = ReferenceSequence(input.seqbuf.buffer, 1, length(input.seqbuf))
+        elseif seqtype(typeof(output)) == BioSequence
             ET = predict(input.seqbuf.buffer, 1, length(input.seqbuf))
             if ET == typeof(output.seq)
                 resize!(output.seq, length(input.seqbuf))
@@ -65,7 +67,7 @@ function Base.open{S}(input::BufferedInputStream, ::Type{FASTA},
 end
 
 # FIXME: output type may be too loose
-Ragel.@generate_read_fuction(
+Ragel.@generate_read!_function(
     "fastaparser",
     FASTAParser,
     SeqRecord,

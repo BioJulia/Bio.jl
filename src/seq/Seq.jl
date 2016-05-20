@@ -124,11 +124,13 @@ export
     approxsearch,
     approxsearchindex,
     approxrsearch,
-    approxrsearchindex
+    approxrsearchindex,
+    ReferenceSequence
 
 using
     Compat,
     BufferedStreams,
+    IndexableBitVectors,
     Bio.StringFields,
     Bio.Ragel
 
@@ -138,15 +140,6 @@ export tryread!
 using Bio:
     FileFormat,
     AbstractParser
-
-abstract Sequence
-
-# This is useful for obscure reasons. We use SeqRecord{Sequence} for reading
-# sequence in an undetermined alphabet, but a consequence that we need to be
-# able to construct a `Sequence`.
-function Sequence()
-    return DNASequence()
-end
 
 """
     alphabet(typ)
@@ -168,13 +161,17 @@ function gap end
 
 gap(::Type{Char}) = '-'
 
+include("sequence.jl")
 include("symbolrange.jl")
 include("nucleotide.jl")
 include("aminoacid.jl")
 include("alphabet.jl")
+include("bitindex.jl")
 include("bioseq.jl")
 include("hash.jl")
 include("kmer.jl")
+include("nmask.jl")
+include("refseq.jl")
 include("eachkmer.jl")
 include("kmercounts.jl")
 include("composition.jl")

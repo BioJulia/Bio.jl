@@ -125,7 +125,7 @@ function Base.open{S}(input::BufferedInputStream, ::Type{FASTQ},
 end
 
 # FIXME: output type may be too loose
-Ragel.@generate_read_fuction(
+Ragel.@generate_read!_function(
     "fastqparser",
     FASTQParser,
     SeqRecord,
