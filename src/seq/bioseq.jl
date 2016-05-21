@@ -777,75 +777,54 @@ end
 # -----------------
 
 """
-`mismatches(a::NucleotideSequence, b::NucleotideSequence, [nmatches=false])`
+    mismatches(seq1::BioSequence, seq2::BioSequence[, compatible=false])
 
-Return the number of mismatches between `a` and `b`.
+Return the number of mismatches between `seq1` and `seq2`.
 
-If `a` and `b` are of differing lengths, only the first `min(length(a), length(b))`
-nucleotides are compared.
-
-### Arguments
-  * `a`: first sequence to compare
-  * `b`: second sequence to compare
-  * `nmatches`: if true, N matches anything, if false, N matches only itself (false)
-
-### Returns
-The number of mismatches
+If `seq1` and `seq2` are of differing lengths, only the first `min(length(seq1),
+length(seq2))` nucleotides are compared.  When `compatible` is `true`, sequence
+symbols are comapred using `iscompatible`; otherwise using `==`.
 """
-function mismatches end
-
-function mismatches{A<:DNAAlphabet}(a::BioSequence{A},
-                                    b::BioSequence{A},
-                                    nmatches::Bool=false)
-    if nmatches
-        return count_mismatches(a, b, nmatches, DNA_N)
-    else
-        return count_mismatches(a, b)
+function mismatches{A<:Alphabet}(
+        seq1::BioSequence{A},
+        seq2::BioSequence{A},
+        compatible::Bool=false)
+    if ((bitsof(A) == 2 || bitsof(A) == 4) && !compatible) ||
+        A == DNAAlphabet{2} ||
+        A == RNAAlphabet{2}
+        return bitparallel_mismatches(seq1, seq2)
     end
-end
 
-function mismatches{A<:RNAAlphabet}(a::BioSequence{A},
-                                    b::BioSequence{A},
-                                    nmatches::Bool=false)
-    if nmatches
-        return count_mismatches(a, b, nmatches, RNA_N)
-    else
-        return count_mismatches(a, b)
-    end
-end
-
-function mismatches(a::AminoAcidSequence, b::AminoAcidSequence, xmatches::Bool=false)
-    return count_mismatches(a, b, xmatches, AA_X)
-end
-
-function count_mismatches(a::BioSequence, b::BioSequence, anychar_matches::Bool, anychar)
-    count = 0
-    for (x, y) in zip(a, b)
-        if anychar_matches
-            mismatch = x != y && x != anychar && y != anychar
-        else
-            mismatch = x != y
+    mis = 0
+    if compatible
+        for (x, y) in zip(seq1, seq2)
+            if !iscompatible(x, y)
+                mis += 1
+            end
         end
-        count += mismatch
+    else
+        for (x, y) in zip(seq1, seq2)
+            if x != y
+                mis += 1
+            end
+        end
     end
-    return count
+    return mis
 end
 
-# fast and exact counting algorithm
-@generated function count_mismatches{A<:Union{DNAAlphabet,RNAAlphabet}}(a::BioSequence{A},
-                                                                        b::BioSequence{A})
+@generated function bitparallel_mismatches{A}(a::BioSequence{A}, b::BioSequence{A})
     n = bitsof(A)
     if n == 2
-        nucmismatches = :nuc2mismatches
+        bitpar_mismatches = :bitpar_mismatches2
     elseif n == 4
-        nucmismatches = :nuc4mismatches
+        bitpar_mismatches = :bitpar_mismatches4
     else
         error("n (= $n) ∉ (2, 4)")
     end
 
     quote
         if length(a) > length(b)
-            return count_mismatches(b, a)
+            return bitparallel_mismatches(b, a)
         end
         @assert length(a) ≤ length(b)
 
@@ -863,7 +842,7 @@ end
             end
             k = 64 - offset(nexta)
             m = mask(k)
-            mismatches += $nucmismatches(x & m, y & m)
+            mismatches += $bitpar_mismatches(x & m, y & m)
             nexta += k
             nextb += k
         end
@@ -873,7 +852,7 @@ end
             while stopa - nexta ≥ 64
                 x = a.data[index(nexta)]
                 y = b.data[index(nextb)]
-                mismatches += $nucmismatches(x, y)
+                mismatches += $bitpar_mismatches(x, y)
                 nexta += 64
                 nextb += 64
             end
@@ -882,7 +861,7 @@ end
                 x = a.data[index(nexta)]
                 y = b.data[index(nextb)]
                 m = mask(stopa - nexta)
-                mismatches += $nucmismatches(x & m, y & m)
+                mismatches += $bitpar_mismatches(x & m, y & m)
             end
         elseif nexta < stopa
             y = b.data[index(nextb)]
@@ -892,7 +871,7 @@ end
                 x = a.data[index(nexta)]
                 z = b.data[index(nextb)]
                 y = y >> offset(nextb) | z << (64 - offset(nextb))
-                mismatches += $nucmismatches(x, y)
+                mismatches += $bitpar_mismatches(x, y)
                 y = z
                 nexta += 64
                 nextb += 64
@@ -905,7 +884,7 @@ end
                     y |= a.data[index(nextb)] << (64 - offset(nextb))
                 end
                 m = mask(stopa - nexta)
-                mismatches += $nucmismatches(x & m, y & m)
+                mismatches += $bitpar_mismatches(x & m, y & m)
             end
         end
 
@@ -913,22 +892,21 @@ end
     end
 end
 
-# mismatch count between two kmers (4 bits)
-function nuc4mismatches(x::UInt64, y::UInt64)
+# bit-parallel mismatch count algorithm for 2 and 4-bit encoding
+@inline function bitpar_mismatches2(x::UInt64, y::UInt64)
+    xyxor = x $ y
+    mismatches = UInt64(0)
+    mismatches |=  xyxor & 0x5555555555555555
+    mismatches |= (xyxor & 0xAAAAAAAAAAAAAAAA) >> 1
+    return count_ones(mismatches)
+end
+
+@inline function bitpar_mismatches4(x::UInt64, y::UInt64)
     xyxor = x $ y
     mismatches = UInt64(0)
     mismatches |=  xyxor & 0x1111111111111111
     mismatches |= (xyxor & 0x2222222222222222) >> 1
     mismatches |= (xyxor & 0x4444444444444444) >> 2
     mismatches |= (xyxor & 0x8888888888888888) >> 3
-    return count_ones(mismatches)
-end
-
-# mismatch count between two kmers (2 bits)
-function nuc2mismatches(x::UInt64, y::UInt64)
-    xyxor = x $ y
-    mismatches = UInt64(0)
-    mismatches |=  xyxor & 0x5555555555555555
-    mismatches |= (xyxor & 0xAAAAAAAAAAAAAAAA) >> 1
     return count_ones(mismatches)
 end
