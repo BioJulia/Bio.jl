@@ -32,7 +32,7 @@ function add_branch!(tree::Phylogeny, branch::Edge, branchlength::Float64)
 end
 
 function parent_branch(tree::Phylogeny, vertex::Int)
-    @assert has_parent(tree, vertex) error("Vertex is not connected to a parent.")
+    @assert hasparent(tree, vertex) error("Vertex is not connected to a parent.")
     return in_edges(tree.graph, vertex)[1]
 end
 

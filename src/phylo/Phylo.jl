@@ -51,6 +51,14 @@ export
     ispreterminal,
     issemipreterminal,
 
+    ## Branches
+    branchlength,
+    branchlength!,
+    parent_branch,
+    child_branches,
+    rem_branch!,
+    add_branch!,
+
     ## Misc
     n_possible_rooted,
     n_possible_unrooted
