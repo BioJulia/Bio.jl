@@ -122,6 +122,38 @@ function simple_coverage(intervals)
     return covintervals
 end
 
+@testset "Strand" begin
+    @testset "Constructor" begin
+        @test Strand('?') === STRAND_NA
+        @test Strand('+') === STRAND_POS
+        @test Strand('-') === STRAND_NEG
+        @test Strand('.') === STRAND_BOTH
+        @test_throws Exception Strand('x')
+    end
+
+    @testset "Order" begin
+        @test STRAND_NA < STRAND_POS < STRAND_NEG < STRAND_BOTH
+    end
+
+    @testset "Show" begin
+        @testset "show" begin
+            buf = IOBuffer()
+            for s in [STRAND_NA, STRAND_POS, STRAND_NEG, STRAND_BOTH]
+                show(buf, s); print(buf, " ")
+            end
+            @test takebuf_string(buf) == "STRAND_NA STRAND_POS STRAND_NEG STRAND_BOTH "
+        end
+
+        @testset "print" begin
+            buf = IOBuffer()
+            for s in [STRAND_NA, STRAND_POS, STRAND_NEG, STRAND_BOTH]
+                print(buf, s)
+            end
+            @test takebuf_string(buf) == "?+-."
+        end
+    end
+end
+
 @testset "Interval" begin
     @testset "Constructor" begin
         i = Interval("chr1", 10, 20)
