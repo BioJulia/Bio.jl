@@ -128,6 +128,13 @@ using LightGraphs
             @test child_branches(add_branch!(tree, Edge(4, 1), 0.5), 4) == [Edge(4, 1), Edge(4, 2), Edge(4, 3)]
         end
 
+        @testset "Manipulation" begin
+            @test Phylo.unconnected_clades(tree) == [5]
+            @test Phylo.subtree_roots(tree) == [4]
+            @test child_branches(Phylo.delete!(tree, 1), 4) == [Edge(4, 2), Edge(4, 3)]
+            @test child_branches(Phylo.disconnect_root!(tree), 4) == []
+        end
+
     end
 
 end

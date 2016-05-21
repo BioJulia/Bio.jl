@@ -104,11 +104,6 @@ function Phylogeny{T <: AbstractString}(taxa::Vector{T})
     return Phylogeny(convert(Vector{Symbol}, taxa))
 end
 
-"""
-    Base.copy{C, B}(tree::Phylogeny{C, B})
-
-Create a copy of a phylogenetic tree.
-"""
 function Base.copy{C, B}(tree::Phylogeny{C, B})
     g = copy(tree.graph)
     i = copy(tree.vertexindex)
@@ -117,11 +112,6 @@ function Base.copy{C, B}(tree::Phylogeny{C, B})
     return Phylogeny{C, B}(g, i, v, d, tree.ntaxa, tree.rooted, tree.rerootable)
 end
 
-"""
-    Base.:(==)(x::Phylogeny, y::Phylogeny)
-
-Test if two phylogenies are considered equal.
-"""
 @compat function Base.:(==)(x::Phylogeny, y::Phylogeny)
     g = x.graph == x.graph
     vi = x.vertexindex == y.vertexindex

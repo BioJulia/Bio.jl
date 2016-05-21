@@ -51,7 +51,7 @@ Unconnects the root vertex from all of its children.
 """
 function disconnect_root!(tree::Phylogeny)
     r = root(tree)
-    for i in out_neighbours(tree.graph, r)
+    for i in children(tree, r)
         rem_branch!(tree, Edge(r, i))
     end
     return tree
@@ -62,11 +62,11 @@ end
 
 Delete a node from a phylogenetic tree.
 """
-function delete!(tree::Phylogeny, vertex::Int, preserve_bl::Bool = false)
-    parent = parent(tree, vertex)
+function Base.delete!(tree::Phylogeny, vertex::Int, preserve_bl::Bool = false)
+    p = Phylo.parent(tree, vertex)
     # Delete the connection to parent but remember the branchlength of the
     # deleted branch.
-    parentedge = Edge(parent, vertex)
+    parentedge = Edge(p, vertex)
     lentoparent = preserve_bl ? branchlength(tree, parentedge) : 0.0
     rem_branch!(tree, parentedge)
     for branch in child_branches(tree, vertex)
