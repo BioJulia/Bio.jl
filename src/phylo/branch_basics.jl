@@ -11,7 +11,7 @@
 # This file is a part of BioJulia. License is MIT: https://github.com/BioJulia/Bio.jl/blob/master/LICENSE.md
 
 function branchlength{C}(tree::Phylogeny{C, Float64}, edge::Edge)
-    return tree.edgedata[edge]
+    return get(tree.edgedata, edge, -1.0)
 end
 
 function branchlength!{C}(tree::Phylogeny{C, Float64}, edge::Edge, value::Float64)
@@ -21,7 +21,7 @@ end
 
 function rem_branch!(tree::Phylogeny, branch::Edge)
     rem_edge!(tree.graph, src(branch), dst(branch))
-    pop!(tree.edgedata, branch)
+    delete!(tree.edgedata, branch)
     return tree
 end
 
@@ -32,7 +32,7 @@ function add_branch!(tree::Phylogeny, branch::Edge, branchlength::Float64)
 end
 
 function parent_branch(tree::Phylogeny, vertex::Int)
-    @assert has_parent(tree, vertex) error("Vertex is not connected to a parent.")
+    @assert hasparent(tree, vertex) error("Vertex is not connected to a parent.")
     return in_edges(tree.graph, vertex)[1]
 end
 

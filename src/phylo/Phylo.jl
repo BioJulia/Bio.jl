@@ -11,9 +11,11 @@
 
 module Phylo
 
-using Bio.Tokenize
+using Compat
 
 using LightGraphs
+
+using Bio.Tokenize
 
 using Bio.Indexers
 
@@ -45,8 +47,17 @@ export
     nchildren,
     haschild,
     children,
+    isredundant,
     ispreterminal,
     issemipreterminal,
+
+    ## Branches
+    branchlength,
+    branchlength!,
+    parent_branch,
+    child_branches,
+    rem_branch!,
+    add_branch!,
 
     ## Misc
     n_possible_rooted,
