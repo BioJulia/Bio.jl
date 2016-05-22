@@ -14,7 +14,7 @@ include("util/tokenize.jl")
 include("util/indexing.jl")
 include("phylo/Phylo.jl")
 include("structure/Structure.jl")
-include("tools/blast/Blast.jl")
+include("tools/Tools.jl")
 include("util/windows.jl")
 include("precompile.jl")
 

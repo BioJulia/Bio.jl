@@ -1,4 +1,4 @@
-module Blast
+module BLAST
 
 export blastn,
        blastp,
@@ -12,4 +12,4 @@ using Bio.Seq,
 
 include("blastcommandline.jl")
 
-end # module Blast
+end # module BLAST
