@@ -120,7 +120,12 @@ export
     RNAAlphabet,
     AminoAcidAlphabet,
     CharAlphabet,
-    ExactSearchQuery
+    ExactSearchQuery,
+    ApproximateSearchQuery,
+    approxsearch,
+    approxsearchindex,
+    approxrsearch,
+    approxrsearchindex
 
 using
     Compat,
@@ -187,6 +192,7 @@ include("fastq.jl")
 include("fastq-parser.jl")
 
 include("search/exact.jl")
+include("search/approx.jl")
 
 # DEPRECATED: defined just for compatibility
 type NucleotideSequence{T<:Nucleotide} end

@@ -1,5 +1,10 @@
 # Exact Search
 # ============
+#
+# Exact sequence search tools.
+#
+# This file is a part of BioJulia.
+# License is MIT: https://github.com/BioJulia/Bio.jl/blob/master/LICENSE.md
 
 # Reference Implementation
 # ------------------------
@@ -208,7 +213,7 @@ end
 """
     rsearch(seq::Sequence, pat[, start=endof(seq)[, stop=1]])
 
-Return the range of the last occurrence of `pat` in `seq[start:stop]`; symbol
+Return the range of the last occurrence of `pat` in `seq[stop:start]`; symbol
 comparison is done using `Bio.Seq.iscompatible`.
 """
 function Base.rsearch(seq::Sequence, val,
