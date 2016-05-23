@@ -1,9 +1,9 @@
-##Blast Tools module for Bio.jl - Spec and Roadmap
+##BLAST Tools module for Bio.jl - Spec and Roadmap
 
 Bio.jl needs a way to run BLAST and other command line tools commonly used in biology applications, taking inputs and capturing outputs in Bio.jl formats.
 
 ###Minimum requirements for BLAST module
-With Blast+ installed on users' system:
+With BLAST+ installed on users' system:
 
 **Input**
 
@@ -26,5 +26,5 @@ With Blast+ installed on users' system:
 - [ ] bundle blast package from within Bio.jl (is this possible?)
 - [ ] pull queries/subjects from NCBI
     - [ ] incorporate into Bio.jl formats
-- [ ] run Blast through NCBI servers instead of locally
+- [ ] run BLAST through NCBI servers instead of locally
 - [ ] ...

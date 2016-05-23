@@ -3,7 +3,7 @@ module BLAST
 export blastn,
        blastp,
        readblastXML,
-       BlastResult
+       BLASTResult
 
 using Bio.Seq,
       Bio.Align,

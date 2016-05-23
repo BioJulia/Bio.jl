@@ -6,7 +6,7 @@
 # This file is a part of BioJulia.
 # License is MIT: https://github.com/BioJulia/Bio.jl/blob/master/LICENSE.md
 
-immutable BlastResult
+immutable BLASTResult
     bitscore::Float64
     expect::Float64
     queryname::Compat.String
@@ -24,14 +24,14 @@ results = readall(open("blast_results.xml")) # need to use `readstring` instead 
 readblastXML(results)
 ```
 
-Returns Vector{BlastResult} with the sequence of the hit, the Alignment with query sequence, bitscore and expect value
+Returns Vector{BLASTResult} with the sequence of the hit, the Alignment with query sequence, bitscore and expect value
 """
 function readblastXML(blastrun::AbstractString; seqtype="nucl")
     xdoc = parse_string(blastrun)
     xroot = root(xdoc)
     params = get_elements_by_tagname(xroot, "BlastOutput_param")
     iterations = get_elements_by_tagname(xroot, "BlastOutput_iterations")
-    results = BlastResult[]
+    results = BLASTResult[]
     for iteration in collect(child_elements(iterations[1]))
         queryname = content(find_element(iteration, "Iteration_query-def"))
         hits = get_elements_by_tagname(iteration, "Iteration_hits")
@@ -52,7 +52,7 @@ function readblastXML(blastrun::AbstractString; seqtype="nucl")
                 aln = AlignedSequence(qseq, hseq)
                 bitscore = float(content(find_element(hsp, "Hsp_bit-score")))
                 expect = float(content(find_element(hsp, "Hsp_evalue")))
-                push!(results, BlastResult(bitscore, expect, queryname, hitname, hseq, aln))
+                push!(results, BLASTResult(bitscore, expect, queryname, hitname, hseq, aln))
             end
         end
     end
@@ -67,7 +67,7 @@ blastresults = `blastn -query seq1.fasta -db some_database -outfmt 5`
 readblastXML(blastresults)
 ```
 
-Returns Vector{BlastResult} with the sequence of the hit, the Alignment with query sequence, bitscore and expect value
+Returns Vector{BLASTResult} with the sequence of the hit, the Alignment with query sequence, bitscore and expect value
 """
 function readblastXML(blastrun::Cmd; seqtype="nucl")
     # need to use `readstring` instead of `readall` for v0.5
