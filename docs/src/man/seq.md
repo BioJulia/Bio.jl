@@ -29,8 +29,8 @@ The `Bio.Seq` module provides three biological symbol (character) types:
 | `AminoAcid`     | Amino acid     |
 
 These symbols can be elements of sequences like characters can be elements of
-strings.  See [Sequences](@ref) and [Nucleotide k-mers](@ref) section for
-details.
+strings.  See sections beginning from [Overview of sequences types](@ref) section
+for details.
 
 
 ### DNA and RNA nucleotides
@@ -212,7 +212,7 @@ AA_A:AA_U
 julia> AA_A:AA_X      # all amino acids except teminal codon (*) and gap
 AA_A:AA_X
 
-julia> AA_A:AA_Gap    # all amino acids including teminal codon (*) and gap
+julia> AA_A:AA_Gap    # all amino acids including terminal codon (*) and gap
 AA_A:AA_Gap
 
 ```
@@ -244,18 +244,52 @@ iscompatible
 ```
 
 
-## Sequences
+## Overview of sequences types
 
-The `Bio.Seq` module provides representations and tools for manipulating nucleotide
-and amino acid sequences. Sequences in Bio.jl are more strictly typed than in
-many other libraries. They are special purpose types rather than simply strings.
-Bio.jl currently provides a single generic sequence type:
-`BioSequence{A<:Alphabet}`. `BioSequence` is parameterized by an alphabet type
+The `Bio.Seq` module provides representations and tools for manipulating
+nucleotide and amino acid sequences. Sequences in Bio.jl are more strictly typed
+than in many other libraries; elements in a sequence are typed as biological
+symbol instead of character or byte.  They are special purpose types rather than
+simply strings and hence offer additional functionality that naive string types
+don't have. Though this strictness sacrifices some convenience, it also means
+you can always rely on a DNA sequence type to store DNA and nothing but DNA,
+without having to check, or deal with lowercase versus uppercase and so on.
+Strict separation of sequence types also means we are free to choose the most
+efficient representation. DNA and RNA sequences are encoded using four bits per
+base by default making them memory efficient, and also allowing us to speed up
+many common operations like nucleotide composition, reverse complement, and
+*k*-mer enumeration.
+
+The `Bio.Seq` provides three different sequence types: `BioSequence`, `Kmer` and
+`ReferenceSequence`. Each of these types is a subtype of an abstract type called
+`Sequence` and supports various string-like operations such as random access and
+iteration. Different sequence types have different features. In most situations,
+`BioSequence` type will do and is used as the default representation. But
+sometimes other types are much more preferable in terms of memory efficiency and
+computation performance.  Here is the summary table of these three types:
+
+| Type                       | Description                                | Element type          | Mutability  | Allocation       |
+| :----                      | :-----------                               | :------------         | :---------- | :----------      |
+| `BioSequence{A<:Alphabet}` | general-purpose biological sequences       | DNA, RNA, Amino acids | mutable     | heap             |
+| `Kmer{T<:Nucleotide,k}`    | specialized for short nucleotide sequences | DNA, RNA              | immutable   | stack / register |
+| `ReferenceSequence`        | specialized for long reference genomes     | DNA                   | immutable   | heap             |
+
+Details of these different representations are explained in the following
+sections:
+
+* `BioSequence`: [General-purpose sequences](@ref)
+* `Kmer`: [Nucleotide k-mers](@ref)
+* `ReferenceSequence`: [Reference sequences](@ref)
+
+
+## General-purpose sequences
+
+`BioSequence{A}` is a generic sequence type parameterized by an alphabet type
 `A` that defines the domain (or set) of biological symbols, and each alphabet
 has an associated symbol type. For example, `AminoAcidAlphabet` is associated
-with `AminoAcid` and hence an object of `BioSequence{AminoAcidAlphabet}`
-represents a sequence of amino acids.  Symbols from multiple alphabets can't
-be intermixed in one sequence type.
+with `AminoAcid` and hence an object of the `BioSequence{AminoAcidAlphabet}`
+type represents a sequence of amino acids.  Symbols from multiple alphabets
+can't be intermixed in one sequence type.
 
 The following table summarizes common sequence types that are defined in the
 `Bio.Seq` module:
@@ -267,18 +301,17 @@ The following table summarizes common sequence types that are defined in the
 | `BioSequence{AminoAcidAlphabet}`   | `AminoAcid`      | `AminoAcidSequence` |
 | `BioSequence{CharAlphabet}`        | `Char`           | `CharSequence`      |
 
+Parameterized definition of the `BioSequence{A}` type is for the purpose of
+unifying the data structure and operations of any symbol type. In most cases,
+users don't have to care about it and can use type aliases listed above.
+However, the alphabet type fixes the internal memory encoding and plays an
+important role when optimizing performance of a program (see [Compact
+representation](@ref) section for low-memory encodings).  It also enables a user
+to define their own alphabet only by defining few numbers of methods. This is
+described in [Defining a new alphabet](@ref) section.
 
-Though this strictness sacrifices some convenience, it also means you can always
-rely on a `DNASequence` to store DNA and nothing but DNA, without having to
-check, or deal with lowercase versus uppercase and so on. Strict separation of
-sequence types also means we are free to choose the most efficient
-representation. DNA and RNA sequences are encoded using four bits per base by
-default making them memory efficient, and also allowing us to speed up many
-common operations like nucleotide composition, reverse complement, and *k*-mer
-enumeration.
 
-
-## Constructing sequences
+### Constructing sequences
 
 Sequence types corresponding to these alphabets can be constructed a number of
 different ways. Most immediately, sequence literals can be constructed using
@@ -378,7 +411,7 @@ A translatable `RNASequence` can also be converted to an `AminoAcidSequence`
 using the [`translate`](@ref) function described below.
 
 
-## Indexing and modifying
+### Indexing and modifying
 
 Sequences for the most part behave like other vector or string types. They can
 be indexed using integers or ranges:
@@ -397,12 +430,12 @@ TANAGTNNAGTACC
 ```
 
 Indexing by range creates a subsequence of the original sequence. Unlike
-`ASCIIString` and `Vector` in the standard library, creating a subsequences is
-copy-free: a subsequence is just a reference to the original sequence with its
-range.  You may think that this is unsafe because modifying subsequences
-propagates to the original sequence, but this doesn't happen actually:
+`Vector` in the standard library, creating a subsequences is copy-free: a
+subsequence is just a reference to the original sequence with its range.  You
+may think that this is unsafe because modifying subsequences propagates to the
+original sequence, but this doesn't happen actually:
 ```jlcon
-julia> seq = dna"AAAA"  # create a sequence
+julia> seq = dna"AAAA"    # create a sequence
 4nt DNA Sequence:
 AAAA
 
@@ -413,11 +446,11 @@ AA
 julia> subseq[2] = DNA_T  # modify the second element of it
 DNA_T
 
-julia> subseq  # the subsequence is modified
+julia> subseq             # the subsequence is modified
 2nt DNA Sequence:
 AT
 
-julia> seq  # but the original sequence is not
+julia> seq                # but the original sequence is not
 4nt DNA Sequence:
 AAAA
 
@@ -493,7 +526,7 @@ julia> n
 ```
 
 
-## Other operations on sequences
+### Other operations on sequences
 
 A number of common sequence operations are provided in the `Bio.Seq` module:
 
@@ -505,7 +538,7 @@ composition
 ```
 
 
-### Translation
+#### Translation
 
 The [`translate`](@ref) funtion translates a sequence of codons in a RNA sequence
 to a amino acid sequence besed on a genetic code mapping.  The `Bio.Seq` module
@@ -517,7 +550,7 @@ translate
 ncbi_trans_table
 ```
 
-```julia
+```jlcon
 julia> ncbi_trans_table
 Translation Tables:
   1. The Standard Code (standard_genetic_code)
@@ -544,7 +577,7 @@ Translation Tables:
 <http://www.ncbi.nlm.nih.gov/Taxonomy/taxonomyhome.html/index.cgi?chapter=cgencodes>
 
 
-## Compact representation
+### Compact representation
 
 As we saw above, DNA and RNA sequences can store any ambiguous nucleotides like
 'N'.  If you are sure that nucleotide sequences store unambiguous nucleotides
@@ -563,11 +596,36 @@ ACGT
 Recall that `DNASequence` is a type alias of `BioSequence{DNAAlphabet{4}}`,
 which uses four bits per base. That is, `BioSequence{DNAAlphabet{2}}` saves half
 of memory footprint compared to `BioSequence{DNAAlphabet{4}}`. If you need to
-handle reference sequences that are composed of five nucleotides, ACGTN,
-consider to use
-[ReferenceSequences.jl](https://github.com/BioJulia/ReferenceSequences.jl).
-`ReferenceSequence`, exported from this package, compresses positions of 'N' and
-enables to handle long DNA sequences with the near space of two-bit encoding.
+handle reference genomes that are composed of five nucleotides, ACGTN,
+consider to use the `ReferenceSequence` type described in the [Reference
+sequences](@ref) section.
+
+
+### Defining a new alphabet
+
+The alphabet type parameter `A` of `BioSequence{A}` enables a user to extend
+functionality of `BioSequence` with mimimum effort. As an example, definition of
+a new alphabet type representing a sequence of boolean values is shown below:
+```julia
+using Bio.Seq
+
+immutable BoolAlphabet <: Alphabet end
+
+Seq.bitsof(::Type{BoolAlphabet}) = 1
+Seq.eltype(::Type{BoolAlphabet}) = Bool
+Seq.alphabet(::Type{BoolAlphabet}) = false:true
+
+function Seq.encode(::Type{BoolAlphabet}, x::Bool)
+    return UInt64(ifelse(x, 0x01, 0x00))
+end
+
+function Seq.decode(::Type{BoolAlphabet}, x::UInt64)
+    if x > 0x01
+        throw(Seq.DecodeError(BoolAlphabet, x))
+    end
+    return ifelse(x == 0x00, false, true)
+end
+```
 
 
 ## Nucleotide k-mers
@@ -579,15 +637,68 @@ representing short sequences in 64-bit integers. Besides being fixed length,
 `Kmer` types, unlike other sequence types cannot contain ambiguous symbols like
 'N'.
 
-The `Kmer{T,k}` type parameterized on alphabet (`T`, either `DNANucleotide`, or
-`RNANucleotide`) and size `k`. A number of functions are provided for operating
-on `Kmers`.
+The `Kmer{T,k}` type parameterized on symbol type (`T`, either `DNANucleotide`,
+or `RNANucleotide`) and size `k`. For ease of writing code, two type aliases for
+each nucleotide type are defined and named as `DNAKmer{k}` and `RNAKmer{k}`:
+```jlcon
+julia> DNAKmer("ACGT")  # create a DNA 4-mer from a string
+DNA 4-mer:
+ACGT
+
+julia> RNAKmer("ACGU")  # create an RNA 4-mer from a string
+RNA 4-mer:
+ACGU
+
+julia> typeof(DNAKmer("ACGT"))
+Bio.Seq.Kmer{Bio.Seq.DNANucleotide,4}
+
+```
 
 ```@docs
 each
 KmerCounts
 canonical
 neighbors
+```
+
+
+## Reference sequences
+
+`DNASequence` (alias of `BioSequence{DNAAlphabet{4}}`) is a flexible data
+sturcture but always consumes 4 bits per base, which will waste a large part of
+the memory space when storing reference genome sequences.  In such a case,
+`ReferenceSequence` is helpful because it compresses positions of 'N' symbols so
+that long DNA sequences are stored with almost 2 bits per base. An important
+limitation is that the `ReferenceSequence` type is immutable due to the
+compression. Other sequence-like operations are supported:
+```jlcon
+julia> seq = ReferenceSequence(dna"NNCGTATTTTCN")
+12nt Reference Sequence:
+NNCGTATTTTCN
+
+julia> seq[1]
+DNA_N
+
+julia> seq[5]
+DNA_T
+
+julia> seq[2:6]
+5nt Reference Sequence:
+NCGTA
+
+julia> ReferenceSequence(dna"ATGM")  # DNA_M is not accepted
+ERROR: ArgumentError: invalid symbol M ∉ {A,C,G,T,N} at 4
+ in convert at /Users/kenta/.julia/v0.4/Bio/src/seq/refseq.jl:58
+ in call at essentials.jl:56
+
+```
+
+When reading reference sequences from a FASTA file, the following snippet will
+avoid allocating temporary sequences and conversion:
+```julia
+for record in open("hg38.fa", FASTA, ReferenceSequence)
+    # do something
+end
 ```
 
 

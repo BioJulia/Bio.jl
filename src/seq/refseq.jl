@@ -55,7 +55,7 @@ function Base.convert{A<:DNAAlphabet}(::Type{ReferenceSequence}, seq::BioSequenc
             elseif nt == DNA_N
                 nmask[i] = true
             else
-                throw(ArgumentError("found a invalid symbol $(seq[i]) ∉ {A,C,G,T,N} at $i"))
+                throw(ArgumentError("invalid symbol $(seq[i]) ∉ {A,C,G,T,N} at $i"))
             end
             i += 1
             r += 2
