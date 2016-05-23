@@ -232,6 +232,8 @@
             
                 <li class="third-level"><a href="#exact-search">Exact search</a></li>
             
+                <li class="third-level"><a href="#approximate-search">Approximate search</a></li>
+            
         
             <li class="second-level"><a href="#sequence-records">Sequence records</a></li>
             
@@ -1078,48 +1080,92 @@ RNAKmerCounts{k}(seq::BioSequence[, step=1])
 <p>Several kinds of on-line search functions are provided.</p>
 <p><a id='Exact-search-1'></a></p>
 <h3 id="exact-search">Exact search</h3>
-<p>Exact search functions search for the first occurrence of the query symbol or sequence. Four functions, <code>search</code>, <code>searchindex</code>, <code>rsearch</code>, and <code>rsearchindex</code>, are available:</p>
-<div class="codehilite"><pre><span></span><span class="n">julia</span><span class="o">&gt;</span> <span class="n">seq</span> <span class="o">=</span> <span class="n">dna</span><span class="s">&quot;ACAGCGTAGCT&quot;</span><span class="p">;</span>
+<p>Exact search functions search for an occurrence of the query symbol or sequence. Four functions, <code>search</code>, <code>searchindex</code>, <code>rsearch</code>, and <code>rsearchindex</code> are available:</p>
+<div class="codehilite"><pre><span></span><span class="gp">julia&gt;</span> <span class="n">seq</span> <span class="o">=</span> <span class="n">dna</span><span class="s">&quot;ACAGCGTAGCT&quot;</span><span class="p">;</span>
 
-<span class="n">julia</span><span class="o">&gt;</span> <span class="n">search</span><span class="p">(</span><span class="n">seq</span><span class="p">,</span> <span class="n">DNA_G</span><span class="p">)</span>  <span class="c"># search a query symbol</span>
-<span class="mi">4</span><span class="p">:</span><span class="mi">4</span>
+<span class="gp">julia&gt;</span> <span class="n">search</span><span class="p">(</span><span class="n">seq</span><span class="p">,</span> <span class="n">DNA_G</span><span class="p">)</span>  <span class="c"># search a query symbol</span>
+<span class="go">4:4</span>
 
-<span class="n">julia</span><span class="o">&gt;</span> <span class="n">query</span> <span class="o">=</span> <span class="n">dna</span><span class="s">&quot;AGC&quot;</span><span class="p">;</span>
+<span class="gp">julia&gt;</span> <span class="n">query</span> <span class="o">=</span> <span class="n">dna</span><span class="s">&quot;AGC&quot;</span><span class="p">;</span>
 
-<span class="n">julia</span><span class="o">&gt;</span> <span class="n">search</span><span class="p">(</span><span class="n">seq</span><span class="p">,</span> <span class="n">query</span><span class="p">)</span>  <span class="c"># search a query sequence</span>
-<span class="mi">3</span><span class="p">:</span><span class="mi">5</span>
+<span class="gp">julia&gt;</span> <span class="n">search</span><span class="p">(</span><span class="n">seq</span><span class="p">,</span> <span class="n">query</span><span class="p">)</span>  <span class="c"># search a query sequence</span>
+<span class="go">3:5</span>
 
-<span class="n">julia</span><span class="o">&gt;</span> <span class="n">searchindex</span><span class="p">(</span><span class="n">seq</span><span class="p">,</span> <span class="n">query</span><span class="p">)</span>
-<span class="mi">3</span>
+<span class="gp">julia&gt;</span> <span class="n">searchindex</span><span class="p">(</span><span class="n">seq</span><span class="p">,</span> <span class="n">query</span><span class="p">)</span>
+<span class="go">3</span>
 
-<span class="n">julia</span><span class="o">&gt;</span> <span class="n">rsearch</span><span class="p">(</span><span class="n">seq</span><span class="p">,</span> <span class="n">query</span><span class="p">)</span>  <span class="c"># similar to `search` but in the reverse direction</span>
-<span class="mi">8</span><span class="p">:</span><span class="mi">10</span>
+<span class="gp">julia&gt;</span> <span class="n">rsearch</span><span class="p">(</span><span class="n">seq</span><span class="p">,</span> <span class="n">query</span><span class="p">)</span>  <span class="c"># similar to `search` but in the reverse direction</span>
+<span class="go">8:10</span>
 
-<span class="n">julia</span><span class="o">&gt;</span> <span class="n">rsearchindex</span><span class="p">(</span><span class="n">seq</span><span class="p">,</span> <span class="n">query</span><span class="p">)</span>  <span class="c"># similar to `searchindex` but in the reverse direction</span>
-<span class="mi">8</span>
+<span class="gp">julia&gt;</span> <span class="n">rsearchindex</span><span class="p">(</span><span class="n">seq</span><span class="p">,</span> <span class="n">query</span><span class="p">)</span>  <span class="c"># similar to `searchindex` but in the reverse direction</span>
+<span class="go">8</span>
 </pre></div>
 
 
 <p>These search functions take ambiguous symbols into account. That is, if two symbols are compatible (e.g. <code>DNA_A</code> and <code>DNA_N</code>), they match when searching an occurrence. In the following example, 'N' is a wild card that matches any symbols:</p>
-<div class="codehilite"><pre><span></span><span class="n">julia</span><span class="o">&gt;</span> <span class="n">search</span><span class="p">(</span><span class="n">dna</span><span class="s">&quot;ACNT&quot;</span><span class="p">,</span> <span class="n">DNA_N</span><span class="p">)</span>  <span class="c"># &#39;A&#39; matches &#39;N&#39;</span>
-<span class="mi">1</span><span class="p">:</span><span class="mi">1</span>
+<div class="codehilite"><pre><span></span><span class="gp">julia&gt;</span> <span class="n">search</span><span class="p">(</span><span class="n">dna</span><span class="s">&quot;ACNT&quot;</span><span class="p">,</span> <span class="n">DNA_N</span><span class="p">)</span>  <span class="c"># &#39;A&#39; matches &#39;N&#39;</span>
+<span class="go">1:1</span>
 
-<span class="n">julia</span><span class="o">&gt;</span> <span class="n">search</span><span class="p">(</span><span class="n">dna</span><span class="s">&quot;ACNT&quot;</span><span class="p">,</span> <span class="n">dna</span><span class="s">&quot;CGT&quot;</span><span class="p">)</span>  <span class="c"># &#39;N&#39; matches &#39;G&#39;</span>
-<span class="mi">2</span><span class="p">:</span><span class="mi">4</span>
+<span class="gp">julia&gt;</span> <span class="n">search</span><span class="p">(</span><span class="n">dna</span><span class="s">&quot;ACNT&quot;</span><span class="p">,</span> <span class="n">dna</span><span class="s">&quot;CGT&quot;</span><span class="p">)</span>  <span class="c"># &#39;N&#39; matches &#39;G&#39;</span>
+<span class="go">2:4</span>
 
-<span class="n">julia</span><span class="o">&gt;</span> <span class="n">search</span><span class="p">(</span><span class="n">dna</span><span class="s">&quot;ACGT&quot;</span><span class="p">,</span> <span class="n">dna</span><span class="s">&quot;CNT&quot;</span><span class="p">)</span>  <span class="c"># &#39;G&#39; matches &#39;N&#39;</span>
-<span class="mi">2</span><span class="p">:</span><span class="mi">4</span>
+<span class="gp">julia&gt;</span> <span class="n">search</span><span class="p">(</span><span class="n">dna</span><span class="s">&quot;ACGT&quot;</span><span class="p">,</span> <span class="n">dna</span><span class="s">&quot;CNT&quot;</span><span class="p">)</span>  <span class="c"># &#39;G&#39; matches &#39;N&#39;</span>
+<span class="go">2:4</span>
 </pre></div>
 
 
 <p>The exact sequence search needs preprocessing phase of query sequence before searching phase. This would be enough fast for most search applications. But when searching a query sequence to large amounts of target sequences, caching the result of preprocessing may save time. The <code>ExactSearchQuery</code> creates such a preprocessed query object and is applicable to the search functions:</p>
-<div class="codehilite"><pre><span></span><span class="n">julia</span><span class="o">&gt;</span> <span class="n">query</span> <span class="o">=</span> <span class="n">ExactSearchQuery</span><span class="p">(</span><span class="n">dna</span><span class="s">&quot;ATT&quot;</span><span class="p">);</span>
+<div class="codehilite"><pre><span></span><span class="gp">julia&gt;</span> <span class="n">query</span> <span class="o">=</span> <span class="n">ExactSearchQuery</span><span class="p">(</span><span class="n">dna</span><span class="s">&quot;ATT&quot;</span><span class="p">);</span>
 
-<span class="n">julia</span><span class="o">&gt;</span> <span class="n">search</span><span class="p">(</span><span class="n">dna</span><span class="s">&quot;ATTTATT&quot;</span><span class="p">,</span> <span class="n">query</span><span class="p">)</span>
-<span class="mi">1</span><span class="p">:</span><span class="mi">3</span>
+<span class="gp">julia&gt;</span> <span class="n">search</span><span class="p">(</span><span class="n">dna</span><span class="s">&quot;ATTTATT&quot;</span><span class="p">,</span> <span class="n">query</span><span class="p">)</span>
+<span class="go">1:3</span>
 
-<span class="n">julia</span><span class="o">&gt;</span> <span class="n">rsearch</span><span class="p">(</span><span class="n">dna</span><span class="s">&quot;ATTTATT&quot;</span><span class="p">,</span> <span class="n">query</span><span class="p">)</span>
-<span class="mi">5</span><span class="p">:</span><span class="mi">7</span>
+<span class="gp">julia&gt;</span> <span class="n">rsearch</span><span class="p">(</span><span class="n">dna</span><span class="s">&quot;ATTTATT&quot;</span><span class="p">,</span> <span class="n">query</span><span class="p">)</span>
+<span class="go">5:7</span>
+</pre></div>
+
+
+<p><a id='Approximate-search-1'></a></p>
+<h3 id="approximate-search">Approximate search</h3>
+<p>The approximate search is similar to the exact search but allows a specific number of errors. That is, it tries to find a subsequence of the target sequence within a specific <a href="https://en.wikipedia.org/wiki/Levenshtein_distance">Levenshtein distance</a> of the query sequence:</p>
+<div class="codehilite"><pre><span></span><span class="gp">julia&gt;</span> <span class="n">seq</span> <span class="o">=</span> <span class="n">dna</span><span class="s">&quot;ACAGCGTAGCT&quot;</span><span class="p">;</span>
+
+<span class="gp">julia&gt;</span> <span class="n">approxsearch</span><span class="p">(</span><span class="n">seq</span><span class="p">,</span> <span class="n">dna</span><span class="s">&quot;AGGG&quot;</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span>  <span class="c"># nothing matches with no errors</span>
+<span class="go">0:-1</span>
+
+<span class="gp">julia&gt;</span> <span class="n">approxsearch</span><span class="p">(</span><span class="n">seq</span><span class="p">,</span> <span class="n">dna</span><span class="s">&quot;AGGG&quot;</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span>  <span class="c"># seq[3:5] matches with one error</span>
+<span class="go">3:6</span>
+
+<span class="gp">julia&gt;</span> <span class="n">approxsearch</span><span class="p">(</span><span class="n">seq</span><span class="p">,</span> <span class="n">dna</span><span class="s">&quot;AGGG&quot;</span><span class="p">,</span> <span class="mi">2</span><span class="p">)</span>  <span class="c"># seq[1:4] matches with two errors</span>
+<span class="go">1:4</span>
+</pre></div>
+
+
+<p>Like the exact search functions, four kinds of functions (<code>approxsearch</code>, <code>approxsearchindex</code>, <code>approxrsearch</code>, and <code>approxrsearchindex</code>) are available:</p>
+<div class="codehilite"><pre><span></span><span class="gp">julia&gt;</span> <span class="n">seq</span> <span class="o">=</span> <span class="n">dna</span><span class="s">&quot;ACAGCGTAGCT&quot;</span><span class="p">;</span> <span class="n">pat</span> <span class="o">=</span> <span class="n">dna</span><span class="s">&quot;AGGG&quot;</span><span class="p">;</span>
+
+<span class="gp">julia&gt;</span> <span class="n">approxsearch</span><span class="p">(</span><span class="n">seq</span><span class="p">,</span> <span class="n">pat</span><span class="p">,</span> <span class="mi">2</span><span class="p">)</span>        <span class="c"># return the range (forward)</span>
+<span class="go">1:4</span>
+
+<span class="gp">julia&gt;</span> <span class="n">approxsearchindex</span><span class="p">(</span><span class="n">seq</span><span class="p">,</span> <span class="n">pat</span><span class="p">,</span> <span class="mi">2</span><span class="p">)</span>   <span class="c"># return the starting index (forward)</span>
+<span class="go">1</span>
+
+<span class="gp">julia&gt;</span> <span class="n">approxrsearch</span><span class="p">(</span><span class="n">seq</span><span class="p">,</span> <span class="n">pat</span><span class="p">,</span> <span class="mi">2</span><span class="p">)</span>       <span class="c"># return the range (backward)</span>
+<span class="go">8:11</span>
+
+<span class="gp">julia&gt;</span> <span class="n">approxrsearchindex</span><span class="p">(</span><span class="n">seq</span><span class="p">,</span> <span class="n">pat</span><span class="p">,</span> <span class="mi">2</span><span class="p">)</span>  <span class="c"># return the starting index (backward)</span>
+<span class="go">8</span>
+</pre></div>
+
+
+<p>Preprocessing can be cached in an <code>ApproximateSearchQuery</code> object:</p>
+<div class="codehilite"><pre><span></span><span class="gp">julia&gt;</span> <span class="n">query</span> <span class="o">=</span> <span class="n">ApproximateSearchQuery</span><span class="p">(</span><span class="n">dna</span><span class="s">&quot;AGGG&quot;</span><span class="p">);</span>
+
+<span class="gp">julia&gt;</span> <span class="n">approxsearch</span><span class="p">(</span><span class="n">dna</span><span class="s">&quot;AAGAGG&quot;</span><span class="p">,</span> <span class="n">query</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span>
+<span class="go">2:5</span>
+
+<span class="gp">julia&gt;</span> <span class="n">approxsearch</span><span class="p">(</span><span class="n">dna</span><span class="s">&quot;ACTACGT&quot;</span><span class="p">,</span> <span class="n">query</span><span class="p">,</span> <span class="mi">2</span><span class="p">)</span>
+<span class="go">4:6</span>
 </pre></div>
 
 

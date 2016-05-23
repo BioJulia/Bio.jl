@@ -193,9 +193,9 @@
         <div class="col-md-3"><div class="bs-sidebar hidden-print affix well" role="complementary">
     <ul class="nav bs-sidenav">
     
-        <li class="first-level active"><a href="#tools-misc-tools-and-function-wrappers">Tools: Misc tools and function wrappers</a></li>
+        <li class="first-level active"><a href="#biotools-misc-tools-and-function-wrappers">Bio.Tools: Misc tools and function wrappers</a></li>
         
-            <li class="second-level"><a href="#blast-wrapper">Blast wrapper</a></li>
+            <li class="second-level"><a href="#blast-wrapper">BLAST wrapper</a></li>
             
                 <li class="third-level"><a href="#the-basics">The Basics</a></li>
             
@@ -207,26 +207,35 @@
 </div></div>
         <div class="col-md-9" role="main">
 
-<p><a id='Tools:-Misc-tools-and-function-wrappers-1'></a></p>
-<h1 id="tools-misc-tools-and-function-wrappers">Tools: Misc tools and function wrappers</h1>
-<p><a id='Blast-wrapper-1'></a></p>
-<h2 id="blast-wrapper">Blast wrapper</h2>
-<p>The <code>Blast</code> module is a wrapper for the command line interface of <a href="https://www.ncbi.nlm.nih.gov/books/NBK279690/">BLAST+</a> from NCBI. It requires that you have Blast+ <a href="https://www.ncbi.nlm.nih.gov/books/NBK279671/">installed</a> and accessible in your PATH (eg. you should be able to execute <code>$ blastn -h</code> from the command line).</p>
+<p><a id='Bio.Tools:-Misc-tools-and-function-wrappers-1'></a></p>
+<h1 id="biotools-misc-tools-and-function-wrappers">Bio.Tools: Misc tools and function wrappers</h1>
+<p><a id='BLAST-wrapper-1'></a></p>
+<h2 id="blast-wrapper">BLAST wrapper</h2>
+<p>The <code>Bio.Tools.BLAST</code> module is a wrapper for the command line interface of <a href="https://www.ncbi.nlm.nih.gov/books/NBK279690/">BLAST+</a> from NCBI. It requires that you have BLAST+ <a href="https://www.ncbi.nlm.nih.gov/books/NBK279671/">installed</a> and accessible in your PATH (eg. you should be able to execute <code>$ blastn -h</code> from the command line).</p>
 <p><a id='The-Basics-1'></a></p>
 <h3 id="the-basics">The Basics</h3>
 <p>This module allows you to run protein and nucleotide BLAST (<code>blastp</code> and <code>blastn</code> respectively) within julia and to parse BLAST results into Bio.jl types.</p>
 <div class="codehilite"><pre><span></span><span class="k">using</span> <span class="n">Bio</span><span class="o">.</span><span class="n">Seq</span><span class="p">,</span>
-      <span class="n">Bio</span><span class="o">.</span><span class="n">Blast</span>
+      <span class="n">Bio</span><span class="o">.</span><span class="n">Tools</span><span class="o">.</span><span class="n">BLAST</span>
 
-<span class="n">seq1</span> <span class="o">=</span> <span class="n">dna</span><span class="s">&quot;CGGACCAGACGGACACAGGGAGAAGCTAGTTTCTTTCATGTGATTGANATNATGACTCTACTCCTAAAAGGGAAAAANCAATATCCTTGTTTACAGAAGAGAAACAAACAAGCCCCACTCAGCTCAGTCACAGGAGAGAN&quot;</span>
-<span class="n">seq2</span> <span class="o">=</span> <span class="n">dna</span><span class="s">&quot;CGGAGCCAGCGAGCATATGCTGCATGAGGACCTTTCTATCTTACATTATGGCTGGGAATCTTACTCTTTCATCTGATACCTTGTTCAGATTTCAAAATAGTTGTAGCCTTATCCTGGTTTTACAGATGTGAAACTTTCAA&quot;</span>
+<span class="n">seq1</span> <span class="o">=</span> <span class="n">dna</span><span class="s">&quot;&quot;&quot;</span>
+<span class="s">CGGACCAGACGGACACAGGGAGAAGCTAGTTTCTTTCATGTGATTGANAT</span>
+<span class="s">NATGACTCTACTCCTAAAAGGGAAAAANCAATATCCTTGTTTACAGAAGA</span>
+<span class="s">GAAACAAACAAGCCCCACTCAGCTCAGTCACAGGAGAGAN</span>
+<span class="s">&quot;&quot;&quot;</span>
+
+<span class="n">seq2</span> <span class="o">=</span> <span class="n">dna</span><span class="s">&quot;&quot;&quot;</span>
+<span class="s">CGGAGCCAGCGAGCATATGCTGCATGAGGACCTTTCTATCTTACATTATG</span>
+<span class="s">GCTGGGAATCTTACTCTTTCATCTGATACCTTGTTCAGATTTCAAAATAG</span>
+<span class="s">TTGTAGCCTTATCCTGGTTTTACAGATGTGAAACTTTCAA</span>
+<span class="s">&quot;&quot;&quot;</span>
 
 <span class="n">blastn</span><span class="p">(</span><span class="n">seq1</span><span class="p">,</span> <span class="n">seq2</span><span class="p">)</span>
 </pre></div>
 
 
-<p>These functions return a <code>Vector{BlastResult}</code>. Each element is a hit which includes the sequence of the hit, an <a href="http://biojulia.github.io/Bio.jl/latest/man/alignments/"><code>AlignedSequence</code></a> using the original query as a reference and some additional information (expect vaue, bitscore) for the hit.</p>
-<div class="codehilite"><pre><span></span><span class="k">immutable</span> <span class="n">BlastResult</span>
+<p>These functions return a <code>Vector{BLASTResult}</code>. Each element is a hit which includes the sequence of the hit, an <a href="http://biojulia.github.io/Bio.jl/latest/man/alignments/"><code>AlignedSequence</code></a> using the original query as a reference and some additional information (expect vaue, bitscore) for the hit.</p>
+<div class="codehilite"><pre><span></span><span class="k">immutable</span> <span class="n">BLASTResult</span>
     <span class="n">bitscore</span><span class="p">::</span><span class="kt">Float64</span>
     <span class="n">expect</span><span class="p">::</span><span class="kt">Float64</span>
     <span class="n">queryname</span><span class="p">::</span><span class="n">ASCIIString</span>
@@ -237,7 +246,7 @@
 </pre></div>
 
 
-<p>If you've already run a blast analysis or have downloaded blast results in XML format from NCBI you can also pass an XML string to <code>readblastXML()</code> in order to obtain an array of <code>BlastResult</code>s.</p>
+<p>If you've already run a blast analysis or have downloaded blast results in XML format from NCBI you can also pass an XML string to <code>readblastXML()</code> in order to obtain an array of <code>BLASTResult</code>s.</p>
 <div class="codehilite"><pre><span></span><span class="n">results</span> <span class="o">=</span> <span class="n">readall</span><span class="p">(</span><span class="n">open</span><span class="p">(</span><span class="s">&quot;blast_results.xml&quot;</span><span class="p">))</span> <span class="c"># need to use `readstring` instead of `readall` for v0.5</span>
 <span class="n">readblastXML</span><span class="p">(</span><span class="n">results</span><span class="p">)</span>
 </pre></div>
