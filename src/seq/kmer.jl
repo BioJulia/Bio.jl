@@ -191,8 +191,10 @@ function Base.showcompact{T,k}(io::IO, x::Kmer{T,k})
 end
 
 @compat begin
-    Base.:-{T,K}(x::Kmer{T,K}, y::Integer) = Kmer{T,K}(UInt64(x) - reinterpret(UInt64, y))
-    Base.:+{T,K}(x::Kmer{T,K}, y::Integer) = Kmer{T,K}(UInt64(x) + reinterpret(UInt64, y))
+    Base.:-{T,K}(x::Kmer{T,K}, y::Integer) =
+        Kmer{T,K}(UInt64(x) - reinterpret(UInt64, Int64(y)))
+    Base.:+{T,K}(x::Kmer{T,K}, y::Integer) =
+        Kmer{T,K}(UInt64(x) + reinterpret(UInt64, Int64(y)))
     Base.:+{T,K}(x::Integer, y::Kmer{T,K}) = y + x
 end
 Base.isless{T,K}(x::Kmer{T,K}, y::Kmer{T,K}) = isless(UInt64(x), UInt64(y))

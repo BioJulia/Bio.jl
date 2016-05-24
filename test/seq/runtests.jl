@@ -1591,12 +1591,12 @@ end
 
     @testset "Arithmetic" begin
         x = dnakmer("AA")
-        @test x - 1 == x + (-1) == dnakmer("TT")
-        @test x + 1 == x - (-1) == dnakmer("AC")
+        @test x - 1 == x + (-1) == x - 0x01 == dnakmer("TT")
+        @test x + 1 == x - (-1) == x + 0x01 == dnakmer("AC")
 
         x = dnakmer("TT")
-        @test x - 1 == x + (-1) == dnakmer("TG")
-        @test x + 1 == x - (-1) == dnakmer("AA")
+        @test x - 1 == x + (-1) == x - 0x01 == dnakmer("TG")
+        @test x + 1 == x - (-1) == x + 0x01 == dnakmer("AA")
 
         base = dnakmer("AAA")
         offset = 0
