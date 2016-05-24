@@ -37,7 +37,7 @@ function Base.show(io::IO, code::GeneticCode)
         println(io)
         print(io, "  ")
         for z in rna
-            codon = kmer(x, y, z)
+            codon = Kmer(x, y, z)
             aa = code[codon]
             print(io, codon, ": ", aa)
             if z != RNA_U
@@ -116,7 +116,7 @@ function parse_gencode(s)
         b1 = DNANucleotide(base1[i])
         b2 = DNANucleotide(base2[i])
         b3 = DNANucleotide(base3[i])
-        codon = Codon(kmer(b1, b2, b3))
+        codon = Codon(Kmer(b1, b2, b3))
         codes[codon] = aa
     end
     return codes
@@ -349,7 +349,7 @@ function translate(seq::RNASequence, code::GeneticCode, allow_ambiguous_codons::
                 aaseq[j] = get(aa)
             end
         else
-            aaseq[j] = code[kmer(x, y, z)]
+            aaseq[j] = code[Kmer(x, y, z)]
         end
         i += 3
         j += 1
@@ -363,10 +363,10 @@ function try_translate_ambiguous_codon(code::GeneticCode,
                                        z::RNANucleotide)
     if !isambiguous(x) && !isambiguous(y)
         # try to translate a codon `(x, y, RNA_N)`
-        aa_a = code[kmer(x, y, RNA_A)]
-        aa_c = code[kmer(x, y, RNA_C)]
-        aa_g = code[kmer(x, y, RNA_G)]
-        aa_u = code[kmer(x, y, RNA_U)]
+        aa_a = code[Kmer(x, y, RNA_A)]
+        aa_c = code[Kmer(x, y, RNA_C)]
+        aa_g = code[Kmer(x, y, RNA_G)]
+        aa_u = code[Kmer(x, y, RNA_U)]
         if aa_a == aa_c == aa_g == aa_u
             return Nullable{AminoAcid}(aa_a)
         end

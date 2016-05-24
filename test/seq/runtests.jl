@@ -1375,7 +1375,7 @@ end
 
     function check_kmer_nucleotide_count(::Type{DNANucleotide}, seq::AbstractString)
         string_counts = string_nucleotide_count(DNANucleotide, seq)
-        kmer_counts = composition(dnakmer(seq))
+        kmer_counts = composition(DNAKmer(seq))
         return string_counts[DNA_A] == kmer_counts[DNA_A] &&
                string_counts[DNA_C] == kmer_counts[DNA_C] &&
                string_counts[DNA_G] == kmer_counts[DNA_G] &&
@@ -1385,7 +1385,7 @@ end
 
     function check_kmer_nucleotide_count(::Type{RNANucleotide}, seq::AbstractString)
         string_counts = string_nucleotide_count(RNANucleotide, seq)
-        kmer_counts = composition(rnakmer(seq))
+        kmer_counts = composition(RNAKmer(seq))
         return string_counts[RNA_A] == kmer_counts[RNA_A] &&
                string_counts[RNA_C] == kmer_counts[RNA_C] &&
                string_counts[RNA_G] == kmer_counts[RNA_G] &&
@@ -1413,6 +1413,8 @@ end
 @testset "Kmer" begin
     reps = 10
     @testset "Construction and Conversions" begin
+        @test Codon(RNA_A, RNA_G, RNA_U) == RNAKmer("AGU")
+
         # Check that kmers in strings survive round trip conversion:
         #   UInt64 → Kmer → UInt64
         function check_uint64_convertion(T::Type, n::UInt64, len::Int)
@@ -1447,7 +1449,7 @@ end
         #   Vector{Nucleotide} → Kmer → Vector{Nucleotide}
         function check_nucarray_kmer{T <: Nucleotide}(seq::Vector{T})
             return convert(AbstractString, [convert(Char, c) for c in seq]) ==
-                   convert(AbstractString, kmer(seq...))
+                   convert(AbstractString, Kmer(seq...))
         end
 
         # Check that kmers in strings survive round trip conversion:
@@ -1490,17 +1492,18 @@ end
             @test all(Bool[check_roundabout_construction(RNAAlphabet{4}, random_rna_kmer(len)) for _ in 1:reps])
         end
 
-        @test_throws Exception kmer() # can't construct 0-mer using `kmer()`
-        @test_throws Exception kmer(RNA_A, RNA_C, RNA_G, RNA_N, RNA_U) # no Ns in kmers
-        @test_throws Exception kmer(DNA_A, DNA_C, DNA_G, DNA_N, DNA_T) # no Ns in kmers
-        @test_throws Exception kmer(rna"ACGNU")# no Ns in kmers
-        @test_throws Exception rnmakmer(rna"ACGNU")# no Ns in kmers
-        @test_throws Exception kmer(dna"ACGNT") # no Ns in kmers
-        @test_throws Exception dnmakmer(dna"ACGNT") # no Ns in kmers
-        @test_throws Exception kmer(RNA_A, DNA_A) # no mixing of RNA and DNA
-        @test_throws Exception kmer(random_rna(33)) # no kmer larger than 32nt
-        @test_throws Exception kmer(random_dna(33)) # no kmer larger than 32nt
-        @test_throws Exception kmer(RNA_A, RNA_C, RNA_G, RNA_U, # no kmer larger than 32nt
+        @test_throws Exception Kmer() # can't construct 0-mer using `Kmer()`
+        @test_throws Exception Kmer(RNA_A, RNA_C, RNA_G, RNA_N, RNA_U) # no Ns in kmers
+        @test_throws Exception Kmer(DNA_A, DNA_C, DNA_G, DNA_N, DNA_T) # no Ns in kmers
+        @test_throws Exception Kmer(rna"ACGNU")# no Ns in kmers
+        @test_throws Exception RNAKmer(rna"ACGNU")# no Ns in kmers
+        @test_throws Exception Kmer(dna"ACGNT") # no Ns in kmers
+        @test_throws Exception DNAKmer(dna"ACGNT") # no Ns in kmers
+        @test_throws Exception Kmer(RNA_A, DNA_A) # no mixing of RNA and DNA
+        @test_throws Exception Kmer(random_rna(33)) # no kmer larger than 32nt
+        @test_throws Exception Kmer(random_dna(33)) # no kmer larger than 32nt
+        @test_throws Exception Kmer(
+                          RNA_A, RNA_C, RNA_G, RNA_U, # no kmer larger than 32nt
                           RNA_A, RNA_C, RNA_G, RNA_U,
                           RNA_A, RNA_C, RNA_G, RNA_U,
                           RNA_A, RNA_C, RNA_G, RNA_U,
@@ -1509,7 +1512,8 @@ end
                           RNA_A, RNA_C, RNA_G, RNA_U,
                           RNA_A, RNA_C, RNA_G, RNA_U,
                           RNA_A, RNA_C, RNA_G, RNA_U)
-        @test_throws Exception kmer(DNA_A, DNA_C, DNA_G, DNA_T, # no kmer larger than 32nt
+        @test_throws Exception Kmer(
+                          DNA_A, DNA_C, DNA_G, DNA_T, # no kmer larger than 32nt
                           DNA_A, DNA_C, DNA_G, DNA_T,
                           DNA_A, DNA_C, DNA_G, DNA_T,
                           DNA_A, DNA_C, DNA_G, DNA_T,
@@ -1520,19 +1524,19 @@ end
                           DNA_A, DNA_C, DNA_G, DNA_T)
 
         @testset "From strings" begin
-            @test dnakmer("ACTG") == convert(Kmer, DNASequence("ACTG"))
-            @test rnakmer("ACUG") == convert(Kmer, RNASequence("ACUG"))
+            @test DNAKmer("ACTG") == convert(Kmer, DNASequence("ACTG"))
+            @test RNAKmer("ACUG") == convert(Kmer, RNASequence("ACUG"))
 
             # N is not allowed in Kmers
-            @test_throws Exception dnakmer("ACGTNACGT")
-            @test_throws Exception rnakmer("ACGUNACGU")
+            @test_throws Exception DNAKmer("ACGTNACGT")
+            @test_throws Exception RNAKmer("ACGUNACGU")
         end
     end
 
     @testset "Comparisons" begin
         @testset "Equality" begin
             function check_seq_kmer_equality(len)
-                a = dnakmer(random_dna_kmer(len))
+                a = DNAKmer(random_dna_kmer(len))
                 b = convert(DNASequence, a)
                 return a == b && b == a
             end
@@ -1542,20 +1546,20 @@ end
             end
 
             # True negatives
-            @test dnakmer("ACG") != rnakmer("ACG")
-            @test dnakmer("T")   != rnakmer("U")
-            @test dnakmer("AC")  != dnakmer("AG")
-            @test rnakmer("AC")  != rnakmer("AG")
+            @test DNAKmer("ACG") != RNAKmer("ACG")
+            @test DNAKmer("T")   != RNAKmer("U")
+            @test DNAKmer("AC")  != DNAKmer("AG")
+            @test RNAKmer("AC")  != RNAKmer("AG")
 
-            @test dnakmer("ACG") != rna"ACG"
-            @test dnakmer("T")   != rna"U"
-            @test dnakmer("AC")  != dna"AG"
-            @test rnakmer("AC")  != rna"AG"
+            @test DNAKmer("ACG") != rna"ACG"
+            @test DNAKmer("T")   != rna"U"
+            @test DNAKmer("AC")  != dna"AG"
+            @test RNAKmer("AC")  != rna"AG"
 
-            @test rna"ACG" != dnakmer("ACG")
-            @test rna"U"   != dnakmer("T")
-            @test dna"AG"  != dnakmer("AC")
-            @test rna"AG"  != rnakmer("AC")
+            @test rna"ACG" != DNAKmer("ACG")
+            @test rna"U"   != DNAKmer("T")
+            @test dna"AG"  != DNAKmer("AC")
+            @test rna"AG"  != RNAKmer("AC")
         end
 
         @testset "Inequality" begin
@@ -1571,11 +1575,11 @@ end
         end
 
         @testset "Hash" begin
-            kmers = map(dnakmer, ["AAAA", "AACT", "ACGT", "TGCA"])
+            kmers = map(DNAKmer, ["AAAA", "AACT", "ACGT", "TGCA"])
             for x in kmers, y in kmers
                 @test (x == y) == (hash(x) == hash(y))
             end
-            kmers = map(rnakmer, ["AAAA", "AACU", "ACGU", "UGCA"])
+            kmers = map(RNAKmer, ["AAAA", "AACU", "ACGU", "UGCA"])
             for x in kmers, y in kmers
                 @test (x == y) == (hash(x) == hash(y))
             end
@@ -1584,37 +1588,37 @@ end
 
     @testset "Length" begin
         for len in [0, 1, 16, 32]
-            @test length(dnakmer(random_dna_kmer(len))) == len
-            @test length(rnakmer(random_rna_kmer(len))) == len
+            @test length(DNAKmer(random_dna_kmer(len))) == len
+            @test length(RNAKmer(random_rna_kmer(len))) == len
         end
     end
 
     @testset "Arithmetic" begin
-        x = dnakmer("AA")
-        @test x - 1 == x + (-1) == dnakmer("TT")
-        @test x + 1 == x - (-1) == dnakmer("AC")
+        x = DNAKmer("AA")
+        @test x - 1 == x + (-1) == x - 0x01 == DNAKmer("TT")
+        @test x + 1 == x - (-1) == x + 0x01 == DNAKmer("AC")
 
-        x = dnakmer("TT")
-        @test x - 1 == x + (-1) == dnakmer("TG")
-        @test x + 1 == x - (-1) == dnakmer("AA")
+        x = DNAKmer("TT")
+        @test x - 1 == x + (-1) == x - 0x01 == DNAKmer("TG")
+        @test x + 1 == x - (-1) == x + 0x01 == DNAKmer("AA")
 
-        base = dnakmer("AAA")
+        base = DNAKmer("AAA")
         offset = 0
         nucs = "ACGT"
         for a in nucs, b in nucs, c in nucs
-            @test base + offset == dnakmer(string(a, b, c))
+            @test base + offset == DNAKmer(string(a, b, c))
             offset += 1
         end
     end
 
     @testset "Order" begin
-        @test dnakmer("AA") < dnakmer("AC") < dnakmer("AG") < dnakmer("AT") < dnakmer("CA")
-        @test rnakmer("AA") < rnakmer("AC") < rnakmer("AG") < rnakmer("AU") < rnakmer("CA")
+        @test DNAKmer("AA") < DNAKmer("AC") < DNAKmer("AG") < DNAKmer("AT") < DNAKmer("CA")
+        @test RNAKmer("AA") < RNAKmer("AC") < RNAKmer("AG") < RNAKmer("AU") < RNAKmer("CA")
     end
 
     @testset "Access and Iterations" begin
-        dna_kmer = dnakmer("ACTG")
-        rna_kmer = rnakmer("ACUG")
+        dna_kmer = DNAKmer("ACTG")
+        rna_kmer = RNAKmer("ACUG")
 
         @testset "Access DNA Kmer" begin
             @test dna_kmer[1] == DNA_A
@@ -1632,17 +1636,17 @@ end
         end
 
         @testset "Iteration through DNA Kmer" begin
-            @test start(dnakmer("ACTG")) == 1
-            @test start(dnakmer(""))     == 1
+            @test start(DNAKmer("ACTG")) == 1
+            @test start(DNAKmer(""))     == 1
 
-            @test next(dnakmer("ACTG"), 1) == (DNA_A, 2)
-            @test next(dnakmer("ACTG"), 4) == (DNA_G, 5)
+            @test next(DNAKmer("ACTG"), 1) == (DNA_A, 2)
+            @test next(DNAKmer("ACTG"), 4) == (DNA_G, 5)
 
-            @test  done(dnakmer(""), 1)
-            @test !done(dnakmer("ACTG"), 1)
-            @test !done(dnakmer("ACTG"), 4)
-            @test  done(dnakmer("ACTG"), 5)
-            @test !done(dnakmer("ACTG"), -1)
+            @test  done(DNAKmer(""), 1)
+            @test !done(DNAKmer("ACTG"), 1)
+            @test !done(DNAKmer("ACTG"), 4)
+            @test  done(DNAKmer("ACTG"), 5)
+            @test !done(DNAKmer("ACTG"), -1)
 
 
             dna_vec = [DNA_A, DNA_C, DNA_T, DNA_G]
@@ -1665,17 +1669,17 @@ end
         end
 
         @testset "Iteration through RNA Kmer" begin
-            @test start(rnakmer("ACUG")) == 1
-            @test start(rnakmer(""))     == 1
+            @test start(RNAKmer("ACUG")) == 1
+            @test start(RNAKmer(""))     == 1
 
-            @test next(rnakmer("ACUG"), 1) == (RNA_A, 2)
-            @test next(rnakmer("ACUG"), 4) == (RNA_G, 5)
+            @test next(RNAKmer("ACUG"), 1) == (RNA_A, 2)
+            @test next(RNAKmer("ACUG"), 4) == (RNA_G, 5)
 
-            @test  done(rnakmer(""), 1)
-            @test !done(rnakmer("ACUG"), 1)
-            @test !done(rnakmer("ACUG"), 4)
-            @test  done(rnakmer("ACUG"), 5)
-            @test !done(rnakmer("ACUG"), -1)
+            @test  done(RNAKmer(""), 1)
+            @test !done(RNAKmer("ACUG"), 1)
+            @test !done(RNAKmer("ACUG"), 4)
+            @test  done(RNAKmer("ACUG"), 5)
+            @test !done(RNAKmer("ACUG"), -1)
 
             rna_vec = [RNA_A, RNA_C, RNA_U, RNA_G]
             @test all([nt === rna_vec[i] for (i, nt) in enumerate(rna_kmer)])
@@ -1683,7 +1687,7 @@ end
     end
 
     @testset "Find" begin
-        kmer = dnakmer("ACGAG")
+        kmer = DNAKmer("ACGAG")
 
         @test findnext(kmer, DNA_A, 1) == 1
         @test findnext(kmer, DNA_C, 1) == 2
@@ -1769,11 +1773,11 @@ end
         for len in 0:32, _ in 1:10
             a = random_dna_kmer(len)
             b = random_dna_kmer(len)
-            test_mismatches(dnakmer(a), dnakmer(b))
+            test_mismatches(DNAKmer(a), DNAKmer(b))
 
             a = random_rna_kmer(len)
             b = random_rna_kmer(len)
-            test_mismatches(rnakmer(a), rnakmer(b))
+            test_mismatches(RNAKmer(a), RNAKmer(b))
         end
     end
 

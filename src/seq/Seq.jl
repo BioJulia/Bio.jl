@@ -76,9 +76,7 @@ export
     Kmer,
     DNAKmer,
     RNAKmer,
-    dnakmer,
-    rnakmer,
-    kmer,
+    Codon,
     KmerCounts,
     DNAKmerCounts,
     RNAKmerCounts,
@@ -194,29 +192,6 @@ include("fastq-parser.jl")
 include("search/exact.jl")
 include("search/approx.jl")
 
-# DEPRECATED: defined just for compatibility
-type NucleotideSequence{T<:Nucleotide} end
-
-NucleotideSequence(::Type{DNANucleotide}) = DNASequence()
-NucleotideSequence(::Type{RNANucleotide}) = RNASequence()
-@compat begin
-    (::Type{NucleotideSequence{DNANucleotide}})() = DNASequence()
-    (::Type{NucleotideSequence{RNANucleotide}})() = RNASequence()
-    (::Type{NucleotideSequence{DNANucleotide}})(
-        seq::Union{AbstractVector{DNANucleotide},AbstractString}) = DNASequence(seq)
-    (::Type{NucleotideSequence{RNANucleotide}})(
-        seq::Union{AbstractVector{RNANucleotide},AbstractString}) = RNASequence(seq)
-end
-
-Base.convert(::Type{NucleotideSequence}, seq::DNAKmer) = DNASequence(seq)
-Base.convert(::Type{NucleotideSequence}, seq::RNAKmer) = RNASequence(seq)
-Base.convert(::Type{NucleotideSequence{DNANucleotide}}, seq::Union{AbstractVector{DNANucleotide},AbstractString,DNAKmer}) = DNASequence(seq)
-Base.convert(::Type{NucleotideSequence{RNANucleotide}}, seq::Union{AbstractVector{RNANucleotide},AbstractString,RNAKmer}) = RNASequence(seq)
-
-# DEPRECATED
-NucleotideCounts(seq) = Composition(seq)
-
-# DEPRECATED: use ambiguous_positions
-npositions(seq::BioSequence) = ambiguous_positions(seq)
+include("deprecated.jl")
 
 end # module Seq
