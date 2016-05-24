@@ -1413,7 +1413,8 @@ end
 @testset "Kmer" begin
     reps = 10
     @testset "Construction and Conversions" begin
-        @test Codon(RNA_A, RNA_G, RNA_U) == RNAKmer("AGU")
+        @test DNACodon(DNA_A, DNA_G, DNA_T) === DNAKmer("AGT")
+        @test RNACodon(RNA_A, RNA_G, RNA_U) === RNAKmer("AGU")
 
         # Check that kmers in strings survive round trip conversion:
         #   UInt64 → Kmer → UInt64
