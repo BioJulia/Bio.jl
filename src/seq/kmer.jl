@@ -261,6 +261,9 @@ function canonical{T, K}(x::Kmer{T, K})
 end
 
 
+# De Bruijn Graph
+# ---------------
+
 # neighbors on a de Bruijn graph
 immutable KmerNeighborIterator{T, K}
     x::Kmer{T, K}
@@ -273,9 +276,10 @@ function neighbors(x::Kmer)
     return KmerNeighborIterator(x)
 end
 
+Base.length(::KmerNeighborIterator) = 4
+Base.eltype{T,k}(::Type{KmerNeighborIterator{T,k}}) = Kmer{T,k}
 Base.start(it::KmerNeighborIterator) = UInt64(0)
 Base.done(it::KmerNeighborIterator, i) = i == 4
-Base.length(::KmerNeighborIterator) = 4
 function Base.next{T, K}(it::KmerNeighborIterator{T, K}, i)
     return Kmer{T,K}((UInt64(it.x) << 2) | i), i + 1
 end
