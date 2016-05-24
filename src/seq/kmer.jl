@@ -33,13 +33,18 @@ bitstype 64 Kmer{T<:Nucleotide, K} <: Sequence
 
 typealias DNAKmer{K} Kmer{DNANucleotide, K}
 typealias RNAKmer{K} Kmer{RNANucleotide, K}
-typealias Codon RNAKmer{3}
+typealias DNACodon DNAKmer{3}
+typealias RNACodon RNAKmer{3}
 
 function Kmer{T<:Nucleotide}(nts::T...)
     return make_kmer(nts)
 end
 
-function Codon(x::RNANucleotide, y::RNANucleotide, z::RNANucleotide)
+function DNACodon(x::DNANucleotide, y::DNANucleotide, z::DNANucleotide)
+    return make_kmer((x, y, z))
+end
+
+function RNACodon(x::RNANucleotide, y::RNANucleotide, z::RNANucleotide)
     return make_kmer((x, y, z))
 end
 

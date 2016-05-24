@@ -8,7 +8,7 @@
 
 # A genetic code is a table mapping RNA 3-mers (i.e. RNAKmer{3}) to AminoAcids.
 "Type representing a Genetic Code"
-immutable GeneticCode <: Associative{RNAKmer{3}, AminoAcid}
+immutable GeneticCode <: Associative{RNACodon, AminoAcid}
     name::Compat.String
     tbl::Vector{AminoAcid}
 end
@@ -17,11 +17,11 @@ end
 # Basic Functions
 # ---------------
 
-function Base.getindex(code::GeneticCode, idx::RNAKmer{3})
+function Base.getindex(code::GeneticCode, idx::Union{DNACodon,RNACodon})
     return code.tbl[convert(UInt64, idx) + 1]
 end
 
-function Base.setindex!(code::GeneticCode, aa::AminoAcid, idx::RNAKmer{3})
+function Base.setindex!(code::GeneticCode, aa::AminoAcid, idx::Union{DNACodon,RNACodon})
     return setindex!(code.tbl, aa, convert(UInt64, idx) + 1)
 end
 
@@ -54,11 +54,11 @@ end
 Base.start(code::GeneticCode) = UInt64(0)
 
 function Base.next(code::GeneticCode, x::UInt64)
-    c = convert(Codon, x)
-    return ((c, code[c]), (x + 1))
+    c = convert(RNACodon, x)
+    return (c, code[c]), x + 1
 end
 
-Base.done(code::GeneticCode, x::UInt64) = (x > UInt64(0b111111))
+Base.done(code::GeneticCode, x::UInt64) = x > UInt64(0b111111)
 
 
 # Default genetic codes
@@ -116,7 +116,7 @@ function parse_gencode(s)
         b1 = DNANucleotide(base1[i])
         b2 = DNANucleotide(base2[i])
         b3 = DNANucleotide(base3[i])
-        codon = Codon(Kmer(b1, b2, b3))
+        codon = DNACodon(Kmer(b1, b2, b3))
         codes[codon] = aa
     end
     return codes
