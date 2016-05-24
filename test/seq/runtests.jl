@@ -1413,6 +1413,8 @@ end
 @testset "Kmer" begin
     reps = 10
     @testset "Construction and Conversions" begin
+        @test Codon(RNA_A, RNA_G, RNA_U) == RNAKmer("AGU")
+
         # Check that kmers in strings survive round trip conversion:
         #   UInt64 → Kmer → UInt64
         function check_uint64_convertion(T::Type, n::UInt64, len::Int)

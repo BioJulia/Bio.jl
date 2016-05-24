@@ -76,6 +76,7 @@ export
     Kmer,
     DNAKmer,
     RNAKmer,
+    Codon,
     KmerCounts,
     DNAKmerCounts,
     RNAKmerCounts,

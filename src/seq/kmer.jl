@@ -39,6 +39,10 @@ function Kmer{T<:Nucleotide}(nts::T...)
     return make_kmer(nts)
 end
 
+function Codon(x::RNANucleotide, y::RNANucleotide, z::RNANucleotide)
+    return make_kmer((x, y, z))
+end
+
 
 # Conversion
 # ----------
