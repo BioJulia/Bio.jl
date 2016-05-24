@@ -35,6 +35,10 @@ typealias DNAKmer{K} Kmer{DNANucleotide, K}
 typealias RNAKmer{K} Kmer{RNANucleotide, K}
 typealias Codon RNAKmer{3}
 
+function Kmer{T<:Nucleotide}(nts::T...)
+    return make_kmer(nts)
+end
+
 
 # Conversion
 # ----------
@@ -71,10 +75,13 @@ Base.convert{A<:DNAAlphabet}(::Type{DNAKmer}, seq::BioSequence{A}) = convert(DNA
 Base.convert{A<:RNAAlphabet}(::Type{RNAKmer}, seq::BioSequence{A}) = convert(RNAKmer{length(seq)}, seq)
 
 # create a kmer from a sequence whose elements are convertible to a nucleotide
-function make_kmer{T,K}(::Type{Kmer{T,K}},
-                        seq::Union{AbstractString,BioSequence,NTuple{K,T}})
-    @assert length(seq) <= 32 error("Cannot construct a K-mer longer than 32nt.")
-    @assert length(seq) == K error("Cannot construct a $(K)-mer from a BioSequence of length $(length(seq))")
+function make_kmer{T,K}(::Type{Kmer{T,K}}, seq)
+    seqlen = length(seq)
+    if seqlen > 32
+        throw(ArgumentError("cannot create a k-mer loger than 32nt"))
+    elseif seqlen != K
+        throw(ArgumentError("cannot create a $(K)-mer from a sequence of length $(seqlen)"))
+    end
 
     x = UInt64(0)
     for c in seq
@@ -94,43 +101,6 @@ Base.convert{K}(::Type{BioSequence}, x::RNAKmer{K}) = RNASequence(x)
 Base.convert{A<:DNAAlphabet,K}(::Type{BioSequence{A}}, x::DNAKmer{K}) = BioSequence{A}([nt for nt in x])
 Base.convert{A<:RNAAlphabet,K}(::Type{BioSequence{A}}, x::RNAKmer{K}) = BioSequence{A}([nt for nt in x])
 Base.convert{S<:AbstractString}(::Type{S}, seq::Kmer) = convert(S, [Char(x) for x in seq])
-
-
-# Constructors
-# ------------
-
-"Construct a DNAKmer to an AbstractString"
-dnakmer(seq::AbstractString) = convert(DNAKmer, seq)
-
-"Construct a RNAKmer to an AbstractString"
-rnakmer(seq::AbstractString) = convert(RNAKmer, seq)
-
-"Construct a Kmer from a sequence of Nucleotides"
-function kmer{T <: Nucleotide}(nts::T...)
-    return make_kmer(nts)
-end
-
-"Construct a Kmer from a DNASequence"
-function kmer(seq::DNASequence)
-    return DNAKmer{length(seq)}(seq)
-end
-
-"Construct a Kmer from a RNASequence"
-function kmer(seq::RNASequence)
-    return RNAKmer{length(seq)}(seq)
-end
-
-# call kmer with @inline macro would reduce the performance significantly?
-# Would the compiler inline even without @inline?
-"Construct a DNAKmer from a DNASequence"
-function dnakmer(seq::DNASequence)
-    return DNAKmer{length(seq)}(seq)
-end
-
-"Construct a RNAKmer from a RNASequence"
-function rnakmer(seq::RNASequence)
-    return RNAKmer{length(seq)}(seq)
-end
 
 
 # Basic Functions

@@ -22,3 +22,7 @@ Base.convert(::Type{NucleotideSequence{RNANucleotide}}, seq::Union{AbstractVecto
 
 @deprecate NucleotideCounts(seq) Composition(seq)
 @deprecate npositions(seq::BioSequence) ambiguous_positions(seq)
+
+@deprecate kmer Kmer
+@deprecate dnakmer DNAKmer
+@deprecate rnakmer RNAKmer
