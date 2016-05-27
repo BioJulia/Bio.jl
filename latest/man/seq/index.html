@@ -208,24 +208,26 @@
                 <li class="third-level"><a href="#other-functions">Other functions</a></li>
             
         
-            <li class="second-level"><a href="#sequences">Sequences</a></li>
+            <li class="second-level"><a href="#overview-of-sequences-types">Overview of sequences types</a></li>
             
         
-            <li class="second-level"><a href="#constructing-sequences">Constructing sequences</a></li>
+            <li class="second-level"><a href="#general-purpose-sequences">General-purpose sequences</a></li>
             
-        
-            <li class="second-level"><a href="#indexing-and-modifying">Indexing and modifying</a></li>
+                <li class="third-level"><a href="#constructing-sequences">Constructing sequences</a></li>
             
-        
-            <li class="second-level"><a href="#other-operations-on-sequences">Other operations on sequences</a></li>
+                <li class="third-level"><a href="#indexing-and-modifying">Indexing and modifying</a></li>
             
-                <li class="third-level"><a href="#translation">Translation</a></li>
+                <li class="third-level"><a href="#other-operations-on-sequences">Other operations on sequences</a></li>
             
-        
-            <li class="second-level"><a href="#compact-representation">Compact representation</a></li>
+                <li class="third-level"><a href="#compact-representation">Compact representation</a></li>
+            
+                <li class="third-level"><a href="#defining-a-new-alphabet">Defining a new alphabet</a></li>
             
         
             <li class="second-level"><a href="#nucleotide-k-mers">Nucleotide k-mers</a></li>
+            
+        
+            <li class="second-level"><a href="#reference-sequences">Reference sequences</a></li>
             
         
             <li class="second-level"><a href="#sequence-search">Sequence search</a></li>
@@ -271,7 +273,7 @@
 </tr>
 </tbody>
 </table>
-<p>These symbols can be elements of sequences like characters can be elements of strings.  See <a href="./#Sequences-1">Sequences</a> and <a href="./#Nucleotide-k-mers-1">Nucleotide k-mers</a> section for details.</p>
+<p>These symbols can be elements of sequences like characters can be elements of strings.  See sections beginning from <a href="./#Overview-of-sequences-types-1">Overview of sequences types</a> section for details.</p>
 <p><a id='DNA-and-RNA-nucleotides-1'></a></p>
 <h3 id="dna-and-rna-nucleotides">DNA and RNA nucleotides</h3>
 <p>Set of nucleotide symbols in Bio.jl covers IUPAC nucleotide base plus a gap symbol:</p>
@@ -631,7 +633,7 @@
 <span class="gp">julia&gt;</span> <span class="n">AA_A</span><span class="p">:</span><span class="n">AA_X</span>      <span class="c"># all amino acids except teminal codon (*) and gap</span>
 <span class="go">AA_A:AA_X</span>
 
-<span class="gp">julia&gt;</span> <span class="n">AA_A</span><span class="p">:</span><span class="n">AA_Gap</span>    <span class="c"># all amino acids including teminal codon (*) and gap</span>
+<span class="gp">julia&gt;</span> <span class="n">AA_A</span><span class="p">:</span><span class="n">AA_Gap</span>    <span class="c"># all amino acids including terminal codon (*) and gap</span>
 <span class="go">AA_A:AA_Gap</span>
 </pre></div>
 
@@ -692,9 +694,53 @@
 </pre></div>
 
 
-<p><a id='Sequences-1'></a></p>
-<h2 id="sequences">Sequences</h2>
-<p>The <code>Bio.Seq</code> module provides representations and tools for manipulating nucleotide and amino acid sequences. Sequences in Bio.jl are more strictly typed than in many other libraries. They are special purpose types rather than simply strings. Bio.jl currently provides a single generic sequence type: <code>BioSequence{A&lt;:Alphabet}</code>. <code>BioSequence</code> is parameterized by an alphabet type <code>A</code> that defines the domain (or set) of biological symbols, and each alphabet has an associated symbol type. For example, <code>AminoAcidAlphabet</code> is associated with <code>AminoAcid</code> and hence an object of <code>BioSequence{AminoAcidAlphabet}</code> represents a sequence of amino acids.  Symbols from multiple alphabets can't be intermixed in one sequence type.</p>
+<p><a id='Overview-of-sequences-types-1'></a></p>
+<h2 id="overview-of-sequences-types">Overview of sequences types</h2>
+<p>The <code>Bio.Seq</code> module provides representations and tools for manipulating nucleotide and amino acid sequences. Sequences in Bio.jl are more strictly typed than in many other libraries; elements in a sequence are typed as biological symbol instead of character or byte.  They are special purpose types rather than simply strings and hence offer additional functionality that naive string types don't have. Though this strictness sacrifices some convenience, it also means you can always rely on a DNA sequence type to store DNA and nothing but DNA, without having to check, or deal with lowercase versus uppercase and so on. Strict separation of sequence types also means we are free to choose the most efficient representation. DNA and RNA sequences are encoded using four bits per base by default making them memory efficient, and also allowing us to speed up many common operations like nucleotide composition, reverse complement, and <em>k</em>-mer enumeration.</p>
+<p>The <code>Bio.Seq</code> provides three different sequence types: <code>BioSequence</code>, <code>Kmer</code> and <code>ReferenceSequence</code>. Each of these types is a subtype of an abstract type called <code>Sequence</code> and supports various string-like operations such as random access and iteration. Different sequence types have different features. In most situations, <code>BioSequence</code> type will do and is used as the default representation. But sometimes other types are much more preferable in terms of memory efficiency and computation performance.  Here is the summary table of these three types:</p>
+<table>
+<thead>
+<tr>
+<th align="left">Type</th>
+<th>Description</th>
+<th>Element type</th>
+<th>Mutability</th>
+<th>Allocation</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td align="left"><code>BioSequence{A&lt;:Alphabet}</code></td>
+<td>general-purpose biological sequences</td>
+<td>DNA, RNA, Amino acids</td>
+<td>mutable</td>
+<td>heap</td>
+</tr>
+<tr>
+<td align="left"><code>Kmer{T&lt;:Nucleotide,k}</code></td>
+<td>specialized for short nucleotide sequences</td>
+<td>DNA, RNA</td>
+<td>immutable</td>
+<td>stack / register</td>
+</tr>
+<tr>
+<td align="left"><code>ReferenceSequence</code></td>
+<td>specialized for long reference genomes</td>
+<td>DNA</td>
+<td>immutable</td>
+<td>heap</td>
+</tr>
+</tbody>
+</table>
+<p>Details of these different representations are explained in the following sections:</p>
+<ul>
+<li><code>BioSequence</code>: <a href="./#General-purpose-sequences-1">General-purpose sequences</a></li>
+<li><code>Kmer</code>: <a href="./#Nucleotide-k-mers-1">Nucleotide k-mers</a></li>
+<li><code>ReferenceSequence</code>: <a href="./#Reference-sequences-1">Reference sequences</a></li>
+</ul>
+<p><a id='General-purpose-sequences-1'></a></p>
+<h2 id="general-purpose-sequences">General-purpose sequences</h2>
+<p><code>BioSequence{A}</code> is a generic sequence type parameterized by an alphabet type <code>A</code> that defines the domain (or set) of biological symbols, and each alphabet has an associated symbol type. For example, <code>AminoAcidAlphabet</code> is associated with <code>AminoAcid</code> and hence an object of the <code>BioSequence{AminoAcidAlphabet}</code> type represents a sequence of amino acids.  Symbols from multiple alphabets can't be intermixed in one sequence type.</p>
 <p>The following table summarizes common sequence types that are defined in the <code>Bio.Seq</code> module:</p>
 <table>
 <thead>
@@ -727,9 +773,9 @@
 </tr>
 </tbody>
 </table>
-<p>Though this strictness sacrifices some convenience, it also means you can always rely on a <code>DNASequence</code> to store DNA and nothing but DNA, without having to check, or deal with lowercase versus uppercase and so on. Strict separation of sequence types also means we are free to choose the most efficient representation. DNA and RNA sequences are encoded using four bits per base by default making them memory efficient, and also allowing us to speed up many common operations like nucleotide composition, reverse complement, and <em>k</em>-mer enumeration.</p>
+<p>Parameterized definition of the <code>BioSequence{A}</code> type is for the purpose of unifying the data structure and operations of any symbol type. In most cases, users don't have to care about it and can use type aliases listed above. However, the alphabet type fixes the internal memory encoding and plays an important role when optimizing performance of a program (see <a href="./#Compact-representation-1">Compact representation</a> section for low-memory encodings).  It also enables a user to define their own alphabet only by defining few numbers of methods. This is described in <a href="./#Defining-a-new-alphabet-1">Defining a new alphabet</a> section.</p>
 <p><a id='Constructing-sequences-1'></a></p>
-<h2 id="constructing-sequences">Constructing sequences</h2>
+<h3 id="constructing-sequences">Constructing sequences</h3>
 <p>Sequence types corresponding to these alphabets can be constructed a number of different ways. Most immediately, sequence literals can be constructed using the string macros <code>dna</code>, <code>rna</code>, <code>aa</code>, and <code>char</code>:</p>
 <div class="codehilite"><pre><span></span><span class="go"># String decorators are provided for common sequence types</span>
 <span class="gp">julia&gt;</span> <span class="n">dna</span><span class="s">&quot;TACGTANNATC&quot;</span>
@@ -816,7 +862,7 @@
 
 <p>A translatable <code>RNASequence</code> can also be converted to an <code>AminoAcidSequence</code> using the <a href="./#Bio.Seq.translate"><code>translate</code></a> function described below.</p>
 <p><a id='Indexing-and-modifying-1'></a></p>
-<h2 id="indexing-and-modifying">Indexing and modifying</h2>
+<h3 id="indexing-and-modifying">Indexing and modifying</h3>
 <p>Sequences for the most part behave like other vector or string types. They can be indexed using integers or ranges:</p>
 <div class="codehilite"><pre><span></span><span class="gp">julia&gt;</span> <span class="n">seq</span> <span class="o">=</span> <span class="n">dna</span><span class="s">&quot;ACGTTTANAGTNNAGTACC&quot;</span>
 <span class="go">19nt DNA Sequence:</span>
@@ -831,8 +877,8 @@
 </pre></div>
 
 
-<p>Indexing by range creates a subsequence of the original sequence. Unlike <code>ASCIIString</code> and <code>Vector</code> in the standard library, creating a subsequences is copy-free: a subsequence is just a reference to the original sequence with its range.  You may think that this is unsafe because modifying subsequences propagates to the original sequence, but this doesn't happen actually:</p>
-<div class="codehilite"><pre><span></span><span class="gp">julia&gt;</span> <span class="n">seq</span> <span class="o">=</span> <span class="n">dna</span><span class="s">&quot;AAAA&quot;</span>  <span class="c"># create a sequence</span>
+<p>Indexing by range creates a subsequence of the original sequence. Unlike <code>Vector</code> in the standard library, creating a subsequences is copy-free: a subsequence is just a reference to the original sequence with its range.  You may think that this is unsafe because modifying subsequences propagates to the original sequence, but this doesn't happen actually:</p>
+<div class="codehilite"><pre><span></span><span class="gp">julia&gt;</span> <span class="n">seq</span> <span class="o">=</span> <span class="n">dna</span><span class="s">&quot;AAAA&quot;</span>    <span class="c"># create a sequence</span>
 <span class="go">4nt DNA Sequence:</span>
 <span class="go">AAAA</span>
 
@@ -843,11 +889,11 @@
 <span class="gp">julia&gt;</span> <span class="n">subseq</span><span class="p">[</span><span class="mi">2</span><span class="p">]</span> <span class="o">=</span> <span class="n">DNA_T</span>  <span class="c"># modify the second element of it</span>
 <span class="go">DNA_T</span>
 
-<span class="gp">julia&gt;</span> <span class="n">subseq</span>  <span class="c"># the subsequence is modified</span>
+<span class="gp">julia&gt;</span> <span class="n">subseq</span>             <span class="c"># the subsequence is modified</span>
 <span class="go">2nt DNA Sequence:</span>
 <span class="go">AT</span>
 
-<span class="gp">julia&gt;</span> <span class="n">seq</span>  <span class="c"># but the original sequence is not</span>
+<span class="gp">julia&gt;</span> <span class="n">seq</span>                <span class="c"># but the original sequence is not</span>
 <span class="go">4nt DNA Sequence:</span>
 <span class="go">AAAA</span>
 </pre></div>
@@ -930,7 +976,7 @@
 
 
 <p><a id='Other-operations-on-sequences-1'></a></p>
-<h2 id="other-operations-on-sequences">Other operations on sequences</h2>
+<h3 id="other-operations-on-sequences">Other operations on sequences</h3>
 <p>A number of common sequence operations are provided in the <code>Bio.Seq</code> module:</p>
 <p><a id='Bio.Seq.complement' href='#Bio.Seq.complement'>#</a>
 <strong><code>Bio.Seq.complement</code></strong> &mdash; <em>Function</em>.</p>
@@ -982,7 +1028,7 @@
 
 <p>Calculate composition of biological symbols in <code>seq</code>.</p>
 <p><a id='Translation-1'></a></p>
-<h3 id="translation">Translation</h3>
+<h4 id="translation">Translation</h4>
 <p>The <a href="./#Bio.Seq.translate"><code>translate</code></a> funtion translates a sequence of codons in a RNA sequence to a amino acid sequence besed on a genetic code mapping.  The <code>Bio.Seq</code> module contains all NCBI defined genetic codes and they are registered in <a href="./#Bio.Seq.ncbi_trans_table"><code>ncbi_trans_table</code></a>.</p>
 <p><a id='Bio.Seq.translate' href='#Bio.Seq.translate'>#</a>
 <strong><code>Bio.Seq.translate</code></strong> &mdash; <em>Function</em>.</p>
@@ -996,32 +1042,32 @@
 <strong><code>Bio.Seq.ncbi_trans_table</code></strong> &mdash; <em>Constant</em>.</p>
 <p>Genetic code list of NCBI.</p>
 <p>The standard genetic code is <code>ncbi_trans_table[1]</code> and others can be shown by <code>show(ncbi_trans_table)</code>. For more details, consult the next link: http://www.ncbi.nlm.nih.gov/Taxonomy/taxonomyhome.html/index.cgi?chapter=cgencodes.</p>
-<div class="codehilite"><pre><span></span><span class="n">julia</span><span class="o">&gt;</span> <span class="n">ncbi_trans_table</span>
-<span class="n">Translation</span> <span class="n">Tables</span><span class="p">:</span>
-  <span class="mf">1.</span> <span class="n">The</span> <span class="n">Standard</span> <span class="n">Code</span> <span class="p">(</span><span class="n">standard_genetic_code</span><span class="p">)</span>
-  <span class="mf">2.</span> <span class="n">The</span> <span class="n">Vertebrate</span> <span class="n">Mitochondrial</span> <span class="n">Code</span> <span class="p">(</span><span class="n">vertebrate_mitochondrial_genetic_code</span><span class="p">)</span>
-  <span class="mf">3.</span> <span class="n">The</span> <span class="n">Yeast</span> <span class="n">Mitochondrial</span> <span class="n">Code</span> <span class="p">(</span><span class="n">yeast_mitochondrial_genetic_code</span><span class="p">)</span>
-  <span class="mf">4.</span> <span class="n">The</span> <span class="n">Mold</span><span class="p">,</span> <span class="n">Protozoan</span><span class="p">,</span> <span class="n">and</span> <span class="n">Coelenterate</span> <span class="n">Mitochondrial</span> <span class="n">Code</span> <span class="n">and</span> <span class="n">the</span> <span class="n">Mycoplasma</span><span class="o">/</span><span class="n">Spiroplasma</span> <span class="n">Code</span> <span class="p">(</span><span class="n">mold_mitochondrial_genetic_code</span><span class="p">)</span>
-  <span class="mf">5.</span> <span class="n">The</span> <span class="n">Invertebrate</span> <span class="n">Mitochondrial</span> <span class="n">Code</span> <span class="p">(</span><span class="n">invertebrate_mitochondrial_genetic_code</span><span class="p">)</span>
-  <span class="mf">6.</span> <span class="n">The</span> <span class="n">Ciliate</span><span class="p">,</span> <span class="n">Dasycladacean</span> <span class="n">and</span> <span class="n">Hexamita</span> <span class="n">Nuclear</span> <span class="n">Code</span> <span class="p">(</span><span class="n">ciliate_nuclear_genetic_code</span><span class="p">)</span>
-  <span class="mf">9.</span> <span class="n">The</span> <span class="n">Echinoderm</span> <span class="n">and</span> <span class="n">Flatworm</span> <span class="n">Mitochondrial</span> <span class="n">Code</span> <span class="p">(</span><span class="n">echinoderm_mitochondrial_genetic_code</span><span class="p">)</span>
- <span class="mf">10.</span> <span class="n">The</span> <span class="n">Euplotid</span> <span class="n">Nuclear</span> <span class="n">Code</span> <span class="p">(</span><span class="n">euplotid_nuclear_genetic_code</span><span class="p">)</span>
- <span class="mf">11.</span> <span class="n">The</span> <span class="n">Bacterial</span><span class="p">,</span> <span class="n">Archaeal</span> <span class="n">and</span> <span class="n">Plant</span> <span class="n">Plastid</span> <span class="n">Code</span> <span class="p">(</span><span class="n">bacterial_plastid_genetic_code</span><span class="p">)</span>
- <span class="mf">12.</span> <span class="n">The</span> <span class="n">Alternative</span> <span class="n">Yeast</span> <span class="n">Nuclear</span> <span class="n">Code</span> <span class="p">(</span><span class="n">alternative_yeast_nuclear_genetic_code</span><span class="p">)</span>
- <span class="mf">13.</span> <span class="n">The</span> <span class="n">Ascidian</span> <span class="n">Mitochondrial</span> <span class="n">Code</span> <span class="p">(</span><span class="n">ascidian_mitochondrial_genetic_code</span><span class="p">)</span>
- <span class="mf">14.</span> <span class="n">The</span> <span class="n">Alternative</span> <span class="n">Flatworm</span> <span class="n">Mitochondrial</span> <span class="n">Code</span> <span class="p">(</span><span class="n">alternative_flatworm_mitochondrial_genetic_code</span><span class="p">)</span>
- <span class="mf">16.</span> <span class="n">Chlorophycean</span> <span class="n">Mitochondrial</span> <span class="n">Code</span> <span class="p">(</span><span class="n">chlorophycean_mitochondrial_genetic_code</span><span class="p">)</span>
- <span class="mf">21.</span> <span class="n">Trematode</span> <span class="n">Mitochondrial</span> <span class="n">Code</span> <span class="p">(</span><span class="n">trematode_mitochondrial_genetic_code</span><span class="p">)</span>
- <span class="mf">22.</span> <span class="n">Scenedesmus</span> <span class="n">obliquus</span> <span class="n">Mitochondrial</span> <span class="n">Code</span> <span class="p">(</span><span class="n">scenedesmus_obliquus_mitochondrial_genetic_code</span><span class="p">)</span>
- <span class="mf">23.</span> <span class="n">Thraustochytrium</span> <span class="n">Mitochondrial</span> <span class="n">Code</span> <span class="p">(</span><span class="n">thraustochytrium_mitochondrial_genetic_code</span><span class="p">)</span>
- <span class="mf">24.</span> <span class="n">Pterobranchia</span> <span class="n">Mitochondrial</span> <span class="n">Code</span> <span class="p">(</span><span class="n">pterobrachia_mitochondrial_genetic_code</span><span class="p">)</span>
- <span class="mf">25.</span> <span class="n">Candidate</span> <span class="n">Division</span> <span class="n">SR1</span> <span class="n">and</span> <span class="n">Gracilibacteria</span> <span class="n">Code</span> <span class="p">(</span><span class="n">candidate_division_sr1_genetic_code</span><span class="p">)</span>
+<div class="codehilite"><pre><span></span><span class="gp">julia&gt;</span> <span class="n">ncbi_trans_table</span>
+<span class="go">Translation Tables:</span>
+<span class="go">  1. The Standard Code (standard_genetic_code)</span>
+<span class="go">  2. The Vertebrate Mitochondrial Code (vertebrate_mitochondrial_genetic_code)</span>
+<span class="go">  3. The Yeast Mitochondrial Code (yeast_mitochondrial_genetic_code)</span>
+<span class="go">  4. The Mold, Protozoan, and Coelenterate Mitochondrial Code and the Mycoplasma/Spiroplasma Code (mold_mitochondrial_genetic_code)</span>
+<span class="go">  5. The Invertebrate Mitochondrial Code (invertebrate_mitochondrial_genetic_code)</span>
+<span class="go">  6. The Ciliate, Dasycladacean and Hexamita Nuclear Code (ciliate_nuclear_genetic_code)</span>
+<span class="go">  9. The Echinoderm and Flatworm Mitochondrial Code (echinoderm_mitochondrial_genetic_code)</span>
+<span class="go"> 10. The Euplotid Nuclear Code (euplotid_nuclear_genetic_code)</span>
+<span class="go"> 11. The Bacterial, Archaeal and Plant Plastid Code (bacterial_plastid_genetic_code)</span>
+<span class="go"> 12. The Alternative Yeast Nuclear Code (alternative_yeast_nuclear_genetic_code)</span>
+<span class="go"> 13. The Ascidian Mitochondrial Code (ascidian_mitochondrial_genetic_code)</span>
+<span class="go"> 14. The Alternative Flatworm Mitochondrial Code (alternative_flatworm_mitochondrial_genetic_code)</span>
+<span class="go"> 16. Chlorophycean Mitochondrial Code (chlorophycean_mitochondrial_genetic_code)</span>
+<span class="go"> 21. Trematode Mitochondrial Code (trematode_mitochondrial_genetic_code)</span>
+<span class="go"> 22. Scenedesmus obliquus Mitochondrial Code (scenedesmus_obliquus_mitochondrial_genetic_code)</span>
+<span class="go"> 23. Thraustochytrium Mitochondrial Code (thraustochytrium_mitochondrial_genetic_code)</span>
+<span class="go"> 24. Pterobranchia Mitochondrial Code (pterobrachia_mitochondrial_genetic_code)</span>
+<span class="go"> 25. Candidate Division SR1 and Gracilibacteria Code (candidate_division_sr1_genetic_code)</span>
 </pre></div>
 
 
 <p><a href="http://www.ncbi.nlm.nih.gov/Taxonomy/taxonomyhome.html/index.cgi?chapter=cgencodes">http://www.ncbi.nlm.nih.gov/Taxonomy/taxonomyhome.html/index.cgi?chapter=cgencodes</a></p>
 <p><a id='Compact-representation-1'></a></p>
-<h2 id="compact-representation">Compact representation</h2>
+<h3 id="compact-representation">Compact representation</h3>
 <p>As we saw above, DNA and RNA sequences can store any ambiguous nucleotides like 'N'.  If you are sure that nucleotide sequences store unambiguous nucleotides only, you can save the memory space of sequences. <code>DNAAlphabet{2}</code> is an alphabet that uses two bits per base and limits to only unambiguous nucleotide symbols (ACGT in DNA and ACGU in RNA). To create a sequence of this alphabet, you need to explicitly pass <code>DNAAlphabet{2}</code> to <code>BioSequence</code> as its parametric type:</p>
 <div class="codehilite"><pre><span></span><span class="gp">julia&gt;</span> <span class="n">seq</span> <span class="o">=</span> <span class="n">BioSequence</span><span class="p">{</span><span class="n">DNAAlphabet</span><span class="p">{</span><span class="mi">2</span><span class="p">}}(</span><span class="s">&quot;ACGT&quot;</span><span class="p">)</span>
 <span class="go">4nt DNA Sequence:</span>
@@ -1029,25 +1075,63 @@
 </pre></div>
 
 
-<p>Recall that <code>DNASequence</code> is a type alias of <code>BioSequence{DNAAlphabet{4}}</code>, which uses four bits per base. That is, <code>BioSequence{DNAAlphabet{2}}</code> saves half of memory footprint compared to <code>BioSequence{DNAAlphabet{4}}</code>. If you need to handle reference sequences that are composed of five nucleotides, ACGTN, consider to use <a href="https://github.com/BioJulia/ReferenceSequences.jl">ReferenceSequences.jl</a>. <code>ReferenceSequence</code>, exported from this package, compresses positions of 'N' and enables to handle long DNA sequences with the near space of two-bit encoding.</p>
+<p>Recall that <code>DNASequence</code> is a type alias of <code>BioSequence{DNAAlphabet{4}}</code>, which uses four bits per base. That is, <code>BioSequence{DNAAlphabet{2}}</code> saves half of memory footprint compared to <code>BioSequence{DNAAlphabet{4}}</code>. If you need to handle reference genomes that are composed of five nucleotides, ACGTN, consider to use the <code>ReferenceSequence</code> type described in the <a href="./#Reference-sequences-1">Reference sequences</a> section.</p>
+<p><a id='Defining-a-new-alphabet-1'></a></p>
+<h3 id="defining-a-new-alphabet">Defining a new alphabet</h3>
+<p>The alphabet type parameter <code>A</code> of <code>BioSequence{A}</code> enables a user to extend functionality of <code>BioSequence</code> with mimimum effort. As an example, definition of a new alphabet type representing a sequence of boolean values is shown below:</p>
+<div class="codehilite"><pre><span></span><span class="k">using</span> <span class="n">Bio</span><span class="o">.</span><span class="n">Seq</span>
+
+<span class="k">immutable</span> <span class="n">BoolAlphabet</span> <span class="o">&lt;:</span> <span class="n">Alphabet</span> <span class="k">end</span>
+
+<span class="n">Seq</span><span class="o">.</span><span class="n">bitsof</span><span class="p">(::</span><span class="n">Type</span><span class="p">{</span><span class="n">BoolAlphabet</span><span class="p">})</span> <span class="o">=</span> <span class="mi">1</span>
+<span class="n">Seq</span><span class="o">.</span><span class="n">eltype</span><span class="p">(::</span><span class="n">Type</span><span class="p">{</span><span class="n">BoolAlphabet</span><span class="p">})</span> <span class="o">=</span> <span class="kt">Bool</span>
+<span class="n">Seq</span><span class="o">.</span><span class="n">alphabet</span><span class="p">(::</span><span class="n">Type</span><span class="p">{</span><span class="n">BoolAlphabet</span><span class="p">})</span> <span class="o">=</span> <span class="n">false</span><span class="p">:</span><span class="n">true</span>
+
+<span class="k">function</span><span class="nf"> Seq</span><span class="o">.</span><span class="n">encode</span><span class="p">(::</span><span class="n">Type</span><span class="p">{</span><span class="n">BoolAlphabet</span><span class="p">},</span> <span class="n">x</span><span class="p">::</span><span class="kt">Bool</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">UInt64</span><span class="p">(</span><span class="n">ifelse</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="mh">0x01</span><span class="p">,</span> <span class="mh">0x00</span><span class="p">))</span>
+<span class="k">end</span>
+
+<span class="k">function</span><span class="nf"> Seq</span><span class="o">.</span><span class="n">decode</span><span class="p">(::</span><span class="n">Type</span><span class="p">{</span><span class="n">BoolAlphabet</span><span class="p">},</span> <span class="n">x</span><span class="p">::</span><span class="n">UInt64</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">x</span> <span class="o">&gt;</span> <span class="mh">0x01</span>
+        <span class="nb">throw</span><span class="p">(</span><span class="n">Seq</span><span class="o">.</span><span class="n">DecodeError</span><span class="p">(</span><span class="n">BoolAlphabet</span><span class="p">,</span> <span class="n">x</span><span class="p">))</span>
+    <span class="k">end</span>
+    <span class="k">return</span> <span class="n">ifelse</span><span class="p">(</span><span class="n">x</span> <span class="o">==</span> <span class="mh">0x00</span><span class="p">,</span> <span class="n">false</span><span class="p">,</span> <span class="n">true</span><span class="p">)</span>
+<span class="k">end</span>
+</pre></div>
+
+
 <p><a id='Nucleotide-k-mers-1'></a></p>
 <h2 id="nucleotide-k-mers">Nucleotide k-mers</h2>
 <p>A common strategy to simplify the analysis of sequence data is to operate or short k-mers, for size fixed size <code>k</code>. These can be packed into machine integers allowing extremely efficient code. The <code>Bio.Seq</code> module has built in support for representing short sequences in 64-bit integers. Besides being fixed length, <code>Kmer</code> types, unlike other sequence types cannot contain ambiguous symbols like 'N'.</p>
-<p>The <code>Kmer{T,k}</code> type parameterized on alphabet (<code>T</code>, either <code>DNANucleotide</code>, or <code>RNANucleotide</code>) and size <code>k</code>. A number of functions are provided for operating on <code>Kmers</code>.</p>
+<p>The <code>Kmer{T,k}</code> type parameterized on symbol type (<code>T</code>, either <code>DNANucleotide</code>, or <code>RNANucleotide</code>) and size <code>k</code>. For ease of writing code, two type aliases for each nucleotide type are defined and named as <code>DNAKmer{k}</code> and <code>RNAKmer{k}</code>:</p>
+<div class="codehilite"><pre><span></span><span class="gp">julia&gt;</span> <span class="n">DNAKmer</span><span class="p">(</span><span class="s">&quot;ACGT&quot;</span><span class="p">)</span>  <span class="c"># create a DNA 4-mer from a string</span>
+<span class="go">DNA 4-mer:</span>
+<span class="go">ACGT</span>
+
+<span class="gp">julia&gt;</span> <span class="n">RNAKmer</span><span class="p">(</span><span class="s">&quot;ACGU&quot;</span><span class="p">)</span>  <span class="c"># create an RNA 4-mer from a string</span>
+<span class="go">RNA 4-mer:</span>
+<span class="go">ACGU</span>
+
+<span class="gp">julia&gt;</span> <span class="nb">typeof</span><span class="p">(</span><span class="n">DNAKmer</span><span class="p">(</span><span class="s">&quot;ACGT&quot;</span><span class="p">))</span>
+<span class="go">Bio.Seq.Kmer{Bio.Seq.DNANucleotide,4}</span>
+</pre></div>
+
+
 <p><a id='Bio.Seq.each' href='#Bio.Seq.each'>#</a>
 <strong><code>Bio.Seq.each</code></strong> &mdash; <em>Function</em>.</p>
-<p>Initialize an iterator over all k-mers in a sequence.</p>
-<p>Any k-mer containing an N will be skipped over.</p>
+<div class="codehilite"><pre><span></span>each(::Type{Kmer{T,k}}, seq::Sequence[, step=1])
+</pre></div>
+
+
+<p>Initialize an iterator over all k-mers in a sequence <code>seq</code> skipping ambiguous nucleotides without changing the reading frame.</p>
 <p><strong>Arguments</strong></p>
 <ul>
-<li><code>t</code>: Kmer type to enumerate.</li>
-<li><code>seq</code>: A NucleotideSequence</li>
-<li><code>step</code>: number of positions between iterated k-mers (default: 1)</li>
+<li><code>Kmer{T,k}</code>: k-mer type to enumerate.</li>
+<li><code>seq</code>: a nucleotide sequence.</li>
+<li><code>step=1</code>: the number of positions between iterated k-mers</li>
 </ul>
-<p><strong>Returns</strong></p>
-<p>A EachKmerIterator constructed with these parameters</p>
 <p><strong>Examples</strong></p>
-<div class="codehilite"><pre><span></span># iterate over codons
+<div class="codehilite"><pre><span></span># iterate over DNA codons
 for (pos, codon) in each(DNAKmer{3}, dna&quot;ATCCTANAGNTACT&quot;, 3)
     @show pos, codon
 end
@@ -1056,8 +1140,8 @@ end
 
 <p><a id='Bio.Seq.KmerCounts' href='#Bio.Seq.KmerCounts'>#</a>
 <strong><code>Bio.Seq.KmerCounts</code></strong> &mdash; <em>Type</em>.</p>
-<div class="codehilite"><pre><span></span>DNAKmerCounts{k}(seq::BioSequence[, step=1])
-RNAKmerCounts{k}(seq::BioSequence[, step=1])
+<div class="codehilite"><pre><span></span>DNAKmerCounts{k}(seq::Sequence[, step=1])
+RNAKmerCounts{k}(seq::Sequence[, step=1])
 </pre></div>
 
 
@@ -1066,7 +1150,7 @@ RNAKmerCounts{k}(seq::BioSequence[, step=1])
 <p><strong>Arguments</strong></p>
 <ul>
 <li><code>seq</code>: A nucleotide sequence.</li>
-<li><code>step</code>: K-mers counted are separated by this many nucleotides (deafult: 1).</li>
+<li><code>step=1</code>: K-mers counted are separated by this many nucleotides.</li>
 </ul>
 <p><a id='Bio.Seq.canonical' href='#Bio.Seq.canonical'>#</a>
 <strong><code>Bio.Seq.canonical</code></strong> &mdash; <em>Function</em>.</p>
@@ -1075,6 +1159,37 @@ RNAKmerCounts{k}(seq::BioSequence[, step=1])
 <p><a id='Bio.Seq.neighbors' href='#Bio.Seq.neighbors'>#</a>
 <strong><code>Bio.Seq.neighbors</code></strong> &mdash; <em>Function</em>.</p>
 <p>Iterate through k-mers neighboring <code>x</code> on a de Bruijn graph.</p>
+<p><a id='Reference-sequences-1'></a></p>
+<h2 id="reference-sequences">Reference sequences</h2>
+<p><code>DNASequence</code> (alias of <code>BioSequence{DNAAlphabet{4}}</code>) is a flexible data sturcture but always consumes 4 bits per base, which will waste a large part of the memory space when storing reference genome sequences.  In such a case, <code>ReferenceSequence</code> is helpful because it compresses positions of 'N' symbols so that long DNA sequences are stored with almost 2 bits per base. An important limitation is that the <code>ReferenceSequence</code> type is immutable due to the compression. Other sequence-like operations are supported:</p>
+<div class="codehilite"><pre><span></span><span class="gp">julia&gt;</span> <span class="n">seq</span> <span class="o">=</span> <span class="n">ReferenceSequence</span><span class="p">(</span><span class="n">dna</span><span class="s">&quot;NNCGTATTTTCN&quot;</span><span class="p">)</span>
+<span class="go">12nt Reference Sequence:</span>
+<span class="go">NNCGTATTTTCN</span>
+
+<span class="gp">julia&gt;</span> <span class="n">seq</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span>
+<span class="go">DNA_N</span>
+
+<span class="gp">julia&gt;</span> <span class="n">seq</span><span class="p">[</span><span class="mi">5</span><span class="p">]</span>
+<span class="go">DNA_T</span>
+
+<span class="gp">julia&gt;</span> <span class="n">seq</span><span class="p">[</span><span class="mi">2</span><span class="p">:</span><span class="mi">6</span><span class="p">]</span>
+<span class="go">5nt Reference Sequence:</span>
+<span class="go">NCGTA</span>
+
+<span class="gp">julia&gt;</span> <span class="n">ReferenceSequence</span><span class="p">(</span><span class="n">dna</span><span class="s">&quot;ATGM&quot;</span><span class="p">)</span>  <span class="c"># DNA_M is not accepted</span>
+<span class="go">ERROR: ArgumentError: invalid symbol M ∉ {A,C,G,T,N} at 4</span>
+<span class="go"> in convert at /Users/kenta/.julia/v0.4/Bio/src/seq/refseq.jl:58</span>
+<span class="go"> in call at essentials.jl:56</span>
+</pre></div>
+
+
+<p>When reading reference sequences from a FASTA file, the following snippet will avoid allocating temporary sequences and conversion:</p>
+<div class="codehilite"><pre><span></span><span class="k">for</span> <span class="n">record</span> <span class="k">in</span> <span class="n">open</span><span class="p">(</span><span class="s">&quot;hg38.fa&quot;</span><span class="p">,</span> <span class="n">FASTA</span><span class="p">,</span> <span class="n">ReferenceSequence</span><span class="p">)</span>
+    <span class="c"># do something</span>
+<span class="k">end</span>
+</pre></div>
+
+
 <p><a id='Sequence-search-1'></a></p>
 <h2 id="sequence-search">Sequence search</h2>
 <p>Several kinds of on-line search functions are provided.</p>
