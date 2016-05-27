@@ -25,6 +25,14 @@ function Composition{A}(seq::BioSequence{A})
     return comp
 end
 
+function Composition(seq::ReferenceSequence)
+    comp = Composition{DNAAlphabet{4}}()
+    @inbounds for x in seq
+        comp.counts[encode(DNAAlphabet{4}, x)+1] += 1
+    end
+    return comp
+end
+
 function Composition{K}(kmer::DNAKmer{K})
     A = DNAAlphabet{2}
     comp = Composition{A}()

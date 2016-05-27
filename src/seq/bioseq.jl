@@ -218,80 +218,13 @@ end
 Base.convert{S<:AbstractString,A}(::Type{BioSequence{A}}, seq::S) = BioSequence{A}(seq)
 
 
-# Printers
-# --------
+# Summaries
+# ---------
 
 Base.summary{A<:DNAAlphabet}(seq::BioSequence{A}) = string(length(seq), "nt ", "DNA Sequence")
 Base.summary{A<:RNAAlphabet}(seq::BioSequence{A}) = string(length(seq), "nt ", "RNA Sequence")
 Base.summary(seq::AminoAcidSequence) = string(length(seq), "aa ", "Amino Acid Sequence")
 Base.summary(seq::CharSequence) = string(length(seq), "char ", "Char Sequence")
-
-# pretting printing of sequences
-function Base.show(io::IO, seq::BioSequence)
-    println(io, summary(seq), ':')
-    showcompact(io, seq)
-end
-
-function Base.showcompact(io::IO, seq::BioSequence)
-    # don't show more than this many characters
-    # to avoid filling the screen with junk
-    width = displaysize()[2]
-    if length(seq) > width
-        half = div(width, 2)
-        for i in 1:half-1
-            print(io, seq[i])
-        end
-        print(io, '…')
-        for i in endof(seq)-half+2:endof(seq)
-            print(io, seq[i])
-        end
-    else
-        for x in seq
-            write(io, Char(x))
-        end
-    end
-end
-
-# simple printing of sequences
-function Base.print(io::IO, seq::BioSequence, width::Integer=50)
-    col = 0
-    for x in seq
-        write(io, Char(x))
-        col += 1
-        if col == width
-            write(io, '\n')
-            col = 0
-        end
-    end
-end
-
-
-# BitIndex
-# --------
-
-# useful for accessing bits of sequence's data
-immutable BitIndex
-    val::Int64
-end
-
-index(i::BitIndex) = (i.val >> 6) + 1
-offset(i::BitIndex) = i.val & 0b111111
-@compat begin
-    Base.:+(i::BitIndex, n::Int) = BitIndex(i.val + n)
-    Base.:-(i::BitIndex, n::Int) = BitIndex(i.val - n)
-    Base.:-(i1::BitIndex, i2::BitIndex) = i1.val - i2.val
-    Base.:(==)(i1::BitIndex, i2::BitIndex) = i1.val == i2.val
-end
-Base.isless(i1::BitIndex, i2::BitIndex) = isless(i1.val, i2.val)
-Base.show(io::IO, i::BitIndex) = print(io, '(', index(i), ", ", offset(i), ')')
-Base.start(i::BitIndex) = 1
-Base.done(i::BitIndex, s) = s > 2
-Base.next(i::BitIndex, s) = ifelse(s == 1, (index(i), 2), (offset(i), 3))
-
-# assumes `i` is positive and `bitsof(A)` is a power of 2
-@inline function bitindex{A}(seq::BioSequence{A}, i::Integer)
-    return BitIndex((Int(i) + seq.part.start - 2) << trailing_zeros(bitsof(A)))
-end
 
 
 # Basic Operators
@@ -300,16 +233,7 @@ end
 alphabet{A}(::Type{BioSequence{A}}) = alphabet(A)
 
 Base.length(seq::BioSequence) = length(seq.part)
-Base.endof(seq::BioSequence) = length(seq)
-Base.isempty(seq::BioSequence) = length(seq) == 0
 Base.eltype{A}(::Type{BioSequence{A}}) = eltype(A)
-
-@inline function Base.checkbounds(seq::BioSequence, i::Integer)
-    if 1 ≤ i ≤ endof(seq)
-        return true
-    end
-    throw(BoundsError(seq, i))
-end
 
 function Base.checkbounds(seq::BioSequence, range::UnitRange)
     if 1 ≤ range.start && range.stop ≤ endof(seq)
@@ -354,14 +278,14 @@ end
 mask(n::Integer) = (UInt64(1) << n) - 1
 mask{A<:Alphabet}(::Type{A}) = mask(bitsof(A))
 
-@inline function unsafe_getindex{A}(seq::BioSequence{A}, i::Integer)
-    j = bitindex(seq, i)
-    @inbounds return decode(A, (seq.data[index(j)] >> offset(j)) & mask(A))
+# assumes `i` is positive and `bitsof(A)` is a power of 2
+@inline function bitindex{A}(seq::BioSequence{A}, i::Integer)
+    return BitIndex((i + first(seq.part) - 2) << trailing_zeros(bitsof(A)))
 end
 
-function Base.getindex{A}(seq::BioSequence{A}, i::Integer)
-    checkbounds(seq, i)
-    return unsafe_getindex(seq, i)
+@inline function inbounds_getindex{A}(seq::BioSequence{A}, i::Integer)
+    j = bitindex(seq, i)
+    @inbounds return decode(A, (seq.data[index(j)] >> offset(j)) & mask(A))
 end
 
 Base.getindex(seq::BioSequence, part::UnitRange) = BioSequence(seq, part)
@@ -562,43 +486,6 @@ function encode_copy!{A}(dst::BioSequence{A},
     return dst
 end
 
-#=
-function encode_copy!{A}(dst::BioSequence{A},
-                         doff::Integer,
-                         src::AbstractString,
-                         soff::Integer,
-                         len::Integer)
-    checkbounds(dst, doff:doff+len-1)
-    if length(src) < soff + len - 1
-        throw(ArgumentError("source string does not contain $len elements from $soff"))
-    end
-
-    orphan!(dst)
-    next = bitindex(dst, doff)
-    stop = bitindex(dst, doff + len)
-
-    # cast first `soff - 1` elements by iteration because strings
-    # whose encoding is variable-length don't support random access
-    s = start(src)
-    for i in 1:soff-1
-        _, s = Base.next(src, s)
-    end
-
-    while next < stop
-        x = UInt64(0)
-        j = index(next)
-        while index(next) == j && next < stop
-            @assert !done(src, s)
-            c, s = Base.next(src, s)
-            x |= enc64(dst, c) << offset(next)
-            next += bitsof(A)
-        end
-        dst.data[j] = x
-    end
-    return dst
-end
-=#
-
 function Base.copy!{A}(seq::BioSequence{A}, doff::Integer,
                        src::Vector{UInt8},  soff::Integer, len::Integer)
     datalen = seq_data_len(A, len)
@@ -693,39 +580,6 @@ function Base.copy{A}(seq::BioSequence{A})
     return newseq
 end
 
-# iterator
-Base.start(seq::BioSequence) = 1
-Base.done(seq::BioSequence, i) = i > endof(seq)
-Base.next(seq::BioSequence, i) = unsafe_getindex(seq, i), i + 1
-
-Base.eachindex(seq::BioSequence) = 1:endof(seq)
-
-@compat function Base.:(==){A1,A2}(s1::BioSequence{A1}, s2::BioSequence{A2})
-    if s1.data === s2.data && s1.part === s2.part && A1 === A2
-        return true
-    elseif length(s1) != length(s2)
-        return false
-    end
-    for (x, y) in zip(s1, s2)
-        if x != y
-            return false
-        end
-    end
-    return true
-end
-
-function Base.cmp{A1,A2}(s1::BioSequence{A1}, s2::BioSequence{A2})
-    for i in 1:min(endof(s1), endof(s2))
-        c = cmp(s1[i], s2[i])
-        if c != 0
-            return c
-        end
-    end
-    return cmp(length(s1), length(s2))
-end
-
-Base.isless{A1,A2}(s1::BioSequence{A1}, s2::BioSequence{A2}) = cmp(s1, s2) < 0
-
 
 # Transformations
 # ---------------
@@ -733,8 +587,8 @@ Base.isless{A1,A2}(s1::BioSequence{A1}, s2::BioSequence{A2}) = cmp(s1, s2) < 0
 function Base.reverse!(seq::BioSequence)
     orphan!(seq)
     for i in 1:div(endof(seq), 2)
-        x = unsafe_getindex(seq, i)
-        unsafe_setindex!(seq, unsafe_getindex(seq, endof(seq) - i + 1), i)
+        x = inbounds_getindex(seq, i)
+        unsafe_setindex!(seq, inbounds_getindex(seq, endof(seq) - i + 1), i)
         unsafe_setindex!(seq, x, endof(seq) - i + 1)
     end
     return seq
@@ -865,35 +719,8 @@ function reverse_complement{A<:Union{DNAAlphabet,RNAAlphabet}}(seq::BioSequence{
 end
 
 
-# Finders
-# -------
-
-function Base.findnext(seq::BioSequence, val, start::Integer)
-    checkbounds(seq, start)
-    v = convert(eltype(seq), val)
-    for i in Int(start):endof(seq)
-        x = unsafe_getindex(seq, i)
-        if x == v
-            return i
-        end
-    end
-    return 0
-end
-
-function Base.findprev(seq::BioSequence, val, start::Integer)
-    checkbounds(seq, start)
-    v = convert(eltype(seq), val)
-    for i in Int(start):-1:1
-        x = unsafe_getindex(seq, i)
-        if x == v
-            return i
-        end
-    end
-    return 0
-end
-
-Base.findfirst(seq::BioSequence, val) = findnext(seq, val, 1)
-Base.findlast(seq::BioSequence, val)  = findprev(seq, val, endof(seq))
+# Ambiguous nucleotides iterator
+# ------------------------------
 
 immutable AmbiguousNucleotideIterator{A<:Union{DNAAlphabet,RNAAlphabet}}
     seq::BioSequence{A}

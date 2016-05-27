@@ -154,7 +154,7 @@ type BigBedDataParser <: AbstractParser
 end
 
 
-Ragel.@generate_read_fuction("_bigbedparser", BigBedDataParser, BEDInterval,
+Ragel.@generate_read!_function("_bigbedparser", BigBedDataParser, BEDInterval,
     begin
         %%write exec;
     end)

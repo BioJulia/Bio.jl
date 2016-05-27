@@ -128,7 +128,7 @@ function IntervalCollection(interval_stream::BEDParser)
     return IntervalCollection{BEDMetadata}(intervals, true)
 end
 
-Ragel.@generate_read_fuction("bedparser", BEDParser, BEDInterval,
+Ragel.@generate_read!_function("bedparser", BEDParser, BEDInterval,
     begin
         %% write exec;
     end)
