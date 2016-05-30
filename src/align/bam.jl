@@ -70,28 +70,19 @@ function readname!(bam::BAMAlignment, name::StringField)
     copy!(name, bam.data, 1, bam.cigar_position-1)
 end
 
-# "MIDNSHP=X" -> [0, 9)
-# const bam_cigar_ops = [
-#     OP_MATCH, OP_INSERT,    OP_DELETE,
-#     OP_SKIP,  OP_SOFT_CLIP, OP_HARD_CLIP,
-#     OP_PAD,   OP_SEQ_MATCH, OP_SEQ_MISMATCH
-# ]
-
-# TODO: cigar as string? too bad :(
 function Align.cigar(aln::BAMAlignment)
-    cigarbuf = IOBuffer()
+    cigar = CIGAR()
     data = aln.data
     for i in aln.cigar_position:4:aln.seq_position-1
         x = UInt32(data[i  ])       |
             UInt32(data[i+1]) <<  8 |
             UInt32(data[i+2]) << 16 |
             UInt32(data[i+3]) << 24
-        oplen = x >> 4
+        len = x >> 4
         op = Operation(x & 0b1111)
-        write(cigarbuf, string(oplen))
-        write(cigarbuf, Char(op))
+        push!(cigar, (op, len))
     end
-    return takebuf_string(cigarbuf)
+    return cigar
 end
 
 
@@ -495,7 +486,7 @@ function Base.read!(parser::BAMParser, aln::BAMAlignment)
         empty!(aln.seqname)
     end
 
-    aln.position = fields.pos + 1  # make 1-based
+    aln.position =  fields.pos + 1  # make 1-based
     l_read_name  =  fields.bin_mq_nl        & 0xff
     aln.mapq     = (fields.bin_mq_nl >>  8) & 0xff
     aln.bin      =  fields.bin_mq_nl >> 16
