@@ -1,15 +1,16 @@
-
 using Libz
 using BufferedStreams
 
 using Bio.Seq
 using Bio.Seq: DNA_INVALID
-using Bio.BGZF
+using Bio.Align
+#using Bio.BGZF
 using Bio.StringFields
 using Bio.Intervals
 using IntervalTrees
+using BGZF
 
-immutable BAM <: FileFormat end
+immutable BAM <: Bio.FileFormat end
 
 
 type BAMAlignment <: AbstractInterval{Int64}
@@ -24,7 +25,8 @@ type BAMAlignment <: AbstractInterval{Int64}
 
     # variable length data: read name, cigar data, sequence, quality scores, and aux
     # offsets within the data
-    data::StringField
+    #data::StringField
+    data::Vector{UInt8}
     cigar_position::Int32
     seq_position::Int32
     seq_length::Int32
@@ -32,6 +34,12 @@ type BAMAlignment <: AbstractInterval{Int64}
     aux_position::Int32
 end
 
+function BAMAlignment()
+    #return BAMAlignment(StringField(), -1, 0, 0, 0, StringField(), -1, -1,
+    #                    StringField(), -1, -1, -1, -1, -1)
+    return BAMAlignment(StringField(), -1, 0, 0, 0, StringField(), -1, -1,
+                        UInt8[], -1, -1, -1, -1, -1)
+end
 
 # Interval interface
 function first(bam::BAMAlignment)
@@ -48,8 +56,10 @@ end
 Return a `StringField` containing the read name. This becomes invalidated if
 the `BAMAlignment` is overwritten.
 """
-function readname(bam::BAMAlignment)
-    bam.data[1:bam.cigar_position-2] # '-2' because this is stored null-terminated
+#function readname(bam::BAMAlignment)
+function name(bam::BAMAlignment)
+    # '-2' because this is stored null-terminated
+    return StringField(bam.data[1:bam.cigar_position-2])
 end
 
 
@@ -60,9 +70,28 @@ function readname!(bam::BAMAlignment, name::StringField)
     copy!(name, bam.data, 1, bam.cigar_position-1)
 end
 
+# "MIDNSHP=X" -> [0, 9)
+# const bam_cigar_ops = [
+#     OP_MATCH, OP_INSERT,    OP_DELETE,
+#     OP_SKIP,  OP_SOFT_CLIP, OP_HARD_CLIP,
+#     OP_PAD,   OP_SEQ_MATCH, OP_SEQ_MISMATCH
+# ]
 
-function cigar(bam::BAMAlignment)
-    # TODO
+# TODO: cigar as string? too bad :(
+function Align.cigar(aln::BAMAlignment)
+    cigarbuf = IOBuffer()
+    data = aln.data
+    for i in aln.cigar_position:4:aln.seq_position-1
+        x = UInt32(data[i  ])       |
+            UInt32(data[i+1]) <<  8 |
+            UInt32(data[i+2]) << 16 |
+            UInt32(data[i+3]) << 24
+        oplen = x >> 4
+        op = Operation(x & 0b1111)
+        write(cigarbuf, string(oplen))
+        write(cigarbuf, Char(op))
+    end
+    return takebuf_string(cigarbuf)
 end
 
 
@@ -76,7 +105,7 @@ const bam4bit_to_dna = [
     DNA_T,       DNA_INVALID, DNA_INVALID, DNA_INVALID,
     DNA_INVALID, DNA_INVALID, DNA_INVALID, DNA_N ]
 
-
+#=
 """
 Return a DNASequence throwing an error if the sequence contains characters other
 than A, C, G, T, N.
@@ -90,7 +119,35 @@ function sequence(bam::BAMAlignment)
     recode_bam_sequence!(bam.data.data, Int(bam.seq_position), Int(bam.seq_length), seqdata, ns)
     return DNASequence(seqdata, ns, 1:seq_length, false, false)
 end
+=#
 
+# TODO: DNA_Gap
+# "=ACMGRSVTWYHKDBN" -> [0,16)
+const bam_nucs = [
+    DNA_Gap, DNA_A, DNA_C, DNA_M,
+    DNA_G,   DNA_R, DNA_S, DNA_V,
+    DNA_T,   DNA_W, DNA_Y, DNA_H,
+    DNA_K,   DNA_D, DNA_B, DNA_N
+]
+
+function sequence(aln::BAMAlignment)
+    seq = DNASequence(aln.seq_length)
+    data = aln.data
+    i = 2
+    j = aln.seq_position
+    while i ≤ aln.seq_length
+        x = data[j]
+        seq[i-1] = bam_nucs[(x >>   4) + 1]
+        seq[i  ] = bam_nucs[(x & 0x0f) + 1]
+        i += 2
+        j += 1
+    end
+    if isodd(aln.seq_length)
+        x = data[j]
+        seq[i-1] = bam_nucs[(x >>   4) + 1]
+    end
+    return seq
+end
 
 function sequence!(bam::BAMAlignment, seq::DNASequence)
     if !seq.mutable
@@ -201,9 +258,9 @@ end
 
 function qualities(bam::BAMAlignment)
     r = bam.qual_position:bam.aux_position-1
-    qs = Array(Int8, length(r))
+    qs = Vector{Int8}(length(r))
     for (i, j) in enumerate(r)
-        @inbounds qs[i] = bam.data.data[j] - 33
+        @inbounds qs[i] = bam.data[j] - 33
     end
     return qs
 end
@@ -356,11 +413,6 @@ function auxiliary(bam::BAMAlignment, tag::AbstractString)
 end
 
 
-function BAMAlignment()
-    return BAMAlignment(StringField(), -1, 0, 0, 0, StringField(), -1, -1,
-                        StringField(), -1, -1, -1, -1, -1)
-end
-
 
 # Leading size parts of a bam entry
 immutable BAMEntryHead
@@ -375,7 +427,8 @@ immutable BAMEntryHead
 end
 
 
-immutable BAMParser{T <: BufferedInputStream} <: AbstractParser
+# FIXME: <: AbstractParser{BAMAlignment}
+immutable BAMParser{T <: BufferedInputStream} <: Bio.AbstractParser
     stream::T
     header_text::StringField
     refs::Vector{Tuple{StringField, Int}}
@@ -387,65 +440,44 @@ end
 end
 
 
-function Base.open{T <: BufferedInputStream}(source_stream::T, ::Type{BAM})
+function Base.open(source_stream::BufferedInputStream, ::Type{BAM})
     stream = BufferedInputStream(BGZFSource(source_stream))
 
-    buffer = stream.buffer
-
     # magic bytes
-    anchor!(stream)
-    seekforward(stream, 4)
-    p = upanchor!(stream)
-    if !(buffer[p]     == UInt8('B') &&
-         buffer[p + 1] == UInt8('A') &&
-         buffer[p + 2] == UInt8('M') &&
-         buffer[p + 3] == 0x01)
-        error("Input was not a valid BAM file. (Nonmatching magic bytes.)")
+    B = read(stream, UInt8)
+    A = read(stream, UInt8)
+    M = read(stream, UInt8)
+    if B != UInt8('B') || A != UInt8('A') || M != UInt8('M') ||
+        read(stream, UInt8) != 0x01
+        error("input was not a valid BAM file")
     end
 
-    # header size
-    anchor!(stream)
-    seekforward(stream, 4)
-    header_size = unsafe_load_type(buffer, upanchor!(stream), Int32)
+    # header text
+    textlen = read(stream, Int32)
+    text = StringField(read!(stream, Vector{UInt8}(textlen)))
 
-    # header
-    anchor!(stream)
-    seekforward(stream, header_size)
-    header_text = StringField(takeanchored!(stream))
-    upanchor!(stream)
-
-    # number of reference sequences
-    anchor!(stream)
-    seekforward(stream, 4)
-    numrefs = unsafe_load_type(buffer, upanchor!(stream), Int32)
-
-    # reference sequence names and sizes
-    refs = Array(Tuple{StringField, Int}, numrefs)
-    for i in 1:numrefs
-        anchor!(stream)
-        seekforward(stream, 4)
-        name_length = unsafe_load_type(buffer, upanchor!(stream), Int32)
-
-        anchor!(stream)
-        seekforward(stream, name_length)
-        name = StringField(takeanchored!(stream))
-
-        anchor!(stream)
-        seekforward(stream, 4)
-        seq_size = unsafe_load_type(buffer, upanchor!(stream), Int32)
-        refs[i] = (name, seq_size)
+    # reference sequences
+    n_refs = read(stream, Int32)
+    refs = Vector{Tuple{StringField,Int}}()
+    for i in 1:n_refs
+        namelen = read(stream, Int32)
+        name = StringField(read!(stream, Vector{UInt8}(namelen)))
+        reflen = read(stream, Int32)
+        push!(refs, (name, reflen))
     end
 
-    return BAMParser{BufferedInputStream{BGZFSource{T}}}(stream, header_text, refs)
+    return BAMParser(stream, text, refs)
 end
 
 
-function Base.read!(parser::BAMParser, alignment::BAMAlignment)
+function Base.read!(parser::BAMParser, aln::BAMAlignment)
     stream = parser.stream
     if eof(stream)
+        # FIXME: throw EOFError
         return false
     end
 
+    # FIXME: why "read the entire entry"?
     # read the entire entry into the buffer
     block_size = read(stream, Int32)
     anchor!(stream)
@@ -454,40 +486,43 @@ function Base.read!(parser::BAMParser, alignment::BAMAlignment)
 
     # extract fields
     ptr = pointer(stream.buffer, p)
+    # FIXME: this may be important in terms of performance: read fixed-length
+    # fields into memory
     fields = unsafe_load(convert(Ptr{BAMEntryHead}, ptr))
     @inbounds if 0 <= fields.refid < length(parser.refs)
-        alignment.seqname = parser.refs[fields.refid + 1][1]
+        aln.seqname = parser.refs[fields.refid + 1][1]
     else
-        empty!(alignment.seqname)
+        empty!(aln.seqname)
     end
 
-    alignment.position = fields.pos + 1 # make 1-based
-    l_read_name        = fields.bin_mq_nl & 0xff
-    alignment.mapq     = (fields.bin_mq_nl >> 8) & 0xff
-    alignment.bin      = (fields.bin_mq_nl >> 16) & 0xffff
-    n_cigar_op         = fields.flag_nc & 0xff
-    alignment.flag     = fields.flag_nc >> 16
+    aln.position = fields.pos + 1  # make 1-based
+    l_read_name  =  fields.bin_mq_nl        & 0xff
+    aln.mapq     = (fields.bin_mq_nl >>  8) & 0xff
+    aln.bin      =  fields.bin_mq_nl >> 16
+    n_cigar_op   =  fields.flag_nc          & 0xffff
+    aln.flag     =  fields.flag_nc   >> 16
 
     @inbounds if 0 <= fields.next_refid < length(parser.refs)
-        alignment.next_seqname = parser.refs[fields.next_refid + 1][1]
+        aln.next_seqname = parser.refs[fields.next_refid + 1][1]
     else
-        empty!(alignment.next_seqname)
+        empty!(aln.next_seqname)
     end
 
-    alignment.next_pos = fields.next_pos
-    alignment.tlen = fields.tlen
+    aln.next_pos = fields.next_pos
+    aln.tlen = fields.tlen
 
     p += sizeof(BAMEntryHead)
-    copy!(alignment.data, stream.buffer, p, stream.position - 1)
+    datalen = stream.position - p
+    if length(aln.data) < datalen
+        resize!(aln.data, datalen)
+    end
+    copy!(aln.data, 1, stream.buffer, p, datalen)
 
-    alignment.cigar_position = l_read_name + 1
-    alignment.seq_position   = alignment.cigar_position + n_cigar_op * sizeof(Int32)
-    alignment.seq_length     = fields.l_seq
-    alignment.qual_position  = alignment.seq_position + div(fields.l_seq + 1, 2)
-    alignment.aux_position   = alignment.qual_position + fields.l_seq
+    aln.cigar_position = l_read_name + 1
+    aln.seq_position   = aln.cigar_position + 4n_cigar_op
+    aln.seq_length     = fields.l_seq
+    aln.qual_position  = aln.seq_position + cld(fields.l_seq, 2)
+    aln.aux_position   = aln.qual_position + fields.l_seq
 
     return true
 end
-
-
-
