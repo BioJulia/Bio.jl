@@ -37,6 +37,9 @@ const OP_BACK         = convert(Operation, 0x09) # B
 const OP_START        = convert(Operation, 0x0a) # 0 (non-standard)
 const OP_INVALID      = convert(Operation, 0xff)
 
+Base.isless(x::Operation, y::Operation) = isless(UInt8(x), UInt8(y))
+Base.isvalid(op::Operation) = op ≤ OP_START
+
 const OP_MAX_VALID = OP_START
 
 # classify operations

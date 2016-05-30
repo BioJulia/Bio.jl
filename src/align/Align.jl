@@ -19,6 +19,7 @@ export
     ismatchop,
     isinsertop,
     isdeleteop,
+    CIGAR,
     cigar,
     OP_MATCH,
     OP_INSERT,
@@ -77,6 +78,7 @@ import IntervalTrees
 
 include("operations.jl")
 include("anchors.jl")
+include("cigar.jl")
 
 include("types.jl")
 include("submat.jl")
