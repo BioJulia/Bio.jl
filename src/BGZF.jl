@@ -1,3 +1,10 @@
+# BGZF
+# ====
+#
+# The BGZF compression format.
+#
+# This file is a part of BioJulia.
+# License is MIT: https://github.com/BioJulia/Bio.jl/blob/master/LICENSE.md
 
 module BGZF
 
@@ -6,11 +13,7 @@ export BGZFSource
 using BufferedStreams
 using Libz
 
-#import Base: eof, readbytes!
-
-
 # compressed and decompressed blocks are <= this in BGZF
-#const BGZF_MAX_BLOCK_SIZE = Int(0x10000)  # FIXME: 64 * 1024
 const BGZF_MAX_BLOCK_SIZE = 64 * 1024
 
 

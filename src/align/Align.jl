@@ -70,10 +70,27 @@ export
     score,
     distance,
     alignment,
-    hasalignment
+    hasalignment,
+    # BAM
+    BAM,
+    BAMAlignment,
+    name,
+    name!,
+    sequence,
+    sequence!,
+    qualities,
+    qualities!,
+    auxiliary
 
+using Bio: FileFormat, AbstractParser
 using Bio.Seq
+using Bio.Intervals
+using Bio.StringFields
+using Bio.BGZF
+
 using Compat
+using Libz
+using BufferedStreams
 import IntervalTrees
 
 include("operations.jl")
@@ -84,5 +101,7 @@ include("types.jl")
 include("submat.jl")
 include("models.jl")
 include("pairwise/pairalign.jl")
+
+include("bam.jl")
 
 end

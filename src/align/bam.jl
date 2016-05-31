@@ -1,18 +1,17 @@
-using Libz
-using BufferedStreams
+# BAM
+# ===
+#
+# The BAM file format.
+#
+# This file is a part of BioJulia.
+# License is MIT: https://github.com/BioJulia/Bio.jl/blob/master/LICENSE.md
 
-using Bio.Seq
-using Bio.Align
-#using Bio.BGZF
-using Bio.StringFields
-using Bio.Intervals
-using IntervalTrees
-using BGZF
+immutable BAM <: FileFormat end
 
-immutable BAM <: Bio.FileFormat end
-
-
-type BAMAlignment <: AbstractInterval{Int64}
+"""
+An alignment data for the BAM file format.
+"""
+type BAMAlignment <: IntervalTrees.AbstractInterval{Int64}
     seqname::StringField
     position::Int64
     mapq::UInt8
@@ -22,7 +21,12 @@ type BAMAlignment <: AbstractInterval{Int64}
     next_pos::Int64
     tlen::Int32
 
-    # variable length data: read name, cigar data, sequence, quality scores, and aux
+    # variable length data:
+    #   * read name
+    #   * cigar data
+    #   * sequence
+    #   * quality scores
+    #   * and aux
     # offsets within the data
     data::Vector{UInt8}
     cigar_position::Int32
@@ -40,12 +44,11 @@ function BAMAlignment()
 end
 
 # Interval interface
-function first(bam::BAMAlignment)
+function Base.first(bam::BAMAlignment)
     return bam.position
 end
 
-
-function last(bam::BAMAlignment)
+function Base.last(bam::BAMAlignment)
     # TODO: calculate end
 end
 
@@ -59,7 +62,6 @@ function name(bam::BAMAlignment)
     return StringField(bam.data[1:bam.cigar_position-2])
 end
 
-
 """
 Copy the read's name into `name`.
 """
@@ -67,7 +69,7 @@ function readname!(bam::BAMAlignment, name::StringField)
     copy!(name, bam.data, 1, bam.cigar_position-1)
 end
 
-function Align.cigar(aln::BAMAlignment)
+function cigar(aln::BAMAlignment)
     cigar = CIGAR()
     data = aln.data
     for i in aln.cigar_position:4:aln.seq_position-1
@@ -338,7 +340,7 @@ immutable BAMEntryHead
     tlen::Int32
 end
 
-immutable BAMParser{T<:BufferedInputStream} <: Bio.AbstractParser
+immutable BAMParser{T<:BufferedInputStream} <: AbstractParser
     stream::T
     header_text::StringField
     refs::Vector{Tuple{StringField,Int}}

@@ -7,6 +7,7 @@ abstract FileFormat
 
 include("StringFields.jl")
 include("Ragel.jl")
+include("BGZF.jl")
 include("seq/Seq.jl")
 include("intervals/Intervals.jl")
 include("align/Align.jl")
@@ -17,6 +18,5 @@ include("structure/Structure.jl")
 include("tools/Tools.jl")
 include("util/windows.jl")
 include("precompile.jl")
-
 
 end # module Bio
