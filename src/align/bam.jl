@@ -6,6 +6,12 @@
 # This file is a part of BioJulia.
 # License is MIT: https://github.com/BioJulia/Bio.jl/blob/master/LICENSE.md
 
+"""
+The BAM file format.
+
+See "Sequence Alignment/Map Format Specification" for details:
+<http://samtools.github.io/hts-specs/SAMv1.pdf>
+"""
 immutable BAM <: FileFormat end
 
 """
@@ -41,6 +47,22 @@ function BAMAlignment()
         StringField(), -1, 0, 0, 0,
         StringField(), -1, -1,
         UInt8[], -1, -1, -1, -1, -1)
+end
+
+function Base.show(io::IO, aln::BAMAlignment)
+    println(io, summary(aln), ':')
+    println(io, "  seqname:         ", aln.seqname)
+    println(io, "  position:        ", aln.position)
+    println(io, "  mapping quality: ", aln.mapq)
+    println(io, "  bin:             ", aln.bin)
+    println(io, "  flag:            ", bin(aln.flag, 16))
+    println(io, "  next seqname:    ", aln.next_seqname)
+    println(io, "  next position:   ", aln.next_pos)
+    println(io, "  template length: ", aln.tlen)
+    println(io, "  sequence:        ", string(sequence(aln)))
+    println(io, "  CIGAR:           ", cigar(aln))
+    println(io, "  quality:         ", qualities(aln))
+      print(io, "  auxiliary data:  ", auxiliary(aln))
 end
 
 # Interval interface
@@ -94,7 +116,13 @@ const bam_nucs = [
 ]
 
 function sequence(aln::BAMAlignment)
-    seq = DNASequence(aln.seq_length)
+    return sequence!(aln, DNASequence(aln.seq_length))
+end
+
+function sequence!(aln::BAMAlignment, seq::DNASequence)
+    if length(seq) != aln.seq_length
+        seq = resize!(seq, aln.seq_length)
+    end
     data = aln.data
     i = 2
     j = aln.seq_position
@@ -109,29 +137,6 @@ function sequence(aln::BAMAlignment)
         x = data[j]
         seq[i-1] = bam_nucs[(x >>   4) + 1]
     end
-    return seq
-end
-
-function sequence!(bam::BAMAlignment, seq::DNASequence)
-    if !seq.mutable
-        error("Cannot copy sequence from BAMAlignment to immutable DNASequence. Call `mutable!(seq)` first.")
-    end
-
-    len = Seq.seq_data_len(bam.seq_length)
-    if length(seq.data) < len
-        resize!(seq.data, len)
-    end
-
-    if length(seq.ns) < bam.seq_length
-        resize!(seq.ns, bam.seq_length)
-    end
-
-    fill!(seq.data, 0)
-    fill!(seq.ns, false)
-    seq.part = 1:bam.seq_length
-
-    recode_bam_sequence!(bam.data.data, Int(bam.seq_position), Int(bam.seq_length), seq.data, seq.ns)
-
     return seq
 end
 
@@ -293,8 +298,10 @@ function count_auxtags(data::Vector{UInt8}, p::Int)
     return count
 end
 
+# Find the starting position of a next tag in `data` after `p`.
+# `(data[p], data[p+1])` is supposed to be a current tag.
 function next_tag_position(data::Vector{UInt8}, p::Int)
-    typ = data[p + 2]
+    typ = Char(data[p+2])
     p += 3
     if typ == 'A'
         p += 1
@@ -309,21 +316,21 @@ function next_tag_position(data::Vector{UInt8}, p::Int)
     elseif typ == 'd'
         p += 8
     elseif typ == 'Z' || typ == 'H'
-        while data[p] != '\0'
+        while data[p] != 0x00  # NULL-terminalted string
             p += 1
         end
         p += 1
     elseif typ == 'B'
-        eltyp = data[p]
-        elsize = eltyp == 'c' || eltyp == 'C' ? 1 :
-                 eltyp == 's' || eltyp == 'S' ? 2 :
+        eltyp = Char(data[p])
+        elsize = eltyp == 'c' || eltyp == 'C'                 ? 1 :
+                 eltyp == 's' || eltyp == 'S'                 ? 2 :
                  eltyp == 'i' || eltye == 'I' || eltyp == 'f' ? 4 :
-                 error(string("Unrecognized auxiliary type ", eltyp))
+                 error("unrecognized auxiliary type: ", eltyp)
         p += 1
         n = unsafe_load(Ptr{Int32}(pointer(data, p)))
         p += elsize * n
     else
-        error(string("Unrecognized auxiliary type ", typ))
+        error("unrecognized auxiliary type: ", typ)
     end
     return p
 end
