@@ -61,7 +61,7 @@ function Base.show(io::IO, aln::BAMAlignment)
     println(io, "  template length: ", aln.tlen)
     println(io, "  sequence:        ", string(sequence(aln)))
     println(io, "  CIGAR:           ", cigar(aln))
-    println(io, "  quality:         ", qualities(aln))
+    println(io, "  quality scores:  ", qualities(aln))
       print(io, "  auxiliary data:  ", auxiliary(aln))
 end
 
@@ -434,4 +434,57 @@ function Base.read!(parser::BAMParser, aln::BAMAlignment)
     end
 
     return aln
+end
+
+
+immutable BAMWriter{T<:BufferedInputStream}
+    stream::T
+    header_text::StringField
+    refs::Vector{Tuple{StringField,Int}}
+end
+
+# write a BAM header to `writer.stream`.
+function write_header(writer::BAMWriter)
+    stream = writer.stream
+
+    # magic
+    write(stream, "BAM\0")
+
+    # header
+    write(stream, Int32(length(writer.header_text)))
+    write(stream, writer.header_text)
+
+    # reference sequences
+    write(stream, Int32(length(writer.refs)))
+    for (refname, reflen) in writer.refs
+        write(stream, Int32(length(refname)))
+        write(stream, refname)
+        write(stream, Int32(reflen))
+    end
+end
+
+function Base.write(writer::BAMWriter, aln::BAMAlignment)
+    stream = writer.stream
+
+    block_size = sizeof(BAMEntryHead) + sizeof(aln.data)
+    bin_mq_nl = UInt32(aln.bin)  << 16 |
+                UInt32(aln.mapq) <<  8 |
+                UInt32(aln.cigar_position - 1)
+    @assert rem(aln.seq_position - aln.cigar_position, 4) == 0
+    n_cigar_op = div(aln.seq_position - aln.cigar_position, 4)
+    flag_nc = UInt32(aln.flag) << 16 | UInt32(n_cigar_op)
+
+    n = 0
+    n += write(stream, Int32(block_size))
+    n += write(stream, Int32(aln.refid))
+    n += write(stream, Int32(aln.position))
+    n += write(stream, UInt32(bin_mq_nl))
+    n += write(stream, UInt32(flag_nc))
+    n += write(stream, Int32(aln.seq_length))
+    n += write(stream, Int32(aln.next_refid))
+    n += write(stream, Int32(aln.next_pos))
+    n += write(stream, Int32(aln.tlen))
+    n += write(stream, aln.data)
+
+    return n
 end
