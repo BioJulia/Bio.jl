@@ -328,18 +328,6 @@ function next_tag_position(data::Vector{UInt8}, p::Int)
     return p
 end
 
-# Leading size parts of a bam entry
-immutable BAMEntryHead
-    refid::Int32
-    pos::Int32
-    bin_mq_nl::UInt32
-    flag_nc::UInt32
-    l_seq::Int32
-    next_refid::Int32
-    next_pos::Int32
-    tlen::Int32
-end
-
 immutable BAMParser{T<:BufferedInputStream} <: AbstractParser
     stream::T
     header_text::StringField
@@ -377,58 +365,66 @@ function Base.open(source_stream::BufferedInputStream, ::Type{BAM})
     return BAMParser(stream, text, refs)
 end
 
+# Leading size parts of a bam entry
+immutable BAMEntryHead
+    refid::Int32
+    pos::Int32
+    bin_mq_nl::UInt32
+    flag_nc::UInt32
+    l_seq::Int32
+    next_refid::Int32
+    next_pos::Int32
+    tlen::Int32
+end
+
 function Base.read!(parser::BAMParser, aln::BAMAlignment)
     stream = parser.stream
     if eof(stream)
         throw(EOFError())
     end
 
-    # FIXME: why "read the entire entry"?
-    # read the entire entry into the buffer
     block_size = read(stream, Int32)
-    anchor!(stream)
-    seekforward(stream, block_size)
-    p = upanchor!(stream)
-
-    # extract fields
-    ptr = pointer(stream.buffer, p)
-    # FIXME: this may be important in terms of performance: read fixed-length
-    # fields into memory
-    fields = unsafe_load(convert(Ptr{BAMEntryHead}, ptr))
-    if 0 ≤ fields.refid < length(parser.refs)
-        aln.seqname = parser.refs[fields.refid + 1][1]
-    else
-        empty!(aln.seqname)
+    if !BufferedStreams.ensurebuffered!(stream, block_size)
+        throw(EOFError())
     end
 
-    aln.position =  fields.pos + 1  # make 1-based
-    l_read_name  =  fields.bin_mq_nl        & 0xff
-    aln.mapq     = (fields.bin_mq_nl >>  8) & 0xff
-    aln.bin      =  fields.bin_mq_nl >> 16
-    n_cigar_op   =  fields.flag_nc          & 0xffff
-    aln.flag     =  fields.flag_nc   >> 16
+    # this hack significantly improves the performance of reading alignment data
+    ptr::Ptr{BAMEntryHead} = pointer(stream.buffer, stream.position)
+    fields = unsafe_load(ptr)
+    stream.position += sizeof(BAMEntryHead)
 
-    if 0 ≤ fields.next_refid < length(parser.refs)
-        aln.next_seqname = parser.refs[fields.next_refid + 1][1]
-    else
-        empty!(aln.next_seqname)
-    end
-
-    aln.next_pos = fields.next_pos
-    aln.tlen = fields.tlen
-
-    p += sizeof(BAMEntryHead)
-    datalen = stream.position - p
+    datalen = block_size - sizeof(BAMEntryHead)
     if length(aln.data) < datalen
         resize!(aln.data, datalen)
     end
-    copy!(aln.data, 1, stream.buffer, p, datalen)
+    n = readbytes!(stream, aln.data, datalen)
+    @assert n == datalen
 
-    aln.cigar_position = l_read_name + 1
+    n_cigar_op = fields.flag_nc & 0xffff
+    l_read_name = fields.bin_mq_nl & 0xff
+
+    aln.position       = fields.pos + 1  # make 1-based
+    aln.mapq           = (fields.bin_mq_nl >> 8) & 0xff
+    aln.bin            = fields.bin_mq_nl >> 16
+    aln.flag           = fields.flag_nc >> 16
+    aln.next_pos       = fields.next_pos
+    aln.tlen           = fields.tlen
+    aln.cigar_position = l_read_name + 1  # read name is NULL-terminated
     aln.seq_position   = aln.cigar_position + 4n_cigar_op
     aln.seq_length     = fields.l_seq
     aln.qual_position  = aln.seq_position + cld(fields.l_seq, 2)
     aln.aux_position   = aln.qual_position + fields.l_seq
+
+    if fields.refid ≥ 0
+        aln.seqname = parser.refs[fields.refid+1][1]
+    else
+        empty!(aln.seqname)
+    end
+    if fields.next_refid ≥ 0
+        aln.next_seqname = parser.refs[fields.next_refid+1][1]
+    else
+        empty!(aln.next_seqname)
+    end
 
     return aln
 end
