@@ -337,7 +337,7 @@ end
 
 immutable BAMParser{T<:BufferedInputStream} <: AbstractParser
     stream::T
-    header_text::StringField
+    header::OrderedDict
     refs::Vector{Tuple{StringField,Int}}
 end
 
@@ -357,7 +357,7 @@ function Base.open(source_stream::BufferedInputStream, ::Type{BAM})
 
     # header text
     textlen = read(stream, Int32)
-    text = StringField(read!(stream, Vector{UInt8}(textlen)))
+    header = parse_samheader(IOBuffer(read(stream, UInt8, textlen)))
 
     # reference sequences
     n_refs = read(stream, Int32)
@@ -369,7 +369,7 @@ function Base.open(source_stream::BufferedInputStream, ::Type{BAM})
         push!(refs, (name, reflen))
     end
 
-    return BAMParser(stream, text, refs)
+    return BAMParser(stream, header, refs)
 end
 
 # Leading size parts of a bam entry
@@ -451,8 +451,11 @@ function write_header(writer::BAMWriter)
     write(stream, "BAM\0")
 
     # header
-    write(stream, Int32(length(writer.header_text)))
-    write(stream, writer.header_text)
+    buf = IOBuffer()
+    write_samheader(buf, writer.header)
+    header_array = takebuf_array(buf)
+    write(stream, Int32(length(header_array)))
+    write(stream, header_array)
 
     # reference sequences
     write(stream, Int32(length(writer.refs)))

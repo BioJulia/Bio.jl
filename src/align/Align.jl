@@ -91,6 +91,7 @@ using Bio.BGZF
 using Compat
 using Libz
 using BufferedStreams
+using DataStructures
 import IntervalTrees
 
 include("operations.jl")
@@ -102,6 +103,7 @@ include("submat.jl")
 include("models.jl")
 include("pairwise/pairalign.jl")
 
+include("sam_header.jl")
 include("bam.jl")
 
 end
