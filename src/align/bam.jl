@@ -2,7 +2,6 @@ using Libz
 using BufferedStreams
 
 using Bio.Seq
-using Bio.Seq: DNA_INVALID
 using Bio.Align
 #using Bio.BGZF
 using Bio.StringFields
@@ -25,7 +24,6 @@ type BAMAlignment <: AbstractInterval{Int64}
 
     # variable length data: read name, cigar data, sequence, quality scores, and aux
     # offsets within the data
-    #data::StringField
     data::Vector{UInt8}
     cigar_position::Int32
     seq_position::Int32
@@ -35,10 +33,10 @@ type BAMAlignment <: AbstractInterval{Int64}
 end
 
 function BAMAlignment()
-    #return BAMAlignment(StringField(), -1, 0, 0, 0, StringField(), -1, -1,
-    #                    StringField(), -1, -1, -1, -1, -1)
-    return BAMAlignment(StringField(), -1, 0, 0, 0, StringField(), -1, -1,
-                        UInt8[], -1, -1, -1, -1, -1)
+    return BAMAlignment(
+        StringField(), -1, 0, 0, 0,
+        StringField(), -1, -1,
+        UInt8[], -1, -1, -1, -1, -1)
 end
 
 # Interval interface
@@ -56,7 +54,6 @@ end
 Return a `StringField` containing the read name. This becomes invalidated if
 the `BAMAlignment` is overwritten.
 """
-#function readname(bam::BAMAlignment)
 function name(bam::BAMAlignment)
     # '-2' because this is stored null-terminated
     return StringField(bam.data[1:bam.cigar_position-2])
@@ -84,33 +81,6 @@ function Align.cigar(aln::BAMAlignment)
     end
     return cigar
 end
-
-
-const bam4bit_to_char = [
-    '=', 'A', 'C', 'M', 'G', 'R', 'S', 'V', 'T', 'W', 'Y', 'H', 'K', 'D', 'B', 'N' ]
-
-
-const bam4bit_to_dna = [
-    DNA_INVALID, DNA_A,       DNA_C,       DNA_INVALID,
-    DNA_G,       DNA_INVALID, DNA_INVALID, DNA_INVALID,
-    DNA_T,       DNA_INVALID, DNA_INVALID, DNA_INVALID,
-    DNA_INVALID, DNA_INVALID, DNA_INVALID, DNA_N ]
-
-#=
-"""
-Return a DNASequence throwing an error if the sequence contains characters other
-than A, C, G, T, N.
-"""
-function sequence(bam::BAMAlignment)
-    # This follows closely from @encode_seq, but unfortunately not enough to
-    # reuse that.
-    seq_length = bam.seq_length
-    seqdata = zeros(UInt64, Seq.seq_data_len(seq_length))
-    ns = falses(Int(seq_length))
-    recode_bam_sequence!(bam.data.data, Int(bam.seq_position), Int(bam.seq_length), seqdata, ns)
-    return DNASequence(seqdata, ns, 1:seq_length, false, false)
-end
-=#
 
 # TODO: DNA_Gap
 # "=ACMGRSVTWYHKDBN" -> [0,16)
@@ -163,136 +133,55 @@ function sequence!(bam::BAMAlignment, seq::DNASequence)
     return seq
 end
 
-
-# Recode a BAM sequence from 4-bit to 2-bit.
-function recode_bam_sequence!(input::Vector{UInt8}, seq_position::Int,
-                              seq_length::Int, seqdata::Vector{UInt64}, ns::BitVector)
-    len = Seq.seq_data_len(seq_length)
-    ored_nucs = UInt8(0)
-    j = seq_position
-    idx = 1
-    for i in 1:len
-        shift = 0
-        data_i = UInt64(0)
-        while shift < 64
-            if idx > seq_length
-                break
-            end
-
-            # high nibble
-            @inbounds nt = bam4bit_to_dna[1 + (input[j] >>> 4)]
-            if nt == DNA_N
-                d = (idx - 1) >>> 6
-                r = (idx - 1) & 63
-                ns.chunks[d + 1] |= UInt64(1) << r
-            else
-                ored_nucs |= convert(UInt8, nt)
-                data_i |= convert(UInt64, nt) << shift
-            end
-
-            shift += 2
-            idx += 1
-
-            if idx > seq_length
-                break
-            end
-
-            # low nibble
-            @inbounds nt = bam4bit_to_dna[1 + (input[j] & 0xf)]
-            if nt == DNA_N
-                d = (idx - 1) >>> 6
-                r = (idx - 1) & 63
-                ns.chunks[d + 1] |= UInt64(1) << r
-            else
-                ored_nucs |= convert(UInt8, nt)
-                data_i |= convert(UInt64, nt) << shift
-            end
-
-            shift += 2
-            idx += 1
-            j += 1
-        end
-        @inbounds seqdata[i] = data_i
-    end
-
-    # if there was a bad nucleotide, go back and find it
-    if ored_nucs & 0b1000 != 0
-        idx = 1
-        j = seq_position
-        while true
-            if idx > seq_length
-                break
-            end
-
-            # high nibble
-            nt = bam4bit_to_dna[1 + (input[j] >>> 4)]
-            if nt == DNA_INVALID
-                error(string(bam4bit_to_char[1 + (input[j] >>> 4)], " is not a valid DNA nucleotide."))
-            end
-            idx += 1
-
-            if idx > seq_length
-                break
-            end
-
-            # low nibble
-            nt = bam4bit_to_dna[1 + (input[j] & 0xf)]
-            if nt == DNA_INVALID
-                error(string(bam4bit_to_char[1 + (input[j] & 0xf)], " is not a valid DNA nucleotide."))
-            end
-            idx += 1
-            j += 1
-        end
-    end
-end
-
-
-function qualities(bam::BAMAlignment)
-    r = bam.qual_position:bam.aux_position-1
+function qualities(aln::BAMAlignment)
+    r = aln.qual_position:aln.aux_position-1
     qs = Vector{Int8}(length(r))
-    for (i, j) in enumerate(r)
-        @inbounds qs[i] = bam.data[j] - 33
+    @inbounds for (i, j) in enumerate(r)
+        qs[i] = aln.data[j] - 33
     end
     return qs
 end
 
-
-function qualities!(bam::BAMAlignment, qs::Vector{Int8})
-    r = bam.qual_position:bam.aux_position-1
+function qualities!(aln::BAMAlignment, qs::Vector{Int8})
+    r = aln.qual_position:aln.aux_position-1
     if length(qs) != length(r)
         resize!(qs, length(r))
     end
-    for (i, j) in enumerate(r)
-        @inbounds qs[i] = bam.data.data[j] - 33
+    @inbounds for (i, j) in enumerate(r)
+        qs[i] = aln.data.data[j] - 33
     end
     return qs
 end
 
-
-# Return all auxillary data
-function auxiliary(bam::BAMAlignment)
-    aux = Dict{Tuple{Char, Char}, Any}()
-    data = bam.data.data
-    p = Int(bam.aux_position)
-    while p <= bam.data.part.stop
-        tag = (Char(data[p]), Char(data[p + 1]))
-        p += 2
-        if data[p] == 'B'
-            typ = Vector{auxtype[data[p+1]]}
-            p += 2
-        else
-            typ = auxtype[data[p]]
-            p += 1
-        end
-        p, value = getauxdata(data, p, typ)
-        aux[tag] = value
-    end
-
-    return aux
+"""
+Two-byte tag of auxiliary data in SAM and BAM.
+"""
+immutable AuxTag
+    data::Tuple{UInt8,UInt8}
 end
 
+AuxTag(x::UInt8, y::UInt8) = AuxTag((x, y))
+AuxTag(x::Char, y::Char) = AuxTag(UInt8(x), UInt8(y))
 
-const auxtype = Dict{Char, Type}(
+function Base.getindex(tag::AuxTag, i::Integer)
+    if i == 1
+        return tag.data[1]
+    elseif i == 2
+        return tag.data[2]
+    end
+    throw(BoundsError(i))
+end
+
+function Base.show(io::IO, tag::AuxTag)
+    write(io, '"', tag[1], tag[2], '"')
+    return
+end
+
+immutable AuxDataDict <: Associative{AuxTag,Any}
+    data::Vector{UInt8}
+end
+
+const auxtype = Dict{UInt8,DataType}(
     'A' => Char,
     'c' => Int8,
     'C' => UInt8,
@@ -305,60 +194,102 @@ const auxtype = Dict{Char, Type}(
     'Z' => ASCIIString
 )
 
+function Base.getindex(dict::AuxDataDict, tag::AbstractString)
+    if length(tag) != 2
+        error("BAM auxillary data tags must be of length 2")
+    end
+    return _auxiliary(dict.data, 1, UInt8(tag[1]), UInt8(tag[2]))
+end
+
+function Base.getindex(dict::AuxDataDict, key::AuxTag)
+    return auxiliary(dict.data, key[1], key[2])
+end
+
+Base.eltype(::Type{AuxDataDict}) = Tuple{AuxTag,Any}
+Base.length(dict::AuxDataDict) = count_auxtags(dict.data, 1)
+Base.start(dict::AuxDataDict) = 1
+Base.done(dict::AuxDataDict, pos) = pos > length(dict.data)
+function Base.next(dict::AuxDataDict, pos)
+    data = dict.data
+    tag = AuxTag(data[pos], data[pos+1])
+    pos, typ = getauxtype(data, pos + 2)
+    pos, value = getauxdata(data, pos, typ)
+    return (tag, value), pos
+end
+
+function auxiliary(aln::BAMAlignment)
+    return AuxDataDict(aln.data[aln.aux_position:end])
+end
+
+function auxiliary(aln::BAMAlignment, tag::AbstractString)
+    if length(tag) != 2
+        error("BAM auxillary data tags must be of length 2")
+    end
+    return auxiliary(aln, UInt8(tag[1]), UInt8(tag[2]))
+end
 
 # Return a specific tag
-function auxillary(bam::BAMAlignment, t1::Char, t2::Char)
-    data = bam.data.data
-    p = Int(bam.aux_position)
+function auxiliary(aln::BAMAlignment, t1::UInt8, t2::UInt8)
+    return _auxiliary(aln.data, aln.aux_position, t1, t2)
+end
 
-    while p <= bam.data.part.stop && (data[p] != t1 || data[p + 1] != t2)
+function _auxiliary(data::Vector{UInt8}, pos::Integer, t1::UInt8, t2::UInt8)
+    p::Int = pos
+
+    while p ≤ length(data) && (data[p] != t1 || data[p+1] != t2)
         p = next_tag_position(data, p)
     end
 
-    if p > bam.data.part.stop
-        throw(KeyError(string(t1, t2)))
+    if p > length(data)
+        throw(KeyError(AuxTag(t1, t2)))
     else
-        p += 2
-        if data[p] == 'B'
-            typ = Vector{auxtype[data[p+1]]}
-            p += 2
-        else
-            typ = auxtype[data[p]]
-            p += 1
-        end
-        p, value = getauxdata(data, p, typ)
+        p, typ = getauxtype(data, p + 2)
+        _, value = getauxdata(data, p, typ)
         return value
     end
 end
 
+function getauxtype(data::Vector{UInt8}, p::Int)
+    t = data[p]
+    if t == UInt8('B')
+        return p + 2, Vector{auxtype[data[p+1]]}
+    else
+        return p + 1, auxtype[t]
+    end
+end
 
 function getauxdata{T}(data::Vector{UInt8}, p::Int, ::Type{T})
-    return (Int(p + sizeof(T)), unsafe_load(Ptr{T}(pointer(data, p))))
+    return p + sizeof(T), unsafe_load(Ptr{T}(pointer(data, p)))
 end
-
 
 function getauxdata(data::Vector{UInt8}, p::Int, ::Type{Char})
-    return (p + 1, Char(unsafe_load(pointer(data, p))))
+    return p + 1, Char(unsafe_load(pointer(data, p)))
 end
-
 
 function getauxdata{T}(data::Vector{UInt8}, p::Int, ::Type{Vector{T}})
     n = unsafe_load(Ptr{Int32}(pointer(data, p)))
     p += 4
     xs = Array(T, n)
     unsafe_copy!(pointer(xs), Ptr{T}(pointer(data, p)), n)
-    return (Int(p + n * sizeof(T)), xs)
+    return p + n * sizeof(T), xs
 end
-
 
 function getauxdata(data::Vector{UInt8}, p::Int, ::Type{ASCIIString})
     dataptr = pointer(data, p)
     endptr = ccall(:memchr, Ptr{Void}, (Ptr{Void}, Cint, Csize_t),
                    dataptr, '\0', length(data) - p + 1)
     q = p + (endptr - dataptr) - 1
-    return (Int(q + 2), ASCIIString(data[p:q]))
+    return q + 2, ASCIIString(data[p:q])
 end
 
+function count_auxtags(data::Vector{UInt8}, p::Int)
+    count = 0
+    while p ≤ length(data)
+        count += 1
+        p = next_tag_position(data, p)
+    end
+    return count
+end
 
 function next_tag_position(data::Vector{UInt8}, p::Int)
     typ = data[p + 2]
@@ -395,16 +326,6 @@ function next_tag_position(data::Vector{UInt8}, p::Int)
     return p
 end
 
-
-function auxiliary(bam::BAMAlignment, tag::AbstractString)
-    if length(tag) != 2
-        error("BAM auxillary data tags must be of length 2")
-    end
-    return auxillary(bam, tag[1], tag[2])
-end
-
-
-
 # Leading size parts of a bam entry
 immutable BAMEntryHead
     refid::Int32
@@ -417,19 +338,13 @@ immutable BAMEntryHead
     tlen::Int32
 end
 
-
-# FIXME: <: AbstractParser{BAMAlignment}
-immutable BAMParser{T <: BufferedInputStream} <: Bio.AbstractParser
+immutable BAMParser{T<:BufferedInputStream} <: Bio.AbstractParser
     stream::T
     header_text::StringField
-    refs::Vector{Tuple{StringField, Int}}
+    refs::Vector{Tuple{StringField,Int}}
 end
 
-
-@inline function unsafe_load_type(buffer::Vector{UInt8}, position::Integer, T::Type)
-    return unsafe_load(convert(Ptr{T}, pointer(buffer, position)))
-end
-
+Base.eof(parser::BAMParser) = eof(parser.stream)
 
 function Base.open(source_stream::BufferedInputStream, ::Type{BAM})
     stream = BufferedInputStream(BGZFSource(source_stream))
@@ -460,12 +375,10 @@ function Base.open(source_stream::BufferedInputStream, ::Type{BAM})
     return BAMParser(stream, text, refs)
 end
 
-
 function Base.read!(parser::BAMParser, aln::BAMAlignment)
     stream = parser.stream
     if eof(stream)
-        # FIXME: throw EOFError
-        return false
+        throw(EOFError())
     end
 
     # FIXME: why "read the entire entry"?
@@ -480,7 +393,7 @@ function Base.read!(parser::BAMParser, aln::BAMAlignment)
     # FIXME: this may be important in terms of performance: read fixed-length
     # fields into memory
     fields = unsafe_load(convert(Ptr{BAMEntryHead}, ptr))
-    @inbounds if 0 <= fields.refid < length(parser.refs)
+    if 0 ≤ fields.refid < length(parser.refs)
         aln.seqname = parser.refs[fields.refid + 1][1]
     else
         empty!(aln.seqname)
@@ -493,7 +406,7 @@ function Base.read!(parser::BAMParser, aln::BAMAlignment)
     n_cigar_op   =  fields.flag_nc          & 0xffff
     aln.flag     =  fields.flag_nc   >> 16
 
-    @inbounds if 0 <= fields.next_refid < length(parser.refs)
+    if 0 ≤ fields.next_refid < length(parser.refs)
         aln.next_seqname = parser.refs[fields.next_refid + 1][1]
     else
         empty!(aln.next_seqname)
@@ -515,5 +428,5 @@ function Base.read!(parser::BAMParser, aln::BAMAlignment)
     aln.qual_position  = aln.seq_position + cld(fields.l_seq, 2)
     aln.aux_position   = aln.qual_position + fields.l_seq
 
-    return true
+    return aln
 end
