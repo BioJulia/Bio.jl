@@ -14,6 +14,169 @@ See "Sequence Alignment/Map Format Specification" for details:
 """
 immutable BAM <: FileFormat end
 
+
+"""
+Two-byte tag of data used in SAM and BAM.
+"""
+immutable Tag <: AbstractString
+    data::Tuple{UInt8,UInt8}
+end
+
+function Tag(x::UInt8, y::UInt8)
+    return Tag((x, y))
+end
+
+function Base.convert(::Type{Tag}, s::AbstractString)
+    if length(s) != 2
+        throw(ArgumentError("tag must be of length 2"))
+    end
+    return Tag(UInt8(s[1]), UInt8(s[2]))
+end
+
+Base.length(tag::Tag) = 2
+Base.endof(tag::Tag) = 2
+Base.start(tag::Tag) = 1
+Base.done(tag::Tag, i::Int) = i > 2
+Base.next(tag::Tag, i::Int) = tag.data[i], i + 1
+
+function twobytes(tag::Tag)
+    return tag.data[1], tag.data[2]
+end
+
+function Base.checkbounds(tag::Tag, i::Integer)
+    if 1 ≤ i ≤ endof(tag)
+        return true
+    end
+    throw(BoundsError(i))
+end
+
+function Base.getindex(tag::Tag, i::Int)
+    checkbounds(tag, i)
+    return tag.data[i]
+end
+
+function Base.write(io::IO, tag::Tag)
+    return write(io, tag[1], tag[2])
+end
+
+
+"""
+A header for SAM/BAM file format.
+"""
+type SAMHeader <: Associative{Tag,Any}
+    # expected value types for each tag:
+    #   * @HD:    Associative{Tag,Any}
+    #   * @CO:    Vector{ASCIIString}
+    #   * others: Vector{Associative{Tag,Any}}
+    dict::OrderedDict{Tag,Any}
+end
+
+function Base.keys(header::SAMHeader)
+    return keys(header.dict)
+end
+
+function Base.getindex(header::SAMHeader, tag)
+    return getindex(header.dict, convert(Tag, tag))
+end
+
+function Base.setindex!(header::SAMHeader, value, tag)
+    return setidnex!(header.dict, value, convert(Tag, tag))
+end
+
+function Base.length(header::SAMHeader)
+    return length(header.dict)
+end
+
+# parse SAM header and return the result as a nested dictionary.
+function parse_samheader(io::IO)
+    # keep the order of header lines
+    d = OrderedDict{Tag,Any}()
+    while !eof(io)
+        mark(io)
+        line::ASCIIString = readline(io)
+        if line[1] != '@'
+            reset(io)
+            break
+        end
+        tag = line[2:3]
+        if line[4] != '\t'
+            error("invalid SAM header")
+        end
+        rest = chomp(line[5:end])
+        if tag == "HD"
+            d[tag] = parse_samheader_values(rest)
+        else
+            if !haskey(d, tag)
+                d[tag] = []
+            end
+            if tag == "CO"
+                push!(d[tag], rest)
+            else
+                push!(d[tag], parse_samheader_values(rest))
+            end
+        end
+    end
+    return SAMHeader(d)
+end
+
+# parse a header line after "@<tag>\t"
+function parse_samheader_values(line)
+    # keep the order of values
+    ret = OrderedDict{Tag,ASCIIString}()
+    for pair in split(line, '\t')
+        tag = pair[1:2]
+        if pair[3] != ':'
+            error("invalid SAM header")
+        end
+        ret[tag] = pair[4:end]
+    end
+    return ret
+end
+
+function check_samheader(header::SAMHeader)
+    # TODO
+end
+
+# write the SAM format header to `io`.
+function Base.write(io::IO, header::SAMHeader)
+    check_samheader(header)
+    n = 0
+
+    # HD is the first line if present
+    if haskey(header, "HD")
+        n += write(io, "@HD")
+        for (key, val) in header["HD"]
+            n += write(io, '\t')
+            n += write(io, key, ':', val)
+        end
+        n += write(io, '\n')
+    end
+
+    for (tag, records) in header
+        if tag == Tag("HD")
+            continue
+        end
+        for record in records
+            n += write_samheader_record(io, tag, record)
+        end
+    end
+
+    return n
+end
+
+# write a header record of `tag` to `io`: a single line of a SAM header.
+function write_samheader_record(io, tag, record)
+    n = 0
+    n += write(io, '@', tag)
+    for (key, val) in record
+        n += write(io, '\t')
+        n += write(io, key, ':', val)
+    end
+    n += write(io, '\n')
+    return n
+end
+
+
 """
 A list of reference sequences in a SAM/BAM file.
 
@@ -72,8 +235,6 @@ function Base.push!(refseqs::ReferenceSequences, pair::Tuple{AbstractString,Inte
 end
 
 Base.size(refseqs::ReferenceSequences) = (length(refseqs.names),)
-# Base.endof(refseqs::ReferenceSequences) = length(refseqs)
-# Base.length(refseqs::ReferenceSequences) = length(refseqs.names)
 
 
 """
@@ -238,38 +399,6 @@ function qualities!(aln::BAMAlignment, qs::Vector{Int8})
     return qs
 end
 
-"""
-Two-byte tag of auxiliary data in SAM and BAM.
-"""
-immutable AuxTag
-    data::Tuple{UInt8,UInt8}
-end
-
-AuxTag(x::UInt8, y::UInt8) = AuxTag((x, y))
-AuxTag(x::Char, y::Char) = AuxTag(UInt8(x), UInt8(y))
-
-function Base.getindex(tag::AuxTag, i::Integer)
-    if i == 1
-        return tag.data[1]
-    elseif i == 2
-        return tag.data[2]
-    end
-    throw(BoundsError(i))
-end
-
-function Base.show(io::IO, tag::AuxTag)
-    write(io, '"', tag[1], tag[2], '"')
-    return
-end
-
-"""
-Auxiliary data dictionary of SAM/BAM file formats.
-
-This is not designed for very large dictionaries: time complexities are O(N) in lookup and update operations.
-"""
-immutable AuxDataDict <: Associative{AuxTag,Any}
-    data::Vector{UInt8}
-end
 
 const auxtype = Dict{UInt8,DataType}(
     'A' => Char,
@@ -284,15 +413,18 @@ const auxtype = Dict{UInt8,DataType}(
     'Z' => ASCIIString
 )
 
-function Base.getindex(dict::AuxDataDict, tag::AbstractString)
-    if length(tag) != 2
-        error("BAM auxillary data tags must be of length 2")
-    end
-    return _auxiliary(dict.data, 1, UInt8(tag[1]), UInt8(tag[2]))
+"""
+Auxiliary data dictionary of SAM/BAM file formats.
+
+This is not designed for very large dictionaries: time complexities are O(N) in lookup and update operations.
+"""
+immutable AuxDataDict <: Associative{Tag,Any}
+    data::Vector{UInt8}
 end
 
-function Base.getindex(dict::AuxDataDict, key::AuxTag)
-    return auxiliary(dict.data, key[1], key[2])
+function Base.getindex(dict::AuxDataDict, key)
+    t1, t2 = twobytes(Tag(key))
+    return _auxiliary(dict.data, 1, t1, t2)
 end
 
 Base.eltype(::Type{AuxDataDict}) = Tuple{AuxTag,Any}
@@ -311,15 +443,8 @@ function auxiliary(aln::BAMAlignment)
     return AuxDataDict(aln.data[aln.aux_position:end])
 end
 
-function auxiliary(aln::BAMAlignment, tag::AbstractString)
-    if length(tag) != 2
-        error("BAM auxillary data tags must be of length 2")
-    end
-    return auxiliary(aln, UInt8(tag[1]), UInt8(tag[2]))
-end
-
-# Return a specific tag
-function auxiliary(aln::BAMAlignment, t1::UInt8, t2::UInt8)
+function auxiliary(aln::BAMAlignment, tag)
+    t1, t2 = twobytes(Tag(tag))
     return _auxiliary(aln.data, aln.aux_position, t1, t2)
 end
 
@@ -418,9 +543,13 @@ function next_tag_position(data::Vector{UInt8}, p::Int)
     return p
 end
 
+
+"""
+A parser for BAM file format.
+"""
 immutable BAMParser{T<:BufferedInputStream} <: AbstractParser
     stream::T
-    header::OrderedDict
+    header::SAMHeader
     refseqs::ReferenceSequences
 end
 
@@ -495,6 +624,7 @@ function Base.read!(parser::BAMParser, aln::BAMAlignment)
     n_cigar_op = fields.flag_nc & 0xffff
     l_read_name = fields.bin_mq_nl & 0xff
 
+    # TODO: directly map the data buffer to a BAMAlignment may be faster
     aln.refid          = fields.refid + 1  # make 1-based
     aln.pos            = fields.pos + 1  # make 1-based
     aln.mapq           = (fields.bin_mq_nl >> 8) & 0xff
@@ -514,39 +644,56 @@ function Base.read!(parser::BAMParser, aln::BAMAlignment)
 end
 
 
-immutable BAMWriter{T<:BufferedInputStream}
+type BAMWriter{T<:BufferedOutputStream}
     stream::T
-    header::OrderedDict
-    refseqs::ReferenceSequences
+    header::SAMHeader
 end
 
-# TODO: interfaces of BMAWriter
+function Base.open(output::BufferedOutputStream, ::Type{BAM};
+                   header::SAMHeader=SAMHeader())
+    stream = BufferedOutputStream(BGZFSink(output))
+    writer = BAMWriter(stream, header)
+    write_header(stream, header)
+    return writer
+end
 
 # write a BAM header to `writer.stream`.
 function write_header(writer::BAMWriter)
     stream = writer.stream
+    n = 0
 
     # magic
-    write(stream, "BAM\0")
+    n += write(stream, "BAM\0")
 
     # header
     buf = IOBuffer()
-    write_samheader(buf, writer.header)
+    write(buf, writer.header)
     header_array = takebuf_array(buf)
-    write(stream, Int32(length(header_array)))
-    write(stream, header_array)
+    n += write(stream, Int32(length(header_array)))
+    n += write(stream, header_array)
 
     # reference sequences
-    write(stream, Int32(length(writer.refseqs)))
-    for (refname, reflen) in writer.refseqs
-        write(stream, Int32(length(refname) + 1))
+    refseqs = writer.header["SQ"]
+    n += write(stream, Int32(length(refseqs)))
+    for record in refseqs
+        name = record["SN"]
+        len  = record["LN"]
+        n += write(stream, Int32(length(name) + 1))
         # sequence name must be NULL-terminated
-        write(stream, refname, '\0')
-        write(stream, Int32(reflen))
+        n += write(stream, name, '\0')
+        n += write(stream, Int32(len))
     end
+
+    return n
 end
 
 function Base.write(writer::BAMWriter, aln::BAMAlignment)
+    if !(0 ≤ aln.refid ≤ endof(writer.refseqs))
+        error(aln.refid, " is not in the reference sequence set")
+    elseif !(0 ≤ aln.next_refid ≤ endof(writer.refseqs))
+        error(aln.next_refid, " is not in the reference sequence set")
+    end
+
     stream = writer.stream
 
     block_size = sizeof(BAMEntryHead) + sizeof(aln.data)

@@ -8,7 +8,7 @@
 
 module BGZF
 
-export BGZFSource
+export BGZFSource, BGZFSink
 
 using BufferedStreams
 using Libz
@@ -168,18 +168,35 @@ function BufferedStreams.readbytes!(source::BGZFSource, buffer::Vector{UInt8}, f
     return from - from0
 end
 
-if VERSION < v"0.5-"
-    function readbytesto!(s::IO, buffer::Vector{UInt8},
-                            from::Integer, nb::Integer)
-        ptr = pointer(buffer, from)
-        buffrom = pointer_to_array(ptr, length(buffer) - from + 1, false)
-        return readbytes!(s, buffrom, nb)
-    end
-else
-    function readbytesto!(s::IO, buffer::Vector{UInt8},
-                            from::Integer, nb::Integer)
-        return unsafe_read(io, pointer(buffer, from), nb)
-    end
+function readbytesto!(s::IO, buffer::Vector{UInt8},
+                        from::Integer, nb::Integer)
+    ptr = pointer(buffer, from)
+    buffrom = pointer_to_array(ptr, length(buffer) - from + 1, false)
+    return readbytes!(s, buffrom, nb)
+end
+
+
+type BGZFSink{T<:IO}
+    output::T
+    zstream::Base.RefValue{Libz.ZStream}
+
+    # space to read the next compressed block
+    compressed_block::Vector{UInt8}
+
+    # space to decompress the block
+    decompressed_block::Vector{UInt8}
+end
+
+function BGZFSink(output::IO)
+    zstream = Libz.init_deflate_stream(
+        true, Libz.Z_DEFAULT_COMPRESSION, 8, Libz.Z_DEFAULT_STRATEGY)
+    compressed_block = Vector{UInt8}(BGZF_MAX_BLOCK_SIZE)
+    decompressed_block = Vector{UInt8}(BGZF_MAX_BLOCK_SIZE)
+    return BGZFSink(output, zstream, compressed_block, decompressed_block)
+end
+
+function BufferedStreams.writebytes(sink::BGZFSink, buffer::Vector{UInt8}, n::Int, eof::Bool)
+    # ...
 end
 
 end  # module BGZF
