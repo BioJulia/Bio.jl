@@ -15,15 +15,77 @@ See "Sequence Alignment/Map Format Specification" for details:
 immutable BAM <: FileFormat end
 
 """
+A list of reference sequences in a SAM/BAM file.
+
+This supports following two mappings:
+* integer index -> (sequence name, sequence length)
+* sequence name -> (integer index, sequence length)
+"""
+immutable ReferenceSequences <: AbstractVector{Tuple{ASCIIString,Int64}}
+    names::Vector{ASCIIString}
+    name2index::Dict{ASCIIString,Int}
+    seqlens::Vector{Int64}
+end
+
+function ReferenceSequences()
+    return ReferenceSequences([])
+end
+
+function ReferenceSequences(iter)
+    names = ASCIIString[]
+    name2index = Dict{ASCIIString,Int}()
+    seqlens = Int64[]
+    for (i, (seqname, seqlen)) in enumerate(iter)
+        push!(names, seqname)
+        push!(seqlens, seqlen)
+        name2index[seqname] = i
+    end
+    return ReferenceSequences(names, name2index, seqlens)
+end
+
+function Base.checkbounds(refseqs::ReferenceSequences, index::Integer)
+    if 1 ≤ index ≤ endof(refseqs)
+        return true
+    end
+    throw(BoundsError(index))
+end
+
+function Base.getindex(refseqs::ReferenceSequences, index::Integer)
+    checkbounds(refseqs, index)
+    name = refseqs.names[index]
+    seqlen = refseqs.seqlens[index]
+    return name, seqlen
+end
+
+function Base.getindex(refseqs::ReferenceSequences, name::AbstractString)
+    index = refseqs.name2index[name]
+    seqlen = refseqs.seqlens[index]
+    return index, seqlen
+end
+
+function Base.push!(refseqs::ReferenceSequences, pair::Tuple{AbstractString,Integer})
+    name, seqlen = pair
+    push!(refseqs.names, name)
+    refseqs.name2index[name] = length(refseqs.names)
+    push!(refseqs.seqlens, seqlen)
+    return refseqs
+end
+
+Base.size(refseqs::ReferenceSequences) = (length(refseqs.names),)
+# Base.endof(refseqs::ReferenceSequences) = length(refseqs)
+# Base.length(refseqs::ReferenceSequences) = length(refseqs.names)
+
+
+"""
 An alignment data for the BAM file format.
 """
 type BAMAlignment <: IntervalTrees.AbstractInterval{Int64}
-    seqname::StringField
-    position::Int64
+    refid::Int32
+    pos::Int64
     mapq::UInt8
     bin::UInt16
     flag::UInt16
-    next_seqname::StringField
+    next_refid::Int32
     next_pos::Int64
     tlen::Int32
 
@@ -40,23 +102,39 @@ type BAMAlignment <: IntervalTrees.AbstractInterval{Int64}
     seq_length::Int32
     qual_position::Int32
     aux_position::Int32
+
+    # reference sequences in BAM file
+    refseqs::ReferenceSequences
 end
 
 function BAMAlignment()
     return BAMAlignment(
-        StringField(), -1, 0, 0, 0,
-        StringField(), -1, -1,
-        UInt8[], -1, -1, -1, -1, -1)
+        0, -1, 0, 0, 0,
+        0, -1, -1,
+        UInt8[], -1, -1, -1, -1, -1,
+        ReferenceSequences()
+    )
 end
 
 function Base.show(io::IO, aln::BAMAlignment)
+    if aln.refid > 0
+        seqname, = aln.refseqs[aln.refid]
+    else
+        seqname = ""
+    end
+    if aln.next_refid > 0
+        next_seqname, = aln.refseqs[aln.next_refid]
+    else
+        next_seqname = ""
+    end
+
     println(io, summary(aln), ':')
-    println(io, "  seqname:         ", aln.seqname)
-    println(io, "  position:        ", aln.position)
+    println(io, "  seqname:         ", seqname)
+    println(io, "  position:        ", aln.pos)
     println(io, "  mapping quality: ", aln.mapq)
     println(io, "  bin:             ", aln.bin)
     println(io, "  flag:            ", bin(aln.flag, 16))
-    println(io, "  next seqname:    ", aln.next_seqname)
+    println(io, "  next seqname:    ", next_seqname)
     println(io, "  next position:   ", aln.next_pos)
     println(io, "  template length: ", aln.tlen)
     println(io, "  sequence:        ", string(sequence(aln)))
@@ -66,8 +144,8 @@ function Base.show(io::IO, aln::BAMAlignment)
 end
 
 # Interval interface
-function Base.first(bam::BAMAlignment)
-    return bam.position
+function Base.first(aln::BAMAlignment)
+    return aln.pos
 end
 
 function Base.last(bam::BAMAlignment)
@@ -184,6 +262,11 @@ function Base.show(io::IO, tag::AuxTag)
     return
 end
 
+"""
+Auxiliary data dictionary of SAM/BAM file formats.
+
+This is not designed for very large dictionaries: time complexities are O(N) in lookup and update operations.
+"""
 immutable AuxDataDict <: Associative{AuxTag,Any}
     data::Vector{UInt8}
 end
@@ -338,7 +421,7 @@ end
 immutable BAMParser{T<:BufferedInputStream} <: AbstractParser
     stream::T
     header::OrderedDict
-    refs::Vector{Tuple{StringField,Int}}
+    refseqs::ReferenceSequences
 end
 
 Base.eof(parser::BAMParser) = eof(parser.stream)
@@ -360,17 +443,19 @@ function Base.open(source_stream::BufferedInputStream, ::Type{BAM})
     header = parse_samheader(IOBuffer(read(stream, UInt8, textlen)))
 
     # reference sequences
+    refseqs = ReferenceSequences()
     n_refs = read(stream, Int32)
-    refs = Vector{Tuple{StringField,Int}}()
-    for i in 1:n_refs
+    for _ in 1:n_refs
         namelen = read(stream, Int32)
-        name = StringField(read!(stream, Vector{UInt8}(namelen)))
-        reflen = read(stream, Int32)
-        push!(refs, (name, reflen))
+        # remove the last NULL character
+        seqname = chop(bytestring(read(stream, UInt8, namelen)))
+        seqlen = read(stream, Int32)
+        push!(refseqs, (seqname, seqlen))
     end
 
-    return BAMParser(stream, header, refs)
+    return BAMParser(stream, header, refseqs)
 end
+
 
 # Leading size parts of a bam entry
 immutable BAMEntryHead
@@ -410,28 +495,20 @@ function Base.read!(parser::BAMParser, aln::BAMAlignment)
     n_cigar_op = fields.flag_nc & 0xffff
     l_read_name = fields.bin_mq_nl & 0xff
 
-    aln.position       = fields.pos + 1  # make 1-based
+    aln.refid          = fields.refid + 1  # make 1-based
+    aln.pos            = fields.pos + 1  # make 1-based
     aln.mapq           = (fields.bin_mq_nl >> 8) & 0xff
     aln.bin            = fields.bin_mq_nl >> 16
     aln.flag           = fields.flag_nc >> 16
-    aln.next_pos       = fields.next_pos
+    aln.next_refid     = fields.next_refid + 1
+    aln.next_pos       = fields.next_pos + 1
     aln.tlen           = fields.tlen
     aln.cigar_position = l_read_name + 1  # read name is NULL-terminated
     aln.seq_position   = aln.cigar_position + 4n_cigar_op
     aln.seq_length     = fields.l_seq
     aln.qual_position  = aln.seq_position + cld(fields.l_seq, 2)
     aln.aux_position   = aln.qual_position + fields.l_seq
-
-    if fields.refid ≥ 0
-        aln.seqname = parser.refs[fields.refid+1][1]
-    else
-        empty!(aln.seqname)
-    end
-    if fields.next_refid ≥ 0
-        aln.next_seqname = parser.refs[fields.next_refid+1][1]
-    else
-        empty!(aln.next_seqname)
-    end
+    aln.refseqs        = parser.refseqs
 
     return aln
 end
@@ -439,9 +516,11 @@ end
 
 immutable BAMWriter{T<:BufferedInputStream}
     stream::T
-    header_text::StringField
-    refs::Vector{Tuple{StringField,Int}}
+    header::OrderedDict
+    refseqs::ReferenceSequences
 end
+
+# TODO: interfaces of BMAWriter
 
 # write a BAM header to `writer.stream`.
 function write_header(writer::BAMWriter)
@@ -458,10 +537,11 @@ function write_header(writer::BAMWriter)
     write(stream, header_array)
 
     # reference sequences
-    write(stream, Int32(length(writer.refs)))
-    for (refname, reflen) in writer.refs
-        write(stream, Int32(length(refname)))
-        write(stream, refname)
+    write(stream, Int32(length(writer.refseqs)))
+    for (refname, reflen) in writer.refseqs
+        write(stream, Int32(length(refname) + 1))
+        # sequence name must be NULL-terminated
+        write(stream, refname, '\0')
         write(stream, Int32(reflen))
     end
 end
@@ -480,7 +560,7 @@ function Base.write(writer::BAMWriter, aln::BAMAlignment)
     n = 0
     n += write(stream, Int32(block_size))
     n += write(stream, Int32(aln.refid))
-    n += write(stream, Int32(aln.position))
+    n += write(stream, Int32(aln.pos))
     n += write(stream, UInt32(bin_mq_nl))
     n += write(stream, UInt32(flag_nc))
     n += write(stream, Int32(aln.seq_length))
