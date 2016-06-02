@@ -31,6 +31,39 @@ function Base.copy(metadata::FASTQMetadata)
     return FASTQMetadata(copy(metadata.description), copy(metadata.quality))
 end
 
+
+# Parser
+# ------
+
+"A type encapsulating the current state of a FASTQ parser"
+type FASTQParser{S<:Sequence} <: AbstractParser
+    state::Ragel.State
+    seqbuf::BufferedOutputStream{BufferedStreams.EmptyStream}
+    qualbuf::BufferedOutputStream{BufferedStreams.EmptyStream}
+    name2buf::StringField
+    desc2buf::StringField
+    qualcount::Int
+    quality_encodings::QualityEncoding
+
+    function FASTQParser(input::BufferedInputStream,
+                         quality_encodings::QualityEncoding)
+        return new(Ragel.State(fastqparser_start, input),
+                   BufferedOutputStream(), BufferedOutputStream(),
+                   StringField(), StringField(), 0, quality_encodings)
+    end
+end
+
+Base.eltype{S}(::Type{FASTQParser{S}}) = SeqRecord{S,FASTQMetadata}
+Base.eof(parser::FASTQParser) = eof(parser.state.stream)
+
+include("fastq-parser.jl")
+
+function Base.open{S}(input::BufferedInputStream, ::Type{FASTQ},
+                      ::Type{S}=DNASequence;
+                      qualenc::QualityEncoding=EMPTY_QUAL_ENCODING)
+    return FASTQParser{S}(input, qualenc)
+end
+
 "A `SeqRecord` for FASTQ sequences"
 typealias FASTQSeqRecord DNASeqRecord{FASTQMetadata}
 
@@ -38,9 +71,6 @@ function FASTQSeqRecord()
     return FASTQSeqRecord(StringField(), DNASequence(), FASTQMetadata())
 end
 
-"""
-Show a `FASTQSeqRecord` to `io`, with graphical display of quality scores.
-"""
 function Base.show(io::IO, seqrec::FASTQSeqRecord)
     write(io, "@", seqrec.name, " ", seqrec.metadata.description, "\n")
     for c in seqrec.seq
@@ -70,9 +100,6 @@ function Base.show(io::IO, seqrec::FASTQSeqRecord)
     write(io, '\n')
 end
 
-"""
-Write a `FASTQSeqRecord` to `io`, as a valid FASTQ record.
-"""
 function Base.write(io::IO, seqrec::FASTQSeqRecord;
                     offset::Integer=-1, qualheader::Bool=false)
 

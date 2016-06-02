@@ -131,18 +131,16 @@ export
     ReferenceSequence
 
 using
-    Compat,
     BufferedStreams,
+    Compat,
     IndexableBitVectors,
-    Bio.StringFields,
-    Bio.Ragel
+    Bio.Ragel,
+    Bio.StringFields
+
+import Bio.IO: FileFormat, AbstractParser
 
 import ..Ragel: tryread!
 export tryread!
-
-using Bio:
-    FileFormat,
-    AbstractParser
 
 """
     alphabet(typ)
@@ -186,9 +184,7 @@ include("seqrecord.jl")
 # Parsing file types
 include("predict.jl")
 include("fasta.jl")
-include("fasta-parser.jl")
 include("fastq.jl")
-include("fastq-parser.jl")
 
 include("search/exact.jl")
 include("search/approx.jl")

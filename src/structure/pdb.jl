@@ -8,9 +8,6 @@ export PDB,
     writepdblines
 
 
-import Bio.FileFormat
-
-
 "Protein Data Bank (PDB) file format."
 immutable PDB <: FileFormat end
 

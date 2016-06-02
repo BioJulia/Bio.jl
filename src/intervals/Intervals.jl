@@ -31,21 +31,19 @@ import ..Ragel: tryread!
 export tryread!
 
 using
-    Bio.Ragel,
-    Bio.StringFields,
     BufferedStreams,
+    Colors,
+    Compat,
     IntervalTrees,
     Libz,
-    Colors,
-    Compat
+    Bio.Ragel,
+    Bio.StringFields
+
+import Bio.IO: FileFormat, AbstractParser
 
 using Base.Collections:
     heappush!,
     heappop!
-
-using Bio:
-    AbstractParser,
-    FileFormat
 
 import Iterators
 
@@ -57,7 +55,6 @@ include("intervalstream.jl")
 
 # Parsing file types
 include("bed.jl")
-include("bed-parser.jl")
 include("bigbed.jl")
 
 end # module Intervals

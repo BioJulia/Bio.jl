@@ -10,6 +10,8 @@ module Structure
 
 using Compat
 
+import Bio.IO: FileFormat, AbstractParser
+
 include("model.jl")
 include("pdb.jl")
 include("spatial.jl")

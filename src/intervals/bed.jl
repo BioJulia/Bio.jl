@@ -70,12 +70,54 @@ end
     return true
 end
 
+"An `Interval` with associated metadata from a BED file"
+typealias BEDInterval Interval{BEDMetadata}
+
+
+# Parser
+# ------
+
+type BEDParser <: AbstractParser
+    state::Ragel.State
+
+    # intermediate values used during parsing
+    red::Float32
+    green::Float32
+    blue::Float32
+    block_size_idx::Int
+    block_first_idx::Int
+
+    function BEDParser(input::BufferedInputStream)
+        return new(Ragel.State(bedparser_start, input), 0, 0, 0, 1, 1)
+    end
+end
+
+function Intervals.metadatatype(::BEDParser)
+    return BEDMetadata
+end
+
+function Base.eltype(::Type{BEDParser})
+    return BEDInterval
+end
+
+function Base.eof(parser::BEDParser)
+    return eof(parser.state.stream)
+end
+
+function Base.open(input::BufferedInputStream, ::Type{BED})
+    return BEDParser(input)
+end
+
+function IntervalCollection(interval_stream::BEDParser)
+    intervals = collect(BEDInterval, interval_stream)
+    return IntervalCollection{BEDMetadata}(intervals, true)
+end
+
+include("bed-parser.jl")
+
 # TODO
 #function show(io::IO, metadata::BEDMetadata)
 #end
-
-"An `Interval` with associated metadata from a BED file"
-typealias BEDInterval Interval{BEDMetadata}
 
 """
 Write a BEDInterval in BED format.

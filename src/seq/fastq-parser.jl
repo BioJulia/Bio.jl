@@ -7,39 +7,6 @@ const _fastqparser_nfa_targs = Int8[ 0, 0 ,  ]
 const _fastqparser_nfa_offsets = Int8[ 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 ,  ]
 const _fastqparser_nfa_push_actions = Int8[ 0, 0 ,  ]
 const _fastqparser_nfa_pop_trans = Int8[ 0, 0 ,  ]
-"A type encapsulating the current state of a FASTQ parser"
-type FASTQParser{S<:Sequence} <: AbstractParser
-state::Ragel.State
-seqbuf::BufferedOutputStream{BufferedStreams.EmptyStream}
-qualbuf::BufferedOutputStream{BufferedStreams.EmptyStream}
-name2buf::StringField
-desc2buf::StringField
-qualcount::Int
-quality_encodings::QualityEncoding
-
-function FASTQParser(input::BufferedInputStream,
-	quality_encodings::QualityEncoding)
-	return new(Ragel.State(fastqparser_start, input),
-	BufferedOutputStream(), BufferedOutputStream(),
-	StringField(), StringField(), 0, quality_encodings)
-end
-end
-
-	function 	Base.eltype{S}(::Type{FASTQParser{S}})
-	return SeqRecord{S,FASTQMetadata}
-end
-
-function Base.eof(parser::FASTQParser)
-	return eof(parser.state.stream)
-end
-
-function Base.open{S}(input::BufferedInputStream, ::Type{FASTQ},
-	::Type{S}=DNASequence;
-	qualenc::QualityEncoding=EMPTY_QUAL_ENCODING)
-	return FASTQParser{S}(input, qualenc)
-end
-
-# FIXME: output type may be too loose
 Ragel.@generate_read!_function(
 "fastqparser",
 FASTQParser,

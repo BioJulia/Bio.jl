@@ -7,30 +7,6 @@ const _fastaparser_nfa_targs = Int8[ 0, 0 ,  ]
 const _fastaparser_nfa_offsets = Int8[ 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 ,  ]
 const _fastaparser_nfa_push_actions = Int8[ 0, 0 ,  ]
 const _fastaparser_nfa_pop_trans = Int8[ 0, 0 ,  ]
-"A type encapsulating the current state of a FASTA parser"
-type FASTAParser{S<:Sequence} <: AbstractParser
-state::Ragel.State
-seqbuf::BufferedOutputStream{BufferedStreams.EmptyStream}
-
-function FASTAParser(input::BufferedInputStream)
-	return new(Ragel.State(fastaparser_start, input), BufferedOutputStream())
-end
-end
-
-	function 	Base.eltype{S}(::Type{FASTAParser{S}})
-	return SeqRecord{S,FASTAMetadata}
-end
-
-function Base.eof(parser::FASTAParser)
-	return eof(parser.state.stream)
-end
-
-function Base.open{S}(input::BufferedInputStream, ::Type{FASTA},
-	::Type{S}=BioSequence)
-	return FASTAParser{S}(input)
-end
-
-# FIXME: output type may be too loose
 Ragel.@generate_read!_function(
 "fastaparser",
 FASTAParser,

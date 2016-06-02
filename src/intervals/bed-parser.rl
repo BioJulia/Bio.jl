@@ -88,47 +88,12 @@
     main := blankline* (bed_entry %finish_match)*;
 }%%
 
-
 %% write data;
 
-
-type BEDParser <: AbstractParser
-    state::Ragel.State
-
-    # intermediate values used during parsing
-    red::Float32
-    green::Float32
-    blue::Float32
-    block_size_idx::Int
-    block_first_idx::Int
-
-    function BEDParser(input::BufferedInputStream)
-        return new(Ragel.State(bedparser_start, input), 0, 0, 0, 1, 1)
-    end
-end
-
-function Intervals.metadatatype(::BEDParser)
-    return BEDMetadata
-end
-
-function Base.eltype(::Type{BEDParser})
-    return BEDInterval
-end
-
-function Base.eof(parser::BEDParser)
-    return eof(parser.state.stream)
-end
-
-function Base.open(input::BufferedInputStream, ::Type{BED})
-    return BEDParser(input)
-end
-
-function IntervalCollection(interval_stream::BEDParser)
-    intervals = collect(BEDInterval, interval_stream)
-    return IntervalCollection{BEDMetadata}(intervals, true)
-end
-
-Ragel.@generate_read!_function("bedparser", BEDParser, BEDInterval,
+Ragel.@generate_read!_function(
+    "bedparser",
+    BEDParser,
+    BEDInterval,
     begin
         %% write exec;
     end)

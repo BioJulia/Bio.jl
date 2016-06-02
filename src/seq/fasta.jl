@@ -25,17 +25,30 @@ function Base.copy(metadata::FASTAMetadata)
     return FASTAMetadata(copy(metadata.description))
 end
 
-"FASTASeqRecord{S} is a `SeqRecord` for FASTA sequences of type `S`"
-typealias FASTASeqRecord          SeqRecord{Sequence,FASTAMetadata}
 
-"A `SeqRecord` type for FASTA DNA sequences"
-typealias FASTADNASeqRecord       DNASeqRecord{FASTAMetadata}
+# Parser
+# ------
 
-"A `SeqRecord` type for FASTA RNA sequences"
-typealias FASTARNASeqRecord       RNASeqRecord{FASTAMetadata}
+"A type encapsulating the current state of a FASTA parser"
+type FASTAParser{S<:Sequence} <: AbstractParser
+    state::Ragel.State
+    seqbuf::BufferedOutputStream{BufferedStreams.EmptyStream}
 
-"A `SeqRecord` type for FASTA amino acid sequences"
-typealias FASTAAminoAcidSeqRecord AminoAcidSeqRecord{FASTAMetadata}
+    function FASTAParser(input::BufferedInputStream)
+        return new(Ragel.State(fastaparser_start, input),
+                   BufferedOutputStream())
+    end
+end
+
+Base.eltype{S}(::Type{FASTAParser{S}}) = SeqRecord{S,FASTAMetadata}
+Base.eof(parser::FASTAParser) = eof(parser.state.stream)
+
+include("fasta-parser.jl")
+
+function Base.open{S}(input::BufferedInputStream, ::Type{FASTA},
+                      ::Type{S}=BioSequence)
+    return FASTAParser{S}(input)
+end
 
 function Base.show{S}(io::IO, seqrec::SeqRecord{S,FASTAMetadata})
     print(io, ">", seqrec.name)
@@ -46,7 +59,6 @@ function Base.show{S}(io::IO, seqrec::SeqRecord{S,FASTAMetadata})
     print(io, seqrec.seq)
 end
 
-"Writes a FASTASeqRecord to an IO-stream (and obeys FASTAs max character constraint)"
 function Base.write{T}(io::IO, seqrec::SeqRecord{T,FASTAMetadata})
     write(io, ">", seqrec.name)
     if !isempty(seqrec.metadata.description)
