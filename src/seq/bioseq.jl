@@ -83,7 +83,9 @@ end
 # Constructors
 # ------------
 
-seq_data_len{A}(::Type{A}, len::Integer) = cld(len, div(64, bitsof(A)))
+function seq_data_len{A}(::Type{A}, len::Integer)
+    return cld(len, div(64, bitsof(A)))
+end
 
 @compat function (::Type{BioSequence{A}}){A<:Alphabet}(len::Integer)
     return BioSequence{A}(Vector{UInt64}(seq_data_len(A, len)), 1:len, false)

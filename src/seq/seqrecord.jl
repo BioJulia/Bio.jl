@@ -14,14 +14,14 @@ type SeqRecord{S<:Sequence,T}
     name::StringField
     seq::S
     metadata::T
+end
 
-    function SeqRecord(name, seq, metadata)
-        return new(name, seq, metadata)
-    end
+function SeqRecord(name::AbstractString, seq::Sequence, metadata=nothing)
+    return SeqRecord(StringField(name), seq, metadata)
+end
 
-    function SeqRecord()
-        return new(StringField(), S(), T())
-    end
+@compat function (::Type{SeqRecord{S,T}}){S,T}()
+    return SeqRecord{S,T}(StringField(), S(), T())
 end
 
 function seqtype{S,T}(::Type{SeqRecord{S,T}})

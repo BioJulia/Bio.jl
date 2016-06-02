@@ -128,7 +128,8 @@ export
     approxsearchindex,
     approxrsearch,
     approxrsearchindex,
-    ReferenceSequence
+    ReferenceSequence,
+    SeqRecord
 
 using
     BufferedStreams,
@@ -137,7 +138,10 @@ using
     Bio.Ragel,
     Bio.StringFields
 
-import Bio.IO: FileFormat, AbstractParser
+import Bio.IO:
+    FileFormat,
+    AbstractParser,
+    AbstractWriter
 
 import ..Ragel: tryread!
 export tryread!

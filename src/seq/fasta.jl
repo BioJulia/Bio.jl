@@ -25,6 +25,22 @@ function Base.copy(metadata::FASTAMetadata)
     return FASTAMetadata(copy(metadata.description))
 end
 
+function Base.open(filepath::AbstractString, mode::AbstractString, ::Type{FASTA};
+                   width::Integer=60)
+    io = open(filepath, mode)
+    if mode[1] == 'r'
+        return open(BufferedInputStream(io), FASTA)
+    elseif mode[1] ∈ ('w', 'a')
+        return FASTAWriter(io, width)
+    end
+    error("invalid open mode")
+end
+
+function Base.open{S}(input::BufferedInputStream, ::Type{FASTA},
+                      ::Type{S}=BioSequence)
+    return FASTAParser{S}(input)
+end
+
 
 # Parser
 # ------
@@ -45,9 +61,50 @@ Base.eof(parser::FASTAParser) = eof(parser.state.stream)
 
 include("fasta-parser.jl")
 
-function Base.open{S}(input::BufferedInputStream, ::Type{FASTA},
-                      ::Type{S}=BioSequence)
-    return FASTAParser{S}(input)
+
+# Writer
+# ------
+
+# Serializer for the FASTA file format.
+type FASTAWriter{T<:IO} <: AbstractWriter
+    output::T
+    # maximum sequence width (no limit when width ≤ 0)
+    width::Int
+end
+
+function Base.flush(writer::FASTAWriter)
+    # TODO: This can be removed on Julia v0.5
+    # (because flush will be defined for IOBuffer).
+    if applicable(flush, writer.output)
+        flush(writer.output)
+    end
+end
+Base.close(writer::FASTAWriter) = close(writer.output)
+
+function Base.write(writer::FASTAWriter, seqrec::SeqRecord)
+    output = writer.output
+    n = 0
+
+    # header
+    n += write(output, '>', seqrec.name)
+    if isa(seqrec.metadata, FASTAMetadata) && !isempty(seqrec.metadata.description)
+        n += write(output, ' ', seqrec.metadata.description)
+    end
+    n += write(output, '\n')
+
+    # sequence
+    w = writer.width
+    for x in seqrec.seq
+        if writer.width > 0 && w == 0
+            n += write(output, '\n')
+            w = writer.width
+        end
+        n += write(output, Char(x))
+        w -= 1
+    end
+    n += write(output, '\n')
+
+    return n
 end
 
 function Base.show{S}(io::IO, seqrec::SeqRecord{S,FASTAMetadata})
@@ -59,6 +116,7 @@ function Base.show{S}(io::IO, seqrec::SeqRecord{S,FASTAMetadata})
     print(io, seqrec.seq)
 end
 
+# This function is almost deprecated in favor of FASTAWriter.
 function Base.write{T}(io::IO, seqrec::SeqRecord{T,FASTAMetadata})
     write(io, ">", seqrec.name)
     if !isempty(seqrec.metadata.description)
