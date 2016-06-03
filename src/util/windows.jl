@@ -51,6 +51,8 @@ function Base.size(winitr::EachWindowIterator)
     return length(StepRange(winitr.width, winitr.step, length(winitr.data)))
 end
 
+Base.length(winitr::EachWindowIterator) = size(winitr)
+
 """
 Calculate the number of elements in the container that are missed during iteration.
 Typically because of the width and step size of the window: some elements near the end of the
