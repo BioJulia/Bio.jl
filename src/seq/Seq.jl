@@ -115,6 +115,7 @@ export
     AA_Gap,
     FASTA,
     FASTAMetadata,
+    FASTASeqRecord,
     FASTQ,
     Alphabet,
     DNAAlphabet,
