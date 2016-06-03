@@ -2243,11 +2243,13 @@ end
 
             # Check round trip
             output = IOBuffer()
+            writer = Seq.FASTQWriter(output, false, typemin(Int))
             expected_entries = Any[]
             for seqrec in open(filename, FASTQ)
-                write(output, seqrec)
+                write(writer, seqrec)
                 push!(expected_entries, seqrec)
             end
+            flush(writer)
 
             read_entries = Any[]
             for seqrec in open(takebuf_array(output), FASTQ)
