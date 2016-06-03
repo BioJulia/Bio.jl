@@ -19,6 +19,7 @@ export
     ismatchop,
     isinsertop,
     isdeleteop,
+    CIGAR,
     cigar,
     OP_MATCH,
     OP_INSERT,
@@ -69,18 +70,40 @@ export
     score,
     distance,
     alignment,
-    hasalignment
+    hasalignment,
+    # BAM
+    BAM,
+    BAMAlignment,
+    name,
+    name!,
+    sequence,
+    sequence!,
+    qualities,
+    qualities!,
+    auxiliary
 
+using Bio: FileFormat, AbstractParser
 using Bio.Seq
+using Bio.Intervals
+using Bio.StringFields
+using Bio.BGZF
+
 using Compat
+using Libz
+using BufferedStreams
+using DataStructures
 import IntervalTrees
 
 include("operations.jl")
 include("anchors.jl")
+include("cigar.jl")
 
 include("types.jl")
 include("submat.jl")
 include("models.jl")
 include("pairwise/pairalign.jl")
+
+include("sam_header.jl")
+include("bam.jl")
 
 end

@@ -7,6 +7,7 @@ else
     const Test = BaseTestNext
 end
 
+using YAML
 using Bio
 using Bio.Seq
 using Bio.Align
@@ -916,6 +917,29 @@ end
         @testset "indel" begin
             @test_throws Exception pairalign(HammingDistance(), "ACGT", "ACG")
             @test_throws Exception pairalign(HammingDistance(), "ACG", "ACGT")
+        end
+    end
+end
+
+@testset "Parsing" begin
+    @testset "BAM" begin
+        get_bio_fmt_specimens()
+
+        path = Pkg.dir("Bio", "test", "BioFmtSpecimens", "BAM")
+        for specimen in YAML.load_file(joinpath(path, "index.yml"))
+            valid = get(specimen, "valid", true)
+            filepath = joinpath(path, specimen["filename"])
+            try
+                parser = open(filepath, BAM)
+                aln = BAMAlignment()
+                while !eof(parser)
+                    read!(parser, aln)
+                end
+                # TODO: check data
+                @test true
+            catch
+                @test false
+            end
         end
     end
 end
