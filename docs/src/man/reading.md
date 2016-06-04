@@ -57,3 +57,25 @@ making it easy to allocate an empty entry for any parser stream.
 entry = eltype(stream)()
 ```
 
+
+## Writing data
+
+Writing data into a stream has a uniform interface consistent with parsers. The
+following code is a template of formatted serialization into a file:
+```julia
+# open a file of a particular file format in writing mode
+out = open(<filepath>, "w", <format>)
+# write a record into it
+write(out, <record>)
+# finally close it
+close(out)
+```
+
+For example, a FASTA file will be created as follows:
+```julia
+out = open("out.fasta", "w", FASTA)
+write(out, FASTASeqRecord("seq1", dna"ACGTN"))
+write(out, FASTASeqRecord("seq2", dna"TTATATTATTGTAAA", "AT rich"))
+# and more records
+close(out)
+```
