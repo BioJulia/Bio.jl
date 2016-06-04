@@ -12,9 +12,7 @@ export tryread!
 
 using BufferedStreams
 using Compat
-using Bio:
-    FileFormat,
-    AbstractParser
+import Bio.IO: FileFormat, AbstractParser
 
 # A type keeping track of a ragel-based parser's state.
 type State{T<:BufferedInputStream}

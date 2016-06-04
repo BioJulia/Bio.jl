@@ -19,8 +19,6 @@ using Bio.Tokenize
 
 using Bio.Indexers
 
-import Bio.FileFormat
-
 export
 
     # Types
