@@ -25,6 +25,19 @@ function Base.copy(metadata::FASTAMetadata)
     return FASTAMetadata(copy(metadata.description))
 end
 
+"""
+    FASTASeqRecord(name, seq[, description=""])
+
+Create a sequence record for the FASTA file format.
+"""
+typealias FASTASeqRecord{S} SeqRecord{S,FASTAMetadata}
+
+@compat function (::Type{FASTASeqRecord})(name::AbstractString,
+                                          seq::Sequence,
+                                          description::AbstractString="")
+    return SeqRecord(name, seq, FASTAMetadata(description))
+end
+
 function Base.open(filepath::AbstractString, mode::AbstractString, ::Type{FASTA};
                    width::Integer=60)
     io = open(filepath, mode)
@@ -56,7 +69,7 @@ type FASTAParser{S<:Sequence} <: AbstractParser
     end
 end
 
-Base.eltype{S}(::Type{FASTAParser{S}}) = SeqRecord{S,FASTAMetadata}
+Base.eltype{S}(::Type{FASTAParser{S}}) = FASTASeqRecord{S}
 Base.eof(parser::FASTAParser) = eof(parser.state.stream)
 
 include("fasta-parser.jl")
@@ -79,15 +92,16 @@ function Base.flush(writer::FASTAWriter)
         flush(writer.output)
     end
 end
+
 Base.close(writer::FASTAWriter) = close(writer.output)
 
-function Base.write(writer::FASTAWriter, seqrec::SeqRecord)
+function Base.write(writer::FASTAWriter, seqrec::FASTASeqRecord)
     output = writer.output
     n = 0
 
     # header
     n += write(output, '>', seqrec.name)
-    if isa(seqrec.metadata, FASTAMetadata) && !isempty(seqrec.metadata.description)
+    if !isempty(seqrec.metadata.description)
         n += write(output, ' ', seqrec.metadata.description)
     end
     n += write(output, '\n')
@@ -107,7 +121,7 @@ function Base.write(writer::FASTAWriter, seqrec::SeqRecord)
     return n
 end
 
-function Base.show{S}(io::IO, seqrec::SeqRecord{S,FASTAMetadata})
+function Base.show(io::IO, seqrec::FASTASeqRecord)
     print(io, ">", seqrec.name)
     if !isempty(seqrec.metadata.description)
         print(io, " ", seqrec.metadata.description)

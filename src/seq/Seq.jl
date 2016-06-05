@@ -114,7 +114,6 @@ export
     AA_Term,
     AA_Gap,
     FASTA,
-    FASTAMetadata,
     FASTASeqRecord,
     FASTQ,
     Alphabet,
@@ -128,8 +127,7 @@ export
     approxsearchindex,
     approxrsearch,
     approxrsearchindex,
-    ReferenceSequence,
-    SeqRecord
+    ReferenceSequence
 
 using
     BufferedStreams,
@@ -195,4 +193,4 @@ include("search/approx.jl")
 
 include("deprecated.jl")
 
-end # module Seq
+end  # module Bio.Seq

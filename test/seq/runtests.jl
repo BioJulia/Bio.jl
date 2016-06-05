@@ -2138,7 +2138,18 @@ end
 
 @testset "Parsing" begin
     @testset "FASTA" begin
-        get_bio_fmt_specimens()
+        output = IOBuffer()
+        writer = Seq.FASTAWriter(output, 5)
+        write(writer, FASTASeqRecord("seq1", dna"TTA"))
+        write(writer, FASTASeqRecord("seq2", dna"ACGTNN", "some description"))
+        flush(writer)
+        @test takebuf_string(output) == """
+        >seq1
+        TTA
+        >seq2 some description
+        ACGTN
+        N
+        """
 
         function check_fasta_parse(filename)
             # Reading from a stream
@@ -2174,6 +2185,7 @@ end
             return expected_entries == read_entries
         end
 
+        get_bio_fmt_specimens()
         path = Pkg.dir("Bio", "test", "BioFmtSpecimens", "FASTA")
         for specimen in YAML.load_file(joinpath(path, "index.yml"))
             tags = specimen["tags"]
