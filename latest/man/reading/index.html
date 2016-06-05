@@ -201,6 +201,9 @@
             <li class="second-level"><a href="#in-place-parsing">In-place parsing</a></li>
             
         
+            <li class="second-level"><a href="#writing-data">Writing data</a></li>
+            
+        
     
     </ul>
 </div></div>
@@ -241,6 +244,27 @@
 <p>Some care is necessary when using this interface. Because <code>entry</code> is completely overwritten on each iteration, one must manually copy any field from <code>entry</code> that should be preserved. For example, if we wish to save the <code>seqname</code> field from <code>entry</code> when parsing BED, we must call <code>copy(entry.seqname)</code>.</p>
 <p>Empty entry types that correspond to the file format be found using <code>eltype</code>, making it easy to allocate an empty entry for any parser stream.</p>
 <div class="codehilite"><pre><span></span><span class="n">entry</span> <span class="o">=</span> <span class="n">eltype</span><span class="p">(</span><span class="n">stream</span><span class="p">)()</span>
+</pre></div>
+
+
+<p><a id='Writing-data-1'></a></p>
+<h2 id="writing-data">Writing data</h2>
+<p>Writing data into a stream has a uniform interface consistent with parsers. The following code is a template of formatted serialization into a file:</p>
+<div class="codehilite"><pre><span></span><span class="c"># open a file of a particular file format in writing mode</span>
+<span class="n">out</span> <span class="o">=</span> <span class="n">open</span><span class="p">(</span><span class="o">&lt;</span><span class="n">filepath</span><span class="o">&gt;</span><span class="p">,</span> <span class="s">&quot;w&quot;</span><span class="p">,</span> <span class="o">&lt;</span><span class="n">format</span><span class="o">&gt;</span><span class="p">)</span>
+<span class="c"># write a record into it</span>
+<span class="n">write</span><span class="p">(</span><span class="n">out</span><span class="p">,</span> <span class="o">&lt;</span><span class="n">record</span><span class="o">&gt;</span><span class="p">)</span>
+<span class="c"># finally close it</span>
+<span class="n">close</span><span class="p">(</span><span class="n">out</span><span class="p">)</span>
+</pre></div>
+
+
+<p>For example, a FASTA file will be created as follows:</p>
+<div class="codehilite"><pre><span></span><span class="n">out</span> <span class="o">=</span> <span class="n">open</span><span class="p">(</span><span class="s">&quot;out.fasta&quot;</span><span class="p">,</span> <span class="s">&quot;w&quot;</span><span class="p">,</span> <span class="n">FASTA</span><span class="p">)</span>
+<span class="n">write</span><span class="p">(</span><span class="n">out</span><span class="p">,</span> <span class="n">FASTASeqRecord</span><span class="p">(</span><span class="s">&quot;seq1&quot;</span><span class="p">,</span> <span class="n">dna</span><span class="s">&quot;ACGTN&quot;</span><span class="p">))</span>
+<span class="n">write</span><span class="p">(</span><span class="n">out</span><span class="p">,</span> <span class="n">FASTASeqRecord</span><span class="p">(</span><span class="s">&quot;seq2&quot;</span><span class="p">,</span> <span class="n">dna</span><span class="s">&quot;TTATATTATTGTAAA&quot;</span><span class="p">,</span> <span class="s">&quot;AT rich&quot;</span><span class="p">))</span>
+<span class="c"># and more records</span>
+<span class="n">close</span><span class="p">(</span><span class="n">out</span><span class="p">)</span>
 </pre></div></div>
         
     </div>
