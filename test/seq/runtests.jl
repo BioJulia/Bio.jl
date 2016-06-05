@@ -2235,7 +2235,22 @@ end
     end
 
     @testset "FASTQ" begin
-        get_bio_fmt_specimens()
+        output = IOBuffer()
+        # no headers before quality lines and the ASCII offset is 33
+        writer = Seq.FASTQWriter(output, false, 33)
+        write(writer, FASTQSeqRecord("1", dna"AN", Int8[11, 25]))
+        write(writer, FASTQSeqRecord("2", dna"TGA", Int8[40, 41, 45], "high quality"))
+        flush(writer)
+        @test takebuf_string(output) == """
+        @1
+        AN
+        +
+        ,:
+        @2 high quality
+        TGA
+        +
+        IJN
+        """
 
         function check_fastq_parse(filename)
             # Reading from a stream
@@ -2271,6 +2286,7 @@ end
             return expected_entries == read_entries
         end
 
+        get_bio_fmt_specimens()
         path = Pkg.dir("Bio", "test", "BioFmtSpecimens", "FASTQ")
         for specimen in YAML.load_file(joinpath(path, "index.yml"))
             tags = get(specimen, "tags", "")

@@ -31,6 +31,23 @@ function Base.copy(metadata::FASTQMetadata)
     return FASTQMetadata(copy(metadata.description), copy(metadata.quality))
 end
 
+"""
+    FASTQSeqRecord(name, seq, quality[, description=""])
+
+Create a sequence record for the FASTQ file format.
+"""
+typealias FASTQSeqRecord{S} SeqRecord{S,FASTQMetadata}
+
+@compat function (::Type{FASTQSeqRecord})(name::AbstractString,
+                                          seq::Sequence,
+                                          quality::Vector{Int8},
+                                          description::AbstractString="")
+    if length(seq) != length(quality)
+        throw(ArgumentError("sequence and base quality must be the same length"))
+    end
+    return SeqRecord(name, seq, FASTQMetadata(description, quality))
+end
+
 function Base.open(
         filepath::AbstractString,
         mode::AbstractString,
@@ -79,17 +96,10 @@ type FASTQParser{S<:Sequence} <: AbstractParser
     end
 end
 
-Base.eltype{S}(::Type{FASTQParser{S}}) = SeqRecord{S,FASTQMetadata}
+Base.eltype{S}(::Type{FASTQParser{S}}) = FASTQSeqRecord{S}
 Base.eof(parser::FASTQParser) = eof(parser.state.stream)
 
 include("fastq-parser.jl")
-
-"A `SeqRecord` for FASTQ sequences"
-typealias FASTQSeqRecord DNASeqRecord{FASTQMetadata}
-
-function FASTQSeqRecord()
-    return FASTQSeqRecord(StringField(), DNASequence(), FASTQMetadata())
-end
 
 
 # Writer

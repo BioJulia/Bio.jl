@@ -116,6 +116,7 @@ export
     FASTA,
     FASTASeqRecord,
     FASTQ,
+    FASTQSeqRecord,
     Alphabet,
     DNAAlphabet,
     RNAAlphabet,
