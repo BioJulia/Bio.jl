@@ -88,7 +88,7 @@ end
 @inline function Base.next(it::EachWindowIterator, state::Integer)
     i = state
     window = sub(it.data, i:i + it.width - 1)
-    return window, i + it.step
+    return (i, window), i + it.step
 end
 
 # Extra next method to account for fact than strings don't have sub method
@@ -98,7 +98,7 @@ end
 @inline function Base.next{T <: AbstractString}(it::EachWindowIterator{T}, state::Integer)
     i = state
     window = it.data[i:i + it.width - 1]
-    return window, i + it.step
+    return (i, window), i + it.step
 end
 
 @inline function Base.done(it::EachWindowIterator, state::Integer)
