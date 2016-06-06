@@ -104,19 +104,19 @@ end
                 @test missed(ribitr) == expectedMissed
                 @test missed(aasitr) == expectedMissed
                 for win in arrres
-                    @test length(win) == winwidth
+                    @test length(win[2]) == winwidth
                 end
                 for win in strres
-                    @test length(win) == winwidth
+                    @test length(win[2]) == winwidth
                 end
                 for win in nucres
-                    @test length(win) == winwidth
+                    @test length(win[2]) == winwidth
                 end
                 for win in ribres
-                    @test length(win) == winwidth
+                    @test length(win[2]) == winwidth
                 end
                 for win in aasres
-                    @test length(win) == winwidth
+                    @test length(win[2]) == winwidth
                 end
             end
         end
@@ -128,8 +128,8 @@ end
                     nucitr = eachwindow(nuc, width, step)
                     i, j = 1, width
                     for win in nucitr
-                        @test win == sub(nuc, i:j)
-                        @test win == nuc[i:j]
+                        @test win[2] == sub(nuc, i:j)
+                        @test win[2] == nuc[i:j]
                         i += step
                         j += step
                     end
@@ -142,8 +142,8 @@ end
                     ribitr = eachwindow(rib, width, step)
                     i, j = 1, width
                     for win in ribitr
-                        @test win == sub(rib, i:j)
-                        @test win == rib[i:j]
+                        @test win[2] == sub(rib, i:j)
+                        @test win[2] == rib[i:j]
                         i += step
                         j += step
                     end
@@ -156,8 +156,8 @@ end
                     aasitr = eachwindow(aas, width, step)
                     i, j = 1, width
                     for win in aasitr
-                        @test win == sub(aas, i:j)
-                        @test win == aas[i:j]
+                        @test win[2] == sub(aas, i:j)
+                        @test win[2] == aas[i:j]
                         i += step
                         j += step
                     end
@@ -170,7 +170,7 @@ end
                     arritr = eachwindow(arr, width, step)
                     i, j = 1, width
                     for win in arritr
-                        @test win == sub(arr, i:j)
+                        @test win[2] == sub(arr, i:j)
                         i += step
                         j += step
                     end
@@ -183,7 +183,7 @@ end
                     stritr = eachwindow(str, width, step)
                     i, j = 1, width
                     for win in stritr
-                        @test win == str[i:j]
+                        @test win[2] == str[i:j]
                         i += step
                         j += step
                     end
