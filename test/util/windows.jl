@@ -128,6 +128,7 @@ end
                     nucitr = eachwindow(nuc, width, step)
                     i, j = 1, width
                     for win in nucitr
+                        @test win[1] == i
                         @test win[2] == sub(nuc, i:j)
                         @test win[2] == nuc[i:j]
                         i += step
@@ -142,6 +143,7 @@ end
                     ribitr = eachwindow(rib, width, step)
                     i, j = 1, width
                     for win in ribitr
+                        @test win[1] == i
                         @test win[2] == sub(rib, i:j)
                         @test win[2] == rib[i:j]
                         i += step
@@ -156,6 +158,7 @@ end
                     aasitr = eachwindow(aas, width, step)
                     i, j = 1, width
                     for win in aasitr
+                        @test win[1] == i
                         @test win[2] == sub(aas, i:j)
                         @test win[2] == aas[i:j]
                         i += step
@@ -170,6 +173,7 @@ end
                     arritr = eachwindow(arr, width, step)
                     i, j = 1, width
                     for win in arritr
+                        @test win[1] == i
                         @test win[2] == sub(arr, i:j)
                         i += step
                         j += step
@@ -183,6 +187,7 @@ end
                     stritr = eachwindow(str, width, step)
                     i, j = 1, width
                     for win in stritr
+                        @test win[1] == i
                         @test win[2] == str[i:j]
                         i += step
                         j += step
