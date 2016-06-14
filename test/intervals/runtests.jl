@@ -131,6 +131,18 @@ end
         @test_throws Exception Strand('x')
     end
 
+    @testset "Conversion" begin
+        @test convert(Strand, '?') === STRAND_NA
+        @test convert(Strand, '+') === STRAND_POS
+        @test convert(Strand, '-') === STRAND_NEG
+        @test convert(Strand, '.') === STRAND_BOTH
+
+        @test convert(Char, STRAND_NA) === '?'
+        @test convert(Char, STRAND_POS) === '+'
+        @test convert(Char, STRAND_NEG) === '-'
+        @test convert(Char, STRAND_BOTH) === '.'
+    end
+
     @testset "Order" begin
         @test STRAND_NA < STRAND_POS < STRAND_NEG < STRAND_BOTH
     end

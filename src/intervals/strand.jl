@@ -39,6 +39,20 @@ function Base.convert(::Type{Strand}, strand::Char)
     end
 end
 
+function Base.convert(::Type{Char}, strand::Strand)
+    if strand == STRAND_NA
+        return '?'
+    elseif strand == STRAND_POS
+        return '+'
+    elseif strand == STRAND_NEG
+        return '-'
+    elseif strand == STRAND_BOTH
+        return '.'
+    else
+        error("'$(strand)' is not a valid strand")
+    end
+end
+
 function Base.show(io::IO, strand::Strand)
     if strand == STRAND_NA
         print(io, "STRAND_NA")
