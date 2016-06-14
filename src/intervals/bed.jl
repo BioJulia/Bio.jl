@@ -73,6 +73,17 @@ end
 "An `Interval` with associated metadata from a BED file"
 typealias BEDInterval Interval{BEDMetadata}
 
+function Base.open(filepath::AbstractString, mode::AbstractString, ::Type{BED};
+                   n_fields::Integer=-1)
+    io = open(filepath, mode)
+    if mode[1] == 'r'
+        return open(BufferedInputStream(io), BED)
+    elseif mode[1] ∈ ('w', 'o')
+        return BEDWriter(io, n_fields)
+    end
+    error("invalid open mode")
+end
+
 
 # Parser
 # ------
@@ -115,13 +126,101 @@ end
 
 include("bed-parser.jl")
 
-# TODO
-#function show(io::IO, metadata::BEDMetadata)
-#end
+# Writer
+# ------
 
-"""
-Write a BEDInterval in BED format.
-"""
+type BEDWriter{T<:IO} <: AbstractWriter
+    output::T
+
+    # number of written additional fields (-1: inferred from the first interval)
+    n_fields::Int
+end
+
+function Base.flush(writer::BEDWriter)
+    # TODO: This can be removed on Julia v0.5
+    # (because flush will be defined for IOBuffer).
+    if applicable(flush, writer.output)
+        flush(writer.output)
+    end
+end
+
+Base.close(writer::BEDWriter) = close(writer.output)
+
+function Base.write(writer::BEDWriter, interval::BEDInterval)
+    if writer.n_fields == -1
+        writer.n_fields = interval.metadata.used_fields
+    end
+
+    if interval.metadata.used_fields < writer.n_fields
+        error("interval doesn't have enough additional fields")
+    end
+
+    output = writer.output
+    n_fields = writer.n_fields
+    n = 0
+    n += write(
+        output,
+        interval.seqname, '\t',
+        dec(interval.first - 1), '\t',
+        dec(interval.last))
+
+    if n_fields ≥ 1
+        n += write(output, '\t', interval.metadata.name)
+    end
+
+    if n_fields ≥ 2
+        n += write(output, '\t', dec(interval.metadata.score))
+    end
+
+    if n_fields ≥ 3
+        n += write(output, '\t', Char(interval.strand))
+    end
+
+    if n_fields ≥ 4
+        n += write(output, '\t', dec(interval.metadata.thick_first - 1))
+    end
+
+    if n_fields ≥ 5
+        n += write(output, '\t', dec(interval.metadata.thick_last))
+    end
+
+    if n_fields ≥ 6
+        rgb = interval.metadata.item_rgb
+        n += write(
+            output, '\t',
+            dec(round(Int, 255 * rgb.r)), ',',
+            dec(round(Int, 255 * rgb.g)), ',',
+            dec(round(Int, 255 * rgb.b)))
+    end
+
+    if n_fields ≥ 7
+        n += write(output, '\t', dec(interval.metadata.block_count))
+    end
+
+    if n_fields ≥ 8
+        block_sizes = interval.metadata.block_sizes
+        if !isempty(block_sizes)
+            n += write(output, '\t', dec(block_sizes[1]))
+            for i in 2:length(block_sizes)
+                n += write(output, ',', dec(block_sizes[i]))
+            end
+        end
+    end
+
+    if n_fields ≥ 9
+        block_firsts = interval.metadata.block_firsts
+        if !isempty(block_firsts)
+            n += write(output, '\t', dec(block_firsts[1] - 1))
+            for i in 2:length(block_firsts)
+                n += write(output, ',', dec(block_firsts[i] - 1))
+            end
+        end
+    end
+
+    n += write(output, '\n')
+    return n
+end
+
 function Base.write(out::IO, interval::BEDInterval)
     print(out, interval.seqname, '\t', interval.first - 1, '\t', interval.last)
     write_optional_fields(out, interval)
