@@ -421,11 +421,13 @@ end
 
             # Check round trip
             output = IOBuffer()
+            writer = Intervals.BEDWriter(output, -1)
             expected_entries = Any[]
             for interval in open(filename, BED)
-                write(output, interval)
+                write(writer, interval)
                 push!(expected_entries, interval)
             end
+            flush(writer)
 
             read_entries = Any[]
             for interval in open(takebuf_array(output), BED)

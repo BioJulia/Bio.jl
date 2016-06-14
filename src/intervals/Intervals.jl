@@ -39,7 +39,10 @@ using
     Bio.Ragel,
     Bio.StringFields
 
-import Bio.IO: FileFormat, AbstractParser
+import Bio.IO:
+    FileFormat,
+    AbstractParser,
+    AbstractWriter
 
 using Base.Collections:
     heappush!,
