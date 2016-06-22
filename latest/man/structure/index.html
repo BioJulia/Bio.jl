@@ -242,45 +242,45 @@
 <thead>
 <tr>
 <th align="left">Command</th>
-<th>Returns</th>
+<th align="left">Returns</th>
 </tr>
 </thead>
 <tbody>
 <tr>
 <td align="left"><code>struc[1]</code></td>
-<td>Model 1</td>
+<td align="left">Model 1</td>
 </tr>
 <tr>
 <td align="left"><code>struc[1]['A']</code></td>
-<td>Model 1, chain A</td>
+<td align="left">Model 1, chain A</td>
 </tr>
 <tr>
 <td align="left"><code>struc['A']</code></td>
-<td>The lowest model (model 1), chain A</td>
+<td align="left">The lowest model (model 1), chain A</td>
 </tr>
 <tr>
 <td align="left"><code>struc['A']["50"]</code></td>
-<td>Model 1, chain A, residue 50</td>
+<td align="left">Model 1, chain A, residue 50</td>
 </tr>
 <tr>
 <td align="left"><code>struc['A'][50]</code></td>
-<td>Shortcut to above if it is not a hetero residue and the insertion code is blank</td>
+<td align="left">Shortcut to above if it is not a hetero residue and the insertion code is blank</td>
 </tr>
 <tr>
 <td align="left"><code>struc['A']["H_90"]</code></td>
-<td>Model 1, chain A, hetero residue 90</td>
+<td align="left">Model 1, chain A, hetero residue 90</td>
 </tr>
 <tr>
 <td align="left"><code>struc['A'][50]["CA"]</code></td>
-<td>Model 1, chain A, residue 50, atom name CA</td>
+<td align="left">Model 1, chain A, residue 50, atom name CA</td>
 </tr>
 <tr>
 <td align="left"><code>struc['A'][15]["CG"]['A']</code></td>
-<td>For disordered atoms, access a specific location</td>
+<td align="left">For disordered atoms, access a specific location</td>
 </tr>
 <tr>
 <td align="left"><code>struc['A'][15]["CG"]</code></td>
-<td>For disordered atoms, access the default location</td>
+<td align="left">For disordered atoms, access the default location</td>
 </tr>
 </tbody>
 </table>
@@ -292,141 +292,141 @@
 <thead>
 <tr>
 <th align="left">Command</th>
-<th>Returns</th>
+<th align="left">Returns</th>
 </tr>
 </thead>
 <tbody>
 <tr>
 <td align="left"><code>structurename(struc)</code></td>
-<td>Name of a structure</td>
+<td align="left">Name of a structure</td>
 </tr>
 <tr>
 <td align="left"><code>modelnumbers(struc)</code></td>
-<td>Model numbers in a structure</td>
+<td align="left">Model numbers in a structure</td>
 </tr>
 <tr>
 <td align="left"><code>chainids(struc)</code></td>
-<td>Chain IDs in a structure</td>
+<td align="left">Chain IDs in a structure</td>
 </tr>
 <tr>
 <td align="left"><code>modelnumber(model)</code></td>
-<td>Number of a model</td>
+<td align="left">Number of a model</td>
 </tr>
 <tr>
 <td align="left"><code>chainids(model)</code></td>
-<td>Chain IDs in a model</td>
+<td align="left">Chain IDs in a model</td>
 </tr>
 <tr>
 <td align="left"><code>chainid(chain)</code></td>
-<td>Chain ID of a chain</td>
+<td align="left">Chain ID of a chain</td>
 </tr>
 <tr>
 <td align="left"><code>resids(chain)</code></td>
-<td>Residue IDs in a chain</td>
+<td align="left">Residue IDs in a chain</td>
 </tr>
 <tr>
 <td align="left"><code>resname(res)</code></td>
-<td>Name of a residue</td>
+<td align="left">Name of a residue</td>
 </tr>
 <tr>
 <td align="left"><code>chainid(res)</code></td>
-<td>Chain ID of a residue</td>
+<td align="left">Chain ID of a residue</td>
 </tr>
 <tr>
 <td align="left"><code>resnumber(res)</code></td>
-<td>Residue number of a residue</td>
+<td align="left">Residue number of a residue</td>
 </tr>
 <tr>
 <td align="left"><code>inscode(res)</code></td>
-<td>Insertion code of a residue</td>
+<td align="left">Insertion code of a residue</td>
 </tr>
 <tr>
 <td align="left"><code>ishetres(res)</code></td>
-<td><code>true</code> if the residue consists of hetero atoms</td>
+<td align="left"><code>true</code> if the residue consists of hetero atoms</td>
 </tr>
 <tr>
 <td align="left"><code>atomnames(res)</code></td>
-<td>Atom names in a residue</td>
+<td align="left">Atom names in a residue</td>
 </tr>
 <tr>
 <td align="left"><code>isdisorderedres(res)</code></td>
-<td><code>true</code> if the residue has multiple residue names</td>
+<td align="left"><code>true</code> if the residue has multiple residue names</td>
 </tr>
 <tr>
 <td align="left"><code>resid(res)</code></td>
-<td>Residue ID of a residue</td>
+<td align="left">Residue ID of a residue</td>
 </tr>
 <tr>
 <td align="left"><code>ishetatom(atom)</code></td>
-<td><code>true</code> if the atom is a hetero atom</td>
+<td align="left"><code>true</code> if the atom is a hetero atom</td>
 </tr>
 <tr>
 <td align="left"><code>serial(atom)</code></td>
-<td>Serial number of an atom</td>
+<td align="left">Serial number of an atom</td>
 </tr>
 <tr>
 <td align="left"><code>atomname(atom)</code></td>
-<td>Name of an atom</td>
+<td align="left">Name of an atom</td>
 </tr>
 <tr>
 <td align="left"><code>altlocid(atom)</code></td>
-<td>Alternative location ID of an atom</td>
+<td align="left">Alternative location ID of an atom</td>
 </tr>
 <tr>
 <td align="left"><code>resname(atom)</code></td>
-<td>Residue name of an atom</td>
+<td align="left">Residue name of an atom</td>
 </tr>
 <tr>
 <td align="left"><code>chainid(atom)</code></td>
-<td>Chain ID of an atom</td>
+<td align="left">Chain ID of an atom</td>
 </tr>
 <tr>
 <td align="left"><code>resnumber(atom)</code></td>
-<td>Residue number of an atom</td>
+<td align="left">Residue number of an atom</td>
 </tr>
 <tr>
 <td align="left"><code>inscode(atom)</code></td>
-<td>Insertion code of an atom</td>
+<td align="left">Insertion code of an atom</td>
 </tr>
 <tr>
 <td align="left"><code>x(atom)</code></td>
-<td>x coordinate of an atom</td>
+<td align="left">x coordinate of an atom</td>
 </tr>
 <tr>
 <td align="left"><code>y(atom)</code></td>
-<td>y coordinate of an atom</td>
+<td align="left">y coordinate of an atom</td>
 </tr>
 <tr>
 <td align="left"><code>z(atom)</code></td>
-<td>z coordinate of an atom</td>
+<td align="left">z coordinate of an atom</td>
 </tr>
 <tr>
 <td align="left"><code>coords(atom)</code></td>
-<td>coordinates of an atom as a <code>Vector{Float64}</code></td>
+<td align="left">coordinates of an atom as a <code>Vector{Float64}</code></td>
 </tr>
 <tr>
 <td align="left"><code>occupancy(atom)</code></td>
-<td>Occupancy of an atom (default is <code>1.0</code>)</td>
+<td align="left">Occupancy of an atom (default is <code>1.0</code>)</td>
 </tr>
 <tr>
 <td align="left"><code>tempfac(atom)</code></td>
-<td>Temperature factor of an atom (default is <code>0.0</code>)</td>
+<td align="left">Temperature factor of an atom (default is <code>0.0</code>)</td>
 </tr>
 <tr>
 <td align="left"><code>element(atom)</code></td>
-<td>Element of an atom (default is <code>""</code>)</td>
+<td align="left">Element of an atom (default is <code>""</code>)</td>
 </tr>
 <tr>
 <td align="left"><code>charge(atom)</code></td>
-<td>Charge of an atom (default is <code>""</code>)</td>
+<td align="left">Charge of an atom (default is <code>""</code>)</td>
 </tr>
 <tr>
 <td align="left"><code>isdisorderedatom(atom)</code></td>
-<td><code>true</code> if the atom is disordered</td>
+<td align="left"><code>true</code> if the atom is disordered</td>
 </tr>
 <tr>
 <td align="left"><code>resid(atom)</code></td>
-<td>Residue ID of an atom</td>
+<td align="left">Residue ID of an atom</td>
 </tr>
 </tbody>
 </table>
@@ -452,29 +452,29 @@
 <thead>
 <tr>
 <th align="left">Command</th>
-<th>Action</th>
+<th align="left">Action</th>
 </tr>
 </thead>
 <tbody>
 <tr>
 <td align="left"><code>collect(struc['A'][50])</code></td>
-<td>Collect the sub-elements of an element, e.g. atoms from a residue</td>
+<td align="left">Collect the sub-elements of an element, e.g. atoms from a residue</td>
 </tr>
 <tr>
 <td align="left"><code>collectresidues(struc)</code></td>
-<td>Collect the residues of an element</td>
+<td align="left">Collect the residues of an element</td>
 </tr>
 <tr>
 <td align="left"><code>collectatoms(struc)</code></td>
-<td>Collect the atoms of an element</td>
+<td align="left">Collect the atoms of an element</td>
 </tr>
 <tr>
 <td align="left"><code>collectatoms(struc, calphaselector)</code></td>
-<td>Collect the C-alpha atoms of an element</td>
+<td align="left">Collect the C-alpha atoms of an element</td>
 </tr>
 <tr>
 <td align="left"><code>collectatoms(struc, calphaselector, disorderselector)</code></td>
-<td>Collect the disordered C-alpha atoms of an element</td>
+<td align="left">Collect the disordered C-alpha atoms of an element</td>
 </tr>
 </tbody>
 </table>
@@ -501,33 +501,33 @@
 <thead>
 <tr>
 <th align="left">Command</th>
-<th>Action</th>
+<th align="left">Action</th>
 </tr>
 </thead>
 <tbody>
 <tr>
 <td align="left"><code>organise(collectatoms(struc))</code></td>
-<td>Organise an atom list into a residue list</td>
+<td align="left">Organise an atom list into a residue list</td>
 </tr>
 <tr>
 <td align="left"><code>organise(collectresidues(struc))</code></td>
-<td>Organise a residue list into a chain list</td>
+<td align="left">Organise a residue list into a chain list</td>
 </tr>
 <tr>
 <td align="left"><code>organise(struc['A'])</code></td>
-<td>Organise chain(s) into a model</td>
+<td align="left">Organise chain(s) into a model</td>
 </tr>
 <tr>
 <td align="left"><code>organise(struc[1])</code></td>
-<td>Organise model(s) into a structure</td>
+<td align="left">Organise model(s) into a structure</td>
 </tr>
 <tr>
 <td align="left"><code>organisemodel(collectatoms(struc))</code></td>
-<td>Organise elements into a model</td>
+<td align="left">Organise elements into a model</td>
 </tr>
 <tr>
 <td align="left"><code>organisestructure(collectatoms(struc))</code></td>
-<td>Organise elements into a structure</td>
+<td align="left">Organise elements into a structure</td>
 </tr>
 </tbody>
 </table>
