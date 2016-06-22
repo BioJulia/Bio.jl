@@ -1,0 +1,371 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0"> 
+    <meta name="author" content="The BioJulia Organisation"> 
+    <link rel="canonical" href="https://biojulia.github.io/Bio.jl/man/intervals/"> 
+    <link rel="shortcut icon" href="../../img/favicon.ico">
+
+    <title>Intervals - Bio.jl</title>
+
+    <link href="../../css/bootstrap-custom.min.css" rel="stylesheet">
+    <link href="//maxcdn.bootstrapcdn.com/font-awesome/4.4.0/css/font-awesome.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="//cdn.jsdelivr.net/font-hack/2.018/css/hack.min.css">
+    <link href='//fonts.googleapis.com/css?family=PT+Sans:400,400italic,700,700italic&subset=latin-ext,latin' rel='stylesheet' type='text/css'>
+    <link href='//fonts.googleapis.com/css?family=Open+Sans:300italic,400italic,700italic,400,300,600,700&subset=latin-ext,latin' rel='stylesheet' type='text/css'>
+    <link href="../../css/base.css" rel="stylesheet">
+    <link href="../../css/cinder.css" rel="stylesheet">
+    <link rel="stylesheet" href="../../css/highlight.css">
+
+
+    <link href="../../assets/Documenter.css" rel="stylesheet">
+
+
+    <link href="../../assets/friendly.css" rel="stylesheet">
+
+
+    <link href="../../assets/custom.css" rel="stylesheet">
+
+    <!-- HTML5 shim and Respond.js IE8 support of HTML5 elements and media queries -->
+    <!--[if lt IE 9]>
+            <script src="https://oss.maxcdn.com/libs/html5shiv/3.7.0/html5shiv.js"></script>
+            <script src="https://oss.maxcdn.com/libs/respond.js/1.3.0/respond.min.js"></script>
+        <![endif]-->
+
+    <script src="https://ajax.googleapis.com/ajax/libs/webfont/1.5.18/webfont.js"></script>
+    <script>
+    WebFont.load({
+        google: {
+            families: ['Open Sans', 'PT Sans']
+        }
+    });
+    </script>
+
+    
+</head>
+
+<body>
+
+    <div class="navbar navbar-default navbar-fixed-top" role="navigation">
+    <div class="container">
+
+        <!-- Collapsed navigation -->
+        <div class="navbar-header">
+            
+            <!-- Expander button -->
+            <button type="button" class="navbar-toggle" data-toggle="collapse" data-target=".navbar-collapse">
+                <span class="sr-only">Toggle navigation</span>
+                <span class="icon-bar"></span>
+                <span class="icon-bar"></span>
+                <span class="icon-bar"></span>
+            </button>
+            
+
+            <!-- Main title -->
+            <a class="navbar-brand" href="../..">Bio.jl</a>
+        </div>
+
+        <!-- Expanded navigation -->
+        <div class="navbar-collapse collapse">
+            
+                <!-- Main navigation -->
+                <ul class="nav navbar-nav">
+                
+                
+                    <li >
+                        <a href="../..">Home</a>
+                    </li>
+                
+                
+                
+                    <li class="dropdown active">
+                        <a href="#" class="dropdown-toggle" data-toggle="dropdown">Manual <b class="caret"></b></a>
+                        <ul class="dropdown-menu">
+                        
+                            
+<li >
+    <a href="../install/">Installation</a>
+</li>
+
+                        
+                            
+<li >
+    <a href="../reading/">IO API</a>
+</li>
+
+                        
+                            
+<li >
+    <a href="../seq/">Biological Sequences</a>
+</li>
+
+                        
+                            
+<li >
+    <a href="../alignments/">Alignments</a>
+</li>
+
+                        
+                            
+<li class="active">
+    <a href="./">Intervals</a>
+</li>
+
+                        
+                            
+<li >
+    <a href="../structure/">Structure</a>
+</li>
+
+                        
+                            
+<li >
+    <a href="../tools/">Tools</a>
+</li>
+
+                        
+                        </ul>
+                    </li>
+                
+                
+                
+                    <li class="dropdown">
+                        <a href="#" class="dropdown-toggle" data-toggle="dropdown">Reference <b class="caret"></b></a>
+                        <ul class="dropdown-menu">
+                        
+                            
+<li >
+    <a href="../../lib/seq/">Seq</a>
+</li>
+
+                        
+                        </ul>
+                    </li>
+                
+                
+                
+                    <li >
+                        <a href="../contributing/">Contributing</a>
+                    </li>
+                
+                
+                </ul>
+            
+
+            <ul class="nav navbar-nav navbar-right">
+                <li>
+                    <a href="#" data-toggle="modal" data-target="#mkdocs_search_modal">
+                        <i class="fa fa-search"></i> Search
+                    </a>
+                </li>
+                
+                    <li >
+                        <a rel="next" href="../alignments/">
+                            <i class="fa fa-arrow-left"></i> Previous
+                        </a>
+                    </li>
+                    <li >
+                        <a rel="prev" href="../structure/">
+                            Next <i class="fa fa-arrow-right"></i>
+                        </a>
+                    </li>
+                
+                
+                    <li>
+                        <a href="https://github.com/BioJulia/Bio.jl">
+                            
+                                <i class="fa fa-github"></i>
+                            
+                            GitHub
+                        </a>
+                    </li>
+                
+            </ul>
+        </div>
+    </div>
+</div>
+
+    <div class="container">
+        
+        <div class="col-md-3"><div class="bs-sidebar hidden-print affix well" role="complementary">
+    <ul class="nav bs-sidenav">
+    
+        <li class="first-level active"><a href="#intervals-genomic-interval-manipulation">Intervals: Genomic Interval Manipulation</a></li>
+        
+            <li class="second-level"><a href="#interval-types">Interval types</a></li>
+            
+        
+            <li class="second-level"><a href="#collections-of-intervals">Collections of intervals</a></li>
+            
+        
+            <li class="second-level"><a href="#intersection">Intersection</a></li>
+            
+        
+            <li class="second-level"><a href="#interval-streams">Interval streams</a></li>
+            
+        
+    
+    </ul>
+</div></div>
+        <div class="col-md-9" role="main">
+
+<p><a id='Intervals:-Genomic-Interval-Manipulation-1'></a></p>
+<h1 id="intervals-genomic-interval-manipulation">Intervals: Genomic Interval Manipulation</h1>
+<p>The <code>Intervals</code> module consists of tools for working efficiently with genomic intervals.</p>
+<p><a id='Interval-types-1'></a></p>
+<h2 id="interval-types">Interval types</h2>
+<p>Intervals in Bio.jl are consistent with ranges in Julia: <em>1-based and end-inclusive</em>. When data is read from formats with different representations (i.e. 0-based and/or end-exclusive) they are always converted automatically. Similarly when writing data. You should not have to reason about off-by-one errors due to format differences while using functionality provided in Bio.jl.</p>
+<p>The <code>Interval</code> type is defined as</p>
+<div class="codehilite"><pre><span></span><span class="k">type</span><span class="nc"> Interval</span><span class="p">{</span><span class="n">T</span><span class="p">}</span> <span class="o">&lt;:</span> <span class="n">AbstractInterval</span><span class="p">{</span><span class="kt">Int64</span><span class="p">}</span>
+    <span class="n">seqname</span><span class="p">::</span><span class="n">ASCIIString</span>
+    <span class="n">first</span><span class="p">::</span><span class="kt">Int64</span>
+    <span class="n">last</span><span class="p">::</span><span class="kt">Int64</span>
+    <span class="n">strand</span><span class="p">::</span><span class="n">Strand</span>
+    <span class="n">metadata</span><span class="p">::</span><span class="n">T</span>
+<span class="k">end</span>
+</pre></div>
+
+
+<p>Similarly to the <code>ReqRecord</code> type in the <code>Seq</code> module, <code>Interval</code> is parameterized on metadata type, which lets it efficiently and precisely be specialized to represent intervals from a variety of formats.</p>
+<p>Strand is represented by the <code>Strand</code> type which can take four possible values:</p>
+<div class="codehilite"><pre><span></span><span class="n">STRAND_NA</span>   <span class="c"># strand is unknown or inapplicable</span>
+<span class="n">STRAND_POS</span>  <span class="c"># positive strand</span>
+<span class="n">STRAND_NEG</span>  <span class="c"># negative strand</span>
+<span class="n">STRAND_BOTH</span> <span class="c"># non-strand-specific feature</span>
+</pre></div>
+
+
+<p><a id='Collections-of-intervals-1'></a></p>
+<h2 id="collections-of-intervals">Collections of intervals</h2>
+<p>Collections of intervals are represented using the <code>IntervalCollection</code> type, which is a general purpose indexed container for intervals. It supports fast intersection operations as well as insertion, deletion, and sorted iteration.</p>
+<p>Interval collections can be initialized by inserting elements one by one using <code>push!</code>.</p>
+<div class="codehilite"><pre><span></span><span class="c"># The type parameter (Nothing here) indicates the interval metadata type.</span>
+<span class="n">incol</span> <span class="o">=</span> <span class="n">IntervalCollection</span><span class="p">{</span><span class="kt">Nothing</span><span class="p">}()</span>
+
+<span class="k">for</span> <span class="n">i</span> <span class="k">in</span> <span class="mi">1</span><span class="p">:</span><span class="mi">100</span><span class="p">:</span><span class="mi">10000</span>
+    <span class="n">push!</span><span class="p">(</span><span class="n">incol</span><span class="p">,</span> <span class="n">Interval</span><span class="p">(</span><span class="s">&quot;chr1&quot;</span><span class="p">,</span> <span class="n">i</span><span class="p">,</span> <span class="n">i</span> <span class="o">+</span> <span class="mi">99</span><span class="p">,</span> <span class="n">STRAND_POS</span><span class="p">,</span> <span class="n">nothing</span><span class="p">))</span>
+<span class="k">end</span>
+</pre></div>
+
+
+<p>Incrementally building an interval collection like this works, but <code>IntervalCollection</code> also has a bulk insertion constructor that is able to build the indexed data structure extremely efficiently from an array of intervals.</p>
+<div class="codehilite"><pre><span></span><span class="n">incol</span> <span class="o">=</span> <span class="n">IntervalCollection</span><span class="p">([</span><span class="n">Interval</span><span class="p">(</span><span class="s">&quot;chr1&quot;</span><span class="p">,</span> <span class="n">i</span><span class="p">,</span> <span class="n">i</span> <span class="o">+</span> <span class="mi">99</span><span class="p">,</span> <span class="n">STRAND_POS</span><span class="p">,</span> <span class="n">nothing</span><span class="p">)</span> <span class="k">for</span> <span class="n">i</span> <span class="k">in</span> <span class="mi">1</span><span class="p">:</span><span class="mi">100</span><span class="p">:</span><span class="mi">10000</span><span class="p">])</span>
+</pre></div>
+
+
+<p>Bulding <code>IntervalCollections</code> in one shot like this should be preferred when it's convenient or speed in an issue.</p>
+<p><a id='Intersection-1'></a></p>
+<h2 id="intersection">Intersection</h2>
+<p>There are number of <code>intersect</code> function in the Intervals module. They follow two patterns: interval versus collection queries which return an iterator over intervals in the collection that intersect the query, and collection versus collection queries which iterate over all pairs of intersecting intervals.</p>
+<p><a id='Base.intersect' href='#Base.intersect'>#</a>
+<strong><code>Base.intersect</code></strong> &mdash; <em>Function</em>.</p>
+<div class="codehilite"><pre><span></span>intersect(s1,s2...)
+∩(s1,s2)
+</pre></div>
+
+
+<p>Construct the intersection of two or more sets. Maintains order and multiplicity of the first argument for arrays and ranges.</p>
+<div class="codehilite"><pre><span></span>intersect(g, h)
+</pre></div>
+
+
+<p>Produces a graph with edges that are only in both graph <code>g</code> and graph <code>h</code>.</p>
+<p>Note that this function may produce a graph with 0-degree vertices.</p>
+<p>Intersect two <code>IntervalStreams</code> returning an iterator over all pairs of intersecting intervals.</p>
+<p>Iterate over pairs of intersections in an IntervalCollection versus an IntervalStream.</p>
+<p>Iterate over pairs of intersecting intervals in two IntervalCollections</p>
+<p>Return an iterator over all intervals in the collection that overlap the query interval.</p>
+<p><a id='Interval-streams-1'></a></p>
+<h2 id="interval-streams">Interval streams</h2>
+<p>Intervals need not necessarily stored in an indexed data structure for efficient intersection to be practical. Two collections of intervals need only be both sorted to compute all intersecting pairs. This is particularly useful in genomics where datasets are sometimes so large that loading them entirely into memory is not practical.</p>
+<p>The Intervals module is able to intersect any two iterators that yield intervals in sorted order, which we refer to as "interval streams". An <code>IntervalCollection</code> is also a interval stream, but so is a sorted array of intervals, and parsers over interval file formats. This allows for a very general notion of intersection.</p>
+<div class="codehilite"><pre><span></span><span class="k">for</span> <span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">)</span> <span class="k">in</span> <span class="n">intersect</span><span class="p">(</span><span class="n">open</span><span class="p">(</span><span class="s">&quot;x_features.bed&quot;</span><span class="p">,</span> <span class="n">BED</span><span class="p">),</span> <span class="n">open</span><span class="p">(</span><span class="s">&quot;y_features.bed&quot;</span><span class="p">,</span> <span class="n">BED</span><span class="p">))</span>
+    <span class="n">println</span><span class="p">(</span><span class="s">&quot;Intersection found between &quot;</span><span class="p">,</span> <span class="n">x</span><span class="p">,</span> <span class="s">&quot; and &quot;</span><span class="p">,</span> <span class="n">y</span><span class="p">)</span>
+<span class="k">end</span>
+</pre></div>
+
+
+<p>An exception will be thrown if an interval in encountered out of order while processing an interval stream. Ordering of intervals has one complication: there is not necessarily a standardized way to order sequence names. By default in Bio.jl intervals are sorted using a special <code>alphanum_isless</code> comparison function that compares numbers numerically if they exist in string, so that names like <code>chr1, chr2, chr10</code> end up in their natural order.</p>
+<p>The <code>intersect</code> function takes as an optional parameter an <code>isless</code> function to use to compare sequence names to account for arbitrary sequence name orderings.</p>
+<div class="codehilite"><pre><span></span><span class="c"># assume lexigraphic ordering for sequence names</span>
+<span class="k">for</span> <span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">)</span> <span class="k">in</span> <span class="n">intersect</span><span class="p">(</span><span class="n">xs</span><span class="p">,</span> <span class="n">ys</span><span class="p">,</span> <span class="n">isless</span><span class="p">)</span>
+    <span class="n">println</span><span class="p">(</span><span class="s">&quot;Intersection found between &quot;</span><span class="p">,</span> <span class="n">a</span><span class="p">,</span> <span class="s">&quot; and &quot;</span><span class="p">,</span> <span class="n">b</span><span class="p">)</span>
+<span class="k">end</span>
+</pre></div>
+
+
+<p>A special sort of intersection can also be performed on a <code>IntervalStreams</code> against itself to produce "coverage intervals".</p>
+<p><a id='Bio.Intervals.coverage' href='#Bio.Intervals.coverage'>#</a>
+<strong><code>Bio.Intervals.coverage</code></strong> &mdash; <em>Function</em>.</p>
+<p>Compute the coverage of a collection of intervals.</p>
+<p><strong>Arguments</strong></p>
+<ul>
+<li><code>intervals</code>: any IntervalStream</li>
+</ul>
+<p><strong>Returns</strong></p>
+<p>An IntervalCollection that contains run-length encoded coverage data.</p>
+<p>E.g. for intervals like</p>
+<p>```{execute="false"}
+    [------]     [------------]
+       [---------------]</p>
+<div class="codehilite"><pre><span></span>this function would return a new set of disjoint intervals with annotated coverage like:
+
+```{execute=&quot;false&quot;}
+    [1][-2-][-1-][--2--][--1--]
+</pre></div></div>
+        
+    </div>
+
+    <footer class="col-md-12 text-center">
+        <hr>
+        <p>
+        <small>Copyright (c) 2016 The BioJulia Organisation<br></small>
+        
+        <small>Documentation built with <a href="http://www.mkdocs.org/">MkDocs</a>.</p></small>
+    </footer>
+
+    <script src="../../js/jquery-1.10.2.min.js"></script>
+    <script src="../../js/bootstrap-3.0.3.min.js"></script>
+    <script src="../../js/highlight.pack.js"></script>
+    <script>hljs.initHighlightingOnLoad();</script>
+    <script>
+    var base_url = '../..';
+    </script>
+    <script data-main="../../mkdocs/js/search.js" src="../../mkdocs/js/require.js"></script>
+    <script src="../../js/base.js"></script>
+    <script src="https://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS_HTML"></script>
+    <script src="../../assets/mathjaxhelper.js"></script>
+
+    <div class="modal" id="mkdocs_search_modal" tabindex="-1" role="dialog" aria-labelledby="Search Modal" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <button type="button" class="close" data-dismiss="modal">
+                        <span aria-hidden="true">&times;</span>
+                        <span class="sr-only">Close</span>
+                    </button>
+                    <h4 class="modal-title" id="exampleModalLabel">Search</h4>
+                </div>
+                <div class="modal-body">
+                    <p>
+                        From here you can search these documents. Enter your search terms below.
+                    </p>
+                    <form role="form">
+                        <div class="form-group">
+                            <input type="text" class="form-control" placeholder="Search..." id="mkdocs-search-query">
+                        </div>
+                    </form>
+                    <div id="mkdocs-search-results"></div>
+                </div>
+                <div class="modal-footer">
+                </div>
+            </div>
+        </div>
+    </div>
+
+    </body>
+
+</html>

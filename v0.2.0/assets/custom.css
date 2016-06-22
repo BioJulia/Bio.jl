@@ -1,0 +1,10 @@
+/* Custom Style Sheet */
+
+h1, h2, h3 {
+    margin-top: 55px;
+    margin-bottom: 20px;
+}
+
+pre {
+    margin-top: 10px;
+}
