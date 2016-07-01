@@ -10,8 +10,5 @@ pre {
 }
 
 .gitter-chat-embed {
-    border-left: 0px;
-    border-top: 1px solid #333;
-    top: 55%;
-    left: 0%;
+    z-index: 2000;
 }
