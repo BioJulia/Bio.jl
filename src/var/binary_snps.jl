@@ -6,6 +6,29 @@ SNPs are stored in a binary format, and also that the SNPs are binary,
 in that they have two states, a reference state and an alternate state.
 =#
 
+
+# An alphabet for storing SNPs
+
+"""
+SNPs alphabet.
+"""
+immutable SNPAlphabet{n} <: Alphabet
+
+for n in (2, 4, 8)
+    @eval begin
+        bitsof(::Type{SNPAlphabet{$n}}) = $n
+        alphabet(::Type{SNPAlphabet{$n}}) = UInt8(0):UInt8($n)
+    end
+end
+
+Base.eltype{n}(::Type{SNPAlphabet{n}}) = UInt8
+
+
+
+
+
+typealias SNPSequence{n} BioSequence{SNPAlphabet{n}}
+
 type BinarySNPs
     snps::Vector{Vector{UInt8}}
     numberOfLoci::Int
