@@ -11,7 +11,7 @@ repo_url:  https://github.com/BioJulia/Bio.jl
 copyright: Copyright (c) 2016 The BioJulia Organisation
 
 # Documentation and theme
-theme: mkdocs-biojulia
+theme: biojulia
 docs_dir: 'build'
 
 # Options
