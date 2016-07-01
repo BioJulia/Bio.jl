@@ -1,6 +1,6 @@
 using Documenter, Bio
 
-custom_deps() = run(`pip install --user pygments mkdocs mkdocs-cinder`)
+custom_deps() = run(`pip install --user pygments mkdocs mkdocs-biojulia`)
 @osx? makedocs(doctest = false) : makedocs()
 deploydocs(
            repo = "github.com/BioJulia/Bio.jl.git",

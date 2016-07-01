@@ -11,7 +11,7 @@ repo_url:  https://github.com/BioJulia/Bio.jl
 copyright: Copyright (c) 2016 The BioJulia Organisation
 
 # Documentation and theme
-theme: cinder
+theme: mkdocs-biojulia
 docs_dir: 'build'
 
 # Options
@@ -22,14 +22,10 @@ extra:
 
 extra_css:
   - assets/Documenter.css
-  - assets/friendly.css
-  - assets/custom.css
 
 extra_javascript:
   - https://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS_HTML
   - assets/mathjaxhelper.js
-  - assets/sidecar.js
-  - https://sidecar.gitter.im/dist/sidecar.v1.js
 
 # Extensions
 markdown_extensions:
