@@ -19,11 +19,12 @@
     <link href='//fonts.googleapis.com/css?family=PT+Sans:400,400italic,700,700italic&subset=latin-ext,latin' rel='stylesheet' type='text/css'>
     <link href='//fonts.googleapis.com/css?family=Open+Sans:300italic,400italic,700italic,400,300,600,700&subset=latin-ext,latin' rel='stylesheet' type='text/css'>
     <link href="{{ base_url }}/css/base.css" rel="stylesheet">
-    <link href="{{ base_url }}/css/cinder.css" rel="stylesheet">
-    <link rel="stylesheet" href="{{ base_url }}/css/highlight.css">{%- for path in extra_css %}
-
-
-    <link href="{{ path }}" rel="stylesheet">{%- endfor %}
+    <link href="{{ base_url }}/css/biojulia.css" rel="stylesheet">
+    <link rel="stylesheet" href="{{ base_url }}/css/highlight.css">
+    <link rel="stylesheet" href="{{ base_url }}/css/friendly.css" type="text/css"> 
+    {%- for path in extra_css %}
+    <link href="{{ path }}" rel="stylesheet">
+    {%- endfor %}
 
     <!-- HTML5 shim and Respond.js IE8 support of HTML5 elements and media queries -->
     <!--[if lt IE 9]>
@@ -88,6 +89,12 @@
     </script>
     <script data-main="{{ base_url }}/mkdocs/js/search.js" src="{{ base_url }}/mkdocs/js/require.js"></script>
     <script src="{{ base_url }}/js/base.js"></script>
+    <script>
+        ((window.gitter = {}).chat = {}).options = {
+            room: 'BioJulia/{{ site_name }}'
+        };
+    </script>
+    <script src="https://sidecar.gitter.im/dist/sidecar.v1.js" async defer></script>
     {%- for path in extra_javascript %}
     <script src="{{ path }}"></script>
     {%- endfor %}
