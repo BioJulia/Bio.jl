@@ -7,6 +7,62 @@
 # This file is a part of BioJulia.
 # License is MIT: https://github.com/BioJulia/Bio.jl/blob/master/LICENSE.md
 
+type FOGSAA
+    alignments::Matrix
+    queue::Vector{Vector{FOGSAABranch}}
+    Mi
+    mi
+
+    function FOGSAA(m, n, s)
+        g0 = m - n
+    	gapMatch = g0 == 0 ? 0 : s.gap_start + abs(g0) * s.gap
+        m0 = g0 < 0 ? m : n
+    	gapMiss = gapMat + m0 * s.mismatch # gm
+    	gapMatch += m0 * s.match
+        alignments = zeros(UInt8, m + 1, n + 1)
+        scores = fill(gapMiss, m + 1, m + 1)
+    	scores[1, 1] = 0
+        Mi = mi = gapMatch - gapMiss + 1
+    	queue = Vector{Vector{FOGSAABranch}}(Mi)
+    	queue[Mi] = [FOGSAABranch(1, 1, 1)]
+
+        return new(alignments, queue, Mi, mi)
+    end
+end
+
+function dequeue!(f::FOGSAA)
+    # Take the very last branch of an alignment.
+    branch = pop!(f.queue[f.Mi])
+
+    x = branch.x
+    y = branch.y
+
+    alignment = 0x0
+
+    if x < 0
+        x = -x
+        alignment |= 1
+    end
+
+    if y < 0
+        y = -y
+        alignment |= 2
+    end
+
+    while !isdefined(f.queue, f.Mi) || endof(f.queue[f.Mi]) == 0
+        if f.Mi == f.mi
+            f.Mi = f.mi = 0
+            break
+        end
+
+        f.Mi -= 1
+    end
+
+    return x, y, alignment
+end
+
+
+
 immutable AlignmentScoring
 	match::Int
 	mismatch::Int
@@ -41,6 +97,7 @@ function FOGSAA(X, Y, s::AlignmentScoring)
     # Thus gapMatch is the sum of the minimum gap score/penalty, and the match
     # score. gapMiss is the sum of the minimum gap score/penalty, and the
     # mismatch score.
+
     eX = endof(X)
     eY = endof(Y)
 	g0 = eX - eY
