@@ -10,14 +10,32 @@
 #
 # This file is a part of BioJulia. License is MIT: https://github.com/BioJulia/Bio.jl/blob/master/LICENSE.md
 
-function branchlength{C}(tree::Phylogeny{C, Float64}, edge::Edge)
-    return get(tree.edgedata, edge, -1.0)
+
+# The basic function on which getting a branch length depends,
+# For any kind of phylogeny.
+function branchlength(tree::Phylogeny, edge::Edge)
+    return branchlength(tree.edgedata[edge])
 end
 
-function branchlength!{C}(tree::Phylogeny{C, Float64}, edge::Edge, value::Float64)
-    tree.edgedata[edge] = value
-    return tree
+# The basic function on which setting a branch length depends,
+# for any kind of phylogeny. The assumption is metadata values on branches are
+# immutables or value types - hence the reassignment.
+function branchlength!(tree::Phylogeny, edge, value::Float64)
+    tree.edgedata[edge] = branchlength!(tree.edgedata[edge], value)
 end
+
+
+# An example of defining branchlength and branchlength! for a piece of metadata.
+# In this case the metadata type is a single Float64, so branches are annotated
+# with a branch length and nothing else.
+function branchlength(metadata::Float64)
+    return metadata
+end
+
+function branchlength!(metadata::Float64, value::Float64)
+    return value
+end
+
 
 function rem_branch!(tree::Phylogeny, branch::Edge)
     rem_edge!(tree.graph, src(branch), dst(branch))
@@ -25,9 +43,9 @@ function rem_branch!(tree::Phylogeny, branch::Edge)
     return tree
 end
 
-function add_branch!(tree::Phylogeny, branch::Edge, branchlength::Float64)
+function add_branch!{C,B}(tree::Phylogeny{C,B}, branch::Edge, branchdata::B)
     add_edge!(tree.graph, branch)
-    branchlength!(tree, branch, branchlength)
+    tree.edgedata[branch] = branchdata
     return tree
 end
 
