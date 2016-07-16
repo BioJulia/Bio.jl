@@ -131,14 +131,12 @@ end
 Base.summary{k}(x::DNAKmer{k}) = string("DNA ", k, "-mer")
 Base.summary{k}(x::RNAKmer{k}) = string("RNA ", k, "-mer")
 
-@compat begin
-    Base.:-{T,K}(x::Kmer{T,K}, y::Integer) =
-        Kmer{T,K}(UInt64(x) - reinterpret(UInt64, Int64(y)))
-    Base.:+{T,K}(x::Kmer{T,K}, y::Integer) =
-        Kmer{T,K}(UInt64(x) + reinterpret(UInt64, Int64(y)))
-    Base.:+{T,K}(x::Integer, y::Kmer{T,K}) = y + x
-    Base.:(==){T,k}(x::Kmer{T,k}, y::Kmer{T,k}) = UInt64(x) == UInt64(y)
-end
+Base.:-{T,K}(x::Kmer{T,K}, y::Integer) =
+    Kmer{T,K}(UInt64(x) - reinterpret(UInt64, Int64(y)))
+Base.:+{T,K}(x::Kmer{T,K}, y::Integer) =
+    Kmer{T,K}(UInt64(x) + reinterpret(UInt64, Int64(y)))
+Base.:+{T,K}(x::Integer, y::Kmer{T,K}) = y + x
+Base.:(==){T,k}(x::Kmer{T,k}, y::Kmer{T,k}) = UInt64(x) == UInt64(y)
 Base.isless{T,K}(x::Kmer{T,K}, y::Kmer{T,K}) = isless(UInt64(x), UInt64(y))
 
 

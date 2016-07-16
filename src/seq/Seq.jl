@@ -149,7 +149,6 @@ export
 
 using
     BufferedStreams,
-    Compat,
     Iterators,
     IndexableBitVectors,
     Bio.Ragel,

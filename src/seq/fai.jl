@@ -8,7 +8,7 @@
 
 # http://www.htslib.org/doc/faidx.html
 type FASTAIndex
-    names::Vector{ASCIIString}
+    names::Vector{String}
     lengths::Vector{Int}
     offsets::Vector{Int}
     linebases::Vector{Int}
@@ -20,7 +20,7 @@ function FASTAIndex(filepath::AbstractString)
 end
 
 function read_faidx(input::IO)
-    names = ASCIIString[]
+    names = String[]
     lengths = Int[]
     offsets = Int[]
     linebases = Int[]

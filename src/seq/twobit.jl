@@ -18,7 +18,7 @@ type TwoBitParser{T<:IO} <: AbstractParser
     input::T
 
     # sequence names
-    names::Vector{AbstractString}
+    names::Vector{String}
 
     # file offsets
     offsets::Vector{UInt32}
@@ -133,13 +133,13 @@ function read_2bit_header(input)
 end
 
 function read_2bit_index(input, swapped, seqcount)
-    names = AbstractString[]
+    names = String[]
     offsets = UInt32[]
     for i in 1:seqcount
         namesize = read(input, UInt8)
         name = read(input, UInt8, namesize)
         offset = read32(input, swapped)
-        push!(names, bytestring(name))
+        push!(names, String(name))
         push!(offsets, offset)
     end
     return names, offsets
@@ -234,17 +234,14 @@ type TwoBitWriter{T<:IO} <: AbstractWriter
     output::T
 
     # sequence names
-    names::Vector{AbstractString}
+    names::Vector{String}
 
     # bit vector to check if each sequence is already written or not
     written::BitVector
 end
 
 function TwoBitWriter(output::IO, names::AbstractVector)
-    writer = TwoBitWriter(
-        output,
-        convert(Vector{AbstractString}, names),
-        falses(length(names)))
+    writer = TwoBitWriter(output, names, falses(length(names)))
     write_header(writer)
     write_index(writer)
     return writer

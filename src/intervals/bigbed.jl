@@ -389,6 +389,8 @@ end
 
 include("bigbed-parser.jl")
 
+Base.iteratorsize(::BigBedData) = Base.SizeUnknown()
+
 # Open a BigBed file for reading.  Once opened, entries can be read from the
 # file either by iterating over it, or by indexing into it with an interval.
 function Base.open(stream::BufferedInputStream, ::Type{BigBed})
@@ -606,6 +608,8 @@ type BigBedIntersectIterator
     nextinterval::BEDInterval
     done::Bool
 end
+
+Base.iteratorsize(::BigBedIntersectIterator) = Base.SizeUnknown()
 
 # Find the given seqname in the BigBed file's index and read the corresponding
 # sequence id and length.

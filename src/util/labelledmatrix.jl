@@ -14,7 +14,7 @@ Float64.
 """
 function readlsm{T}(::Type{T}, io::IO, delim=_default_delims, comment='#')
     matrix = Matrix{T}()
-    labels = UTF8String[]
+    labels = String[]
     nitems = 0
     row = 0
     for line in eachline(io)
@@ -29,7 +29,7 @@ function readlsm{T}(::Type{T}, io::IO, delim=_default_delims, comment='#')
         cells = split(line, delim, keep=false)
         if isempty(labels)
             # header
-            append!(labels, map(UTF8String, cells))
+            append!(labels, cells)
             nitems = length(labels)
             matrix = zeros(T, (nitems, nitems))
             continue

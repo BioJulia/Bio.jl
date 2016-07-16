@@ -33,7 +33,6 @@ export tryread!
 using
     BufferedStreams,
     Colors,
-    Compat,
     IntervalTrees,
     Libz,
     Bio.Ragel,

@@ -10,7 +10,7 @@
 
 
 module Phylo
-using Compat
+
 using LightGraphs
 using Bio: Tokenize, Indexers
 using Bio.Seq: Nucleotide, BioSequence, isambiguous

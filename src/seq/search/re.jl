@@ -46,8 +46,8 @@ type SyntaxTree
     function SyntaxTree(head, args)
         @assert head ∈ (
             :|,
-            :*, :+, symbol("?"), :range,
-            symbol("*?"), symbol("+?"), symbol("??"), symbol("range?"),
+            :*, :+, Symbol("?"), :range,
+            Symbol("*?"), Symbol("+?"), Symbol("??"), Symbol("range?"),
             :set, :compset, :sym, :bits,
             :capture, :nocapture, :concat, :head, :last)
         return new(head, args)
@@ -99,12 +99,12 @@ function parserec{T}(::Type{T}, pat, s, parens)
         elseif c == '?'
             @check !isempty(args) ArgumentError("unexpected '?'")
             arg = pop!(args)
-            if arg.head ∈ (:*, :+, symbol("?"), :range)
+            if arg.head ∈ (:*, :+, Symbol("?"), :range)
                 # lazy quantifier
-                push!(args, expr(symbol(arg.head, '?'), arg.args))
+                push!(args, expr(Symbol(arg.head, '?'), arg.args))
             else
                 # zero-or-one quantifier
-                push!(args, expr(symbol("?"), [arg]))
+                push!(args, expr(Symbol("?"), [arg]))
             end
         elseif c == '{'
             @check !isempty(args) ArgumentError("unexpected '{'")
@@ -334,15 +334,15 @@ function desugar{T}(::Type{T}, tree::SyntaxTree)
         # e+ => ee*
         head = :concat
         args = [args[1], expr(:*, [args[1]])]
-    elseif head == symbol("+?")
+    elseif head == Symbol("+?")
         # e+? => ee*?
         head = :concat
-        args = [args[1], expr(symbol("*?"), [args[1]])]
-    elseif head == symbol("?")
+        args = [args[1], expr(Symbol("*?"), [args[1]])]
+    elseif head == Symbol("?")
         # e? => e|
         head = :|
         args = [args[1], expr(:concat, [])]
-    elseif head == symbol("??")
+    elseif head == Symbol("??")
         # e?? => |e
         head = :|
         args = [expr(:concat, []), args[1]]
@@ -365,7 +365,7 @@ function desugar{T}(::Type{T}, tree::SyntaxTree)
         args = [~bits & mask(T)]
     elseif head == :nocapture
         head = :concat
-    elseif head == :range || head == symbol("range?")
+    elseif head == :range || head == Symbol("range?")
         rng = args[1]
         pat = args[2]
         greedy = head == :range
@@ -384,7 +384,7 @@ function desugar{T}(::Type{T}, tree::SyntaxTree)
             if greedy
                 push!(args, expr(:*, [pat]))
             else
-                push!(args, expr(symbol("*?"), [pat]))
+                push!(args, expr(Symbol("*?"), [pat]))
             end
         elseif isa(rng, Tuple{Int,Int})
             # e{m,n} => eee...eee|eee...ee|...|eee...e  (greedy)
@@ -528,7 +528,7 @@ function compilerec!(code, tree::SyntaxTree, k)
         k = compilerec!(code, args[1], k)
         push!(code, jump(l))
         code[l] = push(length(code) + 1)
-    elseif h == symbol("*?")
+    elseif h == Symbol("*?")
         push!(code, fork(0))  # placeholder
         l = length(code)
         k = compilerec!(code, args[1], k)
@@ -566,7 +566,7 @@ end
 Regular expression for `DNANucleotide`, `RNANucleotide`, and `AminoAcid`.
 """
 immutable Regex{T}
-    pat::ASCIIString  # regular expression pattern (for printing)
+    pat::String       # regular expression pattern (for printing)
     code::Vector{Op}  # compiled code
     nsaves::Int       # the number of `save` operations in `code`
 

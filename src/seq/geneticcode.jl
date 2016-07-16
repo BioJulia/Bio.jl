@@ -9,7 +9,7 @@
 # A genetic code is a table mapping RNA 3-mers (i.e. RNAKmer{3}) to AminoAcids.
 "Type representing a Genetic Code"
 immutable GeneticCode <: Associative{RNACodon, AminoAcid}
-    name::Compat.String
+    name::String
     tbl::Vector{AminoAcid}
 end
 

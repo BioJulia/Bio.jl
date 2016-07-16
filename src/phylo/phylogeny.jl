@@ -112,7 +112,7 @@ function Base.copy{C, B}(tree::Phylogeny{C, B})
     return Phylogeny{C, B}(g, i, v, d, tree.ntaxa, tree.rooted, tree.rerootable)
 end
 
-@compat function Base.:(==)(x::Phylogeny, y::Phylogeny)
+function Base.:(==)(x::Phylogeny, y::Phylogeny)
     g = x.graph == x.graph
     vi = x.vertexindex == y.vertexindex
     vd = x.vertexdata == y.vertexdata

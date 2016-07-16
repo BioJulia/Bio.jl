@@ -79,10 +79,9 @@ import Bio.Util: readlsm
                      ]
 
     # Maps filename to labels
-    NUC44 = UTF8String["A", "T", "G", "C", "S", "W", "R", "Y", "K", "M", "B", "V",
-                       "H", "D", "N"]
-    BLOSUM = UTF8String["A", "R", "N", "D", "C", "Q", "E", "G", "H", "I", "L", "K",
-                        "M", "F", "P", "S", "T", "W", "Y", "V", "B", "Z", "X", "*"]
+    NUC44 = ["A", "T", "G", "C", "S", "W", "R", "Y", "K", "M", "B", "V", "H", "D", "N"]
+    BLOSUM = ["A", "R", "N", "D", "C", "Q", "E", "G", "H", "I", "L", "K",
+              "M", "F", "P", "S", "T", "W", "Y", "V", "B", "Z", "X", "*"]
     subst_matricies = [("BLOSUM62", BLOSUM),
                        ("NUC.4.4", NUC44),
                      ]
@@ -94,13 +93,13 @@ import Bio.Util: readlsm
         expt_m = Array{T}(integral_matrix_expt)
         @test m == expt_m
         @test eltype(m) == T
-        @test l == UTF8String["A", "B", "C"]
+        @test l == ["A", "B", "C"]
     end
 
     @testset "good_matricies" for (mat, expected) in good_matricies
         m, l = readlsm(IOBuffer(mat))
         @test m == expected
-        @test l == UTF8String["A", "B", "C"]
+        @test l == ["A", "B", "C"]
     end
 
     @testset "bad_matricies" for mat in bad_matricies
@@ -111,7 +110,7 @@ import Bio.Util: readlsm
         fname = Pkg.dir("Bio", "test", "BioFmtSpecimens", "LSM", fname)
         m, l = readlsm(fname)
         @test m == expected
-        @test l == UTF8String["A", "B", "C"]
+        @test l == ["A", "B", "C"]
     end
 
     @testset "subst_matrices" for (fname, labels) in subst_matricies

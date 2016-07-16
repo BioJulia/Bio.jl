@@ -87,7 +87,7 @@ function seq_data_len{A}(::Type{A}, len::Integer)
     return cld(len, div(64, bitsof(A)))
 end
 
-@compat function (::Type{BioSequence{A}}){A<:Alphabet}(len::Integer)
+function (::Type{BioSequence{A}}){A<:Alphabet}(len::Integer)
     return BioSequence{A}(Vector{UInt64}(seq_data_len(A, len)), 1:len, false)
 end
 
@@ -100,7 +100,7 @@ function BioSequence()
     return BioSequence{VoidAlphabet}(Vector{UInt64}(0), 0:-1, false)
 end
 
-@compat function (::Type{BioSequence{A}}){A<:Alphabet}(
+function (::Type{BioSequence{A}}){A<:Alphabet}(
         src::Union{AbstractString,AbstractVector},
         startpos::Integer=1,
         stoppos::Integer=length(src))
@@ -119,12 +119,12 @@ function BioSequence{A,T<:Integer}(other::BioSequence{A}, part::UnitRange{T})
     return subseq
 end
 
-@compat function (::Type{BioSequence{A}}){A}(other::BioSequence{A}, part::UnitRange)
+function (::Type{BioSequence{A}}){A}(other::BioSequence{A}, part::UnitRange)
     return BioSequence(other, part)
 end
 
 # concatenate chunks
-@compat function (::Type{BioSequence{A}}){A}(chunks::BioSequence{A}...)
+function (::Type{BioSequence{A}}){A}(chunks::BioSequence{A}...)
     len = 0
     for chunk in chunks
         len += length(chunk)
@@ -149,11 +149,9 @@ function Base.repeat{A}(chunk::BioSequence{A}, n::Integer)
 end
 
 # operators for concat and repeat
-@compat begin
-    Base.:*{A}(chunk::BioSequence{A}, chunks::BioSequence{A}...) =
-        BioSequence{A}(chunk, chunks...)
-    Base.:^(chunk::BioSequence, n::Integer) = repeat(chunk, n)
-end
+Base.:*{A}(chunk::BioSequence{A}, chunks::BioSequence{A}...) =
+    BioSequence{A}(chunk, chunks...)
+Base.:^(chunk::BioSequence, n::Integer) = repeat(chunk, n)
 
 # conversion between different alphabet size
 for A in [DNAAlphabet, RNAAlphabet]
@@ -308,7 +306,7 @@ end
 end
 
 Base.getindex(seq::BioSequence, part::UnitRange) = BioSequence(seq, part)
-Base.sub(seq::BioSequence, part::UnitRange) = BioSequence(seq, part)
+Base.view(seq::BioSequence, part::UnitRange) = BioSequence(seq, part)
 
 function Base.setindex!{A,T<:Integer}(seq::BioSequence{A},
                                       other::BioSequence{A},
@@ -748,9 +746,7 @@ function Base.next(it::AmbiguousNucleotideIterator, nextpos)
     return nextpos, find_next_ambiguous(it.seq, nextpos + 1)
 end
 
-if VERSION > v"0.5-"
-    Base.iteratorsize(::AmbiguousNucleotideIterator) = Base.SizeUnknown()
-end
+Base.iteratorsize(::AmbiguousNucleotideIterator) = Base.SizeUnknown()
 
 function find_next_ambiguous{A<:Union{DNAAlphabet{2},RNAAlphabet{2}}}(
         seq::BioSequence{A}, i::Integer)

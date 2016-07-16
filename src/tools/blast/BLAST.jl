@@ -7,8 +7,7 @@ export blastn,
 
 using Bio.Seq,
       Bio.Align,
-      LightXML,
-      Compat
+      LightXML
 
 include("blastcommandline.jl")
 

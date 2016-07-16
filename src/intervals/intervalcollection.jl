@@ -71,7 +71,7 @@ type IntervalCollection{T} <: IntervalStream{T}
             while j <= n && intervals[i].seqname == intervals[j].seqname
                 j += 1
             end
-            trees[intervals[i].seqname] = IntervalCollectionTree{T}(sub(intervals, i:j-1))
+            trees[intervals[i].seqname] = IntervalCollectionTree{T}(view(intervals, i:j-1))
             i = j
         end
         return new(trees, n, IntervalCollectionTree{T}[], true)
@@ -208,6 +208,8 @@ type IntersectIterator{S, T}
     end
 end
 
+Base.iteratorsize(::IntersectIterator) = Base.SizeUnknown()
+
 "Iterate over pairs of intersecting intervals in two IntervalCollections"
 function Base.intersect{S, T}(a::IntervalCollection{S}, b::IntervalCollection{T})
     seqnames = collect(AbstractString, keys(a.trees) ∩ keys(b.trees))
@@ -293,7 +295,7 @@ immutable IntervalCollectionStreamIteratorState{S, TS, TV}
     end
 end
 
-@compat function Base.:(==){T}(a::IntervalCollection{T}, b::IntervalCollection{T})
+function Base.:(==){T}(a::IntervalCollection{T}, b::IntervalCollection{T})
     if length(a) != length(b)
         return false
     end

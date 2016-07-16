@@ -95,17 +95,17 @@ abstract AbstractAtom <: StructuralElement
 immutable Atom <: AbstractAtom
     het_atom::Bool
     serial::Int
-    name::Compat.ASCIIString
+    name::String
     alt_loc_id::Char
-    res_name::Compat.ASCIIString
+    res_name::String
     chain_id::Char
     res_number::Int
     ins_code::Char
     coords::Vector{Float64}
     occupancy::Float64
     temp_fac::Float64
-    element::Compat.ASCIIString
-    charge::Compat.ASCIIString
+    element::String
+    charge::String
 end
 
 "A container to hold different versions of the same atom in a PDB file."
@@ -123,13 +123,13 @@ abstract AbstractResidue <: StructuralElement
 
 "A residue (amino acid) or other molecule record from a PDB file."
 immutable Residue <: AbstractResidue
-    name::Compat.ASCIIString
+    name::String
     chain_id::Char
     number::Int
     ins_code::Char
     het_res::Bool # Does the residue consist of hetatoms?
-    atom_list::Vector{Compat.ASCIIString}
-    atoms::Dict{Compat.ASCIIString, AbstractAtom}
+    atom_list::Vector{String}
+    atoms::Dict{String, AbstractAtom}
 end
 
 # Constructor without atoms
@@ -143,21 +143,20 @@ Residue{T <: AbstractAtom}(atoms::Vector{T}) = Residue(
         inscode(atoms[1]),
         ishetero(atoms[1]),
         map(atomname, sort(atoms)),
-        [atomname(atom) => atom for atom in atoms]
-    )
+        Dict(atomname(atom) => atom for atom in atoms))
 
 "A container to hold different versions of the same residue (point mutations)."
 immutable DisorderedResidue <: AbstractResidue
-    names::Dict{Compat.ASCIIString, Residue}
-    default::Compat.ASCIIString
+    names::Dict{String, Residue}
+    default::String
 end
 
 
 "A chain represented in a PDB file."
 immutable Chain <: StructuralElement
     id::Char
-    res_list::Vector{Compat.ASCIIString}
-    residues::Dict{Compat.ASCIIString, AbstractResidue}
+    res_list::Vector{String}
+    residues::Dict{String, AbstractResidue}
 end
 
 Chain(id::Char) = Chain(id, [], Dict())
@@ -175,7 +174,7 @@ Model() = Model(1)
 
 "A container for multiple models from a PDB file."
 immutable ProteinStructure <: StructuralElement
-    name::Compat.ASCIIString
+    name::String
     models::Dict{Int, Model}
 end
 
@@ -799,10 +798,10 @@ end
 
 # Organise a Vector{AbstractResidue} into a Vector{Chain}
 function organise{T <: AbstractResidue}(residues::Vector{T})
-    chains = Dict{Char, Dict{Compat.ASCIIString, AbstractResidue}}()
+    chains = Dict{Char, Dict{String, AbstractResidue}}()
     for res in residues
         chain_id = chainid(res)
-        !haskey(chains, chain_id) ? chains[chain_id] = Dict{Compat.ASCIIString, AbstractResidue}() : nothing
+        !haskey(chains, chain_id) ? chains[chain_id] = Dict{String, AbstractResidue}() : nothing
         res_id = resid(res)
         @assert !haskey(chains[chain_id], res_id) "Multiple residues with the same residue ID found - cannot organise into chains"
         chains[chain_id][res_id] = res
@@ -813,18 +812,18 @@ end
 # Organise a Vector{AbstractAtom} into a Vector{AbstractResidue}
 function organise{T <: AbstractAtom}(atoms::Vector{T})
     # Key is chain ID, value is Dict where key is residue ID and value is list of atoms
-    residues = Dict{Char, Dict{Compat.ASCIIString, Vector{AbstractAtom}}}()
+    residues = Dict{Char, Dict{String, Vector{AbstractAtom}}}()
     # Key is chain ID, value is Dict where key is residue ID, value is Dict where key is residue name and value is list of atoms
-    disordered_residues = Dict{Char, Dict{Compat.ASCIIString, Dict{Compat.ASCIIString, Vector{AbstractAtom}}}}()
+    disordered_residues = Dict{Char, Dict{String, Dict{String, Vector{AbstractAtom}}}}()
     # Key is chain ID, value is Dict where key is residue ID and value is default residue name
-    defaults = Dict{Char, Dict{Compat.ASCIIString, Compat.ASCIIString}}()
+    defaults = Dict{Char, Dict{String, String}}()
     for atom in atoms
         # Create chain Dict if required
         chain_id = chainid(atom)
         if !haskey(residues, chain_id)
-            residues[chain_id] = Dict{Compat.ASCIIString, Vector{AbstractAtom}}()
-            disordered_residues[chain_id] = Dict{Compat.ASCIIString, Dict{Compat.ASCIIString, Vector{AbstractAtom}}}()
-            defaults[chain_id] = Dict{Compat.ASCIIString, Compat.ASCIIString}()
+            residues[chain_id] = Dict{String, Vector{AbstractAtom}}()
+            disordered_residues[chain_id] = Dict{String, Dict{String, Vector{AbstractAtom}}}()
+            defaults[chain_id] = Dict{String, String}()
         end
         res_id = resid(atom)
         # The residue ID is not yet present
@@ -889,7 +888,7 @@ which case removes all but the default location for disordered atoms.
 """
 function formatomlist(atoms::Vector{Atom}; remove_disorder::Bool=false)
     # Key is (residue ID, residue name, atom name)
-    atom_dic = Dict{Tuple{Compat.ASCIIString, Compat.ASCIIString, Compat.ASCIIString}, AbstractAtom}()
+    atom_dic = Dict{Tuple{String, String, String}, AbstractAtom}()
     for atom in atoms
         atom_id = atomid(atom)
         # The atom does not exist so we can create it
@@ -980,9 +979,9 @@ hetatomselector(atom::AbstractAtom) = ishetatom(atom)
 Determines if an `AbstractAtom` has its atom name in the given `Set` or
 `Vector`.
 """
-atomnameselector(atom::AbstractAtom, atom_names::Set{Compat.ASCIIString}) = atomname(atom) in atom_names
+atomnameselector(atom::AbstractAtom, atom_names::Set{String}) = atomname(atom) in atom_names
 # Set is faster but Vector method is retained for ease of use
-atomnameselector(atom::AbstractAtom, atom_names::Vector{Compat.ASCIIString}) = atomname(atom) in atom_names
+atomnameselector(atom::AbstractAtom, atom_names::Vector{String}) = atomname(atom) in atom_names
 
 "`Set` of C-alpha atom names."
 const calpha_atom_names = Set(["CA"])
@@ -1012,8 +1011,8 @@ heavyatomselector(atom::AbstractAtom) = stdatomselector(atom) && !hydrogenselect
 Determines if an `AbstractResidue` or `AbstractAtom` has its resiudue name in
 the given `Set` or `Vector`.
 """
-resnameselector(element::Union{AbstractResidue, AbstractAtom}, res_names::Set{Compat.ASCIIString}) = resname(element) in res_names
-resnameselector(element::Union{AbstractResidue, AbstractAtom}, res_names::Vector{Compat.ASCIIString}) = resname(element) in res_names
+resnameselector(element::Union{AbstractResidue, AbstractAtom}, res_names::Set{String}) = resname(element) in res_names
+resnameselector(element::Union{AbstractResidue, AbstractAtom}, res_names::Vector{String}) = resname(element) in res_names
 
 "`Set` of residue names corresponding to water."
 const water_res_names = Set(["HOH"])

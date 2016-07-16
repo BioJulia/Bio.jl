@@ -36,13 +36,6 @@ Base.eachindex(seq::Sequence) = 1:endof(seq)
     throw(BoundsError(seq, i))
 end
 
-if VERSION < v"0.5-"
-    macro boundscheck(ex)
-        # no op
-        return ex
-    end
-end
-
 function Base.getindex(seq::Sequence, i::Integer)
     @boundscheck checkbounds(seq, i)
     return inbounds_getindex(seq, i)
@@ -56,7 +49,7 @@ Base.next(seq::Sequence, i) = inbounds_getindex(seq, i), i + 1
 # Comparison
 # ----------
 
-@compat function Base.:(==)(seq1::Sequence, seq2::Sequence)
+function Base.:(==)(seq1::Sequence, seq2::Sequence)
     return eltype(seq1)    == eltype(seq2) &&
            length(seq1)    == length(seq2) &&
            cmp(seq1, seq2) == 0
@@ -221,7 +214,13 @@ function Base.print(io::IO, seq::Sequence)
 end
 
 function Base.show(io::IO, seq::Sequence)
-    println(io, summary(seq), ':')
+    if !get(io, :compact, false)
+        println(io, summary(seq), ':')
+    end
+    showcompact(io, seq)
+end
+
+function Base.showcompact(io::IO, seq::Sequence)
     # don't show more than this many characters
     # to avoid filling the screen with junk
     width = displaysize()[2]

@@ -1,11 +1,6 @@
 module TestStructure
 
-if VERSION >= v"0.5-"
-    using Base.Test
-else
-    using BaseTestNext
-    const Test = BaseTestNext
-end
+using Base.Test
 
 using Bio.Structure,
     TestFunctions.get_bio_fmt_specimens
@@ -160,7 +155,7 @@ pdbfilepath(filename::AbstractString) = Pkg.dir("Bio", "test", "BioFmtSpecimens"
     @test inscode(res) == ' '
     @test !ishetres(res)
     @test atomnames(res) == ["CA", "CB", "CG"]
-    @test isa(atoms(res), Dict{ASCIIString, AbstractAtom})
+    @test isa(atoms(res), Dict{String, AbstractAtom})
     @test length(atoms(res)) == 3
     @test serial(atoms(res)["CA"]) == 100
 
@@ -175,7 +170,7 @@ pdbfilepath(filename::AbstractString) = Pkg.dir("Bio", "test", "BioFmtSpecimens"
     @test inscode(res_min) == ' '
     @test !ishetres(res_min)
     @test atomnames(res_min) == ["CA", "CB", "CG"]
-    @test isa(atoms(res_min), Dict{ASCIIString, AbstractAtom})
+    @test isa(atoms(res_min), Dict{String, AbstractAtom})
     @test length(atoms(res_min)) == 3
     @test serial(atoms(res_min)["CA"]) == 100
 
@@ -218,7 +213,7 @@ pdbfilepath(filename::AbstractString) = Pkg.dir("Bio", "test", "BioFmtSpecimens"
     @test inscode(disordered_res) == ' '
     @test !ishetres(disordered_res)
     @test atomnames(disordered_res) == ["CA", "CB", "CG"]
-    @test isa(atoms(res), Dict{ASCIIString, AbstractAtom})
+    @test isa(atoms(res), Dict{String, AbstractAtom})
     @test length(atoms(res)) == 3
     @test serial(atoms(res)["CA"]) == 100
 
@@ -257,7 +252,7 @@ pdbfilepath(filename::AbstractString) = Pkg.dir("Bio", "test", "BioFmtSpecimens"
     # Test Chain getters/setters
     @test chainid(chain) == 'A'
     @test resids(chain) == ["10", "H_11"]
-    @test isa(residues(chain), Dict{ASCIIString, AbstractResidue})
+    @test isa(residues(chain), Dict{String, AbstractResidue})
     @test length(residues(chain)) == 2
     @test serial(residues(chain)["10"]["CA"]) == 100
 
@@ -479,7 +474,7 @@ end
     line = "ATOM     40  CB  LEU A   5      22.088  45.547  29.675  1.00 22.23           C  "
     @test parsevalue(line, (7,11), Int) == 40
     @test parsevalue(line, (31,38), Float64) == 22.088
-    @test strip(parsevalue(line, (13,16), ASCIIString)) == "CB"
+    @test strip(parsevalue(line, (13,16), String)) == "CB"
     @test parsevalue(line, (22,22), Char) == 'A'
     @test_throws ErrorException parsevalue(line, (1,4), Int)
     @test_throws ErrorException parsevalue(line, (1,4), Bool)
@@ -490,7 +485,7 @@ end
     line_a = "ATOM    591  C   GLY A  80              54.131  35.806  1.00 40.97           C  "
     line_b = "ATOM    591  C   GLY A  80 "
     @test parsestrict(line, (7,11), Int, "could not read atom serial number", 10) == 591
-    @test strip(parsestrict(line, (13,16), ASCIIString, "could not read atom name", 20)) == "C"
+    @test strip(parsestrict(line, (13,16), String, "could not read atom name", 20)) == "C"
     @test_throws PDBParseError parsestrict(line_a, (31,38), Float64, "could not read x coordinate", 10)
     @test_throws PDBParseError parsestrict(line_b, (31,38), Float64, "could not read x coordinate", 10)
     @test_throws PDBParseError parsestrict(line, (7,11), Bool, "could not read atom serial number", 10)
@@ -500,10 +495,10 @@ end
     line_a = "ATOM     40  CB  LEU A   5      22.088  45.547  29.675  1.00 22.23              "
     line_b = "ATOM     40  CB  LEU A   5      22.088  45.547  29.675  1.00 22.23  "
     line_c = "ATOM     40  CB  LEU A   5      22.088  45.547  29.675       22.23           C  "
-    @test strip(parselenient(line, (77,78), ASCIIString, "")) == "C"
-    @test parselenient(line_a, (77,78), ASCIIString, "") == "  "
-    @test parselenient(line_b, (77,78), ASCIIString, "") == ""
-    @test parselenient(line_b, (77,78), ASCIIString, "C") == "C"
+    @test strip(parselenient(line, (77,78), String, "")) == "C"
+    @test parselenient(line_a, (77,78), String, "") == "  "
+    @test parselenient(line_b, (77,78), String, "") == ""
+    @test parselenient(line_b, (77,78), String, "C") == "C"
     @test parselenient(line_c, (55,60), Float64, 1.0) == 1.0
     @test parselenient(line, (77,78), Bool, "N") == "N"
 

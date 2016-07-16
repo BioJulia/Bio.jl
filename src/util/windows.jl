@@ -10,8 +10,6 @@ module Windows
 
 using Bio.Seq
 
-using Compat
-
 export eachwindow,
     EachWindowIterator,
     missed
@@ -68,7 +66,7 @@ A sliding window iterator is considered equal to another
 sliding window iterator if the data is considered equal, and the
 width and step of the iterator is also equivalent.
 """
-@compat function Base.:(==)(x::EachWindowIterator, y::EachWindowIterator)
+function Base.:(==)(x::EachWindowIterator, y::EachWindowIterator)
     return (x.data == y.data) && (x.width == y.width) && (x.step == y.step)
 end
 
@@ -87,7 +85,7 @@ end
 
 @inline function Base.next(it::EachWindowIterator, state::Integer)
     i = state
-    window = sub(it.data, i:i + it.width - 1)
+    window = view(it.data, i:i + it.width - 1)
     return (i, window), i + it.step
 end
 
