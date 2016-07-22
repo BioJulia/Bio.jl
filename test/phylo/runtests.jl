@@ -149,10 +149,17 @@ end
 end
 
 
-tests = [(10, 3), (100, 2), (1000, 37), (50000, 1023)]
-
 @testset "Dating algorithms" begin
-
+    for i in 1:10
+        size = rand(10:100)
+        mutations = rand(1:size)
+        rate = rand(10e-9:10e-10:10e-6)
+        expected = (mutations / size) / (2 * rate)
+        estimated = coaltime(size, mutations, rate)
+        print(expected)
+        print(estimated)
+        @test (expected in estimated.five:estimated.ninetyfive) == true
+    end
 end
 
 
