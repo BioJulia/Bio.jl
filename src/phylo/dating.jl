@@ -2,10 +2,47 @@ module Dating
 
 using Distributions, Roots
 
-export DatingEstimate, coaltime
+export DatingEstimate, coaltime, SimpleEstimate, SpeedDating, SDResult
 
 """
-DatingEstimate is a simple datatype to store the results of the coaltime
+An abstract dating estimate type.
+
+Types inheriting from DatingEstimate should have the following methods defined:
+
+* lower: Returns the lower bound of the dating estimate.
+* upper: Returns the upper bound of the dating estimate.
+
+They may define their own show methods.
+"""
+abstract DatingEstimate
+
+Base.print(io::IO, de::DatingEstimate) = println(io, "$(lower(de)) ... $(upper(de))")
+Base.show(io::IO, de::DatingEstimate) = println(io, "Coalesence time estimate between two sequences:\nt lies between $(lower(de)) and $(upper(de))")
+
+# Different coalescence time estimation algorithms.
+# method coaltime is dispatched according to arguments or type of
+immutable SimpleEstimate end
+
+"""
+    coaltime(len::Int, nmut::Int, mu::Float64, ::Type{SimpleEstimate})
+
+Compute the coalescence time between two sequences by assuming a mutation rate,
+and then assuming the divergence between two sequences is 2 * mu * t
+
+# Examples
+```julia
+coaltime(50, 17, 10e-9, SimpleEstimate)
+```
+"""
+function coaltime(len::Int, nmut::Int, mu::Float64, ::Type{SimpleEstimate})
+    return (len / nmut) / (2 * mu)
+end
+
+
+immutable SpeedDating end
+
+"""
+SDResult is a simple datatype to store the results of the coaltime
 function.
 
 coaltime estimates date range that may be considered a 95% confidence range in
@@ -13,12 +50,19 @@ which the true coalsescence time between two sequences lies.
 
 The type store the 5%, 50%, and 95% values for the range.
 """
-immutable DatingEstimate
-    five::Float64
-    fifty::Float64
-    ninetyfive::Float64
+immutable SDResult <: DatingEstimate
+    lower::Float64
+    middle::Float64
+    upper::Float64
 end
 
+lower(x::SDResult) = x.lower
+
+upper(x::SDResult) = x.upper
+
+function Base.show(io::IO, de::SDResult)
+    println(io, "Coalescence time estimate:\n5%: $(de.lower), 95%: $(de.upper)")
+end
 
 function binomzero(p0::Float64, N::Int, B::Int)
     f(p::Float64) = cdf(Binomial(N, p), B) - p0
@@ -26,7 +70,7 @@ function binomzero(p0::Float64, N::Int, B::Int)
 end
 
 """
-    coaltime(len::Int, nmut::Int, mu::Float64)
+    coaltime(len::Int, nmut::Int, mu::Float64, ::Type{SpeedDating})
 
 Compute the coalescence time between two sequences by modelling the process of
 mutation accumulation between two sequences as a bernoulli process.
@@ -39,14 +83,14 @@ and mu is the assumed mutation rate.
 
 # Examples
 ```julia
-coaltime(50, 17, 10e-9)
+coaltime(50, 17, 10e-9, SpeedDating)
 ```
 """
-function coaltime(len::Int, nmut::Int, mu::Float64)
-    five = ceil(binomzero(0.05, len, nmut) / (2 * mu))
+function coaltime(len::Int, nmut::Int, mu::Float64, ::Type{SpeedDating})
+    ninetyfive = ceil(binomzero(0.05, len, nmut) / (2 * mu))
     fifty = ceil(binomzero(0.5, len, nmut) / (2 * mu))
-    ninetyfive = ceil(binomzero(0.95, len, nmut) / (2 * mu))
-    return DatingEstimate(five, fifty, ninetyfive)
+    five = ceil(binomzero(0.95, len, nmut) / (2 * mu))
+    return SDResult(five, fifty, ninetyfive)
 end
 
 

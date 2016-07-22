@@ -154,8 +154,10 @@ end
         size = rand(10:100)
         mutations = rand(1:size)
         rate = rand(10e-9:10e-10:10e-6)
-        expected = (mutations / size) / (2 * rate)
-        estimated = coaltime(size, mutations, rate)
+        expected = coaltime(size, mutations, rate, SimpleEstimate)
+        estimated = coaltime(size, mutations, rate, SpeedDating)
+        show(expected)
+        show(estimated)
         print(expected)
         print(estimated)
         @test (expected in estimated.five:estimated.ninetyfive) == true
