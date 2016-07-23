@@ -108,6 +108,37 @@ Base.findfirst(seq::Sequence, val) = findnext(seq, val, 1)
 Base.findlast(seq::Sequence, val) = findprev(seq, val, endof(seq))
 
 
+"""
+    gc_content(seq::Sequence)
+
+Calculate GC content of `seq`.
+"""
+function gc_content(seq::Sequence)
+    gc = 0
+
+    if eltype(seq) == DNANucleotide
+        for x in seq
+            if x == DNA_C || x == DNA_G
+                gc += 1
+            end
+        end
+    elseif eltype(seq) == RNANucleotide
+        for x in seq
+            if x == RNA_C || x == RNA_G
+                gc += 1
+            end
+        end
+    else
+        error("elements must be nucleotides")
+    end
+
+    if isempty(seq)
+        return 0.0
+    else
+        return gc / length(seq)
+    end
+end
+
 # Printers
 # --------
 
