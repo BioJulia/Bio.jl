@@ -909,20 +909,8 @@
 
 <p><a id='Bio.Seq.complement!-Tuple{Any}' href='#Bio.Seq.complement!-Tuple{Any}'>#</a>
 <strong><code>Bio.Seq.complement!</code></strong> &mdash; <em>Method</em>.</p>
-<div class="codehilite"><pre><span></span>complement!(seq)
-</pre></div>
-
-
-<p>Make a complement sequence of <code>seq</code> in place.</p>
-<p>Ambiguous nucleotides are left as-is.</p>
 <p><a id='Bio.Seq.reverse_complement!-Tuple{Any}' href='#Bio.Seq.reverse_complement!-Tuple{Any}'>#</a>
 <strong><code>Bio.Seq.reverse_complement!</code></strong> &mdash; <em>Method</em>.</p>
-<div class="codehilite"><pre><span></span>reverse_complement!(seq)
-</pre></div>
-
-
-<p>Make a reversed complement sequence of <code>seq</code> in place.</p>
-<p>Ambiguous nucleotides are left as-is.</p>
 <div class="codehilite"><pre><span></span><span class="gp">julia&gt;</span> <span class="n">seq</span> <span class="o">=</span> <span class="n">dna</span><span class="s">&quot;ACG&quot;</span>
 <span class="go">3nt DNA Sequence:</span>
 <span class="go">ACG</span>
@@ -973,46 +961,43 @@
 <p>A number of common sequence operations are provided in the <code>Bio.Seq</code> module:</p>
 <p><a id='Bio.Seq.complement' href='#Bio.Seq.complement'>#</a>
 <strong><code>Bio.Seq.complement</code></strong> &mdash; <em>Function</em>.</p>
-<p><code>complement(kmer::Kmer)</code></p>
-<p>The Kmer complement of <code>kmer</code></p>
 <div class="codehilite"><pre><span></span>complement(seq)
 </pre></div>
 
 
 <p>Make a complement sequence of <code>seq</code>.</p>
 <p>Ambiguous nucleotides are left as-is.</p>
+<div class="codehilite"><pre><span></span>complement(kmer::Kmer)
+</pre></div>
+
+
+<p>Return the complement of <code>kmer</code>.</p>
 <p><a id='Bio.Seq.reverse_complement' href='#Bio.Seq.reverse_complement'>#</a>
 <strong><code>Bio.Seq.reverse_complement</code></strong> &mdash; <em>Function</em>.</p>
-<p><code>reverse_complement(kmer::Kmer)</code></p>
-<p>Reversed complement of <code>kmer</code></p>
 <div class="codehilite"><pre><span></span>reverse_complement(seq)
 </pre></div>
 
 
 <p>Make a reversed complement sequence of <code>seq</code>.</p>
 <p>Ambiguous nucleotides are left as-is.</p>
+<div class="codehilite"><pre><span></span>reverse_complement(kmer::Kmer)
+</pre></div>
+
+
+<p>Return the reverse complement of <code>kmer</code></p>
 <p><a id='Bio.Seq.mismatches' href='#Bio.Seq.mismatches'>#</a>
 <strong><code>Bio.Seq.mismatches</code></strong> &mdash; <em>Function</em>.</p>
-<p><code>mismatches(a::Kmer, b::Kmer)</code></p>
+<div class="codehilite"><pre><span></span>mismatches(seq1::BioSequence, seq2::BioSequence[, compatible=false])
+</pre></div>
+
+
+<p>Return the number of mismatches between <code>seq1</code> and <code>seq2</code>.</p>
+<p>If <code>seq1</code> and <code>seq2</code> are of differing lengths, only the first <code>min(length(seq1), length(seq2))</code> nucleotides are compared.  When <code>compatible</code> is <code>true</code>, sequence symbols are comapred using <code>iscompatible</code>; otherwise using <code>==</code>.</p>
+<div class="codehilite"><pre><span></span>mismatches(a::Kmer, b::Kmer)
+</pre></div>
+
+
 <p>Return the number of mismatches between <code>a</code> and <code>b</code>.</p>
-<p><strong>Arguments</strong></p>
-<ul>
-<li><code>a</code>: first sequence to compare</li>
-<li><code>b</code>: second sequence to compare</li>
-</ul>
-<p><strong>Returns</strong></p>
-<p>The number of mismatches</p>
-<p><code>mismatches(a::NucleotideSequence, b::NucleotideSequence, [nmatches=false])</code></p>
-<p>Return the number of mismatches between <code>a</code> and <code>b</code>.</p>
-<p>If <code>a</code> and <code>b</code> are of differing lengths, only the first <code>min(length(a), length(b))</code> nucleotides are compared.</p>
-<p><strong>Arguments</strong></p>
-<ul>
-<li><code>a</code>: first sequence to compare</li>
-<li><code>b</code>: second sequence to compare</li>
-<li><code>nmatches</code>: if true, N matches anything, if false, N matches only itself (false)</li>
-</ul>
-<p><strong>Returns</strong></p>
-<p>The number of mismatches</p>
 <p><a id='Bio.Seq.composition' href='#Bio.Seq.composition'>#</a>
 <strong><code>Bio.Seq.composition</code></strong> &mdash; <em>Function</em>.</p>
 <div class="codehilite"><pre><span></span>composition(seq)
@@ -1147,11 +1132,19 @@ RNAKmerCounts{k}(seq::Sequence[, step=1])
 </ul>
 <p><a id='Bio.Seq.canonical' href='#Bio.Seq.canonical'>#</a>
 <strong><code>Bio.Seq.canonical</code></strong> &mdash; <em>Function</em>.</p>
-<p>Canonical k-mer of <code>x</code></p>
+<div class="codehilite"><pre><span></span>canonical(kmer::Kmer)
+</pre></div>
+
+
+<p>Return the canonical k-mer of <code>x</code>.</p>
 <p>A canonical k-mer is the numerical lesser of a k-mer and its reverse complement. This is useful in hashing/counting k-mers in data that is not strand specific, and thus observing k-mer is equivalent to observing its reverse complement.</p>
 <p><a id='Bio.Seq.neighbors' href='#Bio.Seq.neighbors'>#</a>
 <strong><code>Bio.Seq.neighbors</code></strong> &mdash; <em>Function</em>.</p>
-<p>Iterate through k-mers neighboring <code>x</code> on a de Bruijn graph.</p>
+<div class="codehilite"><pre><span></span>neighbors(kmer::Kmer)
+</pre></div>
+
+
+<p>Return an iterator through k-mers neighboring <code>kmer</code> on a de Bruijn graph.</p>
 <p><a id='Reference-sequences-1'></a></p>
 <h2 id="reference-sequences">Reference sequences</h2>
 <p><code>DNASequence</code> (alias of <code>BioSequence{DNAAlphabet{4}}</code>) is a flexible data sturcture but always consumes 4 bits per base, which will waste a large part of the memory space when storing reference genome sequences.  In such a case, <code>ReferenceSequence</code> is helpful because it compresses positions of 'N' symbols so that long DNA sequences are stored with almost 2 bits per base. An important limitation is that the <code>ReferenceSequence</code> type is immutable due to the compression. Other sequence-like operations are supported:</p>

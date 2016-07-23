@@ -267,10 +267,10 @@
 
 <p>Produces a graph with edges that are only in both graph <code>g</code> and graph <code>h</code>.</p>
 <p>Note that this function may produce a graph with 0-degree vertices.</p>
-<p>Intersect two <code>IntervalStreams</code> returning an iterator over all pairs of intersecting intervals.</p>
-<p>Iterate over pairs of intersections in an IntervalCollection versus an IntervalStream.</p>
-<p>Iterate over pairs of intersecting intervals in two IntervalCollections</p>
 <p>Return an iterator over all intervals in the collection that overlap the query interval.</p>
+<p>Iterate over pairs of intersecting intervals in two IntervalCollections</p>
+<p>Iterate over pairs of intersections in an IntervalCollection versus an IntervalStream.</p>
+<p>Intersect two <code>IntervalStreams</code> returning an iterator over all pairs of intersecting intervals.</p>
 <p><a id='Interval-streams-1'></a></p>
 <h2 id="interval-streams">Interval streams</h2>
 <p>Intervals need not necessarily stored in an indexed data structure for efficient intersection to be practical. Two collections of intervals need only be both sorted to compute all intersecting pairs. This is particularly useful in genomics where datasets are sometimes so large that loading them entirely into memory is not practical.</p>
