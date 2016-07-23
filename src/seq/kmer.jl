@@ -145,55 +145,50 @@ Base.isless{T,K}(x::Kmer{T,K}, y::Kmer{T,K}) = isless(UInt64(x), UInt64(y))
 # ---------------
 
 """
-`complement(kmer::Kmer)`
+    complement(kmer::Kmer)
 
-The Kmer complement of `kmer`
+Return the complement of `kmer`.
 """
-complement{T, K}(x::Kmer{T, K}) = Kmer{T,K}(~UInt64(x))
-
-"""
-`reverse(kmer::Kmer)`
-
-Reversed copy of `kmer`
-"""
-Base.reverse{T, K}(x::Kmer{T, K}) = Kmer{T,K}(nucrev2(UInt64(x)) >> (64 - 2K))
+complement{T,k}(x::Kmer{T,k}) = Kmer{T,k}(~UInt64(x))
 
 """
-`reverse_complement(kmer::Kmer)`
+    reverse(kmer::Kmer)
 
-Reversed complement of `kmer`
+Return the reverse of `kmer`.
 """
-reverse_complement{T, K}(x::Kmer{T, K}) = complement(reverse(x))
+Base.reverse{T,k}(x::Kmer{T,k}) = Kmer{T,k}(nucrev2(UInt64(x)) >> (64 - 2k))
 
 """
-`mismatches(a::Kmer, b::Kmer)`
+    reverse_complement(kmer::Kmer)
+
+Return the reverse complement of `kmer`
+"""
+reverse_complement(x::Kmer) = complement(reverse(x))
+
+"""
+    mismatches(a::Kmer, b::Kmer)
 
 Return the number of mismatches between `a` and `b`.
-
-### Arguments
-* `a`: first sequence to compare
-* `b`: second sequence to compare
-
-### Returns
-The number of mismatches
 """
-mismatches{T, K}(a::Kmer{T, K}, b::Kmer{T, K}) = nuc2mismatches(UInt64(a), UInt64(b))
+mismatches{T,k}(a::Kmer{T,k}, b::Kmer{T,k}) = bitpar_mismatches2(UInt64(a), UInt64(b))
 
 """
-Canonical k-mer of `x`
+    canonical(kmer::Kmer)
+
+Return the canonical k-mer of `x`.
 
 A canonical k-mer is the numerical lesser of a k-mer and its reverse complement.
 This is useful in hashing/counting k-mers in data that is not strand specific,
 and thus observing k-mer is equivalent to observing its reverse complement.
 """
-function canonical{T, K}(x::Kmer{T, K})
+function canonical(x::Kmer)
     y = reverse_complement(x)
     return x < y ? x : y
 end
 
 
-# De Bruijn Graph
-# ---------------
+# K-mer neighbor
+# --------------
 
 # neighbors on a de Bruijn graph
 immutable KmerNeighborIterator{T, K}
@@ -201,11 +196,11 @@ immutable KmerNeighborIterator{T, K}
 end
 
 """
-Iterate through k-mers neighboring `x` on a de Bruijn graph.
+    neighbors(kmer::Kmer)
+
+Return an iterator through k-mers neighboring `kmer` on a de Bruijn graph.
 """
-function neighbors(x::Kmer)
-    return KmerNeighborIterator(x)
-end
+neighbors(x::Kmer) = KmerNeighborIterator(x)
 
 Base.length(::KmerNeighborIterator) = 4
 Base.eltype{T,k}(::Type{KmerNeighborIterator{T,k}}) = Kmer{T,k}

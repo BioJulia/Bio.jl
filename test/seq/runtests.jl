@@ -1258,20 +1258,41 @@ end
 
         function test_mismatches(A, a, b)
             count = 0
-            for (ca, cb) in zip(a, b)
-                if ca != cb
+            for (x, y) in zip(a, b)
+                if (A == AminoAcidAlphabet && x != y && x != 'X' && y != 'X') ||
+                   (A != AminoAcidAlphabet && x != y && x != 'N' && y != 'N')
                     count += 1
                 end
             end
             seq_a = BioSequence{A}(a)
             seq_b = BioSequence{A}(b)
-            @test mismatches(seq_a, seq_b) === mismatches(seq_b, seq_a) == count
+            @test mismatches(seq_a, seq_b, true) ==
+                  mismatches(seq_b, seq_a, true) ==
+                  count
         end
 
-        for len in [0, 1, 10, 32, 1000, 10000, 100000], _ in 1:10
+        function test_mismatches_strict(A, a, b)
+            count = 0
+            for (x, y) in zip(a, b)
+                if x != y
+                    count += 1
+                end
+            end
+            seq_a = BioSequence{A}(a)
+            seq_b = BioSequence{A}(b)
+            @test mismatches(seq_a, seq_b, false) ==
+                  mismatches(seq_b, seq_a, false) ==
+                  count
+        end
+
+        for len in [0, 1, 10, 32, 1000], _ in 1:10
             test_mismatches(DNAAlphabet{4}, random_dna(len), random_dna(len))
             test_mismatches(RNAAlphabet{4}, random_rna(len), random_rna(len))
             test_mismatches(AminoAcidAlphabet, random_aa(len), random_aa(len))
+
+            test_mismatches_strict(DNAAlphabet{4}, random_dna(len), random_dna(len))
+            test_mismatches_strict(RNAAlphabet{4}, random_rna(len), random_rna(len))
+            test_mismatches_strict(AminoAcidAlphabet, random_aa(len), random_aa(len))
 
             probs = [0.25, 0.25, 0.25, 0.25, 0.00]
             test_mismatches(DNAAlphabet{2}, random_dna(len, probs), random_dna(len, probs))
