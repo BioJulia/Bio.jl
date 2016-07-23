@@ -306,6 +306,20 @@ end
         end
     end
 
+    @testset "complement" begin
+        @test Seq.complement(DNA_A) == DNA_T
+        @test Seq.complement(DNA_C) == DNA_G
+        @test Seq.complement(DNA_G) == DNA_C
+        @test Seq.complement(DNA_T) == DNA_A
+        @test_throws Exception Seq.complement(DNA_N)
+
+        @test Seq.complement(RNA_A) == RNA_U
+        @test Seq.complement(RNA_C) == RNA_G
+        @test Seq.complement(RNA_G) == RNA_C
+        @test Seq.complement(RNA_U) == RNA_A
+        @test_throws Exception Seq.complement(RNA_N)
+    end
+
     @testset "Encoder" begin
         @testset "DNA" begin
             encode = Seq.encode
@@ -1203,6 +1217,107 @@ end
                 test_rna_revcomp(RNAAlphabet{2}, random_rna(len, probs))
             end
         end
+    end
+
+    @testset "Predicates" begin
+        # ispalindrome
+        @test  ispalindrome(dna"")
+        @test !ispalindrome(dna"A")
+        @test !ispalindrome(dna"C")
+        @test  ispalindrome(dna"AT")
+        @test  ispalindrome(dna"CG")
+        @test !ispalindrome(dna"AC")
+        @test !ispalindrome(dna"TT")
+        @test  ispalindrome(dna"ACGT")
+        @test_throws Exception ispalindrome(dna"ANT")
+        @test_throws Exception ispalindrome(dna"ACNT")
+
+        @test  ispalindrome(DNAKmer("ACGT"))
+        @test !ispalindrome(DNAKmer("CACG"))
+
+        @test  ispalindrome(rna"")
+        @test !ispalindrome(rna"A")
+        @test !ispalindrome(rna"C")
+        @test  ispalindrome(rna"AU")
+        @test  ispalindrome(rna"CG")
+        @test !ispalindrome(rna"AC")
+        @test !ispalindrome(rna"UU")
+        @test  ispalindrome(rna"ACGU")
+        @test_throws Exception ispalindrome(rna"ANU")
+        @test_throws Exception ispalindrome(rna"ACNU")
+
+        @test  ispalindrome(RNAKmer("ACGU"))
+        @test !ispalindrome(RNAKmer("CACG"))
+
+        @test_throws Exception ispalindrome(aa"PQ")
+
+        # hasambiguity
+        @test !hasambiguity(dna"")
+        @test !hasambiguity(dna"A")
+        @test  hasambiguity(dna"N")
+        @test !hasambiguity(dna"ACGT")
+        @test  hasambiguity(dna"ANGT")
+
+        @test !hasambiguity(DNAKmer("ACGT"))
+
+        @test !hasambiguity(rna"")
+        @test !hasambiguity(rna"A")
+        @test  hasambiguity(rna"N")
+        @test !hasambiguity(rna"ACGU")
+        @test  hasambiguity(rna"ANGU")
+
+        @test !hasambiguity(RNAKmer("ACGU"))
+
+        @test !hasambiguity(aa"")
+        @test !hasambiguity(aa"A")
+        @test !hasambiguity(aa"P")
+        @test  hasambiguity(aa"B")
+        @test  hasambiguity(aa"X")
+        @test !hasambiguity(aa"ARNDCQEGHILKMFPSTWYVOU")
+        @test  hasambiguity(aa"ARXDCQEGHILKMFPSTWYVOU")
+
+        # isrepetitive
+        @test  isrepetitive(dna"")
+        @test !isrepetitive(dna"", 1)
+        @test  isrepetitive(dna"A")
+        @test  isrepetitive(dna"A", 1)
+        @test  isrepetitive(dna"AAA")
+        @test !isrepetitive(dna"ACGT", 2)
+        @test  isrepetitive(dna"AAGT", 2)
+        @test  isrepetitive(dna"ACCG", 2)
+        @test  isrepetitive(dna"ACGG", 2)
+        @test !isrepetitive(dna"ACGTCCGT", 3)
+        @test  isrepetitive(dna"ACGCCCGT", 3)
+
+        @test !isrepetitive(DNAKmer("ACGT"), 2)
+        @test  isrepetitive(DNAKmer("ACCT"), 2)
+        @test !isrepetitive(DNAKmer("ACCT"), 3)
+        @test  isrepetitive(DNAKmer("ACCCT"), 2)
+        @test  isrepetitive(DNAKmer("ACCCT"), 3)
+
+        @test  isrepetitive(rna"")
+        @test !isrepetitive(rna"", 1)
+        @test  isrepetitive(rna"A")
+        @test  isrepetitive(rna"A", 1)
+        @test  isrepetitive(rna"AAA")
+        @test !isrepetitive(rna"ACGU", 2)
+        @test  isrepetitive(rna"AAGU", 2)
+        @test  isrepetitive(rna"ACCG", 2)
+        @test  isrepetitive(rna"ACGG", 2)
+        @test !isrepetitive(rna"ACGUCCGU", 3)
+        @test  isrepetitive(rna"ACGCCCGU", 3)
+
+        @test !isrepetitive(RNAKmer("ACGU"), 2)
+        @test  isrepetitive(RNAKmer("ACCU"), 2)
+        @test !isrepetitive(RNAKmer("ACCU"), 3)
+        @test  isrepetitive(RNAKmer("ACCCU"), 2)
+        @test  isrepetitive(RNAKmer("ACCCU"), 3)
+
+        @test  isrepetitive(aa"")
+        @test !isrepetitive(aa"PGQQ")
+        @test  isrepetitive(aa"PGQQ", 2)
+        @test !isrepetitive(aa"PPQQ", 3)
+        @test  isrepetitive(aa"PPPQQ", 3)
     end
 
     @testset "Find" begin
