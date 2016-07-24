@@ -1,42 +1,74 @@
 # 2bit format
 # ===========
+#
+# Reader and writer of the 2bit file format.
+#
+# This file is a part of BioJulia.
+# License is MIT: https://github.com/BioJulia/Bio.jl/blob/master/LICENSE.md
 
 """
-.2bit format
-
-.2bit file format stores multiple DNA sequences (up to 4 Gib total) in a compact
-randomly-accessible format: https://genome.ucsc.edu/FAQ/FAQformat.html#format7.
+The 2bit file format stores multiple DNA sequences (up to 4 Gbp total) as a
+compact randomly-accessible format.
+See https://genome.ucsc.edu/FAQ/FAQformat.html#format7 for the details.
 """
 immutable TwoBit <: FileFormat end
 
-immutable TwoBitParser <: AbstractParser
-    input::IO
-    names::Vector{ASCIIString}
+type TwoBitParser{T<:IO} <: AbstractParser
+    # input stream
+    input::T
+
+    # sequence names
+    names::Vector{AbstractString}
+
+    # file offsets
     offsets::Vector{UInt32}
-    swap::Bool
+
+    # byte-swapped or not
+    swapped::Bool
 end
 
 function TwoBitParser(input::IO)
-    names, offsets, swap = loadheader(input)
-    return TwoBitParser(input, names, offsets, swap)
+    swapped, seqcount = read_2bit_header(input)
+    names, offsets = read_2bit_index(input, swapped, seqcount)
+    @assert seqcount == length(names) == length(offsets)
+    return TwoBitParser(input, names, offsets, swapped)
 end
 
 function Base.open(filename::AbstractString, ::Type{TwoBit})
-    input = open(filename)
-    finalizer(input, close)
-    return TwoBitParser(input)
+    return TwoBitParser(open(filename))
 end
 
-# iterator
-Base.eltype(::Type{TwoBitParser}) = SeqRecord{DNASequence,Vector{UnitRange{Int}}}
-Base.length(p::TwoBitParser) = length(p.names)
-Base.start(p::TwoBitParser) = 1
-Base.done(p::TwoBitParser, k::Int) = k > endof(p)
-Base.next(p::TwoBitParser, k::Int) = p[k], k + 1
+function Base.close(p::TwoBitParser)
+    close(p.input)
+end
+
+function Base.eof(p::TwoBitParser)
+    return eof(p.input)
+end
+
+function Base.eltype(::Type{TwoBitParser})
+    return SeqRecord{ReferenceSequence,Vector{UnitRange{Int}}}
+end
+
+function Base.length(p::TwoBitParser)
+    return length(p.names)
+end
+
+function Base.start(p::TwoBitParser)
+    return 1
+end
+
+function Base.done(p::TwoBitParser, k)
+    return k > endof(p)
+end
+
+function Base.next(p::TwoBitParser, k)
+    return p[k], k + 1
+end
 
 
-# Indexing
-# --------
+# Random access
+# -------------
 
 function Base.checkbounds(p::TwoBitParser, k::Integer)
     if 1 ≤ k ≤ endof(p)
@@ -52,13 +84,15 @@ function Base.checkbounds(p::TwoBitParser, r::Range)
     throw(BoundsError(p, k))
 end
 
-Base.endof(p::TwoBitParser) = length(p)
+function Base.endof(p::TwoBitParser)
+    return length(p)
+end
 
 function Base.getindex(p::TwoBitParser, k::Integer)
     checkbounds(p, k)
     seek(p.input, p.offsets[k])
-    seq, mblocks = readseq(p.input, p.swap)
-    return SeqRecord{DNASequence,Vector{UnitRange{Int}}}(p.names[k], seq, mblocks)
+    seq, mblocks = read_2bit_seq(p.input, p.swapped)
+    return SeqRecord{ReferenceSequence,Vector{UnitRange{Int}}}(p.names[k], seq, mblocks)
 end
 
 function Base.getindex(p::TwoBitParser, name::AbstractString)
@@ -82,38 +116,78 @@ end
 # Parser
 # ------
 
-function loadheader(io::IO)
-    # header
-    signature = read(io, UInt32)
+function read_2bit_header(input)
+    signature = read(input, UInt32)
     if signature == 0x1A412743
-        swap = false
+        swapped = false
     elseif signature == 0x4327411A
-        swap = true
+        swapped = true
     else
-        error("invalid signature")
+        error("invalid 2bit signature")
     end
-
-    version  = read32(io, swap)
-    seqcount = read32(io, swap)
-    reserved = read32(io, swap)
+    version  = read32(input, swapped)
+    seqcount = read32(input, swapped)
+    reserved = read32(input, swapped)
     @assert version == reserved == 0
+    return swapped, seqcount
+end
 
-    # file index
-    names = ASCIIString[]
+function read_2bit_index(input, swapped, seqcount)
+    names = AbstractString[]
     offsets = UInt32[]
     for i in 1:seqcount
-        namesize = read(io, UInt8)
-        name = read(io, UInt8, Int(namesize))
-        offset = read32(io, swap)
-        push!(names, name)
+        namesize = read(input, UInt8)
+        name = read(input, UInt8, namesize)
+        offset = read32(input, swapped)
+        push!(names, bytestring(name))
         push!(offsets, offset)
     end
+    return names, offsets
+end
 
-    return names, offsets, swap
+function read_2bit_seq(input, swap)
+    # read record header
+    dnasize = read32(input, swap)
+    blockcount = read32(input, swap)  # N blocks
+    blockstarts = read32(input, blockcount, swap)
+    blocksizes = read32(input, blockcount, swap)
+    mblockcount = read32(input, swap)  # masked blocks
+    mblockstarts = read32(input, mblockcount, swap)
+    mblocksizes = read32(input, mblockcount, swap)
+    reserved = read32(input, swap)
+    @assert reserved == 0
+
+    # read packed DNAs
+    data = zeros(UInt64, cld(dnasize, 32))
+    i_stop = BitIndex(dnasize, 2)
+    i = BitIndex(1, 2)
+    while i ≤ i_stop
+        x = read(input, UInt8)
+        data[index(i)] |= twobit2refseq(x) << offset(i)
+        i += 8
+    end
+
+    # make an N vector
+    nmask = falses(Int(dnasize))
+    for j in 1:blockcount
+        s = blockstarts[j]
+        for k in s+1:s+blocksizes[j]
+            nmask[k] = true
+        end
+    end
+
+    # make masked blocks
+    mblocks = UnitRange{Int}[]
+    for j in 1:mblockcount
+        s = mblockstarts[j]
+        push!(mblocks, s+1:s+mblocksizes[j])
+    end
+
+    return ReferenceSequence(data, nmask, 1:dnasize), mblocks
 end
 
 # mapping table from .2bit DNA encoding to Bio.jl DNA encoding
-const twobit_decode_table = let
+const twobit2refseq_table = let
     # T: 00, C: 01, A: 10, G: 11
     f(x) = x == 0b00 ? UInt64(DNA_T) :
            x == 0b01 ? UInt64(DNA_C) :
@@ -122,194 +196,207 @@ const twobit_decode_table = let
     tcag = 0b00:0b11
     tbl = UInt64[]
     for a in tcag, b in tcag, c in tcag, d in tcag
-        x = UInt64(0)
-        x |= f(a)
-        x |= f(b) <<  4
-        x |= f(c) <<  8
-        x |= f(d) << 12
+        x::UInt64 = 0
+        x |= f(a) << 0
+        x |= f(b) << 2
+        x |= f(c) << 4
+        x |= f(d) << 6
         push!(tbl, x)
     end
     tbl
 end
 
-twobit_decode(pack::UInt8) = twobit_decode_table[UInt(pack)+1]
+twobit2refseq(x::UInt8) = twobit2refseq_table[Int(x)+1]
 
 # read 32 bits and swap bytes if necessary
-function read32(io, swap)
-    x = read(io, UInt32)
+function read32(input, swap)
+    x = read(input, UInt32)
     if swap
         x = bswap(x)
     end
     return x
 end
 
-function read32(io, n, swap)
-    xs = read(io, UInt32, n)
+function read32(input, n, swap)
+    xs = read(input, UInt32, n)
     if swap
         map!(bswap, xs)
     end
     return xs
 end
 
-function readseq(io, swap)
-    # read record header
-    dnasize::Int = read32(io, swap)
-    blockcount::Int = read32(io, swap)  # N blocks
-    blockstarts = read32(io, blockcount, swap)
-    blocksizes  = read32(io, blockcount, swap)
-    mblockcount::Int = read32(io, swap)  # masked blocks
-    mblockstarts = read32(io, mblockcount, swap)
-    mblocksizes  = read32(io, mblockcount, swap)
-    reserved = read32(io, swap)
-    @assert reserved == 0
 
-    # read packed DNA
-    data = zeros(UInt64, cld(dnasize, 16))
-    j = 1
-    r = 0
-    for _ in 1:cld(dnasize, 4)
-        pack = read(io, UInt8)
-        #data[j] |= twobit_decode_table[UInt(pack)+1] << r
-        data[j] |= twobit_decode(pack) << r
-        r += 16
-        if r ≥ 64
-            j += 1
-            r = 0
-        end
-    end
+# Writer
+# ------
 
-    # fill N blocks
-    seq = DNASequence(data, 1:dnasize, false)
-    for k in 1:blockcount
-        s = blockstarts[k]
-        l = blocksizes[k]
-        for i in s+1:s+l
-            seq[i] = DNA_N
-        end
-    end
+type TwoBitWriter{T<:IO} <: AbstractWriter
+    # output stream
+    output::T
 
-    # make masked blocks
-    mblocks = UnitRange{Int}[]
-    for k in 1:mblockcount
-        s = mblockstarts[k]
-        l = mblocksizes[k]
-        push!(mblocks, s+1:s+l)
-    end
+    # sequence names
+    names::Vector{AbstractString}
 
-    return seq, mblocks
+    # bit vector to check if each sequence is already written or not
+    written::BitVector
 end
 
+function TwoBitWriter(output::IO, names::AbstractVector)
+    writer = TwoBitWriter(
+        output,
+        convert(Vector{AbstractString}, names),
+        falses(length(names)))
+    write_header(writer)
+    write_index(writer)
+    return writer
+end
 
-# Serializer
-# ----------
+function Base.close(writer::TwoBitWriter)
+    if !all(writer.written)
+        error("one or more sequences are not written")
+    end
+    close(writer.output)
+end
 
-function writeformat(io::IO, ::Type{TwoBit}, records)
-    # compute N blocks
-    blockstarts = Vector{UInt32}[]
-    blocksizes  = Vector{UInt32}[]
-    for r in records
-        seq = r.seq
-        starts = UInt32[]
-        sizes  = UInt32[]
-        i = 1
-        while i ≤ endof(seq)
-            if seq[i] == DNA_N
-                start = i - 1  # 0-based index
-                push!(starts, start)
-                while i ≤ endof(seq) && seq[i] == DNA_N
-                    i += 1
-                end
-                push!(sizes, (i - 1) - start)
-            else
-                if seq[i] > DNA_T
-                    error("ambiguous nucleotide except N is not supported")
-                end
+function write_header(writer::TwoBitWriter)
+    output = writer.output
+    n = 0
+    n += write(output, 0x1A412743)
+    n += write(output, UInt32(0))
+    n += write(output, UInt32(length(writer.names)))
+    n += write(output, UInt32(0))
+    return n
+end
+
+function write_index(writer::TwoBitWriter)
+    output = writer.output
+    n = 0
+    for name in writer.names
+        n += write(output, UInt8(length(name)))
+        n += write(output, name)
+        n += write(output, UInt32(0))
+    end
+    return n
+end
+
+# Update the file offset of a sequence in the index section.
+function update_offset(writer::TwoBitWriter, seqname, seqoffset)
+    output = writer.output
+    offset = 16
+    for name in writer.names
+        offset += sizeof(UInt8) + length(name)
+        if name == seqname
+            old = position(output)
+            seek(output, offset)
+            write(output, UInt32(seqoffset))
+            seek(output, old)
+            return
+        end
+        offset += sizeof(UInt32)
+    end
+end
+
+function Base.write(writer::TwoBitWriter, record::SeqRecord)
+    i = findfirst(writer.names, record.name)
+    if i == 0
+        error("sequence \"", record.name, "\" doesn't exist in the list")
+    elseif writer.written[i]
+        error("sequence \"", record.name, "\" is already written")
+    end
+
+    output = writer.output
+    update_offset(writer, record.name, position(output))
+
+    n = 0
+    n += write(output, UInt32(length(record.seq)))
+    n += write_n_blocks(output, record.seq)
+    n += write_masked_blocks(output, record.metadata)
+    n += write(output, UInt32(0))  # reserved bytes
+    n += write_twobit_sequence(output, record.seq)
+
+    writer.written[i] = true
+    return n
+end
+
+function make_nblocks(seq)
+    starts = UInt32[]
+    sizes = UInt32[]
+    i = 1
+    while i ≤ endof(seq)
+        nt = seq[i]
+        if nt == DNA_N
+            start = i - 1  # 0-based index
+            push!(starts, start)
+            while i ≤ endof(seq) && seq[i] == DNA_N
                 i += 1
             end
+            push!(sizes, (i - 1) - start)
+        elseif isambiguous(nt)
+            error("ambiguous nucleotide except N is not supported")
+        else
+            i += 1
         end
-        push!(blockstarts, starts)
-        push!(blocksizes, sizes)
     end
+    return starts, sizes
+end
+
+function write_n_blocks(output, seq)
+    blockstarts, blocksizes = make_nblocks(seq)
     @assert length(blockstarts) == length(blocksizes)
+    n = 0
+    n += write(output, UInt32(length(blockstarts)))
+    n += write(output, blockstarts)
+    n += write(output, blocksizes)
+    return n
+end
 
-    # write header
-    write(io, 0x1A412743)
-    write(io, UInt32(0))
-    write(io, UInt32(length(records)))
-    write(io, UInt32(0))
-
-    # write index
-    offset = 0  # keep track of the file offset for each sequence record
-    offset += 16  # header size
-    offset += sum([1 + length(r.name) + 4 for r in records])  # index size
-    for (k, r) in enumerate(records)
-        write(io, UInt8(length(r.name)))
-        write(io, r.name)
-        write(io, UInt32(offset))
-
-        # increment the offset by the size of the sequence record
-        offset += 4                               # dna size
-        offset += 4                               # block count
-        offset += 4 * length(blockstarts[k]) * 2  # blockstarts and blocksizes
-        offset += 4                               # masked block count
-        offset += 4 * length(r.metadata) * 2      # masked blockstarts and blocksizes
-        offset += 4                               # reserved bytes
-        offset += cld(length(r.seq), 4)           # DNA sequence
+function write_masked_blocks(output, metadata)
+    n = 0
+    if isa(metadata, Vector{UnitRange{Int}})
+        n += write(output, UInt32(length(metadata)))
+        for mblock in metadata
+            n += write(output, UInt32(first(mblock)))
+            n += write(output, UInt32(length(mblock)))
+        end
+    elseif metadata === nothing
+        n += write(output, UInt32(0))
+    else
+        error("metadata is not serializable in the 2bit file format")
     end
+    return n
+end
 
-    # write sequence records
-    for (k, r) in enumerate(records)
-        seq = r.seq
-        write(io, UInt32(length(seq)))
-
-        # write N blocks
-        write(io, UInt32(length(blockstarts[k])))
-        write(io, blockstarts[k])
-        write(io, blocksizes[k])
-
-        # write masked blocks
-        masks = r.metadata
-        @assert eltype(masks) <: UnitRange
-        write(io, UInt32(length(masks)))
-        for m in masks
-            write(io, UInt32(first(m) - 1))  # 0-based index
-            write(io, UInt32(length(m)))
-        end
-
-        # write reserved bytes
-        write(io, UInt32(0))
-
-        # write packed DNA sequence
-        i = 4
-        while i ≤ endof(seq)
-            x::UInt8 = 0
-            x |= twobit_encode(seq[i-3]) << 6
-            x |= twobit_encode(seq[i-2]) << 4
-            x |= twobit_encode(seq[i-1]) << 2
-            x |= twobit_encode(seq[i])
-            write(io, x)
-            i += 4
-        end
-        r = length(seq) % 4
-        if r > 0
-            y::UInt8 = 0
+function write_twobit_sequence(output, seq)
+    n = 0
+    i = 4
+    while i ≤ endof(seq)
+        x::UInt8 = 0
+        x |= nuc2twobit(seq[i-3]) << 6
+        x |= nuc2twobit(seq[i-2]) << 4
+        x |= nuc2twobit(seq[i-1]) << 2
+        x |= nuc2twobit(seq[i-0]) << 0
+        n += write(output, x)
+        i += 4
+    end
+    r = length(seq) % 4
+    if r > 0
+        let x::UInt8 = 0
             i = endof(seq) - r + 1
             while i ≤ endof(seq)
-                y = y << 2 | twobit_encode(seq[i])
+                x = x << 2 | nuc2twobit(seq[i])
                 i += 1
             end
-            y <<= (4 - r) * 2
-            write(io, y)
+            x <<= (4 - r) * 2
+            n += write(output, x)
         end
     end
+    return n
 end
 
-function twobit_encode(nt::DNANucleotide)
+function nuc2twobit(nt::DNANucleotide)
     return (
         nt == DNA_A ? 0b10 :
         nt == DNA_C ? 0b01 :
         nt == DNA_G ? 0b11 :
         nt == DNA_T ? 0b00 :
-        nt == DNA_N ? 0b00 : error()
-    )
+        nt == DNA_N ? 0b00 : error())
 end

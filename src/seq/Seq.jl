@@ -128,7 +128,8 @@ export
     approxsearchindex,
     approxrsearch,
     approxrsearchindex,
-    ReferenceSequence
+    ReferenceSequence,
+    TwoBit
 
 using
     BufferedStreams,
