@@ -280,6 +280,7 @@ end
 
 # Update the file offset of a sequence in the index section.
 function update_offset(writer::TwoBitWriter, seqname, seqoffset)
+    @assert seqname ∈ writer.names
     output = writer.output
     offset = 16
     for name in writer.names
@@ -298,7 +299,7 @@ end
 function Base.write(writer::TwoBitWriter, record::SeqRecord)
     i = findfirst(writer.names, record.name)
     if i == 0
-        error("sequence \"", record.name, "\" doesn't exist in the list")
+        error("sequence \"", record.name, "\" doesn't exist in the writing list")
     elseif writer.written[i]
         error("sequence \"", record.name, "\" is already written")
     end
@@ -317,7 +318,7 @@ function Base.write(writer::TwoBitWriter, record::SeqRecord)
     return n
 end
 
-function make_nblocks(seq)
+function make_n_blocks(seq)
     starts = UInt32[]
     sizes = UInt32[]
     i = 1
@@ -340,7 +341,7 @@ function make_nblocks(seq)
 end
 
 function write_n_blocks(output, seq)
-    blockstarts, blocksizes = make_nblocks(seq)
+    blockstarts, blocksizes = make_n_blocks(seq)
     @assert length(blockstarts) == length(blocksizes)
     n = 0
     n += write(output, UInt32(length(blockstarts)))
