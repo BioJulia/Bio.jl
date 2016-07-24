@@ -237,6 +237,16 @@ alphabet{A}(::Type{BioSequence{A}}) = alphabet(A)
 Base.length(seq::BioSequence) = length(seq.part)
 Base.eltype{A}(::Type{BioSequence{A}}) = eltype(A)
 
+function Base.count(f::Function, seq::BioSequence)
+    n = 0
+    for x in seq
+        if f(x)
+            n += 1
+        end
+    end
+    return n
+end
+
 function Base.checkbounds(seq::BioSequence, range::UnitRange)
     if 1 ≤ range.start && range.stop ≤ endof(seq)
         return true
@@ -909,4 +919,22 @@ end
     mismatches |= (xyxor & 0x4444444444444444) >> 2
     mismatches |= (xyxor & 0x8888888888888888) >> 3
     return count_ones(mismatches)
+end
+
+
+# Shuffle
+# -------
+
+function Base.shuffle(seq::BioSequence)
+    return shuffle!(copy(seq))
+end
+
+function Base.shuffle!(seq::BioSequence)
+    orphan!(seq)
+    # Fisher-Yates shuffle
+    for i in 1:endof(seq)-1
+        j = rand(i:endof(seq))
+        seq[i], seq[j] = seq[j], seq[i]
+    end
+    return seq
 end

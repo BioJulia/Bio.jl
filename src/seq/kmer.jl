@@ -186,6 +186,14 @@ function canonical(x::Kmer)
     return x < y ? x : y
 end
 
+function Base.rand{T,k}(::Type{Kmer{T,k}})
+    return convert(Kmer{T,k}, rand(UInt64))
+end
+
+function Base.rand{T,k}(::Type{Kmer{T,k}}, size::Integer)
+    return [rand(Kmer{T,k}) for _ in 1:size]
+end
+
 
 # K-mer neighbor
 # --------------
@@ -218,3 +226,25 @@ end
 count_c(x::UInt64) = count_ones((((~x) >>> 1) & x) & 0x5555555555555555)
 count_g(x::UInt64) = count_ones(((x >>> 1) & (~x)) & 0x5555555555555555)
 count_t(x::UInt64) = count_ones((x    & (x >>> 1)) & 0x5555555555555555)
+
+
+# Shuffle
+# -------
+
+function Base.shuffle{T,k}(kmer::Kmer{T,k})
+    # Fisher-Yates shuffle
+    for i in 1:k-1
+        j = rand(i:k)
+        kmer = swap(kmer, i, j)
+    end
+    return kmer
+end
+
+# Swap two nucleotides at `i` and `j`.
+function swap{T,k}(kmer::Kmer{T,k}, i, j)
+    i = 2k - 2i
+    j = 2k - 2j
+    b = convert(UInt64, kmer)
+    x = ((b >> i) $ (b >> j)) & UInt64(0x03)
+    return Kmer{T,k}(b $ ((x << i) | (x << j)))
+end

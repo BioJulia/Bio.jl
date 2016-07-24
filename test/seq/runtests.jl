@@ -1365,6 +1365,25 @@ end
             @test p == pos[i]
         end
     end
+
+    @testset "Shuffle" begin
+        @testset for _ in 1:10
+            @test shuffle(dna"") == dna""
+            @test shuffle(dna"A") == dna"A"
+            @test shuffle(dna"C") == dna"C"
+        end
+
+        seq = dna"ACGTN"^10
+        @test shuffle(seq) != dna"ACGTN"^10
+        @test seq == dna"ACGTN"^10
+        @test shuffle!(seq) === seq
+        @test seq != dna"ACGTN"^10
+        @test count(x -> x == DNA_A, seq) == 10
+        @test count(x -> x == DNA_C, seq) == 10
+        @test count(x -> x == DNA_G, seq) == 10
+        @test count(x -> x == DNA_T, seq) == 10
+        @test count(x -> x == DNA_N, seq) == 10
+    end
 end
 
 @testset "ReferenceSequence" begin
@@ -1780,6 +1799,35 @@ end
         end
     end
 
+    @testset "Random" begin
+        @testset for k in 0:32
+            for _ in 1:10
+                kmer = rand(DNAKmer{k})
+                @test isa(kmer, DNAKmer{k})
+                kmer = rand(RNAKmer{k})
+                @test isa(kmer, RNAKmer{k})
+            end
+
+            for size in [0, 1, 2, 5, 10, 100]
+                @test length(rand(DNAKmer{k}, size)) == size
+                @test length(rand(RNAKmer{k}, size)) == size
+            end
+
+            kmers = rand(DNAKmer{k}, 10_000)
+            for i in 1:k
+                a = sum([kmer[i] for kmer in kmers] .== DNA_A)
+                c = sum([kmer[i] for kmer in kmers] .== DNA_C)
+                g = sum([kmer[i] for kmer in kmers] .== DNA_G)
+                t = sum([kmer[i] for kmer in kmers] .== DNA_T)
+                @test 2200 ≤ a ≤ 2800
+                @test 2200 ≤ c ≤ 2800
+                @test 2200 ≤ g ≤ 2800
+                @test 2200 ≤ t ≤ 2800
+                @test a + c + g + t == 10_000
+            end
+        end
+    end
+
     @testset "Find" begin
         kmer = DNAKmer("ACGAG")
 
@@ -1968,6 +2016,32 @@ end
             RNAKmer["CGA",  "CGC",  "CGG",  "CGU" ]
         @test collect(neighbors(RNAKmer("GGGG"))) ==
             RNAKmer["GGGA", "GGGC", "GGGG", "GGGU"]
+    end
+
+    @testset "Shuffle" begin
+        for s in ["", "A", "C", "G", "T"]
+            kmer = DNAKmer(s)
+            @test kmer === shuffle(kmer)
+        end
+
+        function count(kmer)
+            a = c = g = t = 0
+            for x in kmer
+                a += x == DNA_A
+                c += x == DNA_C
+                g += x == DNA_G
+                t += x == DNA_T
+            end
+            return a, c, g, t
+        end
+
+        for k in 0:32, _ in 1:10
+            kmer = rand(DNAKmer{k})
+            @test count(kmer) == count(shuffle(kmer))
+            if k ≥ 30
+                @test kmer != shuffle(kmer)
+            end
+        end
     end
 end
 
