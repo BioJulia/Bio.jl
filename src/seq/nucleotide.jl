@@ -98,6 +98,10 @@ isambiguous(nt::DNANucleotide) = nt > DNA_T
 alphabet(::Type{DNANucleotide}) = DNA_A:DNA_Gap
 gap(::Type{DNANucleotide}) = DNA_Gap
 
+function isGC(nt::DNANucleotide)
+    return nt == DNA_G || nt == DNA_C || nt == DNA_S
+end
+
 # RNA Nucleotides
 
 "Invalid RNA Nucleotide"
@@ -148,6 +152,9 @@ isambiguous(nt::RNANucleotide) = nt > RNA_U
 alphabet(::Type{RNANucleotide}) = RNA_A:RNA_Gap
 gap(::Type{RNANucleotide}) = RNA_Gap
 
+function isGC(nt::RNANucleotide)
+    return nt == RNA_G || nt == RNA_C || nt == RNA_S
+end
 
 # Compatibility
 # -------------

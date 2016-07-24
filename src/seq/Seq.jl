@@ -67,6 +67,7 @@ export
     ambiguous_positions,
     npositions,
     hasn,
+    gc_content,
     canonical,
     neighbors,
     eachkmer,
