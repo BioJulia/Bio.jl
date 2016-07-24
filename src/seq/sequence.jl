@@ -114,22 +114,15 @@ Base.findlast(seq::Sequence, val) = findprev(seq, val, endof(seq))
 Calculate GC content of `seq`.
 """
 function gc_content(seq::Sequence)
-    gc = 0
-
-    if eltype(seq) == DNANucleotide
-        for x in seq
-            if x == DNA_C || x == DNA_G
-                gc += 1
-            end
-        end
-    elseif eltype(seq) == RNANucleotide
-        for x in seq
-            if x == RNA_C || x == RNA_G
-                gc += 1
-            end
-        end
-    else
+    if !(eltype(seq) <: Nucleotide)
         error("elements must be nucleotides")
+    end
+
+    gc = 0
+    for x in seq
+        if isGC(x)
+            gc += 1
+        end
     end
 
     if isempty(seq)
