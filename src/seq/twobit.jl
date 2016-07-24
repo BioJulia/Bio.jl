@@ -354,7 +354,9 @@ function write_masked_blocks(output, metadata)
     if isa(metadata, Vector{UnitRange{Int}})
         n += write(output, UInt32(length(metadata)))
         for mblock in metadata
-            n += write(output, UInt32(first(mblock)))
+            n += write(output, UInt32(first(mblock) - 1))  # 0-based
+        end
+        for mblock in metadata
             n += write(output, UInt32(length(mblock)))
         end
     elseif metadata === nothing
