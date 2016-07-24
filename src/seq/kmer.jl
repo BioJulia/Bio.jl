@@ -186,6 +186,14 @@ function canonical(x::Kmer)
     return x < y ? x : y
 end
 
+function Base.rand{T,k}(::Type{Kmer{T,k}})
+    return convert(Kmer{T,k}, rand(UInt64))
+end
+
+function Base.rand{T,k}(::Type{Kmer{T,k}}, size::Integer)
+    return [rand(Kmer{T,k}) for _ in 1:size]
+end
+
 
 # K-mer neighbor
 # --------------
