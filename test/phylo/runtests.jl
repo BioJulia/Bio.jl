@@ -1,6 +1,5 @@
 module TestPhylo
 
-
 if VERSION >= v"0.5-"
     using Base.Test
 else
@@ -10,6 +9,7 @@ end
 
 using Bio.Phylo
 using LightGraphs
+using Bio.Phylo.Dating
 
 @testset "Phylogenies" begin
 
@@ -147,5 +147,18 @@ end
     @test n_possible_unrooted(4) == 3
     @test n_possible_unrooted(5) == 15
 end
+
+
+@testset "Dating algorithms" begin
+    for i in 1:10
+        size = rand(10:100)
+        mutations = rand(1:(size - 1))
+        rate = rand(10e-9:10e-10:10e-6)
+        expected = coaltime(size, mutations, rate, SimpleEstimate)
+        estimated = coaltime(size, mutations, rate, SpeedDating)
+        @test expected in estimated
+    end
+end
+
 
 end # TestPhylo
