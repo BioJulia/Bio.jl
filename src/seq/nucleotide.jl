@@ -102,6 +102,25 @@ function isGC(nt::DNANucleotide)
     return nt == DNA_G || nt == DNA_C || nt == DNA_S
 end
 
+"""
+    complement(nt::Nucleotide)
+
+Return the complementary nucleotide of `nt`.
+"""
+function complement(nt::DNANucleotide)
+    if isambiguous(nt)
+        error("complement of an ambiguous nucleotide is not defined")
+    elseif nt == DNA_A
+        return DNA_T
+    elseif nt == DNA_C
+        return DNA_G
+    elseif nt == DNA_G
+        return DNA_C
+    else
+        return DNA_A
+    end
+end
+
 # RNA Nucleotides
 
 "Invalid RNA Nucleotide"
@@ -155,6 +174,21 @@ gap(::Type{RNANucleotide}) = RNA_Gap
 function isGC(nt::RNANucleotide)
     return nt == RNA_G || nt == RNA_C || nt == RNA_S
 end
+
+function complement(nt::RNANucleotide)
+    if isambiguous(nt)
+        error("complement of an ambiguous nucleotide is not defined")
+    elseif nt == RNA_A
+        return RNA_U
+    elseif nt == RNA_C
+        return RNA_G
+    elseif nt == RNA_G
+        return RNA_C
+    else
+        return RNA_A
+    end
+end
+
 
 # Compatibility
 # -------------

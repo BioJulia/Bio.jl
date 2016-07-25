@@ -27,7 +27,6 @@ end
 
 Base.size(seq::Sequence) = (length(seq),)
 Base.endof(seq::Sequence) = length(seq)
-Base.isempty(seq::Sequence) = length(seq) == 0
 Base.eachindex(seq::Sequence) = 1:endof(seq)
 
 @inline function Base.checkbounds(seq::Sequence, i::Integer)
@@ -107,7 +106,6 @@ end
 Base.findfirst(seq::Sequence, val) = findnext(seq, val, 1)
 Base.findlast(seq::Sequence, val) = findprev(seq, val, endof(seq))
 
-
 """
     gc_content(seq::Sequence)
 
@@ -131,6 +129,80 @@ function gc_content(seq::Sequence)
         return gc / length(seq)
     end
 end
+
+# Predicates
+# ----------
+
+function Base.isempty(seq::Sequence)
+    return length(seq) == 0
+end
+
+"""
+    ispalindrome(seq::Sequence)
+
+Return `true` if `seq` is a palindrome sequence; otherwise return `false`.
+"""
+function ispalindrome(seq::Sequence)
+    if !(eltype(seq) <: Nucleotide)
+        error("elements must be nucleotide")
+    end
+
+    for i in 1:cld(length(seq), 2)
+        if seq[i] != complement(seq[end-i+1])
+            return false
+        end
+    end
+
+    return true
+end
+
+"""
+    hasambiguity(seq::Sequence)
+
+Return `true` if `seq` has an ambiguous symbol; otherwise return `false`.
+"""
+function hasambiguity(seq::Sequence)
+    for x in seq
+        if isambiguous(x)
+            return true
+        end
+    end
+    return false
+end
+
+"""
+    isrepetitive(seq::Sequence, n::Integer=length(seq))
+
+Return `true` if and only if `seq` contains a repetitive subsequence of length `≥ n`.
+"""
+function isrepetitive(seq::Sequence, n::Integer=length(seq))
+    if n < 0
+        error("repetition must be non-negative")
+    elseif isempty(seq)
+        return n == 0
+    end
+
+    rep = 1
+    if rep ≥ n
+        return true
+    end
+    last = first(seq)
+    for i in 2:endof(seq)
+        x = seq[i]
+        if x == last
+            rep += 1
+            if rep ≥ n
+                return true
+            end
+        else
+            rep = 1
+        end
+        last = x
+    end
+
+    return false
+end
+
 
 # Printers
 # --------
