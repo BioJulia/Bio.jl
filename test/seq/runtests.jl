@@ -1249,6 +1249,56 @@ end
             @test map!(x -> x == AA_X ? AA_A : x, seq) === seq
             @test seq == aa"ARNDCQAE"
         end
+
+        @testset "Filter" begin
+            seq = dna""
+            @test filter(x -> true, seq) == dna""
+            @test filter(x -> false, seq) == dna""
+            seq = dna"AAA"
+            @test filter(x -> x == DNA_A, seq) == dna"AAA"
+            @test filter(x -> x == DNA_C, seq) == dna""
+            seq = dna"ACGTNACGTN"
+            @test filter(x -> x == DNA_N, seq) == dna"NN"
+            @test filter(x -> x != DNA_N, seq) == dna"ACGTACGT"
+            @test seq == dna"ACGTNACGTN"
+            @test filter!(x -> x != DNA_N, seq) == seq
+            @test seq == dna"ACGTACGT"
+
+            for len in 1:50, _ in 1:10
+                str = random_dna(len)
+                seq = DNASequence(str)
+                @test filter(x -> x == DNA_N, seq) ==
+                    DNASequence(filter(x -> x == 'N', str))
+                @test filter(x -> x != DNA_N, seq) ==
+                    DNASequence(filter(x -> x != 'N', str))
+            end
+
+            seq = rna""
+            @test filter(x -> true, seq) == rna""
+            @test filter(x -> false, seq) == rna""
+            seq = rna"AAA"
+            @test filter(x -> x == RNA_A, seq) == rna"AAA"
+            @test filter(x -> x == RNA_C, seq) == rna""
+            seq = rna"ACGUNACGUN"
+            @test filter(x -> x == RNA_N, seq) == rna"NN"
+            @test filter(x -> x != RNA_N, seq) == rna"ACGUACGU"
+            @test seq == rna"ACGUNACGUN"
+            @test filter!(x -> x != RNA_N, seq) == seq
+            @test seq == rna"ACGUACGU"
+
+            seq = aa""
+            @test filter(x -> true, seq) == aa""
+            @test filter(x -> false, seq) == aa""
+            seq = aa"PPP"
+            @test filter(x -> x == AA_P, seq) == aa"PPP"
+            @test filter(x -> x != AA_P, seq) == aa""
+            seq = aa"ARNDCQXGHILKMFPXTWYVOUX"
+            @test filter(x -> x == AA_X, seq) == aa"XXX"
+            @test filter(x -> x != AA_X, seq) == aa"ARNDCQGHILKMFPTWYVOU"
+            @test seq == aa"ARNDCQXGHILKMFPXTWYVOUX"
+            @test filter!(x -> x != AA_X, seq) == seq
+            @test seq == aa"ARNDCQGHILKMFPTWYVOU"
+        end
     end
 
     @testset "Predicates" begin

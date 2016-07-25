@@ -251,6 +251,10 @@ function Base.map(f::Function, seq::BioSequence)
     return map!(f, copy(seq))
 end
 
+function Base.filter(f::Function, seq::BioSequence)
+    return filter!(f, copy(seq))
+end
+
 function Base.checkbounds(seq::BioSequence, range::UnitRange)
     if 1 ≤ range.start && range.stop ≤ endof(seq)
         return true
@@ -557,6 +561,34 @@ function Base.map!(f::Function, seq::BioSequence)
     for i in 1:endof(seq)
         unsafe_setindex!(seq, f(inbounds_getindex(seq, i)), i)
     end
+    return seq
+end
+
+function Base.filter!{A}(f::Function, seq::BioSequence{A})
+    orphan!(seq)
+
+    len = 0
+    next = bitindex(seq, 1)
+    j = index(next)
+    datum::UInt64 = 0
+    for i in 1:endof(seq)
+        x = inbounds_getindex(seq, i)
+        if f(x)
+            datum |= enc64(seq, x) << offset(next)
+            len += 1
+            next += bitsof(A)
+            if index(next) != j
+                seq.data[j] = datum
+                datum = 0
+                j = index(next)
+            end
+        end
+    end
+    if offset(next) > 0
+        seq.data[j] = datum
+    end
+    resize!(seq, len)
+
     return seq
 end
 
