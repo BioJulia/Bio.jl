@@ -152,7 +152,7 @@ end
 @testset "Dating algorithms" begin
     for i in 1:10
         size = rand(10:100)
-        mutations = rand(1:size)
+        mutations = rand(1:(size - 1))
         rate = rand(10e-9:10e-10:10e-6)
         expected = coaltime(size, mutations, rate, SimpleEstimate)
         estimated = coaltime(size, mutations, rate, SpeedDating)

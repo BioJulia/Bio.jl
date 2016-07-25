@@ -2,7 +2,8 @@ module Dating
 
 using Distributions, Roots
 
-export DatingEstimate, coaltime, SimpleEstimate, SpeedDating, SDResult
+export DatingEstimate, coaltime, SimpleEstimate, SpeedDating, SDResult, upper,
+       lower
 
 """
 An abstract dating estimate type.
@@ -36,7 +37,7 @@ coaltime(50, 17, 10e-9, SimpleEstimate)
 ```
 """
 function coaltime(len::Int, nmut::Int, mu::Float64, ::Type{SimpleEstimate})
-    return (len / nmut) / (2 * mu)
+    return (nmut / len) / (2 * mu)
 end
 
 
