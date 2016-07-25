@@ -18,6 +18,7 @@ abstract DatingEstimate
 
 Base.print(io::IO, de::DatingEstimate) = println(io, "$(lower(de)) ... $(upper(de))")
 Base.show(io::IO, de::DatingEstimate) = println(io, "Coalesence time estimate between two sequences:\nt lies between $(lower(de)) and $(upper(de))")
+Base.in(val::Float64, de::DatingEstimate) = val <= upper(de) && val >= lower(de)
 
 # Different coalescence time estimation algorithms.
 # method coaltime is dispatched according to arguments or type of
@@ -56,8 +57,9 @@ immutable SDResult <: DatingEstimate
     upper::Float64
 end
 
+lower(x::Float64) = x
 lower(x::SDResult) = x.lower
-
+upper(c::Float64) = x
 upper(x::SDResult) = x.upper
 
 function Base.show(io::IO, de::SDResult)
