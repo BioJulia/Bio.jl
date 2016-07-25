@@ -1217,6 +1217,38 @@ end
                 test_rna_revcomp(RNAAlphabet{2}, random_rna(len, probs))
             end
         end
+
+        @testset "Map" begin
+            seq = dna""
+            @test map(identity, seq) == dna""
+            seq = dna"AAA"
+            @test map(x -> DNA_C, seq) == dna"CCC"
+            seq = dna"ACGTNACGTN"
+            @test map(x -> x == DNA_N ? DNA_A : x, seq) == dna"ACGTAACGTA"
+            @test seq == dna"ACGTNACGTN"
+            @test map!(x -> x == DNA_N ? DNA_A : x, seq) === seq
+            @test seq == dna"ACGTAACGTA"
+
+            seq = rna""
+            @test map(identity, seq) == rna""
+            seq = rna"AAA"
+            @test map(x -> RNA_C, seq) == rna"CCC"
+            seq = rna"ACGUNACGUN"
+            @test map(x -> x == RNA_N ? RNA_A : x, seq) == rna"ACGUAACGUA"
+            @test seq == rna"ACGUNACGUN"
+            @test map!(x -> x == RNA_N ? RNA_A : x, seq) === seq
+            @test seq == rna"ACGUAACGUA"
+
+            seq = aa""
+            @test map(identity, seq) == aa""
+            seq = aa"MMM"
+            @test map(x -> AA_P, seq) == aa"PPP"
+            seq = aa"XRNDCQXE"
+            @test map(x -> x == AA_X ? AA_A : x, seq) == aa"ARNDCQAE"
+            @test seq == aa"XRNDCQXE"
+            @test map!(x -> x == AA_X ? AA_A : x, seq) === seq
+            @test seq == aa"ARNDCQAE"
+        end
     end
 
     @testset "Predicates" begin

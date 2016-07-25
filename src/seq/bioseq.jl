@@ -247,6 +247,10 @@ function Base.count(f::Function, seq::BioSequence)
     return n
 end
 
+function Base.map(f::Function, seq::BioSequence)
+    return map!(f, copy(seq))
+end
+
 function Base.checkbounds(seq::BioSequence, range::UnitRange)
     if 1 ≤ range.start && range.stop ≤ endof(seq)
         return true
@@ -546,6 +550,14 @@ function Base.copy!{A}(dst::BioSequence{A}, doff::Integer,
     end
 
     return dst
+end
+
+function Base.map!(f::Function, seq::BioSequence)
+    orphan!(seq)
+    for i in 1:endof(seq)
+        unsafe_setindex!(seq, f(inbounds_getindex(seq, i)), i)
+    end
+    return seq
 end
 
 enc64{A}(::BioSequence{A}, x) = UInt64(encode(A, convert(eltype(A), x)))
