@@ -2428,6 +2428,50 @@ end
         @test matched(match(biore"A+?"d, dna"AAA")) == dna"A"
         @test matched(match(biore"A??"d, dna"AAA")) == dna""
         @test matched(match(biore"A{2,}?"d, dna"AAA")) == dna"AA"
+
+        # search
+        @test search(dna"ACGTAAT", biore"A+"d) == 1:1
+        @test search(dna"ACGTAAT", biore"A+"d, 1) == 1:1
+        @test search(dna"ACGTAAT", biore"A+"d, 2) == 5:6
+        @test search(dna"ACGTAAT", biore"A+"d, 7) == 0:-1
+
+        # eachmatch
+        matches = [dna"CG", dna"GC", dna"GC", dna"CG"]
+        for (i, m) in enumerate(eachmatch(biore"GC|CG"d, dna"ACGTTATGCATGGCG"))
+            @test matched(m) == matches[i]
+        end
+        matches = [dna"CG", dna"GC", dna"GC"]
+        for (i, m) in enumerate(collect(eachmatch(biore"GC|CG"d, dna"ACGTTATGCATGGCG", false)))
+            @test matched(m) == matches[i]
+        end
+
+        # matchall
+        @test matchall(biore"A*"d, dna"") == [dna""]
+        @test matchall(biore"A*"d, dna"AAA") == [
+            dna"AAA", dna"AA", dna"A", dna"",
+            dna"AA",  dna"A",  dna"",
+            dna"A",   dna""]
+        @test matchall(biore"AC*G*T"d, dna"ACCGGGT") == [dna"ACCGGGT"]
+
+        @test matchall(biore"A*"d, dna"", false) == [dna""]
+        @test matchall(biore"A*"d, dna"AAA", false) == [dna"AAA"]
+        @test matchall(biore"AC*G*T"d, dna"ACCGGGT", false) == [dna"ACCGGGT"]
+
+        # RNA and Amino acid
+        @test  ismatch(biore"U(A[AG]|GA)$"r, rna"AUUGUAUGA")
+        @test !ismatch(biore"U(A[AG]|GA)$"r, rna"AUUGUAUGG")
+        @test  ismatch(biore"T+[NQ]A?P"a, aa"MTTQAPMFTQPL")
+        @test  ismatch(biore"T+[NQ]A?P"a, aa"MTTAAPMFTQPL")
+        @test !ismatch(biore"T+[NQ]A?P"a, aa"MTTAAPMFSQPL")
+
+        # PROSITE
+        @test  ismatch(prosite"[AC]-x-V-x(4)-{ED}", aa"ADVAARRK")
+        @test  ismatch(prosite"[AC]-x-V-x(4)-{ED}", aa"CPVAARRK")
+        @test !ismatch(prosite"[AC]-x-V-x(4)-{ED}", aa"ADVAARRE")
+        @test !ismatch(prosite"[AC]-x-V-x(4)-{ED}", aa"CPVAARK")
+        @test  ismatch(prosite"<[AC]-x-V-x(4)-{ED}>", aa"ADVAARRK")
+        @test !ismatch(prosite"<[AC]-x-V-x(4)-{ED}>", aa"AADVAARRK")
+        @test !ismatch(prosite"<[AC]-x-V-x(4)-{ED}>", aa"ADVAARRKA")
     end
 end
 
