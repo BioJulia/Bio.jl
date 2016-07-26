@@ -2391,8 +2391,31 @@ end
     end
 
     @testset "Regular Expression" begin
-        re = dnapat"^A(C+G*)(T{2,})N$"
+        @test isa(biore"A+"d, Seq.RE.Regex{DNANucleotide})
+        @test isa(biore"A+"r, Seq.RE.Regex{RNANucleotide})
+        @test isa(biore"A+"a, Seq.RE.Regex{AminoAcid})
+        @test isa(biore"A+"dna, Seq.RE.Regex{DNANucleotide})
+        @test isa(biore"A+"rna, Seq.RE.Regex{RNANucleotide})
+        @test isa(biore"A+"aa, Seq.RE.Regex{AminoAcid})
+        #@test_throws biore"A+"
+        #@test_throws biore"A+"foo
+
+        re = biore"^A(C+G*)(T{2,})N$"d
         @test !ismatch(re, dna"AC")
+        @test !ismatch(re, dna"AGTT")
+        @test !ismatch(re, dna"CCGTT")
+        @test !ismatch(re, dna"ACTT")
+        @test !ismatch(re, dna"ACTTGT")
+        @test  ismatch(re, dna"ACGTTA")
+        @test  ismatch(re, dna"ACGTTT")
+        @test  ismatch(re, dna"ACCGGTTT")
+        @test  ismatch(re, dna"ACCGGTTT")
+        @test  ismatch(re, dna"ACCGGTTTA")
+        @test  ismatch(re, dna"ACCGGTTTG")
+
+        #@test matched(match(re, dna"ACCGTTTTA")) == dna"ACCGTTTTA"
+        #@test get(captured(match(re, dna"ACCGTTTTA"))[1]) == dna"CCG"
+        #@test get(captured(match(re, dna"ACCGTTTTA"))[2]) == dna"TTTT"
     end
 end
 
