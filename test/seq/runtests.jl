@@ -2389,6 +2389,11 @@ end
             @test approxrsearchindex(seq, query, 1, 6, 6) === 0
         end
     end
+
+    @testset "Regular Expression" begin
+        re = dnapat"^A(C+G*)(T{2,})N$"
+        @test !ismatch(re, dna"AC")
+    end
 end
 
 @testset "Translation" begin

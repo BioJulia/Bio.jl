@@ -57,6 +57,7 @@ export
     @rna_str,
     @aa_str,
     @char_str,
+    @dnapat_str,
     alphabet,
     gap,
     complement,
@@ -195,6 +196,7 @@ include("fastq.jl")
 
 include("search/exact.jl")
 include("search/approx.jl")
+include("search/re.jl")
 
 include("deprecated.jl")
 
