@@ -241,6 +241,7 @@ false
 alphabet
 gap
 iscompatible
+isambiguous
 ```
 
 
