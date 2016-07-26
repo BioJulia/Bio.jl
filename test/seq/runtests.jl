@@ -306,6 +306,15 @@ end
         end
     end
 
+    @testset "isambiguous" begin
+        for x in alphabet(DNANucleotide)
+            @test isambiguous(x) == (x > DNA_T)
+        end
+        for x in alphabet(RNANucleotide)
+            @test isambiguous(x) == (x > RNA_U)
+        end
+    end
+
     @testset "complement" begin
         @test Seq.complement(DNA_A) == DNA_T
         @test Seq.complement(DNA_C) == DNA_G
@@ -554,6 +563,12 @@ end
             @test iscompatible(x, AA_J) == (x ∈ (AA_I, AA_L, AA_J, AA_X))
             @test iscompatible(x, AA_Z) == (x ∈ (AA_E, AA_Q, AA_Z, AA_X))
             @test iscompatible(x, AA_X) == (x ∉ (AA_Term, AA_Gap))
+        end
+    end
+
+    @testset "isambiguous" begin
+        for x in alphabet(AminoAcid)
+            @test isambiguous(x) == (AA_B <= x <= AA_X)
         end
     end
 
