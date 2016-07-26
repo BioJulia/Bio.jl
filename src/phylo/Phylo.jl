@@ -10,12 +10,11 @@
 
 
 module Phylo
-
 using Compat
-
 using LightGraphs
-
 using Bio: Tokenize, Indexers
+using Bio.Seq: Nucleotide, BioSequence, isambiguous
+using Bio.Var: MutationType, DifferentMutation, TransitionMutation, TransversionMutation, count_mutations
 
 export
 
@@ -55,6 +54,14 @@ export
     rem_branch!,
     add_branch!,
 
+    ## Evolutionary distance computation.
+    EvoDist,
+    UncorrectedDist,
+    CorrectedDist,
+    TsTv,
+    JC69,
+    K80,
+
     ## Misc
     n_possible_rooted,
     n_possible_unrooted
@@ -65,6 +72,7 @@ include("phylogeny.jl")
 include("node_basics.jl")
 include("branch_basics.jl")
 include("manipulation.jl")
+include("distances.jl")
 include("dating.jl")
 
 end # module Phylo

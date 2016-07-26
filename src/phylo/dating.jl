@@ -1,3 +1,14 @@
+# phylo/dating.jl
+# ==================
+#
+# Types and methods for computing coalescence times between two sequences.
+#
+# Part of the Bio.Phylo module.
+#
+# This file is a part of BioJulia. License is MIT: https://github.com/BioJulia/Bio.jl/blob/master/LICENSE.md
+
+
+
 module Dating
 
 using Distributions, Roots

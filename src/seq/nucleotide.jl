@@ -122,6 +122,16 @@ function isambiguous(nt::Nucleotide)
 end
 
 """
+    isppambiguous(nt::Nucleotide)
+
+Test if nucleotide could be either a Purine or a Pyrimidine.
+"""
+function isppambiguous(nt::Nucleotide)
+    bits = compatbits(nt)
+    return ((bits & 0b0101) != 0) && ((bits & 0b1010) != 0)
+end
+
+"""
     complement(nt::Nucleotide)
 
 Return the complementary nucleotide of `nt`.

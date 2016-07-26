@@ -15,6 +15,7 @@ export
     ## Mutation Counting
 
     ### Mutation count types.
+    MutationType,
     DifferentMutation,
     TransitionMutation,
     TransversionMutation,

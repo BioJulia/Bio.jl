@@ -14,9 +14,10 @@
 
 # Mutation types
 
-immutable DifferentMutation end
-immutable TransitionMutation end
-immutable TransversionMutation end
+abstract MutationType
+immutable DifferentMutation <: MutationType end
+immutable TransitionMutation <: MutationType end
+immutable TransversionMutation <: MutationType end
 
 
 """
