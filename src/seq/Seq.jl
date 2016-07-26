@@ -45,6 +45,7 @@ export
     RNA_N,
     RNA_Gap,
     iscompatible,
+    isambiguous,
     Sequence,
     BioSequence,
     DNASequence,
