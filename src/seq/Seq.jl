@@ -59,6 +59,8 @@ export
     @char_str,
     @biore_str,
     @prosite_str,
+    matched,
+    captured,
     alphabet,
     gap,
     complement,

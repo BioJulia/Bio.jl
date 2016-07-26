@@ -2413,9 +2413,21 @@ end
         @test  ismatch(re, dna"ACCGGTTTA")
         @test  ismatch(re, dna"ACCGGTTTG")
 
-        #@test matched(match(re, dna"ACCGTTTTA")) == dna"ACCGTTTTA"
-        #@test get(captured(match(re, dna"ACCGTTTTA"))[1]) == dna"CCG"
-        #@test get(captured(match(re, dna"ACCGTTTTA"))[2]) == dna"TTTT"
+        @test matched(match(re, dna"ACCGTTTTA")) == dna"ACCGTTTTA"
+        @test get(captured(match(re, dna"ACCGTTTTA"))[1]) == dna"CCG"
+        @test get(captured(match(re, dna"ACCGTTTTA"))[2]) == dna"TTTT"
+
+        # greedy
+        @test matched(match(biore"A*"d, dna"AAA")) == dna"AAA"
+        @test matched(match(biore"A+"d, dna"AAA")) == dna"AAA"
+        @test matched(match(biore"A?"d, dna"AAA")) == dna"A"
+        @test matched(match(biore"A{2,}"d, dna"AAA")) == dna"AAA"
+
+        # lazy
+        @test matched(match(biore"A*?"d, dna"AAA")) == dna""
+        @test matched(match(biore"A+?"d, dna"AAA")) == dna"A"
+        @test matched(match(biore"A??"d, dna"AAA")) == dna""
+        @test matched(match(biore"A{2,}?"d, dna"AAA")) == dna"AA"
     end
 end
 
