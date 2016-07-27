@@ -818,6 +818,93 @@ julia> approxsearch(dna"ACTACGT", query, 2)
 
 ```
 
+### Regular expression search
+
+Query patterns also can be described in regular expressions. The syntax supports
+a subset of Perl and PROSITE's notation.
+
+The Perl-like syntax starts with `biore` (**bio**logical **re**gular expression)
+and ends with a symbol option: "dna", "rna" or "aa". For example, `biore"A+"dna`
+is a regular expression for DNA sequences and `biore"A+"aa` is for amino acid
+sequences. The symbol options can be abbreviated to its first character: "d",
+"r" or "a", respectively.
+
+Here are examples of using the regular expression for `BioSequence`s:
+```jlcon
+julia> match(biore"A+C*"dna, dna"AAAACC")
+Nullable(RegexMatch("AAAACC"))
+
+julia> match(biore"A+C*"d, dna"AAAACC")
+Nullable(RegexMatch("AAAACC"))
+
+julia> ismatch(biore"A+C*"dna, dna"AAC")
+true
+
+julia> ismatch(biore"A+C*"dna, dna"C")
+false
+
+```
+
+`match` always returns a `Nullable` object and it should be null if no match is
+found.
+
+The table below summarizes available syntax elements.
+
+| Syntax | Description | Example |
+|:------:|:------------|:--------|
+| `|` | alternation | `"A|T"` matches `"A"` and `"T"` |
+| `*` | zero or more times repeat | `"TA*"` matches `"T"`, `"TA"` and `"TAA"` |
+| `+` | one or more times repeat | `"TA+"` matches `"TA"` and `"TAA"` |
+| `?` | zero or one time | `"TA?"` matches `"T"` and `"TA"` |
+| `{n,}` | `n` or more times repeat | `"A{3,}"` matches `"AAA"` and `"AAAA"` |
+| `{n,m}` | `n`-`m` times repeat | `"A{3,5}"` matches `"AAA"`, `"AAAA"` and `"AAAAA"`|
+| `^` | the start of the sequence | `"^TAN*"` matches `"TATGT"` |
+| `$` | the end of the sequence | `"N*TA$"` matches `"GCTA"` |
+| `(...)` | pattern grouping | `"(TA)+"` matches `"TA"` and `"TATA"` |
+| `[...]` | one of symbols | `"[ACG]+"` matches `"AGGC"` |
+
+`eachmatch`, `matchall`, and `search` are also defined like usual strings:
+```jlcon
+julia> matchall(biore"TATA*?"d, dna"TATTATAATTA")  # overlap (default)
+4-element Array{Bio.Seq.BioSequence{Bio.Seq.DNAAlphabet{4}},1}:
+ 3nt DNA Sequence:
+TAT
+ 3nt DNA Sequence:
+TAT
+ 4nt DNA Sequence:
+TATA
+ 5nt DNA Sequence:
+TATAA
+
+julia> matchall(biore"TATA*"d, dna"TATTATAATTA", false)  # no overlap
+2-element Array{Bio.Seq.BioSequence{Bio.Seq.DNAAlphabet{4}},1}:
+ 3nt DNA Sequence:
+TAT
+ 5nt DNA Sequence:
+TATAA
+
+julia> search(dna"TATTATAATTA", biore"TATA*"d)
+1:3
+
+julia> search(dna"TATTATAATTA", biore"TATA*"d, 2)
+4:8
+
+```
+
+The PROSITE notation is described in [ScanProsite - user
+manual](http://prosite.expasy.org/scanprosite/scanprosite_doc.html). The syntax
+supports almost all notations including the extended syntax. The PROSITE
+notation starts with `prosite` prefix and no symbol option is needed because it
+always descirbe patterns of amino acid sequences:
+```jlcon
+julia> match(prosite"[AC]-x-V-x(4)-{ED}", aa"CPVPQARG")
+Nullable(RegexMatch("CPVPQARG"))
+
+julia> match(prosite"[AC]xVx(4){ED}", aa"CPVPQARG")
+Nullable(RegexMatch("CPVPQARG"))
+
+```
+
 
 ## Sequence records
 
