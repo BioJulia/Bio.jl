@@ -704,7 +704,14 @@ end
 
 ## Sequence search
 
-Several kinds of on-line search functions are provided.
+Three kinds of on-line search functions are provided:
+
+1. Exact search
+2. Approximate search
+3. Regular expression search
+
+These are all specialized for biological sequences and ambiguities of symbols
+are considered.
 
 ### Exact search
 
@@ -820,7 +827,7 @@ julia> approxsearch(dna"ACTACGT", query, 2)
 
 ### Regular expression search
 
-Query patterns also can be described in regular expressions. The syntax supports
+Query patterns can be described in regular expressions. The syntax supports
 a subset of Perl and PROSITE's notation.
 
 The Perl-like syntax starts with `biore` (**bio**logical **re**gular expression)
@@ -890,6 +897,11 @@ julia> search(dna"TATTATAATTA", biore"TATA*"d, 2)
 4:8
 
 ```
+
+Notewothy differences from strings are:
+
+* Ambiguous characters match any compatible characters (e.g. `biore"N"d` is equivalent to `biore"[ACGT]"d`).
+* Whitespaces are ignored (e.g. `biore"A C G"d` is equivalent to `biore"ACG"d`).
 
 The PROSITE notation is described in [ScanProsite - user
 manual](http://prosite.expasy.org/scanprosite/scanprosite_doc.html). The syntax
