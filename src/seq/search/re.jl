@@ -799,10 +799,6 @@ type Stack{T}
     Stack(sz::Int=0) = new(0, Vector{T}(sz))
 end
 
-function Base.length(stack::Stack)
-    return stack.top
-end
-
 function Base.isempty(stack::Stack)
     return stack.top == 0
 end
