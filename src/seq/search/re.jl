@@ -730,7 +730,9 @@ function advance!(threads, captured, s, re, seq, overlap)
             end
             return Nullable(RegexMatch(seq, copy(captured))), threads, captured, s
         end
-        _, s = next(seq, s)
+        if !isempty(seq)
+            _, s = next(seq, s)
+        end
         if done(seq, s)
             break
         end
