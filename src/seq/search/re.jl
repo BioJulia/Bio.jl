@@ -417,9 +417,13 @@ function desugar{T}(::Type{T}, tree::SyntaxTree)
     return expr(head, args)
 end
 
-desugar{T}(::Type{T}, atom) = atom
+function desugar{T}(::Type{T}, atom)
+    return atom
+end
 
-replicate(x, n) = collect(repeated(x, n))
+function replicate(x, n)
+    return collect(repeated(x, n))
+end
 
 
 # Compiler
@@ -458,8 +462,14 @@ last() = reinterpret(Op, LastTag)
 fork(l::Int) = reinterpret(Op, ForkTag | UInt32(l))
 
 const operand_mask = (UInt32(1) << 29) - one(UInt32)
-tag(op::Op) = reinterpret(UInt32, op) & ~operand_mask
-operand(op::Op) = reinterpret(UInt32, op) & operand_mask
+
+function tag(op::Op)
+    return reinterpret(UInt32, op) & ~operand_mask
+end
+
+function operand(op::Op)
+    return reinterpret(UInt32, op) &  operand_mask
+end
 
 function Base.show(io::IO, op::Op)
     t = tag(op)
@@ -698,7 +708,13 @@ immutable RegexMatchIterator{T,S}
     end
 end
 
-Base.eltype{T,S}(::Type{RegexMatchIterator{T,S}}) = RegexMatch{S}
+if VERSION > v"0.5-"
+    Base.iteratorsize(::RegexMatchIterator) = Base.SizeUnknown()
+end
+
+function Base.eltype{T,S}(::Type{RegexMatchIterator{T,S}})
+    return RegexMatch{S}
+end
 
 function Base.start(iter::RegexMatchIterator)
     threads = Stack{Tuple{Int,Int}}()
@@ -757,7 +773,9 @@ function Base.matchall{T}(re::Regex{T}, seq::BioSequence, overlap::Bool=true)
     return ret
 end
 
-Base.ismatch{T}(re::Regex{T}, seq::BioSequence) = !isnull(Base.match(re, seq))
+function Base.ismatch{T}(re::Regex{T}, seq::BioSequence)
+    return !isnull(Base.match(re, seq))
+end
 
 # simple stack
 type Stack{T}
@@ -767,8 +785,13 @@ type Stack{T}
     Stack(sz::Int=0) = new(0, Vector{T}(sz))
 end
 
-Base.length(stack::Stack) = stack.top
-Base.isempty(stack::Stack) = stack.top == 0
+function Base.length(stack::Stack)
+    return stack.top
+end
+
+function Base.isempty(stack::Stack)
+    return stack.top == 0
+end
 
 @inline function Base.push!{T}(stack::Stack{T}, x::T)
     if stack.top + 1 > length(stack.data)
@@ -843,7 +866,7 @@ function runmatch!(threads::Stack{Tuple{Int,Int}},
     return false
 end
 
-end
+end  # module RE
 
 # exported from Bio.Seq
 const matched = RE.matched
