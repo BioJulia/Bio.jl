@@ -128,6 +128,14 @@ function count_aligned(aln::PairwiseAlignment)
     return n
 end
 
+function ref2seq(i::Integer, aln::PairwiseAlignment)
+    return ref2seq(i, aln.a)
+end
+
+function seq2ref(i::Integer, aln::PairwiseAlignment)
+    return seq2ref(i, aln.a)
+end
+
 
 # Printers
 # --------

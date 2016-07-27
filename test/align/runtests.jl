@@ -461,6 +461,25 @@ end
         @test count_aligned(aln) == 16
     end
 
+    @testset "Interfaces" begin
+        seq = dna"ACGTATAGT"
+        ref = dna"ATCGTATTGGT"
+        # seq:  1 A-CGTATAG-T  9
+        #         | ||||| | |
+        # ref:  1 ATCGTATTGGT 11
+        model = AffineGapScoreModel(EDNAFULL, gap_open=-4, gap_extend=-1)
+        result = pairalign(GlobalAlignment(), seq, ref, model)
+        @test isa(result, PairwiseAlignmentResult)
+        aln = alignment(result)
+        @test isa(aln, PairwiseAlignment)
+        @test seq2ref(1, aln) == (1, OP_SEQ_MATCH)
+        @test seq2ref(2, aln) == (3, OP_SEQ_MATCH)
+        @test seq2ref(3, aln) == (4, OP_SEQ_MATCH)
+        @test ref2seq(1, aln) == (1, OP_SEQ_MATCH)
+        @test ref2seq(2, aln) == (1, OP_DELETE)
+        @test ref2seq(3, aln) == (2, OP_SEQ_MATCH)
+    end
+
     @testset "GlobalAlignment" begin
         affinegap = AffineGapScoreModel(
             match=0,
