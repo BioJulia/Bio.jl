@@ -397,19 +397,13 @@ function desugar{T}(::Type{T}, tree::SyntaxTree)
                 head = :concat
                 args = replicate(pat, m)
             else
-                if greedy
-                    tree = replicate(pat, m)
-                    for k in m-1:1:n
-                        tree = expr(:|, [replicate(pat, k), tree])
-                    end
-                else
-                    tree = replicate(pat, n)
-                    for k in n-1:-1:m
-                        tree = expr(:|, [replicate(pat, k), tree])
-                    end
-                end
                 head = :|
-                args = tree.args
+                f = (k, t) -> expr(:|, [expr(:concat, replicate(pat, k)), t])
+                if greedy
+                    args = foldr(f, expr(:concat, replicate(pat, m)), n:-1:m+1).args
+                else
+                    args = foldr(f, expr(:concat, replicate(pat, n)), m:1:n-1).args
+                end
             end
         else
             @assert false "invalid AST"

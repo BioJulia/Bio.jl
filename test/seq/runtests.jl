@@ -2397,8 +2397,28 @@ end
         @test isa(biore"A+"dna, Seq.RE.Regex{DNANucleotide})
         @test isa(biore"A+"rna, Seq.RE.Regex{RNANucleotide})
         @test isa(biore"A+"aa, Seq.RE.Regex{AminoAcid})
-        #@test_throws biore"A+"
-        #@test_throws biore"A+"foo
+        @test_throws Exception eval(:(biore"A+"))
+        @test_throws Exception eval(:(biore"A+"foo))
+        @test string(biore"A+"dna) == "biore\"A+\"dna"
+        @test string(biore"A+"rna) == "biore\"A+\"rna"
+        @test string(biore"A+"aa) == "biore\"A+\"aa"
+
+        @test  ismatch(biore"A"d, dna"A")
+        @test !ismatch(biore"A"d, dna"C")
+        @test !ismatch(biore"A"d, dna"G")
+        @test !ismatch(biore"A"d, dna"T")
+        @test  ismatch(biore"N"d, dna"A")
+        @test  ismatch(biore"N"d, dna"C")
+        @test  ismatch(biore"N"d, dna"G")
+        @test  ismatch(biore"N"d, dna"T")
+        @test  ismatch(biore"[AT]"d, dna"A")
+        @test !ismatch(biore"[AT]"d, dna"C")
+        @test !ismatch(biore"[AT]"d, dna"G")
+        @test  ismatch(biore"[AT]"d, dna"T")
+        @test !ismatch(biore"[^AT]"d, dna"A")
+        @test  ismatch(biore"[^AT]"d, dna"C")
+        @test  ismatch(biore"[^AT]"d, dna"G")
+        @test !ismatch(biore"[^AT]"d, dna"T")
 
         re = biore"^A(C+G*)(T{2,})N$"d
         @test !ismatch(re, dna"AC")
@@ -2421,13 +2441,17 @@ end
         @test matched(match(biore"A*"d, dna"AAA")) == dna"AAA"
         @test matched(match(biore"A+"d, dna"AAA")) == dna"AAA"
         @test matched(match(biore"A?"d, dna"AAA")) == dna"A"
+        @test matched(match(biore"A{2}"d, dna"AAA")) == dna"AA"
         @test matched(match(biore"A{2,}"d, dna"AAA")) == dna"AAA"
+        @test matched(match(biore"A{2,4}"d, dna"AAA")) == dna"AAA"
 
         # lazy
         @test matched(match(biore"A*?"d, dna"AAA")) == dna""
         @test matched(match(biore"A+?"d, dna"AAA")) == dna"A"
         @test matched(match(biore"A??"d, dna"AAA")) == dna""
+        @test matched(match(biore"A{2}?"d, dna"AAA")) == dna"AA"
         @test matched(match(biore"A{2,}?"d, dna"AAA")) == dna"AA"
+        @test matched(match(biore"A{2,4}?"d, dna"AAA")) == dna"AA"
 
         # search
         @test search(dna"ACGTAAT", biore"A+"d) == 1:1
