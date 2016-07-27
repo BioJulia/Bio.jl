@@ -60,7 +60,7 @@ Phylogeny(Void, Void, [:Human, :Chimp, :Dog, :Cat])
 Phylogeny(Float64, Float64, [:Human, :Chimp, :Dog, :Cat])
 ```
 """
-function Phylogeny{C, B}(::Type{C}, ::Type{B}, taxa::Vector{Symbol})
+function Phylogeny{C,B}(::Type{C}, ::Type{B}, taxa::Vector{Symbol})
     ntaxa = length(taxa)
     maxVertices = maxvertices(ntaxa)
     taxaAndRoot = push!(copy(taxa), :Root)
@@ -70,8 +70,8 @@ function Phylogeny{C, B}(::Type{C}, ::Type{B}, taxa::Vector{Symbol})
         add_edge!(g, ntaxa + 1, i)
     end
     v = Vector{C}()
-    d = Dict{Edge, B}()
-    return Phylogeny{C, B}(g, idxer, v, d, ntaxa, false, true)
+    d = Dict{Edge,B}()
+    return Phylogeny{C,B}(g, idxer, v, d, ntaxa, false, true)
 end
 
 """

@@ -10,11 +10,19 @@
 #
 # This file is a part of BioJulia. License is MIT: https://github.com/BioJulia/Bio.jl/blob/master/LICENSE.md
 
+typealias BranchFields Union{Symbol, AbstractString, Integer}
+
+immutable Branch{T <: BranchFields}
+    from::T
+    to::T
+end
+
 
 # Functions responsible for getting and setting branch data.
 function branchdata{C,B}(tree::Phylogeny{C,B}, edge::Edge)
-    return get(tree.edgedata, edge, B())
+    return get(tree.edgedata, edge, empty_branch_data(B))
 end
+
 
 function branchdata!{C,B}(tree::Phylogeny{C,B}, edge::Edge, data::B)
     if has_edge(tree.graph, edge)
@@ -26,15 +34,16 @@ function branchdata!{C,B}(tree::Phylogeny{C,B}, edge::Edge, data::B)
 end
 
 # Creating and destroying branches in a phylogeny between two nodes.
-function add_branch!(tree::Phylogeny, branch::Edge)
-    add_edge!(tree.graph, branch)
-    return tree
-end
 function add_branch!{C,B}(tree::Phylogeny{C,B}, branch::Edge, branchdata::B)
-    add_branch!(tree.graph, branch)
-    tree.edgedata[branch] = branchdata
+    add_edge!(tree.graph, branch)
+    branchdata!(tree, branch, branchdata)
     return tree
 end
+
+function add_branch!{C,B}(tree::Phylogeny{C,B}, branch::Edge)
+    return add_branch!(tree, branch, empty_branch_data(B))
+end
+
 
 function rem_branch!(tree::Phylogeny, branch::Edge)
     rem_edge!(tree.graph, src(branch), dst(branch))
@@ -54,26 +63,31 @@ end
 
 # Get and set branchlength mechanism for phylogeneies.
 
-immutable BranchLength
-    value::Float64
-end
-
-BranchLength(value::Float64) = BranchLength(value)
-BranchLength() = BranchLength(-1.0)
-BranchLength(value::BranchLength) = value
-BranchLength(metadata::BranchLength, value::BranchLength) = value
-Float64(metadata::Float64, value::BranchLength) = value.value
-
 # The basic function on which getting a branch length depends,
 # For any kind of phylogeny.
 function branchlength(tree::Phylogeny, edge::Edge)
-    return BranchLength(branchdata(tree, edge))
+    return branchlength(branchdata(tree, edge))
 end
 
 # The basic function on which setting a branch length depends,
 # for any kind of phylogeny. The assumption is metadata values on branches are
 # immutables or value types - hence the reassignment.
 function branchlength!{C,B}(tree::Phylogeny{C,B}, edge::Edge, value::BranchLength)
-    branchdata!(tree, edge, B(branchdata(tree, edge), value))
+    branchdata!(tree, edge, branchlength!(branchdata(tree, edge), value))
     return tree
 end
+
+function empty_branch_data{T}(::Type{T})
+    return T()
+end
+
+# To allow branchlength! to work with your metadata type, the type needs the
+# following methods defined:
+#
+# branchlength - which gets the branchlength from the metadata type.
+# branchlength!
+# optional emptyBranchData - by default it is a no-arg constructor.
+
+empty_branch_data{T<:AbstractFloat}(::Type{T}) = convert(T, -1.0)
+branchlength{T<:AbstractFloat}(metadata::T) = metadata
+branchlength!{A<:AbstractFloat,B<:AbstractFloat}(metadata::A, bl::B) = convert(A, bl)

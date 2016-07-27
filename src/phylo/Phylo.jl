@@ -53,6 +53,7 @@ export
     ## Branches
     branchlength,
     branchlength!,
+    empty_branch_data,
     parent_branch,
     child_branches,
     rem_branch!,
