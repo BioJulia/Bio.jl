@@ -1,5 +1,10 @@
 # Regular Expression
 # ==================
+#
+# Regular expression sequence search tools.
+#
+# This file is a part of BioJulia.
+# License is MIT: https://github.com/BioJulia/Bio.jl/blob/master/LICENSE.md
 
 # String Decorators
 # -----------------
@@ -29,7 +34,7 @@ end
 
 module RE
 
-using Bio.Seq
+using ..Seq
 
 # Syntax tree
 # -----------
@@ -41,7 +46,7 @@ type SyntaxTree
     function SyntaxTree(head, args)
         @assert head ∈ (
             :|,
-            :*, :+, :?, :range,
+            :*, :+, symbol("?"), :range,
             symbol("*?"), symbol("+?"), symbol("??"), symbol("range?"),
             :set, :compset, :sym, :bits,
             :capture, :nocapture, :concat, :head, :last)
@@ -94,12 +99,12 @@ function parserec{T}(::Type{T}, pat, s, parens)
         elseif c == '?'
             @check !isempty(args) ArgumentError("unexpected '?'")
             arg = pop!(args)
-            if arg.head ∈ (:*, :+, :?, :range)
+            if arg.head ∈ (:*, :+, symbol("?"), :range)
                 # lazy quantifier
                 push!(args, expr(symbol(arg.head, '?'), arg.args))
             else
                 # zero-or-one quantifier
-                push!(args, expr(:?, [arg]))
+                push!(args, expr(symbol("?"), [arg]))
             end
         elseif c == '{'
             @check !isempty(args) ArgumentError("unexpected '{'")
@@ -333,7 +338,7 @@ function desugar{T}(::Type{T}, tree::SyntaxTree)
         # e+? => ee*?
         head = :concat
         args = [args[1], expr(symbol("*?"), [args[1]])]
-    elseif head == :?
+    elseif head == symbol("?")
         # e? => e|
         head = :|
         args = [args[1], expr(:concat, [])]
@@ -592,8 +597,17 @@ immutable Regex{T}
     end
 end
 
-function Base.show(io::IO, re::Regex)
-    print(io, summary(re), "(\"", re.pat, "\")")
+function Base.show{T}(io::IO, re::Regex{T})
+    if T == DNANucleotide
+        opt = "dna"
+    elseif T == RNANucleotide
+        opt = "rna"
+    elseif T == AminoAcid
+        opt = "aa"
+    else
+        assert(false)
+    end
+    print(io, "biore\"", re.pat, "\"", opt)
 end
 
 """
