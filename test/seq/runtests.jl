@@ -2644,6 +2644,61 @@ end
             end
         end
     end
+
+    @testset "2bit" begin
+        buffer = IOBuffer()
+        writer = Seq.TwoBitWriter(buffer, ["chr1", "chr2"])
+        chr1 = dna"ACGTNN"
+        chr2 = dna"N"^100 * dna"ACGT"^100 * dna"N"^100
+        write(writer, SeqRecord("chr1", chr1))
+        write(writer, SeqRecord("chr2", chr2))
+        seekstart(buffer)
+        reader = Seq.TwoBitParser(buffer)
+        @test length(reader) == 2
+        @test reader["chr1"].name == "chr1"
+        @test reader["chr1"].seq == chr1
+        @test reader["chr2"].name == "chr2"
+        @test reader["chr2"].seq == chr2
+        @test reader["chr1"].name == "chr1"
+        @test reader["chr1"].seq == chr1
+        @test_throws KeyError reader["chr10"]
+
+        function check_2bit_parse(filename)
+            # read from a stream
+            for record in open(filename, TwoBit)
+            end
+
+            # round trip
+            buffer = IOBuffer()
+            reader = open(filename, TwoBit)
+            writer = Seq.TwoBitWriter(buffer, reader.names)
+            expected_entries = Any[]
+            for record in reader
+                write(writer, record)
+                push!(expected_entries, record)
+            end
+
+            read_entries = Any[]
+            seekstart(buffer)
+            for record in Seq.TwoBitParser(buffer)
+                push!(read_entries, record)
+            end
+
+            return expected_entries == read_entries
+        end
+
+        get_bio_fmt_specimens()
+        path = Pkg.dir("Bio", "test", "BioFmtSpecimens", "2bit")
+        for specimen in YAML.load_file(joinpath(path, "index.yml"))
+            valid = get(specimen, "valid", true)
+            filepath = joinpath(path, specimen["filename"])
+            if valid
+                @test check_2bit_parse(filepath)
+            else
+                @test_throws Exception check_fasta_parse(filepath)
+            end
+        end
+    end
 end
 
 @testset "Quality scores" begin
