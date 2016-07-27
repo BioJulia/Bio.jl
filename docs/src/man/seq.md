@@ -859,7 +859,7 @@ The table below summarizes available syntax elements.
 
 | Syntax | Description | Example |
 |:------:|:------------|:--------|
-| `|` | alternation | `"A|T"` matches `"A"` and `"T"` |
+| `\|` | alternation | `"A\|T"` matches `"A"` and `"T"` |
 | `*` | zero or more times repeat | `"TA*"` matches `"T"`, `"TA"` and `"TAA"` |
 | `+` | one or more times repeat | `"TA+"` matches `"TA"` and `"TAA"` |
 | `?` | zero or one time | `"TA?"` matches `"T"` and `"TA"` |
