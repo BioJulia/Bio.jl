@@ -58,6 +58,10 @@ export
     @rna_str,
     @aa_str,
     @char_str,
+    @biore_str,
+    @prosite_str,
+    matched,
+    captured,
     alphabet,
     gap,
     complement,
@@ -198,6 +202,7 @@ include("twobit.jl")
 
 include("search/exact.jl")
 include("search/approx.jl")
+include("search/re.jl")
 
 include("deprecated.jl")
 
