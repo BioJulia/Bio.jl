@@ -18,34 +18,71 @@ immutable Branch{T <: BranchFields}
 end
 
 
+"""
+    empty_branch_data{T}(::Type{T})
+
+Create a default (empty) instance of any type of branch metadata.
+
+By default this just calls a zero-argument constructor of a type.
+But this may be overloaded in some cases.
+"""
+function empty_branch_data{T}(::Type{T})
+    return T()
+end
+
+"""
+    branchdata{C,B}(tree::Phylogeny{C,B}, edge::Edge)
+
+Getter for metadata associated with branch represented by `edge`.
+"""
 # Functions responsible for getting and setting branch data.
 function branchdata{C,B}(tree::Phylogeny{C,B}, edge::Edge)
     return get(tree.edgedata, edge, empty_branch_data(B))
 end
 
+"""
+    branchdata!{C,B}(tree::Phylogeny{C,B}, edge::Edge, data::B)
 
+Setter for metadata associated with branch represented by `edge`.
+"""
 function branchdata!{C,B}(tree::Phylogeny{C,B}, edge::Edge, data::B)
     if has_edge(tree.graph, edge)
         tree.edgedata[edge] = data
     else
-        warn("Tried to set branch data to a non-existant branch.")
+        warn("You tried to set branch data to a non-existant branch. Consequently, nothing was done.")
     end
     return tree
 end
 
-# Creating and destroying branches in a phylogeny between two nodes.
-function add_branch!{C,B}(tree::Phylogeny{C,B}, branch::Edge, branchdata::B)
+
+"""
+    create_branch!{C,B}(tree::Phylogeny{C,B}, branch::Edge, branchdata::B)
+
+Create a branch between two nodes in a phylogenetic tree.
+Metadata `branchdata` will be associated with the branch.
+"""
+function create_branch!{C,B}(tree::Phylogeny{C,B}, branch::Edge, branchdata::B)
     add_edge!(tree.graph, branch)
     branchdata!(tree, branch, branchdata)
     return tree
 end
 
-function add_branch!{C,B}(tree::Phylogeny{C,B}, branch::Edge)
+"""
+    create_branch!{C,B}(tree::Phylogeny{C,B}, branch::Edge)
+
+Create a branch between two nodes in a phylogenetic tree.
+"""
+function create_branch!{C,B}(tree::Phylogeny{C,B}, branch::Edge)
     return add_branch!(tree, branch, empty_branch_data(B))
 end
 
+"""
+    destroy_branch!(tree::Phylogeny, branch::Edge)
 
-function rem_branch!(tree::Phylogeny, branch::Edge)
+Destroy a branch between two nodes in a phylogenetic tree.
+When the branch is destroyed so will any associated metadata object.
+"""
+function destroy_branch!(tree::Phylogeny, branch::Edge)
     rem_edge!(tree.graph, src(branch), dst(branch))
     delete!(tree.edgedata, branch)
     return tree
@@ -63,30 +100,36 @@ end
 
 # Get and set branchlength mechanism for phylogeneies.
 
-# The basic function on which getting a branch length depends,
-# For any kind of phylogeny.
+"""
+    branchlength(tree::Phylogeny, edge::Edge)
+
+Get the branchlength of branch defined by `edge` in a phylogeny.
+"""
 function branchlength(tree::Phylogeny, edge::Edge)
     return branchlength(branchdata(tree, edge))
 end
 
-# The basic function on which setting a branch length depends,
-# for any kind of phylogeny. The assumption is metadata values on branches are
-# immutables or value types - hence the reassignment.
-function branchlength!{C,B}(tree::Phylogeny{C,B}, edge::Edge, value::BranchLength)
+"""
+    branchlength!{C,B,T<:AbstractFloat}(tree::Phylogeny{C,B}, edge::Edge, value::T)
+
+Set the branchlength of branch defined by `edge` in a phylogeny.
+
+The assumption is metadata values on branches are immutables or value types,
+hence the reassignment using the branchdata! method.
+"""
+function branchlength!{C,B,T<:AbstractFloat}(tree::Phylogeny{C,B}, edge::Edge, value::T)
     branchdata!(tree, edge, branchlength!(branchdata(tree, edge), value))
     return tree
 end
 
-function empty_branch_data{T}(::Type{T})
-    return T()
-end
+
 
 # To allow branchlength! to work with your metadata type, the type needs the
 # following methods defined:
 #
 # branchlength - which gets the branchlength from the metadata type.
 # branchlength!
-# optional emptyBranchData - by default it is a no-arg constructor.
+# optional empty_branch_data - by default this is a no-arg constructor.
 
 empty_branch_data{T<:AbstractFloat}(::Type{T}) = convert(T, -1.0)
 branchlength{T<:AbstractFloat}(metadata::T) = metadata

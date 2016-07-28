@@ -53,11 +53,11 @@ export
     ## Branches
     branchlength,
     branchlength!,
+    child_branches,
+    create_branch!,
+    destroy_branch!,
     empty_branch_data,
     parent_branch,
-    child_branches,
-    rem_branch!,
-    add_branch!,
 
     ## Misc
     n_possible_rooted,
