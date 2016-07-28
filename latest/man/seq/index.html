@@ -229,6 +229,8 @@
             
                 <li class="third-level"><a href="#approximate-search">Approximate search</a></li>
             
+                <li class="third-level"><a href="#regular-expression-search">Regular expression search</a></li>
+            
         
             <li class="second-level"><a href="#sequence-records">Sequence records</a></li>
             
@@ -1185,7 +1187,13 @@ RNAKmerCounts{k}(seq::Sequence[, step=1])
 
 <p><a id='Sequence-search-1'></a></p>
 <h2 id="sequence-search">Sequence search</h2>
-<p>Several kinds of on-line search functions are provided.</p>
+<p>Three kinds of on-line search functions are provided:</p>
+<ol>
+<li>Exact search</li>
+<li>Approximate search</li>
+<li>Regular expression search</li>
+</ol>
+<p>These are all specialized for biological sequences and ambiguities of symbols are considered.</p>
 <p><a id='Exact-search-1'></a></p>
 <h3 id="exact-search">Exact search</h3>
 <p>Exact search functions search for an occurrence of the query symbol or sequence. Four functions, <code>search</code>, <code>searchindex</code>, <code>rsearch</code>, and <code>rsearchindex</code> are available:</p>
@@ -1274,6 +1282,129 @@ RNAKmerCounts{k}(seq::Sequence[, step=1])
 
 <span class="gp">julia&gt;</span> <span class="n">approxsearch</span><span class="p">(</span><span class="n">dna</span><span class="s">&quot;ACTACGT&quot;</span><span class="p">,</span> <span class="n">query</span><span class="p">,</span> <span class="mi">2</span><span class="p">)</span>
 <span class="go">4:6</span>
+</pre></div>
+
+
+<p><a id='Regular-expression-search-1'></a></p>
+<h3 id="regular-expression-search">Regular expression search</h3>
+<p>Query patterns can be described in regular expressions. The syntax supports a subset of Perl and PROSITE's notation.</p>
+<p>The Perl-like syntax starts with <code>biore</code> (<strong>bio</strong>logical <strong>re</strong>gular expression) and ends with a symbol option: "dna", "rna" or "aa". For example, <code>biore"A+"dna</code> is a regular expression for DNA sequences and <code>biore"A+"aa</code> is for amino acid sequences. The symbol options can be abbreviated to its first character: "d", "r" or "a", respectively.</p>
+<p>Here are examples of using the regular expression for <code>BioSequence</code>s:</p>
+<div class="codehilite"><pre><span></span><span class="gp">julia&gt;</span> <span class="n">match</span><span class="p">(</span><span class="n">biore</span><span class="s">&quot;A+C*&quot;</span><span class="n">dna</span><span class="p">,</span> <span class="n">dna</span><span class="s">&quot;AAAACC&quot;</span><span class="p">)</span>
+<span class="go">Nullable(RegexMatch(&quot;AAAACC&quot;))</span>
+
+<span class="gp">julia&gt;</span> <span class="n">match</span><span class="p">(</span><span class="n">biore</span><span class="s">&quot;A+C*&quot;</span><span class="n">d</span><span class="p">,</span> <span class="n">dna</span><span class="s">&quot;AAAACC&quot;</span><span class="p">)</span>
+<span class="go">Nullable(RegexMatch(&quot;AAAACC&quot;))</span>
+
+<span class="gp">julia&gt;</span> <span class="n">ismatch</span><span class="p">(</span><span class="n">biore</span><span class="s">&quot;A+C*&quot;</span><span class="n">dna</span><span class="p">,</span> <span class="n">dna</span><span class="s">&quot;AAC&quot;</span><span class="p">)</span>
+<span class="go">true</span>
+
+<span class="gp">julia&gt;</span> <span class="n">ismatch</span><span class="p">(</span><span class="n">biore</span><span class="s">&quot;A+C*&quot;</span><span class="n">dna</span><span class="p">,</span> <span class="n">dna</span><span class="s">&quot;C&quot;</span><span class="p">)</span>
+<span class="go">false</span>
+</pre></div>
+
+
+<p><code>match</code> always returns a <code>Nullable</code> object and it should be null if no match is found.</p>
+<p>The table below summarizes available syntax elements.</p>
+<table>
+<thead>
+<tr>
+<th align="center">Syntax</th>
+<th align="left">Description</th>
+<th align="left">Example</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td align="center"><code>\    |</code></td>
+<td align="left">alternation</td>
+<td align="left"></td>
+</tr>
+<tr>
+<td align="center"><code>*</code></td>
+<td align="left">zero or more times repeat</td>
+<td align="left"><code>"TA*"</code> matches <code>"T"</code>, <code>"TA"</code> and <code>"TAA"</code></td>
+</tr>
+<tr>
+<td align="center"><code>+</code></td>
+<td align="left">one or more times repeat</td>
+<td align="left"><code>"TA+"</code> matches <code>"TA"</code> and <code>"TAA"</code></td>
+</tr>
+<tr>
+<td align="center"><code>?</code></td>
+<td align="left">zero or one time</td>
+<td align="left"><code>"TA?"</code> matches <code>"T"</code> and <code>"TA"</code></td>
+</tr>
+<tr>
+<td align="center"><code>{n,}</code></td>
+<td align="left"><code>n</code> or more times repeat</td>
+<td align="left"><code>"A{3,}"</code> matches <code>"AAA"</code> and <code>"AAAA"</code></td>
+</tr>
+<tr>
+<td align="center"><code>{n,m}</code></td>
+<td align="left"><code>n</code>-<code>m</code> times repeat</td>
+<td align="left"><code>"A{3,5}"</code> matches <code>"AAA"</code>, <code>"AAAA"</code> and <code>"AAAAA"</code></td>
+</tr>
+<tr>
+<td align="center"><code>^</code></td>
+<td align="left">the start of the sequence</td>
+<td align="left"><code>"^TAN*"</code> matches <code>"TATGT"</code></td>
+</tr>
+<tr>
+<td align="center"><code>$</code></td>
+<td align="left">the end of the sequence</td>
+<td align="left"><code>"N*TA$"</code> matches <code>"GCTA"</code></td>
+</tr>
+<tr>
+<td align="center"><code>(...)</code></td>
+<td align="left">pattern grouping</td>
+<td align="left"><code>"(TA)+"</code> matches <code>"TA"</code> and <code>"TATA"</code></td>
+</tr>
+<tr>
+<td align="center"><code>[...]</code></td>
+<td align="left">one of symbols</td>
+<td align="left"><code>"[ACG]+"</code> matches <code>"AGGC"</code></td>
+</tr>
+</tbody>
+</table>
+<p><code>eachmatch</code>, <code>matchall</code>, and <code>search</code> are also defined like usual strings:</p>
+<div class="codehilite"><pre><span></span><span class="gp">julia&gt;</span> <span class="n">matchall</span><span class="p">(</span><span class="n">biore</span><span class="s">&quot;TATA*?&quot;</span><span class="n">d</span><span class="p">,</span> <span class="n">dna</span><span class="s">&quot;TATTATAATTA&quot;</span><span class="p">)</span>  <span class="c"># overlap (default)</span>
+<span class="go">4-element Array{Bio.Seq.BioSequence{Bio.Seq.DNAAlphabet{4}},1}:</span>
+<span class="go"> 3nt DNA Sequence:</span>
+<span class="go">TAT</span>
+<span class="go"> 3nt DNA Sequence:</span>
+<span class="go">TAT</span>
+<span class="go"> 4nt DNA Sequence:</span>
+<span class="go">TATA</span>
+<span class="go"> 5nt DNA Sequence:</span>
+<span class="go">TATAA</span>
+
+<span class="gp">julia&gt;</span> <span class="n">matchall</span><span class="p">(</span><span class="n">biore</span><span class="s">&quot;TATA*&quot;</span><span class="n">d</span><span class="p">,</span> <span class="n">dna</span><span class="s">&quot;TATTATAATTA&quot;</span><span class="p">,</span> <span class="n">false</span><span class="p">)</span>  <span class="c"># no overlap</span>
+<span class="go">2-element Array{Bio.Seq.BioSequence{Bio.Seq.DNAAlphabet{4}},1}:</span>
+<span class="go"> 3nt DNA Sequence:</span>
+<span class="go">TAT</span>
+<span class="go"> 5nt DNA Sequence:</span>
+<span class="go">TATAA</span>
+
+<span class="gp">julia&gt;</span> <span class="n">search</span><span class="p">(</span><span class="n">dna</span><span class="s">&quot;TATTATAATTA&quot;</span><span class="p">,</span> <span class="n">biore</span><span class="s">&quot;TATA*&quot;</span><span class="n">d</span><span class="p">)</span>
+<span class="go">1:3</span>
+
+<span class="gp">julia&gt;</span> <span class="n">search</span><span class="p">(</span><span class="n">dna</span><span class="s">&quot;TATTATAATTA&quot;</span><span class="p">,</span> <span class="n">biore</span><span class="s">&quot;TATA*&quot;</span><span class="n">d</span><span class="p">,</span> <span class="mi">2</span><span class="p">)</span>
+<span class="go">4:8</span>
+</pre></div>
+
+
+<p>Notewothy differences from strings are:</p>
+<ul>
+<li>Ambiguous characters match any compatible characters (e.g. <code>biore"N"d</code> is equivalent to <code>biore"[ACGT]"d</code>).</li>
+<li>Whitespaces are ignored (e.g. <code>biore"A C G"d</code> is equivalent to <code>biore"ACG"d</code>).</li>
+</ul>
+<p>The PROSITE notation is described in <a href="http://prosite.expasy.org/scanprosite/scanprosite_doc.html">ScanProsite - user manual</a>. The syntax supports almost all notations including the extended syntax. The PROSITE notation starts with <code>prosite</code> prefix and no symbol option is needed because it always descirbe patterns of amino acid sequences:</p>
+<div class="codehilite"><pre><span></span><span class="gp">julia&gt;</span> <span class="n">match</span><span class="p">(</span><span class="n">prosite</span><span class="s">&quot;[AC]-x-V-x(4)-{ED}&quot;</span><span class="p">,</span> <span class="n">aa</span><span class="s">&quot;CPVPQARG&quot;</span><span class="p">)</span>
+<span class="go">Nullable(RegexMatch(&quot;CPVPQARG&quot;))</span>
+
+<span class="gp">julia&gt;</span> <span class="n">match</span><span class="p">(</span><span class="n">prosite</span><span class="s">&quot;[AC]xVx(4){ED}&quot;</span><span class="p">,</span> <span class="n">aa</span><span class="s">&quot;CPVPQARG&quot;</span><span class="p">)</span>
+<span class="go">Nullable(RegexMatch(&quot;CPVPQARG&quot;))</span>
 </pre></div>
 
 
