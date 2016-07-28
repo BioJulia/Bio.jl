@@ -108,7 +108,7 @@ end
 Test if nucleotide is surely a Purine.
 """
 function isPurine(nt::Nucleotide)
-    return nt == DNA_A || nt == DNA_G
+    return (compatbits(nt) | 0b0101) == 0b0101
 end
 
 """
@@ -116,17 +116,8 @@ end
 
 Test if nucleotide is surely a Pyrimidine.
 """
-function isPyrimidine(nt::DNANucleotide)
-    return nt == DNA_T || nt == DNA_C
-end
-
-"""
-    isPyrimidine(nt::Nucleotide)
-
-Test if nucleotide is surely a Pyrimidine.
-"""
-function isPyrimidine(nt::DNANucleotide)
-    return nt == DNA_U || nt == DNA_C
+function isPyrimidine(nt::Nucleotide)
+    return (compatbits(nt) | 0b1010) == 0b1010
 end
 
 """
