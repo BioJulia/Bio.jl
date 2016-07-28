@@ -103,20 +103,20 @@ function isGC(nt::DNANucleotide)
 end
 
 """
-    isPurine(nt::Nucleotide)
+    ispurine(nt::Nucleotide)
 
 Test if nucleotide is surely a Purine.
 """
-function isPurine(nt::Nucleotide)
+function ispurine(nt::Nucleotide)
     return (compatbits(nt) | 0b0101) == 0b0101
 end
 
 """
-    isPyrimidine(nt::Nucleotide)
+    ispyrimidine(nt::Nucleotide)
 
 Test if nucleotide is surely a Pyrimidine.
 """
-function isPyrimidine(nt::Nucleotide)
+function ispyrimidine(nt::Nucleotide)
     return (compatbits(nt) | 0b1010) == 0b1010
 end
 
