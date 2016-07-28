@@ -103,6 +103,33 @@ function isGC(nt::DNANucleotide)
 end
 
 """
+    isPurine(nt::Nucleotide)
+
+Test if nucleotide is surely a Purine.
+"""
+function isPurine(nt::Nucleotide)
+    return nt == DNA_A || nt == DNA_G
+end
+
+"""
+    isPyrimidine(nt::Nucleotide)
+
+Test if nucleotide is surely a Pyrimidine.
+"""
+function isPyrimidine(nt::DNANucleotide)
+    return nt == DNA_T || nt == DNA_C
+end
+
+"""
+    isPyrimidine(nt::Nucleotide)
+
+Test if nucleotide is surely a Pyrimidine.
+"""
+function isPyrimidine(nt::DNANucleotide)
+    return nt == DNA_U || nt == DNA_C
+end
+
+"""
     complement(nt::Nucleotide)
 
 Return the complementary nucleotide of `nt`.

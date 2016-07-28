@@ -307,11 +307,29 @@ end
     end
 
     @testset "isambiguous" begin
-        for x in alphabet(DNANucleotide)
-            @test isambiguous(x) == (x > DNA_T)
+        for nt in alphabet(DNANucleotide)
+            @test isambiguous(nt) == (nt > DNA_T)
         end
         for x in alphabet(RNANucleotide)
-            @test isambiguous(x) == (x > RNA_U)
+            @test isambiguous(nt) == (nt > RNA_U)
+        end
+    end
+
+    @testset "isPurine" begin
+        for nt in alphabet(DNANucleotide)
+            @test isPurine(nt) == (nt == DNA_A || nt == DNA_G)
+        end
+        for nt in alphabet(RNANucleotide)
+            @test isPurine(nt) == (nt == RNA_A || nt == RNA_G)
+        end
+    end
+
+    @testset "isPyrimidine" begin
+        for nt in alphabet(DNANucleotide)
+            @test isPyrimidine(nt) == (nt == DNA_T || nt == DNA_C)
+        end
+        for nt in alphabet(RNANucleotide)
+            @test isPyrimidine(nt) == (nt == RNA_U || nt == RNA_C)
         end
     end
 
