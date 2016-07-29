@@ -1,5 +1,5 @@
-# FAIndex
-# =======
+# FASTA Index
+# ===========
 #
 # Index for random access to FASTA files.
 #
@@ -7,7 +7,7 @@
 # License is MIT: https://github.com/BioJulia/Bio.jl/blob/master/LICENSE.md
 
 # http://www.htslib.org/doc/faidx.html
-type FAIndex
+type FASTAIndex
     names::Vector{ASCIIString}
     lengths::Vector{Int}
     offsets::Vector{Int}
@@ -15,7 +15,7 @@ type FAIndex
     linewidths::Vector{Int}
 end
 
-function FAIndex(filepath::AbstractString)
+function FASTAIndex(filepath::AbstractString)
     return open(read_faidx, filepath)
 end
 
@@ -38,11 +38,11 @@ function read_faidx(input::IO)
         push!(linebases, linebase)
         push!(linewidths, linewidth)
     end
-    return FAIndex(names, lengths, offsets, linebases, linewidths)
+    return FASTAIndex(names, lengths, offsets, linebases, linewidths)
 end
 
 # Set the reading position of `input` to the beginning of a record.
-function seekseq(input::IO, fai::FAIndex, name::AbstractString)
+function seekseq(input::IO, fai::FASTAIndex, name::AbstractString)
     i = findfirst(fai.names, name)
     if i == 0
         error("sequence \"", name, "\" is not in the index")

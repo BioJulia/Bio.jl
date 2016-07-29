@@ -2738,6 +2738,8 @@ end
                 @test chr1.seq == dna"""
                 CCACACCACACCCACACACC
                 """
+
+                @test_throws Exception reader["chr5"]
             end
         end
     end

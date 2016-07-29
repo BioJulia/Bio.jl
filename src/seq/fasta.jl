@@ -42,8 +42,7 @@ function Base.open(filepath::AbstractString, ::Type{FASTA})
     input = BufferedInputStream(open(filepath))
     indexpath = filepath * ".fai"
     if isfile(indexpath)
-        index = FAIndex(indexpath)
-        return FASTAParser{BioSequence}(input, index)
+        return FASTAParser{BioSequence}(input, FASTAIndex(indexpath))
     else
         return FASTAParser{BioSequence}(input)
     end
@@ -75,7 +74,7 @@ include("fai.jl")
 type FASTAParser{S<:Sequence} <: AbstractParser
     state::Ragel.State
     seqbuf::BufferedOutputStream{BufferedStreams.EmptyStream}
-    index::Nullable{FAIndex}
+    index::Nullable{FASTAIndex}
 
     function FASTAParser(input::BufferedInputStream, index=Nullable())
         return new(Ragel.State(fastaparser_start, input),
