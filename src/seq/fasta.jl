@@ -38,6 +38,17 @@ typealias FASTASeqRecord{S} SeqRecord{S,FASTAMetadata}
     return SeqRecord(name, seq, FASTAMetadata(description))
 end
 
+function Base.open(filepath::AbstractString, ::Type{FASTA})
+    input = BufferedInputStream(open(filepath))
+    indexpath = filepath * ".fai"
+    if isfile(indexpath)
+        index = FAIndex(indexpath)
+        return FASTAParser{BioSequence}(input, index)
+    else
+        return FASTAParser{BioSequence}(input)
+    end
+end
+
 function Base.open(filepath::AbstractString, mode::AbstractString, ::Type{FASTA};
                    width::Integer=60)
     io = open(filepath, mode)

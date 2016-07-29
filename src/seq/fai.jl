@@ -6,8 +6,7 @@
 # This file is a part of BioJulia.
 # License is MIT: https://github.com/BioJulia/Bio.jl/blob/master/LICENSE.md
 
-type FAI <: FileFormat end
-
+# http://www.htslib.org/doc/faidx.html
 type FAIndex
     names::Vector{ASCIIString}
     lengths::Vector{Int}
@@ -16,26 +15,28 @@ type FAIndex
     linewidths::Vector{Int}
 end
 
-function Base.open(filepath::AbstractString, ::Type{FAI})
+function FAIndex(filepath::AbstractString)
+    return open(read_faidx, filepath)
+end
+
+function read_faidx(input::IO)
     names = ASCIIString[]
     lengths = Int[]
     offsets = Int[]
     linebases = Int[]
     linewidths = Int[]
-    open(filepath) do input
-        for line in eachline(input)
-            values = split(chomp(line), '\t')
-            name = values[1]
-            length = parse(Int, values[2])
-            offset = parse(Int, values[3])
-            linebase = parse(Int, values[4])
-            linewidth = parse(Int, values[5])
-            push!(names, name)
-            push!(lengths, length)
-            push!(offsets, offset)
-            push!(linebases, linebase)
-            push!(linewidths, linewidth)
-        end
+    for line in eachline(input)
+        values = split(chomp(line), '\t')
+        name = values[1]
+        length = parse(Int, values[2])
+        offset = parse(Int, values[3])
+        linebase = parse(Int, values[4])
+        linewidth = parse(Int, values[5])
+        push!(names, name)
+        push!(lengths, length)
+        push!(offsets, offset)
+        push!(linebases, linebase)
+        push!(linewidths, linewidth)
     end
     return FAIndex(names, lengths, offsets, linebases, linewidths)
 end
