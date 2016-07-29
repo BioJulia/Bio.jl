@@ -317,6 +317,7 @@ end
 
     @testset "ispurine" begin
         for nt in alphabet(DNANucleotide)
+            println(nt)
             @test ispurine(nt) == (nt == DNA_A || nt == DNA_G || nt == DNA_R)
         end
         for nt in alphabet(RNANucleotide)
