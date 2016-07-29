@@ -7,12 +7,15 @@ else
     const Test = BaseTestNext
 end
 
+using Compat
 using Bio.Seq,
       Bio.Tools.BLAST,
       TestFunctions
 
 get_bio_fmt_specimens()
 path = Pkg.dir("Bio", "test", "BioFmtSpecimens")
+
+if !is_windows()  # temporarily disable the BLAST tests on Windows (issue: #197)
 
 @testset "BLAST+ blastn" begin
     na1 = dna"""
@@ -35,7 +38,6 @@ path = Pkg.dir("Bio", "test", "BioFmtSpecimens")
     @test typeof(blastn(na1, nucldb, db=true)) == Array{BLASTResult, 1}
     @test typeof(blastn(na1, fna)) == Array{BLASTResult, 1}
     @test typeof(blastn(fna, nucldb, db=true)) == Array{BLASTResult, 1}
-
 end
 
 @testset "BLAST+ blastp" begin
@@ -60,5 +62,7 @@ end
     @test typeof(blastp(aa1, faa)) == Array{BLASTResult, 1}
     @test typeof(blastp(faa, protdb, db=true)) == Array{BLASTResult, 1}
 end
+
+end  # if !is_windows()
 
 end # TestTools
