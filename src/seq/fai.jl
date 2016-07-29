@@ -1,5 +1,5 @@
-# FAI
-# ===
+# FAIndex
+# =======
 #
 # Index for random access to FASTA files.
 #
