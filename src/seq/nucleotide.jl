@@ -103,6 +103,26 @@ function isGC(nt::DNANucleotide)
 end
 
 """
+    ispurine(nt::Nucleotide)
+
+Test if nucleotide is surely a Purine.
+"""
+function ispurine(nt::Nucleotide)
+    bits = compatbits(nt)
+    return ((bits & 0b1010) == 0) && ((bits & 0b0101) != 0)
+end
+
+"""
+    ispyrimidine(nt::Nucleotide)
+
+Test if nucleotide is surely a Pyrimidine.
+"""
+function ispyrimidine(nt::Nucleotide)
+    bits = compatbits(nt)
+    return ((bits & 0b0101) == 0) && ((bits & 0b1010) != 0)
+end
+
+"""
     complement(nt::Nucleotide)
 
 Return the complementary nucleotide of `nt`.

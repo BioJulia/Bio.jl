@@ -46,6 +46,8 @@ export
     RNA_Gap,
     iscompatible,
     isambiguous,
+    ispurine,
+    ispyrimidine,
     Sequence,
     BioSequence,
     DNASequence,
