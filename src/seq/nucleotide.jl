@@ -108,7 +108,8 @@ end
 Test if nucleotide is surely a Purine.
 """
 function ispurine(nt::Nucleotide)
-    return (compatbits(nt) & 0b0101) && !(compatbits(nt) & 0b1010)
+    bits = compatbits(nt)
+    return ((bits & 0b1010) == 0) && ((bits & 0b0101) != 0)
 end
 
 """
@@ -117,7 +118,8 @@ end
 Test if nucleotide is surely a Pyrimidine.
 """
 function ispyrimidine(nt::Nucleotide)
-    return (compatbits(nt) & 0b1010) && !(compatbits(nt) & 0b0101)
+    bits = compatbits(nt)
+    return ((bits & 0b0101) == 0) && ((bits & 0b1010) != 0)
 end
 
 """
