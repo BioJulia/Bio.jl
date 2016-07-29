@@ -512,7 +512,7 @@ function Base.start(bb::BigBedData)
     parser_isdone = isnull(tryread!(parser, next_interval))
 
     return BigBedIteratorState(seq_names, data_count, 1,
-                               getindex(zlib_stream.source.zstream).total_in,
+                               zlib_stream.source.zstream.total_in,
                                parser, parser_isdone, next_interval)
 end
 
@@ -535,7 +535,7 @@ function Base.next(bb::BigBedData, state::BigBedIteratorState)
         state.parser = BigBedDataParser(
              BufferedInputStream(bb.uncompressed_data, unc_block_size),
              seq_names=Nullable(state.seq_names))
-        state.data_offset += getindex(zlib_stream.source.zstream).total_in
+        state.data_offset += zlib_stream.source.zstream.total_in
 
         state.parser_isdone = isnull(tryread!(state.parser, state.next_interval))
         @assert !state.parser_isdone
