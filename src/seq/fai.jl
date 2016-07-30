@@ -41,7 +41,7 @@ function read_faidx(input::IO)
     return FASTAIndex(names, lengths, offsets, linebases, linewidths)
 end
 
-# Set the reading position of `input` to the beginning of a record.
+# Set the reading position of `input` to the starting position of the record `name`.
 function seekseq(input::IO, fai::FASTAIndex, name::AbstractString)
     i = findfirst(fai.names, name)
     if i == 0
@@ -55,17 +55,17 @@ function seekseq(input::IO, fai::FASTAIndex, name::AbstractString)
     while position(input) < offset
         push!(data, read(input, UInt8))
     end
-    reverse!(data)
-    if offset == minimum(fai.offsets)
-        s = first(search(bytestring(data), r">"))
-    else
-        s = first(search(bytestring(data), r">\n"))
+    for j in endof(data):-1:1
+        if data[j] == UInt8('>') && (offset ≤ n_back || (j ≥ 2 && data[j-1] == UInt8('\n')))
+            seek(input, offset - (endof(data) - j + 1))
+            return
+        end
     end
-    if s == 0
-        n_back *= 2
-        @goto seekback
+    if n_back ≥ offset
+        # reached the starting position of the input
+        error("failed to find the starting position of the record")
     end
-    seek(input, offset - s)
-    return
+    n_back *= 2
+    @goto seekback
 end
 
