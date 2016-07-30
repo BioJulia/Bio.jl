@@ -348,6 +348,45 @@ end
 immutable BigBed <: FileFormat end
 immutable BigWig <: FileFormat end
 
+type BigBedData <: IntervalStream{BEDMetadata}
+    stream::BufferedInputStream
+    header::BigBedHeader
+    zoom_headers::Vector{BigBedZoomHeader}
+    autosql::AbstractString
+    summary::BigBedTotalSummary
+    btree_header::BigBedBTreeHeader
+    rtree_header::BigBedRTreeHeader
+    data_count::UInt32
+
+    # preallocated space for reading and searching the B-tree
+    btree_internal_nodes::Vector{BigBedBTreeInternalNode}
+    btree_leaf_nodes::Vector{BigBedBTreeLeafNode}
+    key::Vector{UInt8}
+    node_keys::Vector{Vector{UInt8}}
+    uncompressed_data::Vector{UInt8}
+end
+
+type BigBedDataParser <: AbstractParser
+    state::Ragel.State
+
+    # intermediate values used during parsing
+    chrom_id::UInt32
+    red::Float32
+    green::Float32
+    blue::Float32
+    block_size_idx::Int
+    block_first_idx::Int
+    seq_names::Nullable{Vector{StringField}}
+    assumed_seqname::Nullable{StringField}
+
+    function BigBedDataParser(input::BufferedInputStream;
+                              seq_names::Nullable{Vector{StringField}}=Nullable{Vector{StringField}}(),
+                              assumed_seqname::Nullable{StringField}=Nullable{StringField}())
+        cs = _bigbedparser_start
+        return new(Ragel.State(cs, input), 0, 0.0, 0.0, 0.0, 1, 1, seq_names, assumed_seqname)
+    end
+end
+
 include("bigbed-parser.jl")
 
 """
