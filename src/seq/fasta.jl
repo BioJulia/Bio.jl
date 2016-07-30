@@ -38,6 +38,16 @@ typealias FASTASeqRecord{S} SeqRecord{S,FASTAMetadata}
     return SeqRecord(name, seq, FASTAMetadata(description))
 end
 
+function Base.open(filepath::AbstractString, ::Type{FASTA})
+    input = BufferedInputStream(open(filepath))
+    indexpath = filepath * ".fai"
+    if isfile(indexpath)
+        return FASTAParser{BioSequence}(input, FASTAIndex(indexpath))
+    else
+        return FASTAParser{BioSequence}(input)
+    end
+end
+
 function Base.open(filepath::AbstractString, mode::AbstractString, ::Type{FASTA};
                    width::Integer=60)
     io = open(filepath, mode)
@@ -58,19 +68,31 @@ end
 # Parser
 # ------
 
+include("fai.jl")
+
 "A type encapsulating the current state of a FASTA parser"
 type FASTAParser{S<:Sequence} <: AbstractParser
     state::Ragel.State
     seqbuf::BufferedOutputStream{BufferedStreams.EmptyStream}
+    index::Nullable{FASTAIndex}
 
-    function FASTAParser(input::BufferedInputStream)
+    function FASTAParser(input::BufferedInputStream, index=Nullable())
         return new(Ragel.State(fastaparser_start, input),
-                   BufferedOutputStream())
+                   BufferedOutputStream(), index)
     end
 end
 
 Base.eltype{S}(::Type{FASTAParser{S}}) = FASTASeqRecord{S}
 Base.eof(parser::FASTAParser) = eof(parser.state.stream)
+
+function Base.getindex(parser::FASTAParser, name::AbstractString)
+    if isnull(parser.index)
+        error("no index")
+    end
+    seekrecord(parser.state.stream, get(parser.index), name)
+    parser.state.cs = fastaparser_start
+    return read(parser)
+end
 
 include("fasta-parser.jl")
 

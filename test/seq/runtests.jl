@@ -9,6 +9,7 @@ end
 
 import Compat
 using Bio.Seq,
+    BufferedStreams,
     YAML,
     TestFunctions
 
@@ -2684,6 +2685,62 @@ end
             dnaseq = first(open(path, FASTA, DNASequence)).seq
             refseq = first(open(path, FASTA, ReferenceSequence)).seq
             @test dnaseq == refseq
+        end
+
+        @testset "Faidx" begin
+            fastastr = """
+            >chr1
+            CCACACCACACCCACACACC
+            >chr2
+            ATGCATGCATGCAT
+            GCATGCATGCATGC
+            >chr3
+            AAATAGCCCTCATGTACGTCTCCTCCAAGCCCTGTTGTCTCTTACCCGGA
+            TGTTCAACCAAAAGCTACTTACTACCTTTATTTTATGTTTACTTTTTATA
+            >chr4
+            TACTT
+            """
+            # generated with `samtools faidx`
+            faistr = """
+            chr1	20	6	20	21
+            chr2	28	33	14	15
+            chr3	100	69	50	51
+            chr4	5	177	5	6
+            """
+            mktempdir() do dir
+                filepath = joinpath(dir, "test.fa")
+                write(filepath, fastastr)
+                write(filepath * ".fai", faistr)
+                reader = open(filepath, FASTA)
+
+                chr3 = reader["chr3"]
+                @test chr3.name == "chr3"
+                @test chr3.seq == dna"""
+                AAATAGCCCTCATGTACGTCTCCTCCAAGCCCTGTTGTCTCTTACCCGGA
+                TGTTCAACCAAAAGCTACTTACTACCTTTATTTTATGTTTACTTTTTATA
+                """
+
+                chr2 = reader["chr2"]
+                @test chr2.name == "chr2"
+                @test chr2.seq == dna"""
+                ATGCATGCATGCAT
+                GCATGCATGCATGC
+                """
+
+                chr4 = reader["chr4"]
+                @test chr4.name == "chr4"
+                @test chr4.seq == dna"""
+                TACTT
+                """
+
+                chr1 = reader["chr1"]
+                @test chr1.name == "chr1"
+                @test chr1.seq == dna"""
+                CCACACCACACCCACACACC
+                """
+
+                @test_throws Exception reader["chr5"]
+            end
         end
     end
 
