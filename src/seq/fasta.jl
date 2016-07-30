@@ -89,7 +89,7 @@ function Base.getindex(parser::FASTAParser, name::AbstractString)
     if isnull(parser.index)
         error("no index")
     end
-    seekseq(parser.state.stream, get(parser.index), name)
+    seekrecord(parser.state.stream, get(parser.index), name)
     parser.state.cs = fastaparser_start
     return read(parser)
 end

@@ -42,7 +42,7 @@ function read_faidx(input::IO)
 end
 
 # Set the reading position of `input` to the starting position of the record `name`.
-function seekseq(input::IO, fai::FASTAIndex, name::AbstractString)
+function seekrecord(input::IO, fai::FASTAIndex, name::AbstractString)
     i = findfirst(fai.names, name)
     if i == 0
         error("sequence \"", name, "\" is not in the index")
