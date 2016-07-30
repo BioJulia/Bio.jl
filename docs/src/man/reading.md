@@ -2,13 +2,18 @@
 
 Bio.jl has a unified interface for reading and writing files in a variety of
 formats. To initialize a parser for a particular format, the `open` method is
-extended with a file format type parameter (currently supported formats types
-are `BED`, `FASTQ`, and `FASTA`).
-
+extended with a file format type parameter `T`:
 ```julia
-open{T <: FileFormat}(filename::String, ::Type{T}; memory_map::Bool=false)
-open{T <: FileFormat}(source::IO, ::Type{T})
-open{T <: FileFormat}(data::Vector{UInt8}, ::Type{T})
+open{T<:FileFormat}(filename::AbstractString, ::Type{T})
+open{T<:FileFormat}(source::IO, ::Type{T})
+open{T<:FileFormat}(data::Vector{UInt8}, ::Type{T})
+```
+
+For example, when reading a FASTA file, a parser for the FASTA file format can
+be initialized as:
+```julia
+using Bio.Seq  # import FASTA
+parser = open("hg38.fa", FASTA)
 ```
 
 
@@ -79,3 +84,119 @@ write(out, FASTASeqRecord("seq2", dna"TTATATTATTGTAAA", "AT rich"))
 # and more records
 close(out)
 ```
+
+
+## Supported file formats
+
+The following table summarizes supported file formats.
+
+| File format | Type parameter | Module          | Specification                                                               |
+| :---------- | :------------- | :-----          | :------------                                                               |
+| FASTA       | `FASTA`        | `Bio.Seq`       | <https://en.wikipedia.org/wiki/FASTA_format>                                |
+| FASTQ       | `FASTQ`        | `Bio.Seq`       | <https://en.wikipedia.org/wiki/FASTQ_format>                                |
+| .2bit       | `TwoBit`       | `Bio.Seq`       | <http://genome.ucsc.edu/FAQ/FAQformat.html#format7>                         |
+| BED         | `BED`          | `Bio.Intervals` | <https://genome.ucsc.edu/FAQ/FAQformat.html#format1>                        |
+| bigBed      | `BigBed`       | `Bio.Intervals` | <https://doi.org/10.1093/bioinformatics/btq351>                             |
+| PDB         | `PDB`          | `Bio.Structure` | <http://www.wwpdb.org/documentation/file-format-content/format33/v3.3.html> |
+
+
+### FASTA
+
+* Parser type: `FASTAParser{S<:Sequence}`
+* Writer type: `FASTAWriter{T<:IO}`
+* Element type: `SeqRecord{S,FASTAMetadata}` (alias: `FASTASeqRecord{S}`)
+
+FASTA is a text-based file format for representing biological sequences. A
+FASTA file stores a list of sequence records with name, description, and
+sequence. The template of a sequence record is:
+```
+>{name} {description}?
+{sequence}
+```
+
+Here is an example of a chromosomal sequence:
+```
+>chrI chromosome 1
+CCACACCACACCCACACACCCACACACCACACCACACACCACACCACACC
+CACACACACACATCCTAACACTACCCTAACACAGCCCTAATCTAACCCTG
+```
+
+Usually sequence records will be read sequentially from a file by iteration.
+But if the FASTA file has an auxiliary index file formatted in
+[fai](http://www.htslib.org/doc/faidx.html), the parser supports random access
+to FASTA records, which would be useful when accessing specific parts of a huge
+genome sequence:
+```julia
+parser = open("sacCer.fa", FASTA)  # find and read "sacCer.fa.fai" file
+chrIV = parser["chrIV"]  # directly read chromosome 4
+```
+
+
+### FASTQ
+
+* Parser type: `FASTQParser{S<:Sequence}`
+* Writer type: `FASTQWriter{T<:IO}`
+* Element type: `SeqRecord{S,FASTQMetadata}` (alias: `FASTQSeqRecord{S}`)
+
+FASTQ is a text-based file format for representing DNA sequences along with
+qualities for each base. A FASTQ file stores a list of sequence records in the
+following format:
+```
+@{name} {description}?
+{sequence}
++
+{qualities}
+```
+
+Here is an example of a part of a FASTQ file:
+```
+@FSRRS4401BE7HA
+tcagTTAAGATGGGAT
++
+eeeccccccc`UUU^U
+```
+
+### .2bit
+
+* Parser type: `TwoBitParser{T<:IO}`
+* Writer type: `TwoBitWriter{T<:IO}`
+* Element type: `SeqRecord{ReferenceSequence,Vector{UnitRange{Int}}}`
+
+.2bit is a binary file format designed for storing a genome consists of multiple
+chromosomal sequences. The reading speed is often an order of magnitude faster
+than that of FASTA and the file size is smaller. However, since the .2bit file
+format is specialized for genomic sequences, it cannot store either RNA or amino
+acid sequences.
+
+Like FASTA, the .2bit parser supports random access using an index included in
+the header section of a .2bit file:
+```julia
+parser = open("sacCer.2bit", TwoBit)  # parse the header and load a random access index
+chrIV = parser["chrIV"]  # directly read chromosome 4
+```
+
+
+### BED
+
+* Parser type: `BEDParser`
+* Writer type: `BEDWriter{T<:IO}`
+* Element type: `Interval{BEDMetadata}` (alias: `BEDInterval`)
+
+BED is a text-based file format for representing genomic annotations like genes,
+transcripts, and so on. A BED file has tab-delimited and variable-length fields;
+the first three fields denoting a genomic interval are mandatory.
+
+This is an example of RNA transcripts:
+```
+chr9	68331023	68424451	NM_015110	0	+
+chr9	68456943	68486659	NM_001206	0	-
+```
+
+
+### bigBed
+
+(TBD)
+
+### PDB
+
+(TBD)
