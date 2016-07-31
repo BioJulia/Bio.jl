@@ -33,3 +33,4 @@ end
 
 include("hamming.jl")
 include("sequence_levenshtein.jl")
+include("trie.jl")
