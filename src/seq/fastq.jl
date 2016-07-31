@@ -90,6 +90,13 @@ type FASTQParser{S<:Sequence} <: AbstractParser
 
     function FASTQParser(input::BufferedInputStream,
                          quality_encodings::QualityEncoding)
+        if quality_encodings == EMPTY_QUAL_ENCODING
+            error("The `quality_encodings` argument is required when parsing FASTQ.")
+        elseif count_ones(convert(UInt16, quality_encodings)) > 1
+            error("The `quality_encodings` argument must specify exactly one encoding.")
+        elseif count_ones(convert(UInt16, quality_encodings & ALL_QUAL_ENCODINGS)) != 1
+            error("Unknown quality encoding.")
+        end
         return new(Ragel.State(fastqparser_start, input),
                    BufferedOutputStream(), BufferedOutputStream(),
                    StringField(), StringField(), 0, quality_encodings)
