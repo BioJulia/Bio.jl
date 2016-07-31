@@ -6,11 +6,11 @@
 
 if VERSION < v"0.5-"
     precompile(Base.open, (ASCIIString, Type{Seq.FASTA},))
-    precompile(Base.open, (ASCIIString, Type{Seq.FASTQ},))
+    precompile(Base.open, (ASCIIString, Type{Seq.FASTQ}, Type{Seq.QualityEncoding},))
     precompile(Base.open, (ASCIIString, Type{Intervals.BED},))
 else
     precompile(Base.open, (String, Type{Seq.FASTA},))
-    precompile(Base.open, (String, Type{Seq.FASTQ},))
+    precompile(Base.open, (String, Type{Seq.FASTQ}, Type{Seq.QualityEncoding},))
     precompile(Base.open, (String, Type{Intervals.BED},))
 end
 precompile(Base.read, (Seq.FASTAParser{Seq.BioSequence},))

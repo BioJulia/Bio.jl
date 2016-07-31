@@ -59,7 +59,7 @@ function Base.open(
         ascii_offset::Integer=typemin(Int))
     io = open(filepath, mode)
     if mode[1] == 'r'
-        return open(BufferedInputStream(io), FASTQ; quality_encoding=quality_encoding)
+        return open(BufferedInputStream(io), FASTQ, quality_encoding)
     elseif mode[1] ∈ ('w', 'a')
         return FASTQWriter(io, quality_header, ascii_offset)
     end
@@ -67,8 +67,8 @@ function Base.open(
 end
 
 function Base.open{S}(input::BufferedInputStream, ::Type{FASTQ},
+                      quality_encoding::QualityEncoding,
                       ::Type{S}=DNASequence;
-                      quality_encoding::QualityEncoding=EMPTY_QUAL_ENCODING,
                       # TODO: remove this option after v0.2
                       qualenc=quality_encoding)
     return FASTQParser{S}(input, quality_encoding)
