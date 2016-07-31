@@ -9,7 +9,7 @@ Activity: [![Planned Work](https://badge.waffle.io/BioJulia/Bio.jl.svg?label=sta
 [![Work In Progress](https://badge.waffle.io/BioJulia/Bio.jl.svg?label=stage:%20WIP&title=In%20Progress)](http://waffle.io/BioJulia/Bio.jl)
 
 Code Quality: [![Build Status](https://travis-ci.org/BioJulia/Bio.jl.svg?branch=master)](https://travis-ci.org/BioJulia/Bio.jl)
-[![Build status](https://ci.appveyor.com/api/projects/status/nq4w264346py8esp?svg=true)](https://ci.appveyor.com/project/Ward9250/bio-jl)
+[![Build status](https://ci.appveyor.com/api/projects/status/nq4w264346py8esp/branch/master?svg=true)](https://ci.appveyor.com/project/Ward9250/bio-jl/branch/master)
 [![Coverage Status](https://img.shields.io/coveralls/BioJulia/Bio.jl.svg)](https://coveralls.io/r/BioJulia/Bio.jl)
 [![codecov.io](http://codecov.io/github/BioJulia/Bio.jl/coverage.svg?branch=master)](http://codecov.io/github/BioJulia/Bio.jl?branch=master)
 
