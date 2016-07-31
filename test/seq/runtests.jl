@@ -2764,15 +2764,15 @@ end
 
         function check_fastq_parse(filename)
             # Reading from a stream
-            for seqrec in open(filename, FASTQ)
+            for seqrec in open(filename, FASTQ, Seq.SANGER_QUAL_ENCODING)
             end
 
             # Reading from a memory mapped file
-            for seqrec in open(filename, FASTQ, memory_map=true)
+            for seqrec in open(filename, FASTQ, Seq.SANGER_QUAL_ENCODING, memory_map=true)
             end
 
             # in-place parsing
-            stream = open(filename, FASTQ)
+            stream = open(filename, FASTQ, Seq.SANGER_QUAL_ENCODING)
             entry = eltype(stream)()
             while !eof(stream)
                 read!(stream, entry)
@@ -2782,14 +2782,14 @@ end
             output = IOBuffer()
             writer = Seq.FASTQWriter(output, false, typemin(Int))
             expected_entries = Any[]
-            for seqrec in open(filename, FASTQ)
+            for seqrec in open(filename, FASTQ, Seq.SANGER_QUAL_ENCODING)
                 write(writer, seqrec)
                 push!(expected_entries, seqrec)
             end
             flush(writer)
 
             read_entries = Any[]
-            for seqrec in open(takebuf_array(output), FASTQ)
+            for seqrec in open(takebuf_array(output), FASTQ, Seq.SANGER_QUAL_ENCODING)
                 push!(read_entries, seqrec)
             end
 
@@ -2822,7 +2822,7 @@ end
             """)
             for A in (DNAAlphabet{2}, DNAAlphabet{4})
                 seekstart(input)
-                seq = first(open(input, FASTQ, BioSequence{A})).seq
+                seq = first(open(input, FASTQ, Seq.SANGER_QUAL_ENCODING, BioSequence{A})).seq
                 @test typeof(seq) == BioSequence{A}
             end
         end
