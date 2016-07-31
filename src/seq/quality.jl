@@ -90,7 +90,6 @@ giving the set of compatible encodings.
 function infer_quality_encoding(data::Vector{UInt8}, start, stop,
                                 encodings::QualityEncoding=ALL_QUAL_ENCODINGS,
                                 default::QualityEncoding=EMPTY_QUAL_ENCODING)
-    encodings = ALL_QUAL_ENCODINGS
     @inbounds for i in start:stop
         c = data[i]
         if '!' <= c <= '~'
