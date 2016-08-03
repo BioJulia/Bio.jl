@@ -301,6 +301,9 @@ function levenshtein_distance(seq1, seq2)
     return dist[m+1,n+1]
 end
 
+# Calculate the Sequence-Levenshtein distance between `seq1` and `seq2`.
+# Buschmann, Tilo, and Leonid V. Bystrykh. "Levenshtein error-correcting
+# barcodes for multiplexed DNA sequencing." BMC bioinformatics 14.1 (2013): 272.
 function sequencelevenshtein_distance(seq1, seq2)
     m = length(seq1)
     n = length(seq2)
