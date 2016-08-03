@@ -2627,8 +2627,8 @@ end
             seq = make_errors(barcodes[i] * randdna(10))
             n_ok += demultiplex(dplxr, seq) == i
         end
-        @show n_ok
         # empirically, n_ok / 10_000 is ~0.985
+        # @show n_ok
         @test n_ok / 10_000 > 0.98
     end
 
@@ -2675,8 +2675,8 @@ end
             seq = make_errors(barcodes[i] * randdna(10))
             n_ok += demultiplex(dplxr, seq) == i
         end
-        @show n_ok
         # empirically, n_ok / 10_000 is ~0.995
+        # @show n_ok
         @test n_ok / 10_000 > 0.99
     end
 end
