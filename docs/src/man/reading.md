@@ -195,9 +195,17 @@ chr9	68456943	68486659	NM_001206	0	-
 
 ### bigBed
 
-(TBD)
+* Parser type: ???
+* Writer type: ???
+* Element type: ???
+
+BigBed is a binary file format for representing genomic annotations and often
+created from BED files. The bigBed files are indexed to quickly fetch specific
+regions.
 
 
 ### PDB
 
-(TBD)
+PDB is a text-based file format for representing 3D macromolecular structures.
+This has different parser interfaces from other file formats. Please consult the
+[Bio.Structure](structure/) chapter for details.
