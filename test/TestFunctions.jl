@@ -7,7 +7,8 @@ export get_bio_fmt_specimens,
     random_seq,
     random_dna,
     random_rna,
-    random_aa
+    random_aa,
+    shows
 
 
 function get_bio_fmt_specimens()
@@ -51,6 +52,12 @@ function random_aa(len)
         ['A', 'R', 'N', 'D', 'C', 'Q', 'E', 'G', 'H', 'I',
          'L', 'K', 'M', 'F', 'P', 'S', 'T', 'W', 'Y', 'V', 'X' ],
         push!(fill(0.049, 20), 0.02))
+end
+
+function shows(thing)
+    io = IOBuffer()
+    show(io, thing)
+    return takebuf_string(io)
 end
 
 end

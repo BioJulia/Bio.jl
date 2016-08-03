@@ -1806,34 +1806,50 @@ end
                                convert(BioSequence{A}, seq)))) == uppercase(seq)
         end
 
+        # Check that kmers can be "transcribed"
+        #   RNAKmer → DNAKmer → RNAKmer (and vice versa)
+        function check_dnarna_kmer(len::Int, kmerint::UInt64)
+            d = convert(DNAKmer{len}, kmerint)
+            r = convert(Kmer{RNANucleotide, len}, kmerint)
+            dnaok = convert(DNAKmer{len}, convert(RNAKmer{len}, d)) === d
+            rnaok = convert(RNAKmer{len}, convert(DNAKmer{len}, r)) === r
+            return  dnaok && rnaok
+        end
+
         for len in [0, 1, 16, 32]
-            # UInt64 conversions
-            @test all(Bool[check_uint64_convertion(DNANucleotide, rand(UInt64(0):UInt64(UInt64(1) << 2len - 1)), len) for _ in 1:reps])
-            @test all(Bool[check_uint64_convertion(RNANucleotide, rand(UInt64(0):UInt64(UInt64(1) << 2len - 1)), len) for _ in 1:reps])
+            for _ in 1:reps
+                # UInt64 conversions
+                kmerrange = UInt64(0):UInt64(4)^len-1
+                @test check_uint64_convertion(DNANucleotide, rand(kmerrange), len)
+                @test check_uint64_convertion(RNANucleotide, rand(kmerrange), len)
 
-            # String construction
-            @test all(Bool[check_string_construction(DNANucleotide, random_dna_kmer(len)) for _ in 1:reps])
-            @test all(Bool[check_string_construction(RNANucleotide, random_rna_kmer(len)) for _ in 1:reps])
+                # String construction
+                @test check_string_construction(DNANucleotide, random_dna_kmer(len))
+                @test check_string_construction(RNANucleotide, random_rna_kmer(len))
 
-            # DNA/RNASequence Constructions
-            @test all(Bool[check_dnasequence_construction(DNASequence(random_dna_kmer(len))) for _ in 1:reps])
-            @test all(Bool[check_rnasequence_construction(RNASequence(random_rna_kmer(len))) for _ in 1:reps])
+                # DNA/RNASequence Constructions
+                @test check_dnasequence_construction(DNASequence(random_dna_kmer(len)))
+                @test check_rnasequence_construction(RNASequence(random_rna_kmer(len)))
 
-            # BioSequence Construction
-            @test all(Bool[check_biosequence_construction(DNASequence(random_dna_kmer(len))) for _ in 1:reps])
-            @test all(Bool[check_biosequence_construction(RNASequence(random_rna_kmer(len))) for _ in 1:reps])
+                # BioSequence Construction
+                @test check_biosequence_construction(DNASequence(random_dna_kmer(len)))
+                @test check_biosequence_construction(RNASequence(random_rna_kmer(len)))
 
-            # Construction from nucleotide arrays
-            if len > 0
-                @test all(Bool[check_nucarray_kmer(random_dna_kmer_nucleotides(len)) for _ in 1:reps])
-                @test all(Bool[check_nucarray_kmer(random_rna_kmer_nucleotides(len)) for _ in 1:reps])
+                # Construction from nucleotide arrays
+                if len > 0
+                    @test check_nucarray_kmer(random_dna_kmer_nucleotides(len))
+                    @test check_nucarray_kmer(random_rna_kmer_nucleotides(len))
+                end
+
+                # Roundabout conversions
+                @test check_roundabout_construction(DNAAlphabet{2}, random_dna_kmer(len))
+                @test check_roundabout_construction(DNAAlphabet{4}, random_dna_kmer(len))
+                @test check_roundabout_construction(RNAAlphabet{2}, random_rna_kmer(len))
+                @test check_roundabout_construction(RNAAlphabet{4}, random_rna_kmer(len))
+
+                # DNA -> RNA -> DNA and vice versa
+                @test check_dnarna_kmer(len, rand(kmerrange))
             end
-
-            # Roundabout conversions
-            @test all(Bool[check_roundabout_construction(DNAAlphabet{2}, random_dna_kmer(len)) for _ in 1:reps])
-            @test all(Bool[check_roundabout_construction(DNAAlphabet{4}, random_dna_kmer(len)) for _ in 1:reps])
-            @test all(Bool[check_roundabout_construction(RNAAlphabet{2}, random_rna_kmer(len)) for _ in 1:reps])
-            @test all(Bool[check_roundabout_construction(RNAAlphabet{4}, random_rna_kmer(len)) for _ in 1:reps])
         end
 
         @test_throws Exception Kmer() # can't construct 0-mer using `Kmer()`
@@ -2881,6 +2897,14 @@ end
                 @test_throws Exception check_fasta_parse(filepath)
             end
         end
+    end
+end
+
+@testset "FASTX show()" begin
+    @testset "FASTQ" begin
+        fqrec = Seq.FASTQSeqRecord("seq1", "ACGTACGT", Seq.FASTQMetadata("",
+                                   Int8[0, 6, 12, 18, 24, 30, 36, 40]))
+        @test shows(fqrec) ==  "@seq1 \nACGTACGT\n▁▂▃▄▅▆▇█\n"
     end
 end
 
