@@ -104,9 +104,21 @@ function Base.show(io::IO, demultiplexer::Demultiplexer)
     println(io, summary(demultiplexer), ":")
     println(io, "  distance: ", demultiplexer.distance)
     println(io, "  number of barcodes:", length(demultiplexer.barcodes))
-    println(io, "  number of correctable errors: ", length(demultiplexer.tries) - 1)
+      print(io, "  number of correctable errors: ", length(demultiplexer.tries) - 1)
 end
 
+"""
+    Demultiplexer(barcodes::Vector{DNASequence};
+                  n_max_errors::Integer=1,
+                  distance::Symbol=:hamming)
+
+Create a demultiplexer object from `barcodes`.
+
+# Arguments
+* `barcodes`: the sorted list of DNA barcodes; integer IDs are assigned in this order.
+* `n_max_errors=1`: the number of maximum correctable errors.
+* `distance=:hamming`: the distance metric (`:hamming` or `:levenshtein`).
+"""
 function Demultiplexer(barcodes::Vector{DNASequence};
                        n_max_errors::Integer=1,
                        distance::Symbol=:hamming)
@@ -118,6 +130,16 @@ function Demultiplexer(barcodes::Vector{DNASequence};
         error("distance must be either :hamming or :levenshtein")
     end
 
+    # check barcodes
+    for barcode in barcodes
+        for i in 1:endof(barcode)
+            if isambiguous(barcode[i])
+                error("barcode must be umambiguous")
+            end
+        end
+    end
+
+    # build trie trees for each error level (0-n_max_errors)
     tries = BarcodeTrie[]
     for m in 0:n_max_errors
         # generate "erroneous" barcodes
