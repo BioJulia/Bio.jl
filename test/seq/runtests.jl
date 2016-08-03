@@ -2678,7 +2678,7 @@ end
             i = rand(1:endof(barcodes))
             seq = make_errors(barcodes[i] * randdna(10))
             n_ok += demultiplex(dplxr, seq) == i
-            n_ok_with_fallback = demultiplex(dplxr, seq, true) == i
+            n_ok_with_fallback += demultiplex(dplxr, seq, true) == i
         end
         # empirically, n_ok / 10_000 is ~0.995
         # @show n_ok
