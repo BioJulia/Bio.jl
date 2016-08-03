@@ -2622,14 +2622,17 @@ end
         end
 
         n_ok = 0
+        n_ok_with_fallback = 0
         for _ in 1:10_000
             i = rand(1:endof(barcodes))
             seq = make_errors(barcodes[i] * randdna(10))
             n_ok += demultiplex(dplxr, seq) == i
+            n_ok_with_fallback += demultiplex(dplxr, seq, true) == i
         end
         # empirically, n_ok / 10_000 is ~0.985
         # @show n_ok
         @test n_ok / 10_000 > 0.98
+        @test n_ok < n_ok_with_fallback
     end
 
     @testset "Levenshtein distance" begin
@@ -2670,14 +2673,17 @@ end
         end
 
         n_ok = 0
+        n_ok_with_fallback = 0
         for _ in 1:10_000
             i = rand(1:endof(barcodes))
             seq = make_errors(barcodes[i] * randdna(10))
             n_ok += demultiplex(dplxr, seq) == i
+            n_ok_with_fallback = demultiplex(dplxr, seq, true) == i
         end
         # empirically, n_ok / 10_000 is ~0.995
         # @show n_ok
         @test n_ok / 10_000 > 0.99
+        @test n_ok < n_ok_with_fallback
     end
 end
 

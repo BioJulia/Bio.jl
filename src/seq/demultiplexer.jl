@@ -165,11 +165,15 @@ function Demultiplexer(barcodes::Vector{DNASequence};
 end
 
 """
-    demultiplex(demultiplexer::Demultiplexer, seq::Sequence)
+    demultiplex(demultiplexer::Demultiplexer, seq::Sequence, linear_search_fallback::Bool=false)
 
 Return a barcode index that matches `seq` with least errors.
+
+The upper limit of the number of maximum errors is bounded by the `n_max_errors`
+parameter of `demultiplexer`. When `linear_search_fallback` is `true`, this
+function tries to find the best matching barcode using linear search.
 """
-function demultiplex(demultiplexer::Demultiplexer, seq::Sequence)
+function demultiplex(demultiplexer::Demultiplexer, seq::Sequence, linear_search_fallback::Bool=false)
     if eltype(seq) != DNANucleotide
         error("sequence must be a DNA sequence")
     end
@@ -179,8 +183,30 @@ function demultiplex(demultiplexer::Demultiplexer, seq::Sequence)
             return i
         end
     end
-    # not found
-    return 0
+    if !linear_search_fallback
+        # not found
+        return 0
+    end
+
+    # find the best matching barcode using linear search
+    i_min = 0
+    dist_min = typemax(Int)
+    for (i, barcode) in enumerate(demultiplexer.barcodes)
+        if demultiplexer.distance == :hamming
+            dist = hamming_distance(barcode, seq[1:length(barcode)])
+        elseif demultiplexer.distance == :levenshtein
+            dist = sequencelevenshtein_distance(barcode, seq)
+        else
+            assert(false)
+        end
+        if dist < dist_min
+            dist_min = dist
+            i_min = i
+        end
+    end
+    @assert i_min != 0
+
+    return i_min
 end
 
 function Base.getindex(demultiplexer::Demultiplexer, i::Integer)
@@ -273,4 +299,35 @@ function levenshtein_distance(seq1, seq2)
     end
 
     return dist[m+1,n+1]
+end
+
+function sequencelevenshtein_distance(seq1, seq2)
+    m = length(seq1)
+    n = length(seq2)
+    dist = Matrix{Int}(m + 1, n + 1)
+
+    dist[1,1] = 0
+    for i in 1:m
+        dist[i+1,1] = i
+    end
+
+    for j in 1:n
+        dist[1,j+1] = j
+        for i in 1:m
+            dist[i+1,j+1] = min(
+                dist[i,j+1] + 1,
+                dist[i+1,j] + 1,
+                dist[i,j]   + ifelse(seq1[i] == seq2[j], 0, 1))
+        end
+    end
+
+    mindist = dist[end,end]
+    for i in 0:m
+        mindist = min(mindist, dist[i+1,end])
+    end
+    for j in 0:n
+        mindist = min(mindist, dist[end,j+1])
+    end
+
+    return mindist
 end
