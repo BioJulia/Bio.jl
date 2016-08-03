@@ -1,5 +1,5 @@
 /*
-  Cinder Theme for MkDocs | Copyright 2015 Christopher Simpkins | MIT License
+  Cinder Theme for MkDocs | Copyright 2016 The BioJulia Organisation | MIT License
 */
 
 body {
@@ -19,6 +19,10 @@ h1 small, h2 small, h3 small, h4 small, h5 small, h6 small, .h1 small, .h2 small
 h1, h2 {
     font-weight: 700;
 }
+h1, h2, h3 {
+    margin-top: 55px;
+    margin-bottom: 20px;
+}
 h4 {
     font-family: 'Open Sans', 'Helvetica Neue', Helvetica, Arial, sans-serif;
     font-weight: 300;
@@ -37,7 +41,7 @@ pre>code {
     font-size: 13px;
 }
 pre {
-    margin-top: 25px;
+    margin-top: 10px;
     margin-bottom: 25px;
 }
 .lead {
@@ -79,4 +83,7 @@ pre {
 }
 footer > hr {
     width: 35%;
+}
+.gitter-chat-embed {
+    z-index: 2000;
 }
