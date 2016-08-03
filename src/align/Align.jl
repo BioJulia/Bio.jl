@@ -69,12 +69,7 @@ export
     score,
     distance,
     alignment,
-    hasalignment,
-    # demultiplexing
-    HammingCode,
-    SequenceLevenshteinCode,
-    codewords,
-    demultiplex
+    hasalignment
 
 using Bio.Seq
 using Compat
@@ -87,6 +82,5 @@ include("types.jl")
 include("submat.jl")
 include("models.jl")
 include("pairwise/pairalign.jl")
-include("demultiplex/demultiplex.jl")
 
 end

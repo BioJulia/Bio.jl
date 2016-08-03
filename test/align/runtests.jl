@@ -939,6 +939,7 @@ end
     end
 end
 
+#=
 @testset "Demultiplexing" begin
     # Wong, Koon Ho, Yi Jin, and Zarmik Moqtaderi. "Multiplex Illumina sequencing
     # using DNA barcoding." Current Protocols in Molecular Biology (2013): 7-11.
@@ -1007,5 +1008,6 @@ end
     test_code(HammingCode(barcodes), barcodes, 0.05)
     test_code(SequenceLevenshteinCode(barcodes), barcodes, 0.02)
 end
+=#
 
 end # TestAlign

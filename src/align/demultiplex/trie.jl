@@ -10,7 +10,8 @@ immutable StaticTrie
     nodes::Vector{Int64}
 end
 
-function StaticTrie(seqs)
+function StaticTrie(seqs, values=1:endof(seqs))
+    @assert length(seqs) == length(values)
     if !issorted(seqs)
         error("sequences must be sorted")
     end
@@ -20,11 +21,11 @@ function StaticTrie(seqs)
         end
     end
     nodes = Int64[1]
-    recursive!(nodes, 1, seqs, 1:endof(seqs), 1)
+    recursive!(nodes, 1, seqs, values, 1:endof(seqs), 1)
     return StaticTrie(nodes)
 end
 
-function recursive!(nodes, root, seqs, range, j)
+function recursive!(nodes, root, seqs, values, range, j)
     n_seqs = length(range)
     if n_seqs == 0
         return
@@ -32,7 +33,8 @@ function recursive!(nodes, root, seqs, range, j)
         idx = first(range)
         if j > length(seqs[idx]) + 1
             # leaf
-            nodes[root] = idx << 1
+            #nodes[root] = idx << 1
+            nodes[root] = values[idx] << 1
             return
         end
     end
@@ -66,32 +68,103 @@ function recursive!(nodes, root, seqs, range, j)
         else
             r = starts[m]:starts[m+1]-1
         end
-        recursive!(nodes, base + m, seqs, r, j + 1)
+        recursive!(nodes, base + m, seqs, values, r, j + 1)
     end
 end
 
-function longest_prefix_length(trie::StaticTrie, seq)
-    i, node = traverse(trie, seq)
-    return i - 2
+function Base.in(seq, trie::StaticTrie)
+    return longest_prefix_length(trie, seq) == length(seq)
+end
+
+function findbarcode(trie::StaticTrie, seq)
+    s = 1
+    for nt in seq
+        t = (trie.nodes[s] >> 1) + Int(nt) + 2
+        if isleaf(trie.nodes[t])
+            break
+        end
+        s = t
+    end
+    s = (trie.nodes[s] >> 1) + 1
+    return trie.nodes[s] >> 1
 end
 
 function isleaf(node::Int64)
     return node & 1 == 0
 end
 
+type Demultiplexer
+    trie::StaticTrie
+    barcodes::Vector{DNASequence}
+end
+
+function Demultiplexer(barcodes::Vector{DNASequence}, n_max_mutations::Integer)
+    barcodes′, ids = extend(barcodes, n_max_mutations)
+    ord = sortperm(barcodes′)
+    trie = StaticTrie(barcodes′[ord], ids[ord])
+    return Demultiplexer(trie, barcodes)
+end
+
+using Iterators
+
+function extend(barcodes, n_max_mutations)
+    ret = copy(barcodes)
+    ids = collect(1:endof(barcodes))
+    for (i, barcode) in enumerate(barcodes)
+        if length(barcode) < n_max_mutations
+            error("too short barcode")
+        end
+        for m in 1:n_max_mutations
+            circle = hamming_circle(barcode, m)
+            append!(ret, circle)
+            append!(ids, collect(repeated(i, length(circle))))
+        end
+    end
+    return ret, ids
+end
+
+function hamming_circle(seq, m)
+    @assert m > 0
+    ret = DNASequence[]
+    for ps in combinations(1:endof(seq), m)
+        for rs in product(repeated(1:3, m)...)
+            seq′ = copy(seq)
+            for (p, r) in zip(ps, rs)
+                if Int(seq[p]) + 1 ≤ r
+                    r += 1
+                end
+                seq′[p] = (DNA_A:DNA_T)[r]
+            end
+            push!(ret, seq′)
+        end
+    end
+    return ret
+end
+
+function demultiplex(x::Demultiplexer, seq::DNASequence)
+    return findbarcode(x.trie, seq)
+end
+
+#=
+function longest_prefix_length(trie::StaticTrie, seq)
+    j, _ = traverse(trie, seq)
+    return j - 2
+end
+
 function traverse(trie::StaticTrie, seq)
-    i = 1
+    j = 1
     s = 1
     node = trie.nodes[s]
-    while !isleaf(node) && i ≤ endof(seq) + 1
+    while !isleaf(node) && j ≤ endof(seq) + 1
         base = node >> 1
-        if i == endof(seq) + 1
+        if j == endof(seq) + 1
             s = base + 1
         else
-            s = base + Int(seq[i]) + 2
+            s = base + Int(seq[j]) + 2
         end
         node = trie.nodes[s]
-        i += 1
+        j += 1
     end
-    return i, node
+    return j, s
 end
+=#
