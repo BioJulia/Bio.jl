@@ -195,10 +195,6 @@ chr9	68456943	68486659	NM_001206	0	-
 
 ### bigBed
 
-* Parser type: ???
-* Writer type: ???
-* Element type: ???
-
 BigBed is a binary file format for representing genomic annotations and often
 created from BED files. The bigBed files are indexed to quickly fetch specific
 regions.
