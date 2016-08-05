@@ -197,6 +197,21 @@
             <li class="second-level"><a href="#writing-data">Writing data</a></li>
             
         
+            <li class="second-level"><a href="#supported-file-formats">Supported file formats</a></li>
+            
+                <li class="third-level"><a href="#fasta">FASTA</a></li>
+            
+                <li class="third-level"><a href="#fastq">FASTQ</a></li>
+            
+                <li class="third-level"><a href="#2bit">.2bit</a></li>
+            
+                <li class="third-level"><a href="#bed">BED</a></li>
+            
+                <li class="third-level"><a href="#bigbed">bigBed</a></li>
+            
+                <li class="third-level"><a href="#pdb">PDB</a></li>
+            
+        
     
     </ul>
 </div></div>
@@ -204,10 +219,16 @@
 
 <p><a id='Reading-and-writing-data-1'></a></p>
 <h1 id="reading-and-writing-data">Reading and writing data</h1>
-<p>Bio.jl has a unified interface for reading and writing files in a variety of formats. To initialize a parser for a particular format, the <code>open</code> method is extended with a file format type parameter (currently supported formats types are <code>BED</code>, <code>FASTQ</code>, and <code>FASTA</code>).</p>
-<div class="codehilite"><pre><span></span><span class="n">open</span><span class="p">{</span><span class="n">T</span> <span class="o">&lt;:</span> <span class="n">FileFormat</span><span class="p">}(</span><span class="n">filename</span><span class="p">::</span><span class="n">String</span><span class="p">,</span> <span class="p">::</span><span class="n">Type</span><span class="p">{</span><span class="n">T</span><span class="p">};</span> <span class="n">memory_map</span><span class="p">::</span><span class="kt">Bool</span><span class="o">=</span><span class="n">false</span><span class="p">)</span>
-<span class="n">open</span><span class="p">{</span><span class="n">T</span> <span class="o">&lt;:</span> <span class="n">FileFormat</span><span class="p">}(</span><span class="n">source</span><span class="p">::</span><span class="n">IO</span><span class="p">,</span> <span class="p">::</span><span class="n">Type</span><span class="p">{</span><span class="n">T</span><span class="p">})</span>
-<span class="n">open</span><span class="p">{</span><span class="n">T</span> <span class="o">&lt;:</span> <span class="n">FileFormat</span><span class="p">}(</span><span class="n">data</span><span class="p">::</span><span class="n">Vector</span><span class="p">{</span><span class="n">UInt8</span><span class="p">},</span> <span class="p">::</span><span class="n">Type</span><span class="p">{</span><span class="n">T</span><span class="p">})</span>
+<p>Bio.jl has a unified interface for reading and writing files in a variety of formats. To initialize a parser for a particular format, the <code>open</code> method is extended with a file format type parameter <code>T</code>:</p>
+<div class="codehilite"><pre><span></span><span class="n">open</span><span class="p">{</span><span class="n">T</span><span class="o">&lt;:</span><span class="n">FileFormat</span><span class="p">}(</span><span class="n">filename</span><span class="p">::</span><span class="n">AbstractString</span><span class="p">,</span> <span class="p">::</span><span class="n">Type</span><span class="p">{</span><span class="n">T</span><span class="p">})</span>
+<span class="n">open</span><span class="p">{</span><span class="n">T</span><span class="o">&lt;:</span><span class="n">FileFormat</span><span class="p">}(</span><span class="n">source</span><span class="p">::</span><span class="n">IO</span><span class="p">,</span> <span class="p">::</span><span class="n">Type</span><span class="p">{</span><span class="n">T</span><span class="p">})</span>
+<span class="n">open</span><span class="p">{</span><span class="n">T</span><span class="o">&lt;:</span><span class="n">FileFormat</span><span class="p">}(</span><span class="n">data</span><span class="p">::</span><span class="n">Vector</span><span class="p">{</span><span class="n">UInt8</span><span class="p">},</span> <span class="p">::</span><span class="n">Type</span><span class="p">{</span><span class="n">T</span><span class="p">})</span>
+</pre></div>
+
+
+<p>For example, when reading a FASTA file, a parser for the FASTA file format can be initialized as:</p>
+<div class="codehilite"><pre><span></span><span class="k">using</span> <span class="n">Bio</span><span class="o">.</span><span class="n">Seq</span>  <span class="c"># import FASTA</span>
+<span class="n">parser</span> <span class="o">=</span> <span class="n">open</span><span class="p">(</span><span class="s">&quot;hg38.fa&quot;</span><span class="p">,</span> <span class="n">FASTA</span><span class="p">)</span>
 </pre></div>
 
 
@@ -258,7 +279,143 @@
 <span class="n">write</span><span class="p">(</span><span class="n">out</span><span class="p">,</span> <span class="n">FASTASeqRecord</span><span class="p">(</span><span class="s">&quot;seq2&quot;</span><span class="p">,</span> <span class="n">dna</span><span class="s">&quot;TTATATTATTGTAAA&quot;</span><span class="p">,</span> <span class="s">&quot;AT rich&quot;</span><span class="p">))</span>
 <span class="c"># and more records</span>
 <span class="n">close</span><span class="p">(</span><span class="n">out</span><span class="p">)</span>
-</pre></div></div>
+</pre></div>
+
+
+<p><a id='Supported-file-formats-1'></a></p>
+<h2 id="supported-file-formats">Supported file formats</h2>
+<p>The following table summarizes supported file formats.</p>
+<table>
+<thead>
+<tr>
+<th align="left">File format</th>
+<th align="left">Type parameter</th>
+<th align="left">Module</th>
+<th align="left">Specification</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td align="left">FASTA</td>
+<td align="left"><code>FASTA</code></td>
+<td align="left"><code>Bio.Seq</code></td>
+<td align="left"><a href="https://en.wikipedia.org/wiki/FASTA_format">https://en.wikipedia.org/wiki/FASTA_format</a></td>
+</tr>
+<tr>
+<td align="left">FASTQ</td>
+<td align="left"><code>FASTQ</code></td>
+<td align="left"><code>Bio.Seq</code></td>
+<td align="left"><a href="https://en.wikipedia.org/wiki/FASTQ_format">https://en.wikipedia.org/wiki/FASTQ_format</a></td>
+</tr>
+<tr>
+<td align="left">.2bit</td>
+<td align="left"><code>TwoBit</code></td>
+<td align="left"><code>Bio.Seq</code></td>
+<td align="left"><a href="http://genome.ucsc.edu/FAQ/FAQformat.html#format7">http://genome.ucsc.edu/FAQ/FAQformat.html#format7</a></td>
+</tr>
+<tr>
+<td align="left">BED</td>
+<td align="left"><code>BED</code></td>
+<td align="left"><code>Bio.Intervals</code></td>
+<td align="left"><a href="https://genome.ucsc.edu/FAQ/FAQformat.html#format1">https://genome.ucsc.edu/FAQ/FAQformat.html#format1</a></td>
+</tr>
+<tr>
+<td align="left">bigBed</td>
+<td align="left"><code>BigBed</code></td>
+<td align="left"><code>Bio.Intervals</code></td>
+<td align="left"><a href="https://doi.org/10.1093/bioinformatics/btq351">https://doi.org/10.1093/bioinformatics/btq351</a></td>
+</tr>
+<tr>
+<td align="left">PDB</td>
+<td align="left"><code>PDB</code></td>
+<td align="left"><code>Bio.Structure</code></td>
+<td align="left"><a href="http://www.wwpdb.org/documentation/file-format-content/format33/v3.3.html">http://www.wwpdb.org/documentation/file-format-content/format33/v3.3.html</a></td>
+</tr>
+</tbody>
+</table>
+<p><a id='FASTA-1'></a></p>
+<h3 id="fasta">FASTA</h3>
+<ul>
+<li>Parser type: <code>FASTAParser{S&lt;:Sequence}</code></li>
+<li>Writer type: <code>FASTAWriter{T&lt;:IO}</code></li>
+<li>Element type: <code>SeqRecord{S,FASTAMetadata}</code> (alias: <code>FASTASeqRecord{S}</code>)</li>
+</ul>
+<p>FASTA is a text-based file format for representing biological sequences. A FASTA file stores a list of sequence records with name, description, and sequence. The template of a sequence record is:</p>
+<div class="codehilite"><pre><span></span>&gt;{name} {description}?
+{sequence}
+</pre></div>
+
+
+<p>Here is an example of a chromosomal sequence:</p>
+<div class="codehilite"><pre><span></span>&gt;chrI chromosome 1
+CCACACCACACCCACACACCCACACACCACACCACACACCACACCACACC
+CACACACACACATCCTAACACTACCCTAACACAGCCCTAATCTAACCCTG
+</pre></div>
+
+
+<p>Usually sequence records will be read sequentially from a file by iteration. But if the FASTA file has an auxiliary index file formatted in <a href="http://www.htslib.org/doc/faidx.html">fai</a>, the parser supports random access to FASTA records, which would be useful when accessing specific parts of a huge genome sequence:</p>
+<div class="codehilite"><pre><span></span><span class="n">parser</span> <span class="o">=</span> <span class="n">open</span><span class="p">(</span><span class="s">&quot;sacCer.fa&quot;</span><span class="p">,</span> <span class="n">FASTA</span><span class="p">)</span>  <span class="c"># find and read &quot;sacCer.fa.fai&quot; file</span>
+<span class="n">chrIV</span> <span class="o">=</span> <span class="n">parser</span><span class="p">[</span><span class="s">&quot;chrIV&quot;</span><span class="p">]</span>  <span class="c"># directly read chromosome 4</span>
+</pre></div>
+
+
+<p><a id='FASTQ-1'></a></p>
+<h3 id="fastq">FASTQ</h3>
+<ul>
+<li>Parser type: <code>FASTQParser{S&lt;:Sequence}</code></li>
+<li>Writer type: <code>FASTQWriter{T&lt;:IO}</code></li>
+<li>Element type: <code>SeqRecord{S,FASTQMetadata}</code> (alias: <code>FASTQSeqRecord{S}</code>)</li>
+</ul>
+<p>FASTQ is a text-based file format for representing DNA sequences along with qualities for each base. A FASTQ file stores a list of sequence records in the following format:</p>
+<div class="codehilite"><pre><span></span>@{name} {description}?
+{sequence}
++
+{qualities}
+</pre></div>
+
+
+<p>Here is an example of a part of a FASTQ file:</p>
+<div class="codehilite"><pre><span></span>@FSRRS4401BE7HA
+tcagTTAAGATGGGAT
++
+eeeccccccc`UUU^U
+</pre></div>
+
+
+<p><a id='.2bit-1'></a></p>
+<h3 id="2bit">.2bit</h3>
+<ul>
+<li>Parser type: <code>TwoBitParser{T&lt;:IO}</code></li>
+<li>Writer type: <code>TwoBitWriter{T&lt;:IO}</code></li>
+<li>Element type: <code>SeqRecord{ReferenceSequence,Vector{UnitRange{Int}}}</code></li>
+</ul>
+<p>.2bit is a binary file format designed for storing a genome consists of multiple chromosomal sequences. The reading speed is often an order of magnitude faster than that of FASTA and the file size is smaller. However, since the .2bit file format is specialized for genomic sequences, it cannot store either RNA or amino acid sequences.</p>
+<p>Like FASTA, the .2bit parser supports random access using an index included in the header section of a .2bit file:</p>
+<div class="codehilite"><pre><span></span><span class="n">parser</span> <span class="o">=</span> <span class="n">open</span><span class="p">(</span><span class="s">&quot;sacCer.2bit&quot;</span><span class="p">,</span> <span class="n">TwoBit</span><span class="p">)</span>  <span class="c"># parse the header and load a random access index</span>
+<span class="n">chrIV</span> <span class="o">=</span> <span class="n">parser</span><span class="p">[</span><span class="s">&quot;chrIV&quot;</span><span class="p">]</span>  <span class="c"># directly read chromosome 4</span>
+</pre></div>
+
+
+<p><a id='BED-1'></a></p>
+<h3 id="bed">BED</h3>
+<ul>
+<li>Parser type: <code>BEDParser</code></li>
+<li>Writer type: <code>BEDWriter{T&lt;:IO}</code></li>
+<li>Element type: <code>Interval{BEDMetadata}</code> (alias: <code>BEDInterval</code>)</li>
+</ul>
+<p>BED is a text-based file format for representing genomic annotations like genes, transcripts, and so on. A BED file has tab-delimited and variable-length fields; the first three fields denoting a genomic interval are mandatory.</p>
+<p>This is an example of RNA transcripts:</p>
+<div class="codehilite"><pre><span></span>chr9    68331023    68424451    NM_015110   0   +
+chr9    68456943    68486659    NM_001206   0   -
+</pre></div>
+
+
+<p><a id='bigBed-1'></a></p>
+<h3 id="bigbed">bigBed</h3>
+<p>BigBed is a binary file format for representing genomic annotations and often created from BED files. The bigBed files are indexed to quickly fetch specific regions.</p>
+<p><a id='PDB-1'></a></p>
+<h3 id="pdb">PDB</h3>
+<p>PDB is a text-based file format for representing 3D macromolecular structures. This has different parser interfaces from other file formats. Please consult the <a href="../structure/">Bio.Structure</a> chapter for details.</p></div>
         
     </div>
 
