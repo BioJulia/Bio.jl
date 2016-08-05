@@ -650,47 +650,13 @@
 
 <p><a id='Other-functions-1'></a></p>
 <h3 id="other-functions">Other functions</h3>
-<p><a id='Bio.Seq.alphabet' href='#Bio.Seq.alphabet'>#</a>
-<strong><code>Bio.Seq.alphabet</code></strong> &mdash; <em>Function</em>.</p>
-<div class="codehilite"><pre><span></span>alphabet(typ)
+<div class="codehilite"><pre><span></span>alphabet
+gap
+iscompatible
+isambiguous
 </pre></div>
 
 
-<p>Return an iterator of symbols of <code>typ</code>.</p>
-<p><code>typ</code> is one of <code>DNANucleotide</code>, <code>RNANucleotide</code>, or <code>AminoAcid</code>.</p>
-<p><a id='Bio.Seq.gap' href='#Bio.Seq.gap'>#</a>
-<strong><code>Bio.Seq.gap</code></strong> &mdash; <em>Function</em>.</p>
-<div class="codehilite"><pre><span></span>gap(typ)
-</pre></div>
-
-
-<p>Return the gap symbol of <code>typ</code>.</p>
-<p><code>typ</code> is one of <code>DNANucleotide</code>, <code>RNANucleotide</code>, <code>AminoAcid</code>, or <code>Char</code>.</p>
-<p><a id='Bio.Seq.iscompatible' href='#Bio.Seq.iscompatible'>#</a>
-<strong><code>Bio.Seq.iscompatible</code></strong> &mdash; <em>Function</em>.</p>
-<div class="codehilite"><pre><span></span>iscompatible(x, y)
-</pre></div>
-
-
-<p>Return <code>true</code> if and only if <code>x</code> and <code>y</code> are compatible with each other (i.e. <code>x</code> and <code>y</code> can be the same symbol).</p>
-<p><code>x</code> and <code>y</code> must be the same type (<code>DNANucleotide</code>, <code>RNANucleotide</code> or <code>AminoAcid</code>).</p>
-<p><strong>Examples</strong></p>
-<div class="codehilite"><pre><span></span><span class="n">julia</span><span class="o">&gt;</span> <span class="n">iscompatible</span><span class="p">(</span><span class="n">DNA_A</span><span class="p">,</span> <span class="n">DNA_A</span><span class="p">)</span>
-<span class="n">true</span>
-
-<span class="n">julia</span><span class="o">&gt;</span> <span class="n">iscompatible</span><span class="p">(</span><span class="n">DNA_C</span><span class="p">,</span> <span class="n">DNA_N</span><span class="p">)</span>  <span class="c"># DNA_N can be DNA_C</span>
-<span class="n">true</span>
-
-<span class="n">julia</span><span class="o">&gt;</span> <span class="n">iscompatible</span><span class="p">(</span><span class="n">DNA_C</span><span class="p">,</span> <span class="n">DNA_R</span><span class="p">)</span>  <span class="c"># DNA_R (A or G) cannot be DNA_C</span>
-<span class="n">false</span>
-
-<span class="n">julia</span><span class="o">&gt;</span> <span class="n">iscompatible</span><span class="p">(</span><span class="n">AA_A</span><span class="p">,</span> <span class="n">AA_X</span><span class="p">)</span>    <span class="c"># AA_X can be AA_A</span>
-<span class="n">true</span>
-</pre></div>
-
-
-<p><a id='Bio.Seq.isambiguous' href='#Bio.Seq.isambiguous'>#</a>
-<strong><code>Bio.Seq.isambiguous</code></strong> &mdash; <em>Function</em>.</p>
 <p><a id='Overview-of-sequences-types-1'></a></p>
 <h2 id="overview-of-sequences-types">Overview of sequences types</h2>
 <p>The <code>Bio.Seq</code> module provides representations and tools for manipulating nucleotide and amino acid sequences. Sequences in Bio.jl are more strictly typed than in many other libraries; elements in a sequence are typed as biological symbol instead of character or byte.  They are special purpose types rather than simply strings and hence offer additional functionality that naive string types don't have. Though this strictness sacrifices some convenience, it also means you can always rely on a DNA sequence type to store DNA and nothing but DNA, without having to check, or deal with lowercase versus uppercase and so on. Strict separation of sequence types also means we are free to choose the most efficient representation. DNA and RNA sequences are encoded using four bits per base by default making them memory efficient, and also allowing us to speed up many common operations like nucleotide composition, reverse complement, and <em>k</em>-mer enumeration.</p>
