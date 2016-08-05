@@ -389,12 +389,8 @@ end
 
 include("bigbed-parser.jl")
 
-"""
-Open a BigBed file for reading.
-
-Once opened, entries can be read from the file either by iterating over it, or
-by indexing into it with an interval.
-"""
+# Open a BigBed file for reading.  Once opened, entries can be read from the
+# file either by iterating over it, or by indexing into it with an interval.
 function Base.open(stream::BufferedInputStream, ::Type{BigBed})
     # header
     header = read(stream, BigBedHeader)
@@ -472,9 +468,7 @@ function memisless(a::Vector{UInt8}, b::Vector{UInt8})
     return false
 end
 
-"""
-Return all sequence (name, id, size) tuples in a BigBed B-tree.
-"""
+# Return all sequence (name, id, size) tuples in a BigBed B-tree.
 function first_btree_leaf_position(bb::BigBedData)
     # find the first leaf-node in the b-tree
     offset = bb.header.chromosome_tree_offset + sizeof(BigBedBTreeHeader)
@@ -613,10 +607,8 @@ type BigBedIntersectIterator
     done::Bool
 end
 
-"""
-Find the given seqname in the BigBed file's index and read the corresponding
-sequence id and length
-"""
+# Find the given seqname in the BigBed file's index and read the corresponding
+# sequence id and length.
 function lookup_seqname(bb::BigBedData, seqname::AbstractString)
     seek(bb.stream, bb.header.chromosome_tree_offset + sizeof(BigBedBTreeHeader))
 
