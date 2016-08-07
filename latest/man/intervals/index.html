@@ -213,7 +213,7 @@
 <p>Intervals in Bio.jl are consistent with ranges in Julia: <em>1-based and end-inclusive</em>. When data is read from formats with different representations (i.e. 0-based and/or end-exclusive) they are always converted automatically. Similarly when writing data. You should not have to reason about off-by-one errors due to format differences while using functionality provided in Bio.jl.</p>
 <p>The <code>Interval</code> type is defined as</p>
 <div class="codehilite"><pre><span></span><span class="k">type</span><span class="nc"> Interval</span><span class="p">{</span><span class="n">T</span><span class="p">}</span> <span class="o">&lt;:</span> <span class="n">AbstractInterval</span><span class="p">{</span><span class="kt">Int64</span><span class="p">}</span>
-    <span class="n">seqname</span><span class="p">::</span><span class="n">ASCIIString</span>
+    <span class="n">seqname</span><span class="p">::</span><span class="n">StringField</span>
     <span class="n">first</span><span class="p">::</span><span class="kt">Int64</span>
     <span class="n">last</span><span class="p">::</span><span class="kt">Int64</span>
     <span class="n">strand</span><span class="p">::</span><span class="n">Strand</span>
@@ -235,8 +235,8 @@
 <h2 id="collections-of-intervals">Collections of intervals</h2>
 <p>Collections of intervals are represented using the <code>IntervalCollection</code> type, which is a general purpose indexed container for intervals. It supports fast intersection operations as well as insertion, deletion, and sorted iteration.</p>
 <p>Interval collections can be initialized by inserting elements one by one using <code>push!</code>.</p>
-<div class="codehilite"><pre><span></span><span class="c"># The type parameter (Nothing here) indicates the interval metadata type.</span>
-<span class="n">incol</span> <span class="o">=</span> <span class="n">IntervalCollection</span><span class="p">{</span><span class="kt">Nothing</span><span class="p">}()</span>
+<div class="codehilite"><pre><span></span><span class="c"># The type parameter (Void here) indicates the interval metadata type.</span>
+<span class="n">incol</span> <span class="o">=</span> <span class="n">IntervalCollection</span><span class="p">{</span><span class="n">Void</span><span class="p">}()</span>
 
 <span class="k">for</span> <span class="n">i</span> <span class="k">in</span> <span class="mi">1</span><span class="p">:</span><span class="mi">100</span><span class="p">:</span><span class="mi">10000</span>
     <span class="n">push!</span><span class="p">(</span><span class="n">incol</span><span class="p">,</span> <span class="n">Interval</span><span class="p">(</span><span class="s">&quot;chr1&quot;</span><span class="p">,</span> <span class="n">i</span><span class="p">,</span> <span class="n">i</span> <span class="o">+</span> <span class="mi">99</span><span class="p">,</span> <span class="n">STRAND_POS</span><span class="p">,</span> <span class="n">nothing</span><span class="p">))</span>
