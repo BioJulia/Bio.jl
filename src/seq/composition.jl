@@ -45,13 +45,21 @@ function Composition(seq::AminoAcidSequence)
     return Composition{AminoAcid}(counts)
 end
 
-"""
-    composition(seq)
+function Composition{T,k}(iter::EachKmerIterator{T,k})
+    counts = zeros(Int, 4^k)
+    for (_, x) in iter
+        counts[convert(UInt64, x) + 1] += 1
+    end
+    return Composition{Kmer{T,k}}(counts)
+end
 
-Calculate composition of biological symbols in `seq`.
 """
-function composition(seq::Sequence)
-    return Composition(seq)
+    composition(seq | kmer_iter)
+
+Calculate composition of biological symbols in `seq` or k-mers in `kmer_iter`.
+"""
+function composition(iter::Union{Sequence,EachKmerIterator})
+    return Composition(iter)
 end
 
 @compat function Base.:(==){T}(x::Composition{T}, y::Composition{T})
@@ -108,7 +116,7 @@ function Base.summary{T}(::Composition{T})
     elseif T == AminoAcid
         return "Amino Acid Composition"
     else
-        return string(summary(T), " Composition")
+        return string(T, " Composition")
     end
 end
 
