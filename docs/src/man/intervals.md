@@ -18,7 +18,7 @@ errors due to format differences while using functionality provided in Bio.jl.
 The `Interval` type is defined as
 ```julia
 type Interval{T} <: AbstractInterval{Int64}
-    seqname::ASCIIString
+    seqname::StringField
     first::Int64
     last::Int64
     strand::Strand
@@ -48,8 +48,8 @@ Interval collections can be initialized by inserting elements one by one using
 `push!`.
 
 ```julia
-# The type parameter (Nothing here) indicates the interval metadata type.
-incol = IntervalCollection{Nothing}()
+# The type parameter (Void here) indicates the interval metadata type.
+incol = IntervalCollection{Void}()
 
 for i in 1:100:10000
     push!(incol, Interval("chr1", i, i + 99, STRAND_POS, nothing))
