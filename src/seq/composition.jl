@@ -6,7 +6,7 @@
 # This file is a part of BioJulia.
 # License is MIT: https://github.com/BioJulia/Bio.jl/blob/master/LICENSE.md
 
-type Composition{T}
+type Composition{T} <: Associative{T,Int}
     counts::Vector{Int}
 end
 
@@ -54,12 +54,50 @@ function composition(seq::Sequence)
     return Composition(seq)
 end
 
+@compat function Base.:(==){T}(x::Composition{T}, y::Composition{T})
+    return x.counts == y.counts
+end
+
+function Base.length(comp::Composition)
+    return length(comp.counts)
+end
+
+function Base.start(comp::Composition)
+    return UInt64(0)
+end
+
+function Base.done(comp::Composition, i)
+    return i ≥ length(comp.counts)
+end
+
+function Base.next(comp::Composition, i)
+    key = convert(keytype(comp), i)
+    count = comp.counts[i + 1]
+    return (key => count), i + 1
+end
+
 function Base.getindex{T}(comp::Composition{T}, x)
     i = convert(UInt64, convert(T, x))
     if !(0 ≤ i < endof(comp.counts))
         throw(KeyError(x))
     end
     return comp.counts[i+1]
+end
+
+function Base.copy{T}(comp::Composition{T})
+    return Composition{T}(copy(comp.counts))
+end
+
+function Base.merge{T}(comp::Composition{T}, other::Composition{T})
+    return merge!(copy(comp), other)
+end
+
+function Base.merge!{T}(comp::Composition{T}, other::Composition{T})
+    @assert length(comp.counts) == length(other.counts)
+    for i in 1:endof(comp.counts)
+        comp.counts[i] += other.counts[i]
+    end
+    return comp
 end
 
 function Base.summary{T}(::Composition{T})
