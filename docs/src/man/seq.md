@@ -657,7 +657,6 @@ Bio.Seq.Kmer{Bio.Seq.DNANucleotide,4}
 
 ```@docs
 each
-KmerCounts
 canonical
 neighbors
 ```
@@ -915,6 +914,65 @@ Nullable(RegexMatch("CPVPQARG"))
 
 julia> match(prosite"[AC]xVx(4){ED}", aa"CPVPQARG")
 Nullable(RegexMatch("CPVPQARG"))
+
+```
+
+
+## Sequence composition
+
+Sequence composition can be easily calculated using the `composition` function:
+```jlcon
+julia> comp = composition(dna"ACGAG")
+DNA Nucleotide Composition:
+  DNA_A   => 2
+  DNA_C   => 1
+  DNA_G   => 2
+  DNA_T   => 0
+  DNA_M   => 0
+  DNA_R   => 0
+  DNA_W   => 0
+  DNA_S   => 0
+  DNA_Y   => 0
+  DNA_K   => 0
+  DNA_V   => 0
+  DNA_H   => 0
+  DNA_D   => 0
+  DNA_B   => 0
+  DNA_N   => 0
+  DNA_Gap => 0
+
+julia> comp[DNA_A]
+2
+
+julia> comp[DNA_T]
+0
+
+```
+
+To accumulate composition statistics of multiple sequences, `merge!` can be used
+as follows:
+```julia
+# initiaize an empty composition counter
+comp = composition(dna"")
+
+# iterate over sequences and accumulate composition statistics into `comp`
+for seq in seqs
+    merge!(comp, composition(seq))
+end
+
+# or functional programming style in one line
+foldl((x, y) -> merge(x, composition(y)), composition(dna""), seqs)
+```
+
+`composition` is also applicable to a *k*-mer iterator:
+```julia
+julia> comp = composition(each(DNAKmer{4}, dna"ACGT"^100));
+
+julia> comp[DNAKmer("ACGT")]
+100
+
+julia> comp[DNAKmer("CGTA")]
+99
 
 ```
 

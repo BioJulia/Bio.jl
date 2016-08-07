@@ -119,11 +119,3 @@ function Base.summary{T}(::Composition{T})
         return string(T, " Composition")
     end
 end
-
-function Base.show{T}(io::IO, comp::Composition{T})
-    print(io, summary(comp), ':')
-    width = ndigits(maximum(comp.counts))
-    for x in alphabet(T)
-        print(io, "\n  ", x, " => ", lpad(comp[x], width))
-    end
-end
