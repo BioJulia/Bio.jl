@@ -26,7 +26,7 @@ type Interval{T} <: AbstractInterval{Int64}
 end
 ```
 
-Similarly to the `ReqRecord` type in the `Seq` module, `Interval` is
+Similarly to the `SeqRecord` type in the `Seq` module, `Interval` is
 parameterized on metadata type, which lets it efficiently and precisely
 be specialized to represent intervals from a variety of formats.
 
