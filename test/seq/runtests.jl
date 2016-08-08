@@ -2605,9 +2605,18 @@ end
         N
         """
 
-        function check_fasta_parse(filename)
+        function test_fasta_parse(filename, valid)
             # Reading from a stream
-            for seqrec in open(filename, FASTA)
+            stream = open(filename, FASTA)
+            if valid
+                for seqrec in stream end
+                @test true  # no error
+                @test close(stream) === nothing
+            else
+                @test_throws Exception begin
+                    for seqrec in stream end
+                end
+                return
             end
 
             # Reading from a memory mapped file
@@ -2636,7 +2645,7 @@ end
                 push!(read_entries, seqrec)
             end
 
-            return expected_entries == read_entries
+            @test expected_entries == read_entries
         end
 
         get_bio_fmt_specimens()
@@ -2648,11 +2657,7 @@ end
                 # currently comments are not supported
                 continue
             end
-            if valid
-                @test check_fasta_parse(joinpath(path, specimen["filename"]))
-            else
-                @test_throws Exception check_fasta_parse(joinpath(path, specimen["filename"]))
-            end
+            test_fasta_parse(joinpath(path, specimen["filename"]), valid)
         end
 
         @testset "specified sequence type" begin
@@ -2762,9 +2767,18 @@ end
         IJN
         """
 
-        function check_fastq_parse(filename)
+        function test_fastq_parse(filename, valid)
             # Reading from a stream
-            for seqrec in open(filename, FASTQ, Seq.SANGER_QUAL_ENCODING)
+            stream = open(filename, FASTQ, Seq.SANGER_QUAL_ENCODING)
+            if valid
+                for seqrec in stream end
+                @test true  # no error
+                @test close(stream) === nothing
+            else
+                @test_throws Exception begin
+                    for seqrec in stream end
+                end
+                return
             end
 
             # Reading from a memory mapped file
@@ -2793,7 +2807,7 @@ end
                 push!(read_entries, seqrec)
             end
 
-            return expected_entries == read_entries
+            @test expected_entries == read_entries
         end
 
         get_bio_fmt_specimens()
@@ -2806,11 +2820,7 @@ end
                contains(tags, "comments") || contains(tags, "ambiguity")
                 continue
             end
-            if valid
-                @test check_fastq_parse(joinpath(path, specimen["filename"]))
-            else
-                @test_throws Exception check_fastq_parse(joinpath(path, specimen["filename"]))
-            end
+            test_fastq_parse(joinpath(path, specimen["filename"]), valid)
         end
 
         @testset "specified sequence type" begin

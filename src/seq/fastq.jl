@@ -104,7 +104,14 @@ type FASTQParser{S<:Sequence} <: AbstractParser
 end
 
 Base.eltype{S}(::Type{FASTQParser{S}}) = FASTQSeqRecord{S}
-Base.eof(parser::FASTQParser) = eof(parser.state.stream)
+
+function Base.eof(parser::FASTQParser)
+    return eof(parser.state.stream)
+end
+
+function Base.close(parser::FASTQParser)
+    close(parser.state.stream)
+end
 
 include("fastq-parser.jl")
 

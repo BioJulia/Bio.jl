@@ -83,7 +83,14 @@ type FASTAParser{S<:Sequence} <: AbstractParser
 end
 
 Base.eltype{S}(::Type{FASTAParser{S}}) = FASTASeqRecord{S}
-Base.eof(parser::FASTAParser) = eof(parser.state.stream)
+
+function Base.eof(parser::FASTAParser)
+    return eof(parser.state.stream)
+end
+
+function Base.close(parser::FASTAParser)
+    close(parser.state.stream)
+end
 
 function Base.getindex(parser::FASTAParser, name::AbstractString)
     if isnull(parser.index)
