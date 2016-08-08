@@ -6,87 +6,116 @@
 # This file is a part of BioJulia.
 # License is MIT: https://github.com/BioJulia/Bio.jl/blob/master/LICENSE.md
 
-type Composition{A<:Alphabet}
+type Composition{T} <: Associative{T,Int}
     counts::Vector{Int}
-    function Composition()
-        new(zeros(Int, length(alphabet(A))))
-    end
 end
 
-typealias DNANucleotideCounts{n} Composition{DNAAlphabet{n}}
-typealias RNANucleotideCounts{n} Composition{RNAAlphabet{n}}
-typealias AminoAcidCounts Composition{AminoAcidAlphabet}
-
-function Composition{A}(seq::BioSequence{A})
-    comp = Composition{A}()
+function Composition{A<:Union{DNAAlphabet,RNAAlphabet}}(seq::BioSequence{A})
+    counts = zeros(Int, 16)
     @inbounds for x in seq
-        comp.counts[encode(A, x)+1] += 1
+        counts[reinterpret(UInt8, x) + 1] += 1
     end
-    return comp
+    return Composition{eltype(A)}(counts)
 end
 
 function Composition(seq::ReferenceSequence)
-    comp = Composition{DNAAlphabet{4}}()
+    counts = zeros(Int, 16)
     @inbounds for x in seq
-        comp.counts[encode(DNAAlphabet{4}, x)+1] += 1
+        counts[reinterpret(UInt8, x) + 1] += 1
     end
-    return comp
+    return Composition{DNANucleotide}(counts)
 end
 
-function Composition{K}(kmer::DNAKmer{K})
-    A = DNAAlphabet{2}
-    comp = Composition{A}()
-    x = UInt64(kmer)
+function Composition{T,k}(kmer::Kmer{T,k})
+    counts = zeros(Int, 16)
     @inbounds begin
-        comp.counts[encode(A, DNA_A)+1] = count_a(x) - (32 - K)
-        comp.counts[encode(A, DNA_C)+1] = count_c(x)
-        comp.counts[encode(A, DNA_G)+1] = count_g(x)
-        comp.counts[encode(A, DNA_T)+1] = count_t(x)
+        counts[1] = count_a(kmer)
+        counts[2] = count_c(kmer)
+        counts[3] = count_g(kmer)
+        counts[4] = count_t(kmer)  # U when T == RNANucleotide
     end
-    return comp
+    return Composition{T}(counts)
 end
 
-function Composition{K}(kmer::RNAKmer{K})
-    A = RNAAlphabet{2}
-    comp = Composition{A}()
-    x = UInt64(kmer)
-    @inbounds begin
-        comp.counts[encode(A, RNA_A)+1] = count_a(x) - (32 - K)
-        comp.counts[encode(A, RNA_C)+1] = count_c(x)
-        comp.counts[encode(A, RNA_G)+1] = count_g(x)
-        comp.counts[encode(A, RNA_U)+1] = count_t(x)
+function Composition(seq::AminoAcidSequence)
+    counts = zeros(Int, length(alphabet(AminoAcid)))
+    @inbounds for x in seq
+        counts[reinterpret(UInt8, x) + 1] += 1
     end
-    return comp
+    return Composition{AminoAcid}(counts)
+end
+
+function Composition{T,k}(iter::EachKmerIterator{T,k})
+    counts = zeros(Int, 4^k)
+    for (_, x) in iter
+        counts[convert(UInt64, x) + 1] += 1
+    end
+    return Composition{Kmer{T,k}}(counts)
 end
 
 """
-    composition(seq)
+    composition(seq | kmer_iter)
 
-Calculate composition of biological symbols in `seq`.
+Calculate composition of biological symbols in `seq` or k-mers in `kmer_iter`.
 """
-function composition(seq::Sequence)
-    return Composition(seq)
+function composition(iter::Union{Sequence,EachKmerIterator})
+    return Composition(iter)
 end
 
-function Base.getindex{A}(comp::Composition{A}, x)
-    try
-        i = encode(A, x) + 1
-        return Int(comp.counts[i])
-    catch ex
-        if isa(ex, EncodeError{A})
-            return 0
-        end
-        rethrow()
+@compat function Base.:(==){T}(x::Composition{T}, y::Composition{T})
+    return x.counts == y.counts
+end
+
+function Base.length(comp::Composition)
+    return length(comp.counts)
+end
+
+function Base.start(comp::Composition)
+    return UInt64(0)
+end
+
+function Base.done(comp::Composition, i)
+    return i ≥ length(comp.counts)
+end
+
+function Base.next(comp::Composition, i)
+    key = convert(keytype(comp), i)
+    count = comp.counts[i + 1]
+    return (key => count), i + 1
+end
+
+function Base.getindex{T}(comp::Composition{T}, x)
+    i = convert(UInt64, convert(T, x))
+    if !(0 ≤ i < endof(comp.counts))
+        throw(KeyError(x))
     end
+    return comp.counts[i+1]
 end
 
-Base.summary(::DNANucleotideCounts) = "DNA Nucleotide Counts"
-Base.summary(::RNANucleotideCounts) = "RNA Nucleotide Counts"
-Base.summary(::AminoAcidCounts)     = "Amino Acid Counts"
+function Base.copy{T}(comp::Composition{T})
+    return Composition{T}(copy(comp.counts))
+end
 
-function Base.show{A}(io::IO, comp::Composition{A})
-    print(io, summary(comp), ':')
-    for x in alphabet(A)
-        print(io, "\n  ", x, " => ", comp[x])
+function Base.merge{T}(comp::Composition{T}, other::Composition{T})
+    return merge!(copy(comp), other)
+end
+
+function Base.merge!{T}(comp::Composition{T}, other::Composition{T})
+    @assert length(comp.counts) == length(other.counts)
+    for i in 1:endof(comp.counts)
+        comp.counts[i] += other.counts[i]
+    end
+    return comp
+end
+
+function Base.summary{T}(::Composition{T})
+    if T == DNANucleotide
+        return "DNA Nucleotide Composition"
+    elseif T == RNANucleotide
+        return "RNA Nucleotide Composition"
+    elseif T == AminoAcid
+        return "Amino Acid Composition"
+    else
+        return string(T, " Composition")
     end
 end

@@ -90,9 +90,6 @@ export
     RNAKmer,
     DNACodon,
     RNACodon,
-    KmerCounts,
-    DNAKmerCounts,
-    RNAKmerCounts,
     translate,
     ncbi_trans_table,
     AminoAcid,
@@ -189,7 +186,6 @@ include("kmer.jl")
 include("nmask.jl")
 include("refseq.jl")
 include("eachkmer.jl")
-include("kmercounts.jl")
 include("composition.jl")
 include("geneticcode.jl")
 include("util.jl")
