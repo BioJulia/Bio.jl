@@ -52,11 +52,13 @@ function randseq{T}(generator::StationaryGenerator{T}, len::Integer)
 end
 
 const StationaryDNAGenerator = StationaryGenerator(
-    [DNA_A, DNA_C, DNA_G, DNA_T], [0.25, 0.25, 0.25])
+    collect(dna"ACGT"), ones(3) / 4)
+
 const StationaryRNAGenerator = StationaryGenerator(
-    [RNA_A, RNA_C, RNA_G, RNA_U], [0.25, 0.25, 0.25])
+    collect(rna"ACGU"), ones(3) / 4)
+
 const StationaryAAGenerator = StationaryGenerator(
-    alphabet(AminoAcid)[1:20], ones(19) / 20)
+    collect(aa"ARNDCQEGHILKMFPSTWYV"), ones(19) / 20)
 
 """
     randdnaseq(len::Integer)
