@@ -232,6 +232,9 @@
                 <li class="third-level"><a href="#regular-expression-search">Regular expression search</a></li>
             
         
+            <li class="second-level"><a href="#sequence-composition">Sequence composition</a></li>
+            
+        
             <li class="second-level"><a href="#sequence-records">Sequence records</a></li>
             
         
@@ -982,11 +985,11 @@ isambiguous
 <p>Return the number of mismatches between <code>a</code> and <code>b</code>.</p>
 <p><a id='Bio.Seq.composition' href='#Bio.Seq.composition'>#</a>
 <strong><code>Bio.Seq.composition</code></strong> &mdash; <em>Function</em>.</p>
-<div class="codehilite"><pre><span></span>composition(seq)
+<div class="codehilite"><pre><span></span>composition(seq | kmer_iter)
 </pre></div>
 
 
-<p>Calculate composition of biological symbols in <code>seq</code>.</p>
+<p>Calculate composition of biological symbols in <code>seq</code> or k-mers in <code>kmer_iter</code>.</p>
 <p><a id='Translation-1'></a></p>
 <h4 id="translation">Translation</h4>
 <p>The <a href="./#Bio.Seq.translate"><code>translate</code></a> funtion translates a sequence of codons in a RNA sequence to a amino acid sequence besed on a genetic code mapping.  The <code>Bio.Seq</code> module contains all NCBI defined genetic codes and they are registered in <a href="./#Bio.Seq.ncbi_trans_table"><code>ncbi_trans_table</code></a>.</p>
@@ -1098,20 +1101,6 @@ end
 </pre></div>
 
 
-<p><a id='Bio.Seq.KmerCounts' href='#Bio.Seq.KmerCounts'>#</a>
-<strong><code>Bio.Seq.KmerCounts</code></strong> &mdash; <em>Type</em>.</p>
-<div class="codehilite"><pre><span></span>DNAKmerCounts{k}(seq::Sequence[, step=1])
-RNAKmerCounts{k}(seq::Sequence[, step=1])
-</pre></div>
-
-
-<p>Count ocurrences of short (≤ 32) <code>k</code>-mers in a sequence.</p>
-<p>This method uses a dense table to store counts, requiring O(4^k) memory, so is not recommended for large k-mer sizes.</p>
-<p><strong>Arguments</strong></p>
-<ul>
-<li><code>seq</code>: A nucleotide sequence.</li>
-<li><code>step=1</code>: K-mers counted are separated by this many nucleotides.</li>
-</ul>
 <p><a id='Bio.Seq.canonical' href='#Bio.Seq.canonical'>#</a>
 <strong><code>Bio.Seq.canonical</code></strong> &mdash; <em>Function</em>.</p>
 <div class="codehilite"><pre><span></span>canonical(kmer::Kmer)
@@ -1378,6 +1367,61 @@ RNAKmerCounts{k}(seq::Sequence[, step=1])
 
 <span class="gp">julia&gt;</span> <span class="n">match</span><span class="p">(</span><span class="n">prosite</span><span class="s">&quot;[AC]xVx(4){ED}&quot;</span><span class="p">,</span> <span class="n">aa</span><span class="s">&quot;CPVPQARG&quot;</span><span class="p">)</span>
 <span class="go">Nullable(RegexMatch(&quot;CPVPQARG&quot;))</span>
+</pre></div>
+
+
+<p><a id='Sequence-composition-1'></a></p>
+<h2 id="sequence-composition">Sequence composition</h2>
+<p>Sequence composition can be easily calculated using the <code>composition</code> function:</p>
+<div class="codehilite"><pre><span></span><span class="gp">julia&gt;</span> <span class="n">comp</span> <span class="o">=</span> <span class="n">composition</span><span class="p">(</span><span class="n">dna</span><span class="s">&quot;ACGAG&quot;</span><span class="p">)</span>
+<span class="go">DNA Nucleotide Composition:</span>
+<span class="go">  DNA_A   =&gt; 2</span>
+<span class="go">  DNA_C   =&gt; 1</span>
+<span class="go">  DNA_G   =&gt; 2</span>
+<span class="go">  DNA_T   =&gt; 0</span>
+<span class="go">  DNA_M   =&gt; 0</span>
+<span class="go">  DNA_R   =&gt; 0</span>
+<span class="go">  DNA_W   =&gt; 0</span>
+<span class="go">  DNA_S   =&gt; 0</span>
+<span class="go">  DNA_Y   =&gt; 0</span>
+<span class="go">  DNA_K   =&gt; 0</span>
+<span class="go">  DNA_V   =&gt; 0</span>
+<span class="go">  DNA_H   =&gt; 0</span>
+<span class="go">  DNA_D   =&gt; 0</span>
+<span class="go">  DNA_B   =&gt; 0</span>
+<span class="go">  DNA_N   =&gt; 0</span>
+<span class="go">  DNA_Gap =&gt; 0</span>
+
+<span class="gp">julia&gt;</span> <span class="n">comp</span><span class="p">[</span><span class="n">DNA_A</span><span class="p">]</span>
+<span class="go">2</span>
+
+<span class="gp">julia&gt;</span> <span class="n">comp</span><span class="p">[</span><span class="n">DNA_T</span><span class="p">]</span>
+<span class="go">0</span>
+</pre></div>
+
+
+<p>To accumulate composition statistics of multiple sequences, <code>merge!</code> can be used as follows:</p>
+<div class="codehilite"><pre><span></span><span class="c"># initiaize an empty composition counter</span>
+<span class="n">comp</span> <span class="o">=</span> <span class="n">composition</span><span class="p">(</span><span class="n">dna</span><span class="s">&quot;&quot;</span><span class="p">)</span>
+
+<span class="c"># iterate over sequences and accumulate composition statistics into `comp`</span>
+<span class="k">for</span> <span class="n">seq</span> <span class="k">in</span> <span class="n">seqs</span>
+    <span class="n">merge!</span><span class="p">(</span><span class="n">comp</span><span class="p">,</span> <span class="n">composition</span><span class="p">(</span><span class="n">seq</span><span class="p">))</span>
+<span class="k">end</span>
+
+<span class="c"># or functional programming style in one line</span>
+<span class="n">foldl</span><span class="p">((</span><span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">merge</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">composition</span><span class="p">(</span><span class="n">y</span><span class="p">)),</span> <span class="n">composition</span><span class="p">(</span><span class="n">dna</span><span class="s">&quot;&quot;</span><span class="p">),</span> <span class="n">seqs</span><span class="p">)</span>
+</pre></div>
+
+
+<p><code>composition</code> is also applicable to a <em>k</em>-mer iterator:</p>
+<div class="codehilite"><pre><span></span><span class="n">julia</span><span class="o">&gt;</span> <span class="n">comp</span> <span class="o">=</span> <span class="n">composition</span><span class="p">(</span><span class="n">each</span><span class="p">(</span><span class="n">DNAKmer</span><span class="p">{</span><span class="mi">4</span><span class="p">},</span> <span class="n">dna</span><span class="s">&quot;ACGT&quot;</span><span class="o">^</span><span class="mi">100</span><span class="p">));</span>
+
+<span class="n">julia</span><span class="o">&gt;</span> <span class="n">comp</span><span class="p">[</span><span class="n">DNAKmer</span><span class="p">(</span><span class="s">&quot;ACGT&quot;</span><span class="p">)]</span>
+<span class="mi">100</span>
+
+<span class="n">julia</span><span class="o">&gt;</span> <span class="n">comp</span><span class="p">[</span><span class="n">DNAKmer</span><span class="p">(</span><span class="s">&quot;CGTA&quot;</span><span class="p">)]</span>
+<span class="mi">99</span>
 </pre></div>
 
 
