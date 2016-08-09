@@ -65,8 +65,8 @@ Base.eltype(::Type{AminoAcidAlphabet}) = AminoAcid
 Base.eltype(::Type{CharAlphabet}) = Char
 Base.eltype(::Type{VoidAlphabet}) = Void
 
-alphabet(::Type{DNAAlphabet{2}}) = DNA_A:DNA_T
-alphabet(::Type{RNAAlphabet{2}}) = RNA_A:RNA_U
+alphabet(::Type{DNAAlphabet{2}}) = (DNA_A, DNA_C, DNA_G, DNA_T)
+alphabet(::Type{RNAAlphabet{2}}) = (RNA_A, RNA_C, RNA_G, RNA_U)
 alphabet(::Type{DNAAlphabet{4}}) = alphabet(DNANucleotide)
 alphabet(::Type{RNAAlphabet{4}}) = alphabet(RNANucleotide)
 alphabet(::Type{AminoAcidAlphabet}) = alphabet(AminoAcid)
@@ -108,11 +108,39 @@ function Base.showerror{A}(io::IO, err::DecodeError{A})
     print(io, "cannot decode ", err.val, " in ", A)
 end
 
+for (A, T) in [(DNAAlphabet, DNANucleotide), (RNAAlphabet, RNANucleotide)]
+    @eval begin
+        # 2-bit encoding
+        @inline function encode(::Type{$(A){2}}, x::$(T))
+            if count_ones(x) != 1
+                throw(EncodeError($(A){2}, x))
+            end
+            return convert(UInt8, trailing_zeros(reinterpret(UInt8, x)))
+        end
+        @inline function decode(::Type{$(A){2}}, x::UInt8)
+            if x > 0x03
+                throw(DecodeError($(A){2}, x))
+            end
+            return reinterpret($(T), 0x01 << x)
+        end
+        decode(::Type{$(A){2}}, x::Unsigned) = decode($(A){2}, UInt8(x))
+
+        # 4-bit encoding
+        @inline function encode(::Type{$(A){4}}, x::$(T))
+            return reinterpret(UInt8, x)
+        end
+        @inline function decode(::Type{$(A){4}}, x::UInt8)
+            return reinterpret($(T), x)
+        end
+        decode(::Type{$(A){4}}, x::Unsigned) = decode($(A){4}, UInt8(x))
+    end
+end
+
 for (A, T, U, ub) in [
-        (DNAAlphabet{2},    DNANucleotide, UInt8,  DNA_T     ),
-        (DNAAlphabet{4},    DNANucleotide, UInt8,  DNA_Gap   ),
-        (RNAAlphabet{2},    RNANucleotide, UInt8,  RNA_U     ),
-        (RNAAlphabet{4},    RNANucleotide, UInt8,  RNA_Gap   ),
+        #(DNAAlphabet{2},    DNANucleotide, UInt8,  DNA_T     ),
+        #(DNAAlphabet{4},    DNANucleotide, UInt8,  DNA_Gap   ),
+        #(RNAAlphabet{2},    RNANucleotide, UInt8,  RNA_U     ),
+        #(RNAAlphabet{4},    RNANucleotide, UInt8,  RNA_Gap   ),
         (AminoAcidAlphabet, AminoAcid,     UInt8,  AA_Gap    ),
         (CharAlphabet,      Char,          UInt32, '\U10ffff')]
     @assert sizeof(T) == sizeof(U)

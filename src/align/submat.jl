@@ -200,7 +200,7 @@ function parse_ncbi_submat{T}(::Type{T}, filepath)
     return SubstitutionMatrix(scores, default_match=0, default_mismatch=0)
 end
 
-const EDNAFULL = load_submat(DNANucleotide, "NUC.4.4")
+#const EDNAFULL = load_submat(DNANucleotide, "NUC.4.4")
 const PAM30    = load_submat(AminoAcid, "PAM30")
 const PAM70    = load_submat(AminoAcid, "PAM70")
 const PAM250   = load_submat(AminoAcid, "PAM250")

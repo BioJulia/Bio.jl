@@ -36,6 +36,8 @@ Base.convert{T<:Number,S<:Nucleotide}(::Type{S}, nt::T) = convert(S, UInt8(nt))
 end
 Base.isless{N<:Nucleotide}(x::N, y::N) = isless(UInt8(x), UInt8(y))
 
+Base.count_ones(nt::Nucleotide) = count_ones(convert(UInt8, nt))
+
 
 # Nucleotide encoding definition
 # ------------------------------
@@ -55,7 +57,8 @@ const compatbits_nuc = zeros(UInt8, 16)
 # derived from "The DDBJ/ENA/GenBank Feature Table Definition"
 # §7.4.1 Nucleotide base code (IUPAC)
 # http://www.insdc.org/documents/feature_table.html#7.4.1
-for (code, (nt, doc, compat)) in enumerate([
+for (char, doc, bits) in [
+        ('-', "DNA Gap",                                   0b0000),
         ('A', "DNA Adenine",                               0b0001),
         ('C', "DNA Cytosine",                              0b0010),
         ('G', "DNA Guanine",                               0b0100),
@@ -70,33 +73,27 @@ for (code, (nt, doc, compat)) in enumerate([
         ('H', "DNA Adenine, Cytosine or Thymine",          0b1011),
         ('D', "DNA Adenine, Guanine or Thymine",           0b1101),
         ('B', "DNA Cytosine, Guanine or Thymine",          0b1110),
-        ('N', "DNA Adenine, Cytosine, Guanine or Thymine", 0b1111)])
-    var = Symbol("DNA_", nt)
+        ('N', "DNA Adenine, Cytosine, Guanine or Thymine", 0b1111)]
+    var = Symbol("DNA_", char != '-' ? char : "Gap")
     @eval begin
-        @doc $doc const $var = convert(DNANucleotide, $(UInt8(code - 1)))
-        char_to_dna[$(Int(nt + 1))] = char_to_dna[$(Int(lowercase(nt) + 1))] = $var
-        dna_to_char[$(code)] = $nt
-        compatbits_nuc[$(code)] = $compat
+        @doc $(doc) const $(var) = reinterpret(DNANucleotide, $(bits))
+        char_to_dna[$(Int(char)+1)] = char_to_dna[$(Int(lowercase(char))+1)] = $(var)
+        dna_to_char[$(Int(bits)+1)] = $(char)
     end
 end
 
-"DNA Gap"
-const DNA_Gap = convert(DNANucleotide, 0b1111)
-char_to_dna[Int('-') + 1] = DNA_Gap
-dna_to_char[0b1111 + 1] = '-'
-compatbits_nuc[0b1111 + 1] = 0b0000
-
-"Returns Any DNA Nucleotide (DNA_N)"
+"Returns Any DNA Nucleotide (i.e. DNA_N)"
 nnucleotide(::Type{DNANucleotide}) = DNA_N
-invalid_nucleotide(::Type{DNANucleotide}) = DNA_INVALID
-
-Base.colon(start::DNANucleotide, stop::DNANucleotide) = SymbolRange(start, stop)
+gap(::Type{DNANucleotide}) = DNA_Gap
 
 Base.isvalid(::Type{DNANucleotide}, x::Integer) = 0 ≤ x < 16
-Base.isvalid(nt::DNANucleotide) = nt ≤ DNA_Gap
-isambiguous(nt::DNANucleotide) = nt > DNA_T
-alphabet(::Type{DNANucleotide}) = DNA_A:DNA_Gap
-gap(::Type{DNANucleotide}) = DNA_Gap
+Base.isvalid(nt::DNANucleotide) = nt ≤ DNA_N
+isambiguous(nt::DNANucleotide) = count_ones(nt) != 1
+alphabet(::Type{DNANucleotide}) = (
+    DNA_Gap, DNA_A, DNA_C, DNA_G,
+    DNA_T,   DNA_M, DNA_R, DNA_W,
+    DNA_S,   DNA_Y, DNA_K, DNA_V,
+    DNA_H,   DNA_D, DNA_B, DNA_N)
 
 function isGC(nt::DNANucleotide)
     return nt == DNA_G || nt == DNA_C || nt == DNA_S
@@ -150,46 +147,43 @@ const RNA_INVALID = convert(RNANucleotide, 0b10000) # Indicates invalid RNA when
 const char_to_rna = [RNA_INVALID for _ in 0x00:0x7f]
 const rna_to_char = Vector{Char}(16)
 
-for (code, (nt, doc)) in enumerate([
-        ('A', "RNA Adenine"                             ),
-        ('C', "RNA Cytosine"                            ),
-        ('G', "RNA Guanine"                             ),
-        ('U', "RNA Uracil"                              ),
-        ('M', "RNA Adenine or Cytosine"                 ),
-        ('R', "RNA Adenine or Guanine"                  ),
-        ('W', "RNA Adenine or Uracil"                   ),
-        ('S', "RNA Cytosine or Guanine"                 ),
-        ('Y', "RNA Cytosine or Uracil"                  ),
-        ('K', "RNA Guanine or Uracil"                   ),
-        ('V', "RNA Adenine, Cytosine or Guanine"        ),
-        ('H', "RNA Adenine, Cytosine or Uracil"         ),
-        ('D', "RNA Adenine, Guanine or Uracil"          ),
-        ('B', "RNA Cytosine, Guanine or Uracil"         ),
-        ('N', "RNA Adenine, Cytosine, Guanine or Uracil")])
-    var = Symbol("RNA_", nt)
+for (char, doc, dna) in [
+        ('-', "RNA Gap",                                  DNA_Gap),
+        ('A', "RNA Adenine",                              DNA_A  ),
+        ('C', "RNA Cytosine",                             DNA_C  ),
+        ('G', "RNA Guanine",                              DNA_G  ),
+        ('U', "RNA Uracil",                               DNA_T  ),
+        ('M', "RNA Adenine or Cytosine",                  DNA_M  ),
+        ('R', "RNA Adenine or Guanine",                   DNA_R  ),
+        ('W', "RNA Adenine or Uracil",                    DNA_W  ),
+        ('S', "RNA Cytosine or Guanine",                  DNA_S  ),
+        ('Y', "RNA Cytosine or Uracil",                   DNA_Y  ),
+        ('K', "RNA Guanine or Uracil",                    DNA_K  ),
+        ('V', "RNA Adenine, Cytosine or Guanine",         DNA_V  ),
+        ('H', "RNA Adenine, Cytosine or Uracil",          DNA_H  ),
+        ('D', "RNA Adenine, Guanine or Uracil",           DNA_D  ),
+        ('B', "RNA Cytosine, Guanine or Uracil",          DNA_B  ),
+        ('N', "RNA Adenine, Cytosine, Guanine or Uracil", DNA_N  )]
+    var = Symbol("RNA_", char != '-' ? char : "Gap")
     @eval begin
-        @doc $doc const $var = convert(RNANucleotide, $(UInt8(code - 1)))
-        char_to_rna[$(Int(nt + 1))] = char_to_rna[$(Int(lowercase(nt) + 1))] = $var
-        rna_to_char[$(code)] = $nt
+        @doc $(doc) const $(var) = reinterpret(RNANucleotide, $(dna))
+        char_to_rna[$(Int(char)+1)] = char_to_rna[$(Int(lowercase(char)+1))] = reinterpret(RNANucleotide, $(dna))
+        rna_to_char[$(Int(dna)+1)] = $(char)
     end
 end
 
-"RNA Gap"
-const RNA_Gap = convert(RNANucleotide, 0b1111)
-char_to_rna[Int('-') + 1] = RNA_Gap
-rna_to_char[0b1111 + 1] = '-'
-
 "Returns Any RNA Nucleotide (RNA_N)"
 nnucleotide(::Type{RNANucleotide}) = RNA_N
-invalid_nucleotide(::Type{RNANucleotide}) = RNA_INVALID
-
-Base.colon(start::RNANucleotide, stop::RNANucleotide) = SymbolRange(start, stop)
+gap(::Type{RNANucleotide}) = RNA_Gap
 
 Base.isvalid(::Type{RNANucleotide}, x::Integer) = 0 ≤ x < 16
-Base.isvalid(nt::RNANucleotide) = nt ≤ RNA_Gap
-isambiguous(nt::RNANucleotide) = nt > RNA_U
-alphabet(::Type{RNANucleotide}) = RNA_A:RNA_Gap
-gap(::Type{RNANucleotide}) = RNA_Gap
+Base.isvalid(nt::RNANucleotide) = nt ≤ RNA_N
+isambiguous(nt::RNANucleotide) = count_ones(nt) != 0
+alphabet(::Type{RNANucleotide}) = (
+    RNA_Gap, RNA_A, RNA_C, RNA_G,
+    RNA_U,   RNA_M, RNA_R, RNA_W,
+    RNA_S,   RNA_Y, RNA_K, RNA_V,
+    RNA_H,   RNA_D, RNA_B, RNA_N)
 
 function isGC(nt::RNANucleotide)
     return nt == RNA_G || nt == RNA_C || nt == RNA_S
@@ -213,7 +207,7 @@ end
 # Compatibility
 # -------------
 
-compatbits(nt::Nucleotide) = compatbits_nuc[reinterpret(UInt8, nt)+1]
+compatbits(nt::Nucleotide) = convert(UInt8, nt)
 
 """
     iscompatible(x, y)
