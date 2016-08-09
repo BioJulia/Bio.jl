@@ -804,28 +804,14 @@ function find_next_ambiguous{A<:Union{DNAAlphabet{2},RNAAlphabet{2}}}(
 end
 
 function find_next_ambiguous{A<:Union{DNAAlphabet{4},RNAAlphabet{4}}}(
-        seq::BioSequence{A}, i::Integer)
-    if i > endof(seq)
-        return 0
-    end
-
-    # extract ambiguity bits using following bit masks:
-    #   * 0x44... = 0b01000100...
-    #   * 0x88... = 0b10001000...
-    #   * 0xCC... = 0b11001100...
-    next = bitindex(seq, max(i, 1))
-    stop = bitindex(seq, endof(seq) + 1)
-    while next < stop
-        m = mask(min(stop - next, 64)) << offset(next)
-        x = seq.data[index(next)] & m
-        if x & 0xCCCCCCCCCCCCCCCC != 0
-            x = (x & 0x8888888888888888) | (x & 0x4444444444444444) << 1
-            return (index(next) - 1) << 4 + (trailing_zeros(x) + 1) >> 2
+        seq::BioSequence{A}, from::Integer)
+    for i in max(from, 1):endof(seq)
+        nt = inbounds_getindex(seq, i)
+        if isambiguous(nt)
+            return i
         end
-        next += 64 - offset(next)
     end
-
-    # found no ambiguity
+    # no ambiguity
     return 0
 end
 
