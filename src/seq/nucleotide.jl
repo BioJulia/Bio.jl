@@ -37,6 +37,7 @@ end
 Base.isless{N<:Nucleotide}(x::N, y::N) = isless(UInt8(x), UInt8(y))
 
 Base.count_ones(nt::Nucleotide) = count_ones(convert(UInt8, nt))
+Base.trailing_zeros(nt::Nucleotide) = trailing_zeros(convert(UInt8, nt))
 
 
 # Nucleotide encoding definition

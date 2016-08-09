@@ -98,8 +98,9 @@ function make_kmer{T,K}(::Type{Kmer{T,K}}, seq)
         if isambiguous(nt)
             error("A K-mer cannot contain an ambiguous nucleotide in its sequence")
         end
-        x = x << 2 | UInt64(nt)
+        x = (x << 2) | UInt64(trailing_zeros(nt))
     end
+
     return Kmer{T,K}(x)
 end
 
@@ -115,8 +116,8 @@ Base.convert{S<:AbstractString}(::Type{S}, seq::Kmer) = convert(S, [Char(x) for 
 # Basic Functions
 # ---------------
 
-alphabet{k}(::Type{DNAKmer{k}}) = DNA_A:DNA_T
-alphabet{k}(::Type{RNAKmer{k}}) = RNA_A:RNA_U
+alphabet{k}(::Type{DNAKmer{k}}) = (DNA_A, DNA_C, DNA_G, DNA_T)
+alphabet{k}(::Type{RNAKmer{k}}) = (RNA_A, RNA_C, RNA_G, RNA_U)
 
 Base.hash(x::Kmer, h::UInt) = hash(UInt64(x), h)
 
@@ -124,7 +125,7 @@ Base.length{T,K}(x::Kmer{T, K}) = K
 Base.eltype{T,k}(::Type{Kmer{T,k}}) = T
 
 @inline function inbounds_getindex{T,K}(x::Kmer{T,K}, i::Integer)
-    return convert(T, (UInt64(x) >> (2K - 2i)) & 0b11)
+    return reinterpret(T, 0x01 << ((UInt64(x) >> 2(K - i)) & 0b11))
 end
 
 Base.summary{k}(x::DNAKmer{k}) = string("DNA ", k, "-mer")
