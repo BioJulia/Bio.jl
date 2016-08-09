@@ -2695,35 +2695,36 @@ end
                 filepath = joinpath(dir, "test.fa")
                 write(filepath, fastastr)
                 write(filepath * ".fai", faistr)
-                reader = open(filepath, FASTA)
+                open(filepath, FASTA) do reader
 
-                chr3 = reader["chr3"]
-                @test chr3.name == "chr3"
-                @test chr3.seq == dna"""
-                AAATAGCCCTCATGTACGTCTCCTCCAAGCCCTGTTGTCTCTTACCCGGA
-                TGTTCAACCAAAAGCTACTTACTACCTTTATTTTATGTTTACTTTTTATA
-                """
+                    chr3 = reader["chr3"]
+                    @test chr3.name == "chr3"
+                    @test chr3.seq == dna"""
+                    AAATAGCCCTCATGTACGTCTCCTCCAAGCCCTGTTGTCTCTTACCCGGA
+                    TGTTCAACCAAAAGCTACTTACTACCTTTATTTTATGTTTACTTTTTATA
+                    """
 
-                chr2 = reader["chr2"]
-                @test chr2.name == "chr2"
-                @test chr2.seq == dna"""
-                ATGCATGCATGCAT
-                GCATGCATGCATGC
-                """
+                    chr2 = reader["chr2"]
+                    @test chr2.name == "chr2"
+                    @test chr2.seq == dna"""
+                    ATGCATGCATGCAT
+                    GCATGCATGCATGC
+                    """
 
-                chr4 = reader["chr4"]
-                @test chr4.name == "chr4"
-                @test chr4.seq == dna"""
-                TACTT
-                """
+                    chr4 = reader["chr4"]
+                    @test chr4.name == "chr4"
+                    @test chr4.seq == dna"""
+                    TACTT
+                    """
 
-                chr1 = reader["chr1"]
-                @test chr1.name == "chr1"
-                @test chr1.seq == dna"""
-                CCACACCACACCCACACACC
-                """
+                    chr1 = reader["chr1"]
+                    @test chr1.name == "chr1"
+                    @test chr1.seq == dna"""
+                    CCACACCACACCCACACACC
+                    """
 
-                @test_throws Exception reader["chr5"]
+                    @test_throws Exception reader["chr5"]
+                end
             end
         end
     end
