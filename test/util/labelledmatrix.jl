@@ -7,6 +7,9 @@ else
     const Test = BaseTestNext
 end
 
+using Bio.LabelledSquareMatrices,
+      TestFunctions
+
 integral_matrix = """\
 \tA\tB\tC
 A\t1\t2\t4
@@ -15,7 +18,9 @@ C\t4\t2\t1
 """
 integral_matrix_expt = Float64[1 2 4; 2 1 2; 4 2 1;]
 commented_matrix = """\
-# This is a comment that gets skipped
+# This is a comment that gets skipped. The next blank line should also get
+# skipped.
+
 \tA\tB\tC
 A\t1\t2\t4
 B\t2\t1\t2
@@ -58,7 +63,9 @@ bad_matricies = [bad_labels,
                  missing_vals,
                  ]
 
-using Bio.LabelledSquareMatrices
+file_matricies = [("ints.tab", integral_matrix_expt),
+                  ("commented.tab", integral_matrix_expt),
+                 ]
 
 @testset "LabelledSquareMatrices" begin
     @testset "types" for T in [Int64, Float64]
@@ -76,6 +83,13 @@ using Bio.LabelledSquareMatrices
 
     @testset "bad_matricies" for mat in bad_matricies
         @test_throws Exception readlsm(IOBuffer(mat))
+    end
+
+    @testset "files" for (fname, expected) in file_matricies
+        fname = Pkg.dir("Bio", "test", "BioFmtSpecimens", "LSM", fname)
+        m, l = readlsm(fname)
+        @test m == expected
+        @test l == UTF8String["A", "B", "C"]
     end
 end
 
