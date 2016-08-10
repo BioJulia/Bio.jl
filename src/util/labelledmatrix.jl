@@ -42,13 +42,19 @@ function readlsm{T}(::Type{T}, io::IO, delim='\t', comment='#')
 end
 
 function readlsm(io::IO, delim='\t')
-    readlsm(Float64, io, delim)
+    return readlsm(Float64, io, delim)
+end
+
+function readlsm{T}(::Type{T}, path::AbstractString, delim='\t')
+    lsm = nothing
+    open(path) do file
+        lsm = readlsm(T, file, delim)
+    end
+    return lsm
 end
 
 function readlsm(path::AbstractString, delim='\t')
-    open(path) do file
-        lsm = readlsm(Float64, file, delim)
-    end
+    return readlsm(Float64, path, delim)
 end
 
 end # module LabelledSquareMatrices
