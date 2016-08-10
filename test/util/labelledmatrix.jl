@@ -14,6 +14,13 @@ B\t2\t1\t2
 C\t4\t2\t1
 """
 integral_matrix_expt = Float64[1 2 4; 2 1 2; 4 2 1;]
+commented_matrix = """\
+# This is a comment that gets skipped
+\tA\tB\tC
+A\t1\t2\t4
+B\t2\t1\t2
+C\t4\t2\t1
+"""
 
 float_matrix = """\
 \tA\tB\tC
@@ -25,6 +32,7 @@ float_matrix_expt = Float64[1. 2.5 4.5; 2.5 1. 2.5; 4.5 2.5 1.;]
 
 good_matricies = [(float_matrix, float_matrix_expt),
                   (integral_matrix, integral_matrix_expt),
+                  (commented_matrix, integral_matrix_expt),
                  ]
 
 bad_labels = """\
