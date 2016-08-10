@@ -37,25 +37,25 @@ for details.
 
 Set of nucleotide symbols in Bio.jl covers IUPAC nucleotide base plus a gap symbol:
 
-| Symbol | Constant              | Meaning                  |
-| :----- | :-------------------- | :----------------------- |
-| 'A'    | `DNA_A` / `RNA_A`     | A; Adenine               |
-| 'C'    | `DNA_C` / `RNA_C`     | C; Cytosine              |
-| 'G'    | `DNA_G` / `RNA_G`     | G; Guanine               |
-| 'T'    | `DNA_T`               | T; Thymine (DNA only)    |
-| 'U'    | `RNA_U`               | U; Uracil (RNA only)     |
-| 'M'    | `DNA_M` / `RNA_M`     | A or C                   |
-| 'R'    | `DNA_R` / `RNA_R`     | A or G                   |
-| 'W'    | `DNA_W` / `RNA_W`     | A or T                   |
-| 'S'    | `DNA_S` / `RNA_S`     | C or G                   |
-| 'Y'    | `DNA_Y` / `RNA_Y`     | C or T                   |
-| 'K'    | `DNA_K` / `RNA_K`     | G or T                   |
-| 'V'    | `DNA_V` / `RNA_V`     | A or C or G; not T       |
-| 'H'    | `DNA_H` / `RNA_H`     | A or C or T; not G       |
-| 'D'    | `DNA_D` / `RNA_D`     | A or G or T; not C       |
-| 'B'    | `DNA_B` / `RNA_B`     | C or G or T; not A       |
-| 'N'    | `DNA_N` / `RNA_N`     | A or C or G or T         |
-| '-'    | `DNA_Gap` / `RNA_Gap` | Gap (none of the above)  |
+| Symbol | Constant              | Meaning                    |
+| :----- | :-------------------- | :------------------------- |
+| 'A'    | `DNA_A` / `RNA_A`     | A; Adenine                 |
+| 'C'    | `DNA_C` / `RNA_C`     | C; Cytosine                |
+| 'G'    | `DNA_G` / `RNA_G`     | G; Guanine                 |
+| 'T'    | `DNA_T`               | T; Thymine (DNA only)      |
+| 'U'    | `RNA_U`               | U; Uracil (RNA only)       |
+| 'M'    | `DNA_M` / `RNA_M`     | A or C                     |
+| 'R'    | `DNA_R` / `RNA_R`     | A or G                     |
+| 'W'    | `DNA_W` / `RNA_W`     | A or T/U                   |
+| 'S'    | `DNA_S` / `RNA_S`     | C or G                     |
+| 'Y'    | `DNA_Y` / `RNA_Y`     | C or T/U                   |
+| 'K'    | `DNA_K` / `RNA_K`     | G or T/U                   |
+| 'V'    | `DNA_V` / `RNA_V`     | A or C or G; not T/U       |
+| 'H'    | `DNA_H` / `RNA_H`     | A or C or T; not G         |
+| 'D'    | `DNA_D` / `RNA_D`     | A or G or T/U; not C       |
+| 'B'    | `DNA_B` / `RNA_B`     | C or G or T/U; not A       |
+| 'N'    | `DNA_N` / `RNA_N`     | A or C or G or T/U         |
+| '-'    | `DNA_Gap` / `RNA_Gap` | Gap (none of the above)    |
 
 <http://www.insdc.org/documents/feature_table.html#7.4.1>
 
