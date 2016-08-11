@@ -132,10 +132,8 @@ function Demultiplexer(barcodes::Vector{DNASequence};
 
     # check barcodes
     for barcode in barcodes
-        for i in 1:endof(barcode)
-            if isambiguous(barcode[i])
-                error("barcode must be umambiguous")
-            end
+        if hasambiguity(barcode)
+            error("barcode must be umambiguous")
         end
     end
 
