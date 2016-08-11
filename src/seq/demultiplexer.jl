@@ -148,11 +148,9 @@ function Demultiplexer(barcodes::Vector{DNASequence};
         for (i, barcode) in enumerate(barcodes)
             if distance == :hamming
                 circle = hamming_circle(barcode, m)
-            elseif distance == :levenshtein
-                circle = levenshtein_circle(barcode, m)
             else
-                # unreachable: already checked above
-                assert(false)
+                @assert distance == :levenshtein
+                circle = levenshtein_circle(barcode, m)
             end
             append!(mutated_barcodes, circle)
             append!(ids, collect(repeated(i, length(circle))))
