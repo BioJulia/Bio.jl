@@ -143,7 +143,7 @@ function Demultiplexer(barcodes::Vector{DNASequence};
     tries = BarcodeTrie[]
     for m in 0:n_max_errors
         # generate "erroneous" barcodes
-        barcodes′ = DNASequence[]
+        mutated_barcodes = DNASequence[]
         ids = Int[]
         for (i, barcode) in enumerate(barcodes)
             if distance == :hamming
@@ -154,11 +154,11 @@ function Demultiplexer(barcodes::Vector{DNASequence};
                 # unreachable: already checked above
                 assert(false)
             end
-            append!(barcodes′, circle)
+            append!(mutated_barcodes, circle)
             append!(ids, collect(repeated(i, length(circle))))
         end
-        ord = sortperm(barcodes′)
-        push!(tries, BarcodeTrie(barcodes′[ord], ids[ord]))
+        ord = sortperm(mutated_barcodes)
+        push!(tries, BarcodeTrie(mutated_barcodes[ord], ids[ord]))
     end
 
     return Demultiplexer(tries, barcodes, distance)
