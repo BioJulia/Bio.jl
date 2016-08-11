@@ -122,9 +122,7 @@ Create a demultiplexer object from `barcodes`.
 function Demultiplexer(barcodes::Vector{DNASequence};
                        n_max_errors::Integer=1,
                        distance::Symbol=:hamming)
-    if !issorted(barcodes)
-        error("barcodes must be sorted")
-    elseif n_max_errors < 0
+    if n_max_errors < 0
         error("n_max_errors must be non-negative")
     elseif distance ∉ (:hamming, :levenshtein)
         error("distance must be either :hamming or :levenshtein")
