@@ -25,6 +25,15 @@ A\t1\t2\t4
 B\t2\t1\t2
 C\t4\t2\t1
 """
+spacy_matrix = """\
+# This matrix has heaps of extra spaces in the road, to try and trip up the
+# parser.
+
+   A  B  C 
+A 1 2          4
+B  2  1  2   
+C  4  2  1  
+"""
 
 float_matrix = """\
 \tA\tB\tC
@@ -37,6 +46,7 @@ float_matrix_expt = Float64[1. 2.5 4.5; 2.5 1. 2.5; 4.5 2.5 1.;]
 good_matricies = [(float_matrix, float_matrix_expt),
                   (integral_matrix, integral_matrix_expt),
                   (commented_matrix, integral_matrix_expt),
+                  (spacy_matrix, integral_matrix_expt),
                  ]
 
 bad_labels = """\
