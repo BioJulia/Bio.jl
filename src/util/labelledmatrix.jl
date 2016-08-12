@@ -1,5 +1,3 @@
-module LabelledSquareMatrices
-
 export readlsm
 
 """
@@ -56,5 +54,3 @@ end
 function readlsm(path::AbstractString, delim='\t')
     return readlsm(Float64, path, delim)
 end
-
-end # module LabelledSquareMatrices

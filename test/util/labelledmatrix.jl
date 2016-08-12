@@ -7,8 +7,8 @@ else
     const Test = BaseTestNext
 end
 
-using Bio.LabelledSquareMatrices,
-      TestFunctions
+import Bio.Util: readlsm
+using TestFunctions
 
 integral_matrix = """\
 \tA\tB\tC
