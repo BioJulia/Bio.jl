@@ -2604,10 +2604,10 @@ end
             @test dplxr[i] == barcodes[i]
         end
 
-        @test demultiplex(dplxr, dna"ATGG") == 1
-        @test demultiplex(dplxr, dna"CAGA") == 2
-        @test demultiplex(dplxr, dna"GGAA") == 3
-        @test demultiplex(dplxr, dna"TACG") == 4
+        @test demultiplex(dplxr, dna"ATGG") === (1, 0)
+        @test demultiplex(dplxr, dna"CAGA") === (2, 0)
+        @test demultiplex(dplxr, dna"GGAA") === (3, 0)
+        @test demultiplex(dplxr, dna"TACG") === (4, 0)
 
         # every 1bp substitution is recoverable
         for (i, barcode) in enumerate(barcodes)
@@ -2616,7 +2616,7 @@ end
                 barcode′ = copy(barcode)
                 for nt in [DNA_A, DNA_C, DNA_G, DNA_T, DNA_N]
                     barcode′[j] = nt
-                    @test demultiplex(dplxr, barcode′) == i
+                    @test demultiplex(dplxr, barcode′) == (i, mismatches(barcode, barcode′))
                 end
             end
         end
@@ -2626,8 +2626,8 @@ end
         for _ in 1:10_000
             i = rand(1:endof(barcodes))
             seq = make_errors(barcodes[i] * randdna(10))
-            n_ok += demultiplex(dplxr, seq) == i
-            n_ok_with_fallback += demultiplex(dplxr, seq, true) == i
+            n_ok += demultiplex(dplxr, seq)[1] == i
+            n_ok_with_fallback += demultiplex(dplxr, seq, true)[1] == i
         end
         # empirically, n_ok / 10_000 is ~0.985
         # @show n_ok
@@ -2643,10 +2643,10 @@ end
             @test dplxr[i] == barcodes[i]
         end
 
-        @test demultiplex(dplxr, dna"ATGG") == 1
-        @test demultiplex(dplxr, dna"CAGA") == 2
-        @test demultiplex(dplxr, dna"GGAA") == 3
-        @test demultiplex(dplxr, dna"TACG") == 4
+        @test demultiplex(dplxr, dna"ATGG") === (1, 0)
+        @test demultiplex(dplxr, dna"CAGA") === (2, 0)
+        @test demultiplex(dplxr, dna"GGAA") === (3, 0)
+        @test demultiplex(dplxr, dna"TACG") === (4, 0)
 
         # every 1bp substitution/insertion/deletion is recoverable
         for (i, barcode) in enumerate(barcodes)
@@ -2655,20 +2655,23 @@ end
                 barcode′ = copy(barcode)
                 for nt in [DNA_A, DNA_C, DNA_G, DNA_T, DNA_N]
                     barcode′[j] = nt
-                    @test demultiplex(dplxr, barcode′) == i
+                    i′, d = demultiplex(dplxr, barcode′)
+                    @test i′ == i && 0 ≤ d ≤ 1
                 end
             end
             # insertion
             for j in 1:endof(barcode)
                 barcode′ = copy(barcode)
                 insert!(barcode′, j, rand([DNA_A, DNA_C, DNA_G, DNA_T, DNA_N]))
-                @test demultiplex(dplxr, barcode′) == i
+                i′, d = demultiplex(dplxr, barcode′)
+                @test i′ == i && 0 ≤ d ≤ 1
             end
             # deletion
             for j in 1:endof(barcode)
                 barcode′ = copy(barcode)
                 deleteat!(barcode′, j)
-                @test demultiplex(dplxr, barcode′) == i
+                i′, d = demultiplex(dplxr, barcode′)
+                @test i′ == i && 0 ≤ d ≤ 1
             end
         end
 
@@ -2677,8 +2680,8 @@ end
         for _ in 1:10_000
             i = rand(1:endof(barcodes))
             seq = make_errors(barcodes[i] * randdna(10))
-            n_ok += demultiplex(dplxr, seq) == i
-            n_ok_with_fallback += demultiplex(dplxr, seq, true) == i
+            n_ok += demultiplex(dplxr, seq)[1] == i
+            n_ok_with_fallback += demultiplex(dplxr, seq, true)[1] == i
         end
         # empirically, n_ok / 10_000 is ~0.995
         # @show n_ok

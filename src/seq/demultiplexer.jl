@@ -40,31 +40,32 @@ function build_trie!(nodes, root, barcodes, ids, range, j)
         end
     end
 
-    # allocate five consecutive nodes {'#', 'A', 'C', 'G', 'T'}
-    resize!(nodes, length(nodes) + 5)
-    for l in endof(nodes)-4:endof(nodes)
+    # allocate six consecutive nodes {'#', 'A', 'C', 'G', 'T', 'N' (or others)}
+    resize!(nodes, length(nodes) + 6)
+    for l in endof(nodes)-5:endof(nodes)
         nodes[l] = 0
     end
-    base = endof(nodes) - 5
+    base = endof(nodes) - 6
 
     # calculate ranges for the next level
-    starts = Vector{Int}(5)
+    starts = Vector{Int}(6)
     i = first(range)
-    starts[1] = i
+    starts[1] = i  # '#'
     while i ≤ last(range) && length(barcodes[i]) < j
         i += 1
     end
-    for k in 1:4
+    for k in 1:4  # ACGT
         starts[k+1] = i
         while i ≤ last(range) && Int(barcodes[i][j]) + 1 == k
             i += 1
         end
     end
+    starts[6] = i  # N
 
     # set nodes
     nodes[root] = (base << 1) | 1
-    for k in 1:5
-        if k == 5
+    for k in 1:6
+        if k == 6
             r = starts[k]:last(range)
         else
             r = starts[k]:starts[k+1]-1
@@ -77,7 +78,18 @@ end
 function findbarcode(trie::BarcodeTrie, seq)
     s = 1
     for nt in seq
-        t = (trie.nodes[s] >> 1) + min(Int(nt), 3) + 2
+        base = trie.nodes[s] >> 1
+        if nt == DNA_A
+            t = base + 2
+        elseif nt == DNA_C
+            t = base + 3
+        elseif nt == DNA_G
+            t = base + 4
+        elseif nt == DNA_T
+            t = base + 5
+        else
+            t = base + 6
+        end
         if trie.nodes[t] & 1 == 0
             # leaf
             break
@@ -103,7 +115,7 @@ end
 function Base.show(io::IO, demultiplexer::Demultiplexer)
     println(io, summary(demultiplexer), ":")
     println(io, "  distance: ", demultiplexer.distance)
-    println(io, "  number of barcodes:", length(demultiplexer.barcodes))
+    println(io, "  number of barcodes: ", length(demultiplexer.barcodes))
       print(io, "  number of correctable errors: ", length(demultiplexer.tries) - 1)
 end
 
@@ -159,31 +171,34 @@ function Demultiplexer(barcodes::Vector{DNASequence};
 end
 
 """
-    demultiplex(demultiplexer::Demultiplexer, seq::Sequence, linear_search_fallback::Bool=false)
+    demultiplex(demultiplexer::Demultiplexer,
+                seq::Sequence,
+                linear_search_fallback::Bool=false) -> (index, distance)
 
-Return a barcode index that matches `seq` with least errors.
+Return a barcode index that matches `seq` with least errors and its distance.
 
 The upper limit of the number of maximum errors is bounded by the `n_max_errors`
 parameter of `demultiplexer`. When `linear_search_fallback` is `true`, this
-function tries to find the best matching barcode using linear search.
+function tries to find the best matching barcodes using linear search and
+returns one of them at random.
 """
 function demultiplex(demultiplexer::Demultiplexer, seq::Sequence, linear_search_fallback::Bool=false)
     if eltype(seq) != DNANucleotide
         error("sequence must be a DNA sequence")
     end
-    for trie in demultiplexer.tries
+    for (k, trie) in enumerate(demultiplexer.tries)
         i = findbarcode(trie, seq)
         if i != 0
-            return i
+            return i, k - 1
         end
     end
     if !linear_search_fallback
         # not found
-        return 0
+        return 0, -1
     end
 
     # find the best matching barcode using linear search
-    i_min = 0
+    i_min = Int[]
     dist_min = typemax(Int)
     for (i, barcode) in enumerate(demultiplexer.barcodes)
         if demultiplexer.distance == :hamming
@@ -193,14 +208,17 @@ function demultiplex(demultiplexer::Demultiplexer, seq::Sequence, linear_search_
         else
             assert(false)
         end
-        if dist < dist_min
+        if dist ≤ dist_min
+            if dist < dist_min
+                empty!(i_min)
+            end
+            push!(i_min, i)
             dist_min = dist
-            i_min = i
         end
     end
-    @assert i_min != 0
+    @assert !isempty(i_min)
 
-    return i_min
+    return rand(i_min), dist_min
 end
 
 function Base.getindex(demultiplexer::Demultiplexer, i::Integer)
@@ -212,15 +230,16 @@ function hamming_circle(seq, m)
     if m == 0
         return [seq]
     end
+    ACGTN = (DNA_A, DNA_C, DNA_G, DNA_T, DNA_N)
     ret = DNASequence[]
     for ps in combinations(1:endof(seq), m)
-        for rs in product(repeated(1:3, m)...)
+        for rs in product(repeated(1:4, m)...)
             seq′ = copy(seq)
             for (p, r) in zip(ps, rs)
                 if Int(seq[p]) + 1 ≤ r
                     r += 1
                 end
-                seq′[p] = (DNA_A:DNA_T)[r]
+                seq′[p] = ACGTN[r]
             end
             push!(ret, seq′)
         end
@@ -252,7 +271,8 @@ function levenshtein_circle(seq, m)
         push!(seqs, deleteat!(copy(seq), i))
     end
     # insertion
-    for i in 1:endof(seq), nt in DNA_A:DNA_T
+    ACGTN = (DNA_A, DNA_C, DNA_G, DNA_T, DNA_N)
+    for i in 1:endof(seq), nt in ACGTN
         if nt != seq[i]
             push!(seqs, insert!(copy(seq), i, nt))
         end
