@@ -12,7 +12,7 @@ DocTestSetup = quote
 end
 ```
 
-The `Bio.Structure` module provides functionality to read Protein Data Bank (PDB) files and manipulate macromolecular structures.
+The `Bio.Structure` module provides functionality to read [Protein Data Bank](http://www.rcsb.org/pdb/home/home.do) (PDB) files and manipulate macromolecular structures.
 
 
 ## Parsing PDB files
@@ -41,17 +41,17 @@ Number of disordered atoms  -  27
 
 The elements of `struc` can be accessed as follows:
 
-| Command                     | Returns                                                                         |
-| :-------------------------- | :------------------------------------------------------------------------------ |
-| `struc[1]`                  | Model 1                                                                         |
-| `struc[1]['A']`             | Model 1, chain A                                                                |
-| `struc['A']`                | The lowest model (model 1), chain A                                             |
-| `struc['A']["50"]`          | Model 1, chain A, residue 50                                                    |
-| `struc['A'][50]`            | Shortcut to above if it is not a hetero residue and the insertion code is blank |
-| `struc['A']["H_90"]`        | Model 1, chain A, hetero residue 90                                             |
-| `struc['A'][50]["CA"]`      | Model 1, chain A, residue 50, atom name CA                                      |
-| `struc['A'][15]["CG"]['A']` | For disordered atoms, access a specific location                                |
-| `struc['A'][15]["CG"]`      | For disordered atoms, access the default location                               |
+| Command                     | Returns                                                                         | Return type      |
+| :-------------------------- | :------------------------------------------------------------------------------ | :--------------- |
+| `struc[1]`                  | Model 1                                                                         | `Model`          |
+| `struc[1]['A']`             | Model 1, chain A                                                                | `Chain`          |
+| `struc['A']`                | The lowest model (model 1), chain A                                             | `Chain`          |
+| `struc['A']["50"]`          | Model 1, chain A, residue 50                                                    | `Residue`        |
+| `struc['A'][50]`            | Shortcut to above if it is not a hetero residue and the insertion code is blank | `Residue`        |
+| `struc['A']["H_90"]`        | Model 1, chain A, hetero residue 90                                             | `Residue`        |
+| `struc['A'][50]["CA"]`      | Model 1, chain A, residue 50, atom name CA                                      | `Atom`           |
+| `struc['A'][15]["CG"]['A']` | For disordered atoms, access a specific location                                | `DisorderedAtom` |
+| `struc['A'][15]["CG"]`      | For disordered atoms, access the default location                               | `Atom`           |
 
 Disordered atoms are stored in a `DisorderedAtom` container but calls fall back to the default atom, so disorder can be ignored if you are not interested in it.
 
@@ -61,46 +61,48 @@ The idea is that disorder will only bother you if you want it to. See the [Biopy
 
 Properties can be retrieved as follows:
 
-| Command                  | Returns                                          |
-| :----------------------- | :----------------------------------------------- |
-| `structurename(struc)`   | Name of a structure                              |
-| `modelnumbers(struc)`    | Model numbers in a structure                     |
-| `chainids(struc)`        | Chain IDs in a structure                         |
-| `modelnumber(model)`     | Number of a model                                |
-| `chainids(model)`        | Chain IDs in a model                             |
-| `chainid(chain)`         | Chain ID of a chain                              |
-| `resids(chain)`          | Residue IDs in a chain                           |
-| `resname(res)`           | Name of a residue                                |
-| `chainid(res)`           | Chain ID of a residue                            |
-| `resnumber(res)`         | Residue number of a residue                      |
-| `inscode(res)`           | Insertion code of a residue                      |
-| `ishetres(res)`          | `true` if the residue consists of hetero atoms   |
-| `atomnames(res)`         | Atom names in a residue                          |
-| `isdisorderedres(res)`   | `true` if the residue has multiple residue names |
-| `resid(res)`             | Residue ID of a residue                          |
-| `ishetatom(atom)`        | `true` if the atom is a hetero atom              |
-| `serial(atom)`           | Serial number of an atom                         |
-| `atomname(atom)`         | Name of an atom                                  |
-| `altlocid(atom)`         | Alternative location ID of an atom               |
-| `resname(atom)`          | Residue name of an atom                          |
-| `chainid(atom)`          | Chain ID of an atom                              |
-| `resnumber(atom)`        | Residue number of an atom                        |
-| `inscode(atom)`          | Insertion code of an atom                        |
-| `x(atom)`                | x coordinate of an atom                          |
-| `y(atom)`                | y coordinate of an atom                          |
-| `z(atom)`                | z coordinate of an atom                          |
-| `coords(atom)`           | coordinates of an atom as a `Vector{Float64}`    |
-| `occupancy(atom)`        | Occupancy of an atom (default is `1.0`)          |
-| `tempfac(atom)`          | Temperature factor of an atom (default is `0.0`) |
-| `element(atom)`          | Element of an atom (default is `""`)             |
-| `charge(atom)`           | Charge of an atom (default is `""`)              |
-| `isdisorderedatom(atom)` | `true` if the atom is disordered                 |
-| `resid(atom)`            | Residue ID of an atom                            |
+| Command                  | Returns                                          | Return type            |
+| :----------------------- | :----------------------------------------------- | :--------------------- |
+| `structurename(struc)`   | Name of a structure                              | `ASCIIString`          |
+| `modelnumbers(struc)`    | Model numbers in a structure                     | `Array{Int64,1}`       |
+| `chainids(struc)`        | Chain IDs in a structure                         | `Array{Char,1}`        |
+| `modelnumber(model)`     | Number of a model                                | `Int64`                |
+| `chainids(model)`        | Chain IDs in a model                             | `Array{Char,1}`        |
+| `chainid(chain)`         | Chain ID of a chain                              | `Char`                 |
+| `resids(chain)`          | Residue IDs in a chain                           | `Array{ASCIIString,1}` |
+| `resname(res)`           | Name of a residue                                | `ASCIIString`          |
+| `chainid(res)`           | Chain ID of a residue                            | `Char`                 |
+| `resnumber(res)`         | Residue number of a residue                      | `Int64`                |
+| `inscode(res)`           | Insertion code of a residue                      | `Char`                 |
+| `ishetres(res)`          | `true` if the residue consists of hetero atoms   | `Bool`                 |
+| `atomnames(res)`         | Atom names in a residue                          | `Array{ASCIIString,1}` |
+| `isdisorderedres(res)`   | `true` if the residue has multiple residue names | `Bool`                 |
+| `resid(res)`             | Residue ID of a residue                          | `ASCIIString`          |
+| `resid(res; full=true)`  | Residue ID of a residue including chain          | `ASCIIString`          |
+| `ishetatom(atom)`        | `true` if the atom is a hetero atom              | `Bool`                 |
+| `serial(atom)`           | Serial number of an atom                         | `Int64`                |
+| `atomname(atom)`         | Name of an atom                                  | `ASCIIString`          |
+| `altlocid(atom)`         | Alternative location ID of an atom               | `Char`                 |
+| `resname(atom)`          | Residue name of an atom                          | `ASCIIString`          |
+| `chainid(atom)`          | Chain ID of an atom                              | `Char`                 |
+| `resnumber(atom)`        | Residue number of an atom                        | `Int64`                |
+| `inscode(atom)`          | Insertion code of an atom                        | `Char`                 |
+| `x(atom)`                | x coordinate of an atom                          | `Float64`              |
+| `y(atom)`                | y coordinate of an atom                          | `Float64`              |
+| `z(atom)`                | z coordinate of an atom                          | `Float64`              |
+| `coords(atom)`           | coordinates of an atom                           | `Array{Float64,1}`     |
+| `occupancy(atom)`        | Occupancy of an atom (default is `1.0`)          | `Float64`              |
+| `tempfac(atom)`          | Temperature factor of an atom (default is `0.0`) | `Float64`              |
+| `element(atom)`          | Element of an atom (default is `""`)             | `ASCIIString`          |
+| `charge(atom)`           | Charge of an atom (default is `""`)              | `ASCIIString`          |
+| `isdisorderedatom(atom)` | `true` if the atom is disordered                 | `Bool`                 |
+| `resid(atom)`            | Residue ID of an atom                            | `ASCIIString`          |
+| `resid(atom; full=true)` | Residue ID of an atom including chain            | `ASCIIString`          |
 
 The coordinates of an atom can be set using `x!`, `y!`, `z!` and `coords!`.
 
 
-## Manipulating Structures
+## Manipulating structures
 
 Elements can be looped over to reveal the sub-elements in the correct order:
 
@@ -116,23 +118,47 @@ for model in struc
 end
 ```
 
+Models are ordered numerically; chains are ordered by character, except the empty chain is last; residues are ordered by residue number and insertion code with hetero residues after standard residues; atoms are ordered by atom serial.
+
 `collect`, `collectresidues` and `collectatoms` can be used to get lists of sub-elements.
 
 Selectors are functions passed as additional arguments to `collectresidues` and `collectatoms`. Only residues/atoms that return `true` when passed to the selector are retained.
 
-| Command                                                 | Action                                                            |
-| :------------------------------------------------------ | :---------------------------------------------------------------- |
-| `collect(struc['A'][50])`                               | Collect the sub-elements of an element, e.g. atoms from a residue |
-| `collectresidues(struc)`                                | Collect the residues of an element                                |
-| `collectatoms(struc) `                                  | Collect the atoms of an element                                   |
-| `collectatoms(struc, calphaselector)`                   | Collect the C-alpha atoms of an element                           |
-| `collectatoms(struc, calphaselector, disorderselector)` | Collect the disordered C-alpha atoms of an element                |
+| Command                                                 | Action                                                            | Return type                |
+| :------------------------------------------------------ | :---------------------------------------------------------------- | :------------------------- |
+| `collect(struc['A'][50])`                               | Collect the sub-elements of an element, e.g. atoms from a residue | `Array{AbstractAtom,1}`    |
+| `collectresidues(struc)`                                | Collect the residues of an element                                | `Array{AbstractResidue,1}` |
+| `collectatoms(struc) `                                  | Collect the atoms of an element                                   | `Array{AbstractAtom,1}`    |
+| `collectatoms(struc, calphaselector)`                   | Collect the C-alpha atoms of an element                           | `Array{AbstractAtom,1}`    |
+| `collectatoms(struc, calphaselector, disorderselector)` | Collect the disordered C-alpha atoms of an element                | `Array{AbstractAtom,1}`    |
 
 It is easy to define your own selector. The below will collect all atoms with x coordinate less than 0:
 
 ```julia
 xselector(atom::AbstractAtom) = x(atom) < 0
 collectatoms(struc, xselector)
+```
+
+Alternatively, you can use an anonymous function:
+
+```julia
+collectatoms(struc, atom -> x(atom) < 0)
+```
+
+Selectors can also be passed to many other functions, including `read`:
+
+```julia
+julia> calphas = read(filepath_1EN2, PDB, calphaselector)
+Name                        -  1EN2.pdb
+Number of models            -  1
+Chain(s)                    -  A
+Number of residues          -  85
+Number of point mutations   -  5
+Number of other molecules   -  0
+Number of water molecules   -  0
+Number of atoms             -  85
+Number of hydrogens         -  0
+Number of disordered atoms  -  2
 ```
 
 `countmodels`, `countchains`, `countresidues` and `countatoms` can be used to count elements. For example:
@@ -156,16 +182,27 @@ julia> countresidues(struc, stdresselector)
 85
 ```
 
-`organise`, `organisemodel` and `organisestruc` can be used to organise sub-elements into elements:
+`organise`, `organisemodel` and `organisestructure` can be used to organise sub-elements into elements:
 
-| Command                                  | Action                                    |
-| :--------------------------------------- | :---------------------------------------- |
-| `organise(collectatoms(struc))`          | Organise an atom list into a residue list |
-| `organise(collectresidues(struc))`       | Organise a residue list into a chain list |
-| `organise(struc['A'])`                   | Organise chain(s) into a model            |
-| `organise(struc[1])`                     | Organise model(s) into a structure        |
-| `organisemodel(collectatoms(struc))`     | Organise elements into a model            |
-| `organisestructure(collectatoms(struc))` | Organise elements into a structure        |
+| Command                                  | Action                                    | Return type                |
+| :--------------------------------------- | :---------------------------------------- | :------------------------- |
+| `organise(collectatoms(struc))`          | Organise an atom list into a residue list | `Array{AbstractResidue,1}` |
+| `organise(collectresidues(struc))`       | Organise a residue list into a chain list | `Array{Chain,1}`           |
+| `organise(struc['A'])`                   | Organise chain(s) into a model            | `Model`                    |
+| `organise(struc[1])`                     | Organise model(s) into a structure        | `ProteinStructure`         |
+| `organisemodel(collectatoms(struc))`     | Organise elements into a model            | `Model`                    |
+| `organisestructure(collectatoms(struc))` | Organise elements into a structure        | `ProteinStructure`         |
+
+The sequence of a protein can be retrieved:
+
+```julia
+julia> AminoAcidSequence(struc, stdresselector)
+85aa Amino Acid Sequence:
+RCGSQGGGSTCPGLRCCSIWGWCGDSEPYCGRTCENKCWSGERSDHRCGAAVGNPPCGQDRCCSVHGWCGGGNDYCSGGNCQYRC
+```
+
+
+## Spatial calculations
 
 Distances can be calculated. The minimum distance between residue 10 and 20 is:
 
@@ -174,7 +211,20 @@ julia> distance(struc['A'][10], struc['A'][20])
 10.782158874733762
 ```
 
-RMSDs/displacements between elements of the same size can also be calculated with `rmsd` and `displacements`.
+Bond angles and dihedral angles can be calculated:
+
+```julia
+julia> rad2deg(bondangle(struc['A'][50]["N"], struc['A'][50]["CA"], struc['A'][50]["C"]))
+69.22234153916602
+
+julia> rad2deg(dihedralangle(struc['A'][50]["N"], struc['A'][50]["CA"], struc['A'][50]["C"], struc['A'][51]["N"]))
+-177.38288114072924
+
+julia> rad2deg(psiangle(struc['A'][50], struc['A'][51]))
+-177.38288114072924
+```
+
+Further spatial functions including `contactmap`, `ramachandranangles`, `rmsd` and `displacements` are described in the Examples section below.
 
 
 ## Writing PDB files
@@ -200,23 +250,51 @@ A few examples of `Bio.Structure` usage are given below.
 
 ```julia
 using Gadfly
-atoms = collectatoms(struc, calphaselector)
-res_numbers = map(resnumber, atoms)
-temp_facs = map(tempfac, atoms)
-plot(x=res_numbers, y=temp_facs, Geom.line)
+calpha_atoms = collectatoms(struc, calphaselector)
+res_numbers = map(resnumber, calpha_atoms)
+temp_facs = map(tempfac, calpha_atoms)
+plot(x=res_numbers,
+    y=temp_facs,
+    Guide.xlabel("Residue number"),
+    Guide.ylabel("Temperature factor"),
+    Geom.line)
 ```
 
 **B)** To find all C-alpha atoms within 5 Angstroms of residue 38:
 
 ```julia
-for atom in atoms
+for atom in calpha_atoms
     if distance(struc['A'][38], atom) < 5.0 && resnumber(atom) != 38
         show(atom)
     end
 end
 ```
 
-**C)** To calculate the RMSD and displacements between the heavy (non-hydrogen) atoms of two models in an NMR structure:
+**D)** To show the contact map of a structure, if you have Hinton installed:
+
+```julia
+using Hinton
+cbeta_atoms = collectatoms(struc, cbetaselector)
+contacts = contactmap(cbeta_atoms, 7.0)
+println(hintontxt(contacts))
+```
+
+`cbetaselector` selects C-beta atoms, or C-alpha atoms for glycine residues. `contactmap` can also be given two structural elements as arguments, in which case a non-symmetrical 2D array is returned showing contacts between the elements.
+
+**E)** To show the Ramachandran phi/psi angle plot of a structure, if you have Gadfly installed:
+
+```julia
+using Gadfly
+phi_angles, psi_angles = ramachandranangles(struc, stdresselector)
+plot(x=map(rad2deg, phi_angles),
+    y=map(rad2deg, psi_angles),
+    Guide.xlabel("Phi / degrees"),
+    Guide.ylabel("Psi / degrees"),
+    Guide.xticks(ticks=[-180,-90,0,90,180]),
+    Guide.yticks(ticks=[-180,-90,0,90,180]))
+```
+
+**F)** To calculate the RMSD and displacements between the heavy (non-hydrogen) atoms of two models in an NMR structure:
 
 ```julia
 downloadpdb("1SSU")

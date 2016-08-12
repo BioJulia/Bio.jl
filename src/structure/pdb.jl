@@ -1,4 +1,5 @@
-export PDB,
+export
+    PDB,
     PDBParseError,
     downloadpdb,
     parseatomrecord,
@@ -41,14 +42,14 @@ end
 
 
 function Base.read(input::IO,
-            ::Type{PDB},
-            selector_functions::Function...;
+            ::Type{PDB};
             structure_name::AbstractString="",
             remove_disorder::Bool=false,
             read_std_atoms::Bool=true,
             read_het_atoms::Bool=true)
-    # Dictionary of model numbers and raw atom lists
-    atom_lists = Dict(1 => Atom[])
+    # Define ProteinStructure and add to it incrementally
+    struc = ProteinStructure(structure_name)
+    struc[1] = Model(1, struc)
     # Entries outside of a MODEL/ENDMDL block are added to model 1
     curr_model = 1
     line_number = 0
@@ -56,7 +57,8 @@ function Base.read(input::IO,
         line_number += 1
         # Read ATOM and HETATM records as required
         if (read_std_atoms && startswith(line, "ATOM  ")) || (read_het_atoms && startswith(line, "HETATM"))
-            push!(atom_lists[curr_model], parseatomrecord(rstrip(line, '\n'), line_number))
+            #addatomtomodel!(struc[curr_model], parseatomrecord(rstrip(line, '\n'), line_number)...; remove_disorder=remove_disorder)
+            addatomtomodel!(struc[curr_model], line, line_number; remove_disorder=remove_disorder)
         # Read MODEL record
         elseif startswith(line, "MODEL ")
             try
@@ -65,22 +67,28 @@ function Base.read(input::IO,
                 throw(PDBParseError("Could not read model serial number", line_number, line))
             end
             # Create model if required
-            if !haskey(atom_lists, curr_model)
-                atom_lists[curr_model] = AbstractAtom[]
+            if !haskey(models(struc), curr_model)
+                struc[curr_model] = Model(curr_model, struc)
             end
         # Read ENDMDL record
         elseif startswith(line, "ENDMDL")
             curr_model = 1
         end
     end
-    # Remove model 1 atom list if it was not added to
-    length(atom_lists[1]) == 0 ? delete!(atom_lists, 1) : nothing
-    # Form disordered atom containers or remove atoms depending on remove_disorder
-    # Apply selectors at this point (so e.g. disorderselector work correctly)
-    # Form structure by organising each atom list into a model
-    return organisestructure(
-        [organisemodel(applyselectors(formatomlist(atom_list; remove_disorder=remove_disorder), selector_functions...); model_number=model_number) for (model_number, atom_list) in atom_lists]; structure_name=structure_name
-    )
+    # Remove any models that were not added to
+    for model_number in modelnumbers(struc)
+        countchains(struc[model_number]) == 0 ? delete!(models(struc), model_number) : nothing
+    end
+    fixlists!(struc)
+    return struc
+end
+
+function Base.read(input::IO,
+            ::Type{PDB},
+            selector_functions::Function...;
+            structure_name::AbstractString="",
+            kwargs...)
+    return organisestructure(collectatoms(read(input, PDB; kwargs...), selector_functions...); structure_name=structure_name)
 end
 
 function Base.read(filepath::AbstractString,
@@ -95,38 +103,38 @@ end
 
 
 "Parse a PDB ATOM or HETATM record and return an `Atom`."
-function parseatomrecord(line::String, line_number::Integer=1)
+function parseatomrecord(line::Compat.ASCIIString, line_number::Integer=1)
+    # As this function is exported, we should check the line looks like an ATOM/HETATM record
     @assert startswith(line, "ATOM  ") || startswith(line, "HETATM") "Line does not appear to be an ATOM/HETATM record: \"$line\""
-    return Atom(
-        line[1:6] == "HETATM",
-        parsestrict(line, (7,11), Int, "Could not read atom serial number", line_number),
-        strip(parsestrict(line, (13,16), String, "Could not read atom name", line_number)),
-        parsestrict(line, (17,17), Char, "Could not read alt loc identifier", line_number),
-        strip(parsestrict(line, (18,20), String, "Could not read residue name", line_number)),
-        parsestrict(line, (22,22), Char, "Could not read chain ID", line_number),
-        parsestrict(line, (23,26), Int, "Could not read residue number", line_number),
-        parsestrict(line, (27,27), Char, "Could not read insertion code", line_number),
-        [
-            parsestrict(line, (31,38), Float64, "Could not read x coordinate", line_number),
-            parsestrict(line, (39,46), Float64, "Could not read y coordinate", line_number),
-            parsestrict(line, (47,54), Float64, "Could not read z coordinate", line_number)
-        ],
-        parselenient(line, (55,60), Float64, 1.0),
-        parselenient(line, (61,66), Float64, 0.0),
-        strip(parselenient(line, (77,78), String, "")),
-        strip(parselenient(line, (79,80), String, ""))
-    )
+    return parsestrict(line, 7, 11, Int, "Could not read atom serial number", line_number),
+    strip(parsestrict(line, 13, 16, String, "Could not read atom name", line_number)),
+    parsestrict(line, 17, 17, Char, "Could not read alt loc identifier", line_number),
+    [
+        parsestrict(line, 31, 38, Float64, "Could not read x coordinate", line_number),
+        parsestrict(line, 39, 46, Float64, "Could not read y coordinate", line_number),
+        parsestrict(line, 47, 54, Float64, "Could not read z coordinate", line_number)
+    ],
+    parselenient(line, 55, 60, Float64, 1.0),
+    parselenient(line, 61, 66, Float64, 0.0),
+    strip(parselenient(line, 77, 78, String, "")),
+    strip(parselenient(line, 79, 80, String, "")),
+    line[1] == 'H', # This is okay due to the above assertion
+    strip(parsestrict(line, 18, 20, String, "Could not read residue name", line_number)),
+    parsestrict(line, 22, 22, Char, "Could not read chain ID", line_number),
+    parsestrict(line, 23, 26, Int, "Could not read residue number", line_number),
+    parsestrict(line, 27, 27, Char, "Could not read insertion code", line_number)
 end
 
 
 "Parse columns from a line and return the value or throw a `PDBParseError`."
 function parsestrict(line::String,
-                    cols::Tuple{Integer, Integer},
+                    col_1::Integer,
+                    col_2::Integer,
                     out_type::Type,
                     error_message::AbstractString,
                     line_number::Integer)
     try
-        return parsevalue(line, cols, out_type)
+        return parsevalue(line, col_1, col_2, out_type)
     catch
         throw(PDBParseError(error_message, line_number, line))
     end
@@ -135,11 +143,12 @@ end
 
 "Parse columns from a line and return the value or a default value."
 function parselenient(line::String,
-                    cols::Tuple{Integer, Integer},
+                    col_1::Integer,
+                    col_2::Integer,
                     out_type::Type,
                     default)
     try
-        return parsevalue(line, cols, out_type)
+        return parsevalue(line, col_1, col_2, out_type)
     catch
         return default
     end
@@ -147,16 +156,16 @@ end
 
 
 "Parse columns from a line."
-function parsevalue(line::String, cols::Tuple{Integer, Integer}, out_type::Type)
+function parsevalue(line::String, col_1::Integer, col_2::Integer, out_type::Type)
     try
         if out_type == Int
-            return parse(Int, line[cols[1]:cols[2]])
+            return parse(Int, line[col_1:col_2])
         elseif out_type == Float64
-            return parse(Float64, line[cols[1]:cols[2]])
+            return parse(Float64, line[col_1:col_2])
         elseif out_type == String
-            return line[cols[1]:cols[2]]
+            return line[col_1:col_2]
         elseif out_type == Char
-            return line[cols[1]]
+            return line[col_1]
         else
             error()
         end

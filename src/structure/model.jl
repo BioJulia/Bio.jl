@@ -53,6 +53,7 @@ export
     modelnumbers,
     models,
     defaultmodel,
+    sequentialresidues,
     sortchainids,
     applyselectors,
     applyselectors!,
@@ -72,6 +73,8 @@ export
     atomnameselector,
     calpha_atom_names,
     calphaselector,
+    cbeta_atom_names,
+    cbetaselector,
     backbone_atom_names,
     backboneselector,
     heavyatomselector,
@@ -81,7 +84,12 @@ export
     stdresselector,
     hetresselector,
     disorderselector,
-    hydrogenselector
+    hydrogenselector,
+    AminoAcidSequence
+
+
+using Bio.Seq
+import Bio.Seq.AminoAcidSequence
 
 
 "A protein structural element."
@@ -93,20 +101,17 @@ abstract AbstractAtom <: StructuralElement
 
 "An atom represented by an ATOM or HETATM record from a PDB file."
 immutable Atom <: AbstractAtom
-    het_atom::Bool
     serial::Int
     name::String
     alt_loc_id::Char
-    res_name::String
-    chain_id::Char
-    res_number::Int
-    ins_code::Char
     coords::Vector{Float64}
     occupancy::Float64
     temp_fac::Float64
     element::String
     charge::String
+    residue::StructuralElement
 end
+
 
 "A container to hold different versions of the same atom in a PDB file."
 immutable DisorderedAtom <: AbstractAtom
@@ -124,17 +129,14 @@ abstract AbstractResidue <: StructuralElement
 "A residue (amino acid) or other molecule record from a PDB file."
 immutable Residue <: AbstractResidue
     name::String
-    chain_id::Char
     number::Int
     ins_code::Char
     het_res::Bool # Does the residue consist of hetatoms?
     atom_list::Vector{String}
     atoms::Dict{String, AbstractAtom}
+    chain::StructuralElement
 end
 
-# Constructor without atoms
-Residue(name::AbstractString, chain_id::Char, number::Integer, ins_code::Char, het_res::Bool) = Residue(
-    name, chain_id, number, ins_code, het_res, [], Dict())
 # Constructor from a list of atoms
 Residue{T <: AbstractAtom}(atoms::Vector{T}) = Residue(
         resname(atoms[1]),
@@ -157,19 +159,16 @@ immutable Chain <: StructuralElement
     id::Char
     res_list::Vector{String}
     residues::Dict{String, AbstractResidue}
+    model::StructuralElement
 end
-
-Chain(id::Char) = Chain(id, [], Dict())
 
 
 "A conformation of a protein represented in a PDB file."
 immutable Model <: StructuralElement
     number::Int
     chains::Dict{Char, Chain}
+    structure::StructuralElement
 end
-
-Model(number::Integer) = Model(number, Dict())
-Model() = Model(1)
 
 
 "A container for multiple models from a PDB file."
@@ -180,6 +179,16 @@ end
 
 ProteinStructure(name::AbstractString) = ProteinStructure(name, Dict())
 ProteinStructure() = ProteinStructure("")
+
+# Moved so types defined in the right order
+# Constructor without atoms
+Residue(name::AbstractString, number::Integer, ins_code::Char, het_res::Bool, chain::Chain) = Residue(
+    name, number, ins_code, het_res, [], Dict(), chain)
+
+Chain(id::Char, model::Model) = Chain(id, [], Dict(), model)
+
+Model(number::Integer, structure::ProteinStructure) = Model(number, Dict(), structure)
+Model(structure::ProteinStructure) = Model(1, structure)
 
 
 "A `StructuralElement` or `Vector` of `StructuralElement`s."
@@ -276,7 +285,7 @@ end
 Determines if an `AbstractAtom` represents a non-hetero atom, i.e. came from an
 ATOM record.
 """
-ishetatom(atom::Atom) = atom.het_atom
+ishetatom(atom::Atom) = ishetres(residue(atom))
 
 "Get the serial number of an `AbstractAtom`."
 serial(atom::Atom) = atom.serial
@@ -288,16 +297,16 @@ atomname(atom::Atom) = atom.name
 altlocid(atom::Atom) = atom.alt_loc_id
 
 "Get the residue name of an `AbstractAtom` or `AbstractResidue`."
-resname(atom::Atom) = atom.res_name
+resname(atom::Atom) = resname(residue(atom))
 
 "Get the chain ID of an `AbstractAtom`, `AbstractResidue` or `Chain`."
-chainid(atom::Atom) = atom.chain_id
+chainid(element::Union{AbstractResidue, AbstractAtom}) = chainid(chain(element))
 
 "Get the residue number of an `AbstractAtom` or `AbstractResidue`."
-resnumber(atom::Atom) = atom.res_number
+resnumber(atom::Atom) = resnumber(residue(atom))
 
 "Get the insertion code of an `AbstractAtom` or `AbstractResidue`."
-inscode(atom::Atom) = atom.ins_code
+inscode(atom::Atom) = inscode(residue(atom))
 
 "Get the x coordinate of an `AbstractAtom`."
 x(atom::Atom) = atom.coords[1]
@@ -335,6 +344,13 @@ file.
 """
 charge(atom::Atom) = atom.charge
 
+residue(atom::Atom) = atom.residue
+chain(atom::Atom) = chain(residue(atom))
+model(atom::Atom) = model(chain(atom))
+structure(atom::Atom) = structure(model(atom))
+
+modelnumber(element::Union{Chain, AbstractResidue, AbstractAtom}) = modelnumber(model(element))
+structurename(element::Union{Model, Chain, AbstractResidue, AbstractAtom}) = structurename(structure(element))
 
 """
 Determines if an `AbstractAtom` represents a hetero atom, i.e. came from a
@@ -412,7 +428,6 @@ serial(disordered_atom::DisorderedAtom) = serial(defaultatom(disordered_atom))
 atomname(disordered_atom::DisorderedAtom) = atomname(defaultatom(disordered_atom))
 altlocid(disordered_atom::DisorderedAtom) = defaultaltlocid(disordered_atom)
 resname(disordered_atom::DisorderedAtom) = resname(defaultatom(disordered_atom))
-chainid(disordered_atom::DisorderedAtom) = chainid(defaultatom(disordered_atom))
 resnumber(disordered_atom::DisorderedAtom) = resnumber(defaultatom(disordered_atom))
 inscode(disordered_atom::DisorderedAtom) = inscode(defaultatom(disordered_atom))
 x(disordered_atom::DisorderedAtom) = x(defaultatom(disordered_atom))
@@ -423,6 +438,11 @@ occupancy(disordered_atom::DisorderedAtom) = occupancy(defaultatom(disordered_at
 tempfac(disordered_atom::DisorderedAtom) = tempfac(defaultatom(disordered_atom))
 element(disordered_atom::DisorderedAtom) = element(defaultatom(disordered_atom))
 charge(disordered_atom::DisorderedAtom) = charge(defaultatom(disordered_atom))
+
+residue(disordered_atom::DisorderedAtom) = residue(defaultatom(disordered_atom))
+chain(disordered_atom::DisorderedAtom) = chain(defaultatom(disordered_atom))
+model(disordered_atom::DisorderedAtom) = model(defaultatom(disordered_atom))
+structure(disordered_atom::DisorderedAtom) = structure(defaultatom(disordered_atom))
 
 isdisorderedatom(::DisorderedAtom) = true
 atomid(disordered_atom::DisorderedAtom) = atomid(defaultatom(disordered_atom))
@@ -445,34 +465,52 @@ is residue number then insertion code with \"H_\" in front for hetero residues.
 If `full` equals true the chain ID is also added after a colon. Examples are
 \"50A\", \"H_20\" and \"10:A\".
 """
-function resid(element::Union{AbstractResidue, AbstractAtom}; full::Bool=false)
-    if ishetero(element)
+function resid(res::AbstractResidue; full::Bool=false)
+    if ishetero(res)
         if full
-            if inscode(element) == ' '
-                "H_$(resnumber(element)):$(chainid(element))"
+            if inscode(res) == ' '
+                return "H_$(resnumber(res)):$(chainid(res))"
             else
-                "H_$(resnumber(element))$(inscode(element)):$(chainid(element))"
+                return "H_$(resnumber(res))$(inscode(res)):$(chainid(res))"
             end
         else
-            if inscode(element) == ' '
-                "H_$(resnumber(element))"
+            if inscode(res) == ' '
+                return "H_$(resnumber(res))"
             else
-                "H_$(resnumber(element))$(inscode(element))"
+                return "H_$(resnumber(res))$(inscode(res))"
             end
         end
     else
         if full
-            if inscode(element) == ' '
-                "$(resnumber(element)):$(chainid(element))"
+            if inscode(res) == ' '
+                return "$(resnumber(res)):$(chainid(res))"
             else
-                "$(resnumber(element))$(inscode(element)):$(chainid(element))"
+                return "$(resnumber(res))$(inscode(res)):$(chainid(res))"
             end
         else
-            if inscode(element) == ' '
-                "$(resnumber(element))"
+            if inscode(res) == ' '
+                return "$(resnumber(res))"
             else
-                "$(resnumber(element))$(inscode(element))"
+                return "$(resnumber(res))$(inscode(res))"
             end
+        end
+    end
+end
+
+resid(atom::AbstractAtom; full::Bool=false) = resid(residue(atom); full=full)
+
+function resid(hetatm::Bool, resnum::Int, inscode::Char)
+    if hetatm
+        if inscode == ' '
+            return "H_$resnum"
+        else
+            return "H_$resnum$inscode"
+        end
+    else
+        if inscode == ' '
+            return "$resnum"
+        else
+            return "$resnum$inscode"
         end
     end
 end
@@ -480,7 +518,6 @@ end
 
 # Residue getters/setters
 resname(res::Residue) = res.name
-chainid(res::Residue) = res.chain_id
 resnumber(res::Residue) = res.number
 inscode(res::Residue) = res.ins_code
 
@@ -489,6 +526,10 @@ Determines if an `AbstractResidue` represents a hetero molecule, i.e. consists
 of HETATM records.
 """
 ishetres(res::Residue) = res.het_res
+
+chain(res::Residue) = res.chain
+model(res::Residue) = model(chain(res))
+structure(res::Residue) = structure(model(res))
 
 "Get the sorted list of `AbstractAtom`s in an `AbstractResidue`."
 atomnames(res::Residue) = res.atom_list
@@ -528,12 +569,15 @@ first, then others are ordered alphabetically.
 resnames(disordered_res::DisorderedResidue) = sort(collect(keys(disordered_res.names)), lt= (res_name_one, res_name_two) -> (isless(res_name_one, res_name_two) && res_name_two != defaultresname(disordered_res)) || res_name_one == defaultresname(disordered_res))
 
 resname(disordered_res::DisorderedResidue) = defaultresname(disordered_res)
-chainid(disordered_res::DisorderedResidue) = chainid(defaultresidue(disordered_res))
 resnumber(disordered_res::DisorderedResidue) = resnumber(defaultresidue(disordered_res))
 inscode(disordered_res::DisorderedResidue) = inscode(defaultresidue(disordered_res))
 ishetres(disordered_res::DisorderedResidue) = ishetres(defaultresidue(disordered_res))
 atomnames(disordered_res::DisorderedResidue) = atomnames(defaultresidue(disordered_res))
 atoms(disordered_res::DisorderedResidue) = atoms(defaultresidue(disordered_res))
+
+chain(disordered_res::DisorderedResidue) = chain(defaultresidue(disordered_res))
+model(disordered_res::DisorderedResidue) = model(defaultresidue(disordered_res))
+structure(disordered_res::DisorderedResidue) = structure(defaultresidue(disordered_res))
 
 isdisorderedres(::DisorderedResidue) = true
 
@@ -553,6 +597,9 @@ resids(chain::Chain) = chain.res_list
 "Access the dictionary of `AbstractResidue`s in a `Chain`."
 residues(chain::Chain) = chain.residues
 
+model(chain::Chain) = chain.model
+structure(chain::Chain) = structure(model(chain))
+
 
 # Model getters/setters
 
@@ -564,6 +611,8 @@ chainids(model::Model) = sortchainids(collect(keys(model.chains)))
 
 "Access the dictionary of `Chain`s in a `Model`."
 chains(model::Model) = model.chains
+
+structure(model::Model) = model.structure
 
 
 # ProteinStructure getters/setters
@@ -609,6 +658,21 @@ function Base.isless(res_one::AbstractResidue, res_two::AbstractResidue)
         end
     end
     return false
+end
+
+
+"""
+Determine if the second residue follows the first in sequence. For this to be
+true the residues need to have the same chain ID, both need to be
+standard/hetero residues and the residue number of the second needs to be one
+greater than that of the first.
+"""
+function sequentialresidues(res_first::AbstractResidue, res_second::AbstractResidue)
+    if resnumber(res_second) == resnumber(res_first) + 1 && chainid(res_second) == chainid(res_first) && ishetres(res_second) == ishetres(res_first)
+        return true
+    else
+        return false
+    end
 end
 
 
@@ -920,6 +984,113 @@ function formatomlist(atoms::Vector{Atom}; remove_disorder::Bool=false)
 end
 
 
+# either make unsafe or deal with lists
+#function addatomtomodel!(model::Model, serial::Int, name::Compat.ASCIIString, alt_loc_id::Char, coords::Vector{Float64}, occupancy::Float64, temp_fac::Float64, element::Compat.ASCIIString, charge::Compat.ASCIIString, het_atom::Bool, res_name::Compat.ASCIIString, chain_id::Char, res_number::Int, ins_code::Char; remove_disorder::Bool=false)
+function addatomtomodel!(model::Model, line::Compat.ASCIIString, line_number::Integer=1; remove_disorder::Bool=false)
+    het_atom = line[1] == 'H' # This is okay as the line has already been checked as an ATOM/HETATM record
+    serial = parsestrict(line, 7, 11, Int, "Could not read atom serial number", line_number)
+    atom_name = parsestrict(line, 13, 16, Compat.ASCIIString, "Could not read atom name", line_number) # Not stripped here for speed
+    alt_loc_id = parsestrict(line, 17, 17, Char, "Could not read alt loc identifier", line_number)
+    res_name = parsestrict(line, 18, 20, Compat.ASCIIString, "Could not read residue name", line_number) # Not stripped here for speed
+    chain_id = parsestrict(line, 22, 22, Char, "Could not read chain ID", line_number)
+    res_number = parsestrict(line, 23, 26, Int, "Could not read residue number", line_number)
+    ins_code = parsestrict(line, 27, 27, Char, "Could not read insertion code", line_number)
+    coords = [
+        parsestrict(line, 31, 38, Float64, "Could not read x coordinate", line_number),
+        parsestrict(line, 39, 46, Float64, "Could not read y coordinate", line_number),
+        parsestrict(line, 47, 54, Float64, "Could not read z coordinate", line_number)
+    ]
+    occupancy = parselenient(line, 55, 60, Float64, 1.0)
+    temp_fac = parselenient(line, 61, 66, Float64, 0.0)
+    element = parselenient(line, 77, 78, Compat.ASCIIString, "") # Not stripped here for speed
+    charge = parselenient(line, 79, 80, Compat.ASCIIString, "") # Not stripped here for speed
+
+    # Add chain to model if necessary
+    !haskey(chains(model), chain_id) ? model[chain_id] = Chain(chain_id, model) : nothing
+    chain = model[chain_id]
+    res_id = resid(het_atom, res_number, ins_code)
+    # If residue does not exist in the chain, create a Residue
+    if !haskey(residues(chain), res_id)
+        chain[res_id] = Residue(res_name, res_number, ins_code, het_atom, chain)
+        residue = chain[res_id]
+    elseif isa(chain[res_id], Residue)
+        # Residue exists in the chain and the residue names match
+        # Add to that Residue
+        if resname(chain[res_id]) == res_name
+            residue = chain[res_id]
+        # Residue exists in the chain but the residue names do not match
+        # Create a DisorderedResidue
+        else
+            chain[res_id] = DisorderedResidue(Dict(
+                resname(chain[res_id]) => chain[res_id],
+                res_name => Residue(res_name, res_number, ins_code, het_atom, chain)
+            ), resname(chain[res_id]))
+            residue = disorderedres(chain[res_id], res_name)
+        end
+    else
+        # DisorderedResidue exists in the chain and the residue names match
+        # Add to that DisorderedResidue
+        if res_name in resnames(chain[res_id])
+            residue = disorderedres(chain[res_id], res_name)
+        # DisorderedResidue exists in the chain and the residue names do not match
+        # Create a new Residue in the DisorderedResidue
+        else
+            chain[res_id].names[res_name] = Residue(res_name, res_number, ins_code, het_atom, chain) # Make residues function for this?
+            residue = disorderedres(chain[res_id], res_name)
+        end
+    end
+    atom = Atom(serial, atom_name, alt_loc_id, coords, occupancy, temp_fac, element, charge, residue)
+    # If atom does not exist in the residue, create an Atom
+    if !haskey(atoms(residue), atom_name)
+        residue[atom_name] = atom
+    # Atom exists in the residue, atom names match and alt loc IDs are different
+    elseif isa(residue[atom_name], Atom) && alt_loc_id != altlocid(residue[atom_name])
+        # If we are removing disorder and the new atom is preferred to the old one, replace the old one
+        if remove_disorder && choosedefaultaltlocid(atom, residue[atom_name]) == alt_loc_id
+             residue[atom_name] = atom
+        # If we are not removing disorder, create a new disordered atom container and add both atoms
+        elseif !remove_disorder
+            residue[atom_name] = DisorderedAtom(Dict(
+                alt_loc_id => atom,
+                altlocid(residue[atom_name]) => residue[atom_name]
+            ), choosedefaultaltlocid(atom, residue[atom_name]))
+        end
+    # A disordered atom container already exists and the alt loc ID is not taken
+    elseif isa(residue[atom_name], DisorderedAtom) && !(alt_loc_id in altlocids(residue[atom_name]))
+        # Add the new atom to the disordered atom container
+        residue[atom_name][alt_loc_id] = atom
+        # If the default alt loc requires changing, change it
+        if choosedefaultaltlocid(defaultatom(residue[atom_name]), atom) != defaultaltlocid(residue[atom_name])
+            residue[atom_name] = DisorderedAtom(residue[atom_name], alt_loc_id)
+        end
+    else
+        error("Two copies of the same atom have the same alternative location ID:\n$(residue[atom_name])\n$(atom)")
+    end
+end
+
+
+# temp name
+function fixlists!(struc::ProteinStructure)
+    for model in struc
+        for chain in model
+            append!(chain.res_list, map(resid, sort(collect(values(residues(chain))))))
+            for res in chain
+                if isa(res, Residue)
+                    fixlists!(res)
+                else
+                    for res_name in resnames(res)
+                        fixlists!(disorderedres(res, res_name))
+                    end
+                end
+            end
+        end
+    end
+end
+
+
+fixlists!(res::Residue) = append!(res.atom_list, map(atomname, sort(collect(values(atoms(res))))))
+
+
 """
 Determine which of two `Atom`s representing a disorered atom better qualifies
 as the default location. The `Atom` with the highest occupancy is chosen; in the
@@ -992,6 +1163,15 @@ C-alpha atom.
 """
 calphaselector(atom::AbstractAtom) = stdatomselector(atom) && atomnameselector(atom, calpha_atom_names)
 
+"`Set` of C-beta atom names."
+const cbeta_atom_names = Set(["CB"])
+
+"""
+Determines if an `AbstractAtom` is not a hetero-atom and corresponds to a
+C-beta atom, or a C-alpha atom in glycine.
+"""
+cbetaselector(atom::AbstractAtom) = stdatomselector(atom) && (atomnameselector(atom, cbeta_atom_names) || (atomnameselector(atom, calpha_atom_names) && resname(atom) == "GLY"))
+
 "`Set` of protein backbone atom names."
 const backbone_atom_names = Set(["CA", "N", "C"])
 
@@ -1051,6 +1231,22 @@ Determines if an `AbstractAtom` represents hydrogen. Uses the element field
 where possible, otherwise uses the atom name.
 """
 hydrogenselector(atom::AbstractAtom) = element(atom) == "H" || (element(atom) == "" && 'H' in atomname(atom) && !ismatch(r"[a-zA-Z]", atomname(atom)[1:findfirst(atomname(atom), 'H')-1]))
+
+
+# how to deal with a missing res? ignore or gap?
+# what should unknown res be?
+function AminoAcidSequence(element::StructuralElementOrList, selector_functions::Function...)
+    residues = collectresidues(element, selector_functions...)
+    seq = AminoAcid[]
+    for res in residues
+        try
+            push!(seq, parse(AminoAcid, resname(res)))
+        catch
+            push!(seq, AA_X)
+        end
+    end
+    return AminoAcidSequence(seq)
+end
 
 
 # Descriptive showing of elements

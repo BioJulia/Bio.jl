@@ -2,9 +2,10 @@ module TestStructure
 
 using Base.Test
 
-using Bio.Structure,
-    TestFunctions.get_bio_fmt_specimens
-using Bio.Structure: atomid,
+using Bio.Structure
+using TestFunctions.get_bio_fmt_specimens
+using Bio.Structure:
+    atomid,
     chainidisless,
     parsestrict,
     parselenient,
@@ -21,6 +22,8 @@ pdbfilepath(filename::AbstractString) = Pkg.dir("Bio", "test", "BioFmtSpecimens"
 @testset "Model" begin
     # Test Atom constructor
     atom = Atom(false, 100, "CA", ' ', "ALA", 'A', 10, ' ', [1.0, 2.0, 3.0], 1.0, 10.0, "C", "")
+    show(DevNull, atom)
+    showcompact(DevNull, atom)
 
     # Test Atom getters/setters
     @test !ishetatom(atom)
@@ -66,6 +69,7 @@ pdbfilepath(filename::AbstractString) = Pkg.dir("Bio", "test", "BioFmtSpecimens"
         'A' => Atom(false, 100, "CA", 'A', "ALA", 'A', 10, ' ', [1.0, 2.0, 3.0], 0.6, 10.0, "C", ""),
         'B' => Atom(false, 101, "CA", 'B', "ALA", 'A', 10, ' ', [11.0, 12.0, 13.0], 0.4, 20.0, "C", "")
     ), 'A')
+    show(DevNull, disordered_atom)
 
     # Test DisorderedAtom getters/setters
     @test defaultaltlocid(disordered_atom) == 'A'
@@ -147,6 +151,7 @@ pdbfilepath(filename::AbstractString) = Pkg.dir("Bio", "test", "BioFmtSpecimens"
         Atom(false, 100, "CA", ' ', "ALA", 'A', 10, ' ', [1.0, 2.0, 3.0], 1.0, 0.0, "C", ""),
         Atom(false, 101, "CB", ' ', "ALA", 'A', 10, ' ', [1.0, 2.0, 3.0], 1.0, 0.0, "C", "")
     ])
+    show(DevNull, res)
 
     # Test Residue getters/setters
     @test resname(res) == "ALA"
@@ -198,6 +203,7 @@ pdbfilepath(filename::AbstractString) = Pkg.dir("Bio", "test", "BioFmtSpecimens"
             "CA" => Atom(false, 110, "CA", ' ', "VAL", 'A', 10, ' ', [1.0, 2.0, 3.0], 1.0, 0.0, "C", "")
         ))
     ), "ALA")
+    show(DevNull, DisorderedResidue)
 
     # Test DisorderedResidue getters/setters
     @test isa(disorderedres(disordered_res, "VAL"), AbstractResidue)
@@ -248,6 +254,7 @@ pdbfilepath(filename::AbstractString) = Pkg.dir("Bio", "test", "BioFmtSpecimens"
         ))
     ))
     chain_min = Chain('A')
+    show(DevNull, chain)
 
     # Test Chain getters/setters
     @test chainid(chain) == 'A'
@@ -284,6 +291,7 @@ pdbfilepath(filename::AbstractString) = Pkg.dir("Bio", "test", "BioFmtSpecimens"
     ))
     model_min = Model(1)
     model_min = Model()
+    show(DevNull, model)
 
     # Test Model getters/setters
     @test modelnumber(model) == 5
@@ -318,6 +326,7 @@ pdbfilepath(filename::AbstractString) = Pkg.dir("Bio", "test", "BioFmtSpecimens"
     ))
     struc_min = ProteinStructure("test")
     struc_min = ProteinStructure()
+    show(DevNull, ProteinStructure)
 
     # Test ProteinStructure getters/setters
     @test structurename(struc) == "test"
@@ -472,35 +481,35 @@ end
 @testset "Parsing" begin
     # Test parsevalue
     line = "ATOM     40  CB  LEU A   5      22.088  45.547  29.675  1.00 22.23           C  "
-    @test parsevalue(line, (7,11), Int) == 40
-    @test parsevalue(line, (31,38), Float64) == 22.088
-    @test strip(parsevalue(line, (13,16), String)) == "CB"
-    @test parsevalue(line, (22,22), Char) == 'A'
-    @test_throws ErrorException parsevalue(line, (1,4), Int)
-    @test_throws ErrorException parsevalue(line, (1,4), Bool)
-    @test_throws ErrorException parsevalue(line, (79,100), Int)
+    @test parsevalue(line, 7, 11, Int) == 40
+    @test parsevalue(line, 31, 38, Float64) == 22.088
+    @test strip(parsevalue(line, 13, 16, String)) == "CB"
+    @test parsevalue(line, 22, 22, Char) == 'A'
+    @test_throws ErrorException parsevalue(line, 1, 4, Int)
+    @test_throws ErrorException parsevalue(line, 1, 4, Bool)
+    @test_throws ErrorException parsevalue(line, 79, 100, Int)
 
     # Test parsestrict
     line =   "ATOM    591  C   GLY A  80      29.876  54.131  35.806  1.00 40.97           C  "
     line_a = "ATOM    591  C   GLY A  80              54.131  35.806  1.00 40.97           C  "
     line_b = "ATOM    591  C   GLY A  80 "
-    @test parsestrict(line, (7,11), Int, "could not read atom serial number", 10) == 591
-    @test strip(parsestrict(line, (13,16), String, "could not read atom name", 20)) == "C"
-    @test_throws PDBParseError parsestrict(line_a, (31,38), Float64, "could not read x coordinate", 10)
-    @test_throws PDBParseError parsestrict(line_b, (31,38), Float64, "could not read x coordinate", 10)
-    @test_throws PDBParseError parsestrict(line, (7,11), Bool, "could not read atom serial number", 10)
+    @test parsestrict(line, 7, 11, Int, "could not read atom serial number", 10) == 591
+    @test strip(parsestrict(line, 13, 16, String, "could not read atom name", 20)) == "C"
+    @test_throws PDBParseError parsestrict(line_a, 31, 38, Float64, "could not read x coordinate", 10)
+    @test_throws PDBParseError parsestrict(line_b, 31, 38, Float64, "could not read x coordinate", 10)
+    @test_throws PDBParseError parsestrict(line, 7, 11, Bool, "could not read atom serial number", 10)
 
     # Test parselenient
     line =   "ATOM     40  CB  LEU A   5      22.088  45.547  29.675  1.00 22.23           C  "
     line_a = "ATOM     40  CB  LEU A   5      22.088  45.547  29.675  1.00 22.23              "
     line_b = "ATOM     40  CB  LEU A   5      22.088  45.547  29.675  1.00 22.23  "
     line_c = "ATOM     40  CB  LEU A   5      22.088  45.547  29.675       22.23           C  "
-    @test strip(parselenient(line, (77,78), String, "")) == "C"
-    @test parselenient(line_a, (77,78), String, "") == "  "
-    @test parselenient(line_b, (77,78), String, "") == ""
-    @test parselenient(line_b, (77,78), String, "C") == "C"
-    @test parselenient(line_c, (55,60), Float64, 1.0) == 1.0
-    @test parselenient(line, (77,78), Bool, "N") == "N"
+    @test strip(parselenient(line, 77, 78, String, "")) == "C"
+    @test parselenient(line_a, 77, 78, String, "") == "  "
+    @test parselenient(line_b, 77, 78, String, "") == ""
+    @test parselenient(line_b, 77, 78, String, "C") == "C"
+    @test parselenient(line_c, 55, 60, Float64, 1.0) == 1.0
+    @test parselenient(line, 77, 78, Bool, "N") == "N"
 
     # Test parseatomrecord
     line_a = "ATOM    669  CA  ILE A  90      31.743  33.110  31.221  1.00 25.76           C  "
@@ -1102,6 +1111,7 @@ end
 
     # Test parser error handling
     error = PDBParseError("message", 10, "line")
+    showerror(DevNull, error)
     # Missing coordinate (blank string)
     @test_throws PDBParseError read(pdbfilepath("1AKE_err_a.pdb"), PDB)
     # Missing chain ID (line ends early)
@@ -1348,6 +1358,7 @@ end
         2.0 0.0;
         1.0 3.0;
     ]
+    # This line gives a @simd warning when --inline=no
     @test isapprox(rmsd(coords_one, coords_two), sqrt(5/2))
     coords_one = [
         0.0 0.0 1.0;
@@ -1378,6 +1389,7 @@ end
         2.0 0.0;
         1.0 4.0;
     ]
+    # This line gives a @simd warning when --inline=no
     @test isapprox(displacements(coords_one, coords_two), [1.0, sqrt(5)])
     coords_one = [
         0.0 0.0 1.0;
