@@ -1,0 +1,477 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0"> 
+    <meta name="author" content="The BioJulia Organisation"> 
+    <link rel="canonical" href="https://biojulia.github.io/Bio.jl/man/reading/"> 
+    <link rel="shortcut icon" href="../../img/favicon.ico">
+
+    <title>IO API - Bio.jl</title>
+
+    <link href="../../css/bootstrap-custom.min.css" rel="stylesheet">
+    <link href="//maxcdn.bootstrapcdn.com/font-awesome/4.4.0/css/font-awesome.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="//cdn.jsdelivr.net/font-hack/2.018/css/hack.min.css">
+    <link href='//fonts.googleapis.com/css?family=PT+Sans:400,400italic,700,700italic&subset=latin-ext,latin' rel='stylesheet' type='text/css'>
+    <link href='//fonts.googleapis.com/css?family=Open+Sans:300italic,400italic,700italic,400,300,600,700&subset=latin-ext,latin' rel='stylesheet' type='text/css'>
+    <link href="../../css/base.css" rel="stylesheet">
+    <link href="../../css/biojulia.css" rel="stylesheet">
+    <link rel="stylesheet" href="../../css/highlight.css">
+    <link rel="stylesheet" href="../../css/friendly.css" type="text/css">
+    <link href="../../assets/Documenter.css" rel="stylesheet">
+
+    <!-- HTML5 shim and Respond.js IE8 support of HTML5 elements and media queries -->
+    <!--[if lt IE 9]>
+            <script src="https://oss.maxcdn.com/libs/html5shiv/3.7.0/html5shiv.js"></script>
+            <script src="https://oss.maxcdn.com/libs/respond.js/1.3.0/respond.min.js"></script>
+        <![endif]-->
+
+    <script src="https://ajax.googleapis.com/ajax/libs/webfont/1.5.18/webfont.js"></script>
+    <script>
+    WebFont.load({
+        google: {
+            families: ['Open Sans', 'PT Sans']
+        }
+    });
+    </script>
+
+    
+</head>
+
+<body>
+
+    <div class="navbar navbar-default navbar-fixed-top" role="navigation">
+    <div class="container">
+
+        <!-- Collapsed navigation -->
+        <div class="navbar-header">
+            
+            <!-- Expander button -->
+            <button type="button" class="navbar-toggle" data-toggle="collapse" data-target=".navbar-collapse">
+                <span class="sr-only">Toggle navigation</span>
+                <span class="icon-bar"></span>
+                <span class="icon-bar"></span>
+                <span class="icon-bar"></span>
+            </button>
+            
+
+            <!-- Main title -->
+            <a class="navbar-brand" href="../..">Bio.jl</a>
+        </div>
+
+        <!-- Expanded navigation -->
+        <div class="navbar-collapse collapse">
+            
+                <!-- Main navigation -->
+                <ul class="nav navbar-nav">
+                
+                
+                    <li >
+                        <a href="../..">Home</a>
+                    </li>
+                
+                
+                
+                    <li class="dropdown active">
+                        <a href="#" class="dropdown-toggle" data-toggle="dropdown">Manual <b class="caret"></b></a>
+                        <ul class="dropdown-menu">
+                        
+                            
+<li >
+    <a href="../install/">Installation</a>
+</li>
+
+                        
+                            
+<li class="active">
+    <a href="./">IO API</a>
+</li>
+
+                        
+                            
+<li >
+    <a href="../seq/">Biological Sequences</a>
+</li>
+
+                        
+                            
+<li >
+    <a href="../alignments/">Alignments</a>
+</li>
+
+                        
+                            
+<li >
+    <a href="../intervals/">Intervals</a>
+</li>
+
+                        
+                            
+<li >
+    <a href="../structure/">Structure</a>
+</li>
+
+                        
+                            
+<li >
+    <a href="../tools/">Tools</a>
+</li>
+
+                        
+                        </ul>
+                    </li>
+                
+                
+                
+                    <li class="dropdown">
+                        <a href="#" class="dropdown-toggle" data-toggle="dropdown">Reference <b class="caret"></b></a>
+                        <ul class="dropdown-menu">
+                        
+                            
+<li >
+    <a href="../../lib/seq/">Seq</a>
+</li>
+
+                        
+                        </ul>
+                    </li>
+                
+                
+                
+                    <li >
+                        <a href="../contributing/">Contributing</a>
+                    </li>
+                
+                
+                </ul>
+            
+
+            <ul class="nav navbar-nav navbar-right">
+                <li>
+                    <a href="#" data-toggle="modal" data-target="#mkdocs_search_modal">
+                        <i class="fa fa-search"></i> Search
+                    </a>
+                </li>
+                
+                    <li >
+                        <a rel="next" href="../install/">
+                            <i class="fa fa-arrow-left"></i> Previous
+                        </a>
+                    </li>
+                    <li >
+                        <a rel="prev" href="../seq/">
+                            Next <i class="fa fa-arrow-right"></i>
+                        </a>
+                    </li>
+                
+                
+                    <li>
+                        <a href="https://github.com/BioJulia/Bio.jl">
+                            
+                                <i class="fa fa-github"></i>
+                            
+                            GitHub
+                        </a>
+                    </li>
+                
+            </ul>
+        </div>
+    </div>
+</div>
+
+    <div class="container">
+        
+        <div class="col-md-3"><div class="bs-sidebar hidden-print affix well" role="complementary">
+    <ul class="nav bs-sidenav">
+    
+        <li class="first-level active"><a href="#reading-and-writing-data">Reading and writing data</a></li>
+        
+            <li class="second-level"><a href="#parsing-by-iteration">Parsing by iteration</a></li>
+            
+        
+            <li class="second-level"><a href="#in-place-parsing">In-place parsing</a></li>
+            
+        
+            <li class="second-level"><a href="#writing-data">Writing data</a></li>
+            
+        
+            <li class="second-level"><a href="#supported-file-formats">Supported file formats</a></li>
+            
+                <li class="third-level"><a href="#fasta">FASTA</a></li>
+            
+                <li class="third-level"><a href="#fastq">FASTQ</a></li>
+            
+                <li class="third-level"><a href="#2bit">.2bit</a></li>
+            
+                <li class="third-level"><a href="#bed">BED</a></li>
+            
+                <li class="third-level"><a href="#bigbed">bigBed</a></li>
+            
+                <li class="third-level"><a href="#pdb">PDB</a></li>
+            
+        
+    
+    </ul>
+</div></div>
+        <div class="col-md-9" role="main">
+
+<p><a id='Reading-and-writing-data-1'></a></p>
+<h1 id="reading-and-writing-data">Reading and writing data</h1>
+<p>Bio.jl has a unified interface for reading and writing files in a variety of formats. To initialize a parser for a particular format, the <code>open</code> method is extended with a file format type parameter <code>T</code>:</p>
+<div class="codehilite"><pre><span></span><span class="n">open</span><span class="p">{</span><span class="n">T</span><span class="o">&lt;:</span><span class="n">FileFormat</span><span class="p">}(</span><span class="n">filename</span><span class="p">::</span><span class="n">AbstractString</span><span class="p">,</span> <span class="p">::</span><span class="n">Type</span><span class="p">{</span><span class="n">T</span><span class="p">})</span>
+<span class="n">open</span><span class="p">{</span><span class="n">T</span><span class="o">&lt;:</span><span class="n">FileFormat</span><span class="p">}(</span><span class="n">source</span><span class="p">::</span><span class="n">IO</span><span class="p">,</span> <span class="p">::</span><span class="n">Type</span><span class="p">{</span><span class="n">T</span><span class="p">})</span>
+<span class="n">open</span><span class="p">{</span><span class="n">T</span><span class="o">&lt;:</span><span class="n">FileFormat</span><span class="p">}(</span><span class="n">data</span><span class="p">::</span><span class="n">Vector</span><span class="p">{</span><span class="n">UInt8</span><span class="p">},</span> <span class="p">::</span><span class="n">Type</span><span class="p">{</span><span class="n">T</span><span class="p">})</span>
+</pre></div>
+
+
+<p>For example, when reading a FASTA file, a parser for the FASTA file format can be initialized as:</p>
+<div class="codehilite"><pre><span></span><span class="k">using</span> <span class="n">Bio</span><span class="o">.</span><span class="n">Seq</span>  <span class="c"># import FASTA</span>
+<span class="n">parser</span> <span class="o">=</span> <span class="n">open</span><span class="p">(</span><span class="s">&quot;hg38.fa&quot;</span><span class="p">,</span> <span class="n">FASTA</span><span class="p">)</span>
+</pre></div>
+
+
+<p><a id='Parsing-by-iteration-1'></a></p>
+<h2 id="parsing-by-iteration">Parsing by iteration</h2>
+<p>Parsers in Bio.jl all read and return entries one at a time. The most convenient way to do this by iteration.</p>
+<div class="codehilite"><pre><span></span><span class="n">stream</span> <span class="o">=</span> <span class="n">open</span><span class="p">(</span><span class="s">&quot;input.bed&quot;</span><span class="p">,</span> <span class="n">BED</span><span class="p">)</span>
+<span class="k">for</span> <span class="n">entry</span> <span class="k">in</span> <span class="n">stream</span>
+    <span class="c"># perform some operation on entry</span>
+<span class="k">end</span>
+</pre></div>
+
+
+<p><a id='In-place-parsing-1'></a></p>
+<h2 id="in-place-parsing">In-place parsing</h2>
+<p>Iterating through entries in a file is convenient, but for each entry in the file, the parser must allocate, and ultimately the garbage collector must spend time to deallocate it. For performance critical applications, a separate lower level parsing interface can be used that avoid unnecessary allocation by overwriting one entry. For files with a large number of small entries, this can greatly speed up reading.</p>
+<p>Instead of looping over a parser stream <code>read!</code> is called with a preallocated entry.</p>
+<div class="codehilite"><pre><span></span><span class="n">stream</span> <span class="o">=</span> <span class="n">open</span><span class="p">(</span><span class="s">&quot;input.bed&quot;</span><span class="p">,</span> <span class="n">BED</span><span class="p">)</span>
+<span class="n">entry</span> <span class="o">=</span> <span class="n">BEDInterval</span><span class="p">()</span>
+<span class="k">while</span> <span class="o">!</span><span class="n">eof</span><span class="p">(</span><span class="n">stream</span><span class="p">)</span>
+    <span class="n">read!</span><span class="p">(</span><span class="n">input</span><span class="p">,</span> <span class="n">entry</span><span class="p">)</span>
+    <span class="c"># perform some operation on `entry`</span>
+<span class="k">end</span>
+</pre></div>
+
+
+<p>Some care is necessary when using this interface. Because <code>entry</code> is completely overwritten on each iteration, one must manually copy any field from <code>entry</code> that should be preserved. For example, if we wish to save the <code>seqname</code> field from <code>entry</code> when parsing BED, we must call <code>copy(entry.seqname)</code>.</p>
+<p>Empty entry types that correspond to the file format be found using <code>eltype</code>, making it easy to allocate an empty entry for any parser stream.</p>
+<div class="codehilite"><pre><span></span><span class="n">entry</span> <span class="o">=</span> <span class="n">eltype</span><span class="p">(</span><span class="n">stream</span><span class="p">)()</span>
+</pre></div>
+
+
+<p><a id='Writing-data-1'></a></p>
+<h2 id="writing-data">Writing data</h2>
+<p>Writing data into a stream has a uniform interface consistent with parsers. The following code is a template of formatted serialization into a file:</p>
+<div class="codehilite"><pre><span></span><span class="c"># open a file of a particular file format in writing mode</span>
+<span class="n">out</span> <span class="o">=</span> <span class="n">open</span><span class="p">(</span><span class="o">&lt;</span><span class="n">filepath</span><span class="o">&gt;</span><span class="p">,</span> <span class="s">&quot;w&quot;</span><span class="p">,</span> <span class="o">&lt;</span><span class="n">format</span><span class="o">&gt;</span><span class="p">)</span>
+<span class="c"># write a record into it</span>
+<span class="n">write</span><span class="p">(</span><span class="n">out</span><span class="p">,</span> <span class="o">&lt;</span><span class="n">record</span><span class="o">&gt;</span><span class="p">)</span>
+<span class="c"># finally close it</span>
+<span class="n">close</span><span class="p">(</span><span class="n">out</span><span class="p">)</span>
+</pre></div>
+
+
+<p>For example, a FASTA file will be created as follows:</p>
+<div class="codehilite"><pre><span></span><span class="n">out</span> <span class="o">=</span> <span class="n">open</span><span class="p">(</span><span class="s">&quot;out.fasta&quot;</span><span class="p">,</span> <span class="s">&quot;w&quot;</span><span class="p">,</span> <span class="n">FASTA</span><span class="p">)</span>
+<span class="n">write</span><span class="p">(</span><span class="n">out</span><span class="p">,</span> <span class="n">FASTASeqRecord</span><span class="p">(</span><span class="s">&quot;seq1&quot;</span><span class="p">,</span> <span class="n">dna</span><span class="s">&quot;ACGTN&quot;</span><span class="p">))</span>
+<span class="n">write</span><span class="p">(</span><span class="n">out</span><span class="p">,</span> <span class="n">FASTASeqRecord</span><span class="p">(</span><span class="s">&quot;seq2&quot;</span><span class="p">,</span> <span class="n">dna</span><span class="s">&quot;TTATATTATTGTAAA&quot;</span><span class="p">,</span> <span class="s">&quot;AT rich&quot;</span><span class="p">))</span>
+<span class="c"># and more records</span>
+<span class="n">close</span><span class="p">(</span><span class="n">out</span><span class="p">)</span>
+</pre></div>
+
+
+<p><a id='Supported-file-formats-1'></a></p>
+<h2 id="supported-file-formats">Supported file formats</h2>
+<p>The following table summarizes supported file formats.</p>
+<table>
+<thead>
+<tr>
+<th align="left">File format</th>
+<th align="left">Type parameter</th>
+<th align="left">Module</th>
+<th align="left">Specification</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td align="left">FASTA</td>
+<td align="left"><code>FASTA</code></td>
+<td align="left"><code>Bio.Seq</code></td>
+<td align="left"><a href="https://en.wikipedia.org/wiki/FASTA_format">https://en.wikipedia.org/wiki/FASTA_format</a></td>
+</tr>
+<tr>
+<td align="left">FASTQ</td>
+<td align="left"><code>FASTQ</code></td>
+<td align="left"><code>Bio.Seq</code></td>
+<td align="left"><a href="https://en.wikipedia.org/wiki/FASTQ_format">https://en.wikipedia.org/wiki/FASTQ_format</a></td>
+</tr>
+<tr>
+<td align="left">.2bit</td>
+<td align="left"><code>TwoBit</code></td>
+<td align="left"><code>Bio.Seq</code></td>
+<td align="left"><a href="http://genome.ucsc.edu/FAQ/FAQformat.html#format7">http://genome.ucsc.edu/FAQ/FAQformat.html#format7</a></td>
+</tr>
+<tr>
+<td align="left">BED</td>
+<td align="left"><code>BED</code></td>
+<td align="left"><code>Bio.Intervals</code></td>
+<td align="left"><a href="https://genome.ucsc.edu/FAQ/FAQformat.html#format1">https://genome.ucsc.edu/FAQ/FAQformat.html#format1</a></td>
+</tr>
+<tr>
+<td align="left">bigBed</td>
+<td align="left"><code>BigBed</code></td>
+<td align="left"><code>Bio.Intervals</code></td>
+<td align="left"><a href="https://doi.org/10.1093/bioinformatics/btq351">https://doi.org/10.1093/bioinformatics/btq351</a></td>
+</tr>
+<tr>
+<td align="left">PDB</td>
+<td align="left"><code>PDB</code></td>
+<td align="left"><code>Bio.Structure</code></td>
+<td align="left"><a href="http://www.wwpdb.org/documentation/file-format-content/format33/v3.3.html">http://www.wwpdb.org/documentation/file-format-content/format33/v3.3.html</a></td>
+</tr>
+</tbody>
+</table>
+<p><a id='FASTA-1'></a></p>
+<h3 id="fasta">FASTA</h3>
+<ul>
+<li>Parser type: <code>FASTAParser{S&lt;:Sequence}</code></li>
+<li>Writer type: <code>FASTAWriter{T&lt;:IO}</code></li>
+<li>Element type: <code>SeqRecord{S,FASTAMetadata}</code> (alias: <code>FASTASeqRecord{S}</code>)</li>
+</ul>
+<p>FASTA is a text-based file format for representing biological sequences. A FASTA file stores a list of sequence records with name, description, and sequence. The template of a sequence record is:</p>
+<div class="codehilite"><pre><span></span>&gt;{name} {description}?
+{sequence}
+</pre></div>
+
+
+<p>Here is an example of a chromosomal sequence:</p>
+<div class="codehilite"><pre><span></span>&gt;chrI chromosome 1
+CCACACCACACCCACACACCCACACACCACACCACACACCACACCACACC
+CACACACACACATCCTAACACTACCCTAACACAGCCCTAATCTAACCCTG
+</pre></div>
+
+
+<p>Usually sequence records will be read sequentially from a file by iteration. But if the FASTA file has an auxiliary index file formatted in <a href="http://www.htslib.org/doc/faidx.html">fai</a>, the parser supports random access to FASTA records, which would be useful when accessing specific parts of a huge genome sequence:</p>
+<div class="codehilite"><pre><span></span><span class="n">parser</span> <span class="o">=</span> <span class="n">open</span><span class="p">(</span><span class="s">&quot;sacCer.fa&quot;</span><span class="p">,</span> <span class="n">FASTA</span><span class="p">)</span>  <span class="c"># find and read &quot;sacCer.fa.fai&quot; file</span>
+<span class="n">chrIV</span> <span class="o">=</span> <span class="n">parser</span><span class="p">[</span><span class="s">&quot;chrIV&quot;</span><span class="p">]</span>  <span class="c"># directly read chromosome 4</span>
+</pre></div>
+
+
+<p><a id='FASTQ-1'></a></p>
+<h3 id="fastq">FASTQ</h3>
+<ul>
+<li>Parser type: <code>FASTQParser{S&lt;:Sequence}</code></li>
+<li>Writer type: <code>FASTQWriter{T&lt;:IO}</code></li>
+<li>Element type: <code>SeqRecord{S,FASTQMetadata}</code> (alias: <code>FASTQSeqRecord{S}</code>)</li>
+</ul>
+<p>FASTQ is a text-based file format for representing DNA sequences along with qualities for each base. A FASTQ file stores a list of sequence records in the following format:</p>
+<div class="codehilite"><pre><span></span>@{name} {description}?
+{sequence}
++
+{qualities}
+</pre></div>
+
+
+<p>Here is an example of a part of a FASTQ file:</p>
+<div class="codehilite"><pre><span></span>@FSRRS4401BE7HA
+tcagTTAAGATGGGAT
++
+eeeccccccc`UUU^U
+</pre></div>
+
+
+<p><a id='.2bit-1'></a></p>
+<h3 id="2bit">.2bit</h3>
+<ul>
+<li>Parser type: <code>TwoBitParser{T&lt;:IO}</code></li>
+<li>Writer type: <code>TwoBitWriter{T&lt;:IO}</code></li>
+<li>Element type: <code>SeqRecord{ReferenceSequence,Vector{UnitRange{Int}}}</code></li>
+</ul>
+<p>.2bit is a binary file format designed for storing a genome consists of multiple chromosomal sequences. The reading speed is often an order of magnitude faster than that of FASTA and the file size is smaller. However, since the .2bit file format is specialized for genomic sequences, it cannot store either RNA or amino acid sequences.</p>
+<p>Like FASTA, the .2bit parser supports random access using an index included in the header section of a .2bit file:</p>
+<div class="codehilite"><pre><span></span><span class="n">parser</span> <span class="o">=</span> <span class="n">open</span><span class="p">(</span><span class="s">&quot;sacCer.2bit&quot;</span><span class="p">,</span> <span class="n">TwoBit</span><span class="p">)</span>  <span class="c"># parse the header and load a random access index</span>
+<span class="n">chrIV</span> <span class="o">=</span> <span class="n">parser</span><span class="p">[</span><span class="s">&quot;chrIV&quot;</span><span class="p">]</span>  <span class="c"># directly read chromosome 4</span>
+</pre></div>
+
+
+<p><a id='BED-1'></a></p>
+<h3 id="bed">BED</h3>
+<ul>
+<li>Parser type: <code>BEDParser</code></li>
+<li>Writer type: <code>BEDWriter{T&lt;:IO}</code></li>
+<li>Element type: <code>Interval{BEDMetadata}</code> (alias: <code>BEDInterval</code>)</li>
+</ul>
+<p>BED is a text-based file format for representing genomic annotations like genes, transcripts, and so on. A BED file has tab-delimited and variable-length fields; the first three fields denoting a genomic interval are mandatory.</p>
+<p>This is an example of RNA transcripts:</p>
+<div class="codehilite"><pre><span></span>chr9    68331023    68424451    NM_015110   0   +
+chr9    68456943    68486659    NM_001206   0   -
+</pre></div>
+
+
+<p><a id='bigBed-1'></a></p>
+<h3 id="bigbed">bigBed</h3>
+<p>BigBed is a binary file format for representing genomic annotations and often created from BED files. The bigBed files are indexed to quickly fetch specific regions.</p>
+<p><a id='PDB-1'></a></p>
+<h3 id="pdb">PDB</h3>
+<p>PDB is a text-based file format for representing 3D macromolecular structures. This has different parser interfaces from other file formats. Please consult the <a href="../structure/">Bio.Structure</a> chapter for details.</p></div>
+        
+    </div>
+
+    <footer class="col-md-12 text-center">
+        <hr>
+        <p>
+        <small>Copyright (c) 2016 The BioJulia Organisation<br></small>
+        
+        <small>Documentation built with <a href="http://www.mkdocs.org/">MkDocs</a>.</p></small>
+    </footer>
+
+    <script src="../../js/jquery-1.10.2.min.js"></script>
+    <script src="../../js/bootstrap-3.0.3.min.js"></script>
+    <script src="../../js/highlight.pack.js"></script>
+    <script>hljs.initHighlightingOnLoad();</script>
+    <script>
+    var base_url = '../..';
+    </script>
+    <script data-main="../../mkdocs/js/search.js" src="../../mkdocs/js/require.js"></script>
+    <script src="../../js/base.js"></script>
+    <script>
+        ((window.gitter = {}).chat = {}).options = {
+            room: 'BioJulia/Bio.jl'
+        };
+    </script>
+    <script src="https://sidecar.gitter.im/dist/sidecar.v1.js" async defer></script>
+    <script src="https://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS_HTML"></script>
+    <script src="../../assets/mathjaxhelper.js"></script>
+
+    <div class="modal" id="mkdocs_search_modal" tabindex="-1" role="dialog" aria-labelledby="Search Modal" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <button type="button" class="close" data-dismiss="modal">
+                        <span aria-hidden="true">&times;</span>
+                        <span class="sr-only">Close</span>
+                    </button>
+                    <h4 class="modal-title" id="exampleModalLabel">Search</h4>
+                </div>
+                <div class="modal-body">
+                    <p>
+                        From here you can search these documents. Enter your search terms below.
+                    </p>
+                    <form role="form">
+                        <div class="form-group">
+                            <input type="text" class="form-control" placeholder="Search..." id="mkdocs-search-query">
+                        </div>
+                    </form>
+                    <div id="mkdocs-search-results"></div>
+                </div>
+                <div class="modal-footer">
+                </div>
+            </div>
+        </div>
+    </div>
+
+    </body>
+
+</html>
