@@ -67,6 +67,14 @@ file_matricies = [("ints.tab", integral_matrix_expt),
                   ("commented.tab", integral_matrix_expt),
                  ]
 
+# Maps filename to labels
+NUC44 = UTF8String["A", "T", "G", "C", "S", "W", "R", "Y", "K", "M", "B", "V",
+                   "H", "D", "N"]
+BLOSUM = UTF8String["A", "R", "N", "D", "C", "Q", "E", "G", "H", "I", "L", "K",
+                    "M", "F", "P", "S", "T", "W", "Y", "V", "B", "Z", "X", "*"]
+subst_matricies = [("BLOSUM62", BLOSUM),
+                   ("NUC.4.4", NUC44),
+                 ]
 @testset "LabelledSquareMatrices" begin
     @testset "types" for T in [Int64, Float64]
         m, l = readlsm(T, IOBuffer(integral_matrix))
@@ -90,6 +98,14 @@ file_matricies = [("ints.tab", integral_matrix_expt),
         m, l = readlsm(fname)
         @test m == expected
         @test l == UTF8String["A", "B", "C"]
+    end
+
+    @testset "subst_matrices" for (fname, labels) in subst_matricies
+        fname = Pkg.dir("Bio", "test", "BioFmtSpecimens", "LSM", fname)
+        N = length(labels)
+        m, l = readlsm(Int64, fname)
+        @test size(m) == (N, N)
+        @test l == labels
     end
 end
 

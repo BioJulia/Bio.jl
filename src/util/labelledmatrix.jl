@@ -1,17 +1,19 @@
 export readlsm
 
+const _default_delims = [' ','\t']
+
 """
 Reads a Labelled Square Matrix
 
 Returns a tuple of `(matrix, labels)`
 """
-function readlsm{T}(::Type{T}, io::IO, delim='\t', comment='#')
+function readlsm{T}(::Type{T}, io::IO, delim=_default_delims, comment='#')
     matrix = Matrix{T}()
     labels = UTF8String[]
     nitems = 0
     row = 0
     for line in eachline(io)
-        line = chomp(line)
+        line = rstrip(line)
         if startswith(line, comment) || isempty(line)
             continue  # skip comments and empty lines
         end
@@ -19,17 +21,18 @@ function readlsm{T}(::Type{T}, io::IO, delim='\t', comment='#')
             # Non-square error handled outside loop below
             break
         end
-        cells = split(line, delim)
+        cells = split(line, delim, keep=false)
         if isempty(labels)
             # header
-            append!(labels, map(UTF8String, cells[2:end]))
+            append!(labels, map(UTF8String, cells))
             nitems = length(labels)
             matrix = zeros(T, (nitems, nitems))
             continue
         end
         row += 1
         if cells[1] != labels[row]
-            error("Cell label mismatch. (at row $row)")
+            error("Cell label mismatch. (at row $row: $(cells[1]) != ",
+                  "$(labels[row]))")
         end
         matrix[row, :] = map((s) -> parse(T, s), cells[2:end])
     end
@@ -39,18 +42,16 @@ function readlsm{T}(::Type{T}, io::IO, delim='\t', comment='#')
     return (matrix, labels)
 end
 
-function readlsm(io::IO, delim='\t')
+function readlsm(io::IO, delim=_default_delims)
     return readlsm(Float64, io, delim)
 end
 
-function readlsm{T}(::Type{T}, path::AbstractString, delim='\t')
-    lsm = nothing
+function readlsm{T}(::Type{T}, path::AbstractString, delim=_default_delims)
     open(path) do file
-        lsm = readlsm(T, file, delim)
+        return readlsm(T, file, delim)
     end
-    return lsm
 end
 
-function readlsm(path::AbstractString, delim='\t')
+function readlsm(path::AbstractString, delim=_default_delims)
     return readlsm(Float64, path, delim)
 end
