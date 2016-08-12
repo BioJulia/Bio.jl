@@ -8,7 +8,6 @@ else
 end
 
 import Bio.Util: readlsm
-using TestFunctions
 
 integral_matrix = """\
 \tA\tB\tC
@@ -75,6 +74,9 @@ BLOSUM = UTF8String["A", "R", "N", "D", "C", "Q", "E", "G", "H", "I", "L", "K",
 subst_matricies = [("BLOSUM62", BLOSUM),
                    ("NUC.4.4", NUC44),
                  ]
+all_subst_matrices = ["BLOSUM45", "BLOSUM50", "BLOSUM62", "BLOSUM80",
+                      "BLOSUM90", "NUC.4.4", "PAM250", "PAM30", "PAM70"]
+
 @testset "LabelledSquareMatrices" begin
     @testset "types" for T in [Int64, Float64]
         m, l = readlsm(T, IOBuffer(integral_matrix))
@@ -106,6 +108,13 @@ subst_matricies = [("BLOSUM62", BLOSUM),
         m, l = readlsm(Int64, fname)
         @test size(m) == (N, N)
         @test l == labels
+    end
+
+    @testset "all_subst_matrices" for fname in all_subst_matrices
+        # Check that we can parse all matrices under the alignm module
+        fname = Pkg.dir("Bio", "src", "align", "data", "submat", fname)
+        m, l = readlsm(Int64, fname)
+        @test eltype(m) === Int64
     end
 end
 
