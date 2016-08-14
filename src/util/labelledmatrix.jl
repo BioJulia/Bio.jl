@@ -2,11 +2,7 @@ export readlsm
 
 const _default_delims = [' ','\t']
 
-"""
-Reads a Labelled Square Matrix
-
-Returns a tuple of `(matrix, labels)`
-"""
+"Reads a Labelled Square Matrix, returning a tuple of `(matrix, labels)`"
 function readlsm{T}(::Type{T}, io::IO, delim=_default_delims, comment='#')
     matrix = Matrix{T}()
     labels = UTF8String[]
