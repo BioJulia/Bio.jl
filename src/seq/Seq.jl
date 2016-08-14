@@ -78,6 +78,7 @@ export
     npositions,
     hasn,
     gc_content,
+    SequenceGenerator,
     randdnaseq,
     randrnaseq,
     randaaseq,
