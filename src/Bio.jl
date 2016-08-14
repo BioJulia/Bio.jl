@@ -5,6 +5,7 @@ module Bio
 include("IO.jl")
 include("Ragel.jl")
 include("StringFields.jl")
+include("util/Util.jl")
 include("seq/Seq.jl")
 include("intervals/Intervals.jl")
 include("align/Align.jl")
