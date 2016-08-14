@@ -3,8 +3,14 @@ export readlsm
 const _default_delims = [' ','\t']
 
 """
-Reads a Labelled Square Matrix from an IO stream or filename, returning a tuple
-of `(matrix, labels)`.
+    readlsm([type,] io, delim=[' ', '\t'], comment='#')
+    readlsm([type,] filepath, delim=[' ', '\t'], comment='#')
+
+Reads a Labelled Square Matrix from an IO stream or file, returning a pair of
+`(matrix, labels)`.
+
+One may specify the element type of the resulting matrix; this defaults to
+Float64.
 """
 function readlsm{T}(::Type{T}, io::IO, delim=_default_delims, comment='#')
     matrix = Matrix{T}()
