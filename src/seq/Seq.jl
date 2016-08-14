@@ -188,7 +188,6 @@ include("refseq.jl")
 include("eachkmer.jl")
 include("composition.jl")
 include("geneticcode.jl")
-include("util.jl")
 include("quality.jl")
 include("seqrecord.jl")
 
