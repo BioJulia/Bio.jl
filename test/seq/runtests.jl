@@ -120,104 +120,76 @@ end
                 @test convert(DNANucleotide, 0b0000) === DNA_Gap
                 @test convert(DNANucleotide, 0b0001) === DNA_A
                 @test convert(DNANucleotide, 0b0010) === DNA_C
+                @test convert(DNANucleotide, 0b0011) === DNA_M
                 @test convert(DNANucleotide, 0b0100) === DNA_G
+                @test convert(DNANucleotide, 0b0101) === DNA_R
+                @test convert(DNANucleotide, 0b0110) === DNA_S
+                @test convert(DNANucleotide, 0b0111) === DNA_V
                 @test convert(DNANucleotide, 0b1000) === DNA_T
-                # ...
+                @test convert(DNANucleotide, 0b1001) === DNA_W
+                @test convert(DNANucleotide, 0b1010) === DNA_Y
+                @test convert(DNANucleotide, 0b1011) === DNA_H
+                @test convert(DNANucleotide, 0b1100) === DNA_K
+                @test convert(DNANucleotide, 0b1101) === DNA_D
+                @test convert(DNANucleotide, 0b1110) === DNA_B
                 @test convert(DNANucleotide, 0b1111) === DNA_N
-                #@test convert(DNANucleotide, UInt8( 0)) == DNA_A
-                #@test convert(DNANucleotide, UInt8( 1)) == DNA_C
-                #@test convert(DNANucleotide, UInt8( 2)) == DNA_G
-                #@test convert(DNANucleotide, UInt8( 3)) == DNA_T
-                #@test convert(DNANucleotide, UInt8( 4)) == DNA_M
-                #@test convert(DNANucleotide, UInt8( 5)) == DNA_R
-                #@test convert(DNANucleotide, UInt8( 6)) == DNA_W
-                #@test convert(DNANucleotide, UInt8( 7)) == DNA_S
-                #@test convert(DNANucleotide, UInt8( 8)) == DNA_Y
-                #@test convert(DNANucleotide, UInt8( 9)) == DNA_K
-                #@test convert(DNANucleotide, UInt8(10)) == DNA_V
-                #@test convert(DNANucleotide, UInt8(11)) == DNA_H
-                #@test convert(DNANucleotide, UInt8(12)) == DNA_D
-                #@test convert(DNANucleotide, UInt8(13)) == DNA_B
-                #@test convert(DNANucleotide, UInt8(14)) == DNA_N
-                #@test convert(DNANucleotide, UInt8(15)) == DNA_Gap
             end
 
             @testset "RNA conversions from UInt8" begin
                 @test convert(RNANucleotide, 0b0000) === RNA_Gap
                 @test convert(RNANucleotide, 0b0001) === RNA_A
                 @test convert(RNANucleotide, 0b0010) === RNA_C
+                @test convert(RNANucleotide, 0b0011) === RNA_M
                 @test convert(RNANucleotide, 0b0100) === RNA_G
+                @test convert(RNANucleotide, 0b0101) === RNA_R
+                @test convert(RNANucleotide, 0b0110) === RNA_S
+                @test convert(RNANucleotide, 0b0111) === RNA_V
                 @test convert(RNANucleotide, 0b1000) === RNA_U
-                # ...
+                @test convert(RNANucleotide, 0b1001) === RNA_W
+                @test convert(RNANucleotide, 0b1010) === RNA_Y
+                @test convert(RNANucleotide, 0b1011) === RNA_H
+                @test convert(RNANucleotide, 0b1100) === RNA_K
+                @test convert(RNANucleotide, 0b1101) === RNA_D
+                @test convert(RNANucleotide, 0b1110) === RNA_B
                 @test convert(RNANucleotide, 0b1111) === RNA_N
-                #@test convert(RNANucleotide, UInt8( 0)) == RNA_A
-                #@test convert(RNANucleotide, UInt8( 1)) == RNA_C
-                #@test convert(RNANucleotide, UInt8( 2)) == RNA_G
-                #@test convert(RNANucleotide, UInt8( 3)) == RNA_U
-                #@test convert(RNANucleotide, UInt8( 4)) == RNA_M
-                #@test convert(RNANucleotide, UInt8( 5)) == RNA_R
-                #@test convert(RNANucleotide, UInt8( 6)) == RNA_W
-                #@test convert(RNANucleotide, UInt8( 7)) == RNA_S
-                #@test convert(RNANucleotide, UInt8( 8)) == RNA_Y
-                #@test convert(RNANucleotide, UInt8( 9)) == RNA_K
-                #@test convert(RNANucleotide, UInt8(10)) == RNA_V
-                #@test convert(RNANucleotide, UInt8(11)) == RNA_H
-                #@test convert(RNANucleotide, UInt8(12)) == RNA_D
-                #@test convert(RNANucleotide, UInt8(13)) == RNA_B
-                #@test convert(RNANucleotide, UInt8(14)) == RNA_N
-                #@test convert(RNANucleotide, UInt8(15)) == RNA_Gap
             end
 
             @testset "DNA conversions to UInt8" begin
                 @test convert(UInt8, DNA_Gap) === 0b0000
-                @test convert(UInt8, DNA_A) === 0b0001
-                @test convert(UInt8, DNA_C) === 0b0010
-                @test convert(UInt8, DNA_G) === 0b0100
-                @test convert(UInt8, DNA_T) === 0b1000
-                # ...
-                @test convert(UInt8, DNA_N) === 0b1111
-                #@test convert(UInt8, DNA_A)   == UInt8( 0)
-                #@test convert(UInt8, DNA_C)   == UInt8( 1)
-                #@test convert(UInt8, DNA_G)   == UInt8( 2)
-                #@test convert(UInt8, DNA_T)   == UInt8( 3)
-                #@test convert(UInt8, DNA_M)   == UInt8( 4)
-                #@test convert(UInt8, DNA_R)   == UInt8( 5)
-                #@test convert(UInt8, DNA_W)   == UInt8( 6)
-                #@test convert(UInt8, DNA_S)   == UInt8( 7)
-                #@test convert(UInt8, DNA_Y)   == UInt8( 8)
-                #@test convert(UInt8, DNA_K)   == UInt8( 9)
-                #@test convert(UInt8, DNA_V)   == UInt8(10)
-                #@test convert(UInt8, DNA_H)   == UInt8(11)
-                #@test convert(UInt8, DNA_D)   == UInt8(12)
-                #@test convert(UInt8, DNA_B)   == UInt8(13)
-                #@test convert(UInt8, DNA_N)   == UInt8(14)
-                #@test convert(UInt8, DNA_Gap) == UInt8(15)
+                @test convert(UInt8, DNA_A)   === 0b0001
+                @test convert(UInt8, DNA_C)   === 0b0010
+                @test convert(UInt8, DNA_M)   === 0b0011
+                @test convert(UInt8, DNA_G)   === 0b0100
+                @test convert(UInt8, DNA_R)   === 0b0101
+                @test convert(UInt8, DNA_S)   === 0b0110
+                @test convert(UInt8, DNA_V)   === 0b0111
+                @test convert(UInt8, DNA_T)   === 0b1000
+                @test convert(UInt8, DNA_W)   === 0b1001
+                @test convert(UInt8, DNA_Y)   === 0b1010
+                @test convert(UInt8, DNA_H)   === 0b1011
+                @test convert(UInt8, DNA_K)   === 0b1100
+                @test convert(UInt8, DNA_D)   === 0b1101
+                @test convert(UInt8, DNA_B)   === 0b1110
+                @test convert(UInt8, DNA_N)   === 0b1111
             end
 
             @testset "RNA conversions to UInt8" begin
                 @test convert(UInt8, RNA_Gap) === 0b0000
-                @test convert(UInt8, RNA_A) === 0b0001
-                @test convert(UInt8, RNA_C) === 0b0010
-                @test convert(UInt8, RNA_G) === 0b0100
-                @test convert(UInt8, RNA_U) === 0b1000
-                # ...
-                @test convert(UInt8, RNA_N) === 0b1111
-                #@test convert(UInt8, RNA_A)   == UInt8( 0)
-                #@test convert(UInt8, RNA_C)   == UInt8( 1)
-                #@test convert(UInt8, RNA_G)   == UInt8( 2)
-                #@test convert(UInt8, RNA_U)   == UInt8( 3)
-                #@test convert(UInt8, RNA_M)   == UInt8( 4)
-                #@test convert(UInt8, RNA_R)   == UInt8( 5)
-                #@test convert(UInt8, RNA_W)   == UInt8( 6)
-                #@test convert(UInt8, RNA_S)   == UInt8( 7)
-                #@test convert(UInt8, RNA_Y)   == UInt8( 8)
-                #@test convert(UInt8, RNA_K)   == UInt8( 9)
-                #@test convert(UInt8, RNA_V)   == UInt8(10)
-                #@test convert(UInt8, RNA_H)   == UInt8(11)
-                #@test convert(UInt8, RNA_D)   == UInt8(12)
-                #@test convert(UInt8, RNA_B)   == UInt8(13)
-                #@test convert(UInt8, RNA_N)   == UInt8(14)
-                #@test convert(UInt8, RNA_Gap) == UInt8(15)
+                @test convert(UInt8, RNA_A)   === 0b0001
+                @test convert(UInt8, RNA_C)   === 0b0010
+                @test convert(UInt8, RNA_M)   === 0b0011
+                @test convert(UInt8, RNA_G)   === 0b0100
+                @test convert(UInt8, RNA_R)   === 0b0101
+                @test convert(UInt8, RNA_S)   === 0b0110
+                @test convert(UInt8, RNA_V)   === 0b0111
+                @test convert(UInt8, RNA_U)   === 0b1000
+                @test convert(UInt8, RNA_W)   === 0b1001
+                @test convert(UInt8, RNA_Y)   === 0b1010
+                @test convert(UInt8, RNA_H)   === 0b1011
+                @test convert(UInt8, RNA_K)   === 0b1100
+                @test convert(UInt8, RNA_D)   === 0b1101
+                @test convert(UInt8, RNA_B)   === 0b1110
+                @test convert(UInt8, RNA_N)   === 0b1111
             end
         end
 
@@ -229,11 +201,6 @@ end
                 @test convert(DNANucleotide, UInt64(0b0100)) === DNA_G
                 @test convert(DNANucleotide, UInt64(0b1000)) === DNA_T
                 @test convert(DNANucleotide, UInt64(0b1111)) === DNA_N
-                #@test convert(DNANucleotide, UInt64(0)) == DNA_A
-                #@test convert(DNANucleotide, UInt64(1)) == DNA_C
-                #@test convert(DNANucleotide, UInt64(2)) == DNA_G
-                #@test convert(DNANucleotide, UInt64(3)) == DNA_T
-                #@test convert(DNANucleotide, UInt64(14)) == DNA_N
             end
 
             @testset "RNA conversions from UInt64" begin
@@ -243,39 +210,24 @@ end
                 @test convert(RNANucleotide, UInt64(0b0100)) === RNA_G
                 @test convert(RNANucleotide, UInt64(0b1000)) === RNA_U
                 @test convert(RNANucleotide, UInt64(0b1111)) === RNA_N
-                #@test convert(RNANucleotide, UInt64(0)) == RNA_A
-                #@test convert(RNANucleotide, UInt64(1)) == RNA_C
-                #@test convert(RNANucleotide, UInt64(2)) == RNA_G
-                #@test convert(RNANucleotide, UInt64(3)) == RNA_U
-                #@test convert(RNANucleotide, UInt64(14)) == RNA_N
             end
 
             @testset "DNA conversions to UInt64" begin
                 @test convert(UInt64, DNA_Gap) === UInt64(0b0000)
-                @test convert(UInt64, DNA_A) === UInt64(0b0001)
-                @test convert(UInt64, DNA_C) === UInt64(0b0010)
-                @test convert(UInt64, DNA_G) === UInt64(0b0100)
-                @test convert(UInt64, DNA_T) === UInt64(0b1000)
-                @test convert(UInt64, DNA_N) === UInt64(0b1111)
-                #@test convert(UInt64, DNA_A) == UInt64(0)
-                #@test convert(UInt64, DNA_C) == UInt64(1)
-                #@test convert(UInt64, DNA_G) == UInt64(2)
-                #@test convert(UInt64, DNA_T) == UInt64(3)
-                #@test convert(UInt64, DNA_N) == UInt64(14)
+                @test convert(UInt64, DNA_A)   === UInt64(0b0001)
+                @test convert(UInt64, DNA_C)   === UInt64(0b0010)
+                @test convert(UInt64, DNA_G)   === UInt64(0b0100)
+                @test convert(UInt64, DNA_T)   === UInt64(0b1000)
+                @test convert(UInt64, DNA_N)   === UInt64(0b1111)
             end
 
             @testset "RNA conversions to UInt64" begin
                 @test convert(UInt64, RNA_Gap) === UInt64(0b0000)
-                @test convert(UInt64, RNA_A) === UInt64(0b0001)
-                @test convert(UInt64, RNA_C) === UInt64(0b0010)
-                @test convert(UInt64, RNA_G) === UInt64(0b0100)
-                @test convert(UInt64, RNA_U) === UInt64(0b1000)
-                @test convert(UInt64, RNA_N) === UInt64(0b1111)
-                #@test convert(UInt64, RNA_A) == UInt64(0)
-                #@test convert(UInt64, RNA_C) == UInt64(1)
-                #@test convert(UInt64, RNA_G) == UInt64(2)
-                #@test convert(UInt64, RNA_U) == UInt64(3)
-                #@test convert(UInt64, RNA_N) == UInt64(14)
+                @test convert(UInt64, RNA_A)   === UInt64(0b0001)
+                @test convert(UInt64, RNA_C)   === UInt64(0b0010)
+                @test convert(UInt64, RNA_G)   === UInt64(0b0100)
+                @test convert(UInt64, RNA_U)   === UInt64(0b1000)
+                @test convert(UInt64, RNA_N)   === UInt64(0b1111)
             end
         end
 
@@ -314,27 +266,27 @@ end
         end
 
         @testset "Other numeric types" begin
-            #@test convert(Int, DNA_A) == 0
-            #@test convert(Int, DNA_C) == 1
-            #@test convert(Int, DNA_G) == 2
-            #@test convert(Int, DNA_T) == 3
-            #@test convert(Int, DNA_N) == 14
-            #@test convert(DNANucleotide, 0) == DNA_A
-            #@test convert(DNANucleotide, 1) == DNA_C
-            #@test convert(DNANucleotide, 2) == DNA_G
-            #@test convert(DNANucleotide, 3) == DNA_T
-            #@test convert(DNANucleotide, 14) == DNA_N
+            @test convert(Int, DNA_A) === 1
+            @test convert(Int, DNA_C) === 2
+            @test convert(Int, DNA_G) === 4
+            @test convert(Int, DNA_T) === 8
+            @test convert(Int, DNA_N) === 15
+            @test convert(DNANucleotide,  1) === DNA_A
+            @test convert(DNANucleotide,  2) === DNA_C
+            @test convert(DNANucleotide,  4) === DNA_G
+            @test convert(DNANucleotide,  8) === DNA_T
+            @test convert(DNANucleotide, 15) === DNA_N
 
-            #@test convert(Int, RNA_A) == 0
-            #@test convert(Int, RNA_C) == 1
-            #@test convert(Int, RNA_G) == 2
-            #@test convert(Int, RNA_U) == 3
-            #@test convert(Int, RNA_N) == 14
-            #@test convert(RNANucleotide, 0) == RNA_A
-            #@test convert(RNANucleotide, 1) == RNA_C
-            #@test convert(RNANucleotide, 2) == RNA_G
-            #@test convert(RNANucleotide, 3) == RNA_U
-            #@test convert(RNANucleotide, 14) == RNA_N
+            @test convert(Int, RNA_A) === 1
+            @test convert(Int, RNA_C) === 2
+            @test convert(Int, RNA_G) === 4
+            @test convert(Int, RNA_U) === 8
+            @test convert(Int, RNA_N) === 15
+            @test convert(RNANucleotide,  1) === RNA_A
+            @test convert(RNANucleotide,  2) === RNA_C
+            @test convert(RNANucleotide,  4) === RNA_G
+            @test convert(RNANucleotide,  8) === RNA_U
+            @test convert(RNANucleotide, 15) === RNA_N
         end
     end
 
