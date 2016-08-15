@@ -42,8 +42,8 @@ function SubstitutionMatrix{T,S}(::Type{T},
     n = length(alpha)
     data = Matrix{S}(n, n)
     for x in alpha, y in alpha
-        i = convert(Int, x) + 1
-        j = convert(Int, y) + 1
+        i = order(x)
+        j = order(y)
         if defined[i,j]
             data[i,j] = submat[i,j]
         else
@@ -67,8 +67,8 @@ function SubstitutionMatrix{T,S}(scores::Associative{Tuple{T,T},S};
     submat = Matrix{S}(n, n)
     defined = falses(n, n)
     for ((x, y), score) in scores
-        i = convert(Int, x) + 1
-        j = convert(Int, y) + 1
+        i = order(x)
+        j = order(y)
         submat[i,j] = score
         defined[i,j] = true
     end
@@ -78,14 +78,14 @@ end
 Base.convert(::Type{Matrix}, submat::SubstitutionMatrix) = copy(submat.data)
 
 @inline function Base.getindex{T}(submat::SubstitutionMatrix{T}, x, y)
-    i = convert(Int, convert(T, x)) + 1
-    j = convert(Int, convert(T, y)) + 1
+    i = order(convert(T, x))
+    j = order(convert(T, y))
     return submat.data[i,j]
 end
 
 function Base.setindex!{T}(submat::SubstitutionMatrix{T}, val, x, y)
-    i = convert(Int, convert(T, x)) + 1
-    j = convert(Int, convert(T, y)) + 1
+    i = order(convert(T, x))
+    j = order(convert(T, y))
     submat.data[i,j] = val
     submat.defined[i,j] = true
     return submat
@@ -109,7 +109,7 @@ function Base.show{T,S}(io::IO, submat::SubstitutionMatrix{T,S})
     end
 
     # add rows and columns
-    rows = map(string, alphabet(T)[1:end-1])
+    rows = map(string, collect(alphabet(T)[1:end-1]))
     mat = hcat(rows, mat)
     cols = vcat("", rows)
     mat = vcat(cols', mat)
@@ -126,6 +126,14 @@ function Base.show{T,S}(io::IO, submat::SubstitutionMatrix{T,S})
 end
 
 underline(s) = join([string(c, '\U0332') for c in s])
+
+function order(nt::Nucleotide)
+    return convert(Int, nt)
+end
+
+function order(aa::AminoAcid)
+    return convert(Int, aa) + 1
+end
 
 
 """
@@ -200,7 +208,7 @@ function parse_ncbi_submat{T}(::Type{T}, filepath)
     return SubstitutionMatrix(scores, default_match=0, default_mismatch=0)
 end
 
-#const EDNAFULL = load_submat(DNANucleotide, "NUC.4.4")
+const EDNAFULL = load_submat(DNANucleotide, "NUC.4.4")
 const PAM30    = load_submat(AminoAcid, "PAM30")
 const PAM70    = load_submat(AminoAcid, "PAM70")
 const PAM250   = load_submat(AminoAcid, "PAM250")

@@ -178,10 +178,10 @@ end
 nnucleotide(::Type{DNANucleotide}) = DNA_N
 gap(::Type{DNANucleotide}) = DNA_Gap
 alphabet(::Type{DNANucleotide}) = (
-    DNA_Gap, DNA_A, DNA_C, DNA_G,
-    DNA_T,   DNA_M, DNA_R, DNA_W,
-    DNA_S,   DNA_Y, DNA_K, DNA_V,
-    DNA_H,   DNA_D, DNA_B, DNA_N)
+    DNA_A, DNA_C, DNA_G, DNA_T,
+    DNA_M, DNA_R, DNA_W, DNA_S,
+    DNA_Y, DNA_K, DNA_V, DNA_H,
+    DNA_D, DNA_B, DNA_N, DNA_Gap)
 
 # RNA Nucleotides
 
@@ -221,10 +221,10 @@ end
 nnucleotide(::Type{RNANucleotide}) = RNA_N
 gap(::Type{RNANucleotide}) = RNA_Gap
 alphabet(::Type{RNANucleotide}) = (
-    RNA_Gap, RNA_A, RNA_C, RNA_G,
-    RNA_U,   RNA_M, RNA_R, RNA_W,
-    RNA_S,   RNA_Y, RNA_K, RNA_V,
-    RNA_H,   RNA_D, RNA_B, RNA_N)
+    RNA_A, RNA_C, RNA_G, RNA_U,
+    RNA_M, RNA_R, RNA_W, RNA_S,
+    RNA_Y, RNA_K, RNA_V, RNA_H,
+    RNA_D, RNA_B, RNA_N, RNA_Gap)
 
 
 # Conversion from Char
