@@ -355,23 +355,23 @@ end
         @test Seq.complement(RNA_N) === RNA_N
     end
 
-    #=
     @testset "Encoder" begin
         @testset "DNA" begin
             encode = Seq.encode
             EncodeError = Seq.EncodeError
 
             # 2 bits
-            @test encode(DNAAlphabet{2}, DNA_A) === convert(UInt8, DNA_A) === 0b00
-            @test encode(DNAAlphabet{2}, DNA_C) === convert(UInt8, DNA_C) === 0b01
-            @test encode(DNAAlphabet{2}, DNA_G) === convert(UInt8, DNA_G) === 0b10
-            @test encode(DNAAlphabet{2}, DNA_T) === convert(UInt8, DNA_T) === 0b11
+            @test encode(DNAAlphabet{2}, DNA_A) === 0x00
+            @test encode(DNAAlphabet{2}, DNA_C) === 0x01
+            @test encode(DNAAlphabet{2}, DNA_G) === 0x02
+            @test encode(DNAAlphabet{2}, DNA_T) === 0x03
             @test_throws EncodeError encode(DNAAlphabet{2}, DNA_M)
             @test_throws EncodeError encode(DNAAlphabet{2}, DNA_N)
+            @test_throws EncodeError encode(DNAAlphabet{2}, DNA_Gap)
 
             # 4 bits
             for nt in alphabet(DNANucleotide)
-                @test encode(DNAAlphabet{4}, nt) === convert(UInt8, nt)
+                @test encode(DNAAlphabet{4}, nt) === reinterpret(UInt8, nt)
             end
             @test_throws EncodeError encode(DNAAlphabet{4}, Seq.DNA_INVALID)
         end
@@ -380,16 +380,17 @@ end
             EncodeError = Seq.EncodeError
 
             # 2 bits
-            @test encode(RNAAlphabet{2}, RNA_A) === convert(UInt8, RNA_A) === 0b00
-            @test encode(RNAAlphabet{2}, RNA_C) === convert(UInt8, RNA_C) === 0b01
-            @test encode(RNAAlphabet{2}, RNA_G) === convert(UInt8, RNA_G) === 0b10
-            @test encode(RNAAlphabet{2}, RNA_U) === convert(UInt8, RNA_U) === 0b11
+            @test encode(RNAAlphabet{2}, RNA_A) === 0x00
+            @test encode(RNAAlphabet{2}, RNA_C) === 0x01
+            @test encode(RNAAlphabet{2}, RNA_G) === 0x02
+            @test encode(RNAAlphabet{2}, RNA_U) === 0x03
             @test_throws EncodeError encode(RNAAlphabet{2}, RNA_M)
             @test_throws EncodeError encode(RNAAlphabet{2}, RNA_N)
+            @test_throws EncodeError encode(RNAAlphabet{2}, RNA_Gap)
 
             # 4 bits
             for nt in alphabet(RNANucleotide)
-                @test encode(RNAAlphabet{4}, nt) === convert(UInt8, nt)
+                @test encode(RNAAlphabet{4}, nt) === reinterpret(UInt8, nt)
             end
             @test_throws EncodeError encode(RNAAlphabet{4}, Seq.RNA_INVALID)
         end
@@ -401,16 +402,16 @@ end
             DecodeError = Seq.DecodeError
 
             # 2 bits
-            @test decode(DNAAlphabet{2}, 0b00) === convert(DNANucleotide, 0b00) === DNA_A
-            @test decode(DNAAlphabet{2}, 0b01) === convert(DNANucleotide, 0b01) === DNA_C
-            @test decode(DNAAlphabet{2}, 0b10) === convert(DNANucleotide, 0b10) === DNA_G
-            @test decode(DNAAlphabet{2}, 0b11) === convert(DNANucleotide, 0b11) === DNA_T
-            @test_throws DecodeError decode(DNAAlphabet{2}, 0b0100)
-            @test_throws DecodeError decode(DNAAlphabet{2}, 0b1110)
+            @test decode(DNAAlphabet{2}, 0x00) === DNA_A
+            @test decode(DNAAlphabet{2}, 0x01) === DNA_C
+            @test decode(DNAAlphabet{2}, 0x02) === DNA_G
+            @test decode(DNAAlphabet{2}, 0x03) === DNA_T
+            @test_throws DecodeError decode(DNAAlphabet{2}, 0x04)
+            @test_throws DecodeError decode(DNAAlphabet{2}, 0x0e)
 
             # 4 bits
             for x in 0b0000:0b1111
-                @test decode(DNAAlphabet{4}, x) === convert(DNANucleotide, x)
+                @test decode(DNAAlphabet{4}, x) === reinterpret(DNANucleotide, x)
             end
             @test_throws DecodeError decode(DNAAlphabet{4}, 0b10000)
         end
@@ -419,21 +420,22 @@ end
             DecodeError = Seq.DecodeError
 
             # 2 bits
-            @test decode(RNAAlphabet{2}, 0b00) === convert(RNANucleotide, 0b00) === RNA_A
-            @test decode(RNAAlphabet{2}, 0b01) === convert(RNANucleotide, 0b01) === RNA_C
-            @test decode(RNAAlphabet{2}, 0b10) === convert(RNANucleotide, 0b10) === RNA_G
-            @test decode(RNAAlphabet{2}, 0b11) === convert(RNANucleotide, 0b11) === RNA_U
-            @test_throws DecodeError decode(RNAAlphabet{2}, 0b0100)
-            @test_throws DecodeError decode(RNAAlphabet{2}, 0b1110)
+            @test decode(RNAAlphabet{2}, 0x00) === RNA_A
+            @test decode(RNAAlphabet{2}, 0x01) === RNA_C
+            @test decode(RNAAlphabet{2}, 0x02) === RNA_G
+            @test decode(RNAAlphabet{2}, 0x03) === RNA_U
+            @test_throws DecodeError decode(RNAAlphabet{2}, 0x04)
+            @test_throws DecodeError decode(RNAAlphabet{2}, 0x0e)
 
             # 4 bits
             for x in 0b0000:0b1111
-                @test decode(RNAAlphabet{4}, x) === convert(RNANucleotide, x)
+                @test decode(RNAAlphabet{4}, x) === reinterpret(RNANucleotide, x)
             end
             @test_throws DecodeError decode(RNAAlphabet{4}, 0b10000)
         end
     end
 
+    #=
     @testset "Arithmetic and Order" begin
         @testset "DNA" begin
             @test DNA_A + 1 == DNA_C
