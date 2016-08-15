@@ -826,6 +826,7 @@ isambiguous
 </pre></div>
 
 
+<p>A random sequence can be obtained by the <code>randdnaseq</code>, <code>randrnaseq</code> and <code>randaaseq</code> functions, which generate <code>DNASequence</code>, <code>RNASequence</code> and <code>AminoAcidSequence</code>, respectively. Generated sequences are composed of the standard symbols without ambiguity and gap. For example, <code>randdnaseq(6)</code> may generate <code>dna"TCATAG"</code> but never generates <code>dna"TNANAG"</code> or <code>dna"T-ATAG"</code>.</p>
 <p>A translatable <code>RNASequence</code> can also be converted to an <code>AminoAcidSequence</code> using the <a href="./#Bio.Seq.translate"><code>translate</code></a> function described below.</p>
 <p><a id='Indexing-and-modifying-1'></a></p>
 <h3 id="indexing-and-modifying">Indexing and modifying</h3>
