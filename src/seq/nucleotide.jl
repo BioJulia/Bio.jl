@@ -39,6 +39,97 @@ Base.isless{N<:Nucleotide}(x::N, y::N) = isless(UInt8(x), UInt8(y))
 Base.count_ones(nt::Nucleotide) = count_ones(convert(UInt8, nt))
 Base.trailing_zeros(nt::Nucleotide) = trailing_zeros(convert(UInt8, nt))
 
+"""
+    isGC(nt::Nucleotide)
+
+Test if `nt` is surely either guanine or cytosine.
+"""
+function isGC(nt::Nucleotide)
+    bits = reinterpret(UInt8, nt)
+    return bits != 0 && (bits & 0b1001) == 0
+end
+
+"""
+    ispurine(nt::Nucleotide)
+
+Test if nucleotide is surely a purine.
+"""
+function ispurine(nt::Nucleotide)
+    bits = reinterpret(UInt8, nt)
+    return bits != 0 && (bits & 0b1010) == 0
+end
+
+"""
+    ispyrimidine(nt::Nucleotide)
+
+Test if nucleotide is surely a pyrimidine.
+"""
+function ispyrimidine(nt::Nucleotide)
+    bits = reinterpret(UInt8, nt)
+    return bits != 0 && (bits & 0b0101) == 0
+end
+
+"""
+    isambiguous(nt::Nucleotide)
+
+Test if `nt` is ambiguous nucleotide.
+"""
+function isambiguous(nt::Nucleotide)
+    return count_ones(nt) != 1
+end
+
+"""
+    complement(nt::Nucleotide)
+
+Return the complementary nucleotide of `nt`.
+"""
+function complement(nt::Nucleotide)
+    bits = compatbits(nt)
+    return reinterpret(
+        typeof(nt),
+        (bits & 0x01) << 3 | (bits & 0x08) >> 3 |
+        (bits & 0x02) << 1 | (bits & 0x04) >> 1)
+end
+
+function Base.isvalid{T<:Nucleotide}(::Type{T}, x::Integer)
+    return 0 ≤ x < 16
+end
+
+function Base.isvalid(nt::Nucleotide)
+    return reinterpret(UInt8, nt) ≤ 0b1111
+end
+
+compatbits(nt::Nucleotide) = reinterpret(UInt8, nt)
+
+"""
+    iscompatible(x, y)
+
+Return `true` if and only if `x` and `y` are compatible with each other (i.e.
+`x` and `y` can be the same symbol).
+
+`x` and `y` must be the same type (`DNANucleotide`, `RNANucleotide` or `AminoAcid`).
+
+# Examples
+
+```julia
+julia> iscompatible(DNA_A, DNA_A)
+true
+
+julia> iscompatible(DNA_C, DNA_N)  # DNA_N can be DNA_C
+true
+
+julia> iscompatible(DNA_C, DNA_R)  # DNA_R (A or G) cannot be DNA_C
+false
+
+julia> iscompatible(AA_A, AA_X)    # AA_X can be AA_A
+true
+
+```
+"""
+function iscompatible{T<:Nucleotide}(x::T, y::T)
+    return compatbits(x) & compatbits(y) != 0
+end
+
 
 # Nucleotide encoding definition
 # ------------------------------
@@ -86,58 +177,11 @@ end
 "Returns Any DNA Nucleotide (i.e. DNA_N)"
 nnucleotide(::Type{DNANucleotide}) = DNA_N
 gap(::Type{DNANucleotide}) = DNA_Gap
-
-Base.isvalid(::Type{DNANucleotide}, x::Integer) = 0 ≤ x < 16
-Base.isvalid(nt::DNANucleotide) = nt ≤ DNA_N
-isambiguous(nt::DNANucleotide) = count_ones(nt) != 1
 alphabet(::Type{DNANucleotide}) = (
     DNA_Gap, DNA_A, DNA_C, DNA_G,
     DNA_T,   DNA_M, DNA_R, DNA_W,
     DNA_S,   DNA_Y, DNA_K, DNA_V,
     DNA_H,   DNA_D, DNA_B, DNA_N)
-
-function isGC(nt::DNANucleotide)
-    return nt == DNA_G || nt == DNA_C || nt == DNA_S
-end
-
-"""
-    ispurine(nt::Nucleotide)
-
-Test if nucleotide is surely a Purine.
-"""
-function ispurine(nt::Nucleotide)
-    bits = compatbits(nt)
-    return ((bits & 0b1010) == 0) && ((bits & 0b0101) != 0)
-end
-
-"""
-    ispyrimidine(nt::Nucleotide)
-
-Test if nucleotide is surely a Pyrimidine.
-"""
-function ispyrimidine(nt::Nucleotide)
-    bits = compatbits(nt)
-    return ((bits & 0b0101) == 0) && ((bits & 0b1010) != 0)
-end
-
-"""
-    complement(nt::Nucleotide)
-
-Return the complementary nucleotide of `nt`.
-"""
-function complement(nt::DNANucleotide)
-    if isambiguous(nt)
-        error("complement of an ambiguous nucleotide is not defined")
-    elseif nt == DNA_A
-        return DNA_T
-    elseif nt == DNA_C
-        return DNA_G
-    elseif nt == DNA_G
-        return DNA_C
-    else
-        return DNA_A
-    end
-end
 
 # RNA Nucleotides
 
@@ -176,66 +220,11 @@ end
 "Returns Any RNA Nucleotide (RNA_N)"
 nnucleotide(::Type{RNANucleotide}) = RNA_N
 gap(::Type{RNANucleotide}) = RNA_Gap
-
-Base.isvalid(::Type{RNANucleotide}, x::Integer) = 0 ≤ x < 16
-Base.isvalid(nt::RNANucleotide) = nt ≤ RNA_N
-isambiguous(nt::RNANucleotide) = count_ones(nt) != 0
 alphabet(::Type{RNANucleotide}) = (
     RNA_Gap, RNA_A, RNA_C, RNA_G,
     RNA_U,   RNA_M, RNA_R, RNA_W,
     RNA_S,   RNA_Y, RNA_K, RNA_V,
     RNA_H,   RNA_D, RNA_B, RNA_N)
-
-function isGC(nt::RNANucleotide)
-    return nt == RNA_G || nt == RNA_C || nt == RNA_S
-end
-
-function complement(nt::RNANucleotide)
-    if isambiguous(nt)
-        error("complement of an ambiguous nucleotide is not defined")
-    elseif nt == RNA_A
-        return RNA_U
-    elseif nt == RNA_C
-        return RNA_G
-    elseif nt == RNA_G
-        return RNA_C
-    else
-        return RNA_A
-    end
-end
-
-
-# Compatibility
-# -------------
-
-compatbits(nt::Nucleotide) = convert(UInt8, nt)
-
-"""
-    iscompatible(x, y)
-
-Return `true` if and only if `x` and `y` are compatible with each other (i.e.
-`x` and `y` can be the same symbol).
-
-`x` and `y` must be the same type (`DNANucleotide`, `RNANucleotide` or `AminoAcid`).
-
-# Examples
-
-```julia
-julia> iscompatible(DNA_A, DNA_A)
-true
-
-julia> iscompatible(DNA_C, DNA_N)  # DNA_N can be DNA_C
-true
-
-julia> iscompatible(DNA_C, DNA_R)  # DNA_R (A or G) cannot be DNA_C
-false
-
-julia> iscompatible(AA_A, AA_X)    # AA_X can be AA_A
-true
-
-```
-"""
-iscompatible{T}(x::T, y::T) = compatbits(x) & compatbits(y) != 0
 
 
 # Conversion from Char

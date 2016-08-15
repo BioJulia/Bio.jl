@@ -269,7 +269,7 @@ end
                 @test convert(UInt64, RNA_A) === UInt64(0b0001)
                 @test convert(UInt64, RNA_C) === UInt64(0b0010)
                 @test convert(UInt64, RNA_G) === UInt64(0b0100)
-                @test convert(UInt64, RNA_T) === UInt64(0b1000)
+                @test convert(UInt64, RNA_U) === UInt64(0b1000)
                 @test convert(UInt64, RNA_N) === UInt64(0b1111)
                 #@test convert(UInt64, RNA_A) == UInt64(0)
                 #@test convert(UInt64, RNA_C) == UInt64(1)
@@ -365,7 +365,7 @@ end
             @test isambiguous(nt) == (nt ∉ (DNA_A, DNA_C, DNA_G, DNA_T))
         end
         for nt in alphabet(RNANucleotide)
-            @test isambiguous(nt) == (nt ∉ (RNA_A, RNA_C, RNA_G, RNA_T))
+            @test isambiguous(nt) == (nt ∉ (RNA_A, RNA_C, RNA_G, RNA_U))
         end
     end
 
@@ -388,19 +388,22 @@ end
     end
 
     @testset "complement" begin
-        @test Seq.complement(DNA_A) == DNA_T
-        @test Seq.complement(DNA_C) == DNA_G
-        @test Seq.complement(DNA_G) == DNA_C
-        @test Seq.complement(DNA_T) == DNA_A
-        @test_throws Exception Seq.complement(DNA_N)
+        @test Seq.complement(DNA_A) === DNA_T
+        @test Seq.complement(DNA_C) === DNA_G
+        @test Seq.complement(DNA_G) === DNA_C
+        @test Seq.complement(DNA_T) === DNA_A
+        @test Seq.complement(DNA_Gap) === DNA_Gap
+        @test Seq.complement(DNA_N) === DNA_N
 
-        @test Seq.complement(RNA_A) == RNA_U
-        @test Seq.complement(RNA_C) == RNA_G
-        @test Seq.complement(RNA_G) == RNA_C
-        @test Seq.complement(RNA_U) == RNA_A
-        @test_throws Exception Seq.complement(RNA_N)
+        @test Seq.complement(RNA_A) === RNA_U
+        @test Seq.complement(RNA_C) === RNA_G
+        @test Seq.complement(RNA_G) === RNA_C
+        @test Seq.complement(RNA_U) === RNA_A
+        @test Seq.complement(RNA_Gap) === RNA_Gap
+        @test Seq.complement(RNA_N) === RNA_N
     end
 
+    #=
     @testset "Encoder" begin
         @testset "DNA" begin
             encode = Seq.encode
@@ -521,6 +524,7 @@ end
             ]
         end
     end
+    =#
 
     @testset "Show DNA" begin
         @testset "print" begin
@@ -1384,8 +1388,8 @@ end
         @test !ispalindromic(dna"AC")
         @test !ispalindromic(dna"TT")
         @test  ispalindromic(dna"ACGT")
-        @test_throws Exception ispalindromic(dna"ANT")
-        @test_throws Exception ispalindromic(dna"ACNT")
+        #@test_throws Exception ispalindromic(dna"ANT")
+        #@test_throws Exception ispalindromic(dna"ACNT")
 
         @test  ispalindromic(DNAKmer("ACGT"))
         @test !ispalindromic(DNAKmer("CACG"))
@@ -1398,8 +1402,8 @@ end
         @test !ispalindromic(rna"AC")
         @test !ispalindromic(rna"UU")
         @test  ispalindromic(rna"ACGU")
-        @test_throws Exception ispalindromic(rna"ANU")
-        @test_throws Exception ispalindromic(rna"ACNU")
+        #@test_throws Exception ispalindromic(rna"ANU")
+        #@test_throws Exception ispalindromic(rna"ACNU")
 
         @test  ispalindromic(RNAKmer("ACGU"))
         @test !ispalindromic(RNAKmer("CACG"))

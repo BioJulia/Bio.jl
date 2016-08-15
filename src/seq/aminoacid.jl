@@ -118,6 +118,10 @@ gap(::Type{AminoAcid}) = AA_Gap
 
 compatbits(aa::AminoAcid) = compatbits_aa[reinterpret(UInt8, aa)+1]
 
+function iscompatible(x::AminoAcid, y::AminoAcid)
+    return compatbits(x) & compatbits(y) != 0
+end
+
 
 # Conversion from/to Char
 # -----------------------
