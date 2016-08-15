@@ -29,10 +29,10 @@ end
 function Composition{T,k}(kmer::Kmer{T,k})
     counts = zeros(Int, 16)
     @inbounds begin
-        counts[1] = count_a(kmer)
-        counts[2] = count_c(kmer)
-        counts[3] = count_g(kmer)
-        counts[4] = count_t(kmer)  # U when T == RNANucleotide
+        counts[Int(DNA_A)+1] = count_a(kmer)
+        counts[Int(DNA_C)+1] = count_c(kmer)
+        counts[Int(DNA_G)+1] = count_g(kmer)
+        counts[Int(DNA_T)+1] = count_t(kmer)  # U when T == RNANucleotide
     end
     return Composition{T}(counts)
 end

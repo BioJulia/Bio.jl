@@ -50,8 +50,14 @@ function Base.convert{A<:DNAAlphabet}(::Type{ReferenceSequence}, seq::BioSequenc
         r = 0
         while r < 64 && i ≤ endof(seq)
             nt = seq[i]
-            if nt ≤ DNA_T
-                x |= convert(UInt64, nt) << r
+            if nt == DNA_A
+                x |= convert(UInt64, 0) << r
+            elseif nt == DNA_C
+                x |= convert(UInt64, 1) << r
+            elseif nt == DNA_G
+                x |= convert(UInt64, 2) << r
+            elseif nt == DNA_T
+                x |= convert(UInt64, 3) << r
             elseif nt == DNA_N
                 nmask[i] = true
             else
@@ -102,7 +108,7 @@ function encode(src::Vector{UInt8}, from::Integer, len::Integer)
             # FIXME: Hotspot
             char = convert(Char, src[i])
             nt = convert(DNANucleotide, char)
-            if nt ≤ DNA_T
+            if !isambiguous(nt)
                 x |= UInt64(encode(DNAAlphabet{2}, nt)) << offset(next)
             elseif nt == DNA_N
                 nmask[i] = true
@@ -129,7 +135,7 @@ end
         return DNA_N
     else
         j = bitindex(seq, i)
-        return DNANucleotide((seq.data[index(j)] >> offset(j)) & 0b11)
+        return DNANucleotide(0x01 << ((seq.data[index(j)] >> offset(j)) & 0b11))
     end
 end
 

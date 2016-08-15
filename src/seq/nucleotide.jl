@@ -231,19 +231,25 @@ alphabet(::Type{RNANucleotide}) = (
 # --------------------
 
 function Base.convert(::Type{DNANucleotide}, c::Char)
-    @inbounds return c <= '\x7f' ? char_to_dna[Int(c) + 1] : DNA_INVALID
-end
-
-function unsafe_ascii_byte_to_nucleotide(T::Type{DNANucleotide}, c::UInt8)
-    @inbounds return char_to_dna[c + 1]
+    if c > '\x7f'
+        throw(InexactError())
+    end
+    @inbounds dna = char_to_dna[Int(c) + 1]
+    if dna == DNA_INVALID
+        throw(InexactError())
+    end
+    return dna
 end
 
 function Base.convert(::Type{RNANucleotide}, c::Char)
-    @inbounds return c <= '\x7f' ? char_to_rna[Int(c) + 1] : RNA_INVALID
-end
-
-function unsafe_ascii_byte_to_nucleotide(T::Type{RNANucleotide}, c::UInt8)
-    @inbounds return char_to_rna[c + 1]
+    if c > '\x7f'
+        throw(InexactError())
+    end
+    @inbounds rna = char_to_rna[Int(c) + 1]
+    if rna == RNA_INVALID
+        throw(InexactError())
+    end
+    return rna
 end
 
 
