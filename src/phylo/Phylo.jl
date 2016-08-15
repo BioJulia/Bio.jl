@@ -15,9 +15,7 @@ using Compat
 
 using LightGraphs
 
-using Bio.Tokenize
-
-using Bio.Indexers
+using Bio: Tokenize, Indexers
 
 export
 
