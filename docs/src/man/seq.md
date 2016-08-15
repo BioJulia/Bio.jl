@@ -408,6 +408,12 @@ true
 
 ```
 
+A random sequence can be obtained by the `randdnaseq`, `randrnaseq` and
+`randaaseq` functions, which generate `DNASequence`, `RNASequence` and
+`AminoAcidSequence`, respectively. Generated sequences are composed of the
+standard symbols without ambiguity and gap. For example, `randdnaseq(6)` may
+generate `dna"TCATAG"` but never generates `dna"TNANAG"` or `dna"T-ATAG"`.
+
 A translatable `RNASequence` can also be converted to an `AminoAcidSequence`
 using the [`translate`](@ref) function described below.
 

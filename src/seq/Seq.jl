@@ -78,6 +78,10 @@ export
     npositions,
     hasn,
     gc_content,
+    SequenceGenerator,
+    randdnaseq,
+    randrnaseq,
+    randaaseq,
     canonical,
     neighbors,
     eachkmer,
@@ -182,6 +186,7 @@ include("alphabet.jl")
 include("bitindex.jl")
 include("bioseq.jl")
 include("hash.jl")
+include("randseq.jl")
 include("kmer.jl")
 include("nmask.jl")
 include("refseq.jl")
