@@ -1329,9 +1329,9 @@ end
         @test  ispalindromic(dna"CG")
         @test !ispalindromic(dna"AC")
         @test !ispalindromic(dna"TT")
+        @test  ispalindromic(dna"ANT")
         @test  ispalindromic(dna"ACGT")
-        #@test_throws Exception ispalindromic(dna"ANT")
-        #@test_throws Exception ispalindromic(dna"ACNT")
+        @test  ispalindromic(dna"ACNT")
 
         @test  ispalindromic(DNAKmer("ACGT"))
         @test !ispalindromic(DNAKmer("CACG"))
@@ -1343,9 +1343,9 @@ end
         @test  ispalindromic(rna"CG")
         @test !ispalindromic(rna"AC")
         @test !ispalindromic(rna"UU")
+        @test  ispalindromic(rna"ANU")
         @test  ispalindromic(rna"ACGU")
-        #@test_throws Exception ispalindromic(rna"ANU")
-        #@test_throws Exception ispalindromic(rna"ACNU")
+        @test !ispalindromic(rna"ACNU")
 
         @test  ispalindromic(RNAKmer("ACGU"))
         @test !ispalindromic(RNAKmer("CACG"))
