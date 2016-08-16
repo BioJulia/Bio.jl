@@ -148,13 +148,27 @@ following format:
 {qualities}
 ```
 
-Here is an example of a part of a FASTQ file:
+Here is an example of one record from a FASTQ file:
 ```
 @FSRRS4401BE7HA
 tcagTTAAGATGGGAT
 +
-eeeccccccc`UUU^U
+###EEEEEEEEE##E#
 ```
+
+To parse a file containing such records, one could use:
+```julia
+parser = open("reads.fastq", FASTQ, Seq.SANGER_QUAL_ENCODING)
+seqrec = eltype(parser)()
+while !eof(parser)
+    read!(parser, seqrec)
+    # ... process sequence
+end
+```
+
+This assumes that the quality scores are in [Sanger
+encoding](https://en.wikipedia.org/wiki/FASTQ_format#Encoding).
+
 
 ### .2bit
 
