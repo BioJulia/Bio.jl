@@ -151,21 +151,21 @@ end
 # AminoAcidAlphabet
 # -----------------
 
-function encode(::Type{AminoAcidAlphabet}, aa::AminoAcid)
+@inline function encode(::Type{AminoAcidAlphabet}, aa::AminoAcid)
     if aa > AA_Gap
         throw(EncodeError(AminoAcidAlphabet, aa))
     end
     return reinterpret(UInt8, aa)
 end
 
-function decode(::Type{AminoAcidAlphabet}, x::UInt8)
+@inline function decode(::Type{AminoAcidAlphabet}, x::UInt8)
     if x > 0x1b
         throw(DecodeError(AminoAcidAlphabet, x))
     end
     return reinterpret(AminoAcid, x)
 end
 
-function decode(::Type{AminoAcidAlphabet}, x::Unsigned)
+@inline function decode(::Type{AminoAcidAlphabet}, x::Unsigned)
     return decode(AminoAcidAlphabet, UInt8(x))
 end
 
@@ -173,20 +173,20 @@ end
 # CharAlphabet
 # ------------
 
-function encode(::Type{CharAlphabet}, char::Char)
+@inline function encode(::Type{CharAlphabet}, char::Char)
     if char > '\U10ffff'
         throw(EncodeError(CharAlphabet, char))
     end
     return reinterpret(UInt32, char)
 end
 
-function decode(::Type{CharAlphabet}, x::UInt32)
+@inline function decode(::Type{CharAlphabet}, x::UInt32)
     if x > 0x10ffff
         throw(DecodeError(CharAlphabet, x))
     end
     return reinterpret(Char, x)
 end
 
-function decode(::Type{CharAlphabet}, x::Unsigned)
+@inline function decode(::Type{CharAlphabet}, x::Unsigned)
     return decode(CharAlphabet, UInt32(x))
 end
