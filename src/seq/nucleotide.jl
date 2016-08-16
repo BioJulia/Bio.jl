@@ -6,7 +6,23 @@
 # This file is a part of BioJulia.
 # License is MIT: https://github.com/BioJulia/Bio.jl/blob/master/LICENSE.md
 
-# Valid nucleotides are represented in bytes using just the four low-order bits
+# Nucleotide Encoding
+# -------------------
+#
+# Unambiguous nucleotides are represented in one-hot encoding as follows:
+#
+#   | Nucleotide | Bits |
+#   | ---------- | ---- |
+#   |     A      | 0001 |
+#   |     C      | 0010 |
+#   |     G      | 0100 |
+#   |    T/U     | 1000 |
+#
+# Ambiguous nucleotides are bitwise OR of these four nucleotides. For example, R
+# , A or G, is represented as 0101 (= A: 0001 | G: 0100). The gap symbol is
+# always 0000.  The meaningful four bits are stored in the least significant
+# bits of a byte.
+
 abstract Nucleotide
 bitstype 8 DNANucleotide <: Nucleotide
 bitstype 8 RNANucleotide <: Nucleotide
@@ -42,8 +58,17 @@ function Base.isless{N<:Nucleotide}(x::N, y::N)
     return isless(reinterpret(UInt8, x), reinterpret(UInt8, y))
 end
 
-Base.count_ones(nt::Nucleotide) = count_ones(reinterpret(UInt8, nt))
-Base.trailing_zeros(nt::Nucleotide) = trailing_zeros(reinterpret(UInt8, nt))
+function Base.count_ones(nt::Nucleotide)
+    return count_ones(reinterpret(UInt8, nt))
+end
+
+function Base.trailing_zeros(nt::Nucleotide)
+    return trailing_zeros(reinterpret(UInt8, nt))
+end
+
+function gap{N<:Nucleotide}(::Type{N})
+    return reinterpret(N, 0b0000)
+end
 
 """
     isGC(nt::Nucleotide)
@@ -105,8 +130,6 @@ function Base.isvalid(nt::Nucleotide)
     return reinterpret(UInt8, nt) ≤ 0b1111
 end
 
-compatbits(nt::Nucleotide) = reinterpret(UInt8, nt)
-
 """
     iscompatible(x, y)
 
@@ -136,6 +159,11 @@ function iscompatible{T<:Nucleotide}(x::T, y::T)
     return compatbits(x) & compatbits(y) != 0
 end
 
+# Return the compatibility bits of `nt`.
+@inline function compatbits(nt::Nucleotide)
+    return reinterpret(UInt8, nt)
+end
+
 
 # Nucleotide encoding definition
 # ------------------------------
@@ -148,9 +176,6 @@ const DNA_INVALID = convert(DNANucleotide, 0b10000) # Indicates invalid DNA when
 # lookup table for characters
 const char_to_dna = [DNA_INVALID for _ in 0x00:0x7f]
 const dna_to_char = Vector{Char}(16)
-
-# compatibility bits
-const compatbits_nuc = zeros(UInt8, 16)
 
 # derived from "The DDBJ/ENA/GenBank Feature Table Definition"
 # §7.4.1 Nucleotide base code (IUPAC)
@@ -180,9 +205,6 @@ for (char, doc, bits) in [
     end
 end
 
-"Returns Any DNA Nucleotide (i.e. DNA_N)"
-nnucleotide(::Type{DNANucleotide}) = DNA_N
-gap(::Type{DNANucleotide}) = DNA_Gap
 alphabet(::Type{DNANucleotide}) = (
     DNA_A, DNA_C, DNA_G, DNA_T,
     DNA_M, DNA_R, DNA_W, DNA_S,
@@ -223,9 +245,6 @@ for (char, doc, dna) in [
     end
 end
 
-"Returns Any RNA Nucleotide (RNA_N)"
-nnucleotide(::Type{RNANucleotide}) = RNA_N
-gap(::Type{RNANucleotide}) = RNA_Gap
 alphabet(::Type{RNANucleotide}) = (
     RNA_A, RNA_C, RNA_G, RNA_U,
     RNA_M, RNA_R, RNA_W, RNA_S,
@@ -233,8 +252,8 @@ alphabet(::Type{RNANucleotide}) = (
     RNA_D, RNA_B, RNA_N, RNA_Gap)
 
 
-# Conversion from Char
-# --------------------
+# Print functions
+# ---------------
 
 function Base.convert(::Type{DNANucleotide}, c::Char)
     if c > '\x7f'
@@ -258,16 +277,13 @@ function Base.convert(::Type{RNANucleotide}, c::Char)
     return rna
 end
 
+function Base.convert(::Type{Char}, nt::DNANucleotide)
+    return dna_to_char[convert(UInt8, nt) + 1]
+end
 
-# Conversion to Char
-# ------------------
-
-Base.convert(::Type{Char}, nt::DNANucleotide) = dna_to_char[convert(UInt8, nt) + 1]
-Base.convert(::Type{Char}, nt::RNANucleotide) = rna_to_char[convert(UInt8, nt) + 1]
-
-
-# Basic functions
-# ---------------
+function Base.convert(::Type{Char}, nt::RNANucleotide)
+    return rna_to_char[convert(UInt8, nt) + 1]
+end
 
 function Base.show(io::IO, nt::DNANucleotide)
     if isvalid(nt)

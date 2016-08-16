@@ -60,7 +60,6 @@ Set of nucleotide symbols in Bio.jl covers IUPAC nucleotide base plus a gap symb
 <http://www.insdc.org/documents/feature_table.html#7.4.1>
 
 Symbols are accessible as constants with `DNA_` or `RNA_` prefix:
-
 ```jlcon
 julia> DNA_A
 DNA_A
@@ -83,7 +82,6 @@ Bio.Seq.RNANucleotide
 ```
 
 Symbols can be constructed by converting regular characters:
-
 ```jlcon
 julia> convert(DNANucleotide, 'C')
 DNA_C
@@ -158,51 +156,10 @@ true
 ```
 
 
-### Arithmetic
-
-Biological symbols behaves like `Char`:
-```jlcon
-julia> DNA_A == DNA_A  # equivalence
-true
-
-julia> DNA_A < DNA_C < DNA_G < DNA_T  # order
-true
-
-julia> DNA_A + 1  # addition
-DNA_C
-
-julia> DNA_T - 3  # subtraction
-DNA_A
-
-julia> DNA_T - DNA_C  # difference
-2
-
-```
-
-Note that these operations are cyclic:
-```jlcon
-julia> DNA_C + 15
-DNA_A
-
-julia> DNA_A - 1
-DNA_Gap
-
-```
-
-
 ### Symbol Ranges
 
 Consecutive symbol sets can be created using a colon like integer ranges:
 ```jlcon
-julia> DNA_A:DNA_T    # unambiguous DNA nucleotides (A, C, G, T)
-DNA_A:DNA_T
-
-julia> DNA_A:DNA_N    # all DNA nucleotides except gap
-DNA_A:DNA_N
-
-julia> DNA_A:DNA_Gap  # all DNA nucleotides including gap
-DNA_A:DNA_Gap
-
 julia> AA_A:AA_V      # standard amino acids
 AA_A:AA_V
 
@@ -214,23 +171,6 @@ AA_A:AA_X
 
 julia> AA_A:AA_Gap    # all amino acids including terminal codon (*) and gap
 AA_A:AA_Gap
-
-```
-
-Most range operations are supported, especially the iterator interface and the
-membership operator (`in` or `∈`) will be useful in many situations:
-```jlcon
-julia> for nt in DNA_A:DNA_T; println(nt); end
-A
-C
-G
-T
-
-julia> DNA_C in DNA_A:DNA_T  # DNA_C is in the range of unambiguous DNA nucleotides
-true
-
-julia> DNA_N in DNA_A:DNA_T  # DNA_N is not in it
-false
 
 ```
 
