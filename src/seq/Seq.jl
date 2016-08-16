@@ -71,7 +71,7 @@ export
     reverse_complement,
     reverse_complement!,
     mismatches,
-    ispalindrome,
+    ispalindromic,
     hasambiguity,
     isrepetitive,
     ambiguous_positions,

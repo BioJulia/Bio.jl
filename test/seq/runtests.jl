@@ -1337,36 +1337,36 @@ end
     end
 
     @testset "Predicates" begin
-        # ispalindrome
-        @test  ispalindrome(dna"")
-        @test !ispalindrome(dna"A")
-        @test !ispalindrome(dna"C")
-        @test  ispalindrome(dna"AT")
-        @test  ispalindrome(dna"CG")
-        @test !ispalindrome(dna"AC")
-        @test !ispalindrome(dna"TT")
-        @test  ispalindrome(dna"ACGT")
-        @test_throws Exception ispalindrome(dna"ANT")
-        @test_throws Exception ispalindrome(dna"ACNT")
+        # ispalindromic
+        @test  ispalindromic(dna"")
+        @test !ispalindromic(dna"A")
+        @test !ispalindromic(dna"C")
+        @test  ispalindromic(dna"AT")
+        @test  ispalindromic(dna"CG")
+        @test !ispalindromic(dna"AC")
+        @test !ispalindromic(dna"TT")
+        @test  ispalindromic(dna"ACGT")
+        @test_throws Exception ispalindromic(dna"ANT")
+        @test_throws Exception ispalindromic(dna"ACNT")
 
-        @test  ispalindrome(DNAKmer("ACGT"))
-        @test !ispalindrome(DNAKmer("CACG"))
+        @test  ispalindromic(DNAKmer("ACGT"))
+        @test !ispalindromic(DNAKmer("CACG"))
 
-        @test  ispalindrome(rna"")
-        @test !ispalindrome(rna"A")
-        @test !ispalindrome(rna"C")
-        @test  ispalindrome(rna"AU")
-        @test  ispalindrome(rna"CG")
-        @test !ispalindrome(rna"AC")
-        @test !ispalindrome(rna"UU")
-        @test  ispalindrome(rna"ACGU")
-        @test_throws Exception ispalindrome(rna"ANU")
-        @test_throws Exception ispalindrome(rna"ACNU")
+        @test  ispalindromic(rna"")
+        @test !ispalindromic(rna"A")
+        @test !ispalindromic(rna"C")
+        @test  ispalindromic(rna"AU")
+        @test  ispalindromic(rna"CG")
+        @test !ispalindromic(rna"AC")
+        @test !ispalindromic(rna"UU")
+        @test  ispalindromic(rna"ACGU")
+        @test_throws Exception ispalindromic(rna"ANU")
+        @test_throws Exception ispalindromic(rna"ACNU")
 
-        @test  ispalindrome(RNAKmer("ACGU"))
-        @test !ispalindrome(RNAKmer("CACG"))
+        @test  ispalindromic(RNAKmer("ACGU"))
+        @test !ispalindromic(RNAKmer("CACG"))
 
-        @test_throws Exception ispalindrome(aa"PQ")
+        @test_throws Exception ispalindromic(aa"PQ")
 
         # hasambiguity
         @test !hasambiguity(dna"")

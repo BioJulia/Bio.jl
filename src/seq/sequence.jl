@@ -138,11 +138,11 @@ function Base.isempty(seq::Sequence)
 end
 
 """
-    ispalindrome(seq::Sequence)
+    ispalindromic(seq::Sequence)
 
-Return `true` if `seq` is a palindrome sequence; otherwise return `false`.
+Return `true` if `seq` is a palindromic sequence; otherwise return `false`.
 """
-function ispalindrome(seq::Sequence)
+function ispalindromic(seq::Sequence)
     if !(eltype(seq) <: Nucleotide)
         error("elements must be nucleotide")
     end
