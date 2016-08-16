@@ -435,20 +435,14 @@ end
         end
     end
 
-    #=
     @testset "Arithmetic and Order" begin
         @testset "DNA" begin
-            @test DNA_A + 1 == DNA_C
-            @test DNA_A + 2 == DNA_G
-            @test DNA_A + 16 == DNA_A
-            @test DNA_T - 1 == DNA_G
-            @test DNA_T - 2 == DNA_C
-            @test DNA_T - 16 == DNA_T
-            @test DNA_T - DNA_A == 3
-            @test DNA_T - DNA_C == 2
-            @test DNA_A < DNA_C < DNA_G < DNA_T < DNA_M < DNA_N < DNA_Gap
+            @test ~DNA_Gap === DNA_N
+            @test ~DNA_N   === DNA_Gap
+            @test DNA_A | DNA_C === DNA_M
+            @test DNA_A & DNA_C === DNA_Gap
+            @test DNA_Gap < DNA_A < DNA_C < DNA_G < DNA_T < DNA_N
             @test !(DNA_A > DNA_G)
-
             @test gap(DNANucleotide) === DNA_Gap
             @test collect(alphabet(DNANucleotide)) == [
                 DNA_A, DNA_C, DNA_G, DNA_T,
@@ -458,17 +452,12 @@ end
             ]
         end
         @testset "RNA" begin
-            @test RNA_A + 1 == RNA_C
-            @test RNA_A + 2 == RNA_G
-            @test RNA_A + 16 == RNA_A
-            @test RNA_U - 1 == RNA_G
-            @test RNA_U - 2 == RNA_C
-            @test RNA_U - 16 == RNA_U
-            @test RNA_U - RNA_A == 3
-            @test RNA_U - RNA_C == 2
-            @test RNA_A < RNA_C < RNA_G < RNA_U < RNA_M < RNA_N < RNA_Gap
+            @test ~RNA_Gap === RNA_N
+            @test ~RNA_N   === RNA_Gap
+            @test RNA_A | RNA_C === RNA_M
+            @test RNA_A & RNA_C === RNA_Gap
+            @test RNA_Gap < RNA_A < RNA_C < RNA_G < RNA_U < RNA_N
             @test !(RNA_A > RNA_G)
-
             @test gap(RNANucleotide) === RNA_Gap
             @test collect(alphabet(RNANucleotide)) == [
                 RNA_A, RNA_C, RNA_G, RNA_U,
@@ -478,7 +467,6 @@ end
             ]
         end
     end
-    =#
 
     @testset "Show DNA" begin
         @testset "print" begin

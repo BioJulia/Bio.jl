@@ -23,18 +23,24 @@ Base.convert{T<:Number,S<:Nucleotide}(::Type{T}, nt::S) = convert(T, UInt8(nt))
 Base.convert{T<:Number,S<:Nucleotide}(::Type{S}, nt::T) = convert(S, UInt8(nt))
 
 
-# Arithmetic and Order
-# --------------------
+# Bit Operations
+# --------------
 
-# These methods are necessary when deriving some algorithims
-# like iteration, sort, comparison, and so on.
-@compat begin
-    Base.:-{N<:Nucleotide}(x::N, y::N) = Int(x) - Int(y)
-    Base.:-{N<:Nucleotide}(x::N, y::Integer) = x + (-y)
-    Base.:+{N<:Nucleotide}(x::N, y::Integer) = reinterpret(N, (UInt8(x) + y % UInt8) & 0b1111)
-    Base.:+{N<:Nucleotide}(x::Integer, y::N) = y + x
+@compat function Base.~{N<:Nucleotide}(x::N)
+    return reinterpret(N, ~reinterpret(UInt8, x) & 0b1111)
 end
-Base.isless{N<:Nucleotide}(x::N, y::N) = isless(UInt8(x), UInt8(y))
+
+@compat function Base.|{N<:Nucleotide}(x::N, y::N)
+    return reinterpret(N, reinterpret(UInt8, x) | reinterpret(UInt8, y))
+end
+
+@compat function Base.&{N<:Nucleotide}(x::N, y::N)
+    return reinterpret(N, reinterpret(UInt8, x) & reinterpret(UInt8, y))
+end
+
+function Base.isless{N<:Nucleotide}(x::N, y::N)
+    return isless(reinterpret(UInt8, x), reinterpret(UInt8, y))
+end
 
 Base.count_ones(nt::Nucleotide) = count_ones(reinterpret(UInt8, nt))
 Base.trailing_zeros(nt::Nucleotide) = trailing_zeros(reinterpret(UInt8, nt))
