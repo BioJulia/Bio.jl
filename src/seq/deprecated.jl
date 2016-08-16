@@ -73,3 +73,9 @@ function Base.show{T,K}(io::IO, counts::KmerCounts{T,K})
 end
 
 @deprecate KmerCounts composition
+
+
+# v0.3
+# ----
+
+@deprecate ispalindrome ispalindromic
