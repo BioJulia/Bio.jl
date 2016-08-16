@@ -99,19 +99,22 @@ Base.minimum(submat::SubstitutionMatrix) = minimum(submat.data)
 Base.maximum(submat::SubstitutionMatrix) = maximum(submat.data)
 
 function Base.show{T,S}(io::IO, submat::SubstitutionMatrix{T,S})
-    n = size(submat.data, 1)
+    alpha = collect(alphabet(T)[1:end-1])
+    n = length(alpha)
     mat = Matrix{Compat.String}(n, n)
-    for i in 1:n, j in 1:n
-        mat[i,j] = string(submat.data[i,j])
-        if !submat.defined[i,j]
+    for (i, x) in enumerate(alpha), (j, y) in enumerate(alpha)
+        i′ = order(x)
+        j′ = order(y)
+        mat[i,j] = string(submat.data[i′,j′])
+        if !submat.defined[i′,j′]
             mat[i,j] = underline(mat[i,j])
         end
     end
 
     # add rows and columns
-    rows = map(string, collect(alphabet(T)[1:end-1]))
-    mat = hcat(rows, mat)
+    rows = map(string, alpha)
     cols = vcat("", rows)
+    mat = hcat(rows, mat)
     mat = vcat(cols', mat)
 
     println(io, summary(submat), ':')
