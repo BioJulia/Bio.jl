@@ -128,7 +128,7 @@ for A in (DNAAlphabet, RNAAlphabet)
             end
             return reinterpret($(T), 0x01 << x)
         end
-        decode(::Type{$(A){2}}, x::Unsigned) = decode($(A){2}, UInt8(x))
+        @inline decode(::Type{$(A){2}}, x::Unsigned) = decode($(A){2}, UInt8(x))
 
         # 4-bit encoding
         @inline function encode(::Type{$(A){4}}, nt::$(T))
@@ -143,7 +143,7 @@ for A in (DNAAlphabet, RNAAlphabet)
             end
             return reinterpret($(T), x)
         end
-        decode(::Type{$(A){4}}, x::Unsigned) = decode($(A){4}, UInt8(x))
+        @inline decode(::Type{$(A){4}}, x::Unsigned) = decode($(A){4}, UInt8(x))
     end
 end
 
