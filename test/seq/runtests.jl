@@ -441,6 +441,10 @@ end
             @test ~DNA_N   === DNA_Gap
             @test DNA_A | DNA_C === DNA_M
             @test DNA_A & DNA_C === DNA_Gap
+            @test DNA_Gap - DNA_A   === -1
+            @test DNA_A   - DNA_Gap === +1
+            @test DNA_Gap + 1 === DNA_Gap + 17 === DNA_A
+            @test DNA_Gap - 1 === DNA_Gap - 17 === DNA_N
             @test DNA_Gap < DNA_A < DNA_C < DNA_G < DNA_T < DNA_N
             @test !(DNA_A > DNA_G)
             @test gap(DNANucleotide) === DNA_Gap
@@ -456,6 +460,10 @@ end
             @test ~RNA_N   === RNA_Gap
             @test RNA_A | RNA_C === RNA_M
             @test RNA_A & RNA_C === RNA_Gap
+            @test RNA_Gap - RNA_A   === -1
+            @test RNA_A   - RNA_Gap === +1
+            @test RNA_Gap + 1 === RNA_Gap + 17 === RNA_A
+            @test RNA_Gap - 1 === RNA_Gap - 17 === RNA_N
             @test RNA_Gap < RNA_A < RNA_C < RNA_G < RNA_U < RNA_N
             @test !(RNA_A > RNA_G)
             @test gap(RNANucleotide) === RNA_Gap
@@ -1331,7 +1339,7 @@ end
         @test !ispalindromic(dna"TT")
         @test  ispalindromic(dna"ANT")
         @test  ispalindromic(dna"ACGT")
-        @test  ispalindromic(dna"ACNT")
+        @test !ispalindromic(dna"ACNT")
 
         @test  ispalindromic(DNAKmer("ACGT"))
         @test !ispalindromic(DNAKmer("CACG"))

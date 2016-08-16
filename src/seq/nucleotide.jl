@@ -54,6 +54,18 @@ end
     return reinterpret(N, reinterpret(UInt8, x) & reinterpret(UInt8, y))
 end
 
+@compat function Base.:-{N<:Nucleotide}(x::N, y::N)
+    return Int(x) - Int(y)
+end
+
+@compat function Base.:-{N<:Nucleotide}(x::N, y::Integer)
+    return x + (-y)
+end
+
+@compat function Base.:+{N<:Nucleotide}(x::N, y::Integer)
+    return reinterpret(N, (UInt8(x) + y % UInt8) & 0b1111)
+end
+
 function Base.isless{N<:Nucleotide}(x::N, y::N)
     return isless(reinterpret(UInt8, x), reinterpret(UInt8, y))
 end
