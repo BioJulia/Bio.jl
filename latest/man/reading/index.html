@@ -374,14 +374,25 @@ CACACACACACATCCTAACACTACCCTAACACAGCCCTAATCTAACCCTG
 </pre></div>
 
 
-<p>Here is an example of a part of a FASTQ file:</p>
+<p>Here is an example of one record from a FASTQ file:</p>
 <div class="codehilite"><pre><span></span>@FSRRS4401BE7HA
 tcagTTAAGATGGGAT
 +
-eeeccccccc`UUU^U
+###EEEEEEEEE##E#
 </pre></div>
 
 
+<p>To parse a file containing such records, one could use:</p>
+<div class="codehilite"><pre><span></span><span class="n">parser</span> <span class="o">=</span> <span class="n">open</span><span class="p">(</span><span class="s">&quot;reads.fastq&quot;</span><span class="p">,</span> <span class="n">FASTQ</span><span class="p">,</span> <span class="n">Seq</span><span class="o">.</span><span class="n">SANGER_QUAL_ENCODING</span><span class="p">)</span>
+<span class="n">seqrec</span> <span class="o">=</span> <span class="n">eltype</span><span class="p">(</span><span class="n">parser</span><span class="p">)()</span>
+<span class="k">while</span> <span class="o">!</span><span class="n">eof</span><span class="p">(</span><span class="n">parser</span><span class="p">)</span>
+    <span class="n">read!</span><span class="p">(</span><span class="n">parser</span><span class="p">,</span> <span class="n">seqrec</span><span class="p">)</span>
+    <span class="c"># ... process sequence</span>
+<span class="k">end</span>
+</pre></div>
+
+
+<p>This assumes that the quality scores are in <a href="https://en.wikipedia.org/wiki/FASTQ_format#Encoding">Sanger encoding</a>.</p>
 <p><a id='.2bit-1'></a></p>
 <h3 id="2bit">.2bit</h3>
 <ul>
