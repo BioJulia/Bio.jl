@@ -4,6 +4,7 @@ available_targets = [
     "phylo",
     "intervals",
     "seq",
+    "var",
     "services",
     "structure",
     "tools",
