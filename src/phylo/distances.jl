@@ -30,26 +30,6 @@ typealias K80 Kimura80
 # Distance computation internals
 # ------------------------------
 
-## JC69 Distance computation internals.
-
-@inline function expected_distance(::Type{JC69}, x::Float64)
-    return -0.75 * log(1 - 4 * x / 3)
-end
-
-@inline function expected_distance(::Type{JC69}, x::Float64,
-    gamma::Float64)
-    return 0.75 * alpha * ( (1 - 4 * p / 3) ^ (-1 / alpha) - 1)
-end
-
-@inline function variance(::Type{JC69}, x::Float64, L::Int)
-    return x * (1 - x) / (((1 - 4 * p / 3) ^ 2) * L)
-end
-
-@inline function variance(::Type{JC69}, x::Float64, L::Int,
-    gamma::Float64)
-    return x * (1 - x)/(((1 - 4 * x / 3) ^ (-2 / (alpha + 1))) * L)
-end
-
 
 ## K80 Distance computation internals
 
@@ -107,17 +87,18 @@ end
 function distance(::Type{JC69}, a::BioSequence, b::BioSequence)
     n, l = distance(N_Mutations{DifferentMutation}, a, b)
     p = n / l
-    @assert p > 0.75 throw(DomainError("JC69 cannot correct a P distance of $p, the maximum is 0.75."))
-    D = expected_distance(JukesCantor69, p)
-    V = variance(JukesCantor69, p, l)
+    @assert 0.0 <= p < 0.75 throw(DomainError())
+    D = -0.75 * log(1 - 4 * p / 3)
+    V = p * (1 - p) / (((1 - 4 * p / 3) ^ 2) * l)
     return D, V
 end
 
-function distance(::Type{JC69}, a::BioSequence, b::BioSequence, gamma::Float64)
+function distance(::Type{JC69}, a::BioSequence, b::BioSequence, alpha::Float64)
     n, l = distance(N_Mutations{DifferentMutation}, a, b)
     p = n / l
-    D = expected_distance(JukesCantor69, p, gamma)
-    V = variance(JukesCantor69, p, l, gamma)
+    @assert 0.0 <= p < 0.75 throw(DomainError())
+    D = 0.75 * alpha * ( (1 - 4 * p / 3) ^ (-1 / alpha) - 1)
+    V = p * (1 - p)/(((1 - 4 * p / 3) ^ (-2 / (alpha + 1))) * l)
     return D, V
 end
 
