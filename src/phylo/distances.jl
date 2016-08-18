@@ -56,19 +56,19 @@ end
 
 ## JC69 Distance computation
 
-function expected_distance(x::Float64, t::Type{JukesCantor69})
+@inline function expected_distance(x::Float64, t::Type{JukesCantor69})
     return -0.75 * log(1 - 4 * x / 3)
 end
 
-function expected_distance(x::Float64, gamma::Float64, t::Type{JukesCantor69})
+@inline function expected_distance(x::Float64, gamma::Float64, t::Type{JukesCantor69})
     return 0.75 * alpha * ( (1 - 4 * p / 3) ^ (-1 / alpha) - 1)
 end
 
-function variance(x::Float64, L::Int, t::Type{JukesCantor69})
+@inline function variance(x::Float64, L::Int, t::Type{JukesCantor69})
     return x * (1 - x) / (((1 - 4 * p / 3) ^ 2) * L)
 end
 
-function variance(x::Float64, L::Int, gamma::Float64, t::Type{JukesCantor69})
+@inline function variance(x::Float64, L::Int, gamma::Float64, t::Type{JukesCantor69})
     return x * (1 - x)/(((1 - 4 * x / 3) ^ (-2 / (alpha + 1))) * L)
 end
 

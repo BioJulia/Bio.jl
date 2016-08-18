@@ -55,12 +55,11 @@ export
     add_branch!,
 
     ## Evolutionary distance computation.
-    EvoDist,
-    UncorrectedDist,
-    CorrectedDist,
-    TsTv,
-    JC69,
-    K80,
+    N_Mutations,
+    P_Distance,
+    JukesCantor69,
+    Kimura80,
+    distance,
 
     ## Misc
     n_possible_rooted,
