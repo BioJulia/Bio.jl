@@ -141,11 +141,14 @@ export
     approxrsearch,
     approxrsearchindex,
     ReferenceSequence,
-    TwoBit
+    TwoBit,
+    Demultiplexer,
+    demultiplex
 
 using
     BufferedStreams,
     Compat,
+    Iterators,
     IndexableBitVectors,
     Bio.Ragel,
     Bio.StringFields
@@ -195,6 +198,7 @@ include("composition.jl")
 include("geneticcode.jl")
 include("quality.jl")
 include("seqrecord.jl")
+include("demultiplexer.jl")
 
 # Parsing file types
 include("predict.jl")
