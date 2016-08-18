@@ -11,6 +11,7 @@ using Bio.Phylo
 using LightGraphs
 using Bio.Phylo.Dating
 using Bio.Seq
+using Bio.Var: DifferentMutation, TransitionMutation, TransversionMutation
 
 @testset "Phylogenies" begin
 
@@ -166,13 +167,13 @@ end
     dna1 = dna"ATTG-ACCTGGNTTTCCGAA"
     dna2 = dna"A-ACAGAGTATACRGTCGTC"
 
-    @test distance(dna1, dna2, N_Mutations{DifferentMutation})[1] == 12
-    @test distance(dna1, dna2, N_Mutations{TransitionMutation})[1] == 4
-    @test distance(dna1, dna2, N_Mutations{TransversionMutation})[1] == 8
+    @test distance(N_Mutations{DifferentMutation}, dna1, dna2)[1] == 12
+    @test distance(N_Mutations{TransitionMutation}, dna1, dna2)[1] == 4
+    @test distance(N_Mutations{TransversionMutation}, dna1, dna2)[1] == 8
 
-    @test distance(dna1, dna2, P_Distance{DifferentMutation})[1] == (12 / 16)
-    @test distance(dna1, dna2, P_Distance{TransitionMutation})[1] == (4 / 16)
-    @test distance(dna1, dna2, P_Distance{TransversionMutation})[1] == (8 / 16)
+    @test distance(P_Distance{DifferentMutation}, dna1, dna2)[1] == (12 / 16)
+    @test distance(P_Distance{TransitionMutation}, dna1, dna2)[1] == (4 / 16)
+    @test distance(P_Distance{TransversionMutation}, dna1, dna2)[1] == (8 / 16)
 
 
 
