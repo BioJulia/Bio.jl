@@ -32,4 +32,7 @@ end
 end # module TestVar
 
 #seqs <- as.DNAbin(rbind(c('a', 't', 't', 'g', '-', 'a', 'c', 'c', 't', 'g', 'g', 'n', 't', 't', 't', 'c', 'c', 'g', 'a', 'a'),
-#c('a','-','a','c','a','g','a','g','t','a','t','a','c','r','g','t','c','g','t','c')))
+#                        c('a','-','a','c','a','g','a','g','t','a','t','a','c','r','g','t','c','g','t','c')))
+
+#seqs <- as.DNAbin(rbind(c('a', 't', 't', 'g', 'g', 'a', 'c', 'c', 't', 'g', 'g', 'n', 't', 't', 't', 'c', 'c', 'g', 'a', 'a'),
+#                        c('a','t','a','c','a','g','a','g','t','a','t','a','c','r','g','t','c','g','t','c')))

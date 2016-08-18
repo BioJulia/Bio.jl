@@ -167,17 +167,30 @@ end
     dna1 = dna"ATTG-ACCTGGNTTTCCGAA"
     dna2 = dna"A-ACAGAGTATACRGTCGTC"
 
+    dna3 = dna"ATTGAACCTGGNTTTCCGAA"
+    dna4 = dna"ATACAGAGTATACRGTCGTC"
+
     @test distance(N_Mutations{DifferentMutation}, dna1, dna2)[1] == 12
     @test distance(N_Mutations{TransitionMutation}, dna1, dna2)[1] == 4
     @test distance(N_Mutations{TransversionMutation}, dna1, dna2)[1] == 8
     @test distance(N_Mutations{K80}, dna1, dna2) == (4, 8, 16)
 
+    @test distance(N_Mutations{DifferentMutation}, dna3, dna4)[1] == 12
+    @test distance(N_Mutations{TransitionMutation}, dna3, dna4)[1] == 4
+    @test distance(N_Mutations{TransversionMutation}, dna3, dna4)[1] == 8
+    @test distance(N_Mutations{K80}, dna3, dna4) == (4, 8, 18)
+
     @test distance(P_Distance{DifferentMutation}, dna1, dna2)[1] == (12 / 16)
     @test distance(P_Distance{TransitionMutation}, dna1, dna2)[1] == (4 / 16)
     @test distance(P_Distance{TransversionMutation}, dna1, dna2)[1] == (8 / 16)
 
-    @test distance(JC69, dna1, dna2) == Inf # Returns infinity as 12/16 is 0.75 - mutation saturation.
+    @test distance(P_Distance{DifferentMutation}, dna3, dna4)[1] == (12 / 18)
+    @test distance(P_Distance{TransitionMutation}, dna3, dna4)[1] == (4 / 18)
+    @test distance(P_Distance{TransversionMutation}, dna3, dna4)[1] == (8 / 18)
 
+    @test distance(JC69, dna1, dna2) == (Inf, Inf) # Returns infinity as 12/16 is 0.75 - mutation saturation.
+
+    @test distance(JC69, dna3, dna4) == (2.471878, 8.125)
 
 end
 
