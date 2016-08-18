@@ -44,6 +44,7 @@ pages:
   - Biological Sequences: man/seq.md
   - Alignments: man/alignments.md
   - Intervals: man/intervals.md
+  - Biological Variation: man/var.md
   - Structure: man/structure.md
   - Tools: man/tools.md
 - Reference:
