@@ -176,6 +176,7 @@ end
     @test distance(P_Distance{TransitionMutation}, dna1, dna2)[1] == (4 / 16)
     @test distance(P_Distance{TransversionMutation}, dna1, dna2)[1] == (8 / 16)
 
+    @test distance(JC69, dna1, dna2) == Inf # Returns infinity as 12/16 is 0.75 - mutation saturation.
 
 
 end

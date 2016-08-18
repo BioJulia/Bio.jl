@@ -107,6 +107,7 @@ end
 function distance(::Type{JC69}, a::BioSequence, b::BioSequence)
     n, l = distance(N_Mutations{DifferentMutation}, a, b)
     p = n / l
+    @assert p > 0.75 throw(DomainError("JC69 cannot correct a P distance of $p, the maximum is 0.75."))
     D = expected_distance(JukesCantor69, p)
     V = variance(JukesCantor69, p, l)
     return D, V
