@@ -62,6 +62,7 @@ immutable SymbolRange{T} <: Range{T}
     stop::UInt8
 
     function SymbolRange(start::T, stop::T)
+        warn("SymbolRange is deprecated")
         if start > stop
             # normalize empty range
             start = convert(T, 0x01)
@@ -111,5 +112,3 @@ function Base.getindex{T}(r::SymbolRange{T}, ir::UnitRange)
         return SymbolRange(r[first(ir)], r[last(ir)])
     end
 end
-
-@deprecate SymbolRange alphabet

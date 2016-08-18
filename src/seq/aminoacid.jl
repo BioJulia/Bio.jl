@@ -108,8 +108,6 @@ char_to_aa[Int('-') + 1] = AA_Gap
 aa_to_char[0x1b+1] = '-'
 compatbits_aa[0x1b+1] = 0
 
-Base.colon(start::AminoAcid, stop::AminoAcid) = SymbolRange(start, stop)
-
 Base.isvalid(::Type{AminoAcid}, x::Integer) = 0 ≤ x ≤ 0x1b
 Base.isvalid(aa::AminoAcid) = aa ≤ AA_Gap
 isambiguous(aa::AminoAcid) = AA_B ≤ aa ≤ AA_X
