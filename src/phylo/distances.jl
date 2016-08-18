@@ -92,7 +92,7 @@ end
     return count_mutations(a, b, T)
 end
 
-@inline function distance(::Type{N_Mutations{TsTv}}, a::BioSequence, b::BioSequence)
+@inline function distance{T<:TsTv}(::Type{N_Mutations{T}}, a::BioSequence, b::BioSequence)
     return count_mutations(a, b, TransitionMutation, TransversionMutation)
 end
 

@@ -14,7 +14,11 @@ using Compat
 using LightGraphs
 using Bio: Tokenize, Indexers
 using Bio.Seq: Nucleotide, BioSequence, isambiguous
-using Bio.Var: MutationType, DifferentMutation, TransitionMutation, TransversionMutation, count_mutations
+using Bio.Var: MutationType,
+    DifferentMutation,
+    TransitionMutation,
+    TransversionMutation,
+    count_mutations
 
 export
 
