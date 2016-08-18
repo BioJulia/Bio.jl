@@ -102,7 +102,7 @@ end
         x = UInt64(0)
         for k in 1:K
             nt = inbounds_getindex(seq, from + k - 1)
-            x = x << 2 | UInt8(nt)
+            x = x << 2 | trailing_zeros(nt)
         end
     else
         pos, kmer = get(pair)
@@ -116,7 +116,7 @@ end
         x = UInt64(kmer)
         for k in 1:n
             nt = inbounds_getindex(seq, from + k - 1)
-            x = x << 2 | UInt8(nt)
+            x = x << 2 | trailing_zeros(nt)
         end
     end
     return Kmer{T,K}(x)

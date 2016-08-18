@@ -28,6 +28,7 @@ export
     DNA_B,
     DNA_N,
     DNA_Gap,
+    ACGT,
     RNA_A,
     RNA_C,
     RNA_G,
@@ -44,6 +45,7 @@ export
     RNA_B,
     RNA_N,
     RNA_Gap,
+    ACGU,
     iscompatible,
     isambiguous,
     ispurine,
@@ -182,7 +184,6 @@ function gap end
 gap(::Type{Char}) = '-'
 
 include("sequence.jl")
-include("symbolrange.jl")
 include("nucleotide.jl")
 include("aminoacid.jl")
 include("alphabet.jl")

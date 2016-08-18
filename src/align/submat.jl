@@ -26,7 +26,6 @@ immutable SubstitutionMatrix{T,S} <: AbstractSubstitutionMatrix{S}
 
     function SubstitutionMatrix(data::Matrix{S}, defined::BitMatrix)
         @assert size(data) == size(defined)
-        @assert alphabet(T)[end] == gap(T)
         @assert size(data, 1) == size(data, 2) == length(alphabet(T)) - 1
         return new(data, defined)
     end
@@ -38,12 +37,12 @@ function SubstitutionMatrix{T,S}(::Type{T},
                                  defined::AbstractMatrix{Bool},
                                  default_match::S,
                                  default_mismatch::S)
-    alpha = alphabet(T)[1:end-1]  # drop gap
+    alpha = alphabet_without_gap(T)
     n = length(alpha)
     data = Matrix{S}(n, n)
     for x in alpha, y in alpha
-        i = convert(Int, x) + 1
-        j = convert(Int, y) + 1
+        i = index(x)
+        j = index(y)
         if defined[i,j]
             data[i,j] = submat[i,j]
         else
@@ -67,8 +66,8 @@ function SubstitutionMatrix{T,S}(scores::Associative{Tuple{T,T},S};
     submat = Matrix{S}(n, n)
     defined = falses(n, n)
     for ((x, y), score) in scores
-        i = convert(Int, x) + 1
-        j = convert(Int, y) + 1
+        i = index(x)
+        j = index(y)
         submat[i,j] = score
         defined[i,j] = true
     end
@@ -78,14 +77,14 @@ end
 Base.convert(::Type{Matrix}, submat::SubstitutionMatrix) = copy(submat.data)
 
 @inline function Base.getindex{T}(submat::SubstitutionMatrix{T}, x, y)
-    i = convert(Int, convert(T, x)) + 1
-    j = convert(Int, convert(T, y)) + 1
+    i = index(convert(T, x))
+    j = index(convert(T, y))
     return submat.data[i,j]
 end
 
 function Base.setindex!{T}(submat::SubstitutionMatrix{T}, val, x, y)
-    i = convert(Int, convert(T, x)) + 1
-    j = convert(Int, convert(T, y)) + 1
+    i = index(convert(T, x))
+    j = index(convert(T, y))
     submat.data[i,j] = val
     submat.defined[i,j] = true
     return submat
@@ -99,19 +98,22 @@ Base.minimum(submat::SubstitutionMatrix) = minimum(submat.data)
 Base.maximum(submat::SubstitutionMatrix) = maximum(submat.data)
 
 function Base.show{T,S}(io::IO, submat::SubstitutionMatrix{T,S})
-    n = size(submat.data, 1)
+    alpha = alphabet_without_gap(T)
+    n = length(alpha)
     mat = Matrix{Compat.String}(n, n)
-    for i in 1:n, j in 1:n
-        mat[i,j] = string(submat.data[i,j])
-        if !submat.defined[i,j]
+    for (i, x) in enumerate(alpha), (j, y) in enumerate(alpha)
+        i′ = index(x)
+        j′ = index(y)
+        mat[i,j] = string(submat.data[i′,j′])
+        if !submat.defined[i′,j′]
             mat[i,j] = underline(mat[i,j])
         end
     end
 
     # add rows and columns
-    rows = map(string, alphabet(T)[1:end-1])
-    mat = hcat(rows, mat)
+    rows = map(string, alpha)
     cols = vcat("", rows)
+    mat = hcat(rows, mat)
     mat = vcat(cols', mat)
 
     println(io, summary(submat), ':')
@@ -126,6 +128,21 @@ function Base.show{T,S}(io::IO, submat::SubstitutionMatrix{T,S})
 end
 
 underline(s) = join([string(c, '\U0332') for c in s])
+
+# Return a vector of all symbols of `T` except the gap symbol.
+function alphabet_without_gap{T}(::Type{T})
+    return filter!(x -> x != gap(T), collect(alphabet(T)))
+end
+
+# Return the row/column index of `nt`.
+function index(nt::Nucleotide)
+    return convert(Int, nt)
+end
+
+# Return the row/column index of `aa`.
+function index(aa::AminoAcid)
+    return convert(Int, aa) + 1
+end
 
 
 """

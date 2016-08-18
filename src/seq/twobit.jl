@@ -189,10 +189,10 @@ end
 # mapping table from .2bit DNA encoding to Bio.jl DNA encoding
 const twobit2refseq_table = let
     # T: 00, C: 01, A: 10, G: 11
-    f(x) = x == 0b00 ? UInt64(DNA_T) :
-           x == 0b01 ? UInt64(DNA_C) :
-           x == 0b10 ? UInt64(DNA_A) :
-           x == 0b11 ? UInt64(DNA_G) : error()
+    f(x) = x == 0b00 ? UInt64(3) :
+           x == 0b01 ? UInt64(1) :
+           x == 0b10 ? UInt64(0) :
+           x == 0b11 ? UInt64(2) : error()
     tcag = 0b00:0b11
     tbl = UInt64[]
     for a in tcag, b in tcag, c in tcag, d in tcag

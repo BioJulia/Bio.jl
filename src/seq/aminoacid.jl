@@ -108,15 +108,18 @@ char_to_aa[Int('-') + 1] = AA_Gap
 aa_to_char[0x1b+1] = '-'
 compatbits_aa[0x1b+1] = 0
 
-Base.colon(start::AminoAcid, stop::AminoAcid) = SymbolRange(start, stop)
-
 Base.isvalid(::Type{AminoAcid}, x::Integer) = 0 ≤ x ≤ 0x1b
 Base.isvalid(aa::AminoAcid) = aa ≤ AA_Gap
 isambiguous(aa::AminoAcid) = AA_B ≤ aa ≤ AA_X
-alphabet(::Type{AminoAcid}) = AA_A:AA_Gap
 gap(::Type{AminoAcid}) = AA_Gap
 
+@eval alphabet(::Type{AminoAcid}) = $(tuple([reinterpret(AminoAcid, x) for x in 0x00:0x1b]...))
+
 compatbits(aa::AminoAcid) = compatbits_aa[reinterpret(UInt8, aa)+1]
+
+function iscompatible(x::AminoAcid, y::AminoAcid)
+    return compatbits(x) & compatbits(y) != 0
+end
 
 
 # Conversion from/to Char

@@ -65,8 +65,8 @@ Base.eltype(::Type{AminoAcidAlphabet}) = AminoAcid
 Base.eltype(::Type{CharAlphabet}) = Char
 Base.eltype(::Type{VoidAlphabet}) = Void
 
-alphabet(::Type{DNAAlphabet{2}}) = DNA_A:DNA_T
-alphabet(::Type{RNAAlphabet{2}}) = RNA_A:RNA_U
+alphabet(::Type{DNAAlphabet{2}}) = ACGT
+alphabet(::Type{RNAAlphabet{2}}) = ACGU
 alphabet(::Type{DNAAlphabet{4}}) = alphabet(DNANucleotide)
 alphabet(::Type{RNAAlphabet{4}}) = alphabet(RNANucleotide)
 alphabet(::Type{AminoAcidAlphabet}) = alphabet(AminoAcid)
@@ -108,28 +108,85 @@ function Base.showerror{A}(io::IO, err::DecodeError{A})
     print(io, "cannot decode ", err.val, " in ", A)
 end
 
-for (A, T, U, ub) in [
-        (DNAAlphabet{2},    DNANucleotide, UInt8,  DNA_T     ),
-        (DNAAlphabet{4},    DNANucleotide, UInt8,  DNA_Gap   ),
-        (RNAAlphabet{2},    RNANucleotide, UInt8,  RNA_U     ),
-        (RNAAlphabet{4},    RNANucleotide, UInt8,  RNA_Gap   ),
-        (AminoAcidAlphabet, AminoAcid,     UInt8,  AA_Gap    ),
-        (CharAlphabet,      Char,          UInt32, '\U10ffff')]
-    @assert sizeof(T) == sizeof(U)
-    @assert isa(ub, T)
+
+# DNA and RNA alphabets
+# ---------------------
+
+for A in (DNAAlphabet, RNAAlphabet)
+    T = eltype(A)
     @eval begin
-        @inline function encode(::Type{$A}, x::$T)
-            if x > $ub
-                throw(EncodeError($A, x))
+        # 2-bit encoding
+        @inline function encode(::Type{$(A){2}}, nt::$(T))
+            if count_ones(nt) != 1 || !isvalid(nt)
+                throw(EncodeError($(A){2}, nt))
             end
-            return reinterpret($U, x)
+            return convert(UInt8, trailing_zeros(nt))
         end
-        @inline function decode(::Type{$A}, x::$U)
-            if x > $(reinterpret(U, ub))
-                throw(DecodeError($A, x))
+        @inline function decode(::Type{$(A){2}}, x::UInt8)
+            if x > 0x03
+                throw(DecodeError($(A){2}, x))
             end
-            return reinterpret($T, x)
+            return reinterpret($(T), 0x01 << x)
         end
-        decode(::Type{$A}, x::Unsigned) = decode($A, $U(x))
+        @inline decode(::Type{$(A){2}}, x::Unsigned) = decode($(A){2}, UInt8(x))
+
+        # 4-bit encoding
+        @inline function encode(::Type{$(A){4}}, nt::$(T))
+            if !isvalid(nt)
+                throw(EncodeError($(A){4}, nt))
+            end
+            return reinterpret(UInt8, nt)
+        end
+        @inline function decode(::Type{$(A){4}}, x::UInt8)
+            if !isvalid($(T), x)
+                throw(DecodeError($(A){4}, x))
+            end
+            return reinterpret($(T), x)
+        end
+        @inline decode(::Type{$(A){4}}, x::Unsigned) = decode($(A){4}, UInt8(x))
     end
+end
+
+
+# AminoAcidAlphabet
+# -----------------
+
+@inline function encode(::Type{AminoAcidAlphabet}, aa::AminoAcid)
+    if aa > AA_Gap
+        throw(EncodeError(AminoAcidAlphabet, aa))
+    end
+    return reinterpret(UInt8, aa)
+end
+
+@inline function decode(::Type{AminoAcidAlphabet}, x::UInt8)
+    if x > 0x1b
+        throw(DecodeError(AminoAcidAlphabet, x))
+    end
+    return reinterpret(AminoAcid, x)
+end
+
+@inline function decode(::Type{AminoAcidAlphabet}, x::Unsigned)
+    return decode(AminoAcidAlphabet, UInt8(x))
+end
+
+
+# CharAlphabet
+# ------------
+
+@inline function encode(::Type{CharAlphabet}, char::Char)
+    if char > '\U10ffff'
+        throw(EncodeError(CharAlphabet, char))
+    end
+    return reinterpret(UInt32, char)
+end
+
+@inline function decode(::Type{CharAlphabet}, x::UInt32)
+    if x > 0x10ffff
+        throw(DecodeError(CharAlphabet, x))
+    end
+    return reinterpret(Char, x)
+end
+
+@inline function decode(::Type{CharAlphabet}, x::Unsigned)
+    return decode(CharAlphabet, UInt32(x))
 end
