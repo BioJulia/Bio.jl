@@ -64,19 +64,19 @@ end
 end
 
 macro k80var()
-    :(return ((c1 * c1 * P + c3 * c3 * Q) - ((c1 * P + c3 * q) ^ 2)) / L)
+    :(return ((c1 * c1 * P + c3 * c3 * Q) - ((c1 * P + c3 * Q) ^ 2)) / L)
 end
 
-@inline function variance(::Type{K80}, P::Int, Q::Int, L::Int, a1::Float64,
-    a2::Float64)
+@inline function variance(::Type{K80}, P::AbstractFloat, Q::AbstractFloat, L::Int, a1::AbstractFloat,
+    a2::AbstractFloat)
     c1 = 1 / a1
     c2 = 1 / a2
     c3 = (c1 + c2) / 2
     @k80var
 end
 
-@inline function variance(::Type{K80}, P::Int, Q::Int, L::Int, a1::Float64,
-    a2::Float64, gamma::Float64)
+@inline function variance(::Type{K80}, P::AbstractFloat, Q::AbstractFloat, L::Int, a1::AbstractFloat,
+    a2::AbstractFloat, gamma::AbstractFloat)
     b = -(1 / gamma + 1)
     c1 = a1 ^ b
     c2 = a2 ^ b
@@ -105,14 +105,16 @@ end
 
 # Method to compute distance corrected by JukesCantor69 substitution model.
 function distance(::Type{JC69}, a::BioSequence, b::BioSequence)
-    p = distance(P_Distance{DifferentMutation}, a, b)
+    n, l = distance(N_Mutations{DifferentMutation}, a, b)
+    p = n / l
     D = expected_distance(JukesCantor69, p)
     V = variance(JukesCantor69, p, l)
     return D, V
 end
 
 function distance(::Type{JC69}, a::BioSequence, b::BioSequence, gamma::Float64)
-    p = distance(P_Distance{DifferentMutation}, a, b)
+    n, l = distance(N_Mutations{DifferentMutation}, a, b)
+    p = n / l
     D = expected_distance(JukesCantor69, p, gamma)
     V = variance(JukesCantor69, p, l, gamma)
     return D, V
