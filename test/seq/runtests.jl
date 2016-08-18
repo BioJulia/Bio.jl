@@ -511,6 +511,22 @@ end
             @test takebuf_string(buf) == "RNA_A RNA_C RNA_G RNA_U RNA_N RNA_Gap "
         end
     end
+
+    @testset "Sets" begin
+        @test length(ACGT) == 4
+        @test ACGT[1] === DNA_A
+        @test ACGT[2] === DNA_C
+        @test ACGT[3] === DNA_G
+        @test ACGT[4] === DNA_T
+        @test collect(ACGT) == [DNA_A, DNA_C, DNA_G, DNA_T]
+
+        @test length(ACGU) == 4
+        @test ACGU[1] === RNA_A
+        @test ACGU[2] === RNA_C
+        @test ACGU[3] === RNA_G
+        @test ACGU[4] === RNA_U
+        @test collect(ACGU) == [RNA_A, RNA_C, RNA_G, RNA_U]
+    end
 end
 
 @testset "Aminoacids" begin
