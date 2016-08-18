@@ -16,98 +16,48 @@ abstract UncorrectedDist <: EvoDist
 abstract CorrectedDist <: EvoDist
 abstract TsTv <: CorrectedDist
 
-immutable N_Mutations{T<:MutationType} <: UncorrectedDist end
-immutable P_Distance{T<:MutationType} <: UncorrectedDist end
+immutable N_Mutations{T} <: UncorrectedDist end
+immutable P_Distance{T} <: UncorrectedDist end
 immutable JukesCantor69 <: CorrectedDist end
 immutable Kimura80 <: TsTv end
 
-
-# Distance computation methods
-# ----------------------------
-
-# Indicate inline on these functions as they are called by other functions repeatedly in a loop.
-
-## Number of mutations.
-
-# Conveinience method that essentially just calls the count_mutations function.
-@inline function distance{T<:MutationType}(t::Type{N_Mutations{T}}, a::BioSequence, b::BioSequence)
-    return count_mutations(a, b, T)
-end
-
-# Method for computing the P distance of any kind of mutation.
-@inline function distance{T<:MutationType}(t::Type{P_Distance{T}}, a::BioSequence, b::BioSequence)
-    d, l = distance(N_Mutations{T}, a, b)
-    return d / l
-end
-
-# Method to compute distance corrected by JukesCantor69 substitution model.
-@inline function distance(t::Type{JukesCantor69}, a::BioSequence, b::BioSequence)
-    p = distance(P_Distance{DifferentMutation}, a, b)
-    D = expected_distance(p, t)
-    V = variance(p, l, t)
-    return D, V
-end
+typealias Raw N_Mutations{DifferentMutation}
+typealias P P_Distance{DifferentMutation}
+typealias JC69 JukesCantor69
+typealias K80 Kimura80
 
 
+# Distance computation internals
+# ------------------------------
 
+## JC69 Distance computation internals.
 
-
-
-
-## JC69 Distance computation
-
-@inline function expected_distance(t::Type{JukesCantor69}, x::Float64)
+@inline function expected_distance(::Type{JC69}, x::Float64)
     return -0.75 * log(1 - 4 * x / 3)
 end
 
-@inline function expected_distance(t::Type{JukesCantor69}, x::Float64, gamma::Float64)
+@inline function expected_distance(::Type{JC69}, x::Float64,
+    gamma::Float64)
     return 0.75 * alpha * ( (1 - 4 * p / 3) ^ (-1 / alpha) - 1)
 end
 
-@inline function variance(t::Type{JukesCantor69}, x::Float64, L::Int)
+@inline function variance(::Type{JC69}, x::Float64, L::Int)
     return x * (1 - x) / (((1 - 4 * p / 3) ^ 2) * L)
 end
 
-@inline function variance(t::Type{JukesCantor69}, x::Float64, L::Int, gamma::Float64)
+@inline function variance(::Type{JC69}, x::Float64, L::Int,
+    gamma::Float64)
     return x * (1 - x)/(((1 - 4 * x / 3) ^ (-2 / (alpha + 1))) * L)
 end
 
+## K80 Distance computation internals
 
-
-function distance(a::BioSequence, b::BioSequence, gamma::Float64, t::Type{JukesCantor69})
-    d, l = count_differences(a, b, model)
-    p = d / l
-    D = expected_distance(p, gamma, model)
-    V = variance(p, l, gamma, model)
-    return D, V
-end
-
-function distance_pairdel(a::BioSequence, b::BioSequence, t::Type{JukesCantor69})
-    d, l = count_differences_pairdel(a, b, model)
-    p = d / l
-    D = expected_distance(p, model)
-    V = variance(p, l, model)
-    return D, V
-end
-
-function distance_pairdel(a::BioSequence, b::BioSequence, t::Type{JukesCantor69}, gamma::Float64)
-    d, l = count_differences_pairdel(a, b, model)
-    p = d / l
-    D = model_correction(p, gamma, model)
-    V = variance(p, l, gamma, model)
-    return D, V
-end
-
-
-
-# K80 Distance computation
-# ------------------------
-
-function model_correction(t::Type{Kimura80}, a1::Float64, a2::Float64)
+@inline function expected_distance(::Type{K80}, a1::Float64, a2::Float64)
     return -0.5 * log(a1 * sqrt(a2))
 end
 
-function model_correction(t::Type{Kimura80}, a1::Float64, a2::Float64, gamma::Float64)
+@inline function expected_distance(::Type{K80}, a1::Float64, a2::Float64,
+    gamma::Float64)
     b = -1 / alpha
     return alpha * ((a1 ^ b) + 0.5 * (a2 ^ b) - 1.5) / 2
 end
@@ -116,14 +66,16 @@ macro k80var()
     :(return ((c1 * c1 * P + c3 * c3 * Q) - ((c1 * P + c3 * q) ^ 2)) / L)
 end
 
-function variance(t::Type{Kimura80}, P::Int, Q::Int, L::Int, a1::Float64, a2::Float64)
+@inline function variance(::Type{K80}, P::Int, Q::Int, L::Int, a1::Float64,
+    a2::Float64)
     c1 = 1 / a1
     c2 = 1 / a2
     c3 = (c1 + c2) / 2
     @k80var
 end
 
-function variance(t::Type{Kimura80}, P::Int, Q::Int, L::Int, a1::Float64, a2::Float64, gamma::Float64)
+@inline function variance(::Type{K80}, P::Int, Q::Int, L::Int, a1::Float64,
+    a2::Float64, gamma::Float64)
     b = -(1 / alpha + 1)
     c1 = a1 ^ b
     c2 = a2 ^ b
@@ -131,7 +83,54 @@ function variance(t::Type{Kimura80}, P::Int, Q::Int, L::Int, a1::Float64, a2::Fl
     @k80var
 end
 
-function distance(a::BioSequence, b::BioSequence, t::Type{Kimura80})
+
+# Distance computation methods
+# ----------------------------
+
+# Distance method that essentially just calls the count_mutations function.
+@inline function distance{T<:MutationType}(::Type{N_Mutations{T}}, a::BioSequence, b::BioSequence)
+    return count_mutations(a, b, T)
+end
+
+@inline function distance(::Type{N_Mutations{TsTv}}, a::BioSequence, b::BioSequence)
+    return count_mutations(a, b, TransitionMutation, TransversionMutation)
+end
+
+# Method for computing the P distance of any kind of mutation.
+@inline function distance{T<:MutationType}(::Type{P_Distance{T}}, a::BioSequence, b::BioSequence)
+    d, l = distance(N_Mutations{T}, a, b)
+    return d / l
+end
+
+# Method to compute distance corrected by JukesCantor69 substitution model.
+function distance(::Type{JC69}, a::BioSequence, b::BioSequence)
+    p = distance(P_Distance{DifferentMutation}, a, b)
+    D = expected_distance(JukesCantor69, p)
+    V = variance(JukesCantor69, p, l)
+    return D, V
+end
+
+function distance(::Type{JC69}, a::BioSequence, b::BioSequence, gamma::Float64)
+    p = distance(P_Distance{DifferentMutation}, a, b)
+    D = expected_distance(JukesCantor69, p, gamma)
+    V = variance(JukesCantor69, p, l, gamma)
+    return D, V
+end
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+function distance(::Type{Kimura80}, a::BioSequence, b::BioSequence)
     nd, ns, nv, l = countTsTv(a, b, model)
     P = ns / L
     Q = nv / L

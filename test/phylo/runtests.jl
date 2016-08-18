@@ -170,6 +170,7 @@ end
     @test distance(N_Mutations{DifferentMutation}, dna1, dna2)[1] == 12
     @test distance(N_Mutations{TransitionMutation}, dna1, dna2)[1] == 4
     @test distance(N_Mutations{TransversionMutation}, dna1, dna2)[1] == 8
+    @test distance(N_Mutations{TsTv}, dna1, dna2) == (4, 8, 16)
 
     @test distance(P_Distance{DifferentMutation}, dna1, dna2)[1] == (12 / 16)
     @test distance(P_Distance{TransitionMutation}, dna1, dna2)[1] == (4 / 16)
