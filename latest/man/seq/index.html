@@ -244,6 +244,9 @@
             <li class="second-level"><a href="#sequence-records">Sequence records</a></li>
             
         
+            <li class="second-level"><a href="#sequence-demultiplexing">Sequence demultiplexing</a></li>
+            
+        
     
     </ul>
 </div></div>
@@ -1443,7 +1446,44 @@ end
 </pre></div>
 
 
-<p>The type of the <code>metadata</code> field depends on the source of the sequence record. For example, if a record is read from a FASTA file, metadata contains the description field. If from a FASTQ file, a quality scores assigned to base calls during sequencing.</p></div>
+<p>The type of the <code>metadata</code> field depends on the source of the sequence record. For example, if a record is read from a FASTA file, metadata contains the description field. If from a FASTQ file, a quality scores assigned to base calls during sequencing.</p>
+<p><a id='Sequence-demultiplexing-1'></a></p>
+<h2 id="sequence-demultiplexing">Sequence demultiplexing</h2>
+<p>Multiplex sequencing is a technology to sequence mutliple samples at the same time on a high-throughput DNA sequencer. Samples are distinguished by the short prefix of a DNA sequence called DNA barcode. The <code>Bio.Seq</code> offers the <code>Demultiplexer</code> type and the <code>demultiplex</code> function to identify the DNA barcode of a longer DNA sequence allowing small errors.</p>
+<p>In the following example, four kinds of DNA sequences of length 4 are used as DNA barcodes. <code>Demultiplexer</code> takes these barcodes as its first argument with a few options:</p>
+<div class="codehilite"><pre><span></span><span class="gp">julia&gt;</span> <span class="n">barcodes</span> <span class="o">=</span> <span class="n">DNASequence</span><span class="p">[</span><span class="s">&quot;ATGG&quot;</span><span class="p">,</span> <span class="s">&quot;CAGA&quot;</span><span class="p">,</span> <span class="s">&quot;GGAA&quot;</span><span class="p">,</span> <span class="s">&quot;TACG&quot;</span><span class="p">];</span>
+
+<span class="gp">julia&gt;</span> <span class="n">dplxr</span> <span class="o">=</span> <span class="n">Demultiplexer</span><span class="p">(</span><span class="n">barcodes</span><span class="p">,</span> <span class="n">n_max_errors</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">distance</span><span class="o">=</span><span class="p">:</span><span class="n">hamming</span><span class="p">)</span>
+<span class="go">Bio.Seq.Demultiplexer{Bio.Seq.BioSequence{Bio.Seq.DNAAlphabet{4}}}:</span>
+<span class="go">  distance: hamming</span>
+<span class="go">  number of barcodes: 4</span>
+<span class="go">  number of correctable errors: 1</span>
+</pre></div>
+
+
+<p><code>n_max_errors</code> specifies the number of maximum correctable errors in a barcode. The type of correctable errors depends on the <code>distance</code> parameter. When <code>distance = :hamming</code> as shown above only substitutions are correctable. When <code>distance = :levenshtein</code> substitutions, deletions, and insertions are correctable. The user is responsible for keeping enough distances among barcodes; <code>Demultiplexer</code> will throw an exception if two barcodes are within <code>n_max_errors * 2</code>.</p>
+<p>The <code>demultiplex</code> function takes a demultiplexer object and a DNA sequence, and returns a tuple of a barcode index and a distance between the original barcode sequence and the prefix sequence:</p>
+<div class="codehilite"><pre><span></span><span class="gp">julia&gt;</span> <span class="n">demultiplex</span><span class="p">(</span><span class="n">dplxr</span><span class="p">,</span> <span class="n">dna</span><span class="s">&quot;ATGGCGNT&quot;</span><span class="p">)</span>  <span class="c"># 1st barcode with no errors</span>
+<span class="go">(1,0)</span>
+
+<span class="gp">julia&gt;</span> <span class="n">demultiplex</span><span class="p">(</span><span class="n">dplxr</span><span class="p">,</span> <span class="n">dna</span><span class="s">&quot;CAGGCGNT&quot;</span><span class="p">)</span>  <span class="c"># 2nd barcode with one error</span>
+<span class="go">(2,1)</span>
+
+<span class="gp">julia&gt;</span> <span class="n">demultiplex</span><span class="p">(</span><span class="n">dplxr</span><span class="p">,</span> <span class="n">dna</span><span class="s">&quot;GGAACGNT&quot;</span><span class="p">)</span>  <span class="c"># 3rd barcode with no errors</span>
+<span class="go">(3,0)</span>
+
+<span class="gp">julia&gt;</span> <span class="n">demultiplex</span><span class="p">(</span><span class="n">dplxr</span><span class="p">,</span> <span class="n">dna</span><span class="s">&quot;TGACCGNT&quot;</span><span class="p">)</span>  <span class="c"># no matching barcode</span>
+<span class="go">(0,-1)</span>
+</pre></div>
+
+
+<p>The optional third argument controls the search strategy. <code>demultiplex</code> uses an index to search the closest barcode within <code>n_max_errors</code> in the barcode set and returns it if any by default. If the third argument is <code>true</code> it falls back to a linear search after the index search and returns one of the closest barcodes at random. The next example shows the difference of these two strategies:</p>
+<div class="codehilite"><pre><span></span><span class="gp">julia&gt;</span> <span class="n">demultiplex</span><span class="p">(</span><span class="n">dplxr</span><span class="p">,</span> <span class="n">dna</span><span class="s">&quot;TGACCGNT&quot;</span><span class="p">,</span> <span class="n">false</span><span class="p">)</span>  <span class="c"># linear search off (default)</span>
+<span class="go">(0,-1)</span>
+
+<span class="gp">julia&gt;</span> <span class="n">demultiplex</span><span class="p">(</span><span class="n">dplxr</span><span class="p">,</span> <span class="n">dna</span><span class="s">&quot;TGACCGNT&quot;</span><span class="p">,</span> <span class="n">true</span><span class="p">)</span>   <span class="c"># linear search on</span>
+<span class="go">(3,2)</span>
+</pre></div></div>
         
     </div>
 
