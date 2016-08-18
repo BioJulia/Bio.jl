@@ -167,8 +167,8 @@ end
     dna1 = dna"ATTG-ACCTGGNTTTCCGAA"
     dna2 = dna"A-ACAGAGTATACRGTCGTC"
 
-    dna3 = dna"ATTGAACCTGGNTTTCCGAA"
-    dna4 = dna"ATACAGAGTATACRGTCGTC"
+    dna3 = dna"attgaacctggntttccgaa"
+    dna4 = dna"atacagagtatacrgtcgtc"
 
     @test distance(N_Mutations{DifferentMutation}, dna1, dna2)[1] == 12
     @test distance(N_Mutations{TransitionMutation}, dna1, dna2)[1] == 4
@@ -190,7 +190,7 @@ end
 
     @test distance(JC69, dna1, dna2) == (Inf, Inf) # Returns infinity as 12/16 is 0.75 - mutation saturation.
 
-    @test distance(JC69, dna3, dna4) == (2.471878, 8.125)
+    @test distance(JC69, dna3, dna4) == (1.647918, 1)
 
 end
 
