@@ -36,13 +36,13 @@ end
 
 # Method for computing the P distance of any kind of mutation.
 @inline function distance{T<:MutationType}(t::Type{P_Distance{T}}, a::BioSequence, b::BioSequence)
-    d, l = distance(a, b, N_Mutations{T})
+    d, l = distance(N_Mutations{T}, a, b)
     return d / l
 end
 
 # Method to compute distance corrected by JukesCantor69 substitution model.
 @inline function distance(t::Type{JukesCantor69}, a::BioSequence, b::BioSequence)
-    p = distance(a, b, P_Distance{DifferentMutation})
+    p = distance(P_Distance{DifferentMutation}, a, b)
     D = expected_distance(p, t)
     V = variance(p, l, t)
     return D, V
