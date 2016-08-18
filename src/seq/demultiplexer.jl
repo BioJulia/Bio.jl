@@ -56,7 +56,7 @@ function build_trie!(nodes, root, barcodes, ids, range, j)
     end
     for k in 1:4  # ACGT
         starts[k+1] = i
-        while i ≤ last(range) && Int(barcodes[i][j]) + 1 == k
+        while i ≤ last(range) && findfirst(ACGT, barcodes[i][j]) == k
             i += 1
         end
     end
@@ -230,13 +230,12 @@ function hamming_circle(seq, m)
     if m == 0
         return [seq]
     end
-    ACGTN = (DNA_A, DNA_C, DNA_G, DNA_T, DNA_N)
     ret = DNASequence[]
     for ps in combinations(1:endof(seq), m)
         for rs in product(repeated(1:4, m)...)
             seq′ = copy(seq)
             for (p, r) in zip(ps, rs)
-                if Int(seq[p]) + 1 ≤ r
+                if findfirst(ACGT, seq[p]) ≤ r
                     r += 1
                 end
                 seq′[p] = ACGTN[r]
@@ -271,7 +270,6 @@ function levenshtein_circle(seq, m)
         push!(seqs, deleteat!(copy(seq), i))
     end
     # insertion
-    ACGTN = (DNA_A, DNA_C, DNA_G, DNA_T, DNA_N)
     for i in 1:endof(seq), nt in ACGTN
         if nt != seq[i]
             push!(seqs, insert!(copy(seq), i, nt))

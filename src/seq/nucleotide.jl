@@ -223,6 +223,9 @@ alphabet(::Type{DNANucleotide}) = (
     DNA_Y, DNA_K, DNA_V, DNA_H,
     DNA_D, DNA_B, DNA_N, DNA_Gap)
 
+const ACGT = (DNA_A, DNA_C, DNA_G, DNA_T)
+const ACGTN = (DNA_A, DNA_C, DNA_G, DNA_T, DNA_N)
+
 # RNA Nucleotides
 
 "Invalid RNA Nucleotide"
@@ -263,6 +266,8 @@ alphabet(::Type{RNANucleotide}) = (
     RNA_Y, RNA_K, RNA_V, RNA_H,
     RNA_D, RNA_B, RNA_N, RNA_Gap)
 
+const ACGU = (RNA_A, RNA_C, RNA_G, RNA_U)
+const ACGUN = (RNA_A, RNA_C, RNA_G, RNA_U, RNA_N)
 
 # Print functions
 # ---------------
