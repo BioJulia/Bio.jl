@@ -217,11 +217,8 @@ for (char, doc, bits) in [
     end
 end
 
-alphabet(::Type{DNANucleotide}) = (
-    DNA_A, DNA_C, DNA_G, DNA_T,
-    DNA_M, DNA_R, DNA_W, DNA_S,
-    DNA_Y, DNA_K, DNA_V, DNA_H,
-    DNA_D, DNA_B, DNA_N, DNA_Gap)
+@eval alphabet(::Type{DNANucleotide}) = $(tuple([reinterpret(DNANucleotide, x)
+                                                 for x in 0b0000:0b1111]...))
 
 const ACGT = (DNA_A, DNA_C, DNA_G, DNA_T)
 const ACGTN = (DNA_A, DNA_C, DNA_G, DNA_T, DNA_N)
@@ -260,11 +257,8 @@ for (char, doc, dna) in [
     end
 end
 
-alphabet(::Type{RNANucleotide}) = (
-    RNA_A, RNA_C, RNA_G, RNA_U,
-    RNA_M, RNA_R, RNA_W, RNA_S,
-    RNA_Y, RNA_K, RNA_V, RNA_H,
-    RNA_D, RNA_B, RNA_N, RNA_Gap)
+@eval alphabet(::Type{RNANucleotide}) = $(tuple([reinterpret(RNANucleotide, x)
+                                                 for x in 0b0000:0b1111]...))
 
 const ACGU = (RNA_A, RNA_C, RNA_G, RNA_U)
 const ACGUN = (RNA_A, RNA_C, RNA_G, RNA_U, RNA_N)

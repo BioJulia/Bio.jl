@@ -65,8 +65,8 @@ Base.eltype(::Type{AminoAcidAlphabet}) = AminoAcid
 Base.eltype(::Type{CharAlphabet}) = Char
 Base.eltype(::Type{VoidAlphabet}) = Void
 
-alphabet(::Type{DNAAlphabet{2}}) = (DNA_A, DNA_C, DNA_G, DNA_T)
-alphabet(::Type{RNAAlphabet{2}}) = (RNA_A, RNA_C, RNA_G, RNA_U)
+alphabet(::Type{DNAAlphabet{2}}) = ACGT
+alphabet(::Type{RNAAlphabet{2}}) = ACGU
 alphabet(::Type{DNAAlphabet{4}}) = alphabet(DNANucleotide)
 alphabet(::Type{RNAAlphabet{4}}) = alphabet(RNANucleotide)
 alphabet(::Type{AminoAcidAlphabet}) = alphabet(AminoAcid)

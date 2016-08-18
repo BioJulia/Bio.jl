@@ -156,25 +156,6 @@ true
 ```
 
 
-### Symbol Ranges
-
-Consecutive symbol sets can be created using a colon like integer ranges:
-```jlcon
-julia> AA_A:AA_V      # standard amino acids
-AA_A:AA_V
-
-julia> AA_A:AA_U      # standard amino acids + pyrrolysine (O) + selenocysteine (U)
-AA_A:AA_U
-
-julia> AA_A:AA_X      # all amino acids except teminal codon (*) and gap
-AA_A:AA_X
-
-julia> AA_A:AA_Gap    # all amino acids including terminal codon (*) and gap
-AA_A:AA_Gap
-
-```
-
-
 ### Other functions
 
 ```@docs

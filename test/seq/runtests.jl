@@ -448,12 +448,11 @@ end
             @test DNA_Gap < DNA_A < DNA_C < DNA_G < DNA_T < DNA_N
             @test !(DNA_A > DNA_G)
             @test gap(DNANucleotide) === DNA_Gap
-            @test collect(alphabet(DNANucleotide)) == [
+            @test collect(alphabet(DNANucleotide)) == sort([
                 DNA_A, DNA_C, DNA_G, DNA_T,
                 DNA_M, DNA_R, DNA_W, DNA_S,
                 DNA_Y, DNA_K, DNA_V, DNA_H,
-                DNA_D, DNA_B, DNA_N, DNA_Gap
-            ]
+                DNA_D, DNA_B, DNA_N, DNA_Gap])
         end
         @testset "RNA" begin
             @test ~RNA_Gap === RNA_N
@@ -467,12 +466,11 @@ end
             @test RNA_Gap < RNA_A < RNA_C < RNA_G < RNA_U < RNA_N
             @test !(RNA_A > RNA_G)
             @test gap(RNANucleotide) === RNA_Gap
-            @test collect(alphabet(RNANucleotide)) == [
+            @test collect(alphabet(RNANucleotide)) == sort([
                 RNA_A, RNA_C, RNA_G, RNA_U,
                 RNA_M, RNA_R, RNA_W, RNA_S,
                 RNA_Y, RNA_K, RNA_V, RNA_H,
-                RNA_D, RNA_B, RNA_N, RNA_Gap
-            ]
+                RNA_D, RNA_B, RNA_N, RNA_Gap])
         end
     end
 
