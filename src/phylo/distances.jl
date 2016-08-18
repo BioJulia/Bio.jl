@@ -31,20 +31,18 @@ immutable Kimura80 <: TsTv end
 
 # Conveinience method that essentially just calls the count_mutations function.
 @inline function distance{T<:MutationType}(a::BioSequence, b::BioSequence, t::Type{N_Mutations{T}})
-    d, l = count_mutations(a, b, T)
-    return d, l
+    return count_mutations(a, b, T)
 end
 
 # Method for computing the P distance of any kind of mutation.
 @inline function distance{T<:MutationType}(a::BioSequence, b::BioSequence, t::Type{P_Distance{T}})
-    d, l = count_mutations(a, b, count_type(t))
+    d, l = distance(a, b, N_Mutations{T})
     return d / l
 end
 
 # Method to compute distance corrected by JukesCantor69 substitution model.
 @inline function distance(a::BioSequence, b::BioSequence, t::Type{JukesCantor69})
-    d, l = count_mutations(a, b, DifferentMutation)
-    p = d / l
+    p = distance(a, b, P_Distance{DifferentMutation})
     D = expected_distance(p, t)
     V = variance(p, l, t)
     return D, V

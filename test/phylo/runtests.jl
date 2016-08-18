@@ -161,4 +161,21 @@ end
     end
 end
 
+@testset "Distance Computation" begin
+
+    dna1 = dna"ATTG-ACCTGGNTTTCCGAA"
+    dna2 = dna"A-ACAGAGTATACRGTCGTC"
+
+    @test distance(dna1, dna2, N_Mutations{DifferentMutation})[1] == 12
+    @test distance(dna1, dna2, N_Mutations{TransitionMutation})[1] == 4
+    @test distance(dna1, dna2, N_Mutations{TransversionMutation})[1] == 8
+
+    @test distance(dna1, dna2, P_Distance{DifferentMutation})[1] == (12 / 16)
+    @test distance(dna1, dna2, P_Distance{TransitionMutation})[1] == (4 / 16)
+    @test distance(dna1, dna2, P_Distance{TransversionMutation})[1] == (8 / 16)
+
+
+
+end
+
 end # Module TestPhylo
