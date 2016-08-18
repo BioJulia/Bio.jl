@@ -14,7 +14,8 @@ DNA sequences.
 
 #### Different types of mutation
 
-The types of mutations that can be counted are currently.
+The types of mutations that can currently be counted are displayed in the
+following table.
 
 | Type                   | Meaning                                 |
 | :--------------------- | :-------------------------------------- |
