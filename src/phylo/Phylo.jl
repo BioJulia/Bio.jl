@@ -63,7 +63,7 @@ export
     Raw,        # alias for N_Mutations{DifferentMutation}
     P,          # alias for P_Distance{DifferentMutation}
     JC69,       # alias for JukesCantor69
-    K80,        # alias for Kimura80 
+    K80,        # alias for Kimura80
 
     ## Misc
     n_possible_rooted,
