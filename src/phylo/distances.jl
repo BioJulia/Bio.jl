@@ -80,7 +80,7 @@ end
 # Method for computing the P distance of any kind of mutation.
 @inline function distance{T<:MutationType}(::Type{P_Distance{T}}, a::BioSequence, b::BioSequence)
     d, l = distance(N_Mutations{T}, a, b)
-    return d / l
+    return d / l, l
 end
 
 function distance(::Type{JC69}, a::BioSequence, b::BioSequence)
