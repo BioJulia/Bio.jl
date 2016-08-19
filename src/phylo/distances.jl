@@ -68,7 +68,22 @@ end
 # Distance computation methods
 # ----------------------------
 
-# Distance method that essentially just calls the count_mutations function.
+"""
+    distance{T<:MutationType}(::Type{N_Mutations{T}}, a::BioSequence, b::BioSequence)
+
+Compute the genetic distance between two DNA or RNA sequences.
+
+Providing the distance type N_Mutations{T} results in a distance which is the
+count of the mutations of type T that exist between the two sequences.
+
+For description of all the mutation types, see the Var module documentation.
+
+You may also provide the type TsTv as T, in which case the count returned is a sum
+of the number of transitions, and the number of transversions.
+
+This function returns a tuple of the number of mutations, and the number of valid
+(i.e. non-ambiguous sites tested by the function).
+"""
 @inline function distance{T<:MutationType}(::Type{N_Mutations{T}}, a::BioSequence, b::BioSequence)
     return count_mutations(a, b, T)
 end
@@ -77,12 +92,47 @@ end
     return count_mutations(a, b, TransitionMutation, TransversionMutation)
 end
 
-# Method for computing the P distance of any kind of mutation.
+"""
+    distance{T<:MutationType}(::Type{P_Distance{T}}, a::BioSequence, b::BioSequence)
+
+Compute the genetic distance between two DNA or RNA sequences.
+
+Providing the distance type P_Distance{T} results in a distance which is the
+count of the mutations of type T that exist between the two sequences, divided
+by the number of sites examined.
+
+In other words the p-distance is simply the proportion of sites between each
+pair of sequences, that are mutated (again where T determines what kind of mutation).
+
+For description of all the mutation types, see the Var module documentation.
+
+You may also provide the type TsTv as T, in which case the count returned is a sum
+of the number of transitions, and the number of transversions.
+
+This function returns a tuple of the p-distance, and the number of valid
+(i.e. non-ambiguous sites tested by the function).
+"""
 @inline function distance{T<:MutationType}(::Type{P_Distance{T}}, a::BioSequence, b::BioSequence)
     d, l = distance(N_Mutations{T}, a, b)
     return d / l, l
 end
 
+"""
+    distance(::Type{JukesCantor69}, a::BioSequence, b::BioSequence)
+
+Compute the genetic distance between two DNA or RNA sequences.
+
+Providing the distance type JukesCantor69 (alias JC69) results in a
+p-distance (the proportion of non-identical sites between the two sequences),
+corrected by the substitution model developed by Jukes and Cantor in 1969.
+
+It assumes that all substitutions (i.e. a change of a base by another one) have
+the same probability.
+This probability is the same for all sites along the DNA sequence.
+
+This function returns a tuple of the expected K80 distance estimate, and the
+computed variance.
+"""
 function distance(::Type{JC69}, a::BioSequence, b::BioSequence)
     p, l = distance(P_Distance{DifferentMutation}, a, b)
     @assert 0.0 <= p <= 0.75 throw(DomainError())
@@ -91,14 +141,25 @@ function distance(::Type{JC69}, a::BioSequence, b::BioSequence)
     return D, V
 end
 
-function distance(::Type{JC69}, a::BioSequence, b::BioSequence, alpha::Float64)
-    p, l = distance(P_Distance{DifferentMutation}, a, b)
-    @assert 0.0 <= p <= 0.75 throw(DomainError())
-    D = 0.75 * alpha * ( (1 - 4 * p / 3) ^ (-1 / alpha) - 1)
-    V = p * (1 - p)/(((1 - 4 * p / 3) ^ (-2 / (alpha + 1))) * l)
-    return D, V
-end
 
+"""
+    distance(::Type{Kimura80}, a::BioSequence, b::BioSequence)
+
+Compute the genetic distance between two DNA or RNA sequences.
+
+Providing the distance type Kimura80 (alias K80) computes a
+distance using the substitution model developed by Kimura in 1980.
+It is somtimes called Kimura's 2 parameter distance.
+
+The model makes the same assumptions as Jukes and Cantor's model, but
+two-kinds of mutation are considered: Transitions and Transversions.
+These two mutations can occur with different probabilities in this model.
+Both transition and transversion rates are the same for all sites along the DNA
+sequence.
+
+This function returns a tuple of the expected K80 distance estimate, and the
+computed variance.
+"""
 function distance(::Type{K80}, a::BioSequence, b::BioSequence)
     ns, nv, l = distance(N_Mutations{K80}, a, b)
     P = ns / l
@@ -107,16 +168,5 @@ function distance(::Type{K80}, a::BioSequence, b::BioSequence)
     a2 = 1 - 2 * Q
     D = expected_distance(K80, a1, a2)
     V = variance(K80, P, Q, l, a1, a2)
-    return D, V
-end
-
-function distance(::Type{K80}, a::BioSequence, b::BioSequence, gamma::Float64)
-    ns, nv, l = distance(N_Mutations{K80}, a, b)
-    P = ns / l
-    Q = nv / l
-    a1 = 1 - 2 * P - Q
-    a2 = 1 - 2 * Q
-    D = expected_distance(K80, a1, a2, gamma)
-    V = variance(K80, P, Q, l, a1, a2, gamma)
     return D, V
 end
