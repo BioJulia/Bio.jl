@@ -84,8 +84,7 @@ end
 end
 
 function distance(::Type{JC69}, a::BioSequence, b::BioSequence)
-    n, l = distance(N_Mutations{DifferentMutation}, a, b)
-    p = n / l
+    p, l = distance(P_Distance{DifferentMutation}, a, b)
     @assert 0.0 <= p <= 0.75 throw(DomainError())
     D = -0.75 * log(1 - 4 * p / 3)
     V = p * (1 - p) / (((1 - 4 * p / 3) ^ 2) * l)
@@ -93,8 +92,7 @@ function distance(::Type{JC69}, a::BioSequence, b::BioSequence)
 end
 
 function distance(::Type{JC69}, a::BioSequence, b::BioSequence, alpha::Float64)
-    n, l = distance(N_Mutations{DifferentMutation}, a, b)
-    p = n / l
+    p, l = distance(P_Distance{DifferentMutation}, a, b)
     @assert 0.0 <= p <= 0.75 throw(DomainError())
     D = 0.75 * alpha * ( (1 - 4 * p / 3) ^ (-1 / alpha) - 1)
     V = p * (1 - p)/(((1 - 4 * p / 3) ^ (-2 / (alpha + 1))) * l)
