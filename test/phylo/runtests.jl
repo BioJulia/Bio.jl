@@ -191,7 +191,10 @@ end
     @test distance(JC69, dna1, dna2) == (Inf, Inf) # Returns infinity as 12/16 is 0.75 - mutation saturation.
 
     @test round(distance(JC69, dna3, dna4)[1], 3) == 1.648
-    @test_approx_eq round(distance(JC69, dna3, dna4)[2], 3) 1
+    @test round(distance(JC69, dna3, dna4)[2], 3) == 1
+
+    @test round(distance(K80, dna3, dna4)[1], 3) == 1.648
+    @test round(distance(K80, dna3, dna4)[2], 3) == 1
 
 end
 
