@@ -87,6 +87,16 @@ function anchors_from_path(path)
     return anchors
 end
 
+# Generate a random range within `range`.
+function randrange(range)
+    x = rand(range)
+    y = rand(range)
+    if x < y
+        return x:y
+    else
+        return y:x
+    end
+end
 
 @testset "Alignments" begin
     @testset "Operations" begin
@@ -1222,6 +1232,42 @@ end
             end
         end
 
+        @testset "Random access" begin
+            filepath = Pkg.dir("Bio", "test", "BioFmtSpecimens", "BAM",
+                               "GSE25840_GSM424320_GM06985_gencode_spliced.head.bam")
+            reader = open(filepath, BAM)
+
+            # expected values are counted using samtools
+            for (refname, interval, expected) in [
+                    ("chr1", 1000:10000,      21),
+                    ("chr1", 8000:10000,      20),
+                    ("chr1", 766_000:800_000, 142),
+                    ("chr1", 786_000:800_000, 1),
+                    ("chr1", 796_000:800_000, 0)]
+                n = 0
+                for rec in intersect(reader, refname, interval)
+                    n += 1
+                end
+                @test n == expected
+            end
+
+            # randomized tests
+            for n in 1:50
+                refid = 1
+                refname = "chr1"
+                range = randrange(1:1_000_000)
+                seekstart(reader)
+                # linear scan
+                expected = collect(filter(reader) do rec
+                    isoverlapping(rec, refid, range)
+                end)
+                # indexed scan
+                actual = collect(intersect(reader, refname, range))
+                @test actual == expected
+            end
+
+            close(reader)
+        end
     end
 end
 

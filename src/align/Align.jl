@@ -95,6 +95,7 @@ export
     qualities,
     header,
     overlapchunks,
+    isoverlapping,  # re-export from Bio.Intervals
     # SAM flags
     SAM_FLAG_PAIRED,
     SAM_FLAG_PROPER_PAIR,
@@ -111,6 +112,7 @@ export
 
 import Bio
 using Bio.Seq
+using Bio.Intervals
 import IntervalTrees
 
 include("operations.jl")

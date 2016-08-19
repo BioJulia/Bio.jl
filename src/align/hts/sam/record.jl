@@ -69,7 +69,7 @@ function ismapped(r::SAMRecord)
     return r.pos != 0
 end
 
-function seqname(r::SAMRecord)
+function Bio.Intervals.seqname(r::SAMRecord)
     return r.name
 end
 

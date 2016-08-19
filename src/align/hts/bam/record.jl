@@ -179,7 +179,7 @@ end
 
 Return the read name of the alignment `rec`.
 """
-function seqname(rec::BAMRecord)
+function Bio.Intervals.seqname(rec::BAMRecord)
     # drop the last NUL character
     return unsafe_string(pointer(rec.data), max(seqname_length(rec) - 1, 0))
 end

@@ -8,6 +8,8 @@ type BAMIntersectionIterator
     interval::UnitRange{Int}
 end
 
+Base.iteratorsize(::BAMIntersectionIterator) = Base.SizeUnknown()
+
 function Base.start(iter::BAMIntersectionIterator)
     if !isempty(iter.chunks)
         seek(iter.reader, first(iter.chunks).start)
@@ -44,7 +46,7 @@ function advance!(iter, rec, i)
     return i, rec
 end
 
-function isoverlapping(rec, refid_, interval)
+function Bio.Intervals.isoverlapping(rec, refid_, interval)
     return ismapped(rec) &&
         refid(rec) == refid_ &&
         position(rec) ≤ last(interval) &&
