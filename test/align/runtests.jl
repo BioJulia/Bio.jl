@@ -934,4 +934,7 @@ end
     end
 end
 
+@testset "High-throughput Sequencing" begin
+end
+
 end # TestAlign
