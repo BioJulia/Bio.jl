@@ -43,6 +43,27 @@ function Base.copy(rec::BAMRecord)
         rec.refseqnames)
 end
 
+function Base.isless(rec1::BAMRecord, rec2::BAMRecord)
+    # left-most position of alignment
+    if rec1.refid == rec2.refid
+        return isless(rec1.pos, rec2.pos)
+    else
+        return isless(rec1.refid, rec2.refid)
+    end
+end
+
+function Base.:(==)(rec1::BAMRecord, rec2::BAMRecord)
+    return (
+        rec1.refid      == rec2.refid      &&
+        rec1.pos        == rec2.pos        &&
+        rec1.bin_mq_nl  == rec2.bin_mq_nl  &&
+        rec1.flag_nc    == rec2.flag_nc    &&
+        rec1.l_seq      == rec2.l_seq      &&
+        rec1.next_refid == rec2.next_refid &&
+        rec1.next_pos   == rec2.next_pos   &&
+        rec1.tlen       == rec2.tlen)  # TODO: check data
+end
+
 function Base.show(io::IO, rec::BAMRecord)
     println(summary(rec), ":")
     println(io, "  reference name: ", refname(rec))

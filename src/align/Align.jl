@@ -78,6 +78,7 @@ export
     BAMRecord,
     BAI,
     Tabix,
+    AuxDataDict,
     ismapped,
     refname,
     nextrefname,

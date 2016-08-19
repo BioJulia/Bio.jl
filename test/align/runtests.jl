@@ -5,6 +5,7 @@ using Base.Test
 using Bio
 using Bio.Seq
 using Bio.Align
+using BGZFStreams
 using TestFunctions
 
 
@@ -935,6 +936,173 @@ end
 end
 
 @testset "High-throughput Sequencing" begin
+    @testset "AuxDataDict" begin
+        dict = AuxDataDict()
+        @test length(dict) == 0
+        @test isempty(dict)
+        @test_throws KeyError dict["NM"]
+
+        dict = AuxDataDict(
+            "X1" => UInt8(1),
+            "X2" => UInt16(2),
+            "X3" => UInt32(3),
+            "X4" => Int8(4),
+            "X5" => Int16(5),
+            "X6" => Int32(6),
+            "X7" => Float32(7),
+            "X8" => "eight",
+            "X9" => Int32[9])
+        @test length(dict) == 9
+        @test !isempty(dict)
+        @test dict["X1"] === UInt8(1)
+        @test dict["X2"] === UInt16(2)
+        @test dict["X3"] === UInt32(3)
+        @test dict["X4"] === Int8(4)
+        @test dict["X5"] === Int16(5)
+        @test dict["X6"] === Int32(6)
+        @test dict["X7"] === Float32(7)
+        @test dict["X8"] == "eight"
+        @test typeof(dict["X8"]) == String
+        @test dict["X9"] == Int32[9]
+        @test typeof(dict["X9"]) == Vector{Int32}
+
+        dict = AuxDataDict("NM" => 0x01, "XY" => Int32(100), "XZ" => [0x11, 0x23])
+        @test length(dict) == 3
+        @test dict["NM"] === 0x01
+        @test dict["XY"] === Int32(100)
+        @test dict["XZ"] == [0x11, 0x23]
+        @test eltype(dict["XZ"]) == UInt8
+
+        dict = AuxDataDict("NM" => 0x01, "MD" => "8T1T39")
+        @test length(dict) == 2
+        @test dict["NM"] === 0x01
+        @test dict["MD"] == "8T1T39"
+        dict["NM"] = 0x00
+        @test dict["NM"] === 0x00
+        dict["MD"] = "50"
+        @test dict["MD"] == "50"
+        @test collect(dict) == ["NM" => 0x00, "MD" => "50"]
+        dict["XY"] = "foobar"
+        @test dict["XY"] == "foobar"
+        @test collect(dict) == ["NM" => 0x00, "MD" => "50", "XY" => "foobar"]
+        delete!(dict, "NM")
+        @test length(dict) == 2
+        @test collect(dict) == ["MD" => "50", "XY" => "foobar"]
+    end
+
+    @testset "BAM" begin
+        bamdir = Pkg.dir("Bio", "test", "BioFmtSpecimens", "BAM")
+
+        @testset "Record" begin
+            rec = BAMRecord()
+            @test !ismapped(rec)
+
+            # default values
+            @test refname(rec) == "*"
+            @test refid(rec) == 0
+            @test position(rec) == 0
+            @test mappingquality(rec) == 0
+            @test flag(rec) == 0
+            @test nextrefname(rec) == "*"
+            @test nextrefid(rec) == 0
+            @test nextposition(rec) == 0
+            @test templatelength(rec) == 0
+            @test seqname(rec) == ""
+            @test cigar(rec) == ""
+            @test sequence(rec) == dna""
+            @test qualities(rec) == UInt8[]
+
+            @test Align.rightmost_position(rec) === Int32(-1)
+            @test Align.alignment_length(rec) === 0
+
+            # set & delete tags
+            rec = BAMRecord()
+            @test !haskey(rec, "MN")
+            rec["MN"] = 0x01
+            @test rec["MN"] === 0x01
+            @test haskey(rec, "MN")
+            @test !haskey(rec, "XY")
+            rec["XY"] = "foobar"
+            @test rec["XY"] == "foobar"
+            @test haskey(rec, "XY")
+            delete!(rec, "MN")
+            @test !haskey(rec, "MN")
+        end
+
+        @testset "Reader" begin
+            reader = open(joinpath(bamdir, "bam1.bam"), BAM)
+            @test isa(reader, Align.BAMReader)
+
+            # header
+            h = header(reader)
+            @test h["SQ"] == [Dict("SN" => "1", "LN" => "239940")]
+            @test h["PG"] == [Dict("ID" => "bwa", "PN" => "bwa", "VN" => "0.6.2-r126")]
+
+            # first record
+            n = 0
+            rec = BAMRecord()
+            read!(reader, rec); n += 1
+            @test refid(rec) == 1
+            @test position(rec) == 136186
+            @test seqname(rec) == "HWI-1KL120:88:D0LRBACXX:1:1101:2852:2134"
+            @test sequence(rec) == dna"""
+            GAGAGGTCAGCGTGAGCCCCTTGCCTCACACCGGCCCCTC
+            TCACGCCGAGAGAGGTCAGCGTGAGCCCCTTGCCTCACAC
+            CGGCCCCTCCCACGCCGAGAG
+            """
+            @test flag(rec) == 69
+            @test cigar(rec) == ""
+
+            # second record
+            read!(reader, rec); n += 1
+            @test refid(rec) == 1
+            @test position(rec) == 136186
+            @test seqname(rec) == "HWI-1KL120:88:D0LRBACXX:1:1101:2852:2134"
+            @test sequence(rec) == dna"""
+            TCACGGTGGCCTGTTGAGGCAGGGGCTCACGCTGACCTCT
+            CTCGGCGTGGGAGGGGCCGGTGTGAGGCAAGGGCTCACGC
+            TGACCTCTCTCGGCGTGGGAG
+            """
+            @test flag(rec) == 137
+            @test cigar(rec) == "101M"
+            @test rec["XT"] === 'U'
+            @test rec["NM"] == 5
+
+            # remaining records (just check the number)
+            while !eof(reader)
+                read!(reader, rec)
+                n += 1
+            end
+            close(reader)
+            @test n == 200
+
+            # iterator
+            @test length(collect(open(joinpath(bamdir, "bam1.bam"), BAM))) == 200
+        end
+
+        @testset "Round trip" begin
+            mktemp() do path, _
+                # copy
+                reader = open(joinpath(bamdir, "bam1.bam"), BAM)
+                writer = Align.BAMWriter(
+                    BGZFStream(path, "w"),
+                    header(reader, true))
+                records = BAMRecord[]
+                for rec in reader
+                    push!(records, rec)
+                    write(writer, rec)
+                end
+                close(reader)
+                close(writer)
+
+                # read again
+                reader = open(path, BAM)
+                @test collect(reader) == records
+                close(reader)
+            end
+        end
+
+    end
 end
 
 end # TestAlign
