@@ -990,6 +990,126 @@ end
         @test collect(dict) == ["MD" => "50", "XY" => "foobar"]
     end
 
+    @testset "SAM" begin
+        samdir = Pkg.dir("Bio", "test", "BioFmtSpecimens", "SAM")
+
+        @testset "SAMHeader" begin
+            h = SAMHeader()
+            @test isa(h, Associative)
+            @test isempty(h)
+            h["HD"] = Dict("VN" => "100.100", "SO" => "unknown")
+            @test length(h) == 1
+            @test h["HD"]["VN"] == "100.100"
+            h["CO"] = ["comment1", "comment2"]
+            @test length(h) == 2
+            @test h["CO"] == ["comment1", "comment2"]
+            delete!(h, "CO")
+            @test length(h) == 1
+        end
+
+        @testset "Record" begin
+            rec = SAMRecord()
+            @test !ismapped(rec)
+            # default values
+            @test seqname(rec) == ""
+            @test flag(rec) == 0x0000
+            @test refname(rec) == "*"
+            @test position(rec) == 0
+            @test nextrefname(rec) == "*"
+            @test nextposition(rec) == 0
+            @test templatelength(rec) == 0
+            @test cigar(rec) == "*"
+            @test sequence(rec) == dna""
+            @test qualities(rec) == UInt8[]
+
+            # set & delete tags
+            rec = SAMRecord()
+            @test !haskey(rec, "MN")
+            rec["MN"] = 0x01
+            @test rec["MN"] === 0x01
+            @test haskey(rec, "MN")
+            @test !haskey(rec, "XY")
+            rec["XY"] = "foobar"
+            @test rec["XY"] == "foobar"
+            @test haskey(rec, "XY")
+            delete!(rec, "MN")
+            @test !haskey(rec, "MN")
+        end
+
+        @testset "Reader" begin
+            reader = open(joinpath(samdir, "sam1.sam"), SAM)
+            @test isa(reader, Align.SAMReader)
+
+            # header
+            # FIXME: pass these tests
+            #h = header(reader)
+            #@test h["SQ"] == [Dict("SN" => "1", "LN" => "239940")]
+            #@test h["PG"] == [Dict("ID" => "bwa", "PN" => "bwa", "VN" => "0.6.2-r126")]
+
+            # first record
+            n = 0
+            rec = SAMRecord()
+            read!(reader, rec); n += 1
+            @test refname(rec) == "1"
+            @test position(rec) == 136186
+            @test seqname(rec) == "HWI-1KL120:88:D0LRBACXX:1:1101:2852:2134"
+            @test sequence(rec) == dna"""
+            GAGAGGTCAGCGTGAGCCCCTTGCCTCACACCGGCCCCTC
+            TCACGCCGAGAGAGGTCAGCGTGAGCCCCTTGCCTCACAC
+            CGGCCCCTCCCACGCCGAGAG
+            """
+            @test flag(rec) == 69
+            @test cigar(rec) == "*"
+
+            # second record
+            read!(reader, rec); n += 1
+            @test refname(rec) == "1"
+            @test position(rec) == 136186
+            @test seqname(rec) == "HWI-1KL120:88:D0LRBACXX:1:1101:2852:2134"
+            @test sequence(rec) == dna"""
+            TCACGGTGGCCTGTTGAGGCAGGGGCTCACGCTGACCTCT
+            CTCGGCGTGGGAGGGGCCGGTGTGAGGCAAGGGCTCACGC
+            TGACCTCTCTCGGCGTGGGAG
+            """
+            @test flag(rec) == 137
+            @test cigar(rec) == "101M"
+            @test rec["XT"] === 'U'
+            @test rec["NM"] == 5
+
+            # remaining records (just check the number)
+            while !eof(reader)
+                read!(reader, rec)
+                n += 1
+            end
+            close(reader)
+            @test n == 200
+
+            # iterator
+            @test length(collect(open(joinpath(samdir, "sam1.sam"), SAM))) == 200
+        end
+
+        @testset "Round trip" begin
+            mktemp() do path, io
+                # copy
+                reader = open(joinpath(samdir, "sam1.sam"), SAM)
+                writer = Align.SAMWriter(io)
+                write(writer, header(reader))
+                records = SAMRecord[]
+                for rec in reader
+                    push!(records, rec)
+                    write(writer, rec)
+                end
+                close(reader)
+                close(writer)
+
+                # read again
+                reader = open(path, SAM)
+                @test collect(reader) == records
+                close(reader)
+            end
+        end
+    end
+
     @testset "BAM" begin
         bamdir = Pkg.dir("Bio", "test", "BioFmtSpecimens", "BAM")
 

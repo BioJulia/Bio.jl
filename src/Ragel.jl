@@ -40,11 +40,17 @@ end
 # doesn't check that the characters are digits (we don't need to since this is
 # already checked during parsing).
 function parse_int64(buffer, firstpos, lastpos)
+    if buffer[firstpos] == UInt8('-')
+        sign = -1
+        firstpos += 1
+    else
+        sign = +1
+    end
     x = Int64(0)
     for i in firstpos:lastpos
         x = x * 10 + buffer[i] - UInt8('0')
     end
-    return x
+    return sign * x
 end
 
 
