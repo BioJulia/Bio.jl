@@ -1,9 +1,9 @@
-# phylo/distances.jl
+# var/distances.jl
 # ==================
 #
 # Types and methods for computing evolutionary and genetic distances.
 #
-# Part of the Bio.Phylo module.
+# Part of the Bio.Var module.
 #
 # This file is a part of BioJulia. License is MIT: https://github.com/BioJulia/Bio.jl/blob/master/LICENSE.md
 

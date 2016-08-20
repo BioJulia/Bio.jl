@@ -58,15 +58,6 @@ export
     rem_branch!,
     add_branch!,
 
-    ## Evolutionary distance computation.
-    N_Mutations,
-    P_Distance,
-    JukesCantor69,
-    Kimura80,
-    distance,
-    JC69,       # alias for JukesCantor69
-    K80,        # alias for Kimura80
-
     ## Misc
     n_possible_rooted,
     n_possible_unrooted
