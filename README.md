@@ -30,6 +30,11 @@ developed as submodules:
 * `Bio.Var`: Biological variation
     * Mutation counting
     * Genetic and evolutionary distances
+* `Bio.Phylo`: Phylogenetics
+    * Phylogenetic trees
+
+
+## Badges
 
 Get Help: [![Join the chat at Gitter!](https://badges.gitter.im/BioJulia.png)](https://gitter.im/BioJulia/Bio.jl)
 [![reference docs](https://img.shields.io/badge/docs-reference-blue.svg)](http://biojulia.github.io/Bio.jl/latest/)
