@@ -40,12 +40,12 @@ end
     @test distance(Count{DifferentMutation}, dna1, dna2) == (12, 16)
     @test distance(Count{TransitionMutation}, dna1, dna2) == (4, 16)
     @test distance(Count{TransversionMutation}, dna1, dna2) == (8, 16)
-    @test distance(Count{K80}, dna1, dna2) == (4, 8, 16)
+    @test distance(Count{Kimura80}, dna1, dna2) == (4, 8, 16)
 
     @test distance(Count{DifferentMutation}, dna3, dna4) == (12, 18)
     @test distance(Count{TransitionMutation}, dna3, dna4) == (4, 18)
     @test distance(Count{TransversionMutation}, dna3, dna4) == (8, 18)
-    @test distance(Count{K80}, dna3, dna4) == (4, 8, 18)
+    @test distance(Count{Kimura80}, dna3, dna4) == (4, 8, 18)
 
     @test distance(Proportion{DifferentMutation}, dna1, dna2) == ((12 / 16), 16)
     @test distance(Proportion{TransitionMutation}, dna1, dna2) == ((4 / 16), 16)
@@ -55,13 +55,13 @@ end
     @test distance(Proportion{TransitionMutation}, dna3, dna4) == ((4 / 18), 18)
     @test distance(Proportion{TransversionMutation}, dna3, dna4) == ((8 / 18), 18)
 
-    @test distance(JC69, dna1, dna2) == (Inf, Inf) # Returns infinity as 12/16 is 0.75 - mutation saturation.
+    @test distance(JukesCantor69, dna1, dna2) == (Inf, Inf) # Returns infinity as 12/16 is 0.75 - mutation saturation.
 
-    @test round(distance(JC69, dna3, dna4)[1], 3) == 1.648
-    @test round(distance(JC69, dna3, dna4)[2], 3) == 1
+    @test round(distance(JukesCantor69, dna3, dna4)[1], 3) == 1.648
+    @test round(distance(JukesCantor69, dna3, dna4)[2], 3) == 1
 
-    @test round(distance(K80, dna3, dna4)[1], 3) == 1.648
-    @test round(distance(K80, dna3, dna4)[2], 3) == 1
+    @test round(distance(Kimura80, dna3, dna4)[1], 3) == 1.648
+    @test round(distance(Kimura80, dna3, dna4)[2], 3) == 1
 
 end
 
