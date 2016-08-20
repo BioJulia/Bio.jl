@@ -1,6 +1,35 @@
 <p align="center"><img src="https://raw.githubusercontent.com/BioJulia/assets/master/branding/bio/BioJl_Design_1.png" width="50%" alt="Bio.jl" /></p>
 
-# Bioinformatics and Computational Biology infrastructure for [Julia](http://julialang.org)
+As the flagship package of the BioJulia organisation, Bio.jl provides core
+modules containing efficient data types and algorithms, that most
+bioinformaticians and biologists would want to use for analyses or for building
+their own applications. Bio.jl is built on top of the [Julia programming
+language](http://julialang.org/), a high-level and high-performance programming
+language for technical computing. Bio.jl and Julia are open source and their
+source codes are immediately available to the public.
+
+Bio.jl provides programmable components for quick prototyping of new analyses
+and algorithms. These components are carefully tuned to achieve the best
+performance without sacrificing the usability of the dynamic programming
+language. The following modules are currently part of the package and actively
+developed as submodules:
+* `Bio.Seq`: Biological sequences
+    * Biological symbols (DNA, RNA and amino acid)
+    * Biological sequences
+    * Sequence search algorithms
+    * Readers for FASTA, FASTQ and .2bit file formats
+* `Bio.Align`: Sequence alignment
+    * Alignment data structures
+    * Pairwise alignment algorithms
+* `Bio.Intervals`: Genomic intervals and annotations
+    * Genomic intervals with annotations
+    * Readers for BED and BigBed file formats
+* `Bio.Structure`: Molecular structures
+    * Macromolecular structures (e.g. proteins)
+    * Reader for PDB file format
+* `Bio.Var`: Biological variation
+    * Mutation counting
+    * Genetic and evolutionary distances
 
 Get Help: [![Join the chat at Gitter!](https://badges.gitter.im/BioJulia.png)](https://gitter.im/BioJulia/Bio.jl)
 [![reference docs](https://img.shields.io/badge/docs-reference-blue.svg)](http://biojulia.github.io/Bio.jl/latest/)
@@ -14,18 +43,32 @@ Code Quality: [![Build Status](https://travis-ci.org/BioJulia/Bio.jl.svg?branch=
 [![codecov.io](http://codecov.io/github/BioJulia/Bio.jl/coverage.svg?branch=master)](http://codecov.io/github/BioJulia/Bio.jl?branch=master)
 
 
-### Documentation
+## Documentation
 
-[Read the reference manual here.](http://biojulia.github.io/Bio.jl/latest)
+Read the reference manual here: <http://biojulia.github.io/Bio.jl/latest>.
 
-### Running tests
 
-`julia test/runtests.jl`
+## Install
 
-### Contributing
+Bio.jl is a registered package in the official package management system and can
+be installed with a command:
+```julia
+julia> Pkg.add("Bio")
 
-If you'd like to contribute, please [join the discussion group](https://groups.google.com/forum/#!forum/biojulia-dev), or drop by our [Gitter chat room](https://gitter.im/BioJulia/Bio.jl).
+```
 
-### Roadmap
+If you are interested in the cutting edge of the development, please check out
+the master branch to try new features before release.
 
-Our roadmap is on the wiki: https://github.com/BioJulia/Bio.jl/wiki/roadmap.
+
+## Contributing
+
+We appreciate contributions from users including reporting bugs, fixing issues,
+improving performance and adding new features. If you have a question about
+contributing, our [Gitter chat room](https://gitter.im/BioJulia/Bio.jl) would be
+the best place to communicate with other users and developers.
+
+
+## Roadmap
+
+Our roadmap is on the wiki: <https://github.com/BioJulia/Bio.jl/wiki/roadmap>.
