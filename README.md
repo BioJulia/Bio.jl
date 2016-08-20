@@ -25,8 +25,11 @@ developed as submodules:
     * Genomic intervals with annotations
     * Readers for BED and BigBed file formats
 * `Bio.Structure`: Molecular structures
-    * Macromolecular structures (protein)
+    * Macromolecular structures (e.g. proteins)
     * Reader for PDB file format
+* `Bio.Var`: Biological variation
+    * Mutation counting
+    * Genetic and evolutionary distances
 
 Get Help: [![Join the chat at Gitter!](https://badges.gitter.im/BioJulia.png)](https://gitter.im/BioJulia/Bio.jl)
 [![reference docs](https://img.shields.io/badge/docs-reference-blue.svg)](http://biojulia.github.io/Bio.jl/latest/)
