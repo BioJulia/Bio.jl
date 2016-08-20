@@ -16,9 +16,44 @@ abstract UncorrectedDist <: EvolutionaryDistances
 abstract CorrectedDist <: EvolutionaryDistances
 abstract TsTv <: CorrectedDist
 
+"""
+A distance which is the count of the mutations of type T that exist between the
+two sequences.
+"""
 immutable Count{T} <: UncorrectedDist end
+
+"""
+Proportion{T} is a distance which is the count of the mutations of type T that
+exist between the two biological sequences, divided by the number of valid sites
+examined (sites which don't have gap or ambiguous symbols).
+
+In other words this so called p-distance is simply the proportion of sites
+between each pair of sequences, that are mutated (again where T determines
+what kind of mutation).
+"""
 immutable Proportion{T} <: UncorrectedDist end
+
+"""
+The JukesCantor69 distance is a p-distance adjusted/corrected by the
+substitution model developed by Jukes and Cantor in 1969.
+
+The Jukes and Cantor model assumes that all substitutions
+(i.e. a change of a base by another one) have the same probability.
+This probability is the same for all sites along the DNA sequence.
+"""
 immutable JukesCantor69 <: CorrectedDist end
+
+"""
+The Kimura80 distance uses a substitution model developed by Kimura in 1980.
+It is somtimes called Kimura's 2 parameter distance.
+
+The model makes the same assumptions as Jukes and Cantor's model, but with a
+crucial difference: two-kinds of mutation are considered
+called Transitions and Transversions.
+Transitions and transversions can occur with different probabilities in this
+model, however, both transition and transversion rates/probabilities are the
+same for all sites along the DNA sequence.
+"""
 immutable Kimura80 <: TsTv end
 
 typealias JC69 JukesCantor69
@@ -67,20 +102,21 @@ end
 # ----------------------------
 
 """
+    distance(::Type{EvolutionaryDistances}, a::BioSequence, b::BioSequence)
+
+Compute the genetic distance between two nucleotide sequences of equal length.
+
+The distance measure to compute is determined by the type provided as the first
+parameter. The second and third parameter provide the two nucleotide sequences.
+"""
+function distance end
+
+"""
     distance{T<:MutationType}(::Type{Count{T}}, a::BioSequence, b::BioSequence)
 
-Compute the genetic distance between two DNA or RNA sequences.
-
-Providing the distance type Count{T} results in a distance which is the
-count of the mutations of type T that exist between the two sequences.
-
-For description of all the mutation types, see the Var module documentation.
-
-You may also provide the type TsTv as T, in which case the count returned is a sum
-of the number of transitions, and the number of transversions.
-
-This function returns a tuple of the number of mutations, and the number of valid
-(i.e. non-ambiguous sites tested by the function).
+This method of distance returns a tuple of the number of mutations of type T
+between two sequences and the number of valid
+(i.e. non-ambiguous sites) counted by the function.
 """
 @inline function distance{T<:MutationType}(::Type{Count{T}}, a::BioSequence, b::BioSequence)
     return count_mutations(a, b, T)
@@ -93,23 +129,8 @@ end
 """
     distance{T<:MutationType}(::Type{Proportion{T}}, a::BioSequence, b::BioSequence)
 
-Compute the genetic distance between two DNA or RNA sequences.
-
-Providing the distance type Proportion{T} results in a distance which is the
-count of the mutations of type T that exist between the two sequences, divided
-by the number of sites examined.
-
-In other words this so called p-distance is simply the proportion of sites
-between each pair of sequences, that are mutated (again where T determines
-what kind of mutation).
-
-For description of all the mutation types, see the Var module documentation.
-
-You may also provide the type TsTv as T, in which case the count returned is a sum
-of the number of transitions, and the number of transversions.
-
-This function returns a tuple of the p-distance, and the number of valid
-(i.e. non-ambiguous sites tested by the function).
+This method of distance returns a tuple of the p-distance, and the number of valid
+(i.e. non-ambiguous sites) counted by the function.
 """
 @inline function distance{T<:MutationType}(::Type{Proportion{T}}, a::BioSequence, b::BioSequence)
     d, l = distance(N_Mutations{T}, a, b)
@@ -118,19 +139,10 @@ end
 
 """
     distance(::Type{JukesCantor69}, a::BioSequence, b::BioSequence)
+    distance(::Type{JC69}, a::BioSequence, b::BioSequence)
 
-Compute the genetic distance between two DNA or RNA sequences.
-
-Providing the distance type JukesCantor69 (alias JC69) results in a
-p-distance (the proportion of non-identical sites between the two sequences),
-corrected by the substitution model developed by Jukes and Cantor in 1969.
-
-It assumes that all substitutions (i.e. a change of a base by another one) have
-the same probability.
-This probability is the same for all sites along the DNA sequence.
-
-This function returns a tuple of the expected K80 distance estimate, and the
-computed variance.
+This method of distance returns a tuple of the expected JukesCantor69 distance
+estimate, and the computed variance.
 """
 function distance(::Type{JC69}, a::BioSequence, b::BioSequence)
     p, l = distance(Proportion{DifferentMutation}, a, b)
@@ -143,21 +155,10 @@ end
 
 """
     distance(::Type{Kimura80}, a::BioSequence, b::BioSequence)
+    distance(::Type{K80}, a::BioSequence, b::BioSequence)
 
-Compute the genetic distance between two DNA or RNA sequences.
-
-Providing the distance type Kimura80 (alias K80) computes a
-distance using the substitution model developed by Kimura in 1980.
-It is somtimes called Kimura's 2 parameter distance.
-
-The model makes the same assumptions as Jukes and Cantor's model, but
-two-kinds of mutation are considered: Transitions and Transversions.
-These two mutations can occur with different probabilities in this model.
-Both transition and transversion rates are the same for all sites along the DNA
-sequence.
-
-This function returns a tuple of the expected K80 distance estimate, and the
-computed variance.
+This method of distance returns a tuple of the expected Kimura80 distance
+estimate, and the computed variance.
 """
 function distance(::Type{K80}, a::BioSequence, b::BioSequence)
     ns, nv, l = distance(Count{K80}, a, b)

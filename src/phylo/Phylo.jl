@@ -68,7 +68,6 @@ include("phylogeny.jl")
 include("node_basics.jl")
 include("branch_basics.jl")
 include("manipulation.jl")
-include("distances.jl")
 include("dating.jl")
 
 end # module Phylo
