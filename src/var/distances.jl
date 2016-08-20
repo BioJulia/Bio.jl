@@ -55,45 +55,42 @@ same for all sites along the DNA sequence.
 """
 immutable Kimura80 <: TsTv end
 
-typealias JC69 JukesCantor69
-typealias K80 Kimura80
-
 
 # Distance computation internals
 # ------------------------------
 
 
-## K80 Distance computation internals
+## Kimura80 Distance computation internals
 
-@inline function expected_distance(::Type{K80}, a1::Float64, a2::Float64)
+@inline function expected_distance(::Type{Kimura80}, a1::Float64, a2::Float64)
     return -0.5 * log(a1 * sqrt(a2))
 end
 
-@inline function expected_distance(::Type{K80}, a1::Float64, a2::Float64,
+@inline function expected_distance(::Type{Kimura80}, a1::Float64, a2::Float64,
     gamma::Float64)
     b = -1 / alpha
     return alpha * ((a1 ^ b) + 0.5 * (a2 ^ b) - 1.5) / 2
 end
 
-macro k80var()
+macro Kimura80var()
     :(return ((c1 * c1 * P + c3 * c3 * Q) - ((c1 * P + c3 * Q) ^ 2)) / L)
 end
 
-@inline function variance(::Type{K80}, P::AbstractFloat, Q::AbstractFloat, L::Int, a1::AbstractFloat,
+@inline function variance(::Type{Kimura80}, P::AbstractFloat, Q::AbstractFloat, L::Int, a1::AbstractFloat,
     a2::AbstractFloat)
     c1 = 1 / a1
     c2 = 1 / a2
     c3 = (c1 + c2) / 2
-    @k80var
+    @Kimura80var
 end
 
-@inline function variance(::Type{K80}, P::AbstractFloat, Q::AbstractFloat, L::Int, a1::AbstractFloat,
+@inline function variance(::Type{Kimura80}, P::AbstractFloat, Q::AbstractFloat, L::Int, a1::AbstractFloat,
     a2::AbstractFloat, gamma::AbstractFloat)
     b = -(1 / gamma + 1)
     c1 = a1 ^ b
     c2 = a2 ^ b
     c3 = (c1 + c2) / 2
-    @k80var
+    @Kimura80var
 end
 
 
@@ -138,12 +135,12 @@ end
 
 """
     distance(::Type{JukesCantor69}, a::BioSequence, b::BioSequence)
-    distance(::Type{JC69}, a::BioSequence, b::BioSequence)
+    distance(::Type{JukesCantor69}, a::BioSequence, b::BioSequence)
 
 This method of distance returns a tuple of the expected JukesCantor69 distance
 estimate, and the computed variance.
 """
-function distance(::Type{JC69}, a::BioSequence, b::BioSequence)
+function distance(::Type{JukesCantor69}, a::BioSequence, b::BioSequence)
     p, l = distance(Proportion{DifferentMutation}, a, b)
     @assert 0.0 <= p <= 0.75 throw(DomainError())
     D = -0.75 * log(1 - 4 * p / 3)
@@ -154,18 +151,18 @@ end
 
 """
     distance(::Type{Kimura80}, a::BioSequence, b::BioSequence)
-    distance(::Type{K80}, a::BioSequence, b::BioSequence)
+    distance(::Type{Kimura80}, a::BioSequence, b::BioSequence)
 
 This method of distance returns a tuple of the expected Kimura80 distance
 estimate, and the computed variance.
 """
-function distance(::Type{K80}, a::BioSequence, b::BioSequence)
-    ns, nv, l = distance(Count{K80}, a, b)
+function distance(::Type{Kimura80}, a::BioSequence, b::BioSequence)
+    ns, nv, l = distance(Count{Kimura80}, a, b)
     P = ns / l
     Q = nv / l
     a1 = 1 - 2 * P - Q
     a2 = 1 - 2 * Q
-    D = expected_distance(K80, a1, a2)
-    V = variance(K80, P, Q, l, a1, a2)
+    D = expected_distance(Kimura80, a1, a2)
+    V = variance(Kimura80, P, Q, l, a1, a2)
     return D, V
 end
