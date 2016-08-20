@@ -1,4 +1,4 @@
-# Bio.Var: Biological variance module.
+# Bio.Var: Biological Variation.
 
 ```@meta
 CurrentModule = Bio.Var
@@ -7,14 +7,15 @@ DocTestSetup = quote
 end
 ```
 
-### Counting mutations
+## Counting mutations
 
 You can count the numbers of different types of mutations between two aligned
-DNA sequences.
+(i.e. of equal length) nucleotide sequences.
 
-#### Different types of mutation
+### Different types of mutation
 
-The types of mutations that can be counted are currently.
+The types of mutations that can currently be counted are displayed in the
+following table.
 
 | Type                   | Meaning                                 |
 | :--------------------- | :-------------------------------------- |
@@ -36,6 +37,60 @@ to be a transversion mutation.
 As with `DifferentMutation`, cases where a nucleotide is ambiguous are excluded
 from the computation.
 
-#### `count_mutations` method
+### `count_mutations` method
 
 Mutations are counted using the `count_mutations` method.
+The method outputs a tuple. The first value is the number of mutations counted.
+The second value is the number of sites examined. Sites which have gaps and
+uncertain nucleotides are not examined and so this second value will be less
+than the length of the two biological sequences.
+
+```julia
+count_mutations(dna"ATCGATCG", dna"ACCGATCG", DifferentMutation)
+
+count_mutations(dna"ATCGATCG", dna"ACCGATCG", TransitionMutation)
+
+count_mutations(dna"ATCGATCG", dna"ACCGATCG", TransversionMutation)
+
+count_mutations(dna"ATCGATCG", dna"ACCGATCG", TransitionMutation, TransversionMutation)
+
+count_mutations(rna"AUCGAUCG", rna"ACCGAUCG", DifferentMutation)
+
+count_mutations(rna"AUCGAUCG", rna"ACCGAUCG", TransitionMutation)
+
+count_mutations(rna"AUCGAUCG", rna"ACCGAUCG", TransversionMutation)
+
+count_mutations(rna"AUCGAUCG", rna"ACCGAUCG", TransitionMutation, TransversionMutation)
+```
+
+## Computing evolutionary and genetic distances
+
+Just as you can count the number of mutations between two nucleotide sequences,
+you can compute the evolutionary distance between two nucleotide sequences.
+
+### Different evolutionary distance measures
+
+The types of distances that can currently be computed are described below.
+
+```@docs
+Count{T}
+Proportion{T}
+JukesCantor69
+Kimura80
+```
+
+### The distance method
+
+```@docs
+distance
+```
+
+Using the distance method you can compute different kinds of evolutionary
+sequence.
+
+```@docs
+distance(Count{T}, BioSequence, BioSequence)
+distance(Proportion{T}, BioSequence, BioSequence)
+distance(JukesCantor69, BioSequence, BioSequence)
+distance(Kimura80, BioSequence, BioSequence)
+```

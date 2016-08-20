@@ -12,17 +12,26 @@ using Bio.Seq
 
 export
 
-    ## Mutation Counting
-
-    ### Mutation count types.
+    # Mutation counting
+    MutationType,
     DifferentMutation,
     TransitionMutation,
     TransversionMutation,
 
-    ### Checking mutation types of nucleotides.
+    count_mutations,
 
-    count_mutations
+    # Genetic and Evolutionary distances
+    Count,
+    Proportion,
+    JukesCantor69,
+    Kimura80,
+
+    distance
+
+
+
 
 include("mutation_counting.jl")
+include("distances.jl")
 
 end # module Var

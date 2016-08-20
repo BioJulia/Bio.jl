@@ -10,6 +10,8 @@ end
 using Bio.Phylo
 using LightGraphs
 using Bio.Phylo.Dating
+using Bio.Seq
+using Bio.Var: DifferentMutation, TransitionMutation, TransversionMutation
 
 @testset "Phylogenies" begin
 
@@ -159,6 +161,5 @@ end
         @test expected in estimated
     end
 end
-
 
 end # Module TestPhylo
