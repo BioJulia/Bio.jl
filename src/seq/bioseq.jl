@@ -667,7 +667,7 @@ Base.reverse(seq::BioSequence) = reverse!(copy(seq))
         next = bitindex(seq, endof(seq))
         stop = bitindex(seq, 0)
         i = 0
-        while next - stop > 0
+        @inbounds while next - stop > 0
             r = offset(next) + $n
             x = seq.data[index(next)] << (64 - r)
             next -= r
@@ -765,7 +765,7 @@ Make a reversed complement sequence of `seq`.
 Ambiguous nucleotides are left as-is.
 """
 function reverse_complement{A<:Union{DNAAlphabet,RNAAlphabet}}(seq::BioSequence{A})
-    return reverse_complement!(copy(seq))
+    return complement!(reverse(seq))
 end
 
 
