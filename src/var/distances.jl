@@ -10,17 +10,16 @@
 # Types
 # -----
 
-# Evolutionary distances
-abstract EvolutionaryDistances
-abstract UncorrectedDist <: EvolutionaryDistances
-abstract CorrectedDist <: EvolutionaryDistances
-abstract TsTv <: CorrectedDist
+abstract EvolutionaryDistance
+abstract UncorrectedDistance <: EvolutionaryDistance
+abstract CorrectedDistance <: EvolutionaryDistance
+abstract TsTv <: CorrectedDistance
 
 """
 A distance which is the count of the mutations of type T that exist between the
 two sequences.
 """
-immutable Count{T} <: UncorrectedDist end
+immutable Count{T} <: UncorrectedDistance end
 
 """
 Proportion{T} is a distance which is the count of the mutations of type T that
@@ -31,7 +30,7 @@ In other words this so called p-distance is simply the proportion of sites
 between each pair of sequences, that are mutated (again where T determines
 what kind of mutation).
 """
-immutable Proportion{T} <: UncorrectedDist end
+immutable Proportion{T} <: UncorrectedDistance end
 
 """
 The JukesCantor69 distance is a p-distance adjusted/corrected by the
@@ -41,7 +40,7 @@ The Jukes and Cantor model assumes that all substitutions
 (i.e. a change of a base by another one) have the same probability.
 This probability is the same for all sites along the DNA sequence.
 """
-immutable JukesCantor69 <: CorrectedDist end
+immutable JukesCantor69 <: CorrectedDistance end
 
 """
 The Kimura80 distance uses a substitution model developed by Kimura in 1980.
@@ -102,7 +101,7 @@ end
 # ----------------------------
 
 """
-    distance(::Type{EvolutionaryDistances}, a::BioSequence, b::BioSequence)
+    distance(::Type{EvolutionaryDistance}, a::BioSequence, b::BioSequence)
 
 Compute the genetic distance between two nucleotide sequences of equal length.
 
