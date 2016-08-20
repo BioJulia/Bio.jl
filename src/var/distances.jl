@@ -129,7 +129,7 @@ This method of distance returns a tuple of the p-distance, and the number of val
 (i.e. non-ambiguous sites) counted by the function.
 """
 @inline function distance{T<:MutationType}(::Type{Proportion{T}}, a::BioSequence, b::BioSequence)
-    d, l = distance(N_Mutations{T}, a, b)
+    d, l = distance(Count{T}, a, b)
     return d / l, l
 end
 

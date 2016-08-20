@@ -25,8 +25,6 @@ export
     Proportion,
     JukesCantor69,
     Kimura80,
-    JC69,       # alias for JukesCantor69
-    K80,        # alias for Kimura80
 
     distance
 
