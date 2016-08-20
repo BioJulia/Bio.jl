@@ -11,18 +11,16 @@
 # -----
 
 # Evolutionary distances
-abstract EvoDist
-abstract UncorrectedDist <: EvoDist
-abstract CorrectedDist <: EvoDist
+abstract EvolutionaryDistances
+abstract UncorrectedDist <: EvolutionaryDistances
+abstract CorrectedDist <: EvolutionaryDistances
 abstract TsTv <: CorrectedDist
 
-immutable N_Mutations{T} <: UncorrectedDist end
-immutable P_Distance{T} <: UncorrectedDist end
+immutable Count{T} <: UncorrectedDist end
+immutable Proportion{T} <: UncorrectedDist end
 immutable JukesCantor69 <: CorrectedDist end
 immutable Kimura80 <: TsTv end
 
-typealias Raw N_Mutations{DifferentMutation}
-typealias P P_Distance{DifferentMutation}
 typealias JC69 JukesCantor69
 typealias K80 Kimura80
 
@@ -69,11 +67,11 @@ end
 # ----------------------------
 
 """
-    distance{T<:MutationType}(::Type{N_Mutations{T}}, a::BioSequence, b::BioSequence)
+    distance{T<:MutationType}(::Type{Count{T}}, a::BioSequence, b::BioSequence)
 
 Compute the genetic distance between two DNA or RNA sequences.
 
-Providing the distance type N_Mutations{T} results in a distance which is the
+Providing the distance type Count{T} results in a distance which is the
 count of the mutations of type T that exist between the two sequences.
 
 For description of all the mutation types, see the Var module documentation.
@@ -84,25 +82,26 @@ of the number of transitions, and the number of transversions.
 This function returns a tuple of the number of mutations, and the number of valid
 (i.e. non-ambiguous sites tested by the function).
 """
-@inline function distance{T<:MutationType}(::Type{N_Mutations{T}}, a::BioSequence, b::BioSequence)
+@inline function distance{T<:MutationType}(::Type{Count{T}}, a::BioSequence, b::BioSequence)
     return count_mutations(a, b, T)
 end
 
-@inline function distance{T<:TsTv}(::Type{N_Mutations{T}}, a::BioSequence, b::BioSequence)
+@inline function distance{T<:TsTv}(::Type{Count{T}}, a::BioSequence, b::BioSequence)
     return count_mutations(a, b, TransitionMutation, TransversionMutation)
 end
 
 """
-    distance{T<:MutationType}(::Type{P_Distance{T}}, a::BioSequence, b::BioSequence)
+    distance{T<:MutationType}(::Type{Proportion{T}}, a::BioSequence, b::BioSequence)
 
 Compute the genetic distance between two DNA or RNA sequences.
 
-Providing the distance type P_Distance{T} results in a distance which is the
+Providing the distance type Proportion{T} results in a distance which is the
 count of the mutations of type T that exist between the two sequences, divided
 by the number of sites examined.
 
-In other words the p-distance is simply the proportion of sites between each
-pair of sequences, that are mutated (again where T determines what kind of mutation).
+In other words this so called p-distance is simply the proportion of sites
+between each pair of sequences, that are mutated (again where T determines
+what kind of mutation).
 
 For description of all the mutation types, see the Var module documentation.
 
@@ -112,7 +111,7 @@ of the number of transitions, and the number of transversions.
 This function returns a tuple of the p-distance, and the number of valid
 (i.e. non-ambiguous sites tested by the function).
 """
-@inline function distance{T<:MutationType}(::Type{P_Distance{T}}, a::BioSequence, b::BioSequence)
+@inline function distance{T<:MutationType}(::Type{Proportion{T}}, a::BioSequence, b::BioSequence)
     d, l = distance(N_Mutations{T}, a, b)
     return d / l, l
 end
@@ -134,7 +133,7 @@ This function returns a tuple of the expected K80 distance estimate, and the
 computed variance.
 """
 function distance(::Type{JC69}, a::BioSequence, b::BioSequence)
-    p, l = distance(P_Distance{DifferentMutation}, a, b)
+    p, l = distance(Proportion{DifferentMutation}, a, b)
     @assert 0.0 <= p <= 0.75 throw(DomainError())
     D = -0.75 * log(1 - 4 * p / 3)
     V = p * (1 - p) / (((1 - 4 * p / 3) ^ 2) * l)
@@ -161,7 +160,7 @@ This function returns a tuple of the expected K80 distance estimate, and the
 computed variance.
 """
 function distance(::Type{K80}, a::BioSequence, b::BioSequence)
-    ns, nv, l = distance(N_Mutations{K80}, a, b)
+    ns, nv, l = distance(Count{K80}, a, b)
     P = ns / l
     Q = nv / l
     a1 = 1 - 2 * P - Q
