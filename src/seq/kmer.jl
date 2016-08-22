@@ -219,6 +219,18 @@ function Base.next{T, K}(it::KmerNeighborIterator{T, K}, i)
     return Kmer{T,K}((UInt64(it.x) << 2) | i), i + 1
 end
 
+
+# Counters
+# --------
+
+function gc_content{T,k}(kmer::Kmer{T,k})
+    if k == 0
+        return 0.0
+    else
+        return (count_g(kmer) + count_c(kmer)) / k
+    end
+end
+
 function count_a{T,k}(kmer::Kmer{T,k})
     return count_a(reinterpret(UInt64, kmer)) - (32 - k)
 end
