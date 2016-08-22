@@ -240,3 +240,5 @@ function Base.show(io::IO, seq::Sequence)
         end
     end
 end
+
+Base.parse{S<:Sequence}(::Type{S}, str::AbstractString) = convert(S, str)
