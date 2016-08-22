@@ -84,13 +84,3 @@ Kimura80
 ```@docs
 distance
 ```
-
-Using the distance method you can compute different kinds of evolutionary
-sequence.
-
-```@docs
-distance(Count{T}, BioSequence, BioSequence)
-distance(Proportion{T}, BioSequence, BioSequence)
-distance(JukesCantor69, BioSequence, BioSequence)
-distance(Kimura80, BioSequence, BioSequence)
-```
