@@ -218,7 +218,7 @@ function Base.convert{S<:AbstractString}(::Type{S}, seq::BioSequence)
     return convert(S, [Char(x) for x in seq])
 end
 Base.convert{S<:AbstractString,A}(::Type{BioSequence{A}}, seq::S) = BioSequence{A}(seq)
-Base.parse{S<AbstractString,A}(::Type{BioSequence{A}}, seq::S) = BioSequence{A}(seq)
+Base.parse{S<:AbstractString,A}(::Type{BioSequence{A}}, seq::S) = BioSequence{A}(seq)
 
 # Summaries
 # ---------

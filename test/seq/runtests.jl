@@ -695,6 +695,10 @@ end
         function test_string_construction(A::Type, seq::AbstractString)
             @test convert(AbstractString, BioSequence{A}(seq)) == uppercase(seq)
         end
+        
+        function test_string_parse(A::Type, seq::AbstractString)
+            @test parse(BioSequence{A}, seq) == BioSequence{A}(seq)
+        end
 
         for len in [0, 1, 2, 3, 10, 32, 1000, 10000]
             test_string_construction(DNAAlphabet{4}, random_dna(len))
@@ -704,11 +708,23 @@ end
             test_string_construction(AminoAcidAlphabet, random_aa(len))
             test_string_construction(AminoAcidAlphabet, lowercase(random_aa(len)))
 
+            test_string_parse(DNAAlphabet{4}, random_dna(len))
+            test_string_parse(DNAAlphabet{4}, lowercase(random_dna(len)))
+            test_string_parse(RNAAlphabet{4}, lowercase(random_rna(len)))
+            test_string_parse(RNAAlphabet{4}, random_rna(len))
+            test_string_parse(AminoAcidAlphabet, random_aa(len))
+            test_string_parse(AminoAcidAlphabet, lowercase(random_aa(len)))
+
             probs = [0.25, 0.25, 0.25, 0.25, 0.00]
             test_string_construction(DNAAlphabet{2}, random_dna(len, probs))
             test_string_construction(DNAAlphabet{2}, lowercase(random_dna(len, probs)))
             test_string_construction(RNAAlphabet{2}, random_rna(len, probs))
             test_string_construction(RNAAlphabet{2}, lowercase(random_rna(len, probs)))
+
+            test_string_parse(DNAAlphabet{2}, random_dna(len, probs))
+            test_string_parse(DNAAlphabet{2}, lowercase(random_dna(len, probs)))
+            test_string_parse(RNAAlphabet{2}, random_rna(len, probs))
+            test_string_parse(RNAAlphabet{2}, lowercase(random_rna(len, probs)))
         end
 
         # non-standard string literal
