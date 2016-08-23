@@ -21,6 +21,7 @@ export
     count_mutations,
 
     # Genetic and Evolutionary distances
+    EvolutionaryDistance,
     Count,
     Proportion,
     JukesCantor69,
