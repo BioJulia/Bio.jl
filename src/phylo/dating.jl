@@ -14,7 +14,7 @@ module Dating
 using Distributions, Roots
 
 export DatingEstimate, coaltime, SimpleEstimate, SpeedDating, SDResult, upper,
-       lower
+       middle, lower
 
 """
 An abstract dating estimate type.
