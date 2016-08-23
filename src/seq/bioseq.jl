@@ -998,14 +998,15 @@ function encode_copy!{A<:Union{DNAAlphabet{4},RNAAlphabet{4}}}(
             check |= y
         end
         if check & 0x80 != 0
-            for d in 0x00:0x0f
+            # invalid byte(s) is detected
+            for d in 0:D-1
                 if !isvalid(charmap[src[i+d]+1])
                     error("cannot encode $(src[i+d])")
                 end
             end
         end
         dst.data[index(next)] = x
-        i += Int(D)
+        i += D
         next += 64
     end
 
