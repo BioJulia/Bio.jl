@@ -6,12 +6,12 @@
 # This file is a part of BioJulia.
 # License is MIT: https://github.com/BioJulia/Bio.jl/blob/master/LICENSE.md
 
-# predict sequence type based on character frequencies in `seq[start:stop]`
+# Predict sequence type based on character frequencies in `seq[start:stop]`.
 function predict(seq::Vector{UInt8}, start, stop)
     # count characters
     a = c = g = t = u = n = alpha = 0
     for i in start:stop
-        x = seq[i]
+        @inbounds x = seq[i]
         if x == 0x41 || x == 0x61
             a += 1
         elseif x == 0x43 || x == 0x63
@@ -27,6 +27,10 @@ function predict(seq::Vector{UInt8}, start, stop)
         end
         if 0x41 ≤ x ≤ 0x5a || 0x61 ≤ x ≤ 0x7a
             alpha += 1
+            if alpha ≥ 300 && t + u > 0 && a + c + g + t + u + n == alpha
+                # pretty sure that the sequence is either DNA or RNA
+                break
+            end
         end
     end
 
