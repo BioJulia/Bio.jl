@@ -182,11 +182,8 @@ end
 
 # DNA Nucleotides
 
-"DNA Invalid Nucleotide"
-const DNA_INVALID = convert(DNANucleotide, 0b10000) # Indicates invalid DNA when converting string
-
 # lookup table for characters
-const char_to_dna = [DNA_INVALID for _ in 0x00:0x7f]
+const char_to_dna = [0x80 for _ in 0x00:0xff]
 const dna_to_char = Vector{Char}(16)
 
 # derived from "The DDBJ/ENA/GenBank Feature Table Definition"
@@ -212,7 +209,7 @@ for (char, doc, bits) in [
     var = Symbol("DNA_", char != '-' ? char : "Gap")
     @eval begin
         @doc $(doc) const $(var) = reinterpret(DNANucleotide, $(bits))
-        char_to_dna[$(Int(char)+1)] = char_to_dna[$(Int(lowercase(char))+1)] = $(var)
+        char_to_dna[$(Int(char)+1)] = char_to_dna[$(Int(lowercase(char))+1)] = $(bits)
         dna_to_char[$(Int(bits)+1)] = $(char)
     end
 end
@@ -225,11 +222,8 @@ const ACGTN = (DNA_A, DNA_C, DNA_G, DNA_T, DNA_N)
 
 # RNA Nucleotides
 
-"Invalid RNA Nucleotide"
-const RNA_INVALID = convert(RNANucleotide, 0b10000) # Indicates invalid RNA when converting string
-
 # lookup table for characters
-const char_to_rna = [RNA_INVALID for _ in 0x00:0x7f]
+const char_to_rna = [0x80 for _ in 0x00:0xff]
 const rna_to_char = Vector{Char}(16)
 
 for (char, doc, dna) in [
@@ -252,7 +246,7 @@ for (char, doc, dna) in [
     var = Symbol("RNA_", char != '-' ? char : "Gap")
     @eval begin
         @doc $(doc) const $(var) = reinterpret(RNANucleotide, $(dna))
-        char_to_rna[$(Int(char)+1)] = char_to_rna[$(Int(lowercase(char)+1))] = reinterpret(RNANucleotide, $(dna))
+        char_to_rna[$(Int(char)+1)] = char_to_rna[$(Int(lowercase(char)+1))] = reinterpret(UInt8, $(dna))
         rna_to_char[$(Int(dna)+1)] = $(char)
     end
 end
@@ -263,29 +257,30 @@ end
 const ACGU = (RNA_A, RNA_C, RNA_G, RNA_U)
 const ACGUN = (RNA_A, RNA_C, RNA_G, RNA_U, RNA_N)
 
+
 # Print functions
 # ---------------
 
 function Base.convert(::Type{DNANucleotide}, c::Char)
-    if c > '\x7f'
+    if c > '\xff'
         throw(InexactError())
     end
     @inbounds dna = char_to_dna[Int(c) + 1]
-    if dna == DNA_INVALID
+    if !isvalid(DNANucleotide, dna)
         throw(InexactError())
     end
-    return dna
+    return reinterpret(DNANucleotide, dna)
 end
 
 function Base.convert(::Type{RNANucleotide}, c::Char)
-    if c > '\x7f'
+    if c > '\xff'
         throw(InexactError())
     end
     @inbounds rna = char_to_rna[Int(c) + 1]
-    if rna == RNA_INVALID
+    if !isvalid(RNANucleotide, rna)
         throw(InexactError())
     end
-    return rna
+    return reinterpret(RNANucleotide, rna)
 end
 
 function Base.convert(::Type{Char}, nt::DNANucleotide)

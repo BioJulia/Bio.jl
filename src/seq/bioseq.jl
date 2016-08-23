@@ -462,49 +462,6 @@ function Base.append!{A}(seq::BioSequence{A}, other::BioSequence{A})
     return seq
 end
 
-function encode_copy!{A}(dst::BioSequence{A},
-                         src::Union{AbstractVector,AbstractString})
-    return encode_copy!(dst, 1, src, 1)
-end
-
-function encode_copy!{A}(dst::BioSequence{A},
-                         doff::Integer,
-                         src::Union{AbstractVector,AbstractString},
-                         soff::Integer)
-    return encode_copy!(dst, doff, src, soff, length(src) - soff + 1)
-end
-
-function encode_copy!{A}(dst::BioSequence{A},
-                         doff::Integer,
-                         src::Union{AbstractVector,AbstractString},
-                         soff::Integer,
-                         len::Integer)
-    if soff != 1 && !isascii(src)
-        throw(ArgumentError("source offset ≠ 1 is not supported for non-ASCII string"))
-    end
-
-    checkbounds(dst, doff:doff+len-1)
-    if length(src) < soff + len - 1
-        throw(ArgumentError("source string does not contain $len elements from $soff"))
-    end
-
-    orphan!(dst)
-    next = bitindex(dst, doff)
-    stop = bitindex(dst, doff + len)
-    i = soff
-    while next < stop
-        x = UInt64(0)
-        j = index(next)
-        while index(next) == j && next < stop
-            char, i = Base.next(src, i)
-            x |= enc64(dst, convert(Char, char)) << offset(next)
-            next += bitsof(A)
-        end
-        dst.data[j] = x
-    end
-    return dst
-end
-
 function Base.copy!{A}(seq::BioSequence{A}, doff::Integer,
                        src::Vector{UInt8},  soff::Integer, len::Integer)
     datalen = seq_data_len(A, len)
@@ -591,7 +548,19 @@ function Base.filter!{A}(f::Function, seq::BioSequence{A})
     return seq
 end
 
-enc64{A}(::BioSequence{A}, x) = UInt64(encode(A, convert(eltype(A), x)))
+function Base.similar{A}(seq::BioSequence{A}, len::Integer=length(seq))
+    return BioSequence{A}(len)
+end
+
+# actually, users don't need to create a copy of a sequence.
+function Base.copy{A}(seq::BioSequence{A})
+    # NOTE: no need to set `seq.shared = true` here
+    # since `newseq` will be `orphan!`ed soon.
+    newseq = BioSequence{A}(seq.data, 1:endof(seq), true)
+    orphan!(newseq, length(seq), true)  # force orphan!
+    @assert newseq.data !== seq.data
+    return newseq
+end
 
 # Replace a BioSequence's data with a copy, copying only what's needed.
 # The user should never need to call this, as it has no outward effect on the
@@ -619,20 +588,6 @@ function orphan!{A}(seq::BioSequence{A}, size::Integer=length(seq), force::Bool=
     seq.part = 1:length(seq)
     seq.shared = false
     return seq
-end
-
-function Base.similar{A}(seq::BioSequence{A}, len::Integer=length(seq))
-    return BioSequence{A}(len)
-end
-
-# actually, users don't need to create a copy of a sequence.
-function Base.copy{A}(seq::BioSequence{A})
-    # NOTE: no need to set `seq.shared = true` here
-    # since `newseq` will be `orphan!`ed soon.
-    newseq = BioSequence{A}(seq.data, 1:endof(seq), true)
-    orphan!(newseq, length(seq), true)  # force orphan!
-    @assert newseq.data !== seq.data
-    return newseq
 end
 
 
@@ -960,4 +915,108 @@ function Base.shuffle!(seq::BioSequence)
         seq[i], seq[j] = seq[j], seq[i]
     end
     return seq
+end
+
+
+# Encoding
+# --------
+
+function encode_copy!{A}(dst::BioSequence{A},
+                         src::Union{AbstractVector,AbstractString})
+    return encode_copy!(dst, 1, src, 1)
+end
+
+function encode_copy!{A}(dst::BioSequence{A},
+                         doff::Integer,
+                         src::Union{AbstractVector,AbstractString},
+                         soff::Integer)
+    return encode_copy!(dst, doff, src, soff, length(src) - soff + 1)
+end
+
+function encode_copy!{A}(dst::BioSequence{A},
+                         doff::Integer,
+                         src::Union{AbstractVector,AbstractString},
+                         soff::Integer,
+                         len::Integer)
+    if soff != 1 && !isascii(src)
+        throw(ArgumentError("source offset ≠ 1 is not supported for non-ASCII string"))
+    end
+
+    checkbounds(dst, doff:doff+len-1)
+    if length(src) < soff + len - 1
+        throw(ArgumentError("source string does not contain $len elements from $soff"))
+    end
+
+    orphan!(dst)
+    next = bitindex(dst, doff)
+    stop = bitindex(dst, doff + len)
+    i = soff
+    while next < stop
+        x = UInt64(0)
+        j = index(next)
+        while index(next) == j && next < stop
+            char, i = Base.next(src, i)
+            x |= enc64(dst, convert(Char, char)) << offset(next)
+            next += bitsof(A)
+        end
+        dst.data[j] = x
+    end
+    return dst
+end
+
+function encode_copy!{A<:Union{DNAAlphabet{4},RNAAlphabet{4}}}(
+        dst::BioSequence{A}, doff::Integer,
+        src::AbstractVector{UInt8}, soff::Integer, len::Integer)
+    checkbounds(dst, doff:doff+len-1)
+    if length(src) < soff + len - 1
+        throw(ArgumentError("source string does not contain $len elements from $soff"))
+    end
+
+    orphan!(dst)
+    charmap = A <: DNAAlphabet ? char_to_dna : char_to_rna
+    i = soff
+    next = bitindex(dst, doff)
+    stop = bitindex(dst, doff + len)
+
+    # head
+    if offset(next) != 0
+        for d in 0:div(64 - offset(next), 4)-1
+            dst[doff+d] = charmap[src[i+d]+1]
+        end
+        i += div(64 - offset(next), 4)
+        next += 64 - offset(next)
+    end
+
+    # body
+    D = 16
+    while next < (stop - offset(stop))
+        x::UInt64 = 0
+        check = 0x00
+        @inbounds for d in 0:D-1
+            y = reinterpret(UInt8, charmap[src[i+d]+1])
+            x |= UInt64(y) << 4d
+            check |= y
+        end
+        if check & 0x80 != 0
+            for d in 0x00:0x0f
+                if !isvalid(charmap[src[i+d]+1])
+                    error("cannot encode $(src[i+d])")
+                end
+            end
+        end
+        dst.data[index(next)] = x
+        i += Int(D)
+        next += 64
+    end
+
+    # tail
+    for d in 0:div(stop - next, 4)-1
+        dst[doff+i-soff+d] = charmap[src[i+d]+1]
+    end
+
+    return dst
+end
+
+function enc64{A}(::BioSequence{A}, x)
+    return UInt64(encode(A, convert(eltype(A), x)))
 end
