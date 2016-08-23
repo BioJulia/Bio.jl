@@ -71,6 +71,8 @@ end
 
 lower(x::Float64) = x
 lower(x::SDResult) = x.lower
+middle(x::Float64) = x
+middle(x::SDResult) = x.middle
 upper(c::Float64) = x
 upper(x::SDResult) = x.upper
 
