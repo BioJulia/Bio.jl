@@ -618,18 +618,28 @@ Base.reverse(seq::BioSequence) = reverse!(copy(seq))
 
     quote
         data = Vector{UInt64}(seq_data_len(A, length(seq)))
+        i = 1
         next = bitindex(seq, endof(seq))
         stop = bitindex(seq, 0)
-        i = 0
-        @inbounds while next - stop > 0
-            r = offset(next) + $n
-            x = seq.data[index(next)] << (64 - r)
-            next -= r
-            if next - stop > 0
-                x |= seq.data[index(next)] >> r
-                next -= 64 - r
+        r = rem(offset(next) + $n, 64)
+        if r == 0
+            @inbounds while next - stop > 0
+                x = seq.data[index(next)]
+                data[i] = $nucrev(x)
+                i += 1
+                next -= 64
             end
-            data[i+=1] = $nucrev(x)
+        else
+            @inbounds while next - stop > 64
+                j = index(next)
+                x = (seq.data[j] << (64 - r)) | (seq.data[j-1] >> r)
+                data[i] = $nucrev(x)
+                i += 1
+                next -= 64
+            end
+            if next - stop > 0
+                data[i] = $nucrev(seq.data[index(next)] << (64 - r))
+            end
         end
         return BioSequence{A}(data, 1:length(seq), false)
     end
