@@ -373,7 +373,7 @@ end
             for nt in alphabet(DNANucleotide)
                 @test encode(DNAAlphabet{4}, nt) === reinterpret(UInt8, nt)
             end
-            @test_throws EncodeError encode(DNAAlphabet{4}, Seq.DNA_INVALID)
+            @test_throws EncodeError encode(DNAAlphabet{4}, reinterpret(DNANucleotide, 0b10000))
         end
         @testset "RNA" begin
             encode = Seq.encode
@@ -392,7 +392,7 @@ end
             for nt in alphabet(RNANucleotide)
                 @test encode(RNAAlphabet{4}, nt) === reinterpret(UInt8, nt)
             end
-            @test_throws EncodeError encode(RNAAlphabet{4}, Seq.RNA_INVALID)
+            @test_throws EncodeError encode(RNAAlphabet{4}, reinterpret(RNANucleotide, 0b10000))
         end
     end
 
