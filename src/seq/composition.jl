@@ -116,6 +116,16 @@ function Base.merge!{T}(comp::Composition{T}, other::Composition{T})
     return comp
 end
 
+function mostfrequent{T}(comp::Composition{T})
+    m = max(comp.counts)
+    maxes = findin(comp.counts, m)
+    nucs = Vector{T}(length(i))
+    @inbounds for i in 1:length(nucs)
+        nucs[i] = reinterpret(T, maxes[i] - 1)
+    end
+    return nucs
+end
+
 function Base.summary{T}(::Composition{T})
     if T == DNANucleotide
         return "DNA Nucleotide Composition"

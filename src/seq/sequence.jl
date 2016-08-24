@@ -257,11 +257,10 @@ Base.parse{S<:Sequence}(::Type{S}, str::AbstractString) = convert(S, str)
 function consensus{S<:Sequence}(seqs::Vector{S})
     itr = zip(seqs...)
     cons = S(length(itr))
-    n = length(seqs)
     i = 1
     @inbounds for site in itr
         comp = Composition(site)
-        cons[i] = maximum(comp).first
+        cons[i] = mostfrequent(comp)
         i += 1
     end
     return cons
