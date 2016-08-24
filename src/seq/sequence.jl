@@ -259,7 +259,7 @@ function consensus{S<:Sequence}(seqs::Vector{S})
     cons = S(length(itr))
     n = length(seqs)
     i = 1
-    @inline for site in itr
+    @inbounds for site in itr
         comp = Composition(site)
         cons[i] = maxmimum(comp).first
         i += 1
