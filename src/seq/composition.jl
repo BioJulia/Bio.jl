@@ -118,7 +118,7 @@ end
 
 function mostfrequent{T}(comp::Composition{T})
     m = max(comp.counts)
-    maxes = findin(comp.counts, m)
+    maxes = convert(Vector{UInt8}, findin(comp.counts, m))
     nucs = Vector{T}(length(maxes))
     @inbounds for i in 1:length(nucs)
         nucs[i] = reinterpret(T, maxes[i] - 1)
