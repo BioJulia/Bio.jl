@@ -18,6 +18,14 @@ function Composition{A<:Union{DNAAlphabet,RNAAlphabet}}(seq::BioSequence{A})
     return Composition{eltype(A)}(counts)
 end
 
+function Composition{N<:Nucleotide,L}(tuple::NTuple{L,N})
+    counts = zeros(Int, 16)
+    @inbounds for x in tuple
+        counts[reinterpret(UInt8, x) + 1] += 1
+    end
+    return Composition{N}(counts)
+end
+
 function Composition(seq::ReferenceSequence)
     counts = zeros(Int, 16)
     @inbounds for x in seq
