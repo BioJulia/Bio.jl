@@ -5,15 +5,14 @@ export
     parseatomrecord,
     spaceatomname,
     pdbline,
-    writepdb,
-    writepdblines
+    writepdb
 
 
 "Protein Data Bank (PDB) file format."
 immutable PDB <: FileFormat end
 
 
-"Error arising from parsing a PDB file."
+"Error arising from parsing a Protein Data Bank (PDB) file."
 type PDBParseError <: Exception
     message::String
     line_number::Int
@@ -25,9 +24,9 @@ Base.showerror(io::IO, e::PDBParseError) = println(io, e.message, " at line ", e
 
 
 """
-Download a PDB file or biological assembly from the RCSB PDB. By default
-downloads the PDB file; if the keyword argument `ba_number` is set the
-biological assembly with that number will be downloaded.
+Download a Protein Data Bank (PDB) file or biological assembly from the RCSB
+PDB. By default downloads the PDB file; if the keyword argument `ba_number` is
+set the biological assembly with that number will be downloaded.
 """
 function downloadpdb(pdbid::AbstractString, out_filepath::AbstractString="$pdbid.pdb"; ba_number::Integer=0)
     # Check PDB ID is 4 characters long and only consits of alphanumeric characters
@@ -57,8 +56,7 @@ function Base.read(input::IO,
         line_number += 1
         # Read ATOM and HETATM records as required
         if (read_std_atoms && startswith(line, "ATOM  ")) || (read_het_atoms && startswith(line, "HETATM"))
-            #addatomtomodel!(struc[curr_model], parseatomrecord(rstrip(line, '\n'), line_number)...; remove_disorder=remove_disorder)
-            addatomtomodel!(struc[curr_model], line, line_number; remove_disorder=remove_disorder)
+            unsafe_addatomtomodel!(struc[curr_model], AtomRecord(line, line_number); remove_disorder=remove_disorder)
         # Read MODEL record
         elseif startswith(line, "MODEL ")
             try
@@ -77,7 +75,9 @@ function Base.read(input::IO,
     end
     # Remove any models that were not added to
     for model_number in modelnumbers(struc)
-        countchains(struc[model_number]) == 0 ? delete!(models(struc), model_number) : nothing
+        if countchains(struc[model_number]) == 0
+            delete!(models(struc), model_number)
+        end
     end
     fixlists!(struc)
     return struc
@@ -102,28 +102,26 @@ function Base.read(filepath::AbstractString,
 end
 
 
-"Parse a PDB ATOM or HETATM record and return an `Atom`."
-function parseatomrecord(line::Compat.ASCIIString, line_number::Integer=1)
-    # As this function is exported, we should check the line looks like an ATOM/HETATM record
-    @assert startswith(line, "ATOM  ") || startswith(line, "HETATM") "Line does not appear to be an ATOM/HETATM record: \"$line\""
-    return parsestrict(line, 7, 11, Int, "Could not read atom serial number", line_number),
-    strip(parsestrict(line, 13, 16, String, "Could not read atom name", line_number)),
-    parsestrict(line, 17, 17, Char, "Could not read alt loc identifier", line_number),
+# Constructor from PDB ATOM/HETATM line
+AtomRecord(pdb_line::Compat.ASCIIString, line_number::Integer=1) = AtomRecord(
+    pdb_line[1] == 'H', # This assumes the line has already been checked as an ATOM/HETATM record
+    parsestrict(pdb_line, 7, 11, Int, "Could not read atom serial number", line_number),
+    parsestrict(pdb_line, 13, 16, Compat.ASCIIString, "Could not read atom name", line_number), # Not stripped here for speed
+    parsestrict(pdb_line, 17, 17, Char, "Could not read alt loc identifier", line_number),
+    parsestrict(pdb_line, 18, 20, Compat.ASCIIString, "Could not read residue name", line_number), # Not stripped here for speed
+    parsestrict(pdb_line, 22, 22, Char, "Could not read chain ID", line_number),
+    parsestrict(pdb_line, 23, 26, Int, "Could not read residue number", line_number),
+    parsestrict(pdb_line, 27, 27, Char, "Could not read insertion code", line_number),
     [
-        parsestrict(line, 31, 38, Float64, "Could not read x coordinate", line_number),
-        parsestrict(line, 39, 46, Float64, "Could not read y coordinate", line_number),
-        parsestrict(line, 47, 54, Float64, "Could not read z coordinate", line_number)
+        parsestrict(pdb_line, 31, 38, Float64, "Could not read x coordinate", line_number),
+        parsestrict(pdb_line, 39, 46, Float64, "Could not read y coordinate", line_number),
+        parsestrict(pdb_line, 47, 54, Float64, "Could not read z coordinate", line_number)
     ],
-    parselenient(line, 55, 60, Float64, 1.0),
-    parselenient(line, 61, 66, Float64, 0.0),
-    strip(parselenient(line, 77, 78, String, "")),
-    strip(parselenient(line, 79, 80, String, "")),
-    line[1] == 'H', # This is okay due to the above assertion
-    strip(parsestrict(line, 18, 20, String, "Could not read residue name", line_number)),
-    parsestrict(line, 22, 22, Char, "Could not read chain ID", line_number),
-    parsestrict(line, 23, 26, Int, "Could not read residue number", line_number),
-    parsestrict(line, 27, 27, Char, "Could not read insertion code", line_number)
-end
+    parselenient(pdb_line, 55, 60, Float64, 1.0),
+    parselenient(pdb_line, 61, 66, Float64, 0.0),
+    parselenient(pdb_line, 77, 78, Compat.ASCIIString, "  "), # Not stripped here for speed
+    parselenient(pdb_line, 79, 80, Compat.ASCIIString, "  ") # Not stripped here for speed
+)
 
 
 "Parse columns from a line and return the value or throw a `PDBParseError`."
@@ -186,6 +184,7 @@ function spacestring(val_in, new_length::Integer)
 end
 
 
+# Note here about how this is in general not used
 """
 Space an `Atom` name such that the last element letter (generally) appears in
 the second column. If the `element` property of the `Atom` is set it is used to
@@ -226,12 +225,12 @@ pdbline(atom::Atom) = String[
         spacestring(resnumber(atom), 4),
         string(inscode(atom)),
         "   ",
-        # This will throw an error for large coordinate values, e.g. -1000.123
+        # This will throw an error for large coordinate values, e.g. -1000.123
         spacestring(round(x(atom), 3), 8),
         spacestring(round(y(atom), 3), 8),
         spacestring(round(z(atom), 3), 8),
         spacestring(round(occupancy(atom), 2), 6),
-        # This will throw an error for large temp facs, e.g. 1000.12
+        # This will throw an error for large temp facs, e.g. 1000.12
         spacestring(round(tempfac(atom), 2), 6),
         "          ",
         spacestring(element(atom), 2),
@@ -240,10 +239,10 @@ pdbline(atom::Atom) = String[
 
 
 """
-Write a `StructuralElementOrList` to a PDB format file. Only ATOM, HETATM, MODEL
-and ENDMDL records are written - there is no header and no TER records.
-Additional arguments are `selector_functions...` - only atoms that satisfy the
-selector functions are written.
+Write a `StructuralElementOrList` to a Protein Data Bank (PDB) format file. Only
+ATOM, HETATM, MODEL and ENDMDL records are written - there is no header and no
+TER records. Additional arguments are `selector_functions...` - only atoms that
+satisfy the selector functions are written.
 """
 function writepdb(output::IO, element::Union{ProteinStructure, Vector{Model}}, selector_functions::Function...)
     # If there are multiple models, write out MODEL/ENDMDL lines
@@ -268,11 +267,6 @@ function writepdb(filepath::AbstractString, element::StructuralElementOrList, se
 end
 
 
-"""
-Write a `StructuralElementOrList` to an output as lines in PDB format.
-Additional arguments are `selector_functions...` - only atoms that satisfy the
-selector functions are written.
-"""
 function writepdblines(output::IO, element::StructuralElementOrList, selector_functions::Function...)
     # Collect residues then expand out disordered residues and atoms
     for res in collectresidues(element)

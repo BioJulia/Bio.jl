@@ -10,7 +10,8 @@ using Bio.Structure:
     parsestrict,
     parselenient,
     parsevalue,
-    spacestring
+    spacestring,
+    writepdblines
 
 
 get_bio_fmt_specimens()
@@ -20,7 +21,7 @@ pdbfilepath(filename::AbstractString) = Pkg.dir("Bio", "test", "BioFmtSpecimens"
 
 
 @testset "Model" begin
-    # Test Atom constructor
+    # Test Atom constructor
     atom = Atom(false, 100, "CA", ' ', "ALA", 'A', 10, ' ', [1.0, 2.0, 3.0], 1.0, 10.0, "C", "")
     show(DevNull, atom)
     showcompact(DevNull, atom)
@@ -64,14 +65,14 @@ pdbfilepath(filename::AbstractString) = Pkg.dir("Bio", "test", "BioFmtSpecimens"
     @test length(atom_list) == 1
     @test serial(atom_list[1]) == 100
 
-    # Test DisorderedAtom constructor
+    # Test DisorderedAtom constructor
     disordered_atom = DisorderedAtom(Dict(
         'A' => Atom(false, 100, "CA", 'A', "ALA", 'A', 10, ' ', [1.0, 2.0, 3.0], 0.6, 10.0, "C", ""),
         'B' => Atom(false, 101, "CA", 'B', "ALA", 'A', 10, ' ', [11.0, 12.0, 13.0], 0.4, 20.0, "C", "")
     ), 'A')
     show(DevNull, disordered_atom)
 
-    # Test DisorderedAtom getters/setters
+    # Test DisorderedAtom getters/setters
     @test defaultaltlocid(disordered_atom) == 'A'
     @test isa(defaultatom(disordered_atom), Atom)
     @test serial(defaultatom(disordered_atom)) == 100
@@ -125,21 +126,21 @@ pdbfilepath(filename::AbstractString) = Pkg.dir("Bio", "test", "BioFmtSpecimens"
     @test coords(disordered_atom) == [100.0, 50.0, 60.0]
     @test coords(disordered_atom['B']) == [110.0, 12.0, 13.0]
 
-    # Test DisorderedAtom indices
+    # Test DisorderedAtom indices
     @test isa(disordered_atom['A'], Atom)
     @test serial(disordered_atom['A']) == 100
     @test serial(disordered_atom['B']) == 101
     @test_throws KeyError disordered_atom['C']
     @test_throws MethodError disordered_atom["A"]
 
-    # Test DisorderedAtom iteration
+    # Test DisorderedAtom iteration
     disordered_atom_list = collect(disordered_atom)
     @test isa(disordered_atom_list, Vector{Atom})
     @test length(disordered_atom_list) == 2
     @test serial(disordered_atom_list[2]) == 101
 
 
-    # Test Residue constructor
+    # Test Residue constructor
     res = Residue("ALA", 'A', 10, ' ', false, ["CA", "CB", "CG"], Dict(
         "CA" => disordered_atom,
         "CB" => Atom(false, 102, "CB", ' ', "ALA", 'A', 10, ' ', [1.0, 2.0, 3.0], 1.0, 0.0, "C", ""),
@@ -153,7 +154,7 @@ pdbfilepath(filename::AbstractString) = Pkg.dir("Bio", "test", "BioFmtSpecimens"
     ])
     show(DevNull, res)
 
-    # Test Residue getters/setters
+    # Test Residue getters/setters
     @test resname(res) == "ALA"
     @test chainid(res) == 'A'
     @test resnumber(res) == 10
@@ -184,7 +185,7 @@ pdbfilepath(filename::AbstractString) = Pkg.dir("Bio", "test", "BioFmtSpecimens"
     @test resid(res_min) == "10"
     @test resid(res_min, full=true) == "10:A"
 
-    # Test Residue indices
+    # Test Residue indices
     @test isa(res["CA"], AbstractAtom)
     @test serial(res["CA"]) == 100
     @test serial(res["CB"]) == 102
@@ -196,7 +197,7 @@ pdbfilepath(filename::AbstractString) = Pkg.dir("Bio", "test", "BioFmtSpecimens"
     @test length(res_list) == 3
     @test serial(res_list[3]) == 103
 
-    # Test DisorderedResidue constructor
+    # Test DisorderedResidue constructor
     disordered_res = DisorderedResidue(Dict(
         "ALA" => res,
         "VAL" => Residue("VAL", 'A', 10, ' ', false, ["CA"], Dict(
@@ -233,7 +234,7 @@ pdbfilepath(filename::AbstractString) = Pkg.dir("Bio", "test", "BioFmtSpecimens"
     @test atomnames(disordered_res_mod) == ["CA"]
     @test_throws AssertionError DisorderedResidue(disordered_res, "SER")
 
-    # Test DisorderedResidue indices
+    # Test DisorderedResidue indices
     @test isa(disordered_res["CA"], AbstractAtom)
     @test serial(disordered_res["CA"]) == 100
     @test serial(disordered_res["CB"]) == 102
@@ -246,7 +247,7 @@ pdbfilepath(filename::AbstractString) = Pkg.dir("Bio", "test", "BioFmtSpecimens"
     @test serial(res_list[3]) == 103
 
 
-    # Test Chain constructor
+    # Test Chain constructor
     chain = Chain('A', ["10", "H_11"], Dict(
         "10" => disordered_res,
         "H_11" => Residue("ATP", 'A', 11, ' ', true, ["PB"], Dict(
@@ -256,14 +257,14 @@ pdbfilepath(filename::AbstractString) = Pkg.dir("Bio", "test", "BioFmtSpecimens"
     chain_min = Chain('A')
     show(DevNull, chain)
 
-    # Test Chain getters/setters
+    # Test Chain getters/setters
     @test chainid(chain) == 'A'
     @test resids(chain) == ["10", "H_11"]
     @test isa(residues(chain), Dict{String, AbstractResidue})
     @test length(residues(chain)) == 2
     @test serial(residues(chain)["10"]["CA"]) == 100
 
-    # Test Chain indices
+    # Test Chain indices
     @test isa(chain["10"], AbstractResidue)
     @test isa(chain[10], AbstractResidue)
     @test_throws KeyError chain["H_10"]
@@ -280,7 +281,7 @@ pdbfilepath(filename::AbstractString) = Pkg.dir("Bio", "test", "BioFmtSpecimens"
     @test resname(chain_list[2]) == "ATP"
 
 
-    # Test Model constructor
+    # Test Model constructor
     model = Model(5, Dict(
         'A' => chain,
         'B' => Chain('B', ["H_20"], Dict(
@@ -293,14 +294,14 @@ pdbfilepath(filename::AbstractString) = Pkg.dir("Bio", "test", "BioFmtSpecimens"
     model_min = Model()
     show(DevNull, model)
 
-    # Test Model getters/setters
+    # Test Model getters/setters
     @test modelnumber(model) == 5
     @test chainids(model) == ['A', 'B']
     @test isa(chains(model), Dict{Char, Chain})
     @test length(chains(model)) == 2
     @test resname(chains(model)['B']["H_20"]) == "ATP"
 
-    # Test Model indices
+    # Test Model indices
     @test isa(model['A'], Chain)
     @test resname(model['A']["H_11"]) == "ATP"
     @test_throws KeyError model['C']
@@ -313,7 +314,7 @@ pdbfilepath(filename::AbstractString) = Pkg.dir("Bio", "test", "BioFmtSpecimens"
     @test chainid(model_list[2]) == 'B'
 
 
-    # Test ProteinStructure constructor
+    # Test ProteinStructure constructor
     struc = ProteinStructure("test", Dict(
         5 => model,
         3 => Model(3, Dict(
@@ -328,7 +329,7 @@ pdbfilepath(filename::AbstractString) = Pkg.dir("Bio", "test", "BioFmtSpecimens"
     struc_min = ProteinStructure()
     show(DevNull, ProteinStructure)
 
-    # Test ProteinStructure getters/setters
+    # Test ProteinStructure getters/setters
     @test structurename(struc) == "test"
     @test modelnumbers(struc) == [3, 5]
     @test isa(models(struc), Dict{Int, Model})
@@ -339,7 +340,7 @@ pdbfilepath(filename::AbstractString) = Pkg.dir("Bio", "test", "BioFmtSpecimens"
     @test modelnumber(defaultmodel(struc)) == 3
     @test chainids(struc) == ['A']
 
-    # Test ProteinStructure indices
+    # Test ProteinStructure indices
     @test isa(struc[5], Model)
     @test isa(struc[3], Model)
     @test isa(struc['A'], Chain)
@@ -458,7 +459,7 @@ pdbfilepath(filename::AbstractString) = Pkg.dir("Bio", "test", "BioFmtSpecimens"
     @test defaultresname(disordered_res_ord) == "SER"
     @test resnames(disordered_res_ord) == ["SER", "ALA", "ILE", "THR", "VAL"]
 
-    # Order when sorting chain IDs is character ordering with the empty chain ID at the end
+    # Order when sorting chain IDs is character ordering with the empty chain ID at the end
     @test chainidisless('A', 'B')
     @test chainidisless('A', 'a')
     @test chainidisless('1', 'A')
@@ -499,7 +500,7 @@ end
     @test_throws PDBParseError parsestrict(line_b, 31, 38, Float64, "could not read x coordinate", 10)
     @test_throws PDBParseError parsestrict(line, 7, 11, Bool, "could not read atom serial number", 10)
 
-    # Test parselenient
+    # Test parselenient
     line =   "ATOM     40  CB  LEU A   5      22.088  45.547  29.675  1.00 22.23           C  "
     line_a = "ATOM     40  CB  LEU A   5      22.088  45.547  29.675  1.00 22.23              "
     line_b = "ATOM     40  CB  LEU A   5      22.088  45.547  29.675  1.00 22.23  "
@@ -511,7 +512,7 @@ end
     @test parselenient(line_c, 55, 60, Float64, 1.0) == 1.0
     @test parselenient(line, 77, 78, Bool, "N") == "N"
 
-    # Test parseatomrecord
+    # Test parseatomrecord
     line_a = "ATOM    669  CA  ILE A  90      31.743  33.110  31.221  1.00 25.76           C  "
     line_b = "HETATM 3474  O  B XX A 334A      8.802  62.000   8.672  1.00 39.15           O1-"
     line_c = "ATOM    669  CA  ILE A  90      xxxxxx  33.110  31.221  1.00 25.76           C  "
@@ -573,7 +574,7 @@ end
     @test x(struc['A'][167]["CD"]['A']) == 24.502
     @test x(struc['A'][167]["CD"]['B']) == 24.69
 
-    # Test collectatoms
+    # Test collectatoms
     atoms = collectatoms(struc)
     @test length(atoms) == 3804
     @test isa(atoms, Vector{AbstractAtom})
@@ -710,7 +711,7 @@ end
     @test atomnames(residues[1]) == ["CA"]
 
 
-    # Test countresidues
+    # Test countresidues
     @test countresidues(struc) == 808
     @test countresidues(struc[1]) == 808
     @test countresidues(struc['A']) == 456
@@ -733,7 +734,7 @@ end
     @test countresidues(Residue("ALA", 'A', 100, ' ', false)) == 1
 
 
-    # Test formatomlist
+    # Test formatomlist
     atom_a = Atom(false, 103, "N", ' ', "ALA", 'A', 10, ' ', [1.0, 2.0, 3.0], 1.0, 10.0, "N", "")
     atom_b = Atom(false, 100, "CA", 'A', "ALA", 'A', 10, ' ', [1.0, 2.0, 3.0], 0.4, 10.0, "C", "")
     atom_c = Atom(false, 102, "C", ' ', "ALA", 'A', 10, ' ', [1.0, 2.0, 3.0], 1.0, 10.0, "C", "")
@@ -908,7 +909,7 @@ end
     @test countresidues(DisorderedResidue[struc['A'][16], struc['A'][10]]) == 2
 
 
-    # Test parsing 1SSU (multiple models)
+    # Test parsing 1SSU (multiple models)
     struc = read(pdbfilepath("1SSU.pdb"), PDB)
     # Test countmodels
     @test countmodels(struc) == 20

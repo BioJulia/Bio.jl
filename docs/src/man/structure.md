@@ -12,7 +12,7 @@ DocTestSetup = quote
 end
 ```
 
-The `Bio.Structure` module provides functionality to read [Protein Data Bank](http://www.rcsb.org/pdb/home/home.do) (PDB) files and manipulate macromolecular structures.
+The `Bio.Structure` module provides functionality to read [Protein Data Bank](http://www.rcsb.org/pdb/home/home.do) (PDB) files and manipulate macromolecular structures. It is designed to be used as a platform on which others can build to create tools for macromolecular structure analysis.
 
 
 ## Parsing PDB files
