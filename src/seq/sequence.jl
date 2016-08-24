@@ -250,3 +250,19 @@ function Base.showcompact(io::IO, seq::Sequence)
 end
 
 Base.parse{S<:Sequence}(::Type{S}, str::AbstractString) = convert(S, str)
+
+# Consensus
+# ---------
+
+function consensus{S<:Sequence}(seqs::Vector{S})
+    itr = zip(seqs...)
+    cons = S(length(itr))
+    n = length(seqs)
+    i = 1
+    @inline for site in itr
+        comp = Composition(site)
+        cons[i] = maxmimum(comp).first
+        i += 1
+    end
+    return cons
+end
