@@ -126,6 +126,123 @@ function mostfrequent{T}(comp::Composition{T})
     return nucs
 end
 
+function _mvote_compat1{T}(comp::Composition{T})
+    votes = zeros(Int, length(comp))
+    @inbounds for i in [0x01, 0x02, 0x03, 0x05, 0x09], j in 0x01:0x10
+        if i == j || (i - 0x01) & (j - 0x01) != 0
+            votes[i] += comp.counts[j]
+        end
+    end
+    m = maximum(votes)
+    maxes = convert(Vector{UInt8}, findin(votes, m))
+    if length(maxes) == 1
+        return reinterpret(T, maxes[1] - 0x01)
+    else
+        nuc = 0x00
+        for max in maxes
+            nuc = nuc | (max - 0x01)
+        end
+        return reinterpret(T, nuc)
+    end
+end
+
+function _mvote_compat2{T}(comp::Composition{T})
+    cs = comp.counts
+    # 1(-), 2(A), 3(C), 5(G), and 9(T) are the certain symbols.
+    gapvotes = cs[1]
+    avotes = cs[2]
+    cvotes = cs[3]
+    gvotes = cs[5]
+    tvotes = cs[9]
+    inc = cs[4]
+    avotes += inc
+    cvotes += inc
+    inc = cs[6]
+    avotes += inc
+    gvotes += inc
+    inc = cs[7]
+    avotes += inc
+    tvotes += inc
+    inc = cs[8]
+    avotes += inc
+    cvotes += inc
+    gvotes += inc
+    inc = cs[10]
+    avotes += inc
+    tvotes += inc
+    inc = cs[11]
+    cvotes += inc
+    tvotes += inc
+    inc = cs[12]
+    avotes += inc
+    cvotes += inc
+    tvotes += inc
+    inc = cs[13]
+    gvotes += inc
+    tvotes += inc
+    inc = cs[14]
+    avotes += inc
+    gvotes += inc
+    tvotes += inc
+    inc = cs[15]
+    cvotes += inc
+    gvotes += inc
+    tvotes += inc
+    inc = cs[16]
+    avotes += inc
+    cvotes += inc
+    gvotes += inc
+    tvotes += inc
+    votes = zeros(Int, 16)
+    votes[1] = gapvotes
+    votes[2] = avotes
+    votes[3] = cvotes
+    votes[5] = gvotes
+    votes[9] = tvotes
+    m = maximum(votes)
+    maxes = convert(Vector{UInt8}, findin(votes, m))
+    if length(maxes) == 1
+        return reinterpret(T, maxes[1] - 0x01)
+    else
+        nuc = 0x00
+        for max in maxes
+            nuc = nuc | (max - 0x01)
+        end
+        return reinterpret(T, nuc)
+    end
+end
+
+function _mvote_compat3{T}(comp::Composition{T})
+    cs = comp.counts
+    gapvotes = cs[1]
+    a = cs[2]; c = cs[3]; g = cs[5];
+    t = cs[9]; m = cs[4]; r = cs[6];
+    s = cs[7]; v = cs[8]; w = cs[10];
+    y = cs[11]; h = cs[12]; k = cs[13];
+    d = cs[14]; b = cs[15]; n = cs[16]
+    avotes = a + m + r + w + v + h + d + n
+    cvotes = c + m + s + y + v + h + b + n
+    gvotes = g + r + s + k + v + d + b + n
+    tvotes = t + w + y + k + h + d + b + n
+    votes = zeros(Int, 16)
+    votes[1] = gapvotes
+    votes[2] = avotes
+    votes[3] = cvotes
+    votes[5] = gvotes
+    votes[9] = tvotes
+    m = maximum(votes)
+    maxes = convert(Vector{UInt8}, findin(votes, m))
+    if length(maxes) == 1
+        return reinterpret(T, maxes[1] - 0x01)
+    else
+        nuc = 0x00
+        for max in maxes
+            nuc = nuc | (max - 0x01)
+        end
+        return reinterpret(T, nuc)
+    end
+end
+
 function Base.summary{T}(::Composition{T})
     if T == DNANucleotide
         return "DNA Nucleotide Composition"
