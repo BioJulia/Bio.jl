@@ -38,4 +38,3 @@ const SAM_FLAG_DUP           = UInt16(0x400)
 
 "supplementary alignment"
 const SAM_FLAG_SUPPLEMENTARY = UInt16(0x800)
-

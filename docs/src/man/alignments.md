@@ -448,6 +448,9 @@ One of the major sources to generate massive amounts of sequence alignments is
 high-throughput sequencing technologies. The `Bio.Align` module provides several
 data formats commonly used in this field.
 
+
+### SAM and BAM file formats
+
 SAM and BAM would be the most popular file formats and their readers have the
 same interface as other readers in Bio.jl:
 ```julia
@@ -458,25 +461,46 @@ end
 close(reader)
 ```
 
-`SAMRecord` and `BAMRecord` supports the following accessors.
+`SAMRecord` and `BAMRecord` supports the following accessors:
 
-| Accessor | Description |
-|:-------- |:----------- |
-| `refname` | reference sequence name |
-| `position` | 1-based leftmost mapping position |
-| `refid` | 1-based reference sequence index (BAM only) |
-| `nextrefname` | `refname` of the mate/next read |
-| `nextposition` | `position` of the mate/next read |
-| `nextrefid` | `refid` of the mate/nextread |
-| `mappingquality` | mapping quality |
-| `flag` | bitwise flag |
-| `templatelength` | observed template length |
-| `seqname` | template name |
-| `cigar` | CIGAR string |
-| `cigar_rle` | run-length encoded CIGAR operations (BAM only) |
-| `sequence` | DNA sequence |
-| `qualities` | base qualities |
-| `[<tag>]` | value of an optional field |
+| Accessor         | Description                                    |
+| :--------------- | :--------------------------------------------- |
+| `refname`        | reference sequence name                        |
+| `position`       | 1-based leftmost mapping position              |
+| `refid`          | 1-based reference sequence index (BAM only)    |
+| `nextrefname`    | `refname` of the mate/next read                |
+| `nextposition`   | `position` of the mate/next read               |
+| `nextrefid`      | `refid` of the mate/nextread (BAM only)        |
+| `mappingquality` | mapping quality                                |
+| `flag`           | bitwise flag                                   |
+| `templatelength` | observed template length                       |
+| `seqname`        | template name                                  |
+| `cigar`          | CIGAR string                                   |
+| `cigar_rle`      | run-length encoded CIGAR operations (BAM only) |
+| `sequence`       | DNA sequence                                   |
+| `qualities`      | base qualities                                 |
+| `[<tag>]`        | value of an optional field with `tag`          |
+
+
+16-bit flags are defiend in the SAM specification as follows:
+
+| Flag                      | Bit       | Description                                                        |
+| :------------------------ | :-------- | :----------------------------------------------------------------- |
+| `SAM_FLAG_PAIRED`         | `0x0001`  | template having multiple segments in sequencing                    |
+| `SAM_FLAG_PROPER_PAIR`    | `0x0002`  | each segment properly aligned according to the aligner             |
+| `SAM_FLAG_UNMAP`          | `0x0004`  | segment unmapped                                                   |
+| `SAM_FLAG_MUNMAP`         | `0x0008`  | next segment in the template unmapped                              |
+| `SAM_FLAG_REVERSE`        | `0x0010`  | SEQ being reverse complemented                                     |
+| `SAM_FLAG_MREVERSE`       | `0x0020`  | SEQ of the next segment in the template being reverse complemented |
+| `SAM_FLAG_READ1`          | `0x0040`  | the first segment in the template                                  |
+| `SAM_FLAG_READ2`          | `0x0080`  | the last segment in the template                                   |
+| `SAM_FLAG_SECONDARY`      | `0x0100`  | secondary alignment                                                |
+| `SAM_FLAG_QCFAIL`         | `0x0200`  | not passing filters, such as platform/vendor quality controls      |
+| `SAM_FLAG_DUP`            | `0x0400`  | PCR or optical duplicate                                           |
+| `SAM_FLAG_SUPPLEMENTARY`  | `0x0800`  | supplementary alignment                                            |
+
+
+### Performance tips
 
 The size of a BAM file is often extremely huge. The iterator interface mentioned
 above allocates an object for each record and that may be a bottleneck of
