@@ -146,8 +146,7 @@ export
     TwoBit,
     Demultiplexer,
     demultiplex,
-    sitemajor,
-    seqmajor
+    seqmatrix
 
 using
     BufferedStreams,
