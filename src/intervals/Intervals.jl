@@ -25,7 +25,9 @@ export
     BEDMetadata,
     BEDInterval,
     BigBed,
-    BigWig
+    BigWig,
+    Tabix,
+    overlapchunks
 
 import ..Ragel: tryread!
 export tryread!
@@ -54,6 +56,7 @@ include("interval.jl")
 include("stream_buffer.jl")
 include("intervalcollection.jl")
 include("intervalstream.jl")
+include("index/index.jl")
 
 # Parsing file types
 include("bed.jl")

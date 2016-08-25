@@ -25,8 +25,8 @@ end
 
 function Base.next(iter::BAMIntersectionIterator, i_rec)
     i, rec = i_rec
-    retrec = copy(rec)
-    return retrec, advance!(iter, rec, i)
+    ret = copy(rec)
+    return ret, advance!(iter, rec, i)
 end
 
 function advance!(iter, rec, i)
@@ -53,12 +53,8 @@ function Bio.Intervals.isoverlapping(rec, refid_, interval)
         rightmost_position(rec) ≥ first(interval)
 end
 
-function Base.intersect(reader::BAMReader, refid::Integer, interval::UnitRange)
-    if isnull(reader.index)
-        error("no index")
-    end
-    chunks = overlapchunks(get(reader.index), refid, interval)
-    return BAMIntersectionIterator(reader, chunks, refid, interval)
+function Base.intersect(reader::BAMReader, interval::Interval)
+    return intersect(reader, interval.seqname, interval.first:interval.last)
 end
 
 function Base.intersect(reader::BAMReader, refname::AbstractString, interval::UnitRange)
@@ -67,4 +63,12 @@ function Base.intersect(reader::BAMReader, refname::AbstractString, interval::Un
         error("sequence name $refname is not in the header")
     end
     return intersect(reader, refid, interval)
+end
+
+function Base.intersect(reader::BAMReader, refid::Integer, interval::UnitRange)
+    if isnull(reader.index)
+        error("no index")
+    end
+    chunks = overlapchunks(get(reader.index).index, refid, interval)
+    return BAMIntersectionIterator(reader, chunks, refid, interval)
 end

@@ -125,8 +125,6 @@ function Base.next(reader::BAMReader, rec)
 end
 
 function loadindex!(reader, filepath)
-    open(filepath) do input
-        reader.index = read(input, BAI)
-    end
+    reader.index = BAI(filepath)
     return reader
 end

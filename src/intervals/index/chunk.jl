@@ -2,6 +2,9 @@
 # =====
 #
 # Consecutive range of BGZF files.
+#
+# This file is a part of BioJulia.
+# License is MIT: https://github.com/BioJulia/Bio.jl/blob/master/LICENSE.md
 
 # BGZF file chunk [.start, .stop).
 immutable Chunk
@@ -18,9 +21,9 @@ function Base.:(==)(chunk1::Chunk, chunk2::Chunk)
 end
 
 function Base.isless(chunk1::Chunk, chunk2::Chunk)
-    return isless(chunk1.start, chunk2.start) ||
-        (chunk1.start == chunk2.start &&
-         isless(chunk1.stop, chunk2.stop))
+    return (
+        isless(chunk1.start, chunk2.start) ||
+        (chunk1.start == chunk2.start && isless(chunk1.stop, chunk2.stop)))
 end
 
 function Base.seek(stream::BGZFStream, chunk::Chunk)
