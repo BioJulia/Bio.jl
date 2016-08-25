@@ -50,10 +50,10 @@ function write_header(stream, header, refseqnames, refseqlens)
     return n
 end
 
-function Base.write(writer::BAMWriter, aln::BAMRecord)
+function Base.write(writer::BAMWriter, record::BAMRecord)
     n = 0
-    n += write(writer.stream, Int32(BAM_FIXED_FIELDS_BYTES + aln.datasize))
-    n += unsafe_write(writer.stream, pointer_from_objref(aln), BAM_FIXED_FIELDS_BYTES)
-    n += unsafe_write(writer.stream, pointer(aln.data), aln.datasize)
+    n += write(writer.stream, Int32(BAM_FIXED_FIELDS_BYTES + record.datasize))
+    n += unsafe_write(writer.stream, pointer_from_objref(record), BAM_FIXED_FIELDS_BYTES)
+    n += unsafe_write(writer.stream, pointer(record.data), record.datasize)
     return n
 end

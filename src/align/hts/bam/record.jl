@@ -44,7 +44,7 @@ function Base.copy(rec::BAMRecord)
 end
 
 function Base.isless(rec1::BAMRecord, rec2::BAMRecord)
-    # left-most position of alignment
+    # compared by left-most position of an alignment
     if rec1.refid == rec2.refid
         return isless(rec1.pos, rec2.pos)
     else
@@ -114,21 +114,21 @@ Return the name of a reference sequence that `rec` is mapped onto.
 
 If `rec` is unmapped, it returns `"*"` like SAM records.
 """
-function refname(r::BAMRecord)
-    id = refid(r)
+function refname(rec::BAMRecord)
+    id = refid(rec)
     if id == 0
         return "*"
     else
-        return r.refseqnames[id]
+        return rec.refseqnames[id]
     end
 end
 
-function nextrefname(r::BAMRecord)
-    id = nextrefid(r)
+function nextrefname(rec::BAMRecord)
+    id = nextrefid(rec)
     if id == 0
         return "*"
     else
-        return r.refseqnames[id]
+        return rec.refseqnames[id]
     end
 end
 

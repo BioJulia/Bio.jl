@@ -99,16 +99,16 @@ function Base.open(filename::AbstractString, ::Type{BAM})
     return reader
 end
 
-function Base.read!(reader::BAMReader, aln::BAMRecord)
+function Base.read!(reader::BAMReader, record::BAMRecord)
     datasize = read(reader.stream, Int32) - BAM_FIXED_FIELDS_BYTES
-    unsafe_read(reader.stream, pointer_from_objref(aln), BAM_FIXED_FIELDS_BYTES)
-    if length(aln.data) < datasize
-        resize!(aln.data, datasize)
+    unsafe_read(reader.stream, pointer_from_objref(record), BAM_FIXED_FIELDS_BYTES)
+    if length(record.data) < datasize
+        resize!(record.data, datasize)
     end
-    unsafe_read(reader.stream, pointer(aln.data), datasize)
-    aln.datasize = datasize
-    aln.refseqnames = reader.refseqnames
-    return aln
+    unsafe_read(reader.stream, pointer(record.data), datasize)
+    record.datasize = datasize
+    record.refseqnames = reader.refseqnames
+    return record
 end
 
 function Base.start(reader::BAMReader)

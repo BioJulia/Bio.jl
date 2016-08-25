@@ -21,7 +21,7 @@ function SAMRecord()
 end
 
 function Base.isless(rec1::SAMRecord, rec2::SAMRecord)
-    # left-most position of alignment
+    # compared by the left-most position of an alignment
     if rec1.name == rec2.name
         return isless(rec1.pos, rec2.pos)
     else
@@ -65,72 +65,72 @@ function Base.copy(rec::SAMRecord)
     return deepcopy(rec)
 end
 
-function ismapped(r::SAMRecord)
-    return r.pos != 0
+function ismapped(rec::SAMRecord)
+    return rec.pos != 0
 end
 
-function Bio.Intervals.seqname(r::SAMRecord)
-    return r.name
+function Bio.Intervals.seqname(rec::SAMRecord)
+    return rec.name
 end
 
-function flag(r::SAMRecord)
-    return r.flag
+function flag(rec::SAMRecord)
+    return rec.flag
 end
 
-function refname(r::SAMRecord)
-    return r.refname
+function refname(rec::SAMRecord)
+    return rec.refname
 end
 
-function nextrefname(r::SAMRecord)
-    return r.next_refname
+function nextrefname(rec::SAMRecord)
+    return rec.next_refname
 end
 
-function Base.position(r::SAMRecord)
-    return r.pos
+function Base.position(rec::SAMRecord)
+    return rec.pos
 end
 
-function nextposition(r::SAMRecord)
-    return r.next_pos
+function nextposition(rec::SAMRecord)
+    return rec.next_pos
 end
 
-function mappingquality(r::SAMRecord)
-    return r.mapq
+function mappingquality(rec::SAMRecord)
+    return rec.mapq
 end
 
-function templatelength(r::SAMRecord)
-    return r.tlen
+function templatelength(rec::SAMRecord)
+    return rec.tlen
 end
 
-function cigar(r::SAMRecord)
-    return r.cigar
+function cigar(rec::SAMRecord)
+    return rec.cigar
 end
 
-function sequence(r::SAMRecord)
-    return r.seq
+function sequence(rec::SAMRecord)
+    return rec.seq
 end
 
-function qualities(r::SAMRecord)
-    return r.qual
+function qualities(rec::SAMRecord)
+    return rec.qual
 end
 
-function Base.getindex(r::SAMRecord, tag::AbstractString)
+function Base.getindex(rec::SAMRecord, tag::AbstractString)
     checkkeytag(tag)
-    return r.optional_fields[tag]
+    return rec.optional_fields[tag]
 end
 
-function Base.setindex!(r::SAMRecord, val, tag::AbstractString)
+function Base.setindex!(rec::SAMRecord, val, tag::AbstractString)
     checkkeytag(tag)
-    setindex!(r.optional_fields, val, tag)
-    return r
+    setindex!(rec.optional_fields, val, tag)
+    return rec
 end
 
-function Base.delete!(r::SAMRecord, tag::AbstractString)
+function Base.delete!(rec::SAMRecord, tag::AbstractString)
     checkkeytag(tag)
-    delete!(r.optional_fields, tag)
-    return r
+    delete!(rec.optional_fields, tag)
+    return rec
 end
 
-function Base.haskey(r::SAMRecord, tag::AbstractString)
+function Base.haskey(rec::SAMRecord, tag::AbstractString)
     checkkeytag(tag)
-    return haskey(r.optional_fields, tag)
+    return haskey(rec.optional_fields, tag)
 end
