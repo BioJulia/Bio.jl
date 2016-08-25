@@ -440,3 +440,63 @@ julia> submat['A','B']  # mismatch
 -1
 
 ```
+
+
+## High-throughput sequencing file formats
+
+One of the major sources to generate massive amounts of sequence alignments is
+high-throughput sequencing technologies. The `Bio.Align` module provides several
+data formats commonly used in this field.
+
+SAM and BAM would be the most popular file formats and their readers have the
+same interface as other readers in Bio.jl:
+```julia
+reader = open("data.bam", BAM)  # same for SAM
+for record in reader
+    # do something
+end
+close(reader)
+```
+
+`SAMRecord` and `BAMRecord` supports the following accessors.
+
+| Accessor | Description |
+|:-------- |:----------- |
+| `refname` | reference sequence name |
+| `position` | 1-based leftmost mapping position |
+| `refid` | 1-based reference sequence index (BAM only) |
+| `nextrefname` | `refname` of the mate/next read |
+| `nextposition` | `position` of the mate/next read |
+| `nextrefid` | `refid` of the mate/nextread |
+| `mappingquality` | mapping quality |
+| `flag` | bitwise flag |
+| `templatelength` | observed template length |
+| `seqname` | template name |
+| `cigar` | CIGAR string |
+| `cigar_rle` | run-length encoded CIGAR operations (BAM only) |
+| `sequence` | DNA sequence |
+| `qualities` | base qualities |
+| `[<tag>]` | value of an optional field |
+
+The size of a BAM file is often extremely huge. The iterator interface mentioned
+above allocates an object for each record and that may be a bottleneck of
+reading data from a BAM file. In-place reading reuses a preallocated object for
+every record and no memory allocation happens in reading:
+```julia
+reader = open("data.bam", BAM)
+record = BAMRecord()
+while !eof(reader)
+    read!(reader, record)
+    # do something
+end
+```
+
+Accessing optional fields will results in type instability in Julia, which has a
+significant negative impact on performance. If the user knows the type of a
+value in advance, specifying it as a type annotation will alleviate the problem:
+```julia
+for record in open("data.bam", BAM)
+    nm = record["NM"]::UInt8
+    # do something
+end
+```
