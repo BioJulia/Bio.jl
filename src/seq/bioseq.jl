@@ -1033,54 +1033,19 @@ end
 # -------------------
 
 """
-    sitemajor{A<:Alphabet}(vseq::Vector{BioSequence{A}})
+    seqmatrix{A<:Alphabet}(vseq::Vector{BioSequence{A}}, major = :seq|:site)
 
 Construct a matrix of nucleotides or amino acids from a BioSequence.
-The matrix is created such that one nucleotide from each sequence is placed in
-each column i.e. the matrix is laid out in site-major order.
 
+If parameter major is set to `:site`, the matrix is created such that one
+nucleotide from each sequence is placed in each column i.e. the matrix is laid
+out in site-major order.
 This means that iteration over one position of many sequences is efficient,
 as julia arrays are laid out in column major order.
 
-# Examples
-```julia
-julia> seqs = [dna"AAAAAAAAAA", dna"TTTTTTTTTT", dna"CCCCCCCCCC", dna"GGGGGGGGGG"]
-4-element Array{Bio.Seq.BioSequence{Bio.Seq.DNAAlphabet{4}},1}:
- 10nt DNA Sequence:
-AAAAAAAAAA
- 10nt DNA Sequence:
-TTTTTTTTTT
- 10nt DNA Sequence:
-CCCCCCCCCC
- 10nt DNA Sequence:
-GGGGGGGGGG
-
-julia> sitemajor(seqs)
-4x10 Array{Bio.Seq.DNANucleotide,2}:
- DNA_A  DNA_A  DNA_A  DNA_A  DNA_A  DNA_A  DNA_A  DNA_A  DNA_A  DNA_A
- DNA_T  DNA_T  DNA_T  DNA_T  DNA_T  DNA_T  DNA_T  DNA_T  DNA_T  DNA_T
- DNA_C  DNA_C  DNA_C  DNA_C  DNA_C  DNA_C  DNA_C  DNA_C  DNA_C  DNA_C
- DNA_G  DNA_G  DNA_G  DNA_G  DNA_G  DNA_G  DNA_G  DNA_G  DNA_G  DNA_G
-
-```
-"""
-function sitemajor{A<:Alphabet}(vseq::Vector{BioSequence{A}})
-    nsites = minimum([length(seq) for seq in vseq])
-    nseqs = length(vseq)
-    mat = Matrix{eltype(A)}(nseqs, nsites)
-    for seq in 1:nseqs, site in 1:nsites
-        mat[seq, site] = vseq[seq][site]
-    end
-    return mat
-end
-
-"""
-    seqmajor{A<:Alphabet}(vseq::Vector{BioSequence{A}})
-
-Construct a matrix of nucleotides or amino acids from a BioSequence.
-The matrix is created such that each sequence is placed in
-each column i.e. the matrix is laid out in sequence-major order.
-
+If the parameter major is set to `:seq`, the matrix is created such that each
+sequence is placed in one column i.e. the matrix is laid out in sequence-major
+order.
 This means that iteration over each sequence is efficient,
 as julia arrays are laid out in column major order.
 
@@ -1097,26 +1062,45 @@ CCCCCCCCCC
  10nt DNA Sequence:
 GGGGGGGGGG
 
-julia> seqmajor(seqs)
-10x4 Array{Bio.Seq.DNANucleotide,2}:
- DNA_A  DNA_T  DNA_C  DNA_G
- DNA_A  DNA_T  DNA_C  DNA_G
- DNA_A  DNA_T  DNA_C  DNA_G
- DNA_A  DNA_T  DNA_C  DNA_G
- DNA_A  DNA_T  DNA_C  DNA_G
- DNA_A  DNA_T  DNA_C  DNA_G
- DNA_A  DNA_T  DNA_C  DNA_G
- DNA_A  DNA_T  DNA_C  DNA_G
- DNA_A  DNA_T  DNA_C  DNA_G
- DNA_A  DNA_T  DNA_C  DNA_G
+julia> seqmatrix(seqs, major = :site)
+4x10 Array{Bio.Seq.DNANucleotide,2}:
+ DNA_A  DNA_A  DNA_A  DNA_A  DNA_A  DNA_A  DNA_A  DNA_A  DNA_A  DNA_A
+ DNA_T  DNA_T  DNA_T  DNA_T  DNA_T  DNA_T  DNA_T  DNA_T  DNA_T  DNA_T
+ DNA_C  DNA_C  DNA_C  DNA_C  DNA_C  DNA_C  DNA_C  DNA_C  DNA_C  DNA_C
+ DNA_G  DNA_G  DNA_G  DNA_G  DNA_G  DNA_G  DNA_G  DNA_G  DNA_G  DNA_G
+
+ julia> seqmatrix(seqs, major = :seq)
+ 10x4 Array{Bio.Seq.DNANucleotide,2}:
+  DNA_A  DNA_T  DNA_C  DNA_G
+  DNA_A  DNA_T  DNA_C  DNA_G
+  DNA_A  DNA_T  DNA_C  DNA_G
+  DNA_A  DNA_T  DNA_C  DNA_G
+  DNA_A  DNA_T  DNA_C  DNA_G
+  DNA_A  DNA_T  DNA_C  DNA_G
+  DNA_A  DNA_T  DNA_C  DNA_G
+  DNA_A  DNA_T  DNA_C  DNA_G
+  DNA_A  DNA_T  DNA_C  DNA_G
+  DNA_A  DNA_T  DNA_C  DNA_G
 ```
 """
-function seqmajor{A<:Alphabet}(vseq::Vector{BioSequence{A}})
-    nsites = minimum([length(seq) for seq in vseq])
-    nseqs = length(vseq)
-    mat = Matrix{eltype(A)}(nsites, nseqs)
-    for seq in 1:nseqs, site in 1:nsites
-        mat[site, seq] = vseq[seq][site]
+function seqmatrix{A<:Alphabet}(vseq::Vector{BioSequence{A}}, major = :site)
+    if major == :site
+        nsites = minimum([length(seq) for seq in vseq])
+        nseqs = length(vseq)
+        mat = Matrix{eltype(A)}(nseqs, nsites)
+        for seq in 1:nseqs, site in 1:nsites
+            mat[seq, site] = vseq[seq][site]
+        end
+        return mat
+    elseif major == :seq
+        nsites = minimum([length(seq) for seq in vseq])
+        nseqs = length(vseq)
+        mat = Matrix{eltype(A)}(nsites, nseqs)
+        for seq in 1:nseqs, site in 1:nsites
+            mat[site, seq] = vseq[seq][site]
+        end
+        return mat
+    else
+        throw(ArgumentError("major must be :site or :seq"))
     end
-    return mat
 end

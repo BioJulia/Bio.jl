@@ -838,13 +838,13 @@ end
             AA_A AA_A AA_A AA_A
         ]
 
-        @test sitemajor(dna) == sitemajdna
-        @test sitemajor(rna) == sitemajrna
-        @test sitemajor(prot) == sitemajaa
+        @test seqmatrix(dna, major = :site) == sitemajdna
+        @test seqmatrix(rna, major = :site) == sitemajrna
+        @test seqmatrix(prot, major = :site) == sitemajaa
 
-        @test seqmajor(dna) == seqmajdna
-        @test seqmajor(rna) == seqmajrna
-        @test seqmajor(prot) == seqmajaa
+        @test seqmatrix(dna, major = :seq) == seqmajdna
+        @test seqmatrix(rna, major = :seq) == seqmajrna
+        @test seqmatrix(prot, major = :seq) == seqmajaa
 
     end
 
