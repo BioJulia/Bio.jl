@@ -21,6 +21,8 @@ type IntervalStreamIntersectIterator{S, T, SS, TS}
     end
 end
 
+Base.iteratorsize(::IntervalStreamIntersectIterator) = Base.SizeUnknown()
+
 immutable IntervalStreamIntersectIteratorState{U, V}
     a_buffer_pos::Int
     a_state::U

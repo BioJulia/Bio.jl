@@ -62,7 +62,7 @@ function composition(iter::Union{Sequence,EachKmerIterator})
     return Composition(iter)
 end
 
-@compat function Base.:(==){T}(x::Composition{T}, y::Composition{T})
+function Base.:(==){T}(x::Composition{T}, y::Composition{T})
     return x.counts == y.counts
 end
 

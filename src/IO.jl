@@ -27,6 +27,8 @@ See `subtypes(AbstractParser)` for all available data parsers.
 """
 abstract AbstractParser
 
+Base.iteratorsize(::AbstractParser) = Base.SizeUnknown()
+
 """
 Abstract data writer type.
 

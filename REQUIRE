@@ -1,10 +1,9 @@
 julia 0.4
 BufferedStreams 0.1
 Colors
-Compat
 Distributions
 IndexableBitVectors 0.1.1
-IntervalTrees
+IntervalTrees 0.1
 Iterators
 Libz 0.2
 LightGraphs

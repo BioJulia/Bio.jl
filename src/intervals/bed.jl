@@ -35,7 +35,7 @@ function Base.copy(metadata::BEDMetadata)
         metadata.block_firsts[1:metadata.block_count])
 end
 
-@compat function Base.:(==)(a::BEDMetadata, b::BEDMetadata)
+function Base.:(==)(a::BEDMetadata, b::BEDMetadata)
     if a.used_fields != b.used_fields
         return false
     end

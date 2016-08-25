@@ -1,11 +1,6 @@
 module TestAlign
 
-if VERSION >= v"0.5-"
-    using Base.Test
-else
-    using BaseTestNext
-    const Test = BaseTestNext
-end
+using Base.Test
 
 using Bio
 using Bio.Seq
@@ -298,7 +293,7 @@ function alignedpair(alnres)
     print_seq(buf, a, anchors)
     println(buf)
     print_ref(buf, b, anchors)
-    return bytestring(buf)
+    return String(buf)
 end
 
 function print_seq(io, seq, anchors)

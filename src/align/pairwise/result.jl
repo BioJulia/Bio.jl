@@ -21,7 +21,7 @@ function PairwiseAlignmentResult(value, isscore, seq, ref)
                                    Nullable(PairwiseAlignment(seq, ref)))
 end
 
-@compat function (::Type{PairwiseAlignmentResult{S1,S2}}){S1,S2}(value, isscore)
+function (::Type{PairwiseAlignmentResult{S1,S2}}){S1,S2}(value, isscore)
     return PairwiseAlignmentResult(value, isscore,
                                    Nullable{PairwiseAlignment{S1,S2}}())
 end

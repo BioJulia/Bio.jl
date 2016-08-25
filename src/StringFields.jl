@@ -10,7 +10,6 @@ module StringFields
 
 export StringField
 
-using Compat
 import BufferedStreams
 
 """
@@ -91,32 +90,24 @@ function Base.isempty(field::StringField)
     return field.part.start > field.part.stop
 end
 
-#function Base.convert(::Type{StringField}, str::ASCIIString)
-#    return StringField(copy(str.data), 1:length(str.data))
-#end
-#
-function Base.convert(::Type{StringField}, str::Compat.String)
+function Base.convert(::Type{StringField}, str::String)
     return StringField(copy(str.data), 1:length(str.data))
 end
 
-function Base.convert(::Type{Compat.UTF8String}, field::StringField)
-    return Compat.UTF8String(field.data[field.part])
+function Base.convert(::Type{String}, field::StringField)
+    return String(field.data[field.part])
 end
 
 function Base.convert(::Type{AbstractString}, field::StringField)
-    return convert(Compat.UTF8String, field::StringField)
+    return convert(String, field)
 end
 
 function Base.write(io::IO, field::StringField)
-    write(io, convert(Compat.UTF8String, field))
+    write(io, convert(String, field))
 end
 
 function Base.show(io::IO, field::StringField)
-    print(io, convert(Compat.UTF8String, field))
-end
-
-function Base.writemime(io::IO, T::MIME"text/plain", field::StringField)
-    writemime(io, T, convert(Compat.UTF8String, field))
+    print(io, convert(String, field))
 end
 
 function Base.copy(field::StringField)
@@ -132,13 +123,13 @@ function Base.hash(field::StringField, h::UInt64)
                  length(field.part), h % UInt32) + h
 end
 
-@compat function Base.:(==)(a::StringField, b::StringField)
+function Base.:(==)(a::StringField, b::StringField)
     return length(a) == length(b) &&
         ccall(:memcmp, Cint, (Ptr{Void}, Ptr{Void}, Csize_t),
               pointer(a.data, a.part.start), pointer(b.data, b.part.start), length(a)) == 0
 end
 
-@compat function Base.:(==)(a::StringField, b::BufferedStreams.BufferedOutputStream)
+function Base.:(==)(a::StringField, b::BufferedStreams.BufferedOutputStream)
     if a === b
         return true
     elseif length(a) == length(b)

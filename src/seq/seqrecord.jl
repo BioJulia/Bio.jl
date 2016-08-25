@@ -20,7 +20,7 @@ function SeqRecord(name::AbstractString, seq::Sequence, metadata=nothing)
     return SeqRecord(StringField(name), seq, metadata)
 end
 
-@compat function (::Type{SeqRecord{S,T}}){S,T}()
+function (::Type{SeqRecord{S,T}}){S,T}()
     return SeqRecord{S,T}(StringField(), S(), T())
 end
 
@@ -39,7 +39,7 @@ function Base.getindex(seqrec::SeqRecord, r::UnitRange)
     return SeqRecord(seqrec.name, seqrec.seq[r], seqrec.metadata)
 end
 
-@compat function Base.:(==){T<:SeqRecord}(a::T, b::T)
+function Base.:(==){T<:SeqRecord}(a::T, b::T)
     return a.name == b.name && a.seq == b.seq && a.metadata == b.metadata
 end
 

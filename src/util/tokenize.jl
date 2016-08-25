@@ -10,9 +10,6 @@
 
 module Tokenize
 
-using Compat
-import Compat.String
-
 export
     Tokenizer, TokenizerResult, tokenize
 
@@ -35,16 +32,16 @@ type Tokenizer
 
     **Parameters:**
 
-    * `x`: An array of `Compat.String`, `Regex` tuples.
+    * `x`: An array of `String`, `Regex` tuples.
 
     **Returns:** Instance of `Tokenizer`
     """
     function Tokenizer(x::Vector{Tuple{String, Regex}})
         dictvalues = [i[2] for i in x]
-        stringvalues = Compat.String[i.pattern for i in dictvalues]
+        stringvalues = String[i.pattern for i in dictvalues]
         combinedstring = join(stringvalues, "|")
         finalstring = "($combinedstring)"
-        return new([i => j for (i, j) in x], Regex(finalstring))
+        return new(Dict(i => j for (i, j) in x), Regex(finalstring))
     end
 end
 

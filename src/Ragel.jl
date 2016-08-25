@@ -11,7 +11,6 @@ module Ragel
 export tryread!
 
 using BufferedStreams
-using Compat
 import Bio.IO: FileFormat, AbstractParser
 
 # A type keeping track of a ragel-based parser's state.
@@ -99,7 +98,7 @@ macro ascii_from_anchor!()
         n = $(esc(:p)) - firstpos + 1
         dst = Vector{UInt8}(n)
         copy!(dst, 1, $(esc(:state)).stream.buffer, firstpos, n)
-        Compat.ASCIIString(dst)
+        String(dst)
     end
 end
 

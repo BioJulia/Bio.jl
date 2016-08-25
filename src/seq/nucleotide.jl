@@ -42,27 +42,27 @@ Base.convert{T<:Number,S<:Nucleotide}(::Type{S}, nt::T) = convert(S, UInt8(nt))
 # Bit Operations
 # --------------
 
-@compat function Base.~{N<:Nucleotide}(x::N)
+function Base.:~{N<:Nucleotide}(x::N)
     return reinterpret(N, ~reinterpret(UInt8, x) & 0b1111)
 end
 
-@compat function Base.|{N<:Nucleotide}(x::N, y::N)
+function Base.:|{N<:Nucleotide}(x::N, y::N)
     return reinterpret(N, reinterpret(UInt8, x) | reinterpret(UInt8, y))
 end
 
-@compat function Base.&{N<:Nucleotide}(x::N, y::N)
+function Base.:&{N<:Nucleotide}(x::N, y::N)
     return reinterpret(N, reinterpret(UInt8, x) & reinterpret(UInt8, y))
 end
 
-@compat function Base.:-{N<:Nucleotide}(x::N, y::N)
+function Base.:-{N<:Nucleotide}(x::N, y::N)
     return Int(x) - Int(y)
 end
 
-@compat function Base.:-{N<:Nucleotide}(x::N, y::Integer)
+function Base.:-{N<:Nucleotide}(x::N, y::Integer)
     return x + (-y)
 end
 
-@compat function Base.:+{N<:Nucleotide}(x::N, y::Integer)
+function Base.:+{N<:Nucleotide}(x::N, y::Integer)
     return reinterpret(N, (UInt8(x) + y % UInt8) & 0b1111)
 end
 

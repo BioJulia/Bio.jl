@@ -1,13 +1,7 @@
 module TestSeq
 
-if VERSION >= v"0.5-"
-    using Base.Test
-else
-    using BaseTestNext
-    const Test = BaseTestNext
-end
+using Base.Test
 
-import Compat
 using Bio.Seq,
     BufferedStreams,
     StatsBase,
@@ -2258,7 +2252,7 @@ end
 
     @testset "Each k-mer" begin
         function string_eachkmer(seq::AbstractString, k, step)
-            kmers = Compat.String[]
+            kmers = String[]
             i = 1
             for i in 1:step:length(seq) - k + 1
                 subseq = seq[i:i + k - 1]
@@ -2591,7 +2585,7 @@ end
 
 @testset "Translation" begin
     # crummy string translation to test against
-    standard_genetic_code_dict = Dict{Compat.String,Char}(
+    standard_genetic_code_dict = Dict{String,Char}(
         "AAA" => 'K', "AAC" => 'N', "AAG" => 'K', "AAU" => 'N',
         "ACA" => 'T', "ACC" => 'T', "ACG" => 'T', "ACU" => 'T',
         "AGA" => 'R', "AGC" => 'S', "AGG" => 'R', "AGU" => 'S',

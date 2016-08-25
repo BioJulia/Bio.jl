@@ -8,8 +8,6 @@
 
 module Structure
 
-using Compat
-
 import Bio.IO: FileFormat, AbstractParser
 
 include("model.jl")

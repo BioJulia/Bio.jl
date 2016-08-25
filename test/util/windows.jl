@@ -1,11 +1,6 @@
 module TestSlidingWindows
 
-if VERSION >= v"0.5-"
-    using Base.Test
-else
-    using BaseTestNext
-    const Test = BaseTestNext
-end
+using Base.Test
 
 using Bio.Windows,
     Bio.Seq,
@@ -43,7 +38,7 @@ end
                 arritr, stritr, nucitr, ribitr, aasitr =
                     generate_test_itrs(winwidth, winstep, arr, str, nuc, rib, aas)
                 @test arritr == EachWindowIterator{Array{Int, 1}}(arr, winwidth, winstep)
-                @test stritr == EachWindowIterator{ASCIIString}(str, winwidth, winstep)
+                @test stritr == EachWindowIterator{String}(str, winwidth, winstep)
                 @test nucitr == EachWindowIterator{DNASequence}(nuc, winwidth, winstep)
                 @test ribitr == EachWindowIterator{RNASequence}(rib, winwidth, winstep)
                 @test aasitr == EachWindowIterator{AminoAcidSequence}(aas, winwidth, winstep)
@@ -129,7 +124,7 @@ end
                     i, j = 1, width
                     for win in nucitr
                         @test win[1] == i
-                        @test win[2] == sub(nuc, i:j)
+                        @test win[2] == view(nuc, i:j)
                         @test win[2] == nuc[i:j]
                         i += step
                         j += step
@@ -144,7 +139,7 @@ end
                     i, j = 1, width
                     for win in ribitr
                         @test win[1] == i
-                        @test win[2] == sub(rib, i:j)
+                        @test win[2] == view(rib, i:j)
                         @test win[2] == rib[i:j]
                         i += step
                         j += step
@@ -159,7 +154,7 @@ end
                     i, j = 1, width
                     for win in aasitr
                         @test win[1] == i
-                        @test win[2] == sub(aas, i:j)
+                        @test win[2] == view(aas, i:j)
                         @test win[2] == aas[i:j]
                         i += step
                         j += step
@@ -174,7 +169,7 @@ end
                     i, j = 1, width
                     for win in arritr
                         @test win[1] == i
-                        @test win[2] == sub(arr, i:j)
+                        @test win[2] == view(arr, i:j)
                         i += step
                         j += step
                     end

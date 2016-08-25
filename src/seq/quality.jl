@@ -12,11 +12,11 @@ bitstype 16 QualityEncoding
 Base.convert(::Type{QualityEncoding}, nt::UInt16) = reinterpret(QualityEncoding, nt)
 Base.convert(::Type{UInt16}, nt::QualityEncoding) = reinterpret(UInt16, nt)
 
-@compat function Base.:|(a::QualityEncoding, b::QualityEncoding)
+function Base.:|(a::QualityEncoding, b::QualityEncoding)
     return convert(QualityEncoding, convert(UInt16, a) | convert(UInt16, b))
 end
 
-@compat function Base.:&(a::QualityEncoding, b::QualityEncoding)
+function Base.:&(a::QualityEncoding, b::QualityEncoding)
     return convert(QualityEncoding, convert(UInt16, a) & convert(UInt16, b))
 end
 
@@ -92,7 +92,7 @@ function infer_quality_encoding(data::Vector{UInt8}, start, stop,
                                 default::QualityEncoding=EMPTY_QUAL_ENCODING)
     @inbounds for i in start:stop
         c = data[i]
-        if '!' <= c <= '~'
+        if UInt8('!') <= c <= UInt8('~')
             encodings &= compatible_qual_encoding[c - UInt8('!') + 1]
         else
             error("Character $(convert(Char, c)) is not compatible with any known quality encoding.")

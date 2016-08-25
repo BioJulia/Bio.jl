@@ -86,7 +86,7 @@ function precedes{T}(a::Interval{T}, b::Interval{T},
         seqname_isless(a.seqname, b.seqname)::Bool
 end
 
-@compat function Base.:(==){T}(a::Interval{T}, b::Interval{T})
+function Base.:(==){T}(a::Interval{T}, b::Interval{T})
     return a.seqname  == b.seqname &&
            a.first    == b.first &&
            a.last     == b.last &&

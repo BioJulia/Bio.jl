@@ -23,7 +23,7 @@ function FASTQMetadata()
     return FASTQMetadata(StringField(), Int8[])
 end
 
-@compat function Base.:(==)(a::FASTQMetadata, b::FASTQMetadata)
+function Base.:(==)(a::FASTQMetadata, b::FASTQMetadata)
     return a.description == b.description && a.quality == b.quality
 end
 
@@ -38,7 +38,7 @@ Create a sequence record for the FASTQ file format.
 """
 typealias FASTQSeqRecord{S} SeqRecord{S,FASTQMetadata}
 
-@compat function (::Type{FASTQSeqRecord})(name::AbstractString,
+function (::Type{FASTQSeqRecord})(name::AbstractString,
                                           seq::Sequence,
                                           quality::Vector{Int8},
                                           description::AbstractString="")

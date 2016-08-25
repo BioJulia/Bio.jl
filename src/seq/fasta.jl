@@ -17,7 +17,7 @@ function FASTAMetadata()
     return FASTAMetadata(StringField())
 end
 
-@compat function Base.:(==)(a::FASTAMetadata, b::FASTAMetadata)
+function Base.:(==)(a::FASTAMetadata, b::FASTAMetadata)
     return a.description == b.description
 end
 
@@ -32,7 +32,7 @@ Create a sequence record for the FASTA file format.
 """
 typealias FASTASeqRecord{S} SeqRecord{S,FASTAMetadata}
 
-@compat function (::Type{FASTASeqRecord})(name::AbstractString,
+function (::Type{FASTASeqRecord})(name::AbstractString,
                                           seq::Sequence,
                                           description::AbstractString="")
     return SeqRecord(name, seq, FASTAMetadata(description))

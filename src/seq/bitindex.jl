@@ -20,12 +20,10 @@ BitIndex(index, nbits) = BitIndex((index - 1) << trailing_zeros(nbits))
 index(i::BitIndex) = (i.val >> 6) + 1
 offset(i::BitIndex) = i.val & 0b111111
 
-@compat begin
-    Base.:+(i::BitIndex, n::Int) = BitIndex(i.val + n)
-    Base.:-(i::BitIndex, n::Int) = BitIndex(i.val - n)
-    Base.:-(i1::BitIndex, i2::BitIndex) = i1.val - i2.val
-    Base.:(==)(i1::BitIndex, i2::BitIndex) = i1.val == i2.val
-end
+Base.:+(i::BitIndex, n::Int) = BitIndex(i.val + n)
+Base.:-(i::BitIndex, n::Int) = BitIndex(i.val - n)
+Base.:-(i1::BitIndex, i2::BitIndex) = i1.val - i2.val
+Base.:(==)(i1::BitIndex, i2::BitIndex) = i1.val == i2.val
 Base.isless(i1::BitIndex, i2::BitIndex) = isless(i1.val, i2.val)
 Base.cmp(i1::BitIndex, i2::BitIndex) = cmp(i1.val, i2.val)
 Base.start(i::BitIndex) = 1

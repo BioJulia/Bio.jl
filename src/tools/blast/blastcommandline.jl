@@ -9,8 +9,8 @@
 immutable BLASTResult
     bitscore::Float64
     expect::Float64
-    queryname::Compat.String
-    hitname::Compat.String
+    queryname::String
+    hitname::String
     hit::BioSequence
     alignment::AlignedSequence
 end
@@ -20,7 +20,7 @@ end
 
 Parse XML output of a blast run. Input is an XML string eg:
 ```julia
-results = readall(open("blast_results.xml")) # need to use `readstring` instead of `readall` for v0.5
+results = readstring(open("blast_results.xml")) # need to use `readstring` instead of `readall` for v0.5
 readblastXML(results)
 ```
 
@@ -70,8 +70,7 @@ readblastXML(blastresults)
 Returns Vector{BLASTResult} with the sequence of the hit, the Alignment with query sequence, bitscore and expect value
 """
 function readblastXML(blastrun::Cmd; seqtype="nucl")
-    # need to use `readstring` instead of `readall` for v0.5
-    return readblastXML(readall(blastrun), seqtype=seqtype)
+    return readblastXML(readstring(blastrun), seqtype=seqtype)
 end
 
 

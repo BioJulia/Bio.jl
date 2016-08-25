@@ -72,7 +72,6 @@ export
     hasalignment
 
 using Bio.Seq
-using Compat
 import IntervalTrees
 
 include("operations.jl")
