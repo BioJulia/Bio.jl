@@ -1,13 +1,8 @@
 module TestLSM
 
-if VERSION >= v"0.5-"
-    using Base.Test
-else
-    using BaseTestNext
-    const Test = BaseTestNext
-end
+using Base.Test
 
-import Bio.Util: readlsm
+using Bio.Util
 
 @testset "LabelledSquareMatrices" begin
 
