@@ -116,7 +116,15 @@ function Base.merge!{T}(comp::Composition{T}, other::Composition{T})
     return comp
 end
 
-function mostfrequent{T}(comp::Composition{T})
+function majorityvote{T}(comp::Composition{T}, compat = true)
+    if compat
+        return _mvote_compat(comp)
+    else
+        return _mvote(comp)
+    end
+end
+
+function _mvote{T}(comp::Composition{T})
     m = max(comp.counts)
     maxes = convert(Vector{UInt8}, findin(comp.counts, m))
     nucs = Vector{T}(length(maxes))
@@ -126,93 +134,7 @@ function mostfrequent{T}(comp::Composition{T})
     return nucs
 end
 
-function _mvote_compat1{T}(comp::Composition{T})
-    votes = zeros(Int, length(comp))
-    @inbounds for i in [0x01, 0x02, 0x03, 0x05, 0x09], j in 0x01:0x10
-        if i == j || (i - 0x01) & (j - 0x01) != 0
-            votes[i] += comp.counts[j]
-        end
-    end
-    m = maximum(votes)
-    maxes = convert(Vector{UInt8}, findin(votes, m))
-    if length(maxes) == 1
-        return reinterpret(T, maxes[1] - 0x01)
-    else
-        nuc = 0x00
-        for max in maxes
-            nuc = nuc | (max - 0x01)
-        end
-        return reinterpret(T, nuc)
-    end
-end
-
-function _mvote_compat2{T}(comp::Composition{T})
-    cs = comp.counts
-    # 1(-), 2(A), 3(C), 5(G), and 9(T) are the certain symbols.
-    gapvotes = cs[1]
-    avotes = cs[2]
-    cvotes = cs[3]
-    gvotes = cs[5]
-    tvotes = cs[9]
-    inc = cs[4]
-    avotes += inc
-    cvotes += inc
-    inc = cs[6]
-    avotes += inc
-    gvotes += inc
-    inc = cs[7]
-    avotes += inc
-    tvotes += inc
-    inc = cs[8]
-    avotes += inc
-    cvotes += inc
-    gvotes += inc
-    inc = cs[10]
-    avotes += inc
-    tvotes += inc
-    inc = cs[11]
-    cvotes += inc
-    tvotes += inc
-    inc = cs[12]
-    avotes += inc
-    cvotes += inc
-    tvotes += inc
-    inc = cs[13]
-    gvotes += inc
-    tvotes += inc
-    inc = cs[14]
-    avotes += inc
-    gvotes += inc
-    tvotes += inc
-    inc = cs[15]
-    cvotes += inc
-    gvotes += inc
-    tvotes += inc
-    inc = cs[16]
-    avotes += inc
-    cvotes += inc
-    gvotes += inc
-    tvotes += inc
-    votes = zeros(Int, 16)
-    votes[1] = gapvotes
-    votes[2] = avotes
-    votes[3] = cvotes
-    votes[5] = gvotes
-    votes[9] = tvotes
-    m = maximum(votes)
-    maxes = convert(Vector{UInt8}, findin(votes, m))
-    if length(maxes) == 1
-        return reinterpret(T, maxes[1] - 0x01)
-    else
-        nuc = 0x00
-        for max in maxes
-            nuc = nuc | (max - 0x01)
-        end
-        return reinterpret(T, nuc)
-    end
-end
-
-function _mvote_compat3{T}(comp::Composition{T})
+function _mvote_compat{T}(comp::Composition{T})
     cs = comp.counts
     gapvotes = cs[1]
     a = cs[2]; c = cs[3]; g = cs[5];
