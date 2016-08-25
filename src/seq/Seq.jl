@@ -145,7 +145,9 @@ export
     ReferenceSequence,
     TwoBit,
     Demultiplexer,
-    demultiplex
+    demultiplex,
+    sitemajor,
+    seqmajor
 
 using
     BufferedStreams,

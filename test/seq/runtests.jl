@@ -689,7 +689,7 @@ end
         function test_string_construction(A::Type, seq::AbstractString)
             @test convert(AbstractString, BioSequence{A}(seq)) == uppercase(seq)
         end
-        
+
         function test_string_parse(A::Type, seq::AbstractString)
             @test parse(BioSequence{A}, seq) == BioSequence{A}(seq)
         end
@@ -780,6 +780,72 @@ end
     @testset "Conversion between RNA and DNA" begin
         @test convert(RNASequence, DNASequence("ACGTN")) == rna"ACGUN"
         @test convert(DNASequence, RNASequence("ACGUN")) == dna"ACGTN"
+    end
+
+    @testset "Conversion to Matrices" begin
+        dna = [dna"AAAAAAAAAA", dna"TTTTTTTTTTAAA", dna"CCCCCCCCCC", dna"GGGGGGGGGG"]
+        rna = [rna"AAAAAAAAAA", rna"UUUUUUUUUU", rna"CCCCCCCCCCUUU", rna"GGGGGGGGGG"]
+        prot = [aa"AMGBTDA", aa"AMGBTDAAAA", aa"AMGBTDA", aa"AMGBTDA"]
+        sitemajdna = [
+            DNA_A  DNA_A  DNA_A  DNA_A  DNA_A  DNA_A  DNA_A  DNA_A  DNA_A  DNA_A;
+            DNA_T  DNA_T  DNA_T  DNA_T  DNA_T  DNA_T  DNA_T  DNA_T  DNA_T  DNA_T;
+            DNA_C  DNA_C  DNA_C  DNA_C  DNA_C  DNA_C  DNA_C  DNA_C  DNA_C  DNA_C;
+            DNA_G  DNA_G  DNA_G  DNA_G  DNA_G  DNA_G  DNA_G  DNA_G  DNA_G  DNA_G
+        ]
+        seqmajdna = [
+            DNA_A  DNA_T  DNA_C  DNA_G;
+            DNA_A  DNA_T  DNA_C  DNA_G;
+            DNA_A  DNA_T  DNA_C  DNA_G;
+            DNA_A  DNA_T  DNA_C  DNA_G;
+            DNA_A  DNA_T  DNA_C  DNA_G;
+            DNA_A  DNA_T  DNA_C  DNA_G;
+            DNA_A  DNA_T  DNA_C  DNA_G;
+            DNA_A  DNA_T  DNA_C  DNA_G;
+            DNA_A  DNA_T  DNA_C  DNA_G;
+            DNA_A  DNA_T  DNA_C  DNA_G
+        ]
+        sitemajrna = [
+            RNA_A  RNA_A  RNA_A  RNA_A  RNA_A  RNA_A  RNA_A  RNA_A  RNA_A  RNA_A;
+            RNA_U  RNA_U  RNA_U  RNA_U  RNA_U  RNA_U  RNA_U  RNA_U  RNA_U  RNA_U;
+            RNA_C  RNA_C  RNA_C  RNA_C  RNA_C  RNA_C  RNA_C  RNA_C  RNA_C  RNA_C;
+            RNA_G  RNA_G  RNA_G  RNA_G  RNA_G  RNA_G  RNA_G  RNA_G  RNA_G  RNA_G
+        ]
+        seqmajrna = [
+            RNA_A  RNA_U  RNA_C  RNA_G;
+            RNA_A  RNA_U  RNA_C  RNA_G;
+            RNA_A  RNA_U  RNA_C  RNA_G;
+            RNA_A  RNA_U  RNA_C  RNA_G;
+            RNA_A  RNA_U  RNA_C  RNA_G;
+            RNA_A  RNA_U  RNA_C  RNA_G;
+            RNA_A  RNA_U  RNA_C  RNA_G;
+            RNA_A  RNA_U  RNA_C  RNA_G;
+            RNA_A  RNA_U  RNA_C  RNA_G;
+            RNA_A  RNA_U  RNA_C  RNA_G
+        ]
+        sitemajaa = [
+            AA_A AA_M AA_G AA_B AA_T AA_D AA_A;
+            AA_A AA_M AA_G AA_B AA_T AA_D AA_A;
+            AA_A AA_M AA_G AA_B AA_T AA_D AA_A;
+            AA_A AA_M AA_G AA_B AA_T AA_D AA_A
+        ]
+        seqmajaa = [
+            AA_A AA_A AA_A AA_A;
+            AA_M AA_M AA_M AA_M;
+            AA_G AA_G AA_G AA_G;
+            AA_B AA_B AA_B AA_B;
+            AA_T AA_T AA_T AA_T;
+            AA_D AA_D AA_D AA_D;
+            AA_A AA_A AA_A AA_A
+        ]
+
+        @test sitemajor(dna) == sitemajdna
+        @test sitemajor(rna) == sitemajrna
+        @test sitemajor(prot) == sitemajaa
+
+        @test seqmajor(dna) == seqmajdna
+        @test seqmajor(rna) == seqmajrna
+        @test seqmajor(prot) == seqmajaa
+
     end
 
     @testset "Copy" begin
