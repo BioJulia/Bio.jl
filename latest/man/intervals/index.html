@@ -122,6 +122,12 @@
                         
                             
 <li >
+    <a href="../util/">Util</a>
+</li>
+
+                        
+                            
+<li >
     <a href="../tools/">Tools</a>
 </li>
 
@@ -267,16 +273,7 @@
 
 
 <p>Construct the intersection of two or more sets. Maintains order and multiplicity of the first argument for arrays and ranges.</p>
-<div class="codehilite"><pre><span></span>intersect(g, h)
-</pre></div>
-
-
-<p>Produces a graph with edges that are only in both graph <code>g</code> and graph <code>h</code>.</p>
-<p>Note that this function may produce a graph with 0-degree vertices.</p>
-<p>Return an iterator over all intervals in the collection that overlap the query interval.</p>
-<p>Iterate over pairs of intersecting intervals in two IntervalCollections</p>
-<p>Iterate over pairs of intersections in an IntervalCollection versus an IntervalStream.</p>
-<p>Intersect two <code>IntervalStreams</code> returning an iterator over all pairs of intersecting intervals.</p>
+<p><a target='_blank' href='https://github.com/JuliaLang/julia/tree/e6f843b0737bdffddbe4cf5c2f8b06278103fe64/base/docs/helpdb/Base.jl#L6015-L6021' class='documenter-source'>source</a><br></p>
 <p><a id='Interval-streams-1'></a></p>
 <h2 id="interval-streams">Interval streams</h2>
 <p>Intervals need not necessarily stored in an indexed data structure for efficient intersection to be practical. Two collections of intervals need only be both sorted to compute all intersecting pairs. This is particularly useful in genomics where datasets are sometimes so large that loading them entirely into memory is not practical.</p>
@@ -314,7 +311,10 @@
 
 ```{execute=&quot;false&quot;}
     [1][-2-][-1-][--2--][--1--]
-</pre></div></div>
+</pre></div>
+
+
+<p><a target='_blank' href='https://github.com/BioJulia/Bio.jl/tree/f6e5732a5e8f8f4a6dc781efc1d2c2254d115b75/src/intervals/intervalstream.jl#L207-L227' class='documenter-source'>source</a><br></p></div>
         
     </div>
 

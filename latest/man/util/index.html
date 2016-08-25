@@ -6,10 +6,10 @@
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1.0"> 
     <meta name="author" content="The BioJulia Organisation"> 
-    <link rel="canonical" href="https://biojulia.github.io/Bio.jl/man/tools/"> 
+    <link rel="canonical" href="https://biojulia.github.io/Bio.jl/man/util/"> 
     <link rel="shortcut icon" href="../../img/favicon.ico">
 
-    <title>Tools - Bio.jl</title>
+    <title>Util - Bio.jl</title>
 
     <link href="../../css/bootstrap-custom.min.css" rel="stylesheet">
     <link href="//maxcdn.bootstrapcdn.com/font-awesome/4.4.0/css/font-awesome.min.css" rel="stylesheet">
@@ -121,14 +121,14 @@
 
                         
                             
-<li >
-    <a href="../util/">Util</a>
+<li class="active">
+    <a href="./">Util</a>
 </li>
 
                         
                             
-<li class="active">
-    <a href="./">Tools</a>
+<li >
+    <a href="../tools/">Tools</a>
 </li>
 
                         
@@ -168,12 +168,12 @@
                 </li>
                 
                     <li >
-                        <a rel="next" href="../util/">
+                        <a rel="next" href="../structure/">
                             <i class="fa fa-arrow-left"></i> Previous
                         </a>
                     </li>
                     <li >
-                        <a rel="prev" href="../../lib/seq/">
+                        <a rel="prev" href="../tools/">
                             Next <i class="fa fa-arrow-right"></i>
                         </a>
                     </li>
@@ -198,13 +198,9 @@
         <div class="col-md-3"><div class="bs-sidebar hidden-print affix well" role="complementary">
     <ul class="nav bs-sidenav">
     
-        <li class="first-level active"><a href="#biotools-misc-tools-and-function-wrappers">Bio.Tools: Misc tools and function wrappers</a></li>
+        <li class="first-level active"><a href="#bioutil-utility-functions">Bio.Util: Utility Functions</a></li>
         
-            <li class="second-level"><a href="#blast-wrapper">BLAST wrapper</a></li>
-            
-                <li class="third-level"><a href="#the-basics">The Basics</a></li>
-            
-                <li class="third-level"><a href="#options-for-blastn-and-blastp">Options for blastn and blastp</a></li>
+            <li class="second-level"><a href="#labelled-square-matrix-parsers">Labelled square matrix parsers</a></li>
             
         
     
@@ -212,69 +208,21 @@
 </div></div>
         <div class="col-md-9" role="main">
 
-<p><a id='Bio.Tools:-Misc-tools-and-function-wrappers-1'></a></p>
-<h1 id="biotools-misc-tools-and-function-wrappers">Bio.Tools: Misc tools and function wrappers</h1>
-<p><a id='BLAST-wrapper-1'></a></p>
-<h2 id="blast-wrapper">BLAST wrapper</h2>
-<p>The <code>Bio.Tools.BLAST</code> module is a wrapper for the command line interface of <a href="https://www.ncbi.nlm.nih.gov/books/NBK279690/">BLAST+</a> from NCBI. It requires that you have BLAST+ <a href="https://www.ncbi.nlm.nih.gov/books/NBK279671/">installed</a> and accessible in your PATH (eg. you should be able to execute <code>$ blastn -h</code> from the command line).</p>
-<p><a id='The-Basics-1'></a></p>
-<h3 id="the-basics">The Basics</h3>
-<p>This module allows you to run protein and nucleotide BLAST (<code>blastp</code> and <code>blastn</code> respectively) within julia and to parse BLAST results into Bio.jl types.</p>
-<div class="codehilite"><pre><span></span><span class="k">using</span> <span class="n">Bio</span><span class="o">.</span><span class="n">Seq</span><span class="p">,</span>
-      <span class="n">Bio</span><span class="o">.</span><span class="n">Tools</span><span class="o">.</span><span class="n">BLAST</span>
-
-<span class="n">seq1</span> <span class="o">=</span> <span class="n">dna</span><span class="s">&quot;&quot;&quot;</span>
-<span class="s">CGGACCAGACGGACACAGGGAGAAGCTAGTTTCTTTCATGTGATTGANAT</span>
-<span class="s">NATGACTCTACTCCTAAAAGGGAAAAANCAATATCCTTGTTTACAGAAGA</span>
-<span class="s">GAAACAAACAAGCCCCACTCAGCTCAGTCACAGGAGAGAN</span>
-<span class="s">&quot;&quot;&quot;</span>
-
-<span class="n">seq2</span> <span class="o">=</span> <span class="n">dna</span><span class="s">&quot;&quot;&quot;</span>
-<span class="s">CGGAGCCAGCGAGCATATGCTGCATGAGGACCTTTCTATCTTACATTATG</span>
-<span class="s">GCTGGGAATCTTACTCTTTCATCTGATACCTTGTTCAGATTTCAAAATAG</span>
-<span class="s">TTGTAGCCTTATCCTGGTTTTACAGATGTGAAACTTTCAA</span>
-<span class="s">&quot;&quot;&quot;</span>
-
-<span class="n">blastn</span><span class="p">(</span><span class="n">seq1</span><span class="p">,</span> <span class="n">seq2</span><span class="p">)</span>
+<p><a id='Bio.Util:-Utility-Functions-1'></a></p>
+<h1 id="bioutil-utility-functions">Bio.Util: Utility Functions</h1>
+<p>The <code>Bio.Util</code> module provides utility functions commonly used in bioinformatics.</p>
+<p><a id='Labelled-square-matrix-parsers-1'></a></p>
+<h2 id="labelled-square-matrix-parsers">Labelled square matrix parsers</h2>
+<p>This module contains a function <code>readlsm</code>, that reads labelled square matrices.</p>
+<p>Such matrices are commonly used to store pairwise measures of similarity or dissimilarity between two sets. This format consists of a delimited file, with text labels on the upper and left sides of a square matrix. Such matrices are often but not exclusively symmetric.</p>
+<p>An example would be:</p>
+<div class="codehilite"><pre><span></span>    A   B
+A   1   2
+B   2   1
 </pre></div>
 
 
-<p>These functions return a <code>Vector{BLASTResult}</code>. Each element is a hit which includes the sequence of the hit, an <a href="http://biojulia.github.io/Bio.jl/latest/man/alignments/"><code>AlignedSequence</code></a> using the original query as a reference and some additional information (expect vaue, bitscore) for the hit.</p>
-<div class="codehilite"><pre><span></span><span class="k">immutable</span> <span class="n">BLASTResult</span>
-    <span class="n">bitscore</span><span class="p">::</span><span class="kt">Float64</span>
-    <span class="n">expect</span><span class="p">::</span><span class="kt">Float64</span>
-    <span class="n">queryname</span><span class="p">::</span><span class="n">ASCIIString</span>
-    <span class="n">hitname</span><span class="p">::</span><span class="n">ASCIIString</span>
-    <span class="n">hit</span><span class="p">::</span><span class="n">BioSequence</span>
-    <span class="n">alignment</span><span class="p">::</span><span class="n">AlignedSequence</span>
-<span class="k">end</span>
-</pre></div>
-
-
-<p>If you've already run a blast analysis or have downloaded blast results in XML format from NCBI you can also pass an XML string to <code>readblastXML()</code> in order to obtain an array of <code>BLASTResult</code>s.</p>
-<div class="codehilite"><pre><span></span><span class="n">results</span> <span class="o">=</span> <span class="n">readall</span><span class="p">(</span><span class="n">open</span><span class="p">(</span><span class="s">&quot;blast_results.xml&quot;</span><span class="p">))</span> <span class="c"># need to use `readstring` instead of `readall` for v0.5</span>
-<span class="n">readblastXML</span><span class="p">(</span><span class="n">results</span><span class="p">)</span>
-</pre></div>
-
-
-<p>When parsing protein blast results, you must include the argument <code>seqtype="prot"</code>, eg. <code>readblastXML("results, seqtype="prot")</code></p>
-<p><a id='Options-for-blastn-and-blastp-1'></a></p>
-<h3 id="options-for-blastn-and-blastp">Options for <code>blastn</code> and <code>blastp</code></h3>
-<p>Both of the basic BLAST+ commands can accept a single <code>BioSequence</code>, a <code>Vector{BioSequence}</code> or a sting representing a file path to a fasta formatted file as arguments for both <code>query</code> and <code>subject</code>.</p>
-<div class="codehilite"><pre><span></span><span class="n">blastn</span><span class="p">([</span><span class="n">seq1</span><span class="p">,</span> <span class="n">seq2</span><span class="p">],</span> <span class="p">[</span><span class="n">seq2</span><span class="p">,</span> <span class="n">seq3</span><span class="p">])</span>
-
-<span class="n">blastp</span><span class="p">(</span><span class="n">aaseq</span><span class="p">,</span> <span class="s">&quot;path/to/sequences.fasta&quot;</span><span class="p">)</span>
-</pre></div>
-
-
-<p>If you have a local blast database (eg through the use of <code>$ makeblastdb</code>), you can use this database as the <code>subject</code></p>
-<div class="codehilite"><pre><span></span><span class="n">blastn</span><span class="p">(</span><span class="n">seq1</span><span class="p">,</span> <span class="s">&quot;path/to/blast_db&quot;</span><span class="p">,</span> <span class="n">db</span><span class="o">=</span><span class="n">true</span><span class="p">)</span>
-</pre></div>
-
-
-<p>If you want to modify the search using additional options (eg. return only results with greater than 90% identity), you may pass a <code>Vector</code> of flags (see <a href="http://www.ncbi.nlm.nih.gov/books/NBK279675/">here</a> for valid arguments - do not use flags that will alter file handling such as <code>-outfmt</code>)</p>
-<div class="codehilite"><pre><span></span><span class="n">blastn</span><span class="p">(</span><span class="n">seq1</span><span class="p">,</span> <span class="n">seq2</span><span class="p">,</span> <span class="p">[</span><span class="s">&quot;-perc_identity&quot;</span><span class="p">,</span> <span class="mi">90</span><span class="p">,</span> <span class="s">&quot;-evalue&quot;</span><span class="p">,</span> <span class="s">&quot;9.0&quot;</span><span class="p">])</span>
-</pre></div></div>
+<p>(Note that we use spaces as a delimiter, where tabs would normally be used)</p></div>
         
     </div>
 
