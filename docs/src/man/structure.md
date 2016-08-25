@@ -132,7 +132,7 @@ Selectors are functions passed as additional arguments to `collectresidues` and 
 | `collectatoms(struc, calphaselector)`                   | Collect the C-alpha atoms of an element                           | `Array{AbstractAtom,1}`    |
 | `collectatoms(struc, calphaselector, disorderselector)` | Collect the disordered C-alpha atoms of an element                | `Array{AbstractAtom,1}`    |
 
-It is easy to define your own selector. The below will collect all atoms with x coordinate less than 0:
+It is easy to define your own atom or residue selectors. The below will collect all atoms with x coordinate less than 0:
 
 ```julia
 xselector(atom::AbstractAtom) = x(atom) < 0
@@ -143,22 +143,6 @@ Alternatively, you can use an anonymous function:
 
 ```julia
 collectatoms(struc, atom -> x(atom) < 0)
-```
-
-Selectors can also be passed to many other functions, including `read`:
-
-```julia
-julia> calphas = read(filepath_1EN2, PDB, calphaselector)
-Name                        -  1EN2.pdb
-Number of models            -  1
-Chain(s)                    -  A
-Number of residues          -  85
-Number of point mutations   -  5
-Number of other molecules   -  0
-Number of water molecules   -  0
-Number of atoms             -  85
-Number of hydrogens         -  0
-Number of disordered atoms  -  2
 ```
 
 `countmodels`, `countchains`, `countresidues` and `countatoms` can be used to count elements. For example:

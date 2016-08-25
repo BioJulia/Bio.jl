@@ -62,11 +62,10 @@ export
     countchains,
     countresidues,
     countatoms,
-    organise,
     formatomlist,
     choosedefaultaltlocid,
-    organisemodel,
-    organisestructure,
+    collectmodels,
+    collectstructures,
     stdatomselector,
     hetatomselector,
     atomnameselector,
@@ -171,7 +170,7 @@ end
 
 """
 A record for a single atom, e.g. as represented in a Protein Data Bank (PDB)
-file
+file.
 """
 immutable AtomRecord
     het_atom::Bool
@@ -192,13 +191,13 @@ end
 
 # Constructors without sub-elements
 
-Residue(name::AbstractString, number::Integer, ins_code::Char, het_res::Bool, chain::Chain) = Residue(
-    name, number, ins_code, het_res, [], Dict(), chain)
+Residue(name::AbstractString, number::Integer, ins_code::Char, het_res::Bool, ch::Chain) = Residue(
+    name, number, ins_code, het_res, [], Dict(), ch)
 
-Chain(id::Char, model::Model) = Chain(id, [], Dict(), model)
+Chain(id::Char, mod::Model) = Chain(id, [], Dict(), mod)
 
-Model(number::Integer, structure::ProteinStructure) = Model(number, Dict(), structure)
-Model(structure::ProteinStructure) = Model(1, structure)
+Model(number::Integer, struc::ProteinStructure) = Model(number, Dict(), struc)
+Model(struc::ProteinStructure) = Model(1, struc)
 
 ProteinStructure(name::AbstractString) = ProteinStructure(name, Dict())
 ProteinStructure() = ProteinStructure("")
@@ -226,10 +225,10 @@ typealias StructuralElementOrList Union{
 
 # Accessing a DisorderedAtom with a character returns the Atom with that alt
 #   loc ID
-Base.getindex(disordered_atom::DisorderedAtom, alt_loc_id::Char) = disordered_atom.alt_loc_ids[alt_loc_id]
-function Base.setindex!(disordered_atom::DisorderedAtom, atom::Atom, alt_loc_id::Char)
-    disordered_atom.alt_loc_ids[alt_loc_id] = atom
-    return disordered_atom
+Base.getindex(dis_at::DisorderedAtom, alt_loc_id::Char) = dis_at.alt_loc_ids[alt_loc_id]
+function Base.setindex!(dis_at::DisorderedAtom, atom::Atom, alt_loc_id::Char)
+    dis_at.alt_loc_ids[alt_loc_id] = atom
+    return dis_at
 end
 
 function findatombyname(res::Residue, atom_name::AbstractString)
@@ -284,40 +283,40 @@ end
 
 # Accessing a Chain with an AbstractString returns the AbstractResidue with that
 #  residue ID
-Base.getindex(chain::Chain, res_id::AbstractString) = chain.residues[res_id]
-function Base.setindex!(chain::Chain, res::AbstractResidue, res_id::AbstractString)
-    chain.residues[res_id] = res
-    return chain
+Base.getindex(ch::Chain, res_id::AbstractString) = ch.residues[res_id]
+function Base.setindex!(ch::Chain, res::AbstractResidue, res_id::AbstractString)
+    ch.residues[res_id] = res
+    return ch
 end
 
 # Accessing a Chain with an Integer returns the AbstractResidue with that residue ID
 #   converted to a string
-Base.getindex(chain::Chain, res_number::Integer) = chain.residues[string(res_number)]
-function Base.setindex!(chain::Chain, res::AbstractResidue, res_number::Integer)
-    chain.residues[string(res_number)] = res
-    return chain
+Base.getindex(ch::Chain, res_n::Integer) = ch.residues[string(res_n)]
+function Base.setindex!(ch::Chain, res::AbstractResidue, res_n::Integer)
+    ch.residues[string(res_n)] = res
+    return ch
 end
 
 # Accessing a Model with a Char returns the Chain with that chain ID
-Base.getindex(model::Model, chain_id::Char) = model.chains[chain_id]
-function Base.setindex!(model::Model, chain::Chain, chain_id::Char)
-    model.chains[chain_id] = chain
-    return model
+Base.getindex(mod::Model, ch_id::Char) = mod.chains[ch_id]
+function Base.setindex!(mod::Model, ch::Chain, ch_id::Char)
+    mod.chains[ch_id] = ch
+    return mod
 end
 
 # Accessing a ProteinStructure with an Integer returns the Model with that model
 #   number
-Base.getindex(struc::ProteinStructure, model_number::Integer) = struc.models[model_number]
-function Base.setindex!(struc::ProteinStructure, model::Model, model_number::Integer)
-    struc.models[model_number] = model
+Base.getindex(struc::ProteinStructure, mod_n::Integer) = struc.models[mod_n]
+function Base.setindex!(struc::ProteinStructure, mod::Model, mod_n::Integer)
+    struc.models[mod_n] = mod
     return struc
 end
 
 # Accessing a ProteinStructure with a Char returns the Chain with that chain ID
 #   on the default model
-Base.getindex(struc::ProteinStructure, chain_id::Char) = defaultmodel(struc)[chain_id]
-function Base.setindex!(struc::ProteinStructure, chain::Chain, chain_id::Char)
-    defaultmodel(struc)[chain_id] = chain
+Base.getindex(struc::ProteinStructure, ch_id::Char) = defaultmodel(struc)[ch_id]
+function Base.setindex!(struc::ProteinStructure, ch::Chain, ch_id::Char)
+    defaultmodel(struc)[ch_id] = ch
     return struc
 end
 
@@ -325,60 +324,63 @@ end
 # Getters and setters for structural elements
 
 "Get the serial number of an `AbstractAtom`."
-serial(atom::Atom) = atom.serial
-serial(disordered_atom::DisorderedAtom) = serial(defaultatom(disordered_atom))
+serial(at::Atom) = at.serial
+serial(dis_at::DisorderedAtom) = serial(defaultatom(dis_at))
 
-"Get the atom name of an `AbstractAtom`, stripped of whitespace."
-function atomname(atom::Atom; spaces::Bool=false)
+"""
+Get the atom name of an `AbstractAtom`. If `spaces` is `false` (the default),
+the name is stripped of whitespace.
+"""
+function atomname(at::Atom; spaces::Bool=false)
     if spaces
-        return atom.name
+        return at.name
     else
-        return strip(atom.name)
+        return strip(at.name)
     end
 end
 
-atomname(disordered_atom::DisorderedAtom; spaces::Bool=false) = atomname(defaultatom(disordered_atom); spaces=spaces)
+atomname(dis_at::DisorderedAtom; spaces::Bool=false) = atomname(defaultatom(dis_at), spaces=spaces)
 
 "Get the alternative location ID of an `AbstractAtom`."
 altlocid(atom::Atom) = atom.alt_loc_id
-altlocid(disordered_atom::DisorderedAtom) = defaultaltlocid(disordered_atom)
+altlocid(dis_at::DisorderedAtom) = defaultaltlocid(dis_at)
 
 "Get the x coordinate of an `AbstractAtom`."
 x(atom::Atom) = atom.coords[1]
-x(disordered_atom::DisorderedAtom) = x(defaultatom(disordered_atom))
+x(dis_at::DisorderedAtom) = x(defaultatom(dis_at))
 
 """
 Set the x coordinate of an `AbstractAtom`. For `DisorderedAtom`s only the
 default atom is updated.
 """
 x!(atom::Atom, x::Real) = (atom.coords[1] = x; atom)
-x!(disordered_atom::DisorderedAtom, x::Real) = x!(defaultatom(disordered_atom), x)
+x!(dis_at::DisorderedAtom, x::Real) = x!(defaultatom(dis_at), x)
 
 "Get the y coordinate of an `AbstractAtom`."
 y(atom::Atom) = atom.coords[2]
-y(disordered_atom::DisorderedAtom) = y(defaultatom(disordered_atom))
+y(dis_at::DisorderedAtom) = y(defaultatom(dis_at))
 
 """
 Set the y coordinate of an `AbstractAtom`. For `DisorderedAtom`s only the
 default atom is updated.
 """
 y!(atom::Atom, y::Real) = (atom.coords[2] = y; atom)
-y!(disordered_atom::DisorderedAtom, y::Real) = y!(defaultatom(disordered_atom), y)
+y!(dis_at::DisorderedAtom, y::Real) = y!(defaultatom(dis_at), y)
 
 "Get the z coordinate of an `AbstractAtom`."
 z(atom::Atom) = atom.coords[3]
-z(disordered_atom::DisorderedAtom) = z(defaultatom(disordered_atom))
+z(dis_at::DisorderedAtom) = z(defaultatom(dis_at))
 
 """
 Set the z coordinate of an `AbstractAtom`. For `DisorderedAtom`s only the
 default atom is updated.
 """
 z!(atom::Atom, z::Real) = (atom.coords[3] = z; atom)
-z!(disordered_atom::DisorderedAtom, z::Real) = z!(defaultatom(disordered_atom), z)
+z!(dis_at::DisorderedAtom, z::Real) = z!(defaultatom(dis_at), z)
 
 "Get the atomic coordinates of an `AbstractAtom` as a `Vector{Float64}`."
 coords(atom::Atom) = atom.coords
-coords(disordered_atom::DisorderedAtom) = coords(defaultatom(disordered_atom))
+coords(dis_at::DisorderedAtom) = coords(defaultatom(dis_at))
 
 """
 Set the coordinates of an `AbstractAtom` to a `Vector{Float64}` of length 3. For
@@ -392,35 +394,36 @@ function coords!(atom::Atom, coords::Vector{Float64})
     return atom
 end
 
-coords!(disordered_atom::DisorderedAtom, coords::Vector{Float64}) = coords!(
-    defaultatom(disordered_atom), coords)
+coords!(dis_at::DisorderedAtom, coords::Vector{Float64}) = coords!(
+    defaultatom(dis_at), coords)
 
 "Get the occupancy of an `AbstractAtom`. Defaults to `1.0`."
 occupancy(atom::Atom) = atom.occupancy
-occupancy(disordered_atom::DisorderedAtom) = occupancy(defaultatom(disordered_atom))
+occupancy(dis_at::DisorderedAtom) = occupancy(defaultatom(dis_at))
 
 "Get the temperature factor on an `AbstractAtom`. Defaults to `0.0`."
 tempfac(atom::Atom) = atom.temp_fac
-tempfac(disordered_atom::DisorderedAtom) = tempfac(defaultatom(disordered_atom))
+tempfac(dis_at::DisorderedAtom) = tempfac(defaultatom(dis_at))
 
-"Get the element of an `AbstractAtom`. Defaults to `"  "`."
+"Get the element of an `AbstractAtom`. Defaults to `\"  \"`."
 element(atom::Atom) = atom.element
-element(disordered_atom::DisorderedAtom) = element(defaultatom(disordered_atom))
+element(dis_at::DisorderedAtom) = element(defaultatom(dis_at))
 
-"Get the charge on an `AbstractAtom`. Defaults to `"  "`."
+"Get the charge on an `AbstractAtom`. Defaults to `\"  \"`."
 charge(atom::Atom) = atom.charge
-charge(disordered_atom::DisorderedAtom) = charge(defaultatom(disordered_atom))
+charge(dis_at::DisorderedAtom) = charge(defaultatom(dis_at))
 
 "Get the `Residue` that an `AbstractAtom` belongs to."
 residue(atom::Atom) = atom.residue
-residue(disordered_atom::DisorderedAtom) = residue(defaultatom(disordered_atom))
+residue(dis_at::DisorderedAtom) = residue(defaultatom(dis_at))
+residue(res::AbstractResidue) = res
 
 """
 Determines if an `AbstractAtom` represents a non-hetero atom, i.e. came from an
 ATOM record.
 """
 ishetatom(atom::Atom) = ishetres(residue(atom))
-ishetatom(disordered_atom::DisorderedAtom) = ishetatom(defaultatom(disordered_atom))
+ishetatom(dis_at::DisorderedAtom) = ishetatom(defaultatom(dis_at))
 
 """
 Determines if an `AbstractAtom` is a `DisorderedAtom`, i.e. if there are
@@ -433,50 +436,50 @@ isdisorderedatom(::DisorderedAtom) = true
 Get the alternative location ID of the default `Atom` in a `DisorderedAtom`. The
 default is the highest occupancy, or lowest character alt loc ID for ties.
 """
-defaultaltlocid(disordered_atom::DisorderedAtom) = disordered_atom.default
+defaultaltlocid(dis_at::DisorderedAtom) = dis_at.default
 
 # Constructor acts as a setter for the default alt loc ID
-function DisorderedAtom(disordered_atom::DisorderedAtom, default::Char)
-    @assert default in altlocids(disordered_atom) "The new default alternative location ID must be present in the atom"
-    return DisorderedAtom(disordered_atom.alt_loc_ids, default)
+function DisorderedAtom(dis_at::DisorderedAtom, default::Char)
+    @assert default in altlocids(dis_at) "The new default alternative location ID must be present in the atom"
+    return DisorderedAtom(dis_at.alt_loc_ids, default)
 end
 
 """
 Access the default `Atom` in a `DisorderedAtom`. The default is the highest
 occupancy, or lowest alt loc ID character for ties.
 """
-defaultatom(disordered_atom::DisorderedAtom) = disordered_atom[defaultaltlocid(disordered_atom)]
+defaultatom(dis_at::DisorderedAtom) = dis_at[defaultaltlocid(dis_at)]
 
 """
 Get the list of alternative location IDs in a `DisorderedAtom`, sorted by atom
 serial.
 """
-altlocids(disordered_atom::DisorderedAtom) = sort(collect(keys(
-    disordered_atom.alt_loc_ids)), by= alt_loc_id -> disordered_atom[alt_loc_id])
+altlocids(dis_at::DisorderedAtom) = sort(collect(keys(
+    dis_at.alt_loc_ids)), by= alt_loc_id -> dis_at[alt_loc_id])
 
 """
 Get a descriptive atom ID for an `AbstractAtom` as a `Tuple` of the form
 (full residue ID, residue name, atom name).
 """
-atomid(atom::Atom) = (resid(atom; full=true), resname(atom), atomname(atom))
-atomid(disordered_atom::DisorderedAtom) = atomid(defaultatom(disordered_atom))
+atomid(atom::Atom) = (resid(atom, full=true), resname(atom), atomname(atom))
+atomid(dis_at::DisorderedAtom) = atomid(defaultatom(dis_at))
 
 
 "Get the residue name of an `AbstractAtom` or `AbstractResidue`."
 resname(atom::Atom) = resname(residue(atom))
-resname(disordered_atom::DisorderedAtom) = resname(defaultatom(disordered_atom))
+resname(dis_at::DisorderedAtom) = resname(defaultatom(dis_at))
 resname(res::Residue) = res.name
 resname(disordered_res::DisorderedResidue) = defaultresname(disordered_res)
 
 "Get the residue number of an `AbstractAtom` or `AbstractResidue`."
 resnumber(atom::Atom) = resnumber(residue(atom))
-resnumber(disordered_atom::DisorderedAtom) = resnumber(defaultatom(disordered_atom))
+resnumber(dis_at::DisorderedAtom) = resnumber(defaultatom(dis_at))
 resnumber(res::Residue) = res.number
 resnumber(disordered_res::DisorderedResidue) = resnumber(defaultresidue(disordered_res))
 
 "Get the insertion code of an `AbstractAtom` or `AbstractResidue`."
 inscode(atom::Atom) = inscode(residue(atom))
-inscode(disordered_atom::DisorderedAtom) = inscode(defaultatom(disordered_atom))
+inscode(dis_at::DisorderedAtom) = inscode(defaultatom(dis_at))
 inscode(res::Residue) = res.ins_code
 inscode(disordered_res::DisorderedResidue) = inscode(defaultresidue(disordered_res))
 
@@ -497,58 +500,46 @@ ishetero(res::AbstractResidue) = ishetres(res)
 
 "Get the `Chain` that an `AbstractAtom` or `AbstractResidue` belongs to."
 chain(atom::Atom) = chain(residue(atom))
-chain(disordered_atom::DisorderedAtom) = chain(defaultatom(disordered_atom))
+chain(dis_at::DisorderedAtom) = chain(defaultatom(dis_at))
 chain(res::Residue) = res.chain
 chain(disordered_res::DisorderedResidue) = chain(defaultresidue(disordered_res))
+chain(ch::Chain) = ch
 
 "Get the chain ID of an `AbstractAtom`, `AbstractResidue` or `Chain`."
-chainid(element::Union{AbstractResidue, AbstractAtom}) = chainid(chain(element))
-chainid(chain::Chain) = chain.id
+chainid(el::Union{AbstractResidue, AbstractAtom}) = chainid(chain(el))
+chainid(ch::Chain) = ch.id
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+"""
+Get the `Model` that an `AbstractAtom`, `AbstractResidue` or `Chain` belongs to.
+"""
 model(atom::Atom) = model(chain(atom))
-model(disordered_atom::DisorderedAtom) = model(defaultatom(disordered_atom))
+model(dis_at::DisorderedAtom) = model(defaultatom(dis_at))
 model(res::Residue) = model(chain(res))
 model(disordered_res::DisorderedResidue) = model(defaultresidue(disordered_res))
-model(chain::Chain) = chain.model
+model(ch::Chain) = ch.model
+model(mod::Model) = mod
 
 """
 Get the model number of a `Model`, `Chain`, `AbstractResidue` or `AbstractAtom`.
 """
-modelnumber(model::Model) = model.number
-modelnumber(element::Union{Chain, AbstractResidue, AbstractAtom}) = modelnumber(model(element))
+modelnumber(mod::Model) = mod.number
+modelnumber(el::Union{Chain, AbstractResidue, AbstractAtom}) = modelnumber(model(el))
 
-
-
-
+"""
+Get the `ProteinStructure` that an `AbstractAtom`, `AbstractResidue`, `Chain`
+or `Model` belongs to.
+"""
 structure(atom::Atom) = structure(model(atom))
-structure(disordered_atom::DisorderedAtom) = structure(defaultatom(disordered_atom))
+structure(dis_at::DisorderedAtom) = structure(defaultatom(dis_at))
 structure(res::Residue) = structure(model(res))
 structure(disordered_res::DisorderedResidue) = structure(defaultresidue(disordered_res))
-structure(chain::Chain) = structure(model(chain))
-structure(model::Model) = model.structure
+structure(ch::Chain) = structure(model(ch))
+structure(mod::Model) = mod.structure
+structure(struc::ProteinStructure) = struc
 
-"""
-Get the structure name of a `ProteinStructure`, or the `ProteinStructure`
-associated with a `StructuralElement`.
-"""
-structurename(element::Union{Model, Chain, AbstractResidue, AbstractAtom}) = structurename(structure(element))
+"Get the structure name of a `StructuralElement`."
+structurename(el::Union{Model, Chain, AbstractResidue, AbstractAtom}) = structurename(structure(el))
 structurename(struc::ProteinStructure) = struc.name
-
-
 
 
 """
@@ -589,7 +580,7 @@ function resid(res::AbstractResidue; full::Bool=false)
     end
 end
 
-resid(atom::AbstractAtom; full::Bool=false) = resid(residue(atom); full=full)
+resid(atom::AbstractAtom; full::Bool=false) = resid(residue(atom), full=full)
 
 function resid(hetatm::Bool, resnum::Int, inscode::Char)
     if hetatm
@@ -607,15 +598,13 @@ function resid(hetatm::Bool, resnum::Int, inscode::Char)
     end
 end
 
-
-
-
 "Get the sorted list of `AbstractAtom`s in an `AbstractResidue`."
 atomnames(res::Residue) = res.atom_list
+atomnames(disordered_res::DisorderedResidue) = atomnames(defaultresidue(disordered_res))
 
 "Access the dictionary of `AbstractAtom`s in an `AbstractResidue`."
 atoms(res::Residue) = res.atoms
-
+atoms(disordered_res::DisorderedResidue) = atoms(defaultresidue(disordered_res))
 
 """
 Determine if an `AbstractResidue` is a `DisorderedResidue`, i.e. there are
@@ -645,31 +634,21 @@ first, then others are ordered alphabetically.
 """
 resnames(disordered_res::DisorderedResidue) = sort(collect(keys(disordered_res.names)), lt= (res_name_one, res_name_two) -> (isless(res_name_one, res_name_two) && res_name_two != defaultresname(disordered_res)) || res_name_one == defaultresname(disordered_res))
 
-
-atomnames(disordered_res::DisorderedResidue) = atomnames(defaultresidue(disordered_res))
-atoms(disordered_res::DisorderedResidue) = atoms(defaultresidue(disordered_res))
-
-
-
 # Constructor acts as a setter for the default residue name
 function DisorderedResidue(disordered_res::DisorderedResidue, default::AbstractString)
     @assert default in resnames(disordered_res) "The new default residue name must be present in the residue"
     return DisorderedResidue(disordered_res.names, default)
 end
 
-
-
 "Get the sorted list of `AbstractResidue`s in a `Chain`."
-resids(chain::Chain) = chain.res_list
+resids(ch::Chain) = ch.res_list
 
 "Access the dictionary of `AbstractResidue`s in a `Chain`."
-residues(chain::Chain) = chain.residues
-
-
+residues(ch::Chain) = ch.residues
 
 
 "Get the sorted chain IDs of the chains in a `Model` or `ProteinStructure`."
-chainids(model::Model) = map(chainid, sort(collect(values(chains(model)))))
+chainids(mod::Model) = map(chainid, sort(collect(values(chains(mod)))))
 
 function chainids(struc::ProteinStructure)
     if countmodels(struc) > 0
@@ -680,11 +659,11 @@ function chainids(struc::ProteinStructure)
 end
 
 "Access the dictionary of `Chain`s in a `Model`."
-chains(model::Model) = model.chains
+chains(mod::Model) = mod.chains
 
 
 "Get the sorted `Model` numbers from a `ProteinStructure`."
-modelnumbers(struc::ProteinStructure) = map(modelnumber, sort(collect(values(struc.models))))
+modelnumbers(struc::ProteinStructure) = map(modelnumber, sort(collect(values(models(struc))))
 
 "Access the dictionary of `Model`s in a `ProteinStructure`."
 models(struc::ProteinStructure) = struc.models
@@ -694,11 +673,6 @@ Get the default `Model` in a `ProteinStructure`. This is the `Model` with the
 lowest model number.
 """
 defaultmodel(struc::ProteinStructure) = struc.models[modelnumbers(struc)[1]]
-
-
-
-
-
 
 
 # Sort lists of elements
@@ -769,17 +743,17 @@ Base.done(struc::ProteinStructure, state) = state > length(struc)
 Base.eltype(::Type{ProteinStructure}) = Model
 
 # Iterating over a Model yields Chains
-Base.length(model::Model) = length(chainids(model))
+Base.length(mod::Model) = length(chainids(mod))
 Base.start(::Model) = 1
-Base.next(model::Model, state) = (model[chainids(model)[state]], state + 1)
-Base.done(model::Model, state) = state > length(model)
+Base.next(mod::Model, state) = (mod[chainids(mod)[state]], state + 1)
+Base.done(mod::Model, state) = state > length(mod)
 Base.eltype(::Type{Model}) = Chain
 
 # Iterating over a Chain yields AbstractResidues
-Base.length(chain::Chain) = length(resids(chain))
+Base.length(ch::Chain) = length(resids(ch))
 Base.start(::Chain) = 1
-Base.next(chain::Chain, state) = (chain[resids(chain)[state]], state + 1)
-Base.done(chain::Chain, state) = state > length(chain)
+Base.next(ch::Chain, state) = (ch[resids(ch)[state]], state + 1)
+Base.done(ch::Chain, state) = state > length(ch)
 Base.eltype(::Type{Chain}) = AbstractResidue
 
 # Iterating over a Residue yields AbstractAtoms
@@ -808,92 +782,89 @@ Base.done(::Atom, state) = state > 1
 Base.eltype(::Type{Atom}) = Atom
 
 # Iterating over a DisorderedAtom yields Atoms
-Base.length(disordered_atom::DisorderedAtom) = length(altlocids(disordered_atom))
+Base.length(dis_at::DisorderedAtom) = length(altlocids(dis_at))
 Base.start(::DisorderedAtom) = 1
-Base.next(disordered_atom::DisorderedAtom, state) = (disordered_atom[altlocids(disordered_atom)[state]], state + 1)
-Base.done(disordered_atom::DisorderedAtom, state) = state > length(disordered_atom)
+Base.next(dis_at::DisorderedAtom, state) = (dis_at[altlocids(dis_at)[state]], state + 1)
+Base.done(dis_at::DisorderedAtom, state) = state > length(dis_at)
 Base.eltype(::Type{DisorderedAtom}) = Atom
 
 
 """
-Returns a copy of a `Vector` of atoms or residues with all elements that do not
-satisfy `selector_functions...` removed.
+Returns a copy of a `Vector` of `StructuralElement`s with all elements that do
+not satisfy the functions `selectors...` removed.
 """
-function applyselectors{T <: Union{AbstractResidue, AbstractAtom}}(element_list::Vector{T}, selector_functions::Function...)
-    new_list = copy(element_list)
-    applyselectors!(new_list, selector_functions...)
+function applyselectors{T <: StructuralElement}(els::Vector{T}, selectors::Function...)
+    new_list = copy(els)
+    applyselectors!(new_list, selectors...)
     return new_list
 end
 
 "Runs `applyselectors` in place."
-function applyselectors!{T <: Union{AbstractResidue, AbstractAtom}}(element_list::Vector{T}, selector_functions::Function...)
-    for selector_function in selector_functions
-        filter!(selector_function, element_list)
+function applyselectors!{T <: StructuralElement}(els::Vector{T}, selectors::Function...)
+    for selector in selectors
+        filter!(selector, els)
     end
-    return element_list
+    return els
 end
 
 
 """
-Returns a sorted `Vector` of the residues in a `StructuralElementOrList`.
-Additional arguments are `selector_functions...` - only residues that satisfy
-the selector functions are retained.
-"""
-function collectresidues(struc::ProteinStructure, selector_functions::Function...)
-    if countmodels(struc) > 0
-        return collectresidues(defaultmodel(struc), selector_functions...)
-    else
-        return AbstractResidue[]
-    end
-end
-
-collectresidues(chain::Chain, selector_functions::Function...) = applyselectors(collect(chain), selector_functions...)
-collectresidues(res::AbstractResidue, selector_functions::Function...) = applyselectors(AbstractResidue[res], selector_functions...)
-collectresidues(atom::AbstractAtom, selector_functions::Function...) = applyselectors(organise(atom), selector_functions...)
-# Note output is always Vector{AbstractResidue} unless input was Vector{Residue}
-# or Vector{DisorderedResidue}, in which case output is same type as input type
-collectresidues{T <: AbstractResidue}(residues::Vector{T}, selector_functions::Function...) = sort(applyselectors(residues, selector_functions...))
-collectresidues{T <: AbstractAtom}(atoms::Vector{T}, selector_functions::Function...) = applyselectors(organise(atoms), selector_functions...)
-
-function collectresidues(element::Union{Model, Vector{Model}, Vector{Chain}}, selector_functions::Function...)
-    residues = AbstractResidue[]
-    for sub_element in element
-        append!(residues, collectresidues(sub_element, selector_functions...))
-    end
-    return residues
-end
-
-
-"""
-Returns a sorted `Vector` of the atoms in a `StructuralElementOrList`.
-Additional arguments are `selector_functions...` - only atoms that satisfy the
+Returns a sorted `Vector` of the models in a `StructuralElementOrList`.
+Additional arguments are `model_selectors...` - only models that satisfy the
 selector functions are retained.
 """
-function collectatoms(struc::ProteinStructure, selector_functions::Function...)
-    if countmodels(struc) > 0
-        return collectatoms(defaultmodel(struc), selector_functions...)
-    else
-        return AbstractAtom[]
+collectmodels(struc::ProteinStructure) = collect(struc)
+
+collectmodels(el::StructuralElement) = collectmodels([el])
+
+# Throw error for structure?
+function collectmodels{T <: StructuralElement}(els::Vector{T})
+    mod_out = Model[]
+    for el in els
+        if !(model(el) in mod_out)
+            push!(mod_out, model(el))
+        end
     end
+    return sort(mod_out)
 end
 
-collectatoms(res::AbstractResidue, selector_functions::Function...) = applyselectors(collect(res), selector_functions...)
-collectatoms(atom::AbstractAtom, selector_functions::Function...) = applyselectors(AbstractAtom[atom], selector_functions...)
-# Note output is always Vector{AbstractAtom} unless input was Vector{Atom} or
-# Vector{DisorderedAtom}, in which case output is same type as input type
-collectatoms{T <: AbstractAtom}(atoms::Vector{T}, selector_functions::Function...) = sort(applyselectors(atoms, selector_functions...))
-
-function collectatoms(element::Union{Model, Chain, Vector{Model}, Vector{Chain}, Vector{AbstractResidue}, Vector{Residue}, Vector{DisorderedResidue}}, selector_functions::Function...)
-    atoms = AbstractAtom[]
-    for sub_element in element
-        append!(atoms, collectatoms(sub_element, selector_functions...))
-    end
-    return atoms
-end
+collectmodels(el::StructuralElementOrList, model_selectors::Function...) = applyselectors(collectmodels(el), model_selectors...)
 
 
 "Get the number of `Model`s in a `ProteinStructure`."
 countmodels(struc::ProteinStructure) = length(struc)
+countmodels(el::StructuralElementOrList, model_selectors::Function...) = length(collectmodels(el, model_selectors...))
+
+
+"""
+Returns a sorted `Vector` of the chains in a `StructuralElementOrList`.
+Additional arguments are `chain_selectors...` - only chains that satisfy the
+selector functions are retained.
+"""
+function collectchains(struc::ProteinStructure)
+    if countmodels(struc) > 0
+        return collectchains(defaultmodel(struc))
+    else
+        return Chain[]
+    end
+end
+
+collectchains(mod::Model) = collect(mod)
+
+function collectchains{T <: StructuralElement}(els::Vector{T})
+    chains_out = Model[]
+    for el in els
+        if !(chain(el) in chains_out)
+            push!(chains_out, chain(el))
+        end
+    end
+    return sort(chains_out)
+end
+
+
+collectchains(el::StructuralElement) = collectchains([el])
+
+collectchains(el::StructuralElementOrList, chain_selectors::Function...) = applyselectors(collectchains(el), chain_selectors...)
 
 "Get the number of `Chain`s in a `ProteinStructure` or a `Model`."
 function countchains(struc::ProteinStructure)
@@ -904,59 +875,39 @@ function countchains(struc::ProteinStructure)
     end
 end
 
-countchains(model::Model) = length(model)
-
-"""
-Get the number of residues in a `StructuralElementOrList`. Additional arguments
-are `selector_functions...` - only residues that satisfy the selector functions
-are counted.
-"""
-countresidues(element::StructuralElementOrList, selector_functions::Function...) = length(collectresidues(element, selector_functions...))
-
-"""
-Get the number of atoms in a `StructuralElementOrList`. Additional arguments are `selector_functions...` - only atoms that satisfy the selector functions are
-counted.
-"""
-countatoms(element::StructuralElementOrList, selector_functions::Function...) = length(collectatoms(element, selector_functions...))
+countchains(mod::Model) = length(mod)
+countchains(el::StructuralElement, chain_selectors::Function...) = length(collectchains(el, chain_selectors))
 
 
 """
-Organise a `StructuralElementOrList` into the next level up the heirarchy. A
-`Vector{AbstractAtom}` becomes a `Vector{AbstractResidue}`, a
-`Vector{AbstractResidue}` becomes a `Vector{Chain}`, a `Vector{Chain}` becomes a
-`Vector{Model}` and a `Vector{Model}` becomes a `Vector{ProteinStructure}`.
+Returns a sorted `Vector` of the residues in a `StructuralElementOrList`.
+Additional arguments are `residue_selectors...` - only residues that satisfy the
+selector functions are retained.
 """
-function organise(models::Vector{Model})
-    strucs_out = ProteinStructure[]
-    for model in models
-        if !(structure(model) in strucs_out)
-            push!(strucs_out, structure(model))
-        end
+function collectresidues(struc::ProteinStructure)
+    if countmodels(struc) > 0
+        return collectresidues(defaultmodel(struc))
+    else
+        return AbstractResidue[]
     end
-    return strucs_out
 end
 
-function organise(chains::Vector{Chain})
-    models_out = Model[]
-    for chain in chains
-        if !(model(chain) in models_out)
-            push!(models_out, model(chain))
-        end
+collectresidues(ch::Chain) = collect(ch)
+collectresidues(res::AbstractResidue) = AbstractResidue[res]
+collectresidues(atom::AbstractAtom) = collectresidues(atom)
+# Note output is always Vector{AbstractResidue} unless input was Vector{Residue}
+# or Vector{DisorderedResidue}, in which case output is same type as input type
+collectresidues{T <: AbstractResidue}(residues::Vector{T}) = sort(residues)
+
+function collectresidues(el::Union{Model, Vector{Model}, Vector{Chain}})
+    residues = AbstractResidue[]
+    for sub_el in el
+        append!(residues, collectresidues(sub_el))
     end
-    return sort(models_out)
+    return residues
 end
 
-function organise{T <: AbstractResidue}(residues::Vector{T})
-    chains_out = Chain[]
-    for res in residues
-        if !(chain(res) in chains_out)
-            push!(chains_out, chain(res))
-        end
-    end
-    return sort(chains_out)
-end
-
-function organise{T <: AbstractAtom}(atoms::Vector{T})
+function collectresidues{T <: AbstractAtom}(atoms::Vector{T})
     residues_out = AbstractResidue[]
     for atom in atoms
         if !(residue(atom) in residues_out)
@@ -966,40 +917,65 @@ function organise{T <: AbstractAtom}(atoms::Vector{T})
     return sort(residues_out)
 end
 
-organise(element::Union{Model, Chain, AbstractResidue, AbstractAtom}) = organise([element])
+collectresidues(el::StructuralElementOrList, residue_selectors::Function...) = applyselectors(collectresidues(el), residue_selectors...)
 
-# Throw errors when struc passed?
-function organisemodel{T <: StructuralElement}(element_list::Vector{T})
-    models_out = Model[]
-    for element in element_list
-        if !(model(element) in models_out)
-            push!(models_out, model(element))
-        end
+
+"""
+Get the number of residues in a `StructuralElementOrList`. Additional arguments
+are `residue_selectors...` - only residues that satisfy the selector functions
+are counted.
+"""
+countresidues(ch::Chain) = length(ch)
+
+countresidues(el::StructuralElementOrList, residue_selectors::Function...) = length(collectresidues(el, residue_selectors...))
+
+
+"""
+Returns a sorted `Vector` of the atoms in a `StructuralElementOrList`.
+Additional arguments are `atom_selectors...` - only atoms that satisfy the
+selector functions are retained.
+"""
+function collectatoms(struc::ProteinStructure, atom_selectors::Function...)
+    if collectmodels(struc) > 0
+        return collectatoms(defaultmodel(struc), atom_selectors...)
+    else
+        return AbstractAtom[]
     end
-    return sort(models_out)
 end
 
-organisemodel(element::StructuralElement) = organisemodel([element])
+collectatoms(res::AbstractResidue, atom_selectors::Function...) = applyselectors(collect(res), atom_selectors...)
+collectatoms(atom::AbstractAtom, atom_selectors::Function...) = applyselectors(AbstractAtom[atom], atom_selectors...)
+# Note output is always Vector{AbstractAtom} unless input was Vector{Atom} or
+# Vector{DisorderedAtom}, in which case output is same type as input type
+collectatoms{T <: AbstractAtom}(atoms::Vector{T}, atom_selectors::Function...) = sort(applyselectors(atoms, atom_selectors...))
 
-function organisestructure{T <: StructuralElement}(element_list::Vector{T})
-    strucs_out = ProteinStructure[]
-    for element in element_list
-        if !(structure(element) in strucs_out)
-            push!(strucs_out, structure(element))
-        end
+function collectatoms(el::Union{Model, Chain, Vector{Model}, Vector{Chain}, Vector{AbstractResidue}, Vector{Residue}, Vector{DisorderedResidue}}, atom_selectors::Function...)
+    atoms = AbstractAtom[]
+    for sub_el in el
+        append!(atoms, collectatoms(sub_el, atom_selectors...))
     end
-    return strucs_out
+    return atoms
 end
 
-organisestructure(element::StructuralElement) = organisestructure([element])
+
+"""
+Get the number of atoms in a `StructuralElementOrList`. Additional arguments are `atom_selectors...` - only atoms that satisfy the selector functions are
+counted.
+"""
+countatoms(res::AbstractResidue) = length(res)
+
+countatoms(el::StructuralElementOrList, atom_selectors::Function...) = length(collectatoms(el, atom_selectors...))
 
 
-function unsafe_addatomtomodel!(model::Model, atom_record::AtomRecord; remove_disorder::Bool=false)
+# Add an atom represented in an AtomRecord to a Model
+# Unsafe as sub-element lists are not updated (for speed)
+# fixlists! should be run after all additions to update the sub-element lists
+function unsafe_addatomtomodel!(mod::Model, atom_record::AtomRecord; remove_disorder::Bool=false)
     # Add chain to model if necessary
-    if !haskey(chains(model), atom_record.chain_id)
-        model[atom_record.chain_id] = Chain(atom_record.chain_id, model)
+    if !haskey(chains(mod), atom_record.chain_id)
+        mod[atom_record.chain_id] = Chain(atom_record.chain_id, mod)
     end
-    chain = model[atom_record.chain_id]
+    chain = mod[atom_record.chain_id]
     res_id = resid(atom_record.het_atom, atom_record.res_number, atom_record.ins_code)
     # If residue does not exist in the chain, create a Residue
     if !haskey(residues(chain), res_id)
@@ -1027,7 +1003,7 @@ function unsafe_addatomtomodel!(model::Model, atom_record::AtomRecord; remove_di
         # DisorderedResidue exists in the chain and the residue names do not match
         # Create a new Residue in the DisorderedResidue
         else
-            chain[res_id].names[atom_record.res_name] = Residue(atom_record.res_name, atom_record.res_number, atom_record.ins_code, atom_record.het_atom, chain) # Make residues function for this?
+            chain[res_id].names[atom_record.res_name] = Residue(atom_record.res_name, atom_record.res_number, atom_record.ins_code, atom_record.het_atom, chain)
             residue = disorderedres(chain[res_id], atom_record.res_name)
         end
     end
@@ -1061,12 +1037,12 @@ function unsafe_addatomtomodel!(model::Model, atom_record::AtomRecord; remove_di
 end
 
 
-# temp name
+# Internal function to form ordered sub-element lists after parsing
 function fixlists!(struc::ProteinStructure)
-    for model in struc
-        for chain in model
-            append!(chain.res_list, map(resid, sort(collect(values(residues(chain))))))
-            for res in chain
+    for mod in struc
+        for ch in mod
+            append!(ch.res_list, map(resid, sort(collect(values(residues(ch))))))
+            for res in ch
                 if isa(res, Residue)
                     fixlists!(res)
                 else
@@ -1078,7 +1054,6 @@ function fixlists!(struc::ProteinStructure)
         end
     end
 end
-
 
 fixlists!(res::Residue) = append!(res.atom_list, map(atomname, sort(collect(values(atoms(res))))))
 
@@ -1157,8 +1132,8 @@ heavyatomselector(atom::AbstractAtom) = stdatomselector(atom) && !hydrogenselect
 Determines if an `AbstractResidue` or `AbstractAtom` has its resiudue name in
 the given `Set` or `Vector`.
 """
-resnameselector(element::Union{AbstractResidue, AbstractAtom}, res_names::Set{String}) = resname(element) in res_names
-resnameselector(element::Union{AbstractResidue, AbstractAtom}, res_names::Vector{String}) = resname(element) in res_names
+resnameselector(el::Union{AbstractResidue, AbstractAtom}, res_names::Set{String}) = resname(el) in res_names
+resnameselector(el::Union{AbstractResidue, AbstractAtom}, res_names::Vector{String}) = resname(el) in res_names
 
 "`Set` of residue names corresponding to water."
 const water_res_names = Set(["HOH"])
@@ -1167,7 +1142,7 @@ const water_res_names = Set(["HOH"])
 Determines if an `AbstractResidue` or `AbstractAtom` represents a water
 molecule.
 """
-waterselector(element::Union{AbstractResidue, AbstractAtom}) = resnameselector(element, water_res_names)
+waterselector(el::Union{AbstractResidue, AbstractAtom}) = resnameselector(el, water_res_names)
 
 """
 Determines if an `AbstractResidue` represents a standard protein residue,
@@ -1199,69 +1174,84 @@ where possible, otherwise uses the atom name.
 hydrogenselector(atom::AbstractAtom) = element(atom) == "H" || (element(atom) == "" && 'H' in atomname(atom) && !ismatch(r"[a-zA-Z]", atomname(atom)[1:findfirst(atomname(atom), 'H')-1]))
 
 
-# how to deal with a missing res? ignore or gap?
-# what should unknown res be?
-# have file as input and wrap?
-function AminoAcidSequence(element::StructuralElementOrList, selector_functions::Function...)
-    residues = collectresidues(element, selector_functions...)
+function AminoAcidSequence{T <: AbstractResidue}(res_list::Vector{T})
+    # Assumes residues are in same chain
+    # Assume residues are in order, i.e. all hetero residues after
+    # For obtaining sequence we will re-order them numerically
+    sorted_res = sort(res_list, lt=resnumber)
     seq = AminoAcid[]
-    for res in residues
-        try
-            push!(seq, parse(AminoAcid, resname(res)))
-        catch
-            push!(seq, AA_X)
+    curr_ind = 1
+    # Loop from min to max residue number
+    for i in resnumber(sorted_res[1]):resnumber(sorted_res[end])
+        if resnumber(sorted_res[curr_ind]) == i
+            curr_ind += 1
+            res_name = resname(res)
+            try
+                aa = parse(AminoAcid, res_name)
+            catch ex
+                if isa(ex, ErrorException)
+                    aa = AA_X
+                else
+                    rethrow()
+                end
+            end
+            push!(seq, aa)
+        else
+            push!(seq, AA_Gap)
         end
     end
     return AminoAcidSequence(seq)
 end
+
+AminoAcidSequence(el::StructuralElementOrList; residue_selectors::Function...) = AminoAcidSequence(collectresidues(el, residue_selectors...))
 
 
 # Descriptive showing of elements
 
 function Base.show(io::IO, struc::ProteinStructure)
     if countmodels(struc) > 0
-        model = defaultmodel(struc)
+        mod = defaultmodel(struc)
         println(io, "Name                        -  ", structurename(struc))
         println(io, "Number of models            -  ", countmodels(struc))
-        println(io, "Chain(s)                    -  ", join(chainids(model)))
-        println(io, "Number of residues          -  ", countresidues(model, stdresselector))
-        println(io, "Number of point mutations   -  ", countresidues(model, stdresselector, disorderselector))
-        println(io, "Number of other molecules   -  ", countresidues(model, hetresselector) - countresidues(model, hetresselector, waterselector))
-        println(io, "Number of water molecules   -  ", countresidues(model, hetresselector, waterselector))
-        println(io, "Number of atoms             -  ", countatoms(model, stdatomselector))
-        println(io, "Number of hydrogens         -  ", countatoms(model, stdatomselector, hydrogenselector))
-        println(io, "Number of disordered atoms  -  ", countatoms(model, stdatomselector, disorderselector))
+        println(io, "Chain(s)                    -  ", join(chainids(mod)))
+        println(io, "Number of residues          -  ", countresidues(mod, stdresselector))
+        println(io, "Number of point mutations   -  ", countresidues(mod, stdresselector, disorderselector))
+        println(io, "Number of other molecules   -  ", countresidues(mod, hetresselector) - countresidues(mod, hetresselector, waterselector))
+        println(io, "Number of water molecules   -  ", countresidues(mod, hetresselector, waterselector))
+        println(io, "Number of atoms             -  ", countatoms(mod, stdatomselector))
+        println(io, "Number of hydrogens         -  ", countatoms(mod, stdatomselector, hydrogenselector))
+        println(io, "Number of disordered atoms  -  ", countatoms(mod, stdatomselector, disorderselector))
     else
         println(io, "Name                        -  ", structurename(struc))
         println(io, "Number of models            -  0")
     end
 end
 
-function Base.show(io::IO, model::Model)
-    println(io, "Model number                -  ", modelnumber(model))
-    println(io, "Chain(s)                    -  ", join(chainids(model)))
-    println(io, "Number of residues          -  ", countresidues(model, stdresselector))
-    println(io, "Number of point mutations   -  ", countresidues(model, stdresselector, disorderselector))
-    println(io, "Number of other molecules   -  ", countresidues(model, hetresselector) - countresidues(model, hetresselector, waterselector))
-    println(io, "Number of water molecules   -  ", countresidues(model, hetresselector, waterselector))
-    println(io, "Number of atoms             -  ", countatoms(model, stdatomselector))
-    println(io, "Number of hydrogens         -  ", countatoms(model, stdatomselector, hydrogenselector))
-    println(io, "Number of disordered atoms  -  ", countatoms(model, stdatomselector, disorderselector))
+function Base.show(io::IO, mod::Model)
+    println(io, "Model number                -  ", modelnumber(mod))
+    println(io, "Chain(s)                    -  ", join(chainids(mod)))
+    println(io, "Number of residues          -  ", countresidues(mod, stdresselector))
+    println(io, "Number of point mutations   -  ", countresidues(mod, stdresselector, disorderselector))
+    println(io, "Number of other molecules   -  ", countresidues(mod, hetresselector) - countresidues(mod, hetresselector, waterselector))
+    println(io, "Number of water molecules   -  ", countresidues(mod, hetresselector, waterselector))
+    println(io, "Number of atoms             -  ", countatoms(mod, stdatomselector))
+    println(io, "Number of hydrogens         -  ", countatoms(mod, stdatomselector, hydrogenselector))
+    println(io, "Number of disordered atoms  -  ", countatoms(mod, stdatomselector, disorderselector))
 end
 
-function Base.show(io::IO, chain::Chain)
-    println(io, "Chain ID                    -  ", chainid(chain))
-    println(io, "Number of residues          -  ", countresidues(chain, stdresselector))
-    println(io, "Number of point mutations   -  ", countresidues(chain, stdresselector, disorderselector))
-    println(io, "Number of other molecules   -  ", countresidues(chain, hetresselector) - countresidues(chain, hetresselector, waterselector))
-    println(io, "Number of water molecules   -  ", countresidues(chain, hetresselector, waterselector))
-    println(io, "Number of atoms             -  ", countatoms(chain, stdatomselector))
-    println(io, "Number of hydrogens         -  ", countatoms(chain, stdatomselector, hydrogenselector))
-    println(io, "Number of disordered atoms  -  ", countatoms(chain, stdatomselector, disorderselector))
+function Base.show(io::IO, ch::Chain)
+    println(io, "Chain ID                    -  ", chainid(ch))
+    println(io, "Number of residues          -  ", countresidues(ch, stdresselector))
+    println(io, "Number of point mutations   -  ", countresidues(ch, stdresselector, disorderselector))
+    println(io, "Number of other molecules   -  ", countresidues(ch, hetresselector) - countresidues(ch, hetresselector, waterselector))
+    println(io, "Number of water molecules   -  ", countresidues(ch, hetresselector, waterselector))
+    println(io, "Number of atoms             -  ", countatoms(ch, stdatomselector))
+    println(io, "Number of hydrogens         -  ", countatoms(ch, stdatomselector, hydrogenselector))
+    println(io, "Number of disordered atoms  -  ", countatoms(ch, stdatomselector, disorderselector))
 end
 
 function Base.show(io::IO, res::Residue)
-    println(io, "Residue ID                  -  ", resid(res; full=true))
+    println(io, "Residue ID                  -  ", resid(res, full=true))
     println(io, "Residue name                -  ", resname(res))
     println(io, "Number of atoms             -  ", countatoms(res))
     println(io, "Number of hydrogens         -  ", countatoms(res, hydrogenselector))
@@ -1269,7 +1259,7 @@ function Base.show(io::IO, res::Residue)
 end
 
 function Base.show(io::IO, disordered_res::DisorderedResidue)
-    println(io, "Residue ID                  -  ", resid(disordered_res; full=true))
+    println(io, "Residue ID                  -  ", resid(disordered_res, full=true))
     for res_name in resnames(disordered_res)
         println(io, "Residue name                -  ", res_name)
         println(io, "Number of atoms             -  ", countatoms(disorderedres(disordered_res, res_name)))
@@ -1281,8 +1271,8 @@ end
 Base.show(io::IO, atom::Atom) = println(io, pdbline(atom)...)
 Base.showcompact(io::IO, atom::Atom) = print(io, pdbline(atom)...)
 
-function Base.show(io::IO, disordered_atom::DisorderedAtom)
-    for atom in disordered_atom
+function Base.show(io::IO, dis_at::DisorderedAtom)
+    for atom in dis_at
         show(io, atom)
     end
 end

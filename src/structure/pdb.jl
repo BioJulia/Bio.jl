@@ -56,7 +56,7 @@ function Base.read(input::IO,
         line_number += 1
         # Read ATOM and HETATM records as required
         if (read_std_atoms && startswith(line, "ATOM  ")) || (read_het_atoms && startswith(line, "HETATM"))
-            unsafe_addatomtomodel!(struc[curr_model], AtomRecord(line, line_number); remove_disorder=remove_disorder)
+            unsafe_addatomtomodel!(struc[curr_model], AtomRecord(line, line_number), remove_disorder=remove_disorder)
         # Read MODEL record
         elseif startswith(line, "MODEL ")
             try
@@ -83,21 +83,12 @@ function Base.read(input::IO,
     return struc
 end
 
-function Base.read(input::IO,
-            ::Type{PDB},
-            selector_functions::Function...;
-            structure_name::AbstractString="",
-            kwargs...)
-    return organisestructure(collectatoms(read(input, PDB; kwargs...), selector_functions...); structure_name=structure_name)
-end
-
 function Base.read(filepath::AbstractString,
-            ::Type{PDB},
-            selector_functions::Function...;
+            ::Type{PDB};
             structure_name::AbstractString=splitdir(filepath)[2],
             kwargs...)
     open(filepath, "r") do input
-        read(input, PDB, selector_functions...; structure_name=structure_name, kwargs...)
+        read(input, PDB, structure_name=structure_name, kwargs...)
     end
 end
 
@@ -154,7 +145,10 @@ end
 
 
 "Parse columns from a line."
-function parsevalue(line::String, col_1::Integer, col_2::Integer, out_type::Type)
+function parsevalue(line::String,
+                    col_1::Integer,
+                    col_2::Integer,
+                    out_type::Type)
     try
         if out_type == Int
             return parse(Int, line[col_1:col_2])
@@ -184,23 +178,26 @@ function spacestring(val_in, new_length::Integer)
 end
 
 
-# Note here about how this is in general not used
 """
 Space an `Atom` name such that the last element letter (generally) appears in
 the second column. If the `element` property of the `Atom` is set it is used to
 get the element, otherwise the name starts from the second column where
-possible.
+possible. This is generally not required as spacing is recorded when atom names
+are read in.
 """
-function spaceatomname(atom::Atom)
-    atom_name = atomname(atom)
+function spaceatomname(at::Atom)
+    atom_name = atomname(at)
     chars = length(atom_name)
+    if chars == 4
+        return atom_name
+    end
     @assert chars <= 4 "Atom name is greater than four characters: \"$atom_name\""
     # In the absence of the element, the first index goes in column two
-    if element(atom) == "" || findfirst(atom_name, element(atom)[1]) == 0
+    if strip(element(at)) == "" || findfirst(atom_name, element(at)[1]) == 0
         cent_ind = 1
     # The last letter of the element goes in column two where possible
     else
-        cent_ind = findfirst(atom_name, element(atom)[1]) + length(element(atom)) - 1
+        cent_ind = findfirst(atom_name, element(at)[1]) + length(element(at)) - 1
     end
     @assert cent_ind <= 2 "Atom name is too long to space correctly: \"$atom_name\""
     if cent_ind == 1 && chars < 4
@@ -213,70 +210,76 @@ end
 
 
 "Form a Protein Data Bank (PDB) format ATOM or HETATM record from an `Atom`."
-pdbline(atom::Atom) = String[
-        ishetatom(atom) ? "HETATM" : "ATOM  ",
-        spacestring(serial(atom), 5),
+pdbline(at::Atom) = String[
+        ishetatom(at) ? "HETATM" : "ATOM  ",
+        spacestring(serial(at), 5),
         " ",
-        spaceatomname(atom),
-        string(altlocid(atom)),
-        spacestring(resname(atom), 3),
+        spaceatomname(at),
+        string(altlocid(at)),
+        spacestring(resname(at), 3),
         " ",
-        string(chainid(atom)),
-        spacestring(resnumber(atom), 4),
-        string(inscode(atom)),
+        string(chainid(at)),
+        spacestring(resnumber(at), 4),
+        string(inscode(at)),
         "   ",
         # This will throw an error for large coordinate values, e.g. -1000.123
-        spacestring(round(x(atom), 3), 8),
-        spacestring(round(y(atom), 3), 8),
-        spacestring(round(z(atom), 3), 8),
-        spacestring(round(occupancy(atom), 2), 6),
+        spacestring(round(x(at), 3), 8),
+        spacestring(round(y(at), 3), 8),
+        spacestring(round(z(at), 3), 8),
+        spacestring(round(occupancy(at), 2), 6),
         # This will throw an error for large temp facs, e.g. 1000.12
-        spacestring(round(tempfac(atom), 2), 6),
+        spacestring(round(tempfac(at), 2), 6),
         "          ",
-        spacestring(element(atom), 2),
-        spacestring(charge(atom), 2),
+        spacestring(element(at), 2),
+        spacestring(charge(at), 2),
     ]
 
 
 """
 Write a `StructuralElementOrList` to a Protein Data Bank (PDB) format file. Only
 ATOM, HETATM, MODEL and ENDMDL records are written - there is no header and no
-TER records. Additional arguments are `selector_functions...` - only atoms that
+TER records. Additional arguments are `atom_selectors...` - only atoms that
 satisfy the selector functions are written.
 """
-function writepdb(output::IO, element::Union{ProteinStructure, Vector{Model}}, selector_functions::Function...)
+function writepdb(output::IO, element::Union{ProteinStructure, Vector{Model}}, atom_selectors::Function...)
     # If there are multiple models, write out MODEL/ENDMDL lines
     if length(element) > 1
         for model in element
             println(output, "MODEL     ", spacestring(modelnumber(model), 4), repeat(" ", 66))
-            writepdblines(output, model, selector_functions...)
+            writepdblines(output, model, atom_selectors...)
             println(output, "ENDMDL$(repeat(" ", 74))")
         end
     # If there is only one model, do not write out MODEL/ENDMDL lines
     else
-        writepdblines(output, element, selector_functions...)
+        writepdblines(output, element, atom_selectors...)
     end
 end
 
-writepdb(output::IO, element::StructuralElementOrList, selector_functions::Function...) = writepdblines(output, element, selector_functions...)
+writepdb(output::IO, element::StructuralElementOrList, atom_selectors::Function...) = writepdblines(output, element, atom_selectors...)
 
-function writepdb(filepath::AbstractString, element::StructuralElementOrList, selector_functions::Function...)
+function writepdb(filepath::AbstractString, element::StructuralElementOrList, atom_selectors::Function...)
     open(filepath, "w") do output
-        writepdb(output, element, selector_functions...)
+        writepdb(output, element, atom_selectors...)
     end
 end
 
 
-function writepdblines(output::IO, element::StructuralElementOrList, selector_functions::Function...)
+function writepdblines(output::IO, element::StructuralElementOrList, atom_selectors::Function...)
     # Collect residues then expand out disordered residues and atoms
     for res in collectresidues(element)
         if isa(res, Residue)
-            for atom in collectatoms(res, selector_functions...), atom_record in atom
-                println(output, pdbline(atom_record)...)
+            for at in collectatoms(res, atom_selectors...)
+                for atom_record in at
+                    println(output, pdbline(atom_record)...)
+                end
             end
         else
-            for res_name in resnames(res), atom in collectatoms(disorderedres(res, res_name), selector_functions...), atom_record in atom
-                println(output, pdbline(atom_record)...)
+            for res_name in resnames(res)
+                for at in collectatoms(disorderedres(res, res_name), atom_selectors...)
+                    for atom_record in at
+                        println(output, pdbline(atom_record)...)
+                    end
+                end
             end
         end
     end

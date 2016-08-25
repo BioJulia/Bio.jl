@@ -17,8 +17,8 @@ export
 Get the atomic coordinates of a `StructuralElementOrList` as a 2D `Array` with
 each column corresponding to one atom.
 """
-function coordarray(element::StructuralElementOrList, selector_functions::Function...)
-    atoms = collectatoms(element, selector_functions...)
+function coordarray(el::StructuralElementOrList, atom_selectors::Function...)
+    atoms = collectatoms(el, atom_selectors...)
     coords = zeros(3, length(atoms))
     for j in eachindex(atoms)
         coords[1,j] = x(atoms[j])
@@ -28,7 +28,7 @@ function coordarray(element::StructuralElementOrList, selector_functions::Functi
     return coords
 end
 
-coordarray(coords::Array{Float64}, selector_functions::Function...) = coords
+coordarray(coords::Array{Float64}, atom_selectors::Function...) = coords
 
 
 """
@@ -38,11 +38,11 @@ superimposed.
 """
 function rmsd(coords_one::Array{Float64}, coords_two::Array{Float64})
     @assert size(coords_one) == size(coords_two) "Sizes of coordinate arrays are different - cannot calculate RMSD"
-    difference = coords_one - coords_two
-    return sqrt(sum(difference .* difference) / size(coords_one, 2))
+    diff = coords_one - coords_two
+    return sqrt(sum(diff .* diff) / size(coords_one, 2))
 end
 
-rmsd(element_one::StructuralElementOrList, element_two::StructuralElementOrList, selector_functions::Function...) = rmsd(coordarray(element_one, selector_functions...), coordarray(element_two, selector_functions...))
+rmsd(el_one::StructuralElementOrList, el_two::StructuralElementOrList, atom_selectors::Function...) = rmsd(coordarray(el_one, atom_selectors...), coordarray(el_two, atom_selectors...))
 
 
 """
@@ -52,16 +52,16 @@ they are already superimposed.
 """
 function displacements(coords_one::Array{Float64}, coords_two::Array{Float64})
     @assert size(coords_one) == size(coords_two) "Sizes of coordinate arrays are different - cannot calculate displacements"
-    difference = coords_one - coords_two
-    return sqrt(sum(difference .* difference, 1))[:]
+    diff = coords_one - coords_two
+    return sqrt(sum(diff .* diff, 1))[:]
 end
 
-displacements(element_one::StructuralElementOrList, element_two::StructuralElementOrList, selector_functions::Function...) = displacements(coordarray(element_one, selector_functions...), coordarray(element_two, selector_functions...))
+displacements(el_one::StructuralElementOrList, el_two::StructuralElementOrList, atom_selectors::Function...) = displacements(coordarray(el_one, atom_selectors...), coordarray(el_two, atom_selectors...))
 
 
-function sqdistance(element_one::StructuralElementOrList, element_two::StructuralElementOrList, selector_functions::Function...)
-    coords_one = coordarray(element_one, selector_functions...)
-    coords_two = coordarray(element_two, selector_functions...)
+function sqdistance(el_one::StructuralElementOrList, el_two::StructuralElementOrList, atom_selectors::Function...)
+    coords_one = coordarray(el_one, atom_selectors...)
+    coords_two = coordarray(el_two, atom_selectors...)
     min_sq_dist = Inf
     for i in 1:size(coords_one, 2)
         for j in 1:size(coords_two, 2)
@@ -78,10 +78,10 @@ sqdistance(atom_one::AbstractAtom, atom_two::AbstractAtom) = (x(atom_one) - x(at
 
 
 "Get the minimum distance between two `StructuralElementOrList`s."
-distance(element_one::StructuralElementOrList, element_two::StructuralElementOrList, selector_functions::Function...) = sqrt(sqdistance(
-        element_one,
-        element_two,
-        selector_functions...
+distance(el_one::StructuralElementOrList, el_two::StructuralElementOrList, atom_selectors::Function...) = sqrt(sqdistance(
+        el_one,
+        el_two,
+        atom_selectors...
     ))
 
 distance(atom_one::AbstractAtom, atom_two::AbstractAtom) = sqrt(sqdistance(atom_one, atom_two))
@@ -133,16 +133,17 @@ function psiangle(res::AbstractResidue, res_next::AbstractResidue)
 end
 
 
-function ramachandranangles(element::StructuralElementOrList, selector_functions::Function...)
-    residues = collectresidues(element, selector_functions...)
-    @assert length(residues) > 2 "Multiple residues required to calculate Ramachandran angles"
+function ramachandranangles(el::StructuralElementOrList, residue_selectors::Function...)
+    res_list = collectresidues(el, residue_selectors...)
+    @assert length(res_list) > 2 "Multiple residues required to calculate Ramachandran angles"
     phi_angles = Float64[]
     psi_angles = Float64[]
-    for i in 2:length(residues)-1
-        res = residues[i]
-        res_prev = residues[i-1]
-        res_next = residues[i+1]
+    for i in 2:length(res_list)-1
+        res = res_list[i]
+        res_prev = res_list[i-1]
+        res_next = res_list[i+1]
         if sequentialresidues(res_prev, res) && sequentialresidues(res, res_next)
+            # Eliminate this try
             try
                 phi_angle = phiangle(res, res_prev)
                 psi_angle = psiangle(res, res_next)
@@ -155,14 +156,14 @@ function ramachandranangles(element::StructuralElementOrList, selector_functions
 end
 
 
-function contactmap(element_one::StructuralElementOrList, element_two::StructuralElementOrList, contact_dist::Real)
+function contactmap(el_one::StructuralElementOrList, el_two::StructuralElementOrList, contact_dist::Real)
     sq_contact_dist = contact_dist ^ 2
-    contacts = falses(length(element_one), length(element_two))
-    element_one_list = collect(element_one)
-    element_two_list = collect(element_two)
-    for i in 1:length(element_one)
-        for j in 1:length(element_two)
-            if sqdistance(element_one_list[i], element_two_list[j]) <= sq_contact_dist
+    contacts = falses(length(el_one), length(el_two))
+    el_one_list = collect(el_one)
+    el_two_list = collect(el_two)
+    for i in 1:length(el_one)
+        for j in 1:length(el_two)
+            if sqdistance(el_one_list[i], el_two_list[j]) <= sq_contact_dist
                 contacts[i,j] = true
             end
         end
@@ -170,13 +171,13 @@ function contactmap(element_one::StructuralElementOrList, element_two::Structura
     return contacts
 end
 
-function contactmap(element::StructuralElementOrList, contact_dist::Real)
+function contactmap(el::StructuralElementOrList, contact_dist::Real)
     sq_contact_dist = contact_dist ^ 2
-    contacts = eye(Bool, length(element))
-    element_list = collect(element)
-    for i in 1:length(element)
+    contacts = eye(Bool, length(el))
+    el_list = collect(el)
+    for i in 1:length(el)
         for j in 1:i-1
-            if sqdistance(element_list[i], element_list[j]) <= sq_contact_dist
+            if sqdistance(el_list[i], el_list[j]) <= sq_contact_dist
                 contacts[i,j] = true
                 contacts[j,i] = true
             end
