@@ -444,15 +444,18 @@ julia> submat['A','B']  # mismatch
 
 ## High-throughput sequencing file formats
 
-One of the major sources to generate massive amounts of sequence alignments is
-high-throughput sequencing technologies. The `Bio.Align` module provides several
-data formats commonly used in this field.
+High-throughput sequencing technologies generate a large amount of data in the
+form of a large number of nucleotide sequencing reads. One of the most common
+tasks in bioinformatics is to align these reads against known reference genomes,
+chromosomes, or contigs. The `Bio.Align` module provides several data formats
+commonly used for this kind of task.
 
 
 ### SAM and BAM file formats
 
-SAM and BAM would be the most popular file formats and their readers have the
-same interface as other readers in Bio.jl:
+SAM and BAM are the most popular file formats and have the same reading and
+writing interface as all other formats in Bio.jl (see [Reading and writing
+data](reading/)]):
 ```julia
 reader = open("data.bam", BAM)  # same for SAM
 for record in reader

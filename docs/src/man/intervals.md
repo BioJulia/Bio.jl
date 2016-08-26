@@ -136,7 +136,7 @@ time-wasting process when handing a big data file.
 data file and makes it possible to quickly retrieve data overlapping with a
 specific genomic region. Indexing a file using the tabix tool requires that the
 data file is sorted and then compressed in a special file format called
-[BGZF](https://github.com/BioJulia/BGZFStreams.jl). The BGZF file format is
+[BGZF](https://github.com/BioJulia/BGZFStreams.jl). The BGZF file format is a
 gzip-compliant data format and readable using standard command-line tools like
 `gzip`. However, creating a BGZF file needs a purpose-built tool called `bgzip`.
 Once a BGZF file and its index file are prepared using `bgzip` and `tabix`, the
