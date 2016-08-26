@@ -238,8 +238,9 @@ pdbline(at::Atom) = String[
 """
 Write a `StructuralElementOrList` to a Protein Data Bank (PDB) format file. Only
 ATOM, HETATM, MODEL and ENDMDL records are written - there is no header and no
-TER records. Additional arguments are `atom_selectors...` - only atoms that
-satisfy the selector functions are written.
+TER records.
+Additional arguments are atom selector functions - only atoms that return
+`True` from the functions are retained.
 """
 function writepdb(output::IO, element::Union{ProteinStructure, Vector{Model}}, atom_selectors::Function...)
     # If there are multiple models, write out MODEL/ENDMDL lines

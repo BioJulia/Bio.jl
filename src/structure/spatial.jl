@@ -16,25 +16,30 @@ export
 """
 Get the atomic coordinates of a `StructuralElementOrList` as a 2D `Array` with
 each column corresponding to one atom.
+Additional arguments are atom selector functions - only atoms that return
+`True` from the functions are retained.
 """
 function coordarray(el::StructuralElementOrList, atom_selectors::Function...)
-    atoms = collectatoms(el, atom_selectors...)
-    coords = zeros(3, length(atoms))
-    for j in eachindex(atoms)
-        coords[1,j] = x(atoms[j])
-        coords[2,j] = y(atoms[j])
-        coords[3,j] = z(atoms[j])
+    atom_list = collectatoms(el, atom_selectors...)
+    coords_out = zeros(3, length(atom_list))
+    for j in eachindex(atom_list)
+        coords_out[1,j] = x(atom_list[j])
+        coords_out[2,j] = y(atom_list[j])
+        coords_out[3,j] = z(atom_list[j])
     end
-    return coords
+    return coords_out
 end
 
-coordarray(coords::Array{Float64}, atom_selectors::Function...) = coords
+# Selector functions ignored
+coordarray(coords_in::Array{Float64}, atom_selectors::Function...) = coords_in
 
 
 """
 Get the root-mean-square deviation (RMSD) between two `StructuralElementOrList`s
 or two coordinate `Array`s of the same size. Assumes they are already
 superimposed.
+Additional arguments are atom selector functions - only atoms that return
+`True` from the functions are retained.
 """
 function rmsd(coords_one::Array{Float64}, coords_two::Array{Float64})
     @assert size(coords_one) == size(coords_two) "Sizes of coordinate arrays are different - cannot calculate RMSD"
@@ -49,6 +54,8 @@ rmsd(el_one::StructuralElementOrList, el_two::StructuralElementOrList, atom_sele
 Get the displacements between atomic coordinates from two
 `StructuralElementOrList`s or two coordinate `Array`s of the same size. Assumes
 they are already superimposed.
+Additional arguments are atom selector functions - only atoms that return
+`True` from the functions are retained.
 """
 function displacements(coords_one::Array{Float64}, coords_two::Array{Float64})
     @assert size(coords_one) == size(coords_two) "Sizes of coordinate arrays are different - cannot calculate displacements"
@@ -59,6 +66,11 @@ end
 displacements(el_one::StructuralElementOrList, el_two::StructuralElementOrList, atom_selectors::Function...) = displacements(coordarray(el_one, atom_selectors...), coordarray(el_two, atom_selectors...))
 
 
+"""
+Get the minimum square distance between two `StructuralElementOrList`s.
+Additional arguments are atom selector functions - only atoms that return
+`True` from the functions are retained.
+"""
 function sqdistance(el_one::StructuralElementOrList, el_two::StructuralElementOrList, atom_selectors::Function...)
     coords_one = coordarray(el_one, atom_selectors...)
     coords_two = coordarray(el_two, atom_selectors...)
@@ -77,7 +89,11 @@ end
 sqdistance(atom_one::AbstractAtom, atom_two::AbstractAtom) = (x(atom_one) - x(atom_two)) ^ 2 + (y(atom_one) - y(atom_two)) ^ 2 + (z(atom_one) - z(atom_two)) ^ 2
 
 
-"Get the minimum distance between two `StructuralElementOrList`s."
+"""
+Get the minimum distance between two `StructuralElementOrList`s.
+Additional arguments are atom selector functions - only atoms that return
+`True` from the functions are retained.
+"""
 distance(el_one::StructuralElementOrList, el_two::StructuralElementOrList, atom_selectors::Function...) = sqrt(sqdistance(
         el_one,
         el_two,
@@ -133,6 +149,11 @@ function psiangle(res::AbstractResidue, res_next::AbstractResidue)
 end
 
 
+"""
+
+Additional arguments are residue selector functions - only residues that return
+`True` from the functions are retained.
+"""
 function ramachandranangles(el::StructuralElementOrList, residue_selectors::Function...)
     res_list = collectresidues(el, residue_selectors...)
     @assert length(res_list) > 2 "Multiple residues required to calculate Ramachandran angles"
