@@ -783,40 +783,45 @@ end
     end
 
     @testset "Conversion to Matrices" begin
-        dna = [dna"AAA", dna"TTTAAA", dna"CCC", dna"GGG"]
-        rna = [rna"AAA", rna"UUU", rna"CCCUUU", rna"GGG"]
+        dna = [dna"AAA", dna"TTT", dna"CCC", dna"GGG"]
+        dnathrow = [dna"AAA", dna"TTTAAA", dna"CCC", dna"GGG"]
+
+        rna = [rna"AAA", rna"UUU", rna"CCC", rna"GGG"]
+        rnathrow = [rna"AAA", rna"UUU", rna"CCCUUU", rna"GGG"]
+
         prot = [aa"AMG", aa"AMG", aa"AMG", aa"AMG"]
+
         sitemajdna = [
-            DNA_A  DNA_A  DNA_A;
-            DNA_T  DNA_T  DNA_T;
-            DNA_C  DNA_C  DNA_C;
+            DNA_A  DNA_A  DNA_A
+            DNA_T  DNA_T  DNA_T
+            DNA_C  DNA_C  DNA_C
             DNA_G  DNA_G  DNA_G
         ]
         seqmajdna = [
-            DNA_A  DNA_T  DNA_C  DNA_G;
-            DNA_A  DNA_T  DNA_C  DNA_G;
+            DNA_A  DNA_T  DNA_C  DNA_G
+            DNA_A  DNA_T  DNA_C  DNA_G
             DNA_A  DNA_T  DNA_C  DNA_G
         ]
         sitemajrna = [
-            RNA_A  RNA_A  RNA_A;
-            RNA_U  RNA_U  RNA_U;
-            RNA_C  RNA_C  RNA_C;
+            RNA_A  RNA_A  RNA_A
+            RNA_U  RNA_U  RNA_U
+            RNA_C  RNA_C  RNA_C
             RNA_G  RNA_G  RNA_G
         ]
         seqmajrna = [
-            RNA_A  RNA_U  RNA_C  RNA_G;
-            RNA_A  RNA_U  RNA_C  RNA_G;
+            RNA_A  RNA_U  RNA_C  RNA_G
+            RNA_A  RNA_U  RNA_C  RNA_G
             RNA_A  RNA_U  RNA_C  RNA_G
         ]
         sitemajaa = [
-            AA_A AA_M AA_G;
-            AA_A AA_M AA_G;
-            AA_A AA_M AA_G;
+            AA_A AA_M AA_G
+            AA_A AA_M AA_G
+            AA_A AA_M AA_G
             AA_A AA_M AA_G
         ]
         seqmajaa = [
-            AA_A AA_A AA_A AA_A;
-            AA_M AA_M AA_M AA_M;
+            AA_A AA_A AA_A AA_A
+            AA_M AA_M AA_M AA_M
             AA_G AA_G AA_G AA_G
         ]
 
@@ -827,6 +832,10 @@ end
         @test seqmatrix(dna, :seq) == seqmajdna
         @test seqmatrix(rna, :seq) == seqmajrna
         @test seqmatrix(prot, :seq) == seqmajaa
+
+        @test_throws ArgumentError seqmatrix(dnathrow, :site)
+        @test_throws ArgumentError seqmatrix(rnathrow, :seq)
+        @test_throws ArgumentError seqmatrix(dna, :lol)
 
     end
 
