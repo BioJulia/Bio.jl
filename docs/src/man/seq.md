@@ -463,8 +463,7 @@ complement
 reverse_complement
 mismatches
 composition
-seqmajor
-sitemajor
+seqmatrix
 ```
 
 
