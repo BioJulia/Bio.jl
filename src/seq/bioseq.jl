@@ -1033,9 +1033,9 @@ end
 # -------------------
 
 """
-    seqmatrix{A<:Alphabet}(vseq::Vector{BioSequence{A}}, major = :seq|:site)
+    seqmatrix{A<:Alphabet}(vseq::Vector{BioSequence{A}}, major=:seq|:site)
 
-Construct a matrix of nucleotides or amino acids from a BioSequence.
+Construct a matrix of nucleotides or amino acids from a vector of `BioSequence`s.
 
 If parameter major is set to `:site`, the matrix is created such that one
 nucleotide from each sequence is placed in each column i.e. the matrix is laid
@@ -1051,39 +1051,32 @@ as julia arrays are laid out in column major order.
 
 # Examples
 ```julia
-julia> seqs = [dna"AAAAAAAAAA", dna"TTTTTTTTTT", dna"CCCCCCCCCC", dna"GGGGGGGGGG"]
+julia> seqs = [dna"AAA", dna"TTT", dna"CCC", dna"GGG"]
 4-element Array{Bio.Seq.BioSequence{Bio.Seq.DNAAlphabet{4}},1}:
- 10nt DNA Sequence:
-AAAAAAAAAA
- 10nt DNA Sequence:
-TTTTTTTTTT
- 10nt DNA Sequence:
-CCCCCCCCCC
- 10nt DNA Sequence:
-GGGGGGGGGG
+ 3nt DNA Sequence:
+AAA
+ 3nt DNA Sequence:
+TTT
+ 3nt DNA Sequence:
+CCC
+ 3nt DNA Sequence:
+GGG
 
-julia> seqmatrix(seqs, major = :site)
-4x10 Array{Bio.Seq.DNANucleotide,2}:
- DNA_A  DNA_A  DNA_A  DNA_A  DNA_A  DNA_A  DNA_A  DNA_A  DNA_A  DNA_A
- DNA_T  DNA_T  DNA_T  DNA_T  DNA_T  DNA_T  DNA_T  DNA_T  DNA_T  DNA_T
- DNA_C  DNA_C  DNA_C  DNA_C  DNA_C  DNA_C  DNA_C  DNA_C  DNA_C  DNA_C
- DNA_G  DNA_G  DNA_G  DNA_G  DNA_G  DNA_G  DNA_G  DNA_G  DNA_G  DNA_G
+julia> seqmatrix(seqs, :site)
+4x3 Array{Bio.Seq.DNANucleotide,2}:
+ DNA_A  DNA_A  DNA_A
+ DNA_T  DNA_T  DNA_T
+ DNA_C  DNA_C  DNA_C
+ DNA_G  DNA_G  DNA_G
 
- julia> seqmatrix(seqs, major = :seq)
- 10x4 Array{Bio.Seq.DNANucleotide,2}:
-  DNA_A  DNA_T  DNA_C  DNA_G
-  DNA_A  DNA_T  DNA_C  DNA_G
-  DNA_A  DNA_T  DNA_C  DNA_G
-  DNA_A  DNA_T  DNA_C  DNA_G
-  DNA_A  DNA_T  DNA_C  DNA_G
-  DNA_A  DNA_T  DNA_C  DNA_G
-  DNA_A  DNA_T  DNA_C  DNA_G
+ julia> seqmatrix(seqs, :seq)
+ 3x4 Array{Bio.Seq.DNANucleotide,2}:
   DNA_A  DNA_T  DNA_C  DNA_G
   DNA_A  DNA_T  DNA_C  DNA_G
   DNA_A  DNA_T  DNA_C  DNA_G
 ```
 """
-function seqmatrix{A<:Alphabet}(vseq::Vector{BioSequence{A}}, major = :site)
+function seqmatrix{A<:Alphabet}(vseq::Vector{BioSequence{A}}, major=:site)
     if major == :site
         nsites = minimum([length(seq) for seq in vseq])
         nseqs = length(vseq)

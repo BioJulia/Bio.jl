@@ -783,68 +783,50 @@ end
     end
 
     @testset "Conversion to Matrices" begin
-        dna = [dna"AAAAAAAAAA", dna"TTTTTTTTTTAAA", dna"CCCCCCCCCC", dna"GGGGGGGGGG"]
-        rna = [rna"AAAAAAAAAA", rna"UUUUUUUUUU", rna"CCCCCCCCCCUUU", rna"GGGGGGGGGG"]
-        prot = [aa"AMGBTDA", aa"AMGBTDAAAA", aa"AMGBTDA", aa"AMGBTDA"]
+        dna = [dna"AAA", dna"TTTAAA", dna"CCC", dna"GGG"]
+        rna = [rna"AAA", rna"UUU", rna"CCCUUU", rna"GGG"]
+        prot = [aa"AMG", aa"AMG", aa"AMG", aa"AMG"]
         sitemajdna = [
-            DNA_A  DNA_A  DNA_A  DNA_A  DNA_A  DNA_A  DNA_A  DNA_A  DNA_A  DNA_A;
-            DNA_T  DNA_T  DNA_T  DNA_T  DNA_T  DNA_T  DNA_T  DNA_T  DNA_T  DNA_T;
-            DNA_C  DNA_C  DNA_C  DNA_C  DNA_C  DNA_C  DNA_C  DNA_C  DNA_C  DNA_C;
-            DNA_G  DNA_G  DNA_G  DNA_G  DNA_G  DNA_G  DNA_G  DNA_G  DNA_G  DNA_G
+            DNA_A  DNA_A  DNA_A;
+            DNA_T  DNA_T  DNA_T;
+            DNA_C  DNA_C  DNA_C;
+            DNA_G  DNA_G  DNA_G
         ]
         seqmajdna = [
-            DNA_A  DNA_T  DNA_C  DNA_G;
-            DNA_A  DNA_T  DNA_C  DNA_G;
-            DNA_A  DNA_T  DNA_C  DNA_G;
-            DNA_A  DNA_T  DNA_C  DNA_G;
-            DNA_A  DNA_T  DNA_C  DNA_G;
-            DNA_A  DNA_T  DNA_C  DNA_G;
-            DNA_A  DNA_T  DNA_C  DNA_G;
             DNA_A  DNA_T  DNA_C  DNA_G;
             DNA_A  DNA_T  DNA_C  DNA_G;
             DNA_A  DNA_T  DNA_C  DNA_G
         ]
         sitemajrna = [
-            RNA_A  RNA_A  RNA_A  RNA_A  RNA_A  RNA_A  RNA_A  RNA_A  RNA_A  RNA_A;
-            RNA_U  RNA_U  RNA_U  RNA_U  RNA_U  RNA_U  RNA_U  RNA_U  RNA_U  RNA_U;
-            RNA_C  RNA_C  RNA_C  RNA_C  RNA_C  RNA_C  RNA_C  RNA_C  RNA_C  RNA_C;
-            RNA_G  RNA_G  RNA_G  RNA_G  RNA_G  RNA_G  RNA_G  RNA_G  RNA_G  RNA_G
+            RNA_A  RNA_A  RNA_A;
+            RNA_U  RNA_U  RNA_U;
+            RNA_C  RNA_C  RNA_C;
+            RNA_G  RNA_G  RNA_G
         ]
         seqmajrna = [
-            RNA_A  RNA_U  RNA_C  RNA_G;
-            RNA_A  RNA_U  RNA_C  RNA_G;
-            RNA_A  RNA_U  RNA_C  RNA_G;
-            RNA_A  RNA_U  RNA_C  RNA_G;
-            RNA_A  RNA_U  RNA_C  RNA_G;
-            RNA_A  RNA_U  RNA_C  RNA_G;
-            RNA_A  RNA_U  RNA_C  RNA_G;
             RNA_A  RNA_U  RNA_C  RNA_G;
             RNA_A  RNA_U  RNA_C  RNA_G;
             RNA_A  RNA_U  RNA_C  RNA_G
         ]
         sitemajaa = [
-            AA_A AA_M AA_G AA_B AA_T AA_D AA_A;
-            AA_A AA_M AA_G AA_B AA_T AA_D AA_A;
-            AA_A AA_M AA_G AA_B AA_T AA_D AA_A;
-            AA_A AA_M AA_G AA_B AA_T AA_D AA_A
+            AA_A AA_M AA_G;
+            AA_A AA_M AA_G;
+            AA_A AA_M AA_G;
+            AA_A AA_M AA_G
         ]
         seqmajaa = [
             AA_A AA_A AA_A AA_A;
             AA_M AA_M AA_M AA_M;
-            AA_G AA_G AA_G AA_G;
-            AA_B AA_B AA_B AA_B;
-            AA_T AA_T AA_T AA_T;
-            AA_D AA_D AA_D AA_D;
-            AA_A AA_A AA_A AA_A
+            AA_G AA_G AA_G AA_G
         ]
 
-        @test seqmatrix(dna, major = :site) == sitemajdna
-        @test seqmatrix(rna, major = :site) == sitemajrna
-        @test seqmatrix(prot, major = :site) == sitemajaa
+        @test seqmatrix(dna, :site) == sitemajdna
+        @test seqmatrix(rna, :site) == sitemajrna
+        @test seqmatrix(prot, :site) == sitemajaa
 
-        @test seqmatrix(dna, major = :seq) == seqmajdna
-        @test seqmatrix(rna, major = :seq) == seqmajrna
-        @test seqmatrix(prot, major = :seq) == seqmajaa
+        @test seqmatrix(dna, :seq) == seqmajdna
+        @test seqmatrix(rna, :seq) == seqmajrna
+        @test seqmatrix(prot, :seq) == seqmajaa
 
     end
 
