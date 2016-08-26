@@ -602,7 +602,7 @@
 
 <p>Return an iterator of symbols of <code>typ</code>.</p>
 <p><code>typ</code> is one of <code>DNANucleotide</code>, <code>RNANucleotide</code>, or <code>AminoAcid</code>.</p>
-<p><a target='_blank' href='https://github.com/BioJulia/Bio.jl/tree/ad7e781bc0fc153045ae586b2d1d4c9f1415204d/src/seq/Seq.jl#L166-L172' class='documenter-source'>source</a><br></p>
+<p><a target='_blank' href='https://github.com/BioJulia/Bio.jl/tree/1a73078ac721ea753c0c352ba426d33d612463d8/src/seq/Seq.jl#L166-L172' class='documenter-source'>source</a><br></p>
 <p><a id='Bio.Seq.gap' href='#Bio.Seq.gap'>#</a>
 <strong><code>Bio.Seq.gap</code></strong> &mdash; <em>Function</em>.</p>
 <div class="codehilite"><pre><span></span>gap(typ)
@@ -611,7 +611,7 @@
 
 <p>Return the gap symbol of <code>typ</code>.</p>
 <p><code>typ</code> is one of <code>DNANucleotide</code>, <code>RNANucleotide</code>, <code>AminoAcid</code>, or <code>Char</code>.</p>
-<p><a target='_blank' href='https://github.com/BioJulia/Bio.jl/tree/ad7e781bc0fc153045ae586b2d1d4c9f1415204d/src/seq/Seq.jl#L175-L181' class='documenter-source'>source</a><br></p>
+<p><a target='_blank' href='https://github.com/BioJulia/Bio.jl/tree/1a73078ac721ea753c0c352ba426d33d612463d8/src/seq/Seq.jl#L175-L181' class='documenter-source'>source</a><br></p>
 <p><a id='Bio.Seq.iscompatible' href='#Bio.Seq.iscompatible'>#</a>
 <strong><code>Bio.Seq.iscompatible</code></strong> &mdash; <em>Function</em>.</p>
 <div class="codehilite"><pre><span></span>iscompatible(x, y)
@@ -635,7 +635,7 @@
 </pre></div>
 
 
-<p><a target='_blank' href='https://github.com/BioJulia/Bio.jl/tree/ad7e781bc0fc153045ae586b2d1d4c9f1415204d/src/seq/nucleotide.jl#L145-L169' class='documenter-source'>source</a><br></p>
+<p><a target='_blank' href='https://github.com/BioJulia/Bio.jl/tree/1a73078ac721ea753c0c352ba426d33d612463d8/src/seq/nucleotide.jl#L145-L169' class='documenter-source'>source</a><br></p>
 <p><a id='Bio.Seq.isambiguous' href='#Bio.Seq.isambiguous'>#</a>
 <strong><code>Bio.Seq.isambiguous</code></strong> &mdash; <em>Function</em>.</p>
 <div class="codehilite"><pre><span></span>isambiguous(nt::Nucleotide)
@@ -643,7 +643,7 @@
 
 
 <p>Test if <code>nt</code> is ambiguous nucleotide.</p>
-<p><a target='_blank' href='https://github.com/BioJulia/Bio.jl/tree/ad7e781bc0fc153045ae586b2d1d4c9f1415204d/src/seq/nucleotide.jl#L115-L119' class='documenter-source'>source</a><br></p>
+<p><a target='_blank' href='https://github.com/BioJulia/Bio.jl/tree/1a73078ac721ea753c0c352ba426d33d612463d8/src/seq/nucleotide.jl#L115-L119' class='documenter-source'>source</a><br></p>
 <p><a id='Overview-of-sequences-types-1'></a></p>
 <h2 id="overview-of-sequences-types">Overview of sequences types</h2>
 <p>The <code>Bio.Seq</code> module provides representations and tools for manipulating nucleotide and amino acid sequences. Sequences in Bio.jl are more strictly typed than in many other libraries; elements in a sequence are typed as biological symbol instead of character or byte.  They are special purpose types rather than simply strings and hence offer additional functionality that naive string types don't have. Though this strictness sacrifices some convenience, it also means you can always rely on a DNA sequence type to store DNA and nothing but DNA, without having to check, or deal with lowercase versus uppercase and so on. Strict separation of sequence types also means we are free to choose the most efficient representation. DNA and RNA sequences are encoded using four bits per base by default making them memory efficient, and also allowing us to speed up many common operations like nucleotide composition, reverse complement, and <em>k</em>-mer enumeration.</p>
@@ -925,20 +925,20 @@ reverse_complement!(seq)
 
 
 <p>Return the complementary nucleotide of <code>nt</code>.</p>
-<p><a target='_blank' href='https://github.com/BioJulia/Bio.jl/tree/ad7e781bc0fc153045ae586b2d1d4c9f1415204d/src/seq/nucleotide.jl#L124-L128' class='documenter-source'>source</a><br></p>
+<p><a target='_blank' href='https://github.com/BioJulia/Bio.jl/tree/1a73078ac721ea753c0c352ba426d33d612463d8/src/seq/nucleotide.jl#L124-L128' class='documenter-source'>source</a><br></p>
 <div class="codehilite"><pre><span></span>complement(seq)
 </pre></div>
 
 
 <p>Make a complement sequence of <code>seq</code>.</p>
 <p>Ambiguous nucleotides are left as-is.</p>
-<p><a target='_blank' href='https://github.com/BioJulia/Bio.jl/tree/ad7e781bc0fc153045ae586b2d1d4c9f1415204d/src/seq/bioseq.jl#L700-L706' class='documenter-source'>source</a><br></p>
+<p><a target='_blank' href='https://github.com/BioJulia/Bio.jl/tree/1a73078ac721ea753c0c352ba426d33d612463d8/src/seq/bioseq.jl#L700-L706' class='documenter-source'>source</a><br></p>
 <div class="codehilite"><pre><span></span>complement(kmer::Kmer)
 </pre></div>
 
 
 <p>Return the complement of <code>kmer</code>.</p>
-<p><a target='_blank' href='https://github.com/BioJulia/Bio.jl/tree/ad7e781bc0fc153045ae586b2d1d4c9f1415204d/src/seq/kmer.jl#L144-L148' class='documenter-source'>source</a><br></p>
+<p><a target='_blank' href='https://github.com/BioJulia/Bio.jl/tree/1a73078ac721ea753c0c352ba426d33d612463d8/src/seq/kmer.jl#L144-L148' class='documenter-source'>source</a><br></p>
 <p><a id='Bio.Seq.reverse_complement' href='#Bio.Seq.reverse_complement'>#</a>
 <strong><code>Bio.Seq.reverse_complement</code></strong> &mdash; <em>Function</em>.</p>
 <div class="codehilite"><pre><span></span>reverse_complement(seq)
@@ -947,13 +947,13 @@ reverse_complement!(seq)
 
 <p>Make a reversed complement sequence of <code>seq</code>.</p>
 <p>Ambiguous nucleotides are left as-is.</p>
-<p><a target='_blank' href='https://github.com/BioJulia/Bio.jl/tree/ad7e781bc0fc153045ae586b2d1d4c9f1415204d/src/seq/bioseq.jl#L722-L728' class='documenter-source'>source</a><br></p>
+<p><a target='_blank' href='https://github.com/BioJulia/Bio.jl/tree/1a73078ac721ea753c0c352ba426d33d612463d8/src/seq/bioseq.jl#L722-L728' class='documenter-source'>source</a><br></p>
 <div class="codehilite"><pre><span></span>reverse_complement(kmer::Kmer)
 </pre></div>
 
 
 <p>Return the reverse complement of <code>kmer</code></p>
-<p><a target='_blank' href='https://github.com/BioJulia/Bio.jl/tree/ad7e781bc0fc153045ae586b2d1d4c9f1415204d/src/seq/kmer.jl#L158-L162' class='documenter-source'>source</a><br></p>
+<p><a target='_blank' href='https://github.com/BioJulia/Bio.jl/tree/1a73078ac721ea753c0c352ba426d33d612463d8/src/seq/kmer.jl#L158-L162' class='documenter-source'>source</a><br></p>
 <p><a id='Bio.Seq.mismatches' href='#Bio.Seq.mismatches'>#</a>
 <strong><code>Bio.Seq.mismatches</code></strong> &mdash; <em>Function</em>.</p>
 <div class="codehilite"><pre><span></span>mismatches(seq1::BioSequence, seq2::BioSequence[, compatible=false])
@@ -962,13 +962,13 @@ reverse_complement!(seq)
 
 <p>Return the number of mismatches between <code>seq1</code> and <code>seq2</code>.</p>
 <p>If <code>seq1</code> and <code>seq2</code> are of differing lengths, only the first <code>min(length(seq1), length(seq2))</code> nucleotides are compared.  When <code>compatible</code> is <code>true</code>, sequence symbols are comapred using <code>iscompatible</code>; otherwise using <code>==</code>.</p>
-<p><a target='_blank' href='https://github.com/BioJulia/Bio.jl/tree/ad7e781bc0fc153045ae586b2d1d4c9f1415204d/src/seq/bioseq.jl#L773-L781' class='documenter-source'>source</a><br></p>
+<p><a target='_blank' href='https://github.com/BioJulia/Bio.jl/tree/1a73078ac721ea753c0c352ba426d33d612463d8/src/seq/bioseq.jl#L773-L781' class='documenter-source'>source</a><br></p>
 <div class="codehilite"><pre><span></span>mismatches(a::Kmer, b::Kmer)
 </pre></div>
 
 
 <p>Return the number of mismatches between <code>a</code> and <code>b</code>.</p>
-<p><a target='_blank' href='https://github.com/BioJulia/Bio.jl/tree/ad7e781bc0fc153045ae586b2d1d4c9f1415204d/src/seq/kmer.jl#L165-L169' class='documenter-source'>source</a><br></p>
+<p><a target='_blank' href='https://github.com/BioJulia/Bio.jl/tree/1a73078ac721ea753c0c352ba426d33d612463d8/src/seq/kmer.jl#L165-L169' class='documenter-source'>source</a><br></p>
 <p><a id='Bio.Seq.composition' href='#Bio.Seq.composition'>#</a>
 <strong><code>Bio.Seq.composition</code></strong> &mdash; <em>Function</em>.</p>
 <div class="codehilite"><pre><span></span>composition(seq | kmer_iter)
@@ -976,7 +976,7 @@ reverse_complement!(seq)
 
 
 <p>Calculate composition of biological symbols in <code>seq</code> or k-mers in <code>kmer_iter</code>.</p>
-<p><a target='_blank' href='https://github.com/BioJulia/Bio.jl/tree/ad7e781bc0fc153045ae586b2d1d4c9f1415204d/src/seq/composition.jl#L56-L60' class='documenter-source'>source</a><br></p>
+<p><a target='_blank' href='https://github.com/BioJulia/Bio.jl/tree/1a73078ac721ea753c0c352ba426d33d612463d8/src/seq/composition.jl#L56-L60' class='documenter-source'>source</a><br></p>
 <p><a id='Bio.Seq.seqmatrix' href='#Bio.Seq.seqmatrix'>#</a>
 <strong><code>Bio.Seq.seqmatrix</code></strong> &mdash; <em>Function</em>.</p>
 <div class="codehilite"><pre><span></span>seqmatrix{A&lt;:Alphabet}(vseq::Vector{BioSequence{A}}, major::Symbol)
@@ -1013,7 +1013,7 @@ reverse_complement!(seq)
 </pre></div>
 
 
-<p><a target='_blank' href='https://github.com/BioJulia/Bio.jl/tree/ad7e781bc0fc153045ae586b2d1d4c9f1415204d/src/seq/bioseq.jl#L1035-L1078' class='documenter-source'>source</a><br></p>
+<p><a target='_blank' href='https://github.com/BioJulia/Bio.jl/tree/1a73078ac721ea753c0c352ba426d33d612463d8/src/seq/bioseq.jl#L1035-L1078' class='documenter-source'>source</a><br></p>
 <p><a id='Translation-1'></a></p>
 <h4 id="translation">Translation</h4>
 <p>The <a href="./#Bio.Seq.translate"><code>translate</code></a> funtion translates a sequence of codons in a RNA sequence to a amino acid sequence besed on a genetic code mapping.  The <code>Bio.Seq</code> module contains all NCBI defined genetic codes and they are registered in <a href="./#Bio.Seq.ncbi_trans_table"><code>ncbi_trans_table</code></a>.</p>
@@ -1025,12 +1025,12 @@ reverse_complement!(seq)
 
 <p>Translate an <code>RNASequence</code> to an <code>AminoAcidSequence</code>.</p>
 <p>Translation uses genetic code <code>code</code> to map codons to amino acids. See <code>ncbi_trans_table</code> for available genetic codes. If codons in the given RNA sequence cannot determine a unique amino acid, they will be translated to <code>AA_X</code> if <code>allow_ambiguous_codons</code> is <code>true</code> and otherwise result in an error.</p>
-<p><a target='_blank' href='https://github.com/BioJulia/Bio.jl/tree/ad7e781bc0fc153045ae586b2d1d4c9f1415204d/src/seq/geneticcode.jl#L311-L321' class='documenter-source'>source</a><br></p>
+<p><a target='_blank' href='https://github.com/BioJulia/Bio.jl/tree/1a73078ac721ea753c0c352ba426d33d612463d8/src/seq/geneticcode.jl#L311-L321' class='documenter-source'>source</a><br></p>
 <p><a id='Bio.Seq.ncbi_trans_table' href='#Bio.Seq.ncbi_trans_table'>#</a>
 <strong><code>Bio.Seq.ncbi_trans_table</code></strong> &mdash; <em>Constant</em>.</p>
 <p>Genetic code list of NCBI.</p>
 <p>The standard genetic code is <code>ncbi_trans_table[1]</code> and others can be shown by <code>show(ncbi_trans_table)</code>. For more details, consult the next link: http://www.ncbi.nlm.nih.gov/Taxonomy/taxonomyhome.html/index.cgi?chapter=cgencodes.</p>
-<p><a target='_blank' href='https://github.com/BioJulia/Bio.jl/tree/ad7e781bc0fc153045ae586b2d1d4c9f1415204d/src/seq/geneticcode.jl#L90-L97' class='documenter-source'>source</a><br></p>
+<p><a target='_blank' href='https://github.com/BioJulia/Bio.jl/tree/1a73078ac721ea753c0c352ba426d33d612463d8/src/seq/geneticcode.jl#L90-L97' class='documenter-source'>source</a><br></p>
 <div class="codehilite"><pre><span></span><span class="gp">julia&gt;</span> <span class="n">ncbi_trans_table</span>
 <span class="go">Translation Tables:</span>
 <span class="go">  1. The Standard Code (standard_genetic_code)</span>
@@ -1127,7 +1127,7 @@ end
 </pre></div>
 
 
-<p><a target='_blank' href='https://github.com/BioJulia/Bio.jl/tree/ad7e781bc0fc153045ae586b2d1d4c9f1415204d/src/seq/eachkmer.jl#L15-L33' class='documenter-source'>source</a><br></p>
+<p><a target='_blank' href='https://github.com/BioJulia/Bio.jl/tree/1a73078ac721ea753c0c352ba426d33d612463d8/src/seq/eachkmer.jl#L15-L33' class='documenter-source'>source</a><br></p>
 <p><a id='Bio.Seq.canonical' href='#Bio.Seq.canonical'>#</a>
 <strong><code>Bio.Seq.canonical</code></strong> &mdash; <em>Function</em>.</p>
 <div class="codehilite"><pre><span></span>canonical(kmer::Kmer)
@@ -1136,7 +1136,7 @@ end
 
 <p>Return the canonical k-mer of <code>x</code>.</p>
 <p>A canonical k-mer is the numerical lesser of a k-mer and its reverse complement. This is useful in hashing/counting k-mers in data that is not strand specific, and thus observing k-mer is equivalent to observing its reverse complement.</p>
-<p><a target='_blank' href='https://github.com/BioJulia/Bio.jl/tree/ad7e781bc0fc153045ae586b2d1d4c9f1415204d/src/seq/kmer.jl#L172-L180' class='documenter-source'>source</a><br></p>
+<p><a target='_blank' href='https://github.com/BioJulia/Bio.jl/tree/1a73078ac721ea753c0c352ba426d33d612463d8/src/seq/kmer.jl#L172-L180' class='documenter-source'>source</a><br></p>
 <p><a id='Bio.Seq.neighbors' href='#Bio.Seq.neighbors'>#</a>
 <strong><code>Bio.Seq.neighbors</code></strong> &mdash; <em>Function</em>.</p>
 <div class="codehilite"><pre><span></span>neighbors(kmer::Kmer)
@@ -1144,7 +1144,7 @@ end
 
 
 <p>Return an iterator through k-mers neighboring <code>kmer</code> on a de Bruijn graph.</p>
-<p><a target='_blank' href='https://github.com/BioJulia/Bio.jl/tree/ad7e781bc0fc153045ae586b2d1d4c9f1415204d/src/seq/kmer.jl#L203-L207' class='documenter-source'>source</a><br></p>
+<p><a target='_blank' href='https://github.com/BioJulia/Bio.jl/tree/1a73078ac721ea753c0c352ba426d33d612463d8/src/seq/kmer.jl#L203-L207' class='documenter-source'>source</a><br></p>
 <p><a id='Reference-sequences-1'></a></p>
 <h2 id="reference-sequences">Reference sequences</h2>
 <p><code>DNASequence</code> (alias of <code>BioSequence{DNAAlphabet{4}}</code>) is a flexible data sturcture but always consumes 4 bits per base, which will waste a large part of the memory space when storing reference genome sequences.  In such a case, <code>ReferenceSequence</code> is helpful because it compresses positions of 'N' symbols so that long DNA sequences are stored with almost 2 bits per base. An important limitation is that the <code>ReferenceSequence</code> type is immutable due to the compression. Other sequence-like operations are supported:</p>
