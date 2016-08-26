@@ -1080,7 +1080,7 @@ function seqmatrix{A<:Alphabet}(vseq::AbstractVector{BioSequence{A}}, major::Sym
     l = length(vseq[1])
     nseqs = length(vseq)
     @inbounds for i in 2:nseqs
-        length(vseq[i]) != l || throw(ArgumentError("Sequences in vseq must be of same length"))
+        length(vseq[i]) == l || throw(ArgumentError("Sequences in vseq must be of same length"))
     end
     if major == :site
         nsites = minimum([length(seq) for seq in vseq])
