@@ -36,14 +36,22 @@ Base.eachindex(seq::Sequence) = 1:endof(seq)
     throw(BoundsError(seq, i))
 end
 
-function Base.getindex(seq::Sequence, i::Integer)
+@inline function Base.getindex(seq::Sequence, i::Integer)
     @boundscheck checkbounds(seq, i)
     return inbounds_getindex(seq, i)
 end
 
-Base.start(seq::Sequence) = 1
-Base.done(seq::Sequence, i) = i > endof(seq)
-Base.next(seq::Sequence, i) = inbounds_getindex(seq, i), i + 1
+@inline function Base.start(seq::Sequence)
+    return 1
+end
+
+@inline function Base.done(seq::Sequence, i)
+    return i > endof(seq)
+end
+
+@inline function Base.next(seq::Sequence, i)
+    return inbounds_getindex(seq, i), i + 1
+end
 
 
 # Comparison
@@ -122,6 +130,7 @@ function gc_content(seq::Sequence)
         return gc / length(seq)
     end
 end
+
 
 # Predicates
 # ----------
