@@ -451,16 +451,26 @@ end
 
         function check_intersection(filename_a, filename_b)
             ic_a = IntervalCollection{BEDMetadata}()
-            for interval in open(filename_a, BED)
-                push!(ic_a, interval)
+            open(filename_a, BED) do intervals
+                for interval in intervals
+                    push!(ic_a, interval)
+                end
             end
 
             ic_b = IntervalCollection{BEDMetadata}()
-            for interval in open(filename_b, BED)
-                push!(ic_b, interval)
+            open(filename_b, BED) do intervals
+                for interval in intervals
+                    push!(ic_b, interval)
+                end
             end
 
-            xs = sort(collect(intersect(open(filename_a, BED), open(filename_b, BED))))
+            # This is refactored out to close streams
+            fa = open(filename_a, BED)
+            fb = open(filename_b, BED)
+            xs = sort(collect(intersect(fa, fb)))
+            close(fa)
+            close(fb)
+
             ys = sort(collect(intersect(ic_a, ic_b)))
 
             return xs == ys
