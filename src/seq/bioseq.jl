@@ -1076,20 +1076,23 @@ julia> seqmatrix(seqs, :site)
   DNA_A  DNA_T  DNA_C  DNA_G
 ```
 """
-function seqmatrix{A<:Alphabet}(vseq::Vector{BioSequence{A}}, major=:site)
+function seqmatrix{A<:Alphabet}(vseq::AbstractVector{BioSequence{A}}, major=:site)
+    l = length(vseq[1])
+    nseqs = length(vseq)
+    @inbounds for i in 2:nseqs
+        length(vseq[i]) != l | throw(ArgumentError("Sequences in vseq must be of same length"))
+    end
     if major == :site
         nsites = minimum([length(seq) for seq in vseq])
-        nseqs = length(vseq)
         mat = Matrix{eltype(A)}(nseqs, nsites)
-        for seq in 1:nseqs, site in 1:nsites
+        @inbounds for seq in 1:nseqs, site in 1:nsites
             mat[seq, site] = vseq[seq][site]
         end
         return mat
     elseif major == :seq
         nsites = minimum([length(seq) for seq in vseq])
-        nseqs = length(vseq)
         mat = Matrix{eltype(A)}(nsites, nseqs)
-        for seq in 1:nseqs, site in 1:nsites
+        @inbounds for seq in 1:nseqs, site in 1:nsites
             mat[site, seq] = vseq[seq][site]
         end
         return mat
