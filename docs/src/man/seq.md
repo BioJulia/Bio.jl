@@ -463,6 +463,7 @@ complement
 reverse_complement
 mismatches
 composition
+seqmatrix
 ```
 
 

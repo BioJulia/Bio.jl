@@ -689,7 +689,7 @@ end
         function test_string_construction(A::Type, seq::AbstractString)
             @test convert(AbstractString, BioSequence{A}(seq)) == uppercase(seq)
         end
-        
+
         function test_string_parse(A::Type, seq::AbstractString)
             @test parse(BioSequence{A}, seq) == BioSequence{A}(seq)
         end
@@ -780,6 +780,54 @@ end
     @testset "Conversion between RNA and DNA" begin
         @test convert(RNASequence, DNASequence("ACGTN")) == rna"ACGUN"
         @test convert(DNASequence, RNASequence("ACGUN")) == dna"ACGTN"
+    end
+
+    @testset "Conversion to Matrices" begin
+        dna = [dna"AAA", dna"TTTAAA", dna"CCC", dna"GGG"]
+        rna = [rna"AAA", rna"UUU", rna"CCCUUU", rna"GGG"]
+        prot = [aa"AMG", aa"AMG", aa"AMG", aa"AMG"]
+        sitemajdna = [
+            DNA_A  DNA_A  DNA_A;
+            DNA_T  DNA_T  DNA_T;
+            DNA_C  DNA_C  DNA_C;
+            DNA_G  DNA_G  DNA_G
+        ]
+        seqmajdna = [
+            DNA_A  DNA_T  DNA_C  DNA_G;
+            DNA_A  DNA_T  DNA_C  DNA_G;
+            DNA_A  DNA_T  DNA_C  DNA_G
+        ]
+        sitemajrna = [
+            RNA_A  RNA_A  RNA_A;
+            RNA_U  RNA_U  RNA_U;
+            RNA_C  RNA_C  RNA_C;
+            RNA_G  RNA_G  RNA_G
+        ]
+        seqmajrna = [
+            RNA_A  RNA_U  RNA_C  RNA_G;
+            RNA_A  RNA_U  RNA_C  RNA_G;
+            RNA_A  RNA_U  RNA_C  RNA_G
+        ]
+        sitemajaa = [
+            AA_A AA_M AA_G;
+            AA_A AA_M AA_G;
+            AA_A AA_M AA_G;
+            AA_A AA_M AA_G
+        ]
+        seqmajaa = [
+            AA_A AA_A AA_A AA_A;
+            AA_M AA_M AA_M AA_M;
+            AA_G AA_G AA_G AA_G
+        ]
+
+        @test seqmatrix(dna, :site) == sitemajdna
+        @test seqmatrix(rna, :site) == sitemajrna
+        @test seqmatrix(prot, :site) == sitemajaa
+
+        @test seqmatrix(dna, :seq) == seqmajdna
+        @test seqmatrix(rna, :seq) == seqmajrna
+        @test seqmatrix(prot, :seq) == seqmajaa
+
     end
 
     @testset "Copy" begin
