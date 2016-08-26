@@ -107,7 +107,7 @@ encoded as `0101` because `0101` is the bitwise OR of `0001` (`DNA_A`) and
 | `DNA_T`, `RNA_U` | `1000` |
 
 The next examples demonstrate bit operations of DNA:
-```julia
+```jlcon
 julia> bits(reinterpret(UInt8, DNA_A))
 "00000001"
 
