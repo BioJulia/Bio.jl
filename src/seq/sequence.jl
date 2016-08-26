@@ -254,14 +254,24 @@ Base.parse{S<:Sequence}(::Type{S}, str::AbstractString) = convert(S, str)
 # Consensus
 # ---------
 
-function consensus{S<:Sequence}(seqs::Vector{S})
-    itr = zip(seqs...)
-    cons = S(length(itr))
-    i = 1
-    @inbounds for site in itr
-        comp = Composition(site)
-        cons[i] = mostfrequent(comp)
-        i += 1
+function majorityvote(seqs::AbstractVector{DNASequence})
+    # Construct a site major matrix to iterate over.
+    mat = seqmatrix(seqs, :site)
+    nsites = size(mat, 2)
+    nseqs = size(mat, 1)
+    result = S(nsites)
+    options = [DNA_A, DNA_C, DNA_G, DNA_T, DNA_Gap]
+    votes = Vector{Int}(5)
+
+    for site in 1:nsites
+        votes[1] = votes[2] = votes[3] = votes[4] = votes[5] = 0
+        for seq in 1:neqs
+            nuc = mat[seq, site]
+            votes[1] += iscompatible(nuc, DNA_A)
+            votes[2] += iscompatible(nuc, DNA_C)
+            votes[3] += iscompatible(nuc, DNA_G)
+            votes[4] += iscompatible(nuc, DNA_T)
+            votes[5] += iscompatible(nuc, DNA_Gap)
+        end
     end
-    return cons
 end
