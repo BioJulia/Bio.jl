@@ -1819,19 +1819,26 @@ anchor = p + 1
 @label ctr13
 line = String(data[anchor:p])
 tag = line[2:3]
-if !haskey(header, tag)
-	header[tag] = []
-end
-if tag == "CO"
-	push!(header[tag], line[5:end-1])
+if tag == "HD"
+	if haskey(header, "HD")
+		error("there are multiple @HD lines")
+	end
+	header[tag] = parse_keyvals(line[5:end-1])
 else
-			push!(header[tag], parse_keyvals(line[5:end-1]))
+			if !haskey(header, tag)
+		header[tag] = []
+	end
+	if tag == "CO"
+		push!(header[tag], line[5:end-1])
+else
+	push!(header[tag], parse_keyvals(line[5:end-1]))
 end
-	anchor = p + 1
-	@goto st1
+		end
+anchor = p + 1
+@goto st1
 @label st1
 p+= 1
-if 	p == pe
+if p == pe
 	@goto _test_eof1
 
 end
@@ -1841,12 +1848,12 @@ if (data[1+(p )])== 67
 
 end
 if (data[1+(p )])> 90
-	if 97 <= (data[1+(p )])&& (data[1+(p )])<= 122
-		@goto st2
+	if 	97 <= (data[1+(p )])&& (data[1+(p )])<= 122
+	@goto st2
 
-	end
+end
 
-elseif (data[1+(p )])>= 65
+elseif 	(data[1+(p )])>= 65
 	@goto st2
 
 end
@@ -2076,6 +2083,12 @@ if p == eof
 	if cs  == 13
 		line = String(data[anchor:p])
 		tag = line[2:3]
+		if tag == "HD"
+			if haskey(header, "HD")
+				error("there are multiple @HD lines")
+			end
+			header[tag] = parse_keyvals(line[5:end-1])
+	else
 		if !haskey(header, tag)
 			header[tag] = []
 		end
@@ -2085,6 +2098,7 @@ if p == eof
 		push!(header[tag], parse_keyvals(line[5:end-1]))
 end
 end
+			end
 
 end
 @label _out

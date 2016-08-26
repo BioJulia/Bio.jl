@@ -99,7 +99,6 @@ function randrange(range)
     end
 end
 
-#=
 @testset "Alignments" begin
     @testset "Operations" begin
         @testset "Constructors and Conversions" begin
@@ -946,7 +945,6 @@ end
         end
     end
 end
-=#
 
 @testset "High-throughput Sequencing" begin
     @testset "AuxDataDict" begin
@@ -1084,7 +1082,6 @@ end
         @testset "Round trip" begin
             for specimen in YAML.load_file(joinpath(samdir, "index.yml"))
                 filepath = joinpath(samdir, specimen["filename"])
-                println(filepath)
                 mktemp() do path, io
                     # copy
                     reader = open(filepath, SAM)
@@ -1147,81 +1144,67 @@ end
         end
 
         @testset "Reader" begin
-            reader = open(joinpath(bamdir, "bam1.bam"), BAM)
+            reader = open(joinpath(bamdir, "ce#1.bam"), BAM)
             @test isa(reader, Align.BAMReader)
 
             # header
             h = header(reader)
-            @test h["SQ"] == [Dict("SN" => "1", "LN" => "239940")]
-            @test h["PG"] == [Dict("ID" => "bwa", "PN" => "bwa", "VN" => "0.6.2-r126")]
+            @test h["SQ"] == [Dict("SN" => "CHROMOSOME_I", "LN" => "1009800")]
 
             # first record
-            n = 0
             rec = BAMRecord()
-            read!(reader, rec); n += 1
+            read!(reader, rec)
             @test refid(rec) == 1
-            @test position(rec) == 136186
-            @test seqname(rec) == "HWI-1KL120:88:D0LRBACXX:1:1101:2852:2134"
+            @test position(rec) == 2
+            @test seqname(rec) == "SRR065390.14978392"
             @test sequence(rec) == dna"""
-            GAGAGGTCAGCGTGAGCCCCTTGCCTCACACCGGCCCCTC
-            TCACGCCGAGAGAGGTCAGCGTGAGCCCCTTGCCTCACAC
-            CGGCCCCTCCCACGCCGAGAG
+            CCTAGCCCTAACCCTAACCCTAACCCTAGCCTAAGCCTAAGCCTAAGCCT
+            AAGCCTAAGCCTAAGCCTAAGCCTAAGCCTAAGCCTAAGCCTAAGCCTAA
             """
-            @test flag(rec) == 69
-            @test cigar(rec) == ""
-
-            # second record
-            read!(reader, rec); n += 1
-            @test refid(rec) == 1
-            @test position(rec) == 136186
-            @test seqname(rec) == "HWI-1KL120:88:D0LRBACXX:1:1101:2852:2134"
-            @test sequence(rec) == dna"""
-            TCACGGTGGCCTGTTGAGGCAGGGGCTCACGCTGACCTCT
-            CTCGGCGTGGGAGGGGCCGGTGTGAGGCAAGGGCTCACGC
-            TGACCTCTCTCGGCGTGGGAG
-            """
-            @test flag(rec) == 137
-            @test cigar(rec) == "101M"
-            @test rec["XT"] === 'U'
-            @test rec["NM"] == 5
-
-            # remaining records (just check the number)
-            while !eof(reader)
-                read!(reader, rec)
-                n += 1
-            end
+            @test flag(rec) == 16
+            @test cigar(rec) == "27M1D73M"
+            @test rec["XG"] == 1
+            @test rec["XM"] == 5
+            @test rec["XN"] == 0
+            @test rec["XO"] == 1
+            @test rec["AS"] == -18
+            @test rec["XS"] == -18
+            @test rec["YT"] == "UU"
+            @test eof(reader)
             close(reader)
-            @test n == 200
 
             # iterator
-            @test length(collect(open(joinpath(bamdir, "bam1.bam"), BAM))) == 200
+            @test length(collect(open(joinpath(bamdir, "ce#1.bam"), BAM))) == 1
+            @test length(collect(open(joinpath(bamdir, "ce#2.bam"), BAM))) == 2
         end
 
         @testset "Round trip" begin
-            mktemp() do path, _
-                # copy
-                reader = open(joinpath(bamdir, "bam1.bam"), BAM)
-                writer = Align.BAMWriter(
-                    BGZFStream(path, "w"),
-                    header(reader, true))
-                records = BAMRecord[]
-                for rec in reader
-                    push!(records, rec)
-                    write(writer, rec)
-                end
-                close(reader)
-                close(writer)
+            for specimen in YAML.load_file(joinpath(bamdir, "index.yml"))
+                filepath = joinpath(bamdir, specimen["filename"])
+                mktemp() do path, _
+                    # copy
+                    reader = open(filepath, BAM)
+                    writer = Align.BAMWriter(
+                        BGZFStream(path, "w"),
+                        header(reader, true))
+                    records = BAMRecord[]
+                    for rec in reader
+                        push!(records, rec)
+                        write(writer, rec)
+                    end
+                    close(reader)
+                    close(writer)
 
-                # read again
-                reader = open(path, BAM)
-                @test collect(reader) == records
-                close(reader)
+                    # read again
+                    reader = open(path, BAM)
+                    @test collect(reader) == records
+                    close(reader)
+                end
             end
         end
 
         @testset "Random access" begin
-            filepath = Pkg.dir("Bio", "test", "BioFmtSpecimens", "BAM",
-                               "GSE25840_GSM424320_GM06985_gencode_spliced.head.bam")
+            filepath = joinpath(bamdir, "GSE25840_GSM424320_GM06985_gencode_spliced.head.bam")
             reader = open(filepath, BAM)
 
             # expected values are counted using samtools

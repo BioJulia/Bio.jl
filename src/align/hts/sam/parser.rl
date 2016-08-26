@@ -160,13 +160,20 @@ Ragel.@generate_read!_function(
     action header {
         line = String(data[anchor:p])
         tag = line[2:3]
-        if !haskey(header, tag)
-            header[tag] = []
-        end
-        if tag == "CO"
-            push!(header[tag], line[5:end-1])
+        if tag == "HD"
+            if haskey(header, "HD")
+                error("there are multiple @HD lines")
+            end
+            header[tag] = parse_keyvals(line[5:end-1])
         else
-            push!(header[tag], parse_keyvals(line[5:end-1]))
+            if !haskey(header, tag)
+                header[tag] = []
+            end
+            if tag == "CO"
+                push!(header[tag], line[5:end-1])
+            else
+                push!(header[tag], parse_keyvals(line[5:end-1]))
+            end
         end
     }
 
