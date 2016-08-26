@@ -91,16 +91,16 @@ true
 
 ```
 
-Every nucleotide is encoded using lower 4 bits of a byte. Unambiguous
-nucleotides have only one *true* bit and the other bits are *false*s. The table
-below shows all unambiguous nucleotides and their corresponding bits. An
+Every nucleotide is encoded using lower 4 bits of a byte. An unambiguous
+nucleotide has only one *true* bit and the other bits are *false*s. The table
+below summarizes all unambiguous nucleotides and their corresponding bits. An
 ambiguous nucleotide is the bitwise OR of unambiguous nucleotides that the
 ambiguous nucleotide can take. For example, `DNA_R`--`DNA_A` or `DNA_G`--is
 encoded as `0101` because `0101` is the bitwise OR of `0001` (`DNA_A`) and
 `0100` (`DNA_G`). The gap symbol is always `0000`.
 
 |    Nucleotide    |  Bits  |
-| ---------------- | ------ |
+|:---------------- |:------ |
 | `DNA_A`, `RNA_A` | `0001` |
 | `DNA_C`, `RNA_C` | `0010` |
 | `DNA_G`, `RNA_G` | `0100` |
