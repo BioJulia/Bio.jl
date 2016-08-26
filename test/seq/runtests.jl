@@ -790,38 +790,38 @@ end
         rnathrow = [rna"AAA", rna"UUU", rna"CCCUUU", rna"GGG"]
 
         prot = [aa"AMG", aa"AMG", aa"AMG", aa"AMG"]
-        
+
         sitemajdna = [
-            DNA_A  DNA_A  DNA_A;
-            DNA_T  DNA_T  DNA_T;
-            DNA_C  DNA_C  DNA_C;
+            DNA_A  DNA_A  DNA_A
+            DNA_T  DNA_T  DNA_T
+            DNA_C  DNA_C  DNA_C
             DNA_G  DNA_G  DNA_G
         ]
         seqmajdna = [
-            DNA_A  DNA_T  DNA_C  DNA_G;
-            DNA_A  DNA_T  DNA_C  DNA_G;
+            DNA_A  DNA_T  DNA_C  DNA_G
+            DNA_A  DNA_T  DNA_C  DNA_G
             DNA_A  DNA_T  DNA_C  DNA_G
         ]
         sitemajrna = [
-            RNA_A  RNA_A  RNA_A;
-            RNA_U  RNA_U  RNA_U;
-            RNA_C  RNA_C  RNA_C;
+            RNA_A  RNA_A  RNA_A
+            RNA_U  RNA_U  RNA_U
+            RNA_C  RNA_C  RNA_C
             RNA_G  RNA_G  RNA_G
         ]
         seqmajrna = [
-            RNA_A  RNA_U  RNA_C  RNA_G;
-            RNA_A  RNA_U  RNA_C  RNA_G;
+            RNA_A  RNA_U  RNA_C  RNA_G
+            RNA_A  RNA_U  RNA_C  RNA_G
             RNA_A  RNA_U  RNA_C  RNA_G
         ]
         sitemajaa = [
-            AA_A AA_M AA_G;
-            AA_A AA_M AA_G;
-            AA_A AA_M AA_G;
+            AA_A AA_M AA_G
+            AA_A AA_M AA_G
+            AA_A AA_M AA_G
             AA_A AA_M AA_G
         ]
         seqmajaa = [
-            AA_A AA_A AA_A AA_A;
-            AA_M AA_M AA_M AA_M;
+            AA_A AA_A AA_A AA_A
+            AA_M AA_M AA_M AA_M
             AA_G AA_G AA_G AA_G
         ]
 
