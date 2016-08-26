@@ -88,6 +88,7 @@ export
 
 using Bio.Seq
 import Bio.Seq.AminoAcidSequence
+import Bio.Seq.threeletter_to_aa
 
 
 "A macromolecular structural element."
@@ -232,8 +233,10 @@ function Base.setindex!(dis_at::DisorderedAtom, at::Atom, alt_loc_id::Char)
 end
 
 function findatombyname(res::Residue, atom_name::AbstractString)
-    if length(atom_name) == 4
+    # Look for atom name directly
+    if atom_name in keys(res.atoms)
         return res.atoms[atom_name]
+    # Pad out name to 4 characters to read PDB atom names with whitespace
     elseif length(atom_name) == 3
         if " $atom_name" in keys(res.atoms)
             return res.atoms[" $atom_name"]
@@ -259,6 +262,7 @@ function findatombyname(res::Residue, atom_name::AbstractString)
             return res.atoms["$atom_name   "]
         end
     end
+    # Could not find atom name
     throw(KeyError(atom_name))
 end
 
@@ -328,8 +332,8 @@ serial(at::Atom) = at.serial
 serial(dis_at::DisorderedAtom) = serial(defaultatom(dis_at))
 
 """
-Get the atom name of an `AbstractAtom`. If `spaces` is `false` (the default),
-the name is stripped of whitespace.
+Get the atom name of an `AbstractAtom`. `spaces` determines whether the name is
+stripped of whitespace (default `false`).
 """
 function atomname(at::Atom; spaces::Bool=false)
     if spaces
@@ -791,7 +795,7 @@ Base.eltype(::Type{DisorderedAtom}) = Atom
 
 """
 Returns a copy of a `Vector` of `StructuralElement`s with all elements that do
-not return `True` from the selector functions removed.
+not return `true` from the selector functions removed.
 """
 function applyselectors{T <: StructuralElement}(els::Vector{T}, selectors::Function...)
     new_list = copy(els)
@@ -811,7 +815,7 @@ end
 """
 Returns a sorted `Vector` of the models in a `StructuralElementOrList`.
 Additional arguments are model selector functions - only models that return
-`True` from the functions are retained.
+`true` from the functions are retained.
 """
 collectmodels(struc::ProteinStructure) = collect(struc)
 
@@ -837,7 +841,7 @@ collectmodels(el::StructuralElementOrList, model_selectors::Function...) = apply
 """
 Return the number of `Model`s in a `StructuralElementOrList`.
 Additional arguments are model selector functions - only models that return
-`True` from the functions are counted.
+`true` from the functions are counted.
 """
 countmodels(el::StructuralElementOrList, model_selectors::Function...) = length(collectmodels(el, model_selectors...))
 
@@ -849,7 +853,7 @@ countmodels(mods::Vector{Model}) = length(mods)
 """
 Returns a sorted `Vector` of the chains in a `StructuralElementOrList`.
 Additional arguments are chain selector functions - only chains that return
-`True` from the functions are retained.
+`true` from the functions are retained.
 """
 function collectchains(struc::ProteinStructure)
     if countmodels(struc) > 0
@@ -866,11 +870,11 @@ collectchains(ch::Chain) = [ch]
 collectchains(el::Union{AbstractResidue, AbstractAtom}) = [chain(el)]
 
 function collectchains(mods::Vector{Model})
-    res_list = AbstractResidue[]
+    ch_list = Chain[]
     for mod in mods
-        append!(res_list, collectresidues(mod))
+        append!(ch_list, collectchains(mod))
     end
-    return res_list
+    return sort(ch_list)
 end
 
 collectchains(chs::Vector{Chain}) = sort(chains)
@@ -891,7 +895,7 @@ collectchains(el::StructuralElementOrList, chain_selectors::Function...) = apply
 """
 Return the number of `Chain`s in a `StructuralElementOrList`.
 Additional arguments are chain selector functions - only chains that return
-`True` from the functions are counted.
+`true` from the functions are counted.
 """
 countchains(el::StructuralElement, chain_selectors::Function...) = length(collectchains(el, chain_selectors))
 
@@ -903,7 +907,7 @@ countchains(chs::Vector{Chain}) = length(chains)
 """
 Returns a sorted `Vector` of the residues in a `StructuralElementOrList`.
 Additional arguments are residue selector functions - only residues that return
-`True` from the functions are retained.
+`true` from the functions are retained.
 """
 function collectresidues(struc::ProteinStructure)
     if countmodels(struc) > 0
@@ -918,7 +922,7 @@ function collectresidues(el::Union{Model, Vector{Model}, Vector{Chain}})
     for sub_el in el
         append!(res_list, collectresidues(sub_el))
     end
-    return res_list
+    return sort(res_list)
 end
 
 collectresidues(ch::Chain) = collect(ch)
@@ -947,7 +951,7 @@ collectresidues(el::StructuralElementOrList, residue_selectors::Function...) = a
 """
 Return the number of residues in a `StructuralElementOrList`.
 Additional arguments are residue selector functions - only residues that return
-`True` from the functions are counted.
+`true` from the functions are counted.
 """
 countresidues(el::StructuralElementOrList, residue_selectors::Function...) = length(collectresidues(el, residue_selectors...))
 
@@ -959,7 +963,7 @@ countresidues{T <: AbstractResidue}(res_list::Vector{T}) = length(res_list)
 """
 Returns a sorted `Vector` of the atoms in a `StructuralElementOrList`.
 Additional arguments are atom selector functions - only atoms that return
-`True` from the functions are retained.
+`true` from the functions are retained.
 """
 function collectatoms(struc::ProteinStructure)
     if collectmodels(struc) > 0
@@ -974,7 +978,7 @@ function collectatoms(el::Union{Model, Chain, Vector{Model}, Vector{Chain}, Vect
     for sub_el in el
         append!(atom_list, collectatoms(sub_el))
     end
-    return atom_list
+    return sort(atom_list)
 end
 
 collectatoms(res::AbstractResidue) = collect(res)
@@ -991,7 +995,7 @@ collectatoms(el::StructuralElementOrList, atom_selectors::Function...) = applyse
 """
 Return the number of atoms in a `StructuralElementOrList`.
 Additional arguments are atom selector functions - only atoms that return
-`True` from the functions are counted.
+`true` from the functions are counted.
 """
 countatoms(el::StructuralElementOrList, atom_selectors::Function...) = length(collectatoms(el, atom_selectors...))
 
@@ -1207,36 +1211,26 @@ where possible, otherwise uses the atom name.
 hydrogenselector(at::AbstractAtom) = element(at) == "H" || (element(at) == "" && 'H' in atomname(at) && !ismatch(r"[a-zA-Z]", atomname(at)[1:findfirst(atomname(at), 'H')-1]))
 
 
-function AminoAcidSequence{T <: AbstractResidue}(res_list::Vector{T})
-    # Assumes residues are in same chain
-    # Assume residues are in order, i.e. all hetero residues after
+function AminoAcidSequence(ch::Chain, residue_selectors::Function...)
+    # Residues are ordered with all hetero residues after
     # For obtaining sequence we will re-order them numerically
-    sorted_res = sort(res_list, lt=resnumber)
+    sorted_res = sort(collectresidues(ch, residue_selectors...), by=resnumber)
     seq = AminoAcid[]
-    curr_ind = 1
-    # Loop from min to max residue number
-    for i in resnumber(sorted_res[1]):resnumber(sorted_res[end])
-        if resnumber(sorted_res[curr_ind]) == i
-            curr_ind += 1
-            res_name = resname(res)
-            try
-                aa = parse(AminoAcid, res_name)
-            catch ex
-                if isa(ex, ErrorException)
-                    aa = AA_X
-                else
-                    rethrow()
-                end
-            end
-            push!(seq, aa)
+    for i in 1:length(sorted_res)
+        if resname(sorted_res[i]) in keys(threeletter_to_aa)
+            push!(seq, threeletter_to_aa[resname(sorted_res[i])])
         else
-            push!(seq, AA_Gap)
+            push!(seq, AA_X)
+        end
+        if i+1 <= length(sorted_res) && resnumber(sorted_res[i+1]) - resnumber(sorted_res[i]) > 1
+            append!(seq, [AA_Gap for _ in 1:(resnumber(sorted_res[i+1]) - resnumber(sorted_res[i]) - 1)])
         end
     end
     return AminoAcidSequence(seq)
 end
 
-AminoAcidSequence(el::StructuralElementOrList; residue_selectors::Function...) = AminoAcidSequence(collectresidues(el, residue_selectors...))
+
+proteinsequences(el::StructuralElementOrList) = map(AminoAcidSequence, collectchains(el))
 
 
 # Descriptive showing of elements

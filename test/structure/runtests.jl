@@ -21,140 +21,172 @@ pdbfilepath(filename::AbstractString) = Pkg.dir("Bio", "test", "BioFmtSpecimens"
 
 
 @testset "Model" begin
-    # Test Atom constructor
-    atom = Atom(false, 100, "CA", ' ', "ALA", 'A', 10, ' ', [1.0, 2.0, 3.0], 1.0, 10.0, "C", "")
-    show(DevNull, atom)
-    showcompact(DevNull, atom)
+    # Test constructors and indexing
+    struc = ProteinStructure("Test structure")
+    struc[1] = Model(1, struc)
+    mod = struc[1]
+    @test isa(mod, Model)
+    struc[1]['A'] = Chain('A', mod)
+    ch = struc[1]['A']
+    @test isa(ch, Chain)
+    struc['A'][10] = Residue("ALA", 10, ' ', false, ch)
+    res = struc['A'][10]
+    @test isa(res, Residue)
+    struc['A']["H_20A"] = DisorderedResidue(Dict(
+        "VAL"=> Residue("VAL", 20, 'A', true, ch),
+        "ILE"=> Residue("ILE", 20, 'A', true, ch)
+    ), "VAL")
+    dis_res = struc['A']["H_20A"]
+    @test isa(dis_res, DisorderedResidue)
+    struc['A'][10][" CA "] = Atom(100, " CA ", ' ', [1.0, 2.0, 3.0], 1.0, 0.0, " C", "  ", res)
+    at = struc['A'][10]["CA"]
+    @test isa(at, Atom)
+    struc['A'][10][" CB "] = DisorderedAtom(Dict(
+        'A'=> Atom(200, " CB ", 'A', [10.0, 20.0, 30.0], 0.5, 0.0, " C", "  ", res),
+        'B'=> Atom(201, " CB ", 'B', [11.0, 21.0, 31.0], 0.5, 0.0, " C", "  ", res)
+    ), 'A')
+    dis_at = struc['A'][10]["CB"]
+    @test isa(dis_at, DisorderedAtom)
+    Bio.Structure.fixlists!(struc)
 
-    # Test Atom getters/setters
-    @test !ishetatom(atom)
-    @test serial(atom) == 100
-    @test atomname(atom) == "CA"
-    @test altlocid(atom) == ' '
-    @test resname(atom) == "ALA"
-    @test chainid(atom) == 'A'
-    @test resnumber(atom) == 10
-    @test inscode(atom) == ' '
-    @test x(atom) == 1.0
-    @test y(atom) == 2.0
-    @test z(atom) == 3.0
-    @test coords(atom) == [1.0, 2.0, 3.0]
-    @test occupancy(atom) == 1.0
-    @test tempfac(atom) == 10.0
-    @test element(atom) == "C"
-    @test charge(atom) == ""
+    # Test show
+    show(DevNull, at)
+    showcompact(DevNull, at)
+    show(DevNull, dis_at)
+    show(DevNull, res)
+    show(DevNull, dis_res)
+    show(DevNull, ch)
+    show(DevNull, mod)
+    show(DevNull, struc)
 
-    @test !ishetero(atom)
-    @test !isdisorderedatom(atom)
-    @test atomid(atom) == ("10:A", "ALA", "CA")
-    @test resid(atom) == "10"
-    @test resid(atom, full=true) == "10:A"
+    # Test getters/setters
+    @test !ishetatom(at)
+    @test !ishetatom(dis_at)
 
-    x!(atom, 10.0)
-    @test coords(atom) == [10.0, 2.0, 3.0]
-    y!(atom, 20.0)
-    @test coords(atom) == [10.0, 20.0, 3.0]
-    z!(atom, 30.0)
-    @test coords(atom) == [10.0, 20.0, 30.0]
-    coords!(atom, [40.0, 50.0, 60.0])
-    @test coords(atom) == [40.0, 50.0, 60.0]
+    @test serial(at) == 100
+    @test serial(dis_at) == 100
+
+    @test atomname(at) == "CA"
+    @test atomname(dis_at) == "CB"
+    @test atomname(at, spaces=true) == " CA "
+    @test atomname(dis_at, spaces=true) == " CB "
+
+    @test altlocid(at) == ' '
+    @test altlocid(dis_at) == 'A'
+
+    @test resname(at) == "ALA"
+    @test resname(dis_at) == "VAL"
+
+    @test chainid(at) == 'A'
+    @test chainid(dis_at) == 'A'
+
+    @test resnumber(at) == 10
+    @test resnumber(dis_at) == 10
+
+    @test inscode(at) == ' '
+    @test inscode(dis_at) == ' '
+
+    @test x(at) == 1.0
+    @test x(dis_at) == 1.0
+
+    @test y(at) == 2.0
+    @test y(dis_at) == 2.0
+
+    @test z(at) == 3.0
+    @test z(dis_at) == 3.0
+
+    @test coords(at) == [1.0, 2.0, 3.0]
+    @test coords(dis_at) == [1.0, 2.0, 3.0]
+
+    @test occupancy(at) == 1.0
+    @test occupancy(dis_at) == 0.6
+
+    @test tempfac(at) == 10.0
+    @test tempfac(dis_at) == 10.0
+
+    @test element(at) == " C"
+    @test element(G) == "C"
+
+    @test charge(at) == "  "
+    @test charge(dis_at) == ""
+
+
+
+    @test !ishetero(dis_at)
+    @test isdisorderedatom(dis_at)
+    @test atomid(dis_at) == ("10:A", "ALA", "CA")
+    @test resid(dis_at) == "10"
+    @test resid(dis_at, full=true) == "10:A"
+
+    @test !ishetero(at)
+    @test !isdisorderedatom(at)
+    @test atomid(at) == ("10:A", "ALA", "CA")
+    @test resid(at) == "10"
+    @test resid(at, full=true) == "10:A"
+
+    x!(at, 10.0)
+    @test coords(at) == [10.0, 2.0, 3.0]
+    y!(at, 20.0)
+    @test coords(at) == [10.0, 20.0, 3.0]
+    z!(at, 30.0)
+    @test coords(at) == [10.0, 20.0, 30.0]
+    coords!(at, [40.0, 50.0, 60.0])
+    @test coords(at) == [40.0, 50.0, 60.0]
+
+    # Only the coordinates on the default atom are changed
+    x!(dis_at, 10.0)
+    @test coords(dis_at) == [10.0, 2.0, 3.0]
+    @test coords(dis_at['B']) == [11.0, 12.0, 13.0]
+    y!(dis_at, 20.0)
+    @test coords(dis_at) == [10.0, 20.0, 3.0]
+    @test coords(dis_at['B']) == [11.0, 12.0, 13.0]
+    z!(dis_at, 30.0)
+    @test coords(dis_at) == [10.0, 20.0, 30.0]
+    @test coords(dis_at['B']) == [11.0, 12.0, 13.0]
+    coords!(dis_at, [40.0, 50.0, 60.0])
+    @test coords(dis_at) == [40.0, 50.0, 60.0]
+    @test coords(dis_at['B']) == [11.0, 12.0, 13.0]
+    x!(dis_at['A'], 100.0)
+    @test coords(dis_at) == [100.0, 50.0, 60.0]
+    @test coords(dis_at['B']) == [11.0, 12.0, 13.0]
+    x!(dis_at['B'], 110.0)
+    @test coords(dis_at) == [100.0, 50.0, 60.0]
+    @test coords(dis_at['B']) == [110.0, 12.0, 13.0]
 
     # Test Atom iteration
-    atom_list = collect(atom)
+    atom_list = collect(at)
     @test isa(atom_list, Vector{Atom})
     @test length(atom_list) == 1
     @test serial(atom_list[1]) == 100
 
-    # Test DisorderedAtom constructor
-    disordered_atom = DisorderedAtom(Dict(
-        'A' => Atom(false, 100, "CA", 'A', "ALA", 'A', 10, ' ', [1.0, 2.0, 3.0], 0.6, 10.0, "C", ""),
-        'B' => Atom(false, 101, "CA", 'B', "ALA", 'A', 10, ' ', [11.0, 12.0, 13.0], 0.4, 20.0, "C", "")
-    ), 'A')
-    show(DevNull, disordered_atom)
-
     # Test DisorderedAtom getters/setters
-    @test defaultaltlocid(disordered_atom) == 'A'
-    @test isa(defaultatom(disordered_atom), Atom)
-    @test serial(defaultatom(disordered_atom)) == 100
-    @test altlocids(disordered_atom) == ['A', 'B']
+    @test defaultaltlocid(dis_at) == 'A'
+    @test isa(defaultatom(dis_at), Atom)
+    @test serial(defaultatom(dis_at)) == 100
+    @test altlocids(dis_at) == ['A', 'B']
 
-    @test !ishetatom(disordered_atom)
-    @test serial(disordered_atom) == 100
-    @test atomname(disordered_atom) == "CA"
-    @test altlocid(disordered_atom) == 'A'
-    @test resname(disordered_atom) == "ALA"
-    @test chainid(disordered_atom) == 'A'
-    @test resnumber(disordered_atom) == 10
-    @test inscode(disordered_atom) == ' '
-    @test x(disordered_atom) == 1.0
-    @test y(disordered_atom) == 2.0
-    @test z(disordered_atom) == 3.0
-    @test coords(disordered_atom) == [1.0, 2.0, 3.0]
-    @test occupancy(disordered_atom) == 0.6
-    @test tempfac(disordered_atom) == 10.0
-    @test element(disordered_atom) == "C"
-    @test charge(disordered_atom) == ""
 
-    @test !ishetero(disordered_atom)
-    @test isdisorderedatom(disordered_atom)
-    @test atomid(disordered_atom) == ("10:A", "ALA", "CA")
-    @test resid(disordered_atom) == "10"
-    @test resid(disordered_atom, full=true) == "10:A"
 
-    disordered_atom_mod = DisorderedAtom(disordered_atom, 'B')
-    @test defaultaltlocid(disordered_atom_mod) == 'B'
-    @test serial(disordered_atom_mod) == 101
-    @test_throws AssertionError DisorderedAtom(disordered_atom, 'C')
+    dis_at_mod = DisorderedAtom(dis_at, 'B')
+    @test defaultaltlocid(dis_at_mod) == 'B'
+    @test serial(dis_at_mod) == 101
+    @test_throws AssertionError DisorderedAtom(dis_at, 'C')
 
-    # Only the coordinates on the default atom are changed
-    x!(disordered_atom, 10.0)
-    @test coords(disordered_atom) == [10.0, 2.0, 3.0]
-    @test coords(disordered_atom['B']) == [11.0, 12.0, 13.0]
-    y!(disordered_atom, 20.0)
-    @test coords(disordered_atom) == [10.0, 20.0, 3.0]
-    @test coords(disordered_atom['B']) == [11.0, 12.0, 13.0]
-    z!(disordered_atom, 30.0)
-    @test coords(disordered_atom) == [10.0, 20.0, 30.0]
-    @test coords(disordered_atom['B']) == [11.0, 12.0, 13.0]
-    coords!(disordered_atom, [40.0, 50.0, 60.0])
-    @test coords(disordered_atom) == [40.0, 50.0, 60.0]
-    @test coords(disordered_atom['B']) == [11.0, 12.0, 13.0]
-    x!(disordered_atom['A'], 100.0)
-    @test coords(disordered_atom) == [100.0, 50.0, 60.0]
-    @test coords(disordered_atom['B']) == [11.0, 12.0, 13.0]
-    x!(disordered_atom['B'], 110.0)
-    @test coords(disordered_atom) == [100.0, 50.0, 60.0]
-    @test coords(disordered_atom['B']) == [110.0, 12.0, 13.0]
+
 
     # Test DisorderedAtom indices
-    @test isa(disordered_atom['A'], Atom)
-    @test serial(disordered_atom['A']) == 100
-    @test serial(disordered_atom['B']) == 101
-    @test_throws KeyError disordered_atom['C']
-    @test_throws MethodError disordered_atom["A"]
+    @test isa(dis_at['A'], Atom)
+    @test serial(dis_at['A']) == 100
+    @test serial(dis_at['B']) == 101
+    @test_throws KeyError dis_at['C']
+    @test_throws MethodError dis_at["A"]
 
     # Test DisorderedAtom iteration
-    disordered_atom_list = collect(disordered_atom)
-    @test isa(disordered_atom_list, Vector{Atom})
-    @test length(disordered_atom_list) == 2
-    @test serial(disordered_atom_list[2]) == 101
+    dis_at_list = collect(dis_at)
+    @test isa(dis_at_list, Vector{Atom})
+    @test length(dis_at_list) == 2
+    @test serial(dis_at_list[2]) == 101
 
-
-    # Test Residue constructor
-    res = Residue("ALA", 'A', 10, ' ', false, ["CA", "CB", "CG"], Dict(
-        "CA" => disordered_atom,
-        "CB" => Atom(false, 102, "CB", ' ', "ALA", 'A', 10, ' ', [1.0, 2.0, 3.0], 1.0, 0.0, "C", ""),
-        "CG" => Atom(false, 103, "CG", ' ', "ALA", 'A', 10, ' ', [1.0, 2.0, 3.0], 1.0, 0.0, "C", "")
-    ))
-    res_min = Residue("ALA", 'A', 10, ' ', false)
-    res_min = Residue(AbstractAtom[
-        Atom(false, 102, "CG", ' ', "ALA", 'A', 10, ' ', [1.0, 2.0, 3.0], 1.0, 0.0, "C", ""),
-        Atom(false, 100, "CA", ' ', "ALA", 'A', 10, ' ', [1.0, 2.0, 3.0], 1.0, 0.0, "C", ""),
-        Atom(false, 101, "CB", ' ', "ALA", 'A', 10, ' ', [1.0, 2.0, 3.0], 1.0, 0.0, "C", "")
-    ])
-    show(DevNull, res)
-
-    # Test Residue getters/setters
     @test resname(res) == "ALA"
     @test chainid(res) == 'A'
     @test resnumber(res) == 10
@@ -197,15 +229,6 @@ pdbfilepath(filename::AbstractString) = Pkg.dir("Bio", "test", "BioFmtSpecimens"
     @test length(res_list) == 3
     @test serial(res_list[3]) == 103
 
-    # Test DisorderedResidue constructor
-    disordered_res = DisorderedResidue(Dict(
-        "ALA" => res,
-        "VAL" => Residue("VAL", 'A', 10, ' ', false, ["CA"], Dict(
-            "CA" => Atom(false, 110, "CA", ' ', "VAL", 'A', 10, ' ', [1.0, 2.0, 3.0], 1.0, 0.0, "C", "")
-        ))
-    ), "ALA")
-    show(DevNull, DisorderedResidue)
-
     # Test DisorderedResidue getters/setters
     @test isa(disorderedres(disordered_res, "VAL"), AbstractResidue)
     @test resname(disorderedres(disordered_res, "VAL")) == "VAL"
@@ -246,17 +269,6 @@ pdbfilepath(filename::AbstractString) = Pkg.dir("Bio", "test", "BioFmtSpecimens"
     @test length(disordered_res_list) == 3
     @test serial(res_list[3]) == 103
 
-
-    # Test Chain constructor
-    chain = Chain('A', ["10", "H_11"], Dict(
-        "10" => disordered_res,
-        "H_11" => Residue("ATP", 'A', 11, ' ', true, ["PB"], Dict(
-            "PB" => Atom(true, 120, "PB", ' ', "ATP", 'A', 11, ' ', [1.0, 2.0, 3.0], 1.0, 0.0, "P", "")
-        ))
-    ))
-    chain_min = Chain('A')
-    show(DevNull, chain)
-
     # Test Chain getters/setters
     @test chainid(chain) == 'A'
     @test resids(chain) == ["10", "H_11"]
@@ -280,20 +292,6 @@ pdbfilepath(filename::AbstractString) = Pkg.dir("Bio", "test", "BioFmtSpecimens"
     @test length(chain_list) == 2
     @test resname(chain_list[2]) == "ATP"
 
-
-    # Test Model constructor
-    model = Model(5, Dict(
-        'A' => chain,
-        'B' => Chain('B', ["H_20"], Dict(
-            "H_20" => Residue("ATP", 'B', 1, ' ', true, ["PB"], Dict(
-                "PB" => Atom(true, 1000, "PB", ' ', "ATP", 'B', 1, ' ', [1.0, 2.0, 3.0], 1.0, 0.0, "P", "")
-            ))
-        ))
-    ))
-    model_min = Model(1)
-    model_min = Model()
-    show(DevNull, model)
-
     # Test Model getters/setters
     @test modelnumber(model) == 5
     @test chainids(model) == ['A', 'B']
@@ -313,21 +311,6 @@ pdbfilepath(filename::AbstractString) = Pkg.dir("Bio", "test", "BioFmtSpecimens"
     @test length(model_list) == 2
     @test chainid(model_list[2]) == 'B'
 
-
-    # Test ProteinStructure constructor
-    struc = ProteinStructure("test", Dict(
-        5 => model,
-        3 => Model(3, Dict(
-            'A' => Chain('A', ["10"], Dict(
-                "10" => Residue("ALA", 'A', 10, ' ', false, ["CA"], Dict(
-                    "CA" => Atom(false, 100, "CA", ' ', "ALA", 'A', 10, ' ', [1.0, 2.0, 3.0], 1.0, 0.0, "C", "")
-                ))
-            ))
-        ))
-    ))
-    struc_min = ProteinStructure("test")
-    struc_min = ProteinStructure()
-    show(DevNull, ProteinStructure)
 
     # Test ProteinStructure getters/setters
     @test structurename(struc) == "test"
@@ -392,7 +375,7 @@ pdbfilepath(filename::AbstractString) = Pkg.dir("Bio", "test", "BioFmtSpecimens"
     @test !hetresselector(res_a)
     @test hetresselector(res_b)
     @test !disorderselector(atom_a)
-    @test disorderselector(disordered_atom)
+    @test disorderselector(dis_at)
     @test !disorderselector(res_a)
     @test disorderselector(disordered_res)
     @test hydrogenselector(Atom(false, 100, "H", ' ', "ALA", 'A', 10, ' ', [1.0, 2.0, 3.0], 1.0, 10.0, "H", ""))
@@ -404,12 +387,12 @@ pdbfilepath(filename::AbstractString) = Pkg.dir("Bio", "test", "BioFmtSpecimens"
 
     # Further tests for structural element ordering
     # Order when looping over a DisorderedAtom is the atom serial
-    disordered_atom_ord = DisorderedAtom(Dict(
+    dis_at_ord = DisorderedAtom(Dict(
         'A' => Atom(false, 102, "CA", 'A', "ALA", 'A', 10, ' ', [1.0, 2.0, 3.0], 0.3, 10.0, "C", ""),
         'B' => Atom(false, 101, "CA", 'B', "ALA", 'A', 10, ' ', [1.0, 2.0, 3.0], 0.4, 10.0, "C", ""),
         'C' => Atom(false, 100, "CA", 'C', "ALA", 'A', 10, ' ', [1.0, 2.0, 3.0], 0.3, 10.0, "C", ""),
     ), 'B')
-    @test altlocids(disordered_atom_ord) == ['C', 'B', 'A']
+    @test altlocids(dis_at_ord) == ['C', 'B', 'A']
 
     # Order when sorting an atom list is the atom serial
     atom_list_ord = AbstractAtom[
@@ -1015,8 +998,8 @@ end
 
     struc = read(pdbfilepath("1EN2.pdb"), PDB)
     atoms = [
-        collect(struc['A'][9]);
-        collect(disorderedres(struc['A'][10], "SER"));
+        collect(struc['A'][9])
+        collect(disorderedres(struc['A'][10], "SER"))
         collect(disorderedres(struc['A'][10], "GLY"))
     ]
     residues_new = organise(atoms)
@@ -1350,26 +1333,26 @@ end
 
     # Test rmsd
     coords_one = [
-        0.0 0.0;
-        1.0 0.0;
-        1.0 3.0;
+        0.0 0.0
+        1.0 0.0
+        1.0 3.0
     ]
     coords_two = [
-        0.0 2.0;
-        2.0 0.0;
-        1.0 3.0;
+        0.0 2.0
+        2.0 0.0
+        1.0 3.0
     ]
     # This line gives a @simd warning when --inline=no
     @test isapprox(rmsd(coords_one, coords_two), sqrt(5/2))
     coords_one = [
-        0.0 0.0 1.0;
-        1.0 0.0 2.0;
-        1.0 3.0 3.0;
+        0.0 0.0 1.0
+        1.0 0.0 2.0
+        1.0 3.0 3.0
     ]
     coords_two = [
-        0.0 2.0;
-        2.0 0.0;
-        1.0 3.0;
+        0.0 2.0
+        2.0 0.0
+        1.0 3.0
     ]
     @test_throws AssertionError rmsd(coords_one, coords_two)
 
@@ -1381,26 +1364,26 @@ end
 
     # Test displacements
     coords_one = [
-        0.0 0.0;
-        1.0 0.0;
-        1.0 3.0;
+        0.0 0.0
+        1.0 0.0
+        1.0 3.0
     ]
     coords_two = [
-        0.0 2.0;
-        2.0 0.0;
-        1.0 4.0;
+        0.0 2.0
+        2.0 0.0
+        1.0 4.0
     ]
     # This line gives a @simd warning when --inline=no
     @test isapprox(displacements(coords_one, coords_two), [1.0, sqrt(5)])
     coords_one = [
-        0.0 0.0 1.0;
-        1.0 0.0 2.0;
-        1.0 3.0 3.0;
+        0.0 0.0 1.0
+        1.0 0.0 2.0
+        1.0 3.0 3.0
     ]
     coords_two = [
-        0.0 2.0;
-        2.0 0.0;
-        1.0 4.0;
+        0.0 2.0
+        2.0 0.0
+        1.0 4.0
     ]
     @test_throws AssertionError displacements(coords_one, coords_two)
 
