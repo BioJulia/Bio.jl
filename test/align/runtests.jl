@@ -947,6 +947,8 @@ end
 end
 
 @testset "High-throughput Sequencing" begin
+    get_bio_fmt_specimens()
+
     @testset "AuxDataDict" begin
         dict = AuxDataDict()
         @test length(dict) == 0
