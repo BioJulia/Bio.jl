@@ -6,7 +6,7 @@ type SAMRecord
     flag::UInt16
     refname::StringField
     pos::Int64
-    mapq::Int8
+    mapq::UInt8
     cigar::StringField
     next_refname::StringField
     next_pos::Int64

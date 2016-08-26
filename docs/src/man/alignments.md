@@ -442,13 +442,13 @@ julia> submat['A','B']  # mismatch
 ```
 
 
-## High-throughput sequencing file formats
+## Alignment file formats for high-throughput sequencing
 
-High-throughput sequencing technologies generate a large amount of data in the
-form of a large number of nucleotide sequencing reads. One of the most common
-tasks in bioinformatics is to align these reads against known reference genomes,
-chromosomes, or contigs. The `Bio.Align` module provides several data formats
-commonly used for this kind of task.
+High-throughput sequencing (HTS) technologies generate a large amount of data in
+the form of a large number of nucleotide sequencing reads. One of the most
+common tasks in bioinformatics is to align these reads against known reference
+genomes, chromosomes, or contigs. The `Bio.Align` module provides several data
+formats commonly used for this kind of task.
 
 
 ### SAM and BAM file formats
@@ -473,7 +473,7 @@ close(reader)
 | `refid`          | 1-based reference sequence index (BAM only)    |
 | `nextrefname`    | `refname` of the mate/next read                |
 | `nextposition`   | `position` of the mate/next read               |
-| `nextrefid`      | `refid` of the mate/nextread (BAM only)        |
+| `nextrefid`      | `refid` of the mate/next read (BAM only)       |
 | `mappingquality` | mapping quality                                |
 | `flag`           | bitwise flag                                   |
 | `templatelength` | observed template length                       |
@@ -485,7 +485,7 @@ close(reader)
 | `[<tag>]`        | value of an optional field with `tag`          |
 
 
-16-bit flags are defiend in the SAM specification as follows:
+16-bit flags are defined in the SAM specification as follows:
 
 | Flag                      | Bit       | Description                                                        |
 | :------------------------ | :-------- | :----------------------------------------------------------------- |
@@ -505,10 +505,10 @@ close(reader)
 
 ### Performance tips
 
-The size of a BAM file is often extremely huge. The iterator interface mentioned
-above allocates an object for each record and that may be a bottleneck of
-reading data from a BAM file. In-place reading reuses a preallocated object for
-every record and no memory allocation happens in reading:
+The size of a BAM file is often extremely large. The iterator interface
+mentioned above allocates an object for each record and that may be a bottleneck
+of reading data from a BAM file. In-place reading reuses a preallocated object
+for every record and no memory allocation happens in reading:
 ```julia
 reader = open("data.bam", BAM)
 record = BAMRecord()
