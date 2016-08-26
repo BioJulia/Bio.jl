@@ -77,7 +77,6 @@ export
     BAM,
     BAMRecord,
     BAI,
-    Tabix,
     AuxDataDict,
     ismapped,
     refname,
@@ -94,7 +93,6 @@ export
     sequence,
     qualities,
     header,
-    overlapchunks,
     isoverlapping,  # re-export from Bio.Intervals
     # SAM flags
     SAM_FLAG_PAIRED,
@@ -113,6 +111,7 @@ export
 import Bio
 using Bio.Seq
 using Bio.Intervals
+import Bio.StringFields: StringField
 import IntervalTrees
 
 include("operations.jl")

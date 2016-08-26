@@ -59,17 +59,11 @@
     }
 
     action seq {
-        seqstr = Ragel.@ascii_from_anchor!()
-        resize!(output.seq, length(seqstr))
-        Bio.Seq.encode_copy!(output.seq, seqstr)
+        Ragel.@copy_from_anchor!(output.seq)
     }
 
     action qual {
-        qualstr = Ragel.@ascii_from_anchor!()
-        resize!(output.qual, length(qualstr))
-        for i in 1:endof(qualstr)
-            output.qual[i] = UInt8(qualstr[i]) - 33
-        end
+        Ragel.@copy_from_anchor!(output.qual)
         empty!(output.optional_fields)
     }
 

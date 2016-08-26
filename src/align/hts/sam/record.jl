@@ -2,22 +2,22 @@
 # ==========
 
 type SAMRecord
-    name::Bio.StringFields.StringField
+    name::StringField
     flag::UInt16
-    refname::Bio.StringFields.StringField
+    refname::StringField
     pos::Int64
     mapq::Int8
-    cigar::Bio.StringFields.StringField
-    next_refname::Bio.StringFields.StringField
+    cigar::StringField
+    next_refname::StringField
     next_pos::Int64
     tlen::Int32
-    seq::DNASequence
-    qual::Vector{UInt8}
+    seq::StringField
+    qual::StringField
     optional_fields::Dict{String,Any}
 end
 
 function SAMRecord()
-    return SAMRecord("", 0x0000, "*", 0, 0, "*", "*", 0, 0, "", UInt8[], Dict())
+    return SAMRecord("*", 0x0000, "*", 0, 0, "*", "*", 0, 0, "*", "*", Dict())
 end
 
 function Base.isless(rec1::SAMRecord, rec2::SAMRecord)

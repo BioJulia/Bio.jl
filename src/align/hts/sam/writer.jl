@@ -53,8 +53,8 @@ function Base.write(writer::SAMWriter, record::SAMRecord)
         record.next_refname, '\t',
         string(record.next_pos), '\t',
         string(record.tlen), '\t',
-        convert(String, record.seq), '\t',
-        [UInt8(q + 33) for q in record.qual])
+        record.seq, '\t',
+        record.qual)
     n += write_optfields(stream, record.optional_fields)
     n += write(stream, '\n')
 

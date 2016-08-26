@@ -7,6 +7,7 @@ using Bio.Seq
 using Bio.Align
 using BGZFStreams
 using TestFunctions
+using YAML
 
 
 # Generate a random valid alignment of a sequence of length n against a sequence
@@ -98,6 +99,7 @@ function randrange(range)
     end
 end
 
+#=
 @testset "Alignments" begin
     @testset "Operations" begin
         @testset "Constructors and Conversions" begin
@@ -944,6 +946,7 @@ end
         end
     end
 end
+=#
 
 @testset "High-throughput Sequencing" begin
     @testset "AuxDataDict" begin
@@ -1021,7 +1024,7 @@ end
             rec = SAMRecord()
             @test !ismapped(rec)
             # default values
-            @test seqname(rec) == ""
+            @test seqname(rec) == "*"
             @test flag(rec) == 0x0000
             @test refname(rec) == "*"
             @test position(rec) == 0
@@ -1029,8 +1032,8 @@ end
             @test nextposition(rec) == 0
             @test templatelength(rec) == 0
             @test cigar(rec) == "*"
-            @test sequence(rec) == dna""
-            @test qualities(rec) == UInt8[]
+            @test sequence(rec) == "*"
+            @test qualities(rec) == "*"
 
             # set & delete tags
             rec = SAMRecord()
@@ -1047,75 +1050,59 @@ end
         end
 
         @testset "Reader" begin
-            reader = open(joinpath(samdir, "sam1.sam"), SAM)
+            reader = open(joinpath(samdir, "ce#1.sam"), SAM)
             @test isa(reader, Align.SAMReader)
 
-            # header
-            # FIXME: pass these tests
+            # TODO header
             #h = header(reader)
-            #@test h["SQ"] == [Dict("SN" => "1", "LN" => "239940")]
-            #@test h["PG"] == [Dict("ID" => "bwa", "PN" => "bwa", "VN" => "0.6.2-r126")]
 
             # first record
-            n = 0
             rec = SAMRecord()
-            read!(reader, rec); n += 1
-            @test refname(rec) == "1"
-            @test position(rec) == 136186
-            @test seqname(rec) == "HWI-1KL120:88:D0LRBACXX:1:1101:2852:2134"
-            @test sequence(rec) == dna"""
-            GAGAGGTCAGCGTGAGCCCCTTGCCTCACACCGGCCCCTC
-            TCACGCCGAGAGAGGTCAGCGTGAGCCCCTTGCCTCACAC
-            CGGCCCCTCCCACGCCGAGAG
-            """
-            @test flag(rec) == 69
-            @test cigar(rec) == "*"
-
-            # second record
-            read!(reader, rec); n += 1
-            @test refname(rec) == "1"
-            @test position(rec) == 136186
-            @test seqname(rec) == "HWI-1KL120:88:D0LRBACXX:1:1101:2852:2134"
-            @test sequence(rec) == dna"""
-            TCACGGTGGCCTGTTGAGGCAGGGGCTCACGCTGACCTCT
-            CTCGGCGTGGGAGGGGCCGGTGTGAGGCAAGGGCTCACGC
-            TGACCTCTCTCGGCGTGGGAG
-            """
-            @test flag(rec) == 137
-            @test cigar(rec) == "101M"
-            @test rec["XT"] === 'U'
-            @test rec["NM"] == 5
-
-            # remaining records (just check the number)
-            while !eof(reader)
-                read!(reader, rec)
-                n += 1
-            end
+            read!(reader, rec)
+            @test refname(rec) == "CHROMOSOME_I"
+            @test position(rec) == 2
+            @test seqname(rec) == "SRR065390.14978392"
+            @test sequence(rec)  == "CCTAGCCCTAACCCTAACCCTAACCCTAGCCTAAGCCTAAGCCTAAGCCTAAGCCTAAGCCTAAGCCTAAGCCTAAGCCTAAGCCTAAGCCTAAGCCTAA"
+            @test qualities(rec) == "#############################@B?8B?BA@@DDBCDDCBC@CDCDCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCC"
+            @test flag(rec) == 16
+            @test cigar(rec) == "27M1D73M"
+            @test rec["XG"] == 1
+            @test rec["XM"] == 5
+            @test rec["XN"] == 0
+            @test rec["XO"] == 1
+            @test rec["AS"] == -18
+            @test rec["XS"] == -18
+            @test rec["YT"] == "UU"
+            @test eof(reader)
             close(reader)
-            @test n == 200
 
             # iterator
-            @test length(collect(open(joinpath(samdir, "sam1.sam"), SAM))) == 200
+            @test length(collect(open(joinpath(samdir, "ce#1.sam"), SAM))) == 1
+            @test length(collect(open(joinpath(samdir, "ce#2.sam"), SAM))) == 2
         end
 
         @testset "Round trip" begin
-            mktemp() do path, io
-                # copy
-                reader = open(joinpath(samdir, "sam1.sam"), SAM)
-                writer = Align.SAMWriter(io)
-                write(writer, header(reader))
-                records = SAMRecord[]
-                for rec in reader
-                    push!(records, rec)
-                    write(writer, rec)
-                end
-                close(reader)
-                close(writer)
+            for specimen in YAML.load_file(joinpath(samdir, "index.yml"))
+                filepath = joinpath(samdir, specimen["filename"])
+                println(filepath)
+                mktemp() do path, io
+                    # copy
+                    reader = open(filepath, SAM)
+                    writer = Align.SAMWriter(io)
+                    write(writer, header(reader))
+                    records = SAMRecord[]
+                    for rec in reader
+                        push!(records, rec)
+                        write(writer, rec)
+                    end
+                    close(reader)
+                    close(writer)
 
-                # read again
-                reader = open(path, SAM)
-                @test collect(reader) == records
-                close(reader)
+                    # read again
+                    reader = open(path, SAM)
+                    @test collect(reader) == records
+                    close(reader)
+                end
             end
         end
     end

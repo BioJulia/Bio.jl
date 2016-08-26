@@ -182,6 +182,7 @@ begin
 	Ragel.@anchor!
 	@goto st1
 	@label ctr85
+	# need to anchor here for the next record
 	Ragel.@anchor!
 	Ragel.@yield 1
 	Ragel.@anchor!
@@ -556,9 +557,7 @@ if (data[1+(p )])== 9
 end
 @goto st0
 @label ctr30
-seqstr = Ragel.@ascii_from_anchor!()
-resize!(output.seq, length(seqstr))
-Bio.Seq.encode_copy!(output.seq, seqstr)
+Ragel.@copy_from_anchor!(output.seq)
 @goto st21
 @label st21
 p+= 1
@@ -593,18 +592,14 @@ if 33 <= (data[1+(p )])&& (data[1+(p )])<= 126
 end
 @goto st0
 @label ctr32
-qualstr = Ragel.@ascii_from_anchor!()
-resize!(output.qual, length(qualstr))
-for i in 1:endof(qualstr)
-output.qual[i] = UInt8(qualstr[i]) - 33
-end
-		empty!(output.optional_fields)
-	@goto st23
+Ragel.@copy_from_anchor!(output.qual)
+empty!(output.optional_fields)
+@goto st23
 @label ctr46
 optfieldstr = Ragel.@ascii_from_anchor!()
-		tag = optfieldstr[1:2]
-		typ = optfieldstr[4]
-		if 	typ == 'A'
+tag = optfieldstr[1:2]
+typ = optfieldstr[4]
+if typ == 'A'
 	value = optfieldstr[6]
 elseif typ == 'Z'
 	value = optfieldstr[6:end]
@@ -744,19 +739,15 @@ elseif (data[1+(p )]) == 10
 end
 @goto st0
 @label ctr33
-qualstr = Ragel.@ascii_from_anchor!()
-resize!(output.qual, length(qualstr))
-for i in 1:endof(qualstr)
-output.qual[i] = UInt8(qualstr[i]) - 33
-end
-		empty!(output.optional_fields)
-	input.state.linenum += 1
-	@goto st71
+Ragel.@copy_from_anchor!(output.qual)
+empty!(output.optional_fields)
+input.state.linenum += 1
+@goto st71
 @label ctr47
 optfieldstr = Ragel.@ascii_from_anchor!()
-		tag = optfieldstr[1:2]
-		typ = optfieldstr[4]
-		if 	typ == 'A'
+tag = optfieldstr[1:2]
+typ = optfieldstr[4]
+if typ == 'A'
 	value = optfieldstr[6]
 elseif typ == 'Z'
 	value = optfieldstr[6:end]
@@ -1749,6 +1740,7 @@ if p == eof
 		push!(input.header[tag], parse_keyvals(header[5:end-1]))
 end
 elseif 	cs  == 71
+	# need to anchor here for the next record
 	Ragel.@anchor!
 	Ragel.@yield 0
 end
@@ -1770,14 +1762,14 @@ const _samheaderparser_nfa_offsets = Int8[0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
 const _samheaderparser_nfa_push_actions = Int8[0, 0 , ]
 const _samheaderparser_nfa_pop_trans = Int8[0, 0 , ]
 function parse_samheader(data)
-    header = SAMHeader()
+	header = SAMHeader()
 
-p = 0
-pe = eof = endof(data)
-anchor = 0
+	p = 0
+	pe = eof = endof(data)
+	anchor = 0
 
 cs = convert(Int, samheaderparser_start )
-if p == pe
+if 	p == pe
 	@goto _test_eof
 
 end
