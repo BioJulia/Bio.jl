@@ -1109,28 +1109,26 @@ function majorityvote(seqs::AbstractVector{DNASequence})
     nsites = size(mat, 2)
     nseqs = size(mat, 1)
     result = DNASequence(nsites)
-    candidates = [DNA_A, DNA_C, DNA_G, DNA_T, DNA_Gap]
-    votes = Vector{Int}(5)
+    votes = zeros(Int, 16)
     @inbounds for site in 1:nsites
-        votes[1] = votes[2] = votes[3] = votes[4] = votes[5] = 0
         for seq in 1:nseqs
             nuc = mat[seq, site]
-            votes[1] += iscompatible(nuc, DNA_A)
-            votes[2] += iscompatible(nuc, DNA_C)
-            votes[3] += iscompatible(nuc, DNA_G)
-            votes[4] += iscompatible(nuc, DNA_T)
-            votes[5] += iscompatible(nuc, DNA_Gap)
+            votes[1] += iscompatible(nuc, DNA_Gap)
+            votes[2] += iscompatible(nuc, DNA_A)
+            votes[3] += iscompatible(nuc, DNA_C)
+            votes[5] += iscompatible(nuc, DNA_G)
+            votes[9] += iscompatible(nuc, DNA_T)
         end
         m = maximum(votes)
-        winners = findin(votes, m)
-        if length(winners) > 1
-            merged = DNA_Gap
-            for winner in winners
-                merged |= candidates[winner]
-            end
-            result[site] = merged
+        winners = convert(Vector{UInt8}, findin(votes, m))
+        if length(winners) == 1
+            result[site] = reinterpret(DNANucleotide, winners[1] - 0x01)
         else
-            result[site] = candidates[winners]
+            merged = 0x00
+            for winner in winners
+                merged |= (winner - 0x01)
+            end
+            result[site] = reinterpret(DNANucleotide, merged)
         end
     end
     return result
