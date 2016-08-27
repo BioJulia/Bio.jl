@@ -3217,7 +3217,7 @@ end
     end
 end
 
-@testset "majorityvote"
+@testset "majorityvote" begin
     dnas = [dna"CTCGATCGATCC", dna"CTCGAAAAATCA", dna"ATCGAAAAATCG", dna"ATCGGGGGATCG"]
     dna2 = [dna"CTCGATCGATCC", dna"CTCGAAA", dna"ATCGAAAAATCG", dna"ATCGGGGGATCG"]
     rnas = [rna"CUCGAUCGAUCC", rna"CUCGAAAAAUCA", rna"AUCGAAAAAUCG", rna"AUCGGGGGAUCG"]
