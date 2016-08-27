@@ -1104,6 +1104,34 @@ end
 # Consensus
 # ---------
 
+"""
+    majorityvote(seqs::AbstractVector{DNASequence})
+
+Construct a sequence that is a consensus of a vector of sequences.
+
+The consensus is established by a simple majority vote rule, where amiguous
+nucleotides cast an equal vote for each of their possible states.
+For each site a winner(s) out of A, T(U), C, or G is determined, in the cases
+of ties the ambiguity symbol that unifies all the winners is returned.
+E.g if A and T tie, then W is inserted in the consensus. If all A, T, C, and G
+tie at a site, then N is inserted in the consensus.
+
+# Examples
+
+```julia
+julia> seqs = [dna"CTCGATCGATCC", dna"CTCGAAAAATCA", dna"ATCGAAAAATCG", dna"ATCGGGGGATCG"]
+
+4-element Array{Bio.Seq.BioSequence{Bio.Seq.DNAAlphabet{4}},1}:
+ CTCGATCGATCC
+ CTCGAAAAATCA
+ ATCGAAAAATCG
+ ATCGGGGGATCG
+
+julia> majorityvote(seqs)
+12nt DNA Sequence:
+MTCGAAARATCG
+```
+"""
 function majorityvote(seqs::AbstractVector{DNASequence})
     mat = seqmatrix(seqs, :site)
     nsites = size(mat, 2)
