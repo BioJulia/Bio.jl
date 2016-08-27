@@ -1145,7 +1145,7 @@ MTCGAAARATCG
         Anuc = :RNA_A
         Cnuc = :RNA_C
         Gnuc = :RNA_G
-        Tnuc = :RNA_T
+        Tnuc = :RNA_U
         nuckind = :RNANucleotide
     end
 
