@@ -1113,7 +1113,7 @@ function majorityvote(seqs::AbstractVector{DNASequence})
     votes = Vector{Int}(5)
     @inbounds for site in 1:nsites
         votes[1] = votes[2] = votes[3] = votes[4] = votes[5] = 0
-        for seq in 1:neqs
+        for seq in 1:nseqs
             nuc = mat[seq, site]
             votes[1] += iscompatible(nuc, DNA_A)
             votes[2] += iscompatible(nuc, DNA_C)
