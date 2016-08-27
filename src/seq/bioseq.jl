@@ -1122,7 +1122,7 @@ function majorityvote(seqs::AbstractVector{DNASequence})
             votes[5] += iscompatible(nuc, DNA_Gap)
         end
         m = maximum(votes)
-        winners = convert(Vector{UInt8}, findin(votes, m))
+        winners = findin(votes, m)
         if length(winners) > 1
             merged = DNA_Gap
             for winner in winners
