@@ -82,15 +82,9 @@ type FASTAParser{S<:Sequence} <: AbstractParser
     end
 end
 
+stream(parser::FASTAParser) = stream(parser.state)
+
 Base.eltype{S}(::Type{FASTAParser{S}}) = FASTASeqRecord{S}
-
-function Base.eof(parser::FASTAParser)
-    return eof(parser.state.stream)
-end
-
-function Base.close(parser::FASTAParser)
-    close(parser.state.stream)
-end
 
 function Base.getindex(parser::FASTAParser, name::AbstractString)
     if isnull(parser.index)
@@ -114,15 +108,8 @@ type FASTAWriter{T<:IO} <: AbstractWriter
     width::Int
 end
 
-function Base.flush(writer::FASTAWriter)
-    # TODO: This can be removed on Julia v0.5
-    # (because flush will be defined for IOBuffer).
-    if applicable(flush, writer.output)
-        flush(writer.output)
-    end
-end
+stream(writer::FASTAWriter) = writer.output
 
-Base.close(writer::FASTAWriter) = close(writer.output)
 
 function Base.write(writer::FASTAWriter, seqrec::FASTASeqRecord)
     output = writer.output

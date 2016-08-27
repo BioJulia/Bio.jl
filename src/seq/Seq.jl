@@ -146,7 +146,8 @@ export
     TwoBit,
     Demultiplexer,
     demultiplex,
-    seqmatrix
+    seqmatrix,
+    stream
 
 using
     BufferedStreams,

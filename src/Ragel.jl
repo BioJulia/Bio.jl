@@ -8,7 +8,8 @@
 
 module Ragel
 
-export tryread!
+export tryread!,
+       stream
 
 using BufferedStreams
 import Bio.IO: FileFormat, AbstractParser
@@ -23,6 +24,9 @@ end
 function State(initstate::Int, input::BufferedInputStream)
     return State(input, initstate, 1)
 end
+
+"Access the underlying IO stream"
+stream(state::State) = state.stream
 
 @inline function anchor!(state, p)
     state.stream.anchor = 1 + p

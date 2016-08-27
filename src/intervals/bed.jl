@@ -111,9 +111,7 @@ function Base.eltype(::Type{BEDParser})
     return BEDInterval
 end
 
-function Base.eof(parser::BEDParser)
-    return eof(parser.state.stream)
-end
+stream(parser::BEDParser) = stream(parser.state)
 
 function Base.open(input::BufferedInputStream, ::Type{BED})
     return BEDParser(input)
@@ -136,15 +134,7 @@ type BEDWriter{T<:IO} <: AbstractWriter
     n_fields::Int
 end
 
-function Base.flush(writer::BEDWriter)
-    # TODO: This can be removed on Julia v0.5
-    # (because flush will be defined for IOBuffer).
-    if applicable(flush, writer.output)
-        flush(writer.output)
-    end
-end
-
-Base.close(writer::BEDWriter) = close(writer.output)
+stream(writer::BEDWriter) = writer.output
 
 function Base.write(writer::BEDWriter, interval::BEDInterval)
     if writer.n_fields == -1

@@ -105,13 +105,7 @@ end
 
 Base.eltype{S}(::Type{FASTQParser{S}}) = FASTQSeqRecord{S}
 
-function Base.eof(parser::FASTQParser)
-    return eof(parser.state.stream)
-end
-
-function Base.close(parser::FASTQParser)
-    close(parser.state.stream)
-end
+stream(parser::FASTQParser) = stream(parser.state)
 
 include("fastq-parser.jl")
 
@@ -129,14 +123,8 @@ type FASTQWriter{T<:IO} <: AbstractWriter
     ascii_offset::Int
 end
 
-function Base.flush(writer::FASTQWriter)
-    # TODO: This can be removed on Julia v0.5
-    # (because flush will be defined for IOBuffer).
-    if applicable(flush, writer.output)
-        flush(writer.output)
-    end
-end
-Base.close(writer::FASTQWriter) = close(writer.output)
+stream(writer::FASTQWriter) = writer.output
+
 
 function Base.write(writer::FASTQWriter, seqrec::FASTQSeqRecord)
     if writer.ascii_offset == typemin(Int)

@@ -27,6 +27,11 @@ See `subtypes(AbstractParser)` for all available data parsers.
 """
 abstract AbstractParser
 
+stream() = nothing
+
+Base.eof{T<:AbstractParser}(parser::T) = eof(stream(parser))
+Base.close{T<:AbstractParser}(parser::T) = close(stream(parser))
+
 Base.iteratorsize(::AbstractParser) = Base.SizeUnknown()
 
 """
@@ -35,5 +40,9 @@ Abstract data writer type.
 See `subtypes(AbstractWriter)` for all available data writers.
 """
 abstract AbstractWriter
+
+stream(parser::AbstractWriter) = nothing
+Base.close{T<:AbstractWriter}(writer::T) = close(stream(writer))
+Base.flush{T<:AbstractWriter}(writer::T) = flush(stream(writer))
 
 end  # module Bio.IO

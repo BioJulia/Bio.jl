@@ -28,7 +28,8 @@ export
     BigWig
 
 import ..Ragel: tryread!
-export tryread!
+export tryread!,
+       stream
 
 using
     BufferedStreams,
@@ -41,7 +42,8 @@ using
 import Bio.IO:
     FileFormat,
     AbstractParser,
-    AbstractWriter
+    AbstractWriter,
+    stream
 
 using Base.Collections:
     heappush!,

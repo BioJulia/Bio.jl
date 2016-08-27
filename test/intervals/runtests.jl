@@ -413,6 +413,7 @@ end
             while !eof(stream)
                 read!(stream, entry)
             end
+            close(stream)
 
             # Check round trip
             output = IOBuffer()
