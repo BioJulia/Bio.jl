@@ -3200,4 +3200,8 @@ end
     end
 end
 
+@testset "majorityvote"
+
+end
+
 end # TestSeq
