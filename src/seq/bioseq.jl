@@ -1109,8 +1109,8 @@ function majorityvote(seqs::AbstractVector{DNASequence})
     nsites = size(mat, 2)
     nseqs = size(mat, 1)
     result = DNASequence(nsites)
-    votes = zeros(Int, 16)
     @inbounds for site in 1:nsites
+        votes = zeros(Int, 16)
         for seq in 1:nseqs
             nuc = mat[seq, site]
             votes[1] += iscompatible(nuc, DNA_Gap)
