@@ -813,6 +813,17 @@ end
             RNA_A  RNA_U  RNA_C  RNA_G
             RNA_A  RNA_U  RNA_C  RNA_G
         ]
+        sitemajnucint = [
+            0x01  0x01  0x01
+            0x08  0x08  0x08
+            0x02  0x02  0x02
+            0x04  0x04  0x04
+        ]
+        seqmajnucint = [
+            0x01  0x08  0x02  0x04
+            0x01  0x08  0x02  0x04
+            0x01  0x08  0x02  0x04
+        ]
         sitemajaa = [
             AA_A AA_M AA_G
             AA_A AA_M AA_G
@@ -828,14 +839,20 @@ end
         @test seqmatrix(dna, :site) == sitemajdna
         @test seqmatrix(rna, :site) == sitemajrna
         @test seqmatrix(prot, :site) == sitemajaa
+        @test seqmatrix(dna, :site, UInt8) == sitemajnucint
+        @test seqmatrix(rna, :site, UInt8) == sitemajnucint
 
         @test seqmatrix(dna, :seq) == seqmajdna
         @test seqmatrix(rna, :seq) == seqmajrna
         @test seqmatrix(prot, :seq) == seqmajaa
+        @test seqmatrix(dna, :seq, UInt8) == seqmajnucint
+        @test seqmatrix(rna, :seq, UInt8) == seqmajnucint
+
 
         @test_throws ArgumentError seqmatrix(dnathrow, :site)
         @test_throws ArgumentError seqmatrix(rnathrow, :seq)
         @test_throws ArgumentError seqmatrix(dna, :lol)
+        @test_throws MethodError seqmatrix(dna, :site, AminoAcid)
 
     end
 

@@ -1099,6 +1099,50 @@ function seqmatrix{A<:Alphabet}(vseq::AbstractVector{BioSequence{A}}, major::Sym
     end
 end
 
+"""
+    seqmatrix{A<:Alphabet,T}(vseq::Vector{BioSequence{A}}, major::Symbol, conv::Type{T})
+
+Construct a matrix of T from a vector of `BioSequence`s.
+
+If parameter major is set to `:site`, the matrix is created such that one
+nucleotide from each sequence is placed in each column i.e. the matrix is laid
+out in site-major order.
+This means that iteration over one position of many sequences is efficient,
+as julia arrays are laid out in column major order.
+
+If the parameter major is set to `:seq`, the matrix is created such that each
+sequence is placed in one column i.e. the matrix is laid out in sequence-major
+order.
+This means that iteration over each sequence is efficient,
+as julia arrays are laid out in column major order.
+
+# Examples
+```julia
+julia> seqs = [dna"AAA", dna"TTT", dna"CCC", dna"GGG"]
+4-element Array{Bio.Seq.BioSequence{Bio.Seq.DNAAlphabet{4}},1}:
+ 3nt DNA Sequence:
+AAA
+ 3nt DNA Sequence:
+TTT
+ 3nt DNA Sequence:
+CCC
+ 3nt DNA Sequence:
+GGG
+
+julia> seqmatrix(seqs, :site, UInt8)
+4×3 Array{UInt8,2}:
+ 0x01  0x01  0x01
+ 0x08  0x08  0x08
+ 0x02  0x02  0x02
+ 0x04  0x04  0x04
+
+julia> seqmatrix(seqs, :seq, UInt8)
+3×4 Array{UInt8,2}:
+ 0x01  0x08  0x02  0x04
+ 0x01  0x08  0x02  0x04
+ 0x01  0x08  0x02  0x04
+```
+"""
 function seqmatrix{A<:Alphabet,T}(vseq::AbstractVector{BioSequence{A}}, major::Symbol, conv::Type{T})
     nsites = length(vseq[1])
     nseqs = length(vseq)
@@ -1138,7 +1182,6 @@ E.g if A and T tie, then W is inserted in the consensus. If all A, T, C, and G
 tie at a site, then N is inserted in the consensus.
 
 # Examples
-
 ```julia
 julia> seqs = [dna"CTCGATCGATCC", dna"CTCGAAAAATCA", dna"ATCGAAAAATCG", dna"ATCGGGGGATCG"]
 
