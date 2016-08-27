@@ -1139,14 +1139,14 @@ MTCGAAARATCG
         Cnuc = :DNA_C
         Gnuc = :DNA_G
         Tnuc = :DNA_T
-        nuckind = :DNAnucleotide
+        nuckind = :DNANucleotide
     else
         gap = :RNA_Gap
         Anuc = :RNA_A
         Cnuc = :RNA_C
         Gnuc = :RNA_G
         Tnuc = :RNA_T
-        nuckind = :RNAnucleotide
+        nuckind = :RNANucleotide
     end
 
     quote
