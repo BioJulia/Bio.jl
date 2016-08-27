@@ -1153,50 +1153,32 @@ julia> majorityvote(seqs)
 MTCGAAARATCG
 ```
 """
-@generated function majorityvote{A<:NucleotideAlphabets}(seqs::AbstractVector{BioSequence{A}})
-    if A <: DNAAlphabet
-        gap = :DNA_Gap
-        Anuc = :DNA_A
-        Cnuc = :DNA_C
-        Gnuc = :DNA_G
-        Tnuc = :DNA_T
-        nuckind = :DNANucleotide
-    else
-        gap = :RNA_Gap
-        Anuc = :RNA_A
-        Cnuc = :RNA_C
-        Gnuc = :RNA_G
-        Tnuc = :RNA_U
-        nuckind = :RNANucleotide
-    end
-
-    quote
-        mat = seqmatrix(seqs, :site)
-        nsites = size(mat, 2)
-        nseqs = size(mat, 1)
-        result = BioSequence{A}(nsites)
-        @inbounds for site in 1:nsites
-            votes = zeros(Int, 16)
-            for seq in 1:nseqs
-                nuc = mat[seq, site]
-                votes[1] += iscompatible(nuc, $gap)
-                votes[2] += iscompatible(nuc, $Anuc)
-                votes[3] += iscompatible(nuc, $Cnuc)
-                votes[5] += iscompatible(nuc, $Gnuc)
-                votes[9] += iscompatible(nuc, $Tnuc)
-            end
-            m = maximum(votes)
-            winners = convert(Vector{UInt8}, findin(votes, m))
-            if length(winners) == 1
-                result[site] = reinterpret($nuckind, winners[1] - 0x01)
-            else
-                merged = 0x00
-                for winner in winners
-                    merged |= (winner - 0x01)
-                end
-                result[site] = reinterpret($nuckind, merged)
-            end
+function majorityvote{A<:NucleotideAlphabets}(seqs::AbstractVector{BioSequence{A}})
+    mat = seqmatrix(seqs, :site, UInt8)
+    nsites = size(mat, 2)
+    nseqs = size(mat, 1)
+    result = BioSequence{A}(nsites)
+    @inbounds for site in 1:nsites
+        votes = zeros(Int, 16)
+        for seq in 1:nseqs
+            nuc = mat[seq, site]
+            votes[1] += nuc == 0x00
+            votes[2] += (nuc & 0x01) != 0x00
+            votes[3] += (nuc & 0x02) != 0x00
+            votes[5] += (nuc & 0x04) != 0x00
+            votes[9] += (nuc & 0x08) != 0x00
         end
-        return result
+        m = maximum(votes)
+        winners = convert(Vector{UInt8}, findin(votes, m))
+        if length(winners) == 1
+            result[site] = reinterpret(eltype(A), winners[1] - 0x01)
+        else
+            merged = 0x00
+            for winner in winners
+                merged |= (winner - 0x01)
+            end
+            result[site] = reinterpret(eltype(A), merged)
+        end
     end
+    return result
 end
