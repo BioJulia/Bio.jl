@@ -1135,17 +1135,17 @@ MTCGAAARATCG
 @generated function majorityvote{A<:NucleotideAlphabets}(seqs::AbstractVector{BioSequence{A}})
     if A <: DNAAlphabet
         gap = :DNA_Gap
-        A = :DNA_A
-        C = :DNA_C
-        G = :DNA_G
-        T = :DNA_T
+        Anuc = :DNA_A
+        Cnuc = :DNA_C
+        Gnuc = :DNA_G
+        Tnuc = :DNA_T
         nuckind = :DNAnucleotide
     else
         gap = :RNA_Gap
-        A = :RNA_A
-        C = :RNA_C
-        G = :RNA_G
-        T = :RNA_T
+        Anuc = :RNA_A
+        Cnuc = :RNA_C
+        Gnuc = :RNA_G
+        Tnuc = :RNA_T
         nuckind = :RNAnucleotide
     end
 
@@ -1159,10 +1159,10 @@ MTCGAAARATCG
             for seq in 1:nseqs
                 nuc = mat[seq, site]
                 votes[1] += iscompatible(nuc, $gap)
-                votes[2] += iscompatible(nuc, $A)
-                votes[3] += iscompatible(nuc, $C)
-                votes[5] += iscompatible(nuc, $G)
-                votes[9] += iscompatible(nuc, $T)
+                votes[2] += iscompatible(nuc, $Anuc)
+                votes[3] += iscompatible(nuc, $Cnuc)
+                votes[5] += iscompatible(nuc, $Gnuc)
+                votes[9] += iscompatible(nuc, $Tnuc)
             end
             m = maximum(votes)
             winners = convert(Vector{UInt8}, findin(votes, m))
