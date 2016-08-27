@@ -19,19 +19,19 @@ export
     resnumber,
     inscode,
     x,
+    x!,
     y,
+    y!,
     z,
+    z!,
     coords,
+    coords!,
     occupancy,
     tempfac,
     element,
     charge,
     ishetero,
     isdisorderedatom,
-    x!,
-    y!,
-    z!,
-    coords!,
     defaultaltlocid,
     defaultatom,
     altlocids,
@@ -56,16 +56,15 @@ export
     sequentialresidues,
     applyselectors,
     applyselectors!,
-    collectresidues,
-    collectatoms,
-    countmodels,
-    countchains,
-    countresidues,
-    countatoms,
-    formatomlist,
-    choosedefaultaltlocid,
     collectmodels,
-    collectstructures,
+    countmodels,
+    collectchains,
+    countchains,
+    collectresidues,
+    countresidues,
+    collectatoms,
+    countatoms,
+    choosedefaultaltlocid,
     stdatomselector,
     hetatomselector,
     atomnameselector,
@@ -379,7 +378,7 @@ z(dis_at::DisorderedAtom) = z(defaultatom(dis_at))
 Set the z coordinate of an `AbstractAtom`. For `DisorderedAtom`s only the
 default atom is updated.
 """
-z!(at::Atom, z::Real) = (atom.coords[3] = z; at)
+z!(at::Atom, z::Real) = (at.coords[3] = z; at)
 z!(dis_at::DisorderedAtom, z::Real) = z!(defaultatom(dis_at), z)
 
 "Get the atomic coordinates of an `AbstractAtom` as a `Vector{Float64}`."
@@ -966,7 +965,7 @@ Additional arguments are atom selector functions - only atoms that return
 `true` from the functions are retained.
 """
 function collectatoms(struc::ProteinStructure)
-    if collectmodels(struc) > 0
+    if countmodels(struc) > 0
         return collectatoms(defaultmodel(struc))
     else
         return AbstractAtom[]

@@ -2,7 +2,6 @@ export
     PDB,
     PDBParseError,
     downloadpdb,
-    parseatomrecord,
     spaceatomname,
     pdbline,
     writepdb
