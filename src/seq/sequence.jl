@@ -250,38 +250,3 @@ function Base.showcompact(io::IO, seq::Sequence)
 end
 
 Base.parse{S<:Sequence}(::Type{S}, str::AbstractString) = convert(S, str)
-
-# Consensus
-# ---------
-
-function majorityvote(seqs::AbstractVector{DNASequence})
-    mat = seqmatrix(seqs, :site)
-    nsites = size(mat, 2)
-    nseqs = size(mat, 1)
-    result = DNASequence(nsites)
-    candidates = [DNA_A, DNA_C, DNA_G, DNA_T, DNA_Gap]
-    votes = Vector{Int}(5)
-    @inbounds for site in 1:nsites
-        votes[1] = votes[2] = votes[3] = votes[4] = votes[5] = 0
-        for seq in 1:neqs
-            nuc = mat[seq, site]
-            votes[1] += iscompatible(nuc, DNA_A)
-            votes[2] += iscompatible(nuc, DNA_C)
-            votes[3] += iscompatible(nuc, DNA_G)
-            votes[4] += iscompatible(nuc, DNA_T)
-            votes[5] += iscompatible(nuc, DNA_Gap)
-        end
-        m = maximum(votes)
-        winners = convert(Vector{UInt8}, findin(votes, m))
-        if length(winners) > 1
-            merged = DNA_Gap
-            for winner in winners
-                merged |= candidates[winner]
-            end
-            result[site] = merged
-        else
-            result[site] = candidates[winners]
-        end
-    end
-    return result
-end
