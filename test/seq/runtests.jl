@@ -3218,7 +3218,14 @@ end
 end
 
 @testset "majorityvote"
-
+    dnas = [dna"CTCGATCGATCC", dna"CTCGAAAAATCA", dna"ATCGAAAAATCG", dna"ATCGGGGGATCG"]
+    dna2 = [dna"CTCGATCGATCC", dna"CTCGAAA", dna"ATCGAAAAATCG", dna"ATCGGGGGATCG"]
+    rnas = [rna"CUCGAUCGAUCC", rna"CUCGAAAAAUCA", rna"AUCGAAAAAUCG", rna"AUCGGGGGAUCG"]
+    rna2 = [rna"CUCGAUCGAUCC", rna"CUCGAAAAAUCA", rna"AUCGAAAAAUCG", rna"AUCGUCG"]
+    @test majorityvote(dnas) == dna"MTCGAAARATCG"
+    @test majorityvote(rnas) == rna"MUCGAAARAUCG"
+    @test_throws ArgumentError majorityvote(dna2)
+    @test_throws ArgumentError majorityvote(rna2)
 end
 
 end # TestSeq
