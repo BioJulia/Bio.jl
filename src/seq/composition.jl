@@ -18,14 +18,6 @@ function Composition{A<:Union{DNAAlphabet,RNAAlphabet}}(seq::BioSequence{A})
     return Composition{eltype(A)}(counts)
 end
 
-function Composition{N<:Nucleotide,L}(tuple::NTuple{L,N})
-    counts = zeros(Int, 16)
-    @inbounds for x in tuple
-        counts[reinterpret(UInt8, x) + 1] += 1
-    end
-    return Composition{N}(counts)
-end
-
 function Composition(seq::ReferenceSequence)
     counts = zeros(Int, 16)
     @inbounds for x in seq
@@ -114,55 +106,6 @@ function Base.merge!{T}(comp::Composition{T}, other::Composition{T})
         comp.counts[i] += other.counts[i]
     end
     return comp
-end
-
-function majorityvote{T}(comp::Composition{T}, compat = true)
-    if compat
-        return _mvote_compat(comp)
-    else
-        return _mvote(comp)
-    end
-end
-
-function _mvote{T}(comp::Composition{T})
-    m = max(comp.counts)
-    maxes = convert(Vector{UInt8}, findin(comp.counts, m))
-    nucs = Vector{T}(length(maxes))
-    @inbounds for i in 1:length(nucs)
-        nucs[i] = reinterpret(T, maxes[i] - 1)
-    end
-    return nucs
-end
-
-function _mvote_compat{T}(comp::Composition{T})
-    cs = comp.counts
-    gapvotes = cs[1]
-    a = cs[2]; c = cs[3]; g = cs[5];
-    t = cs[9]; m = cs[4]; r = cs[6];
-    s = cs[7]; v = cs[8]; w = cs[10];
-    y = cs[11]; h = cs[12]; k = cs[13];
-    d = cs[14]; b = cs[15]; n = cs[16]
-    avotes = a + m + r + w + v + h + d + n
-    cvotes = c + m + s + y + v + h + b + n
-    gvotes = g + r + s + k + v + d + b + n
-    tvotes = t + w + y + k + h + d + b + n
-    votes = zeros(Int, 16)
-    votes[1] = gapvotes
-    votes[2] = avotes
-    votes[3] = cvotes
-    votes[5] = gvotes
-    votes[9] = tvotes
-    m = maximum(votes)
-    maxes = convert(Vector{UInt8}, findin(votes, m))
-    if length(maxes) == 1
-        return reinterpret(T, maxes[1] - 0x01)
-    else
-        nuc = 0x00
-        for max in maxes
-            nuc = nuc | (max - 0x01)
-        end
-        return reinterpret(T, nuc)
-    end
 end
 
 function Base.summary{T}(::Composition{T})
