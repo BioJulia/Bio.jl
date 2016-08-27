@@ -1227,3 +1227,18 @@ function majorityvote{A<:NucleotideAlphabet}(seqs::AbstractVector{BioSequence{A}
     end
     return result
 end
+
+function majorityvote2(seqs::AbstractVector{DNASequence})
+    l = length(vseq[1])
+    nseqs = length(vseq)
+    @inbounds for i in 2:nseqs
+        length(vseq[i]) == l || throw(ArgumentError("Sequences in vseq must be of same length"))
+    end
+    result = DNASequence(l)
+    i = 1
+    @inbounds for site in zip(seqs...)
+        comp = Composition(site)
+        result[i] = majorityvote(comp)
+    end
+    return result
+end
