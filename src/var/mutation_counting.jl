@@ -35,7 +35,7 @@ end
 end
 
 @inline function is_mutation{T<:Nucleotide}(a::T, b::T, ::Type{TransitionMutation})
-    return a != b & ((ispurine(a) & ispurine(b)) | (ispyrimidine(a) & ispyrimidine(b)))
+    return (a != b) & ((ispurine(a) & ispurine(b)) | (ispyrimidine(a) & ispyrimidine(b)))
 end
 
 function count_mutations{A<:NucleotideAlphabets,T<:MutationType}(sequences::Vector{BioSequence{A}}, ::Type{T})
