@@ -30,7 +30,37 @@ A, T, G, or C, then this function returns true.
     return isambiguous(a) || isambiguous(b)
 end
 
-typealias NucleotideAlphabet Union{DNAAlphabet{2}, DNAAlphabet{4}, RNAAlphabet{2}, RNAAlphabet{4}}
+@inline function is_mutation{T<:Nucleotide}(a::T, b::T, t::Type{DifferentMutations})
+    return a != b
+end
+
+function count_mutations{A<:NucleotideAlphabets}(sequences::Vector{BioSequence{A}}, t::Type{DifferentMutations})
+    seqs = seqmatrix(sequences, :seq)
+    S, N = size(seqs)
+    c = binomial(N, 2)
+    lengths = Vector{Int}(c)
+    nmutations = Vector{Int}(c)
+    target = 1
+    for i1 in 1:N
+        for i2 in i1+1:N
+            L = S
+            Nd = 0
+            for s in 1:S
+                s1 = seqs[(i1 - 1) * S + s]
+                s2 = seqs[(i2 - 1) * S + s]
+                isamb = is_ambiguous_strict(s1, s2)
+                ismut = is_mutation(s1, s2, t)
+                L -= isamb
+                Nd += !isamb && ismut
+            end
+            lengths[target] = L
+            nmutations[target] = Nd
+            target += 1
+        end
+    end
+    return nmutations, lengths
+end
+
 
 """
     count_mutations(seq1::BioSequence{A}, seq2::BioSequence{A}, t::Type{DifferentMutation})
@@ -40,7 +70,7 @@ Count the number of differences between two DNA sequences.
 Returns a tuple of the number of sites that are different, and the number of sites
 considered (sites with any ambiguity characters are not considered).
 """
-function count_mutations{A<:NucleotideAlphabet}(seq1::BioSequence{A},
+function count_mutations{A<:NucleotideAlphabets}(seq1::BioSequence{A},
     seq2::BioSequence{A},
     t::Type{DifferentMutation})
 
@@ -67,7 +97,7 @@ Count the number of transition mutations between two DNA sequences.
 Returns a tuple of the number of sites that are different, and the number of sites
 considered (sites with any ambiguity characters are not considered).
 """
-function count_mutations{A<:NucleotideAlphabet}(seq1::BioSequence{A},
+function count_mutations{A<:NucleotideAlphabets}(seq1::BioSequence{A},
     seq2::BioSequence{A},
     t::Type{TransitionMutation})
 
@@ -94,7 +124,7 @@ Count the number of transversion mutations between two DNA sequences.
 Returns a tuple of the number of sites that are different, and the number of sites
 considered (sites with any ambiguity characters are not considered).
 """
-function count_mutations{A<:NucleotideAlphabet}(seq1::BioSequence{A},
+function count_mutations{A<:NucleotideAlphabets}(seq1::BioSequence{A},
     seq2::BioSequence{A},
     t::Type{TransversionMutation})
 
