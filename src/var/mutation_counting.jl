@@ -149,7 +149,7 @@ end
 
 Count the number of transition and transversion mutations between two DNA sequences.
 """
-function count_mutations{A<:NucleotideAlphabet}(seq1::BioSequence{A},
+function count_mutations{A<:NucleotideAlphabets}(seq1::BioSequence{A},
     seq2::BioSequence{A},
     t1::Type{TransitionMutation},
     t2::Type{TransversionMutation})
@@ -175,7 +175,7 @@ function count_mutations{A<:NucleotideAlphabet}(seq1::BioSequence{A},
     return ntransitions, ntransversions, nsites
 end
 
-function count_mutations{A<:NucleotideAlphabet}(a::BioSequence{A},
+function count_mutations{A<:NucleotideAlphabets}(a::BioSequence{A},
     b::BioSequence{A},
     t1::Type{TransversionMutation},
     t2::Type{TransitionMutation})
