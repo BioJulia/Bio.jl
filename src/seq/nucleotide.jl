@@ -70,7 +70,7 @@ function Base.isless{N<:Nucleotide}(x::N, y::N)
     return isless(reinterpret(UInt8, x), reinterpret(UInt8, y))
 end
 
-function Base.count_ones(nt::Nucleotide)
+@inline function Base.count_ones(nt::Nucleotide)
     return count_ones(reinterpret(UInt8, nt))
 end
 
