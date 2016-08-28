@@ -38,7 +38,7 @@ end
     return a != b & ((ispurine(a) & ispurine(b)) | (ispyrimidine(a) & ispyrimidine(b)))
 end
 
-function count_mutations{A<:NucleotideAlphabets}(sequences::Vector{BioSequence{A}}, t::Type{MutationType})
+function count_mutations{A<:NucleotideAlphabets,T<:MutationType}(sequences::Vector{BioSequence{A}}, ::Type{T})
     # This method has been written with the aim of improving performance by taking
     # advantage of the memory layout of matrices of nucleotides, as well as
     # getting julia to emit simd code for the innermost loop.
@@ -56,7 +56,7 @@ function count_mutations{A<:NucleotideAlphabets}(sequences::Vector{BioSequence{A
                 s1 = seqs[(i1 - 1) * S + s]
                 s2 = seqs[(i2 - 1) * S + s]
                 isamb = is_ambiguous_strict(s1, s2)
-                ismut = is_mutation(s1, s2, t)
+                ismut = is_mutation(s1, s2, T)
                 L -= isamb
                 Nd += !isamb & ismut
             end
