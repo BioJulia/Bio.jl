@@ -27,7 +27,7 @@ The strictest test of ambiguity, if either nucleotide is not
 A, T, G, or C, then this function returns true.
 """
 @inline function is_ambiguous_strict{T<:Nucleotide}(a::T, b::T)
-    return isambiguous(a) || isambiguous(b)
+    return isambiguous(a) | isambiguous(b)
 end
 
 @inline function is_mutation{T<:Nucleotide}(a::T, b::T, t::Type{DifferentMutation})
@@ -51,7 +51,7 @@ function count_mutations{A<:NucleotideAlphabets}(sequences::Vector{BioSequence{A
                 isamb = is_ambiguous_strict(s1, s2)
                 ismut = is_mutation(s1, s2, t)
                 L -= isamb
-                Nd += !isamb && ismut
+                Nd += !isamb & ismut
             end
             lengths[target] = L
             nmutations[target] = Nd
