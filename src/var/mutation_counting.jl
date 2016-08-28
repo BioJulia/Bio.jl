@@ -41,7 +41,7 @@ function count_mutations{A<:NucleotideAlphabets}(sequences::Vector{BioSequence{A
     lengths = Vector{Int}(c)
     nmutations = Vector{Int}(c)
     target = 1
-    for i1 in 1:N
+    @inbounds for i1 in 1:N
         for i2 in i1+1:N
             L = S
             Nd = 0
