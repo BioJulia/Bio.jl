@@ -30,11 +30,11 @@ A, T, G, or C, then this function returns true.
     return isambiguous(a) || isambiguous(b)
 end
 
-@inline function is_mutation{T<:Nucleotide}(a::T, b::T, t::Type{DifferentMutations})
+@inline function is_mutation{T<:Nucleotide}(a::T, b::T, t::Type{DifferentMutation})
     return a != b
 end
 
-function count_mutations{A<:NucleotideAlphabets}(sequences::Vector{BioSequence{A}}, t::Type{DifferentMutations})
+function count_mutations{A<:NucleotideAlphabets}(sequences::Vector{BioSequence{A}}, t::Type{DifferentMutation})
     seqs = seqmatrix(sequences, :seq)
     S, N = size(seqs)
     c = binomial(N, 2)
