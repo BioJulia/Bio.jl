@@ -30,11 +30,11 @@ A, T, G, or C, then this function returns true.
     return isambiguous(a) | isambiguous(b)
 end
 
-@inline function is_mutation{T<:Nucleotide}(a::T, b::T, t::Type{DifferentMutation})
+@inline function is_mutation{T<:Nucleotide}(a::T, b::T, ::Type{DifferentMutation})
     return a != b
 end
 
-@inline function is_mutation{T<:Nucleotide}(a::T, b::T, t::Type{TransitionMutation})
+@inline function is_mutation{T<:Nucleotide}(a::T, b::T, ::Type{TransitionMutation})
     return a != b & ((ispurine(a) & ispurine(b)) | (ispyrimidine(a) & ispyrimidine(b)))
 end
 
