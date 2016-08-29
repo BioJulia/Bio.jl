@@ -4,7 +4,7 @@
 type BAMIntersectionIterator
     reader::BAMReader
     chunks::Vector{Chunk}
-    refid::Int
+    refindex::Int
     interval::UnitRange{Int}
 end
 
@@ -34,7 +34,7 @@ function advance!(iter, rec, i)
         chunk = iter.chunks[i]
         while virtualoffset(iter.reader.stream) < chunk.stop
             read!(iter.reader, rec)
-            if isoverlapping(rec, iter.refid, iter.interval)
+            if isoverlapping(rec, iter.refindex, iter.interval)
                 return i, rec
             end
         end
@@ -46,9 +46,9 @@ function advance!(iter, rec, i)
     return i, rec
 end
 
-function Bio.Intervals.isoverlapping(rec, refid_, interval)
+function Bio.Intervals.isoverlapping(rec, refindex_, interval)
     return ismapped(rec) &&
-        refid(rec) == refid_ &&
+        refindex(rec) == refindex_ &&
         position(rec) ≤ last(interval) &&
         rightmost_position(rec) ≥ first(interval)
 end
@@ -58,17 +58,17 @@ function Base.intersect(reader::BAMReader, interval::Interval)
 end
 
 function Base.intersect(reader::BAMReader, refname::AbstractString, interval::UnitRange)
-    refid = findfirst(reader.refseqnames, refname)
-    if refid == 0
+    i = findfirst(reader.refseqnames, refname)
+    if i == 0
         error("sequence name $refname is not in the header")
     end
-    return intersect(reader, refid, interval)
+    return intersect(reader, i, interval)
 end
 
-function Base.intersect(reader::BAMReader, refid::Integer, interval::UnitRange)
+function Base.intersect(reader::BAMReader, refindex::Integer, interval::UnitRange)
     if isnull(reader.index)
         error("no index")
     end
-    chunks = overlapchunks(get(reader.index).index, refid, interval)
-    return BAMIntersectionIterator(reader, chunks, refid, interval)
+    chunks = overlapchunks(get(reader.index).index, refindex, interval)
+    return BAMIntersectionIterator(reader, chunks, refindex, interval)
 end

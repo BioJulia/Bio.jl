@@ -470,10 +470,10 @@ close(reader)
 | :--------------- | :--------------------------------------------- |
 | `refname`        | reference sequence name                        |
 | `position`       | 1-based leftmost mapping position              |
-| `refid`          | 1-based reference sequence index (BAM only)    |
+| `refindex`       | 1-based reference sequence index (BAM only)    |
 | `nextrefname`    | `refname` of the mate/next read                |
 | `nextposition`   | `position` of the mate/next read               |
-| `nextrefid`      | `refid` of the mate/next read (BAM only)       |
+| `nextrefindex`   | `refid` of the mate/next read (BAM only)       |
 | `mappingquality` | mapping quality                                |
 | `flag`           | bitwise flag                                   |
 | `templatelength` | observed template length                       |

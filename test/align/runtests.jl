@@ -1115,12 +1115,12 @@ end
 
             # default values
             @test refname(rec) == "*"
-            @test refid(rec) == 0
+            @test refindex(rec) == 0
             @test position(rec) == 0
             @test mappingquality(rec) == 0
             @test flag(rec) == 0
             @test nextrefname(rec) == "*"
-            @test nextrefid(rec) == 0
+            @test nextrefindex(rec) == 0
             @test nextposition(rec) == 0
             @test templatelength(rec) == 0
             @test seqname(rec) == ""
@@ -1156,7 +1156,7 @@ end
             # first record
             rec = BAMRecord()
             read!(reader, rec)
-            @test refid(rec) == 1
+            @test refindex(rec) == 1
             @test position(rec) == 2
             @test seqname(rec) == "SRR065390.14978392"
             @test sequence(rec) == dna"""
@@ -1225,13 +1225,13 @@ end
 
             # randomized tests
             for n in 1:50
-                refid = 1
+                refindex = 1
                 refname = "chr1"
                 range = randrange(1:1_000_000)
                 seekstart(reader)
                 # linear scan
                 expected = collect(filter(reader) do rec
-                    isoverlapping(rec, refid, range)
+                    isoverlapping(rec, refindex, range)
                 end)
                 # indexed scan
                 actual = collect(intersect(reader, refname, range))

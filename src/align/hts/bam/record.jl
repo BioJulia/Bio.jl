@@ -93,17 +93,17 @@ function ismapped(rec::BAMRecord)
 end
 
 """
-    refid(rec::BAMRecord)
+    refindex(rec::BAMRecord)
 
 Return the index of a reference sequence that `rec` is mapped onto.
 
 The index is 1-based and will be 0 for an alignment without mapping position.
 """
-function refid(rec::BAMRecord)
+function refindex(rec::BAMRecord)
     return rec.refid + 1
 end
 
-function nextrefid(rec::BAMRecord)
+function nextrefindex(rec::BAMRecord)
     return rec.next_refid + 1
 end
 
@@ -115,20 +115,20 @@ Return the name of a reference sequence that `rec` is mapped onto.
 If `rec` is unmapped, it returns `"*"` like SAM records.
 """
 function refname(rec::BAMRecord)
-    id = refid(rec)
-    if id == 0
+    i = refindex(rec)
+    if i == 0
         return "*"
     else
-        return rec.refseqnames[id]
+        return rec.refseqnames[i]
     end
 end
 
 function nextrefname(rec::BAMRecord)
-    id = nextrefid(rec)
-    if id == 0
+    i = nextrefindex(rec)
+    if i == 0
         return "*"
     else
-        return rec.refseqnames[id]
+        return rec.refseqnames[i]
     end
 end
 
