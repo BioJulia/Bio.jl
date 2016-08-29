@@ -19,7 +19,6 @@ immutable DifferentMutation <: MutationType end
 immutable TransitionMutation <: MutationType end
 immutable TransversionMutation <: MutationType end
 
-
 """
     is_ambiguous_strict{T<:Nucleotide}(a::T, b::T)
 
@@ -30,18 +29,46 @@ A, T, G, or C, then this function returns true.
     return isambiguous(a) | isambiguous(b)
 end
 
+"""
+    is_mutation{T<:Nucleotide}(a::T, b::T, ::Type{DifferentMutation})
+
+Test if two nucleotides constitute a `DifferentMutation`.
+"""
 @inline function is_mutation{T<:Nucleotide}(a::T, b::T, ::Type{DifferentMutation})
     return a != b
 end
 
+"""
+    is_mutation{T<:Nucleotide}(a::T, b::T, ::Type{TransitionMutation})
+
+Test if two nucleotides constitute a `TransitionMutation`.
+"""
 @inline function is_mutation{T<:Nucleotide}(a::T, b::T, ::Type{TransitionMutation})
     return (a != b) & ((ispurine(a) & ispurine(b)) | (ispyrimidine(a) & ispyrimidine(b)))
 end
 
+"""
+    is_mutation{T<:Nucleotide}(a::T, b::T, ::Type{TransversionMutation})
+
+Test if two nucleotides constitute a `TransversionMutation`.
+"""
 @inline function is_mutation{T<:Nucleotide}(a::T, b::T, ::Type{TransversionMutation})
     return (a != b) & ((ispurine(a) & ispyrimidine(b)) | (ispyrimidine(a) & ispurine(b)))
 end
 
+"""
+    count_mutations(sequences::Vector{BioSequence{A}}, ::Type{T})
+
+Count the number of mutations between DNA sequences in a pairwise manner.
+
+Different types of mutation can be counted:
+`DifferentMutation`, `TransitionMutation`, `TransversionMutation`.
+
+Returns a tuple of: 1. A vector containing the number of mutations between each,
+possible pair of sequences, and 2. a vector containing the number of sites
+considered (sites with any ambiguity characters are not considered) for each
+possible pair of sequences.
+"""
 function count_mutations{A<:NucleotideAlphabets,T<:MutationType}(sequences::Vector{BioSequence{A}}, ::Type{T})
     # This method has been written with the aim of improving performance by taking
     # advantage of the memory layout of matrices of nucleotides, as well as
@@ -72,6 +99,18 @@ function count_mutations{A<:NucleotideAlphabets,T<:MutationType}(sequences::Vect
     return nmutations, lengths
 end
 
+"""
+    count_mutations(sequences::Vector{BioSequence{A}}, ::Type{TransitionMutation}, ::Type{TransversionMutation})
+
+Count the number of `TransitionMutation`s and `TransversionMutation`s in a
+pairwise manner, between each possible pair of sequences.
+
+Returns a tuple of: 1. A vector containing the number of transitions between
+each, possible pair of sequences, and 2. a vector containing the number of
+transversions between each, possible pair of sequences, and 3. a vector
+containing the number of sites considered (sites with any ambiguity characters
+are not considered) for each possible pair of sequences.
+"""
 function count_mutations{A<:NucleotideAlphabets}(sequences::Vector{BioSequence{A}}, ::Type{TransitionMutation}, ::Type{TransversionMutation})
     # This method has been written with the aim of improving performance by taking
     # advantage of the memory layout of matrices of nucleotides, as well as
@@ -109,125 +148,4 @@ end
 
 function count_mutations{A<:NucleotideAlphabets}(sequences::Vector{BioSequence{A}}, ::Type{TransversionMutation}, ::Type{TransitionMutation})
     return count_mutations(sequences, TransitionMutation, TransversionMutation)
-end
-
-"""
-    count_mutations(seq1::BioSequence{A}, seq2::BioSequence{A}, t::Type{DifferentMutation})
-
-Count the number of differences between two DNA sequences.
-
-Returns a tuple of the number of sites that are different, and the number of sites
-considered (sites with any ambiguity characters are not considered).
-"""
-function count_mutations{A<:NucleotideAlphabets}(seq1::BioSequence{A},
-    seq2::BioSequence{A},
-    t::Type{DifferentMutation})
-
-    @assert length(seq1) == length(seq2)
-    ndifferences = 0
-    nsites = length(seq1)
-
-    for (a, b) in zip(seq1, seq2)
-        if is_ambiguous_strict(a, b)
-            nsites -= 1
-            continue
-        end
-        if a != b
-            ndifferences += 1
-        end
-    end
-    return ndifferences, nsites
-end
-
-"""
-    count_mutations(seq1::BioSequence, seq2::BioSequence, t::Type{TransitionMutation})
-
-Count the number of transition mutations between two DNA sequences.
-Returns a tuple of the number of sites that are different, and the number of sites
-considered (sites with any ambiguity characters are not considered).
-"""
-function count_mutations{A<:NucleotideAlphabets}(seq1::BioSequence{A},
-    seq2::BioSequence{A},
-    t::Type{TransitionMutation})
-
-    @assert length(seq1) == length(seq2)
-    ntransitions = 0
-    nsites = length(seq1)
-
-    for (a, b) in zip(seq1, seq2)
-        if is_ambiguous_strict(a, b)
-            nsites -= 1
-            continue
-        end
-        if a != b && ((ispurine(a) && ispurine(b)) || (ispyrimidine(a) && ispyrimidine(b)))
-            ntransitions += 1
-        end
-    end
-    return ntransitions, nsites
-end
-
-"""
-    count_mutations(seq1::BioSequence, seq2::BioSequence, t::Type{TransversionMutation})
-
-Count the number of transversion mutations between two DNA sequences.
-Returns a tuple of the number of sites that are different, and the number of sites
-considered (sites with any ambiguity characters are not considered).
-"""
-function count_mutations{A<:NucleotideAlphabets}(seq1::BioSequence{A},
-    seq2::BioSequence{A},
-    t::Type{TransversionMutation})
-
-    @assert length(seq1) == length(seq2)
-    ntransversions = 0
-    nsites = length(seq1)
-
-    for (a, b) in zip(seq1, seq2)
-        if is_ambiguous_strict(a, b)
-            nsites -= 1
-            continue
-        end
-        if a != b && ((ispurine(a) && ispyrimidine(b)) || (ispyrimidine(a) && ispurine(b)))
-            ntransversions += 1
-        end
-    end
-    return ntransversions, nsites
-end
-
-"""
-    count_mutations(seq1::BioSequence, seq2::BioSequence, t1::Type{TransitionMutation}, t2::Type{TransversionMutation})
-
-Count the number of transition and transversion mutations between two DNA sequences.
-"""
-function count_mutations{A<:NucleotideAlphabets}(seq1::BioSequence{A},
-    seq2::BioSequence{A},
-    t1::Type{TransitionMutation},
-    t2::Type{TransversionMutation})
-
-    @assert length(seq1) == length(seq2)
-    ndifferences = 0
-    ntransitions = 0
-    nsites = length(seq1)
-
-    for (a, b) in zip(seq1, seq2)
-        if is_ambiguous_strict(a, b)
-            nsites -= 1
-            continue
-        end
-        if a != b
-            ndifferences += 1
-            if (ispurine(a) && ispurine(b)) || (ispyrimidine(a) && ispyrimidine(b))
-                ntransitions += 1
-            end
-        end
-    end
-    ntransversions = ndifferences - ntransitions
-    return ntransitions, ntransversions, nsites
-end
-
-function count_mutations{A<:NucleotideAlphabets}(a::BioSequence{A},
-    b::BioSequence{A},
-    t1::Type{TransversionMutation},
-    t2::Type{TransitionMutation})
-
-    return count_mutations(a, b, t2, t1)
 end
