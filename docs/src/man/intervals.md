@@ -129,7 +129,7 @@ coverage
 ## Random access of intervals
 
 It is often the case that the user is interested in specific regions of a file.
-In such a case, reading all data from top to the specifc regions is a
+In such a case, reading all data from top to the specific regions is a
 time-wasting process when handing a big data file.
 
 [Tabix](http://www.htslib.org/doc/tabix.html) is a tool to index an interval
@@ -148,7 +148,7 @@ for interval in intersect(reader, "chr2", 1_000_000:2_000_000)
 end
 ```
 
-In the internal, this random accessing function uses an index type named
+Internally, this random accessing function uses an index type named
 `Tabix`.  If the user knows well about the BGZF file format, it is also possible
 to use its interfaces to read a formatted file that are not supported in Bio.jl:
 ```julia
