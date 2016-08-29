@@ -42,7 +42,7 @@ Void alphabet (internal use only).
 """
 immutable VoidAlphabet <: Alphabet end
 
-typealias NucleotideAlphabets Union{DNAAlphabet,RNAAlphabet}
+typealias NucleotideAlphabet Union{DNAAlphabet,RNAAlphabet}
 
 """
 The number of bits to represent the alphabet.

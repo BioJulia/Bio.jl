@@ -136,6 +136,7 @@ export
     RNAAlphabet,
     AminoAcidAlphabet,
     CharAlphabet,
+    NucleotideAlphabet,
     ExactSearchQuery,
     ApproximateSearchQuery,
     approxsearch,
@@ -154,7 +155,8 @@ using
     Iterators,
     IndexableBitVectors,
     Bio.Ragel,
-    Bio.StringFields
+    Bio.StringFields,
+    Combinatorics
 
 import Bio.IO:
     FileFormat,

@@ -839,20 +839,30 @@ end
         @test seqmatrix(dna, :site) == sitemajdna
         @test seqmatrix(rna, :site) == sitemajrna
         @test seqmatrix(prot, :site) == sitemajaa
-        @test seqmatrix(dna, :site, UInt8) == sitemajnucint
-        @test seqmatrix(rna, :site, UInt8) == sitemajnucint
+        @test seqmatrix(UInt8, dna, :site) == sitemajnucint
+        @test seqmatrix(UInt8, rna, :site) == sitemajnucint
 
         @test seqmatrix(dna, :seq) == seqmajdna
         @test seqmatrix(rna, :seq) == seqmajrna
         @test seqmatrix(prot, :seq) == seqmajaa
-        @test seqmatrix(dna, :seq, UInt8) == seqmajnucint
-        @test seqmatrix(rna, :seq, UInt8) == seqmajnucint
+        @test seqmatrix(UInt8, dna, :seq) == seqmajnucint
+        @test seqmatrix(UInt8, rna, :seq) == seqmajnucint
 
+        @test seqmatrix([dna"", dna"", dna""], :site) == Matrix{DNANucleotide}(3, 0)
+        @test seqmatrix([dna"", dna"", dna""], :seq) == Matrix{DNANucleotide}(0, 3)
+        @test seqmatrix([rna"", rna"", rna""], :site) == Matrix{RNANucleotide}(3, 0)
+        @test seqmatrix([rna"", rna"", rna""], :seq) == Matrix{RNANucleotide}(0, 3)
+        @test seqmatrix(UInt8, [dna"", dna"", dna""], :site) == Matrix{UInt8}(3, 0)
+        @test seqmatrix(UInt8, [dna"", dna"", dna""], :seq) == Matrix{UInt8}(0, 3)
+        @test seqmatrix(UInt8, [rna"", rna"", rna""], :site) == Matrix{UInt8}(3, 0)
+        @test seqmatrix(UInt8, [rna"", rna"", rna""], :seq) == Matrix{UInt8}(0, 3)
 
         @test_throws ArgumentError seqmatrix(dnathrow, :site)
         @test_throws ArgumentError seqmatrix(rnathrow, :seq)
         @test_throws ArgumentError seqmatrix(dna, :lol)
-        @test_throws MethodError seqmatrix(dna, :site, AminoAcid)
+        @test_throws MethodError seqmatrix(AminoAcid, dna, :site)
+        @test_throws ArgumentError seqmatrix(DNASequence[], :site)
+        @test_throws ArgumentError seqmatrix(DNASequence[], :seq)
 
     end
 

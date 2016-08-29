@@ -1037,16 +1037,16 @@ end
 
 Construct a matrix of nucleotides or amino acids from a vector of `BioSequence`s.
 
-If parameter major is set to `:site`, the matrix is created such that one
+If parameter `major` is set to `:site`, the matrix is created such that one
 nucleotide from each sequence is placed in each column i.e. the matrix is laid
 out in site-major order.
 This means that iteration over one position of many sequences is efficient,
 as julia arrays are laid out in column major order.
 
-If the parameter major is set to `:seq`, the matrix is created such that each
+If the parameter `major` is set to `:seq`, the matrix is created such that each
 sequence is placed in one column i.e. the matrix is laid out in sequence-major
 order.
-This means that iteration over each sequence is efficient,
+This means that iteration across each sequence in turn is efficient,
 as julia arrays are laid out in column major order.
 
 # Examples
@@ -1077,8 +1077,9 @@ julia> seqmatrix(seqs, :site)
 ```
 """
 function seqmatrix{A<:Alphabet}(vseq::AbstractVector{BioSequence{A}}, major::Symbol)
-    nsites = length(vseq[1])
     nseqs = length(vseq)
+    @assert nseqs > 0 throw(ArgumentError("Vector of BioSequence{$A} is empty."))
+    nsites = length(vseq[1])
     @inbounds for i in 2:nseqs
         length(vseq[i]) == nsites || throw(ArgumentError("Sequences in vseq must be of same length"))
     end
@@ -1100,20 +1101,20 @@ function seqmatrix{A<:Alphabet}(vseq::AbstractVector{BioSequence{A}}, major::Sym
 end
 
 """
-    seqmatrix{A<:Alphabet,T}(vseq::Vector{BioSequence{A}}, major::Symbol, conv::Type{T})
+    seqmatrix{A<:Alphabet,T}(::Type{T}, vseq::Vector{BioSequence{A}}, major::Symbol)
 
-Construct a matrix of T from a vector of `BioSequence`s.
+Construct a matrix of `T` from a vector of `BioSequence`s.
 
-If parameter major is set to `:site`, the matrix is created such that one
+If parameter `major` is set to `:site`, the matrix is created such that one
 nucleotide from each sequence is placed in each column i.e. the matrix is laid
 out in site-major order.
 This means that iteration over one position of many sequences is efficient,
 as julia arrays are laid out in column major order.
 
-If the parameter major is set to `:seq`, the matrix is created such that each
+If the parameter `major` is set to `:seq`, the matrix is created such that each
 sequence is placed in one column i.e. the matrix is laid out in sequence-major
 order.
-This means that iteration over each sequence is efficient,
+This means that iteration across each sequence in turn is efficient,
 as julia arrays are laid out in column major order.
 
 # Examples
@@ -1143,11 +1144,12 @@ julia> seqmatrix(seqs, :seq, UInt8)
  0x01  0x08  0x02  0x04
 ```
 """
-function seqmatrix{A<:Alphabet,T}(vseq::AbstractVector{BioSequence{A}}, major::Symbol, conv::Type{T})
-    nsites = length(vseq[1])
+function seqmatrix{T,A<:Alphabet}(::Type{T}, vseq::AbstractVector{BioSequence{A}}, major::Symbol)
     nseqs = length(vseq)
+    @assert nseqs > 0 throw(ArgumentError("Vector of BioSequence{$A} is empty."))
+    nsites = length(vseq[1])
     @inbounds for i in 2:nseqs
-        length(vseq[i]) == nsites || throw(ArgumentError("Sequences in vseq must be of same length"))
+        length(vseq[i]) == nsites || throw(ArgumentError("Sequences in vseq must be of same length."))
     end
     if major == :site
         mat = Matrix{T}(nseqs, nsites)
@@ -1170,7 +1172,7 @@ end
 # ---------
 
 """
-    majorityvote(seqs::AbstractVector{DNASequence})
+    majorityvote{A<:NucleotideAlphabet}(seqs::AbstractVector{BioSequence{A}})
 
 Construct a sequence that is a consensus of a vector of sequences.
 
@@ -1196,8 +1198,8 @@ julia> majorityvote(seqs)
 MTCGAAARATCG
 ```
 """
-function majorityvote{A<:NucleotideAlphabets}(seqs::AbstractVector{BioSequence{A}})
-    mat = seqmatrix(seqs, :site, UInt8)
+function majorityvote{A<:NucleotideAlphabet}(seqs::AbstractVector{BioSequence{A}})
+    mat = seqmatrix(UInt8, seqs, :site)
     nsites = size(mat, 2)
     nseqs = size(mat, 1)
     result = BioSequence{A}(nsites)
