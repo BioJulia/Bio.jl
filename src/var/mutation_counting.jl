@@ -15,8 +15,42 @@
 # Mutation types
 
 abstract MutationType
+
+"""
+`DifferentMutation` describes a site where two aligned nucleotides are not the
+same.
+
+Every kind of difference is counted.
+"""
 immutable DifferentMutation <: MutationType end
+
+"""
+`TransitionMutation` describes a situation with two aligned nucleotides, where a
+purine has mutated into another purine, or a pyrimadine has mutated into another
+pyrimadine.
+
+Possible transition mutations are:
+A -> G
+G -> A
+C -> T
+T -> C
+"""
 immutable TransitionMutation <: MutationType end
+
+"""
+`TransversionMutation` describes a situation with two aligned nucleotides,
+where a purine has mutated into a pyrimadine or vice versa.
+
+Possible transversion mutations are:
+A -> T
+T -> A
+C -> G
+G -> C
+A -> C
+C -> A
+T -> G
+G -> T
+"""
 immutable TransversionMutation <: MutationType end
 
 """

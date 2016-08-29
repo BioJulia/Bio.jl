@@ -9,33 +9,19 @@ end
 
 ## Counting mutations
 
-You can count the numbers of different types of mutations between two aligned
-(i.e. of equal length) nucleotide sequences.
+You can count the numbers of different types of mutations in a pairwise manner
+for a set of nucleotide sequences.
 
 ### Different types of mutation
 
-The types of mutations that can currently be counted are displayed in the
-following table.
+The types of mutations that can currently be counted are `DifferentMutation`,s
+`TransitionMutation`s, and `TransversionMutation`s.
 
-| Type                   | Meaning                                 |
-| :--------------------- | :-------------------------------------- |
-| `DifferentMutation`    | Nucleotides that are different          |
-| `TransitionMutation`   | Transition mutations                    |
-| `TransversionMutation` | Transversion mutations                  |
-
-`DifferentMutation` simply compares two nucleotides to see if they can be deemed
-the same or different. Ambiguous cases are detected and excluded from the
-computation.
-
-`TransitionMutation` compares two nucleotides to see if they can be determined
-to be a transition mutation.
-As with `DifferentMutation`, cases where a nucleotide is ambiguous are excluded
-from the computation.
-
-`TransversionMutation` compares two nucleotides to see if they can be determined
-to be a transversion mutation.
-As with `DifferentMutation`, cases where a nucleotide is ambiguous are excluded
-from the computation.
+```@docs
+DifferentMutation
+TransitionMutation
+TransversionMutation
+```
 
 ### `count_mutations` method
 
@@ -46,21 +32,21 @@ uncertain nucleotides are not examined and so this second value will be less
 than the length of the two biological sequences.
 
 ```julia
-count_mutations(dna"ATCGATCG", dna"ACCGATCG", DifferentMutation)
+count_mutations([dna"ATCGATCG", dna"ACCGATCG"], DifferentMutation)
 
-count_mutations(dna"ATCGATCG", dna"ACCGATCG", TransitionMutation)
+count_mutations([dna"ATCGATCG", dna"ACCGATCG"], TransitionMutation)
 
-count_mutations(dna"ATCGATCG", dna"ACCGATCG", TransversionMutation)
+count_mutations([dna"ATCGATCG", dna"ACCGATCG"], TransversionMutation)
 
-count_mutations(dna"ATCGATCG", dna"ACCGATCG", TransitionMutation, TransversionMutation)
+count_mutations([dna"ATCGATCG", dna"ACCGATCG"], TransitionMutation, TransversionMutation)
 
-count_mutations(rna"AUCGAUCG", rna"ACCGAUCG", DifferentMutation)
+count_mutations([rna"AUCGAUCG", rna"ACCGAUCG"], DifferentMutation)
 
-count_mutations(rna"AUCGAUCG", rna"ACCGAUCG", TransitionMutation)
+count_mutations([rna"AUCGAUCG", rna"ACCGAUCG"], TransitionMutation)
 
-count_mutations(rna"AUCGAUCG", rna"ACCGAUCG", TransversionMutation)
+count_mutations([rna"AUCGAUCG", rna"ACCGAUCG"], TransversionMutation)
 
-count_mutations(rna"AUCGAUCG", rna"ACCGAUCG", TransitionMutation, TransversionMutation)
+count_mutations([rna"AUCGAUCG", rna"ACCGAUCG"], TransitionMutation, TransversionMutation)
 ```
 
 ## Computing evolutionary and genetic distances
