@@ -136,6 +136,7 @@ export
     RNAAlphabet,
     AminoAcidAlphabet,
     CharAlphabet,
+    NucleotideAlphabet,
     ExactSearchQuery,
     ApproximateSearchQuery,
     approxsearch,
@@ -146,14 +147,16 @@ export
     TwoBit,
     Demultiplexer,
     demultiplex,
-    seqmatrix
+    seqmatrix,
+    majorityvote
 
 using
     BufferedStreams,
     Iterators,
     IndexableBitVectors,
     Bio.Ragel,
-    Bio.StringFields
+    Bio.StringFields,
+    Combinatorics
 
 import Bio.IO:
     FileFormat,

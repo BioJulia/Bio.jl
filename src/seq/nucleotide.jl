@@ -167,7 +167,7 @@ true
 
 ```
 """
-function iscompatible{T<:Nucleotide}(x::T, y::T)
+@inline function iscompatible{T<:Nucleotide}(x::T, y::T)
     return compatbits(x) & compatbits(y) != 0
 end
 

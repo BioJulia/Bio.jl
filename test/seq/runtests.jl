@@ -813,6 +813,17 @@ end
             RNA_A  RNA_U  RNA_C  RNA_G
             RNA_A  RNA_U  RNA_C  RNA_G
         ]
+        sitemajnucint = [
+            0x01  0x01  0x01
+            0x08  0x08  0x08
+            0x02  0x02  0x02
+            0x04  0x04  0x04
+        ]
+        seqmajnucint = [
+            0x01  0x08  0x02  0x04
+            0x01  0x08  0x02  0x04
+            0x01  0x08  0x02  0x04
+        ]
         sitemajaa = [
             AA_A AA_M AA_G
             AA_A AA_M AA_G
@@ -828,14 +839,30 @@ end
         @test seqmatrix(dna, :site) == sitemajdna
         @test seqmatrix(rna, :site) == sitemajrna
         @test seqmatrix(prot, :site) == sitemajaa
+        @test seqmatrix(UInt8, dna, :site) == sitemajnucint
+        @test seqmatrix(UInt8, rna, :site) == sitemajnucint
 
         @test seqmatrix(dna, :seq) == seqmajdna
         @test seqmatrix(rna, :seq) == seqmajrna
         @test seqmatrix(prot, :seq) == seqmajaa
+        @test seqmatrix(UInt8, dna, :seq) == seqmajnucint
+        @test seqmatrix(UInt8, rna, :seq) == seqmajnucint
+
+        @test seqmatrix([dna"", dna"", dna""], :site) == Matrix{DNANucleotide}(3, 0)
+        @test seqmatrix([dna"", dna"", dna""], :seq) == Matrix{DNANucleotide}(0, 3)
+        @test seqmatrix([rna"", rna"", rna""], :site) == Matrix{RNANucleotide}(3, 0)
+        @test seqmatrix([rna"", rna"", rna""], :seq) == Matrix{RNANucleotide}(0, 3)
+        @test seqmatrix(UInt8, [dna"", dna"", dna""], :site) == Matrix{UInt8}(3, 0)
+        @test seqmatrix(UInt8, [dna"", dna"", dna""], :seq) == Matrix{UInt8}(0, 3)
+        @test seqmatrix(UInt8, [rna"", rna"", rna""], :site) == Matrix{UInt8}(3, 0)
+        @test seqmatrix(UInt8, [rna"", rna"", rna""], :seq) == Matrix{UInt8}(0, 3)
 
         @test_throws ArgumentError seqmatrix(dnathrow, :site)
         @test_throws ArgumentError seqmatrix(rnathrow, :seq)
         @test_throws ArgumentError seqmatrix(dna, :lol)
+        @test_throws MethodError seqmatrix(AminoAcid, dna, :site)
+        @test_throws ArgumentError seqmatrix(DNASequence[], :site)
+        @test_throws ArgumentError seqmatrix(DNASequence[], :seq)
 
     end
 
@@ -3198,6 +3225,17 @@ end
                     Int8[0, 2, 3, 4, 5, 40, 93],
                     UInt8['!', '#', '$', '%', '&', 'I', '~'])
     end
+end
+
+@testset "majorityvote" begin
+    dnas = [dna"CTCGATCGATCC", dna"CTCGAAAAATCA", dna"ATCGAAAAATCG", dna"ATCGGGGGATCG"]
+    dna2 = [dna"CTCGATCGATCC", dna"CTCGAAA", dna"ATCGAAAAATCG", dna"ATCGGGGGATCG"]
+    rnas = [rna"CUCGAUCGAUCC", rna"CUCGAAAAAUCA", rna"AUCGAAAAAUCG", rna"AUCGGGGGAUCG"]
+    rna2 = [rna"CUCGAUCGAUCC", rna"CUCGAAAAAUCA", rna"AUCGAAAAAUCG", rna"AUCGUCG"]
+    @test majorityvote(dnas) == dna"MTCGAAARATCG"
+    @test majorityvote(rnas) == rna"MUCGAAARAUCG"
+    @test_throws ArgumentError majorityvote(dna2)
+    @test_throws ArgumentError majorityvote(rna2)
 end
 
 end # TestSeq
