@@ -21,8 +21,8 @@ function BAMWriter(stream::BGZFStream, header::SAMHeader)
     return BAMWriter(stream)
 end
 
-function Base.close(writer::BAMWriter)
-    close(writer.stream)
+function Bio.IO.stream(writer::BAMWriter)
+    return writer.stream
 end
 
 function write_header(stream, header, refseqnames, refseqlens)

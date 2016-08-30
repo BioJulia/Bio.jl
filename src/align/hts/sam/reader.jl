@@ -15,20 +15,16 @@ type SAMReader <: Bio.IO.AbstractReader
     end
 end
 
+function Bio.IO.stream(reader::SAMReader)
+    return reader.state.stream
+end
+
 function header(reader::SAMReader)
     return reader.header
 end
 
 function Base.eltype(::Type{SAMReader})
     return SAMRecord
-end
-
-function Base.eof(reader::SAMReader)
-    return eof(reader.state.stream)
-end
-
-function Base.close(reader::SAMReader)
-    close(reader.state.stream)
 end
 
 function Base.open(input::BufferedInputStream, ::Type{SAM})

@@ -5,8 +5,8 @@ type SAMWriter{T<:IO} <: Bio.IO.AbstractWriter
     stream::T
 end
 
-function Base.close(writer::SAMWriter)
-    close(writer.stream)
+function Bio.IO.stream(writer::SAMWriter)
+    return writer.stream
 end
 
 function Base.write(writer::SAMWriter, header::SAMHeader)

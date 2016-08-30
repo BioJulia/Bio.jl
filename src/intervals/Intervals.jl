@@ -32,6 +32,7 @@ export
 import ..Ragel: tryread!
 export tryread!
 
+import Bio
 using
     BufferedStreams,
     Colors,
@@ -39,11 +40,6 @@ using
     Libz,
     Bio.Ragel,
     Bio.StringFields
-
-import Bio.IO:
-    FileFormat,
-    AbstractReader,
-    AbstractWriter
 
 using Base.Collections:
     heappush!,
