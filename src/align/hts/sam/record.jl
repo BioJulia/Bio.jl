@@ -62,7 +62,19 @@ function Base.show(io::IO, rec::SAMRecord)
 end
 
 function Base.copy(rec::SAMRecord)
-    return deepcopy(rec)
+    return SAMRecord(
+        copy(rec.name),
+        rec.flag,
+        copy(rec.refname),
+        rec.pos,
+        rec.mapq,
+        copy(rec.cigar),
+        copy(rec.next_refname),
+        rec.next_pos,
+        rec.tlen,
+        copy(rec.seq),
+        copy(rec.qual),
+        deepcopy(rec.optional_fields))
 end
 
 function ismapped(rec::SAMRecord)
