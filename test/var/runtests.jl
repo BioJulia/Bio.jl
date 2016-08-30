@@ -27,23 +27,21 @@ using Bio.Var
 
 end
 
-# @testset "Distance Computation" begin
-#
-#     dna1 = dna"ATTG-ACCTGGNTTTCCGAA"
-#     dna2 = dna"A-ACAGAGTATACRGTCGTC"
-#
-#     dna3 = dna"attgaacctggntttccgaa"
-#     dna4 = dna"atacagagtatacrgtcgtc"
-#
-#     @test distance(Count{DifferentMutation}, dna1, dna2) == (12, 16)
-#     @test distance(Count{TransitionMutation}, dna1, dna2) == (4, 16)
-#     @test distance(Count{TransversionMutation}, dna1, dna2) == (8, 16)
-#     @test distance(Count{Kimura80}, dna1, dna2) == (4, 8, 16)
-#
-#     @test distance(Count{DifferentMutation}, dna3, dna4) == (12, 18)
-#     @test distance(Count{TransitionMutation}, dna3, dna4) == (4, 18)
-#     @test distance(Count{TransversionMutation}, dna3, dna4) == (8, 18)
-#     @test distance(Count{Kimura80}, dna3, dna4) == (4, 8, 18)
+@testset "Distance Computation" begin
+
+    dnas1 = [dna"ATTG-ACCTGGNTTTCCGAA", dna"A-ACAGAGTATACRGTCGTC"]
+
+    dnas2 = [dna"attgaacctggntttccgaa", dna"atacagagtatacrgtcgtc"]
+
+    @test distance(Count{DifferentMutation}, dnas1) == ([12], [16])
+    @test distance(Count{TransitionMutation}, dnas1) == ([4], [16])
+    @test distance(Count{TransversionMutation}, dnas1) == ([8], [16])
+    @test distance(Count{Kimura80}, dnas1) == ([4], [8], [16])
+
+    @test distance(Count{DifferentMutation}, dnas2) == ([12], [18])
+    @test distance(Count{TransitionMutation}, dnas2) == ([4], [18])
+    @test distance(Count{TransversionMutation}, dnas2) == ([8], [18])
+    @test distance(Count{Kimura80}, dnas2) == ([4], [8], [18])
 #
 #     @test distance(Proportion{DifferentMutation}, dna1, dna2) == ((12 / 16), 16)
 #     @test distance(Proportion{TransitionMutation}, dna1, dna2) == ((4 / 16), 16)
@@ -61,6 +59,6 @@ end
 #     @test round(distance(Kimura80, dna3, dna4)[1], 3) == 1.648
 #     @test round(distance(Kimura80, dna3, dna4)[2], 3) == 1
 #
-# end
+end
 
 end # module TestVar

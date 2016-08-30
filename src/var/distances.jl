@@ -110,6 +110,9 @@ function distance end
 """
     distance{T<:MutationType,A<:NucleotideAlphabet}(::Type{Count{T}}, seqs::Vector{BioSequence{A}})
 
+Compute the number of mutations of type `T` between a set of sequences in a
+pairwise manner.
+
 This method of distance returns a tuple of the number of mutations of type T
 between sequences and the number of valid
 (i.e. non-ambiguous sites) counted by the function.
@@ -128,7 +131,7 @@ end
 This method of distance returns a tuple of the p-distance, and the number of valid
 (i.e. non-ambiguous sites) counted by the function.
 """
-@inline function distance{T<:MutationType}(::Type{Proportion{T}}, a::BioSequence, b::BioSequence)
+@inline function distance{T<:MutationType,A<:NucleotideAlphabet}(::Type{Proportion{T}}, seqs::Vector{BioSequence{A}})
     d, l = distance(Count{T}, a, b)
     return d / l, l
 end
@@ -140,11 +143,14 @@ end
 This method of distance returns a tuple of the expected JukesCantor69 distance
 estimate, and the computed variance.
 """
-function distance(::Type{JukesCantor69}, a::BioSequence, b::BioSequence)
+function distance{A<:NucleotideAlphabet}(::Type{JukesCantor69}, seqs::Vector{BioSequence{A}})
     p, l = distance(Proportion{DifferentMutation}, a, b)
-    @assert 0.0 <= p <= 0.75 throw(DomainError())
-    D = -0.75 * log(1 - 4 * p / 3)
-    V = p * (1 - p) / (((1 - 4 * p / 3) ^ 2) * l)
+    D = Vector{Float64}(length(p))
+    V = Vector{Float64}(length(p))
+    for i in 1:length(p)
+        D[i] = -0.75 * log(1 - 4 * p[i] / 3)
+        V[i] = p[i] * (1 - p[i]) / (((1 - 4 * p[i] / 3) ^ 2) * l[i])
+    end
     return D, V
 end
 
