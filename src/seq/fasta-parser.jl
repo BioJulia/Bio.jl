@@ -9,7 +9,7 @@ const _fastaparser_nfa_push_actions = Int8[ 0, 0 ,  ]
 const _fastaparser_nfa_pop_trans = Int8[ 0, 0 ,  ]
 Ragel.@generate_read!_function(
 "fastaparser",
-FASTAParser,
+FASTAReader,
 SeqRecord,
 begin
 begin

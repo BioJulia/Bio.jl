@@ -13,7 +13,7 @@ See https://genome.ucsc.edu/FAQ/FAQformat.html#format7 for the details.
 """
 immutable TwoBit <: FileFormat end
 
-type TwoBitParser{T<:IO} <: AbstractParser
+type TwoBitReader{T<:IO} <: AbstractReader
     # input stream
     input::T
 
@@ -27,42 +27,42 @@ type TwoBitParser{T<:IO} <: AbstractParser
     swapped::Bool
 end
 
-function TwoBitParser(input::IO)
+function TwoBitReader(input::IO)
     swapped, seqcount = read_2bit_header(input)
     names, offsets = read_2bit_index(input, swapped, seqcount)
     @assert seqcount == length(names) == length(offsets)
-    return TwoBitParser(input, names, offsets, swapped)
+    return TwoBitReader(input, names, offsets, swapped)
 end
 
 function Base.open(filename::AbstractString, ::Type{TwoBit})
-    return TwoBitParser(open(filename))
+    return TwoBitReader(open(filename))
 end
 
-function Base.close(p::TwoBitParser)
+function Base.close(p::TwoBitReader)
     close(p.input)
 end
 
-function Base.eof(p::TwoBitParser)
+function Base.eof(p::TwoBitReader)
     return eof(p.input)
 end
 
-function Base.eltype(::Type{TwoBitParser})
+function Base.eltype(::Type{TwoBitReader})
     return SeqRecord{ReferenceSequence,Vector{UnitRange{Int}}}
 end
 
-function Base.length(p::TwoBitParser)
+function Base.length(p::TwoBitReader)
     return length(p.names)
 end
 
-function Base.start(p::TwoBitParser)
+function Base.start(p::TwoBitReader)
     return 1
 end
 
-function Base.done(p::TwoBitParser, k)
+function Base.done(p::TwoBitReader, k)
     return k > endof(p)
 end
 
-function Base.next(p::TwoBitParser, k)
+function Base.next(p::TwoBitReader, k)
     return p[k], k + 1
 end
 
@@ -70,32 +70,32 @@ end
 # Random access
 # -------------
 
-function Base.checkbounds(p::TwoBitParser, k::Integer)
+function Base.checkbounds(p::TwoBitReader, k::Integer)
     if 1 ≤ k ≤ endof(p)
         return true
     end
     throw(BoundsError(p, k))
 end
 
-function Base.checkbounds(p::TwoBitParser, r::Range)
+function Base.checkbounds(p::TwoBitReader, r::Range)
     if isempty(r) || (1 ≤ first(r) && last(r) ≤ endof(p))
         return true
     end
     throw(BoundsError(p, k))
 end
 
-function Base.endof(p::TwoBitParser)
+function Base.endof(p::TwoBitReader)
     return length(p)
 end
 
-function Base.getindex(p::TwoBitParser, k::Integer)
+function Base.getindex(p::TwoBitReader, k::Integer)
     checkbounds(p, k)
     seek(p.input, p.offsets[k])
     seq, mblocks = read_2bit_seq(p.input, p.swapped)
     return SeqRecord{ReferenceSequence,Vector{UnitRange{Int}}}(p.names[k], seq, mblocks)
 end
 
-function Base.getindex(p::TwoBitParser, name::AbstractString)
+function Base.getindex(p::TwoBitReader, name::AbstractString)
     k = findfirst(p.names, name)
     if k == 0
         throw(KeyError(name))
@@ -103,17 +103,17 @@ function Base.getindex(p::TwoBitParser, name::AbstractString)
     return p[k]
 end
 
-function Base.getindex(p::TwoBitParser, r::Range)
+function Base.getindex(p::TwoBitReader, r::Range)
     checkbounds(p, r)
     return [p[k] for k in r]
 end
 
-function Base.getindex{S<:AbstractString}(p::TwoBitParser, names::AbstractVector{S})
+function Base.getindex{S<:AbstractString}(p::TwoBitReader, names::AbstractVector{S})
     return [p[name] for name in names]
 end
 
 
-# Parser
+# Reader
 # ------
 
 function read_2bit_header(input)

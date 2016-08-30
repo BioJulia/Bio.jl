@@ -1,7 +1,7 @@
 # SAM Reader
 # ==========
 
-type SAMReader <: Bio.IO.AbstractParser
+type SAMReader <: Bio.IO.AbstractReader
     state::Ragel.State
     header::SAMHeader
 

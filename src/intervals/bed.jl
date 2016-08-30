@@ -85,10 +85,10 @@ function Base.open(filepath::AbstractString, mode::AbstractString, ::Type{BED};
 end
 
 
-# Parser
+# Reader
 # ------
 
-type BEDParser <: AbstractParser
+type BEDReader <: AbstractReader
     state::Ragel.State
 
     # intermediate values used during parsing
@@ -98,32 +98,32 @@ type BEDParser <: AbstractParser
     block_size_idx::Int
     block_first_idx::Int
 
-    function BEDParser(input::BufferedInputStream)
+    function BEDReader(input::BufferedInputStream)
         return new(Ragel.State(bedparser_start, input), 0, 0, 0, 1, 1)
     end
 end
 
-function Intervals.metadatatype(::BEDParser)
+function Intervals.metadatatype(::BEDReader)
     return BEDMetadata
 end
 
-function Base.eltype(::Type{BEDParser})
+function Base.eltype(::Type{BEDReader})
     return BEDInterval
 end
 
-function Base.eof(parser::BEDParser)
-    return eof(parser.state.stream)
+function Base.eof(reader::BEDReader)
+    return eof(reader.state.stream)
 end
 
-function Base.close(parser::BEDParser)
-    return close(parser.state.stream)
+function Base.close(reader::BEDReader)
+    return close(reader.state.stream)
 end
 
 function Base.open(input::BufferedInputStream, ::Type{BED})
-    return BEDParser(input)
+    return BEDReader(input)
 end
 
-function IntervalCollection(interval_stream::BEDParser)
+function IntervalCollection(interval_stream::BEDReader)
     intervals = collect(BEDInterval, interval_stream)
     return IntervalCollection{BEDMetadata}(intervals, true)
 end

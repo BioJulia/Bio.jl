@@ -42,7 +42,7 @@ using
 
 import Bio.IO:
     FileFormat,
-    AbstractParser,
+    AbstractReader,
     AbstractWriter
 
 using Base.Collections:

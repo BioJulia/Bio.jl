@@ -11,7 +11,7 @@ module Ragel
 export tryread!
 
 using BufferedStreams
-import Bio.IO: FileFormat, AbstractParser
+import Bio.IO: FileFormat, AbstractReader
 
 # A type keeping track of a ragel-based parser's state.
 type State{T<:BufferedInputStream}
@@ -209,21 +209,21 @@ macro generate_read!_function(machine_name, input_type, output_type, ragel_body)
     end)
 end
 
-function Base.read(input::AbstractParser)
+function Base.read(input::AbstractReader)
     return read!(input, eltype(input)())
 end
 
 """
-    tryread!(parser::AbstractParser, output)
+    tryread!(reader::AbstractReader, output)
 
-Try to read the next element into `output` from `parser`.
+Try to read the next element into `output` from `reader`.
 
 The result is wrapped in `Nullable` and will be null if no entry is available.
 """
-function tryread!(parser::AbstractParser, output)
-    T = eltype(parser)
+function tryread!(reader::AbstractReader, output)
+    T = eltype(reader)
     try
-        read!(parser, output)
+        read!(reader, output)
         return Nullable{T}(output)
     catch ex
         if isa(ex, EOFError)
@@ -268,23 +268,23 @@ end
 # Iterator
 # --------
 
-function Base.start(parser::AbstractParser)
-    T = eltype(parser)
+function Base.start(reader::AbstractReader)
+    T = eltype(reader)
     nextone = T()
-    if isnull(tryread!(parser, nextone))
+    if isnull(tryread!(reader, nextone))
         return Nullable{T}()
     else
         return Nullable{T}(nextone)
     end
 end
 
-Base.done(parser::AbstractParser, nextone) = isnull(nextone)
+Base.done(reader::AbstractReader, nextone) = isnull(nextone)
 
-function Base.next(parser::AbstractParser, nextone)
+function Base.next(reader::AbstractReader, nextone)
     item = get(nextone)
     ret = copy(item)
-    if isnull(tryread!(parser, item))
-        return ret, Nullable{eltype(parser)}()
+    if isnull(tryread!(reader, item))
+        return ret, Nullable{eltype(reader)}()
     else
         return ret, Nullable(item)
     end

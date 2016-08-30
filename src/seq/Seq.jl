@@ -160,7 +160,7 @@ using
 
 import Bio.IO:
     FileFormat,
-    AbstractParser,
+    AbstractReader,
     AbstractWriter
 
 import ..Ragel: tryread!

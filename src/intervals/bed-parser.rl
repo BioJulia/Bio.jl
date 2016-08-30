@@ -92,7 +92,7 @@
 
 Ragel.@generate_read!_function(
     "bedparser",
-    BEDParser,
+    BEDReader,
     BEDInterval,
     begin
         %% write exec;
