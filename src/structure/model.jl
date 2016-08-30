@@ -9,6 +9,7 @@ export
     Chain,
     Model,
     ProteinStructure,
+    AtomRecord,
     StructuralElementOrList,
     ishetatom,
     serial,
@@ -189,18 +190,27 @@ immutable AtomRecord
 end
 
 
-# Constructors without sub-elements
-
-Residue(name::AbstractString, number::Integer, ins_code::Char, het_res::Bool, ch::Chain) = Residue(
-    name, number, ins_code, het_res, [], Dict(), ch)
-
-Chain(id::Char, mod::Model) = Chain(id, [], Dict(), mod)
-
-Model(number::Integer, struc::ProteinStructure) = Model(number, Dict(), struc)
-Model(struc::ProteinStructure) = Model(1, struc)
+# Constructors without sub-elements and without super-elements
 
 ProteinStructure(name::AbstractString) = ProteinStructure(name, Dict())
 ProteinStructure() = ProteinStructure("")
+
+Model(number::Integer, struc::ProteinStructure) = Model(number, Dict(), struc)
+Model(struc::ProteinStructure) = Model(1, struc)
+Model() = Model(ProteinStructure())
+
+Chain(id::Char, mod::Model) = Chain(id, [], Dict(), mod)
+Chain(id::Char) = Chain(id, [], Dict(), Model())
+Chain() = Chain('A')
+
+Residue(name::AbstractString, number::Integer, ins_code::Char, het_res::Bool, ch::Chain) = Residue(
+    name, number, ins_code, het_res, [], Dict(), ch)
+Residue(name::AbstractString, number::Integer, ins_code::Char, het_res::Bool) = Residue(
+    name, number, ins_code, het_res, [], Dict(), Chain())
+Residue() = Residue("ALA", 1, ' ', false)
+
+Atom(serial::Integer, name::AbstractString, alt_loc_id::Char, coords::Vector{Float64}, occupancy::Float64, temp_fac::Float64, element::AbstractString, charge::AbstractString) = Atom(serial, name, alt_loc_id, coords, occupancy, temp_fac, element, charge, Residue())
+Atom() = Atom(1, "CA", ' ', [0.0, 0.0, 0.0], 1.0, 0.0, "  ", "  ")
 
 
 "A `StructuralElement` or `Vector` of `StructuralElement`s."
@@ -331,8 +341,8 @@ serial(at::Atom) = at.serial
 serial(dis_at::DisorderedAtom) = serial(defaultatom(dis_at))
 
 """
-Get the atom name of an `AbstractAtom`. `spaces` determines whether the name is
-stripped of whitespace (default `false`).
+Get the atom name of an `AbstractAtom`. `spaces` determines whether surrounding
+whitespace is retained (default `false`).
 """
 function atomname(at::Atom; spaces::Bool=false)
     if spaces
@@ -409,8 +419,15 @@ tempfac(at::Atom) = at.temp_fac
 tempfac(dis_at::DisorderedAtom) = tempfac(defaultatom(dis_at))
 
 "Get the element of an `AbstractAtom`. Defaults to `\"  \"`."
-element(at::Atom) = at.element
-element(dis_at::DisorderedAtom) = element(defaultatom(dis_at))
+function element(at::Atom; spaces::Bool=false)
+    if spaces
+        return at.element
+    else
+        return strip(at.element)
+    end
+end
+
+element(dis_at::DisorderedAtom; spaces::Bool=false) = element(defaultatom(dis_at), spaces=spaces)
 
 "Get the charge on an `AbstractAtom`. Defaults to `\"  \"`."
 charge(at::Atom) = at.charge
@@ -896,7 +913,7 @@ Return the number of `Chain`s in a `StructuralElementOrList`.
 Additional arguments are chain selector functions - only chains that return
 `true` from the functions are counted.
 """
-countchains(el::StructuralElement, chain_selectors::Function...) = length(collectchains(el, chain_selectors))
+countchains(el::StructuralElement, chain_selectors::Function...) = length(collectchains(el, chain_selectors...))
 
 countchains(mod::Model) = length(mod)
 
@@ -1068,7 +1085,7 @@ function unsafe_addatomtomodel!(mod::Model, atom_record::AtomRecord; remove_diso
             residue[atom_record.atom_name] = DisorderedAtom(residue[atom_record.atom_name], atom_record.alt_loc_id)
         end
     else
-        error("Two copies of the same atom have the same alternative location ID:\n$(residue[atom_record.atom_name])\n$(atom)")
+        error("Two copies of the same atom have the same alternative location ID:\n$(residue[atom_record.atom_name])$(atom_record)")
     end
 end
 
@@ -1125,11 +1142,12 @@ hetatomselector(at::AbstractAtom) = ishetatom(at)
 
 """
 Determines if an `AbstractAtom` has its atom name in the given `Set` or
-`Vector`.
+`Vector`. `spaces` determines whether surrounding whitespace is retained
+(default `false`).
 """
-atomnameselector(at::AbstractAtom, atom_names::Set{String}) = atomname(at) in atom_names
+atomnameselector(at::AbstractAtom, atom_names::Set{String}; spaces::Bool=false) = atomname(at, spaces=spaces) in atom_names
 # Set is faster but Vector method is retained for ease of use
-atomnameselector(at::AbstractAtom, atom_names::Vector{String}) = atomname(at) in atom_names
+atomnameselector(at::AbstractAtom, atom_names::Vector{String}; spaces::Bool=false) = atomname(at, spaces=spaces) in atom_names
 
 "`Set` of C-alpha atom names."
 const calpha_atom_names = Set(["CA"])
@@ -1207,7 +1225,7 @@ disorderselector(res::AbstractResidue) = isdisorderedres(res)
 Determines if an `AbstractAtom` represents hydrogen. Uses the element field
 where possible, otherwise uses the atom name.
 """
-hydrogenselector(at::AbstractAtom) = element(at) == "H" || (element(at) == "" && 'H' in atomname(at) && !ismatch(r"[a-zA-Z]", atomname(at)[1:findfirst(atomname(at), 'H')-1]))
+hydrogenselector(at::AbstractAtom) = element(at, spaces=false) == "H" || (element(at, spaces=false) == "" && 'H' in atomname(at) && !ismatch(r"[a-zA-Z]", atomname(at)[1:findfirst(atomname(at), 'H')-1]))
 
 
 function AminoAcidSequence(ch::Chain, residue_selectors::Function...)
@@ -1302,3 +1320,6 @@ function Base.show(io::IO, dis_at::DisorderedAtom)
         show(io, at)
     end
 end
+
+Base.show(io::IO, at_rec::AtomRecord) = println(io, pdbline(at_rec)...)
+Base.showcompact(io::IO, at_rec::AtomRecord) = print(io, pdbline(at_rec)...)

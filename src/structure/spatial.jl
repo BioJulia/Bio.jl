@@ -105,7 +105,7 @@ distance(atom_one::AbstractAtom, atom_two::AbstractAtom) = sqrt(sqdistance(atom_
 
 # in docs say we assume they are in a bond, and degrees/rads
 bondangle(atom_a::AbstractAtom, atom_b::AbstractAtom, atom_c::AbstractAtom) = bondangle(
-        coords(atom_b) - coords(atom_a),
+        coords(atom_a) - coords(atom_b),
         coords(atom_c) - coords(atom_b)
     )
 bondangle(vec_a::Vector{Float64}, vec_b::Vector{Float64}) = acos(

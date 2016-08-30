@@ -186,17 +186,18 @@ are read in.
 """
 function spaceatomname(at::Atom)
     atom_name = atomname(at)
+    strip_el = element(at, spaces=false)
     chars = length(atom_name)
     if chars == 4
         return atom_name
     end
     @assert chars <= 4 "Atom name is greater than four characters: \"$atom_name\""
     # In the absence of the element, the first index goes in column two
-    if strip(element(at)) == "" || findfirst(atom_name, element(at)[1]) == 0
+    if strip_el == "" || findfirst(atom_name, strip_el[1]) == 0
         cent_ind = 1
     # The last letter of the element goes in column two where possible
     else
-        cent_ind = findfirst(atom_name, element(at)[1]) + length(element(at)) - 1
+        cent_ind = findfirst(atom_name, strip_el[1]) + length(strip_el) - 1
     end
     @assert cent_ind <= 2 "Atom name is too long to space correctly: \"$atom_name\""
     if cent_ind == 1 && chars < 4
@@ -208,7 +209,10 @@ function spaceatomname(at::Atom)
 end
 
 
-"Form a Protein Data Bank (PDB) format ATOM or HETATM record from an `Atom`."
+"""
+Form a Protein Data Bank (PDB) format ATOM or HETATM record from an `Atom` or
+`AtomRecord`.
+"""
 pdbline(at::Atom) = String[
         ishetatom(at) ? "HETATM" : "ATOM  ",
         spacestring(serial(at), 5),
@@ -233,6 +237,29 @@ pdbline(at::Atom) = String[
         spacestring(charge(at), 2),
     ]
 
+pdbline(at_rec::AtomRecord) = Compat.ASCIIString[
+        at_rec.het_atom ? "HETATM" : "ATOM  ",
+        spacestring(at_rec.serial, 5),
+        " ",
+        spacestring(at_rec.atom_name, 4),
+        string(at_rec.alt_loc_id),
+        spacestring(at_rec.res_name, 3),
+        " ",
+        string(at_rec.chain_id),
+        spacestring(at_rec.res_number, 4),
+        string(at_rec.ins_code),
+        "   ",
+        # This will throw an error for large coordinate values, e.g. -1000.123
+        spacestring(round(at_rec.coords[1], 3), 8),
+        spacestring(round(at_rec.coords[2], 3), 8),
+        spacestring(round(at_rec.coords[3], 3), 8),
+        spacestring(round(at_rec.occupancy, 2), 6),
+        # This will throw an error for large temp facs, e.g. 1000.12
+        spacestring(round(at_rec.temp_fac, 2), 6),
+        "          ",
+        spacestring(at_rec.element, 2),
+        spacestring(at_rec.charge, 2),
+    ]
 
 """
 Write a `StructuralElementOrList` to a Protein Data Bank (PDB) format file. Only
