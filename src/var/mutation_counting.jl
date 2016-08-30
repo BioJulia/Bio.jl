@@ -90,24 +90,12 @@ Test if two nucleotides constitute a `TransversionMutation`.
     return (a != b) & ((ispurine(a) & ispyrimidine(b)) | (ispyrimidine(a) & ispurine(b)))
 end
 
-"""
-    count_mutations{T<:MutationType,A<:NucleotideAlphabet}(::Type{T}, sequences::Vector{BioSequence{A}})
 
-Count the number of mutations between DNA sequences in a pairwise manner.
 
-Different types of mutation can be counted:
-`DifferentMutation`, `TransitionMutation`, `TransversionMutation`.
-
-Returns a tuple of: 1. A vector containing the number of mutations between each,
-possible pair of sequences, and 2. a vector containing the number of sites
-considered (sites with any ambiguity characters are not considered) for each
-possible pair of sequences.
-"""
-function count_mutations{T<:MutationType,A<:NucleotideAlphabet}(::Type{T}, sequences::Vector{BioSequence{A}})
+function count_mutations{T<:MutationType,N<:Nucleotide}(::Type{T}, seqs::Matrix{N})
     # This method has been written with the aim of improving performance by taking
     # advantage of the memory layout of matrices of nucleotides, as well as
     # getting julia to emit simd code for the innermost loop.
-    seqs = seqmatrix(sequences, :seq)
     S, N = size(seqs)
     c = binomial(N, 2)
     lengths = Vector{Int}(c)
@@ -134,22 +122,27 @@ function count_mutations{T<:MutationType,A<:NucleotideAlphabet}(::Type{T}, seque
 end
 
 """
-    count_mutations{A<:NucleotideAlphabet}(::Type{TransitionMutation}, ::Type{TransversionMutation}, sequences::Vector{BioSequence{A}})
+    count_mutations{T<:MutationType,A<:NucleotideAlphabet}(::Type{T}, sequences::Vector{BioSequence{A}})
 
-Count the number of `TransitionMutation`s and `TransversionMutation`s in a
-pairwise manner, between each possible pair of sequences.
+Count the number of mutations between DNA sequences in a pairwise manner.
 
-Returns a tuple of: 1. A vector containing the number of transitions between
-each, possible pair of sequences, and 2. a vector containing the number of
-transversions between each, possible pair of sequences, and 3. a vector
-containing the number of sites considered (sites with any ambiguity characters
-are not considered) for each possible pair of sequences.
+Different types of mutation can be counted:
+`DifferentMutation`, `TransitionMutation`, `TransversionMutation`.
+
+Returns a tuple of: 1. A vector containing the number of mutations between each,
+possible pair of sequences, and 2. a vector containing the number of sites
+considered (sites with any ambiguity characters are not considered) for each
+possible pair of sequences.
 """
-function count_mutations{A<:NucleotideAlphabet}(::Type{TransitionMutation}, ::Type{TransversionMutation}, sequences::Vector{BioSequence{A}})
+function count_mutations{T<:MutationType,A<:NucleotideAlphabet}(::Type{T}, sequences::Vector{BioSequence{A}})
+    seqs = seqmatrix(sequences, :seq)
+    return count_mutations(T, seqs)
+end
+
+function count_mutations{A<:Nucleotide}(::Type{TransitionMutation}, ::Type{TransversionMutation}, seqs::Matrix{A})
     # This method has been written with the aim of improving performance by taking
     # advantage of the memory layout of matrices of nucleotides, as well as
     # getting julia to emit simd code for the innermost loop.
-    seqs = seqmatrix(sequences, :seq)
     S, N = size(seqs)
     c = binomial(N, 2)
     lengths = Vector{Int}(c)
@@ -180,6 +173,23 @@ function count_mutations{A<:NucleotideAlphabet}(::Type{TransitionMutation}, ::Ty
     return ntransition, ntransversion, lengths
 end
 
+"""
+    count_mutations{A<:NucleotideAlphabet}(::Type{TransitionMutation}, ::Type{TransversionMutation}, sequences::Vector{BioSequence{A}})
+
+Count the number of `TransitionMutation`s and `TransversionMutation`s in a
+pairwise manner, between each possible pair of sequences.
+
+Returns a tuple of: 1. A vector containing the number of transitions between
+each, possible pair of sequences, and 2. a vector containing the number of
+transversions between each, possible pair of sequences, and 3. a vector
+containing the number of sites considered (sites with any ambiguity characters
+are not considered) for each possible pair of sequences.
+"""
+function count_mutations{A<:NucleotideAlphabet}(::Type{TransitionMutation}, ::Type{TransversionMutation}, sequences::Vector{BioSequence{A}})
+    seqs = seqmatrix(sequences, :seq)
+    return count_mutations(TransitionMutation, TransversionMutation, seqs)
+end
+
 function count_mutations{A<:NucleotideAlphabet}(::Type{TransversionMutation}, ::Type{TransitionMutation}, sequences::Vector{BioSequence{A}})
-    return count_mutations(sequences, TransitionMutation, TransversionMutation)
+    return count_mutations(TransitionMutation, TransversionMutation, sequences)
 end

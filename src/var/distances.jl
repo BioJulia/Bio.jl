@@ -108,18 +108,18 @@ parameter. The second and third parameter provide the two nucleotide sequences.
 function distance end
 
 """
-    distance{T<:MutationType}(::Type{Count{T}}, a::BioSequence, b::BioSequence)
+    distance{T<:MutationType,A<:NucleotideAlphabet}(::Type{Count{T}}, seqs::Vector{BioSequence{A}})
 
 This method of distance returns a tuple of the number of mutations of type T
-between two sequences and the number of valid
+between sequences and the number of valid
 (i.e. non-ambiguous sites) counted by the function.
 """
-@inline function distance{T<:MutationType}(::Type{Count{T}}, a::BioSequence, b::BioSequence)
-    return count_mutations(a, b, T)
+@inline function distance{T<:MutationType,A<:NucleotideAlphabet}(::Type{Count{T}}, seqs::Vector{BioSequence{A}})
+    return count_mutations(T, seqs)
 end
 
-@inline function distance{T<:TsTv}(::Type{Count{T}}, a::BioSequence, b::BioSequence)
-    return count_mutations(a, b, TransitionMutation, TransversionMutation)
+@inline function distance{T<:TsTv,A<:NucleotideAlphabet}(::Type{Count{T}}, seqs::Vector{BioSequence{A}})
+    return count_mutations(TransitionMutation, TransversionMutation, seqs)
 end
 
 """
