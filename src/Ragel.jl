@@ -11,7 +11,7 @@ module Ragel
 export tryread!
 
 using BufferedStreams
-import Bio.IO: FileFormat, AbstractParser
+import Bio.IO: FileFormat, AbstractReader
 
 # A type keeping track of a ragel-based parser's state.
 type State{T<:BufferedInputStream}
@@ -209,18 +209,18 @@ macro generate_read!_function(machine_name, input_type, output_type, ragel_body)
     end)
 end
 
-function Base.read(input::AbstractParser)
+function Base.read(input::AbstractReader)
     return read!(input, eltype(input)())
 end
 
 """
-    tryread!(parser::AbstractParser, output)
+    tryread!(parser::AbstractReader, output)
 
 Try to read the next element into `output` from `parser`.
 
 The result is wrapped in `Nullable` and will be null if no entry is available.
 """
-function tryread!(parser::AbstractParser, output)
+function tryread!(parser::AbstractReader, output)
     T = eltype(parser)
     try
         read!(parser, output)
@@ -268,7 +268,7 @@ end
 # Iterator
 # --------
 
-function Base.start(parser::AbstractParser)
+function Base.start(parser::AbstractReader)
     T = eltype(parser)
     nextone = T()
     if isnull(tryread!(parser, nextone))
@@ -278,9 +278,9 @@ function Base.start(parser::AbstractParser)
     end
 end
 
-Base.done(parser::AbstractParser, nextone) = isnull(nextone)
+Base.done(parser::AbstractReader, nextone) = isnull(nextone)
 
-function Base.next(parser::AbstractParser, nextone)
+function Base.next(parser::AbstractReader, nextone)
     item = get(nextone)
     ret = copy(item)
     if isnull(tryread!(parser, item))

@@ -79,7 +79,7 @@ end
 # ------
 
 "A type encapsulating the current state of a FASTQ parser"
-type FASTQParser{S<:Sequence} <: AbstractParser
+type FASTQParser{S<:Sequence} <: AbstractReader
     state::Ragel.State
     seqbuf::BufferedOutputStream{BufferedStreams.EmptyStream}
     qualbuf::BufferedOutputStream{BufferedStreams.EmptyStream}

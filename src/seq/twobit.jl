@@ -13,7 +13,7 @@ See https://genome.ucsc.edu/FAQ/FAQformat.html#format7 for the details.
 """
 immutable TwoBit <: FileFormat end
 
-type TwoBitParser{T<:IO} <: AbstractParser
+type TwoBitParser{T<:IO} <: AbstractReader
     # input stream
     input::T
 

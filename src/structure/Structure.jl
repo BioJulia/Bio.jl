@@ -8,7 +8,7 @@
 
 module Structure
 
-import Bio.IO: FileFormat, AbstractParser
+import Bio.IO: FileFormat
 
 include("model.jl")
 include("pdb.jl")

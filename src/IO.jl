@@ -10,7 +10,7 @@ module IO
 
 export
     FileFormat,
-    AbstractParser,
+    AbstractReader,
     AbstractWriter
 
 """
@@ -23,11 +23,11 @@ abstract FileFormat
 """
 Abstract data reader type.
 
-See `subtypes(AbstractParser)` for all available data parsers.
+See `subtypes(AbstractReader)` for all available data parsers.
 """
-abstract AbstractParser
+abstract AbstractReader
 
-Base.iteratorsize(::AbstractParser) = Base.SizeUnknown()
+Base.iteratorsize(::AbstractReader) = Base.SizeUnknown()
 
 """
 Abstract data writer type.

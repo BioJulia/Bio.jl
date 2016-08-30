@@ -71,7 +71,7 @@ end
 include("fai.jl")
 
 "A type encapsulating the current state of a FASTA parser"
-type FASTAParser{S<:Sequence} <: AbstractParser
+type FASTAParser{S<:Sequence} <: AbstractReader
     state::Ragel.State
     seqbuf::BufferedOutputStream{BufferedStreams.EmptyStream}
     index::Nullable{FASTAIndex}

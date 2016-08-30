@@ -366,7 +366,7 @@ type BigBedData <: IntervalStream{BEDMetadata}
     uncompressed_data::Vector{UInt8}
 end
 
-type BigBedDataParser <: AbstractParser
+type BigBedDataParser <: AbstractReader
     state::Ragel.State
 
     # intermediate values used during parsing

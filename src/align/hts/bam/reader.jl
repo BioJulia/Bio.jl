@@ -1,7 +1,7 @@
 # BAM Reader
 # ==========
 
-type BAMReader <: Bio.IO.AbstractParser
+type BAMReader <: Bio.IO.AbstractReader
     filepath::String
     stream::BGZFStream
     header::SAMHeader

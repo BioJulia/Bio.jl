@@ -88,7 +88,7 @@ end
 # Parser
 # ------
 
-type BEDParser <: AbstractParser
+type BEDParser <: AbstractReader
     state::Ragel.State
 
     # intermediate values used during parsing
