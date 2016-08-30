@@ -131,12 +131,13 @@ end
 This method of distance returns a tuple of the p-distance, and the number of valid
 (i.e. non-ambiguous sites) counted by the function.
 """
-@inline function distance{T<:MutationType,A<:NucleotideAlphabet}(::Type{Proportion{T}}, seqs::Vector{BioSequence{A}})
+function distance{T<:MutationType,A<:NucleotideAlphabet}(::Type{Proportion{T}}, seqs::Vector{BioSequence{A}})
     d, l = distance(Count{T}, seqs)
-    @inbounds for i in 1:length(d)
-        d[i] = d[i] / l[i]
+    D = Vector{Float64}(length(d))
+    @inbounds for i in 1:length(D)
+        D[i] = d[i] / l[i]
     end
-    return d, l
+    return D, l
 end
 
 """
