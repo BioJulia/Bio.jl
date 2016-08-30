@@ -212,6 +212,9 @@
             <li class="second-level"><a href="#interval-streams">Interval streams</a></li>
             
         
+            <li class="second-level"><a href="#random-access-of-intervals">Random access of intervals</a></li>
+            
+        
     
     </ul>
 </div></div>
@@ -314,7 +317,34 @@
 </pre></div>
 
 
-<p><a target='_blank' href='https://github.com/BioJulia/Bio.jl/tree/648ac8ba60340c8abdb99977df288cdf31b10c5e/src/intervals/intervalstream.jl#L207-L227' class='documenter-source'>source</a><br></p></div>
+<p><a target='_blank' href='https://github.com/BioJulia/Bio.jl/tree/ec6d53f342f555097ac07d225549228a4f081752/src/intervals/intervalstream.jl#L207-L227' class='documenter-source'>source</a><br></p>
+<p><a id='Random-access-of-intervals-1'></a></p>
+<h2 id="random-access-of-intervals">Random access of intervals</h2>
+<p>It is often the case that the user is interested in specific regions of a file. In such a case, reading all data from top to the specific regions is a time-wasting process when handing a big data file.</p>
+<p><a href="http://www.htslib.org/doc/tabix.html">Tabix</a> is a tool to index an interval data file and makes it possible to quickly retrieve data overlapping with a specific genomic region. Indexing a file using the tabix tool requires that the data file is sorted and then compressed in a special file format called <a href="https://github.com/BioJulia/BGZFStreams.jl">BGZF</a>. The BGZF file format is a gzip-compliant data format and readable using standard command-line tools like <code>gzip</code>. However, creating a BGZF file needs a purpose-built tool called <code>bgzip</code>. Once a BGZF file and its index file are prepared using <code>bgzip</code> and <code>tabix</code>, the user can iterate over intervals overlapping with a specified region:</p>
+<div class="codehilite"><pre><span></span><span class="n">reader</span> <span class="o">=</span> <span class="n">open</span><span class="p">(</span><span class="s">&quot;data.bed.gz&quot;</span><span class="p">,</span> <span class="n">BED</span><span class="p">)</span>
+<span class="k">for</span> <span class="n">interval</span> <span class="k">in</span> <span class="n">intersect</span><span class="p">(</span><span class="n">reader</span><span class="p">,</span> <span class="s">&quot;chr2&quot;</span><span class="p">,</span> <span class="mi">1_000_000</span><span class="p">:</span><span class="mi">2_000_000</span><span class="p">)</span>
+    <span class="c"># do something</span>
+<span class="k">end</span>
+</pre></div>
+
+
+<p>Internally, this random accessing function uses an index type named <code>Tabix</code>.  If the user knows well about the BGZF file format, it is also possible to use its interfaces to read a formatted file that are not supported in Bio.jl:</p>
+<div class="codehilite"><pre><span></span><span class="n">index</span> <span class="o">=</span> <span class="n">Tabix</span><span class="p">(</span><span class="s">&quot;data.xxx.gz.tbi&quot;</span><span class="p">)</span>
+<span class="n">stream</span> <span class="o">=</span> <span class="n">BGZFStream</span><span class="p">(</span><span class="s">&quot;data.xxx.gz&quot;</span><span class="p">)</span>
+<span class="k">for</span> <span class="n">chunk</span> <span class="k">in</span> <span class="n">overlapchunks</span><span class="p">(</span><span class="n">index</span><span class="p">,</span> <span class="s">&quot;chr2&quot;</span><span class="p">,</span> <span class="mi">1_000_000</span><span class="p">:</span><span class="mi">2_000_000</span><span class="p">)</span>
+    <span class="n">seekstart</span><span class="p">(</span><span class="n">stream</span><span class="p">,</span> <span class="n">chunk</span><span class="o">.</span><span class="n">start</span><span class="p">)</span>
+    <span class="k">for</span> <span class="n">line</span> <span class="k">in</span> <span class="n">eachline</span><span class="p">(</span><span class="n">stream</span><span class="p">)</span>
+        <span class="n">values</span> <span class="o">=</span> <span class="n">split</span><span class="p">(</span><span class="n">chomp</span><span class="p">(</span><span class="n">line</span><span class="p">),</span> <span class="sc">&#39;\t&#39;</span><span class="p">)</span>
+        <span class="n">seqname</span> <span class="o">=</span> <span class="n">values</span><span class="p">[</span><span class="n">index</span><span class="o">.</span><span class="n">columns</span><span class="p">[</span><span class="mi">1</span><span class="p">]]</span>
+        <span class="n">start</span> <span class="o">=</span> <span class="n">parse</span><span class="p">(</span><span class="kt">Int</span><span class="p">,</span> <span class="n">values</span><span class="p">[</span><span class="n">index</span><span class="o">.</span><span class="n">columns</span><span class="p">[</span><span class="mi">2</span><span class="p">]])</span>
+        <span class="n">stop</span> <span class="o">=</span> <span class="n">parse</span><span class="p">(</span><span class="kt">Int</span><span class="p">,</span> <span class="n">values</span><span class="p">[</span><span class="n">index</span><span class="o">.</span><span class="n">columns</span><span class="p">[</span><span class="mi">3</span><span class="p">]])</span>
+        <span class="k">if</span> <span class="n">seqname</span> <span class="o">==</span> <span class="s">&quot;chr2&quot;</span> <span class="o">&amp;&amp;</span> <span class="n">intersect</span><span class="p">(</span><span class="n">start</span><span class="p">:</span><span class="n">stop</span><span class="p">,</span> <span class="mi">1_000_000</span><span class="p">:</span><span class="mi">2_000_000</span><span class="p">)</span>
+            <span class="c"># do something</span>
+        <span class="k">end</span>
+    <span class="k">end</span>
+<span class="k">end</span>
+</pre></div></div>
         
     </div>
 
