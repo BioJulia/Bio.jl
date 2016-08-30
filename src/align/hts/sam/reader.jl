@@ -6,7 +6,12 @@ type SAMReader <: Bio.IO.AbstractParser
     header::SAMHeader
 
     function SAMReader(input::BufferedInputStream)
-        return new(Ragel.State(samparser_start, input), SAMHeader())
+        reader = new(Ragel.State(samparser_start, input), SAMHeader())
+        while !eof(input) && BufferedStreams.peek(input) == UInt8('@')
+            # NOTE: This reads a header line, not the first record.
+            @assert read(reader) == SAMRecord()
+        end
+        return reader
     end
 end
 

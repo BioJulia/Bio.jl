@@ -1053,8 +1053,9 @@ end
             reader = open(joinpath(samdir, "ce#1.sam"), SAM)
             @test isa(reader, Align.SAMReader)
 
-            # TODO header
-            #h = header(reader)
+            # header
+            h = header(reader)
+            @test h["SQ"] == [Dict("SN" => "CHROMOSOME_I", "LN" => "1009800")]
 
             # first record
             rec = SAMRecord()

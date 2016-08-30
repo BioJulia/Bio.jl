@@ -188,21 +188,29 @@ begin
 	Ragel.@anchor!
 	@goto st1
 	@label ctr86
-	header = Ragel.@ascii_from_anchor!()
-	tag = header[2:3]
+	line = Ragel.@ascii_from_anchor!()
+	tag = line[2:3]
+	if tag == "HD"
+		if haskey(input.header, "HD")
+			error("found multiple @HD lines")
+		end
+		input.header[tag] = parse_keyvals(line[5:end-1])
+else
 	if !haskey(input.header, tag)
 		input.header[tag] = []
 	end
 	if tag == "CO"
-		push!(input.header[tag], header[5:end-1])
+		push!(input.header[tag], line[5:end-1])
 else
-	push!(input.header[tag], parse_keyvals(header[5:end-1]))
+	push!(input.header[tag], parse_keyvals(line[5:end-1]))
 end
-	Ragel.@anchor!
-	@goto st1
+		end
+@goto yield
+Ragel.@anchor!
+@goto st1
 @label st1
 p+= 1
-if 	p == pe
+if p == pe
 	@goto _test_eof1
 
 end
@@ -212,12 +220,12 @@ if (data[1+(p )])== 9
 
 end
 if (data[1+(p )])> 63
-	if 65 <= (data[1+(p )])&& (data[1+(p )])<= 126
-		@goto st1
+	if 	65 <= (data[1+(p )])&& (data[1+(p )])<= 126
+	@goto st1
 
-	end
+end
 
-elseif (data[1+(p )])>= 33
+elseif 	(data[1+(p )])>= 33
 	@goto st1
 
 end
@@ -1288,21 +1296,29 @@ end
 Ragel.@anchor!
 @goto st59
 @label ctr87
-header = Ragel.@ascii_from_anchor!()
-tag = header[2:3]
-if !haskey(input.header, tag)
-	input.header[tag] = []
-end
-if tag == "CO"
-	push!(input.header[tag], header[5:end-1])
+line = Ragel.@ascii_from_anchor!()
+tag = line[2:3]
+if tag == "HD"
+	if haskey(input.header, "HD")
+		error("found multiple @HD lines")
+	end
+	input.header[tag] = parse_keyvals(line[5:end-1])
 else
-			push!(input.header[tag], parse_keyvals(header[5:end-1]))
+			if !haskey(input.header, tag)
+		input.header[tag] = []
+	end
+	if tag == "CO"
+		push!(input.header[tag], line[5:end-1])
+else
+	push!(input.header[tag], parse_keyvals(line[5:end-1]))
 end
-	Ragel.@anchor!
-	@goto st59
+		end
+@goto yield
+Ragel.@anchor!
+@goto st59
 @label st59
 p+= 1
-if 	p == pe
+if p == pe
 	@goto _test_eof59
 
 end
@@ -1312,12 +1328,12 @@ if (data[1+(p )])== 67
 
 end
 if (data[1+(p )])> 90
-	if 97 <= (data[1+(p )])&& (data[1+(p )])<= 122
-		@goto st60
+	if 	97 <= (data[1+(p )])&& (data[1+(p )])<= 122
+	@goto st60
 
-	end
+end
 
-elseif (data[1+(p )])>= 65
+elseif 	(data[1+(p )])>= 65
 	@goto st60
 
 end
@@ -1729,21 +1745,29 @@ cs = 69
 @label _test_eof
 if p == eof
 	if cs  == 72
-		header = Ragel.@ascii_from_anchor!()
-		tag = header[2:3]
+		line = Ragel.@ascii_from_anchor!()
+		tag = line[2:3]
+		if tag == "HD"
+			if haskey(input.header, "HD")
+				error("found multiple @HD lines")
+			end
+			input.header[tag] = parse_keyvals(line[5:end-1])
+	else
 		if !haskey(input.header, tag)
 			input.header[tag] = []
 		end
 		if tag == "CO"
-			push!(input.header[tag], header[5:end-1])
+			push!(input.header[tag], line[5:end-1])
 	else
-		push!(input.header[tag], parse_keyvals(header[5:end-1]))
+		push!(input.header[tag], parse_keyvals(line[5:end-1]))
 end
-elseif 	cs  == 71
-	# need to anchor here for the next record
-	Ragel.@anchor!
-	Ragel.@yield 0
 end
+				@goto yield
+			elseif cs  == 71
+# need to anchor here for the next record
+				Ragel.@anchor!
+				Ragel.@yield 0
+			end
 
 end
 @label _out
@@ -1762,50 +1786,50 @@ const _samheaderparser_nfa_offsets = Int8[0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
 const _samheaderparser_nfa_push_actions = Int8[0, 0 , ]
 const _samheaderparser_nfa_pop_trans = Int8[0, 0 , ]
 function parse_samheader(data)
-	header = SAMHeader()
+header = SAMHeader()
 
-	p = 0
-	pe = eof = endof(data)
-	anchor = 0
+p = 0
+pe = eof = endof(data)
+anchor = 0
 
 cs = convert(Int, samheaderparser_start )
-if 	p == pe
-	@goto _test_eof
+if p == pe
+@goto _test_eof
 
 end
 if cs  == 12
-	@goto st_case_12
+@goto st_case_12
 elseif cs  == 0
-	@goto st_case_0
+@goto st_case_0
 elseif cs  == 1
-	@goto st_case_1
+@goto st_case_1
 elseif cs  == 2
-	@goto st_case_2
+@goto st_case_2
 elseif cs  == 3
-	@goto st_case_3
+@goto st_case_3
 elseif cs  == 4
-	@goto st_case_4
+@goto st_case_4
 elseif cs  == 5
-	@goto st_case_5
+@goto st_case_5
 elseif cs  == 6
-	@goto st_case_6
+@goto st_case_6
 elseif cs  == 7
-	@goto st_case_7
+@goto st_case_7
 elseif cs  == 8
-	@goto st_case_8
+@goto st_case_8
 elseif cs  == 13
-	@goto st_case_13
+@goto st_case_13
 elseif cs  == 9
-	@goto st_case_9
+@goto st_case_9
 elseif cs  == 10
-	@goto st_case_10
+@goto st_case_10
 elseif cs  == 11
-	@goto st_case_11
+@goto st_case_11
 end
 @goto st_out
 @label st_case_12
 if (data[1+(p )])== 64
-	@goto ctr12
+@goto ctr12
 
 end
 @goto st0
@@ -1820,224 +1844,224 @@ anchor = p + 1
 line = String(data[anchor:p])
 tag = line[2:3]
 if tag == "HD"
-	if haskey(header, "HD")
-		error("there are multiple @HD lines")
-	end
-	header[tag] = parse_keyvals(line[5:end-1])
-else
-			if !haskey(header, tag)
-		header[tag] = []
-	end
-	if tag == "CO"
-		push!(header[tag], line[5:end-1])
-else
-	push!(header[tag], parse_keyvals(line[5:end-1]))
-end
+if haskey(header, "HD")
+		error("found multiple @HD lines")
 		end
+header[tag] = parse_keyvals(line[5:end-1])
+else
+if !haskey(header, tag)
+header[tag] = []
+end
+if tag == "CO"
+push!(header[tag], line[5:end-1])
+else
+push!(header[tag], parse_keyvals(line[5:end-1]))
+end
+end
 anchor = p + 1
 @goto st1
 @label st1
 p+= 1
 if p == pe
-	@goto _test_eof1
+@goto _test_eof1
 
 end
 @label st_case_1
 if (data[1+(p )])== 67
-	@goto st9
+@goto st9
 
 end
 if (data[1+(p )])> 90
-	if 	97 <= (data[1+(p )])&& (data[1+(p )])<= 122
-	@goto st2
+if 97 <= (data[1+(p )])&& (data[1+(p )])<= 122
+@goto st2
 
 end
 
-elseif 	(data[1+(p )])>= 65
-	@goto st2
+elseif (data[1+(p )])>= 65
+@goto st2
 
 end
 @goto st0
 @label st2
 p+= 1
 if p == pe
-	@goto _test_eof2
+@goto _test_eof2
 
 end
 @label st_case_2
 if (data[1+(p )])< 65
-	if 48 <= (data[1+(p )])&& (data[1+(p )])<= 57
-		@goto st3
+if 48 <= (data[1+(p )])&& (data[1+(p )])<= 57
+@goto st3
 
-	end
+end
 
 elseif (data[1+(p )])> 90
-	if 97 <= (data[1+(p )])&& (data[1+(p )])<= 122
-		@goto st3
+if 97 <= (data[1+(p )])&& (data[1+(p )])<= 122
+@goto st3
 
-	end
+end
 
 else
-	@goto st3
+@goto st3
 
 end
 @goto st0
 @label st3
 p+= 1
 if p == pe
-	@goto _test_eof3
+@goto _test_eof3
 
 end
 @label st_case_3
 if (data[1+(p )])== 9
-	@goto st4
+@goto st4
 
 end
 @goto st0
 @label st4
 p+= 1
 if p == pe
-	@goto _test_eof4
+@goto _test_eof4
 
 end
 @label st_case_4
 if (data[1+(p )])> 90
-	if 97 <= (data[1+(p )])&& (data[1+(p )])<= 122
-		@goto st5
+if 97 <= (data[1+(p )])&& (data[1+(p )])<= 122
+@goto st5
 
-	end
+end
 
 elseif (data[1+(p )])>= 65
-	@goto st5
+@goto st5
 
 end
 @goto st0
 @label st5
 p+= 1
 if p == pe
-	@goto _test_eof5
+@goto _test_eof5
 
 end
 @label st_case_5
 if (data[1+(p )])< 65
-	if 48 <= (data[1+(p )])&& (data[1+(p )])<= 57
-		@goto st6
+if 48 <= (data[1+(p )])&& (data[1+(p )])<= 57
+@goto st6
 
-	end
+end
 
 elseif (data[1+(p )])> 90
-	if 97 <= (data[1+(p )])&& (data[1+(p )])<= 122
-		@goto st6
+if 97 <= (data[1+(p )])&& (data[1+(p )])<= 122
+@goto st6
 
-	end
+end
 
 else
-	@goto st6
+@goto st6
 
 end
 @goto st0
 @label st6
 p+= 1
 if p == pe
-	@goto _test_eof6
+@goto _test_eof6
 
 end
 @label st_case_6
 if (data[1+(p )])== 58
-	@goto st7
+@goto st7
 
 end
 @goto st0
 @label st7
 p+= 1
 if p == pe
-	@goto _test_eof7
+@goto _test_eof7
 
 end
 @label st_case_7
 if 32 <= (data[1+(p )])&& (data[1+(p )])<= 126
-	@goto st8
+@goto st8
 
 end
 @goto st0
 @label st8
 p+= 1
 if p == pe
-	@goto _test_eof8
+@goto _test_eof8
 
 end
 @label st_case_8
 if (data[1+(p )]) == 9
-	@goto st4
+@goto st4
 elseif (data[1+(p )]) == 10
-	@goto st13
+@goto st13
 end
 if 32 <= (data[1+(p )])&& (data[1+(p )])<= 126
-	@goto st8
+@goto st8
 
 end
 @goto st0
 @label st13
 p+= 1
 if p == pe
-	@goto _test_eof13
+@goto _test_eof13
 
 end
 @label st_case_13
 if (data[1+(p )])== 64
-	@goto ctr13
+@goto ctr13
 
 end
 @goto st0
 @label st9
 p+= 1
 if p == pe
-	@goto _test_eof9
+@goto _test_eof9
 
 end
 @label st_case_9
 if (data[1+(p )])== 79
-	@goto st10
+@goto st10
 
 end
 if (data[1+(p )])< 65
-	if 48 <= (data[1+(p )])&& (data[1+(p )])<= 57
-		@goto st3
+if 48 <= (data[1+(p )])&& (data[1+(p )])<= 57
+@goto st3
 
-	end
+end
 
 elseif (data[1+(p )])> 90
-	if 97 <= (data[1+(p )])&& (data[1+(p )])<= 122
-		@goto st3
+if 97 <= (data[1+(p )])&& (data[1+(p )])<= 122
+@goto st3
 
-	end
+end
 
 else
-	@goto st3
+@goto st3
 
 end
 @goto st0
 @label st10
 p+= 1
 if p == pe
-	@goto _test_eof10
+@goto _test_eof10
 
 end
 @label st_case_10
 if (data[1+(p )])== 9
-	@goto st11
+@goto st11
 
 end
 @goto st0
 @label st11
 p+= 1
 if p == pe
-	@goto _test_eof11
+@goto _test_eof11
 
 end
 @label st_case_11
 if (data[1+(p )])== 10
-	@goto st13
+@goto st13
 
 end
 @goto st11
@@ -2080,25 +2104,25 @@ cs = 11
 @goto _test_eof
 @label _test_eof
 if p == eof
-	if cs  == 13
-		line = String(data[anchor:p])
-		tag = line[2:3]
-		if tag == "HD"
-			if haskey(header, "HD")
-				error("there are multiple @HD lines")
-			end
-			header[tag] = parse_keyvals(line[5:end-1])
-	else
-		if !haskey(header, tag)
-			header[tag] = []
-		end
-		if tag == "CO"
-			push!(header[tag], line[5:end-1])
-	else
-		push!(header[tag], parse_keyvals(line[5:end-1]))
+if cs  == 13
+line = String(data[anchor:p])
+tag = line[2:3]
+if tag == "HD"
+if haskey(header, "HD")
+error("found multiple @HD lines")
+end
+header[tag] = parse_keyvals(line[5:end-1])
+else
+if !haskey(header, tag)
+header[tag] = []
+end
+if tag == "CO"
+push!(header[tag], line[5:end-1])
+else
+push!(header[tag], parse_keyvals(line[5:end-1]))
 end
 end
-			end
+end
 
 end
 @label _out

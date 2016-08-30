@@ -10,16 +10,24 @@
     }
 
     action header {
-        header = Ragel.@ascii_from_anchor!()
-        tag = header[2:3]
-        if !haskey(input.header, tag)
-            input.header[tag] = []
-        end
-        if tag == "CO"
-            push!(input.header[tag], header[5:end-1])
+        line = Ragel.@ascii_from_anchor!()
+        tag = line[2:3]
+        if tag == "HD"
+            if haskey(input.header, "HD")
+                error("found multiple @HD lines")
+            end
+            input.header[tag] = parse_keyvals(line[5:end-1])
         else
-            push!(input.header[tag], parse_keyvals(header[5:end-1]))
+            if !haskey(input.header, tag)
+                input.header[tag] = []
+            end
+            if tag == "CO"
+                push!(input.header[tag], line[5:end-1])
+            else
+                push!(input.header[tag], parse_keyvals(line[5:end-1]))
+            end
         end
+        @goto yield
     }
 
     action qname {
@@ -162,7 +170,7 @@ Ragel.@generate_read!_function(
         tag = line[2:3]
         if tag == "HD"
             if haskey(header, "HD")
-                error("there are multiple @HD lines")
+                error("found multiple @HD lines")
             end
             header[tag] = parse_keyvals(line[5:end-1])
         else
