@@ -32,21 +32,21 @@ uncertain nucleotides are not examined and so this second value will be less
 than the length of the two biological sequences.
 
 ```julia
-count_mutations([dna"ATCGATCG", dna"ACCGATCG"], DifferentMutation)
+count_mutations(DifferentMutation, [dna"ATCGATCG", dna"ACCGATCG"])
 
-count_mutations([dna"ATCGATCG", dna"ACCGATCG"], TransitionMutation)
+count_mutations(TransitionMutation, [dna"ATCGATCG", dna"ACCGATCG"])
 
-count_mutations([dna"ATCGATCG", dna"ACCGATCG"], TransversionMutation)
+count_mutations(TransversionMutation, [dna"ATCGATCG", dna"ACCGATCG"])
 
-count_mutations([dna"ATCGATCG", dna"ACCGATCG"], TransitionMutation, TransversionMutation)
+count_mutations(TransitionMutation, TransversionMutation, [dna"ATCGATCG", dna"ACCGATCG"])
 
-count_mutations([rna"AUCGAUCG", rna"ACCGAUCG"], DifferentMutation)
+count_mutations(DifferentMutation, [rna"AUCGAUCG", rna"ACCGAUCG"])
 
-count_mutations([rna"AUCGAUCG", rna"ACCGAUCG"], TransitionMutation)
+count_mutations(TransitionMutation, [rna"AUCGAUCG", rna"ACCGAUCG"])
 
-count_mutations([rna"AUCGAUCG", rna"ACCGAUCG"], TransversionMutation)
+count_mutations(TransversionMutation, [rna"AUCGAUCG", rna"ACCGAUCG"])
 
-count_mutations([rna"AUCGAUCG", rna"ACCGAUCG"], TransitionMutation, TransversionMutation)
+count_mutations(TransitionMutation, TransversionMutation, [rna"AUCGAUCG", rna"ACCGAUCG"])
 ```
 
 ## Computing evolutionary and genetic distances

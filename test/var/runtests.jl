@@ -19,11 +19,11 @@ using Bio.Var
 
     rnas = [rna"AUUG-ACCUGGNUUUCCGAA", rna"A-ACAGAGUAUACRGUCGUC"]
 
-    @test count_mutations(dnas, DifferentMutation) == count_mutations(rnas, DifferentMutation) == ([12], [16])
-    @test count_mutations(dnas, TransitionMutation) == count_mutations(rnas, TransitionMutation) == ([4], [16])
-    @test count_mutations(dnas, TransversionMutation) == count_mutations(rnas, TransversionMutation) == ([8], [16])
-    @test count_mutations(dnas, TransitionMutation, TransversionMutation) == count_mutations(rnas, TransitionMutation, TransversionMutation) == ([4], [8], [16])
-    @test count_mutations(dnas, TransversionMutation, TransitionMutation) == count_mutations(rnas, TransversionMutation, TransitionMutation) == ([4], [8], [16])
+    @test count_mutations(DifferentMutation, dnas) == count_mutations(DifferentMutation, rnas) == ([12], [16])
+    @test count_mutations(TransitionMutation, dnas) == count_mutations(TransitionMutation, rnas) == ([4], [16])
+    @test count_mutations(TransversionMutation, dnas) == count_mutations(TransversionMutation, rnas) == ([8], [16])
+    @test count_mutations(TransitionMutation, TransversionMutation, dnas) == count_mutations(TransitionMutation, TransversionMutation, rnas) == ([4], [8], [16])
+    @test count_mutations(TransversionMutation, TransitionMutation, dnas) == count_mutations(TransversionMutation, TransitionMutation, rnas) == ([4], [8], [16])
 
 end
 

@@ -64,34 +64,34 @@ A, T, G, or C, then this function returns true.
 end
 
 """
-    is_mutation{T<:Nucleotide}(a::T, b::T, ::Type{DifferentMutation})
+    is_mutation{T<:Nucleotide}(::Type{DifferentMutation}, a::T, b::T)
 
 Test if two nucleotides constitute a `DifferentMutation`.
 """
-@inline function is_mutation{T<:Nucleotide}(a::T, b::T, ::Type{DifferentMutation})
+@inline function is_mutation{T<:Nucleotide}(::Type{DifferentMutation}, a::T, b::T)
     return a != b
 end
 
 """
-    is_mutation{T<:Nucleotide}(a::T, b::T, ::Type{TransitionMutation})
+    is_mutation{T<:Nucleotide}(::Type{TransitionMutation}, a::T, b::T)
 
 Test if two nucleotides constitute a `TransitionMutation`.
 """
-@inline function is_mutation{T<:Nucleotide}(a::T, b::T, ::Type{TransitionMutation})
+@inline function is_mutation{T<:Nucleotide}(::Type{TransitionMutation}, a::T, b::T)
     return (a != b) & ((ispurine(a) & ispurine(b)) | (ispyrimidine(a) & ispyrimidine(b)))
 end
 
 """
-    is_mutation{T<:Nucleotide}(a::T, b::T, ::Type{TransversionMutation})
+    is_mutation{T<:Nucleotide}(::Type{TransversionMutation}, a::T, b::T)
 
 Test if two nucleotides constitute a `TransversionMutation`.
 """
-@inline function is_mutation{T<:Nucleotide}(a::T, b::T, ::Type{TransversionMutation})
+@inline function is_mutation{T<:Nucleotide}(::Type{TransversionMutation}, a::T, b::T)
     return (a != b) & ((ispurine(a) & ispyrimidine(b)) | (ispyrimidine(a) & ispurine(b)))
 end
 
 """
-    count_mutations{A<:NucleotideAlphabet,T<:MutationType}(sequences::Vector{BioSequence{A}}, ::Type{T})
+    count_mutations{T<:MutationType,A<:NucleotideAlphabet}(::Type{T}, sequences::Vector{BioSequence{A}})
 
 Count the number of mutations between DNA sequences in a pairwise manner.
 
@@ -103,7 +103,7 @@ possible pair of sequences, and 2. a vector containing the number of sites
 considered (sites with any ambiguity characters are not considered) for each
 possible pair of sequences.
 """
-function count_mutations{A<:NucleotideAlphabet,T<:MutationType}(sequences::Vector{BioSequence{A}}, ::Type{T})
+function count_mutations{T<:MutationType,A<:NucleotideAlphabet}(::Type{T}, sequences::Vector{BioSequence{A}})
     # This method has been written with the aim of improving performance by taking
     # advantage of the memory layout of matrices of nucleotides, as well as
     # getting julia to emit simd code for the innermost loop.
@@ -134,7 +134,7 @@ function count_mutations{A<:NucleotideAlphabet,T<:MutationType}(sequences::Vecto
 end
 
 """
-    count_mutations{A<:NucleotideAlphabet}(sequences::Vector{BioSequence{A}}, ::Type{TransitionMutation}, ::Type{TransversionMutation})
+    count_mutations{A<:NucleotideAlphabet}(::Type{TransitionMutation}, ::Type{TransversionMutation}, sequences::Vector{BioSequence{A}})
 
 Count the number of `TransitionMutation`s and `TransversionMutation`s in a
 pairwise manner, between each possible pair of sequences.
@@ -145,7 +145,7 @@ transversions between each, possible pair of sequences, and 3. a vector
 containing the number of sites considered (sites with any ambiguity characters
 are not considered) for each possible pair of sequences.
 """
-function count_mutations{A<:NucleotideAlphabet}(sequences::Vector{BioSequence{A}}, ::Type{TransitionMutation}, ::Type{TransversionMutation})
+function count_mutations{A<:NucleotideAlphabet}(::Type{TransitionMutation}, ::Type{TransversionMutation}, sequences::Vector{BioSequence{A}})
     # This method has been written with the aim of improving performance by taking
     # advantage of the memory layout of matrices of nucleotides, as well as
     # getting julia to emit simd code for the innermost loop.
@@ -180,6 +180,6 @@ function count_mutations{A<:NucleotideAlphabet}(sequences::Vector{BioSequence{A}
     return ntransition, ntransversion, lengths
 end
 
-function count_mutations{A<:NucleotideAlphabet}(sequences::Vector{BioSequence{A}}, ::Type{TransversionMutation}, ::Type{TransitionMutation})
+function count_mutations{A<:NucleotideAlphabet}(::Type{TransversionMutation}, ::Type{TransitionMutation}, sequences::Vector{BioSequence{A}})
     return count_mutations(sequences, TransitionMutation, TransversionMutation)
 end
