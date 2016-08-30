@@ -109,7 +109,7 @@ function count_mutations{T<:MutationType,N<:Nucleotide}(::Type{T}, seqs::Matrix{
                 s1 = seqs[(i1 - 1) * S + s]
                 s2 = seqs[(i2 - 1) * S + s]
                 isamb = is_ambiguous_strict(s1, s2)
-                ismut = is_mutation(s1, s2, T)
+                ismut = is_mutation(T, s1, s2)
                 L -= isamb
                 Nd += !isamb & ismut
             end
