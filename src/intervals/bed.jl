@@ -104,7 +104,7 @@ type BEDReader <: Bio.IO.AbstractReader
 end
 
 function Bio.IO.stream(reader::BEDReader)
-    return reader.state
+    return reader.state.stream
 end
 
 function Intervals.metadatatype(::BEDReader)
