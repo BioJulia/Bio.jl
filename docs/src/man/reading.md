@@ -102,7 +102,7 @@ The following table summarizes supported file formats.
 
 ### FASTA
 
-* Parser type: `FASTAParser{S<:Sequence}`
+* Reader type: `FASTAReader{S<:Sequence}`
 * Writer type: `FASTAWriter{T<:IO}`
 * Element type: `SeqRecord{S,FASTAMetadata}` (alias: `FASTASeqRecord{S}`)
 
@@ -134,7 +134,7 @@ chrIV = parser["chrIV"]  # directly read chromosome 4
 
 ### FASTQ
 
-* Parser type: `FASTQParser{S<:Sequence}`
+* Reader type: `FASTQReader{S<:Sequence}`
 * Writer type: `FASTQWriter{T<:IO}`
 * Element type: `SeqRecord{S,FASTQMetadata}` (alias: `FASTQSeqRecord{S}`)
 
@@ -172,7 +172,7 @@ encoding](https://en.wikipedia.org/wiki/FASTQ_format#Encoding).
 
 ### .2bit
 
-* Parser type: `TwoBitParser{T<:IO}`
+* Reader type: `TwoBitReader{T<:IO}`
 * Writer type: `TwoBitWriter{T<:IO}`
 * Element type: `SeqRecord{ReferenceSequence,Vector{UnitRange{Int}}}`
 
@@ -192,7 +192,7 @@ chrIV = parser["chrIV"]  # directly read chromosome 4
 
 ### BED
 
-* Parser type: `BEDParser`
+* Reader type: `BEDReader`
 * Writer type: `BEDWriter{T<:IO}`
 * Element type: `Interval{BEDMetadata}` (alias: `BEDInterval`)
 

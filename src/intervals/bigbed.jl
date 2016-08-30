@@ -366,7 +366,7 @@ type BigBedData <: IntervalStream{BEDMetadata}
     uncompressed_data::Vector{UInt8}
 end
 
-type BigBedDataParser <: AbstractReader
+type BigBedDataReader <: AbstractReader
     state::Ragel.State
 
     # intermediate values used during parsing
@@ -379,7 +379,7 @@ type BigBedDataParser <: AbstractReader
     seq_names::Nullable{Vector{StringField}}
     assumed_seqname::Nullable{StringField}
 
-    function BigBedDataParser(input::BufferedInputStream;
+    function BigBedDataReader(input::BufferedInputStream;
                               seq_names::Nullable{Vector{StringField}}=Nullable{Vector{StringField}}(),
                               assumed_seqname::Nullable{StringField}=Nullable{StringField}())
         cs = _bigbedparser_start
@@ -506,7 +506,7 @@ type BigBedIteratorState
     data_count::Int
     data_num::Int
     data_offset::UInt
-    parser::BigBedDataParser
+    parser::BigBedDataReader
     parser_isdone::Bool
     next_interval::Interval{BEDMetadata}
 end
@@ -539,7 +539,7 @@ function Base.start(bb::BigBedData)
     unc_block_size = readbytes!(zlib_stream, bb.uncompressed_data,
                                length(bb.uncompressed_data))
 
-    parser = BigBedDataParser(
+    parser = BigBedDataReader(
         BufferedInputStream(bb.uncompressed_data, unc_block_size),
         seq_names=Nullable(seq_names))
 
@@ -567,7 +567,7 @@ function Base.next(bb::BigBedData, state::BigBedIteratorState)
 
         unc_block_size = readbytes!(zlib_stream, bb.uncompressed_data,
                                     length(bb.uncompressed_data))
-        state.parser = BigBedDataParser(
+        state.parser = BigBedDataReader(
              BufferedInputStream(bb.uncompressed_data, unc_block_size),
              seq_names=Nullable(state.seq_names))
         state.data_offset += zlib_stream.source.zstream.total_in
@@ -604,7 +604,7 @@ type BigBedIntersectIterator
     # Index of block currently being parsed
     block_num::Int
 
-    parser::Nullable{BigBedDataParser}
+    parser::Nullable{BigBedDataReader}
     nextinterval::BEDInterval
     done::Bool
 end
@@ -689,7 +689,7 @@ function Base.intersect(bb::BigBedData, query::Interval)
 
     return BigBedIntersectIterator(bb, seqname, first, last, chrom_id,
                                    chrom_size, blocks, 0,
-                                   Nullable{BigBedDataParser}(),
+                                   Nullable{BigBedDataReader}(),
                                    BEDInterval(), false)
 end
 
@@ -702,7 +702,7 @@ function find_next_intersection!(it::BigBedIntersectIterator)
             # Run the parser until we find an intersection
             it.done = isnull(tryread!(parser, it.nextinterval))
             if it.done
-                it.parser = Nullable{BigBedDataParser}()
+                it.parser = Nullable{BigBedDataReader}()
                 break
             end
 
@@ -724,7 +724,7 @@ function find_next_intersection!(it::BigBedIntersectIterator)
             unc_block_size = readbytes!(ZlibInflateInputStream(it.bb.stream, reset_on_end=false),
                                         it.bb.uncompressed_data,
                                         length(it.bb.uncompressed_data))
-            it.parser = BigBedDataParser(
+            it.parser = BigBedDataReader(
                 BufferedInputStream(it.bb.uncompressed_data, unc_block_size),
                 assumed_seqname=Nullable(it.query_seqname))
         else

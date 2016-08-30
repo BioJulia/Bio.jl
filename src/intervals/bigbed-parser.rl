@@ -104,7 +104,7 @@
 
 %%write data;
 
-Ragel.@generate_read!_function("_bigbedparser", BigBedDataParser, BEDInterval,
+Ragel.@generate_read!_function("_bigbedparser", BigBedDataReader, BEDInterval,
     begin
         %%write exec;
     end)

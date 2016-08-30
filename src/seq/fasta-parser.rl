@@ -44,7 +44,7 @@
 # FIXME: output type may be too loose
 Ragel.@generate_read!_function(
     "fastaparser",
-    FASTAParser,
+    FASTAReader,
     SeqRecord,
     begin
         %% write exec;

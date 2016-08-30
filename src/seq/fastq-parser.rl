@@ -93,7 +93,7 @@
 # FIXME: output type may be too loose
 Ragel.@generate_read!_function(
     "fastqparser",
-    FASTQParser,
+    FASTQReader,
     SeqRecord,
     begin
         %% write exec;

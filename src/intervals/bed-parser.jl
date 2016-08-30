@@ -9,7 +9,7 @@ const _bedparser_nfa_push_actions = Int8[ 0, 0 ,  ]
 const _bedparser_nfa_pop_trans = Int8[ 0, 0 ,  ]
 Ragel.@generate_read!_function(
 "bedparser",
-BEDParser,
+BEDReader,
 BEDInterval,
 begin
 begin

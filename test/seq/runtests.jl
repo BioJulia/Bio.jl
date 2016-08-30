@@ -3102,7 +3102,7 @@ end
         write(writer, SeqRecord("chr1", chr1))
         write(writer, SeqRecord("chr2", chr2))
         seekstart(buffer)
-        reader = Seq.TwoBitParser(buffer)
+        reader = Seq.TwoBitReader(buffer)
         @test length(reader) == 2
         @test reader["chr1"].name == "chr1"
         @test reader["chr1"].seq == chr1
@@ -3129,7 +3129,7 @@ end
 
             read_entries = Any[]
             seekstart(buffer)
-            for record in Seq.TwoBitParser(buffer)
+            for record in Seq.TwoBitReader(buffer)
                 push!(read_entries, record)
             end
 

@@ -42,9 +42,9 @@ function Base.open(filepath::AbstractString, ::Type{FASTA})
     input = BufferedInputStream(open(filepath))
     indexpath = filepath * ".fai"
     if isfile(indexpath)
-        return FASTAParser{BioSequence}(input, FASTAIndex(indexpath))
+        return FASTAReader{BioSequence}(input, FASTAIndex(indexpath))
     else
-        return FASTAParser{BioSequence}(input)
+        return FASTAReader{BioSequence}(input)
     end
 end
 
@@ -61,38 +61,38 @@ end
 
 function Base.open{S}(input::BufferedInputStream, ::Type{FASTA},
                       ::Type{S}=BioSequence)
-    return FASTAParser{S}(input)
+    return FASTAReader{S}(input)
 end
 
 
-# Parser
+# Reader
 # ------
 
 include("fai.jl")
 
 "A type encapsulating the current state of a FASTA parser"
-type FASTAParser{S<:Sequence} <: AbstractReader
+type FASTAReader{S<:Sequence} <: AbstractReader
     state::Ragel.State
     seqbuf::BufferedOutputStream{BufferedStreams.EmptyStream}
     index::Nullable{FASTAIndex}
 
-    function FASTAParser(input::BufferedInputStream, index=Nullable())
+    function FASTAReader(input::BufferedInputStream, index=Nullable())
         return new(Ragel.State(fastaparser_start, input),
                    BufferedOutputStream(), index)
     end
 end
 
-Base.eltype{S}(::Type{FASTAParser{S}}) = FASTASeqRecord{S}
+Base.eltype{S}(::Type{FASTAReader{S}}) = FASTASeqRecord{S}
 
-function Base.eof(parser::FASTAParser)
+function Base.eof(parser::FASTAReader)
     return eof(parser.state.stream)
 end
 
-function Base.close(parser::FASTAParser)
+function Base.close(parser::FASTAReader)
     close(parser.state.stream)
 end
 
-function Base.getindex(parser::FASTAParser, name::AbstractString)
+function Base.getindex(parser::FASTAReader, name::AbstractString)
     if isnull(parser.index)
         error("no index")
     end

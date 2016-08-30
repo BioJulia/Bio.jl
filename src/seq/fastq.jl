@@ -71,15 +71,15 @@ function Base.open{S}(input::BufferedInputStream, ::Type{FASTQ},
                       ::Type{S}=DNASequence;
                       # TODO: remove this option after v0.2
                       qualenc=quality_encoding)
-    return FASTQParser{S}(input, quality_encoding)
+    return FASTQReader{S}(input, quality_encoding)
 end
 
 
-# Parser
+# Reader
 # ------
 
 "A type encapsulating the current state of a FASTQ parser"
-type FASTQParser{S<:Sequence} <: AbstractReader
+type FASTQReader{S<:Sequence} <: AbstractReader
     state::Ragel.State
     seqbuf::BufferedOutputStream{BufferedStreams.EmptyStream}
     qualbuf::BufferedOutputStream{BufferedStreams.EmptyStream}
@@ -88,7 +88,7 @@ type FASTQParser{S<:Sequence} <: AbstractReader
     qualcount::Int
     quality_encodings::QualityEncoding
 
-    function FASTQParser(input::BufferedInputStream,
+    function FASTQReader(input::BufferedInputStream,
                          quality_encodings::QualityEncoding)
         if quality_encodings == EMPTY_QUAL_ENCODING
             error("The `quality_encodings` argument is required when parsing FASTQ.")
@@ -103,13 +103,13 @@ type FASTQParser{S<:Sequence} <: AbstractReader
     end
 end
 
-Base.eltype{S}(::Type{FASTQParser{S}}) = FASTQSeqRecord{S}
+Base.eltype{S}(::Type{FASTQReader{S}}) = FASTQSeqRecord{S}
 
-function Base.eof(parser::FASTQParser)
+function Base.eof(parser::FASTQReader)
     return eof(parser.state.stream)
 end
 
-function Base.close(parser::FASTQParser)
+function Base.close(parser::FASTQReader)
     close(parser.state.stream)
 end
 

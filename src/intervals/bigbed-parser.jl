@@ -16,7 +16,7 @@ const __bigbedparser_nfa_offsets = Int8[ 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 
 const __bigbedparser_nfa_push_actions = Int8[ 0, 0 ,  ]
 const __bigbedparser_nfa_pop_trans = Int8[ 0, 0 ,  ]
 
-Ragel.@generate_read!_function("_bigbedparser", BigBedDataParser, BEDInterval,
+Ragel.@generate_read!_function("_bigbedparser", BigBedDataReader, BEDInterval,
 begin
 begin
 if ( p == pe  )
