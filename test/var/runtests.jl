@@ -42,14 +42,14 @@ end
     @test distance(Count{TransitionMutation}, dnas2) == ([4], [18])
     @test distance(Count{TransversionMutation}, dnas2) == ([8], [18])
     @test distance(Count{Kimura80}, dnas2) == ([4], [8], [18])
-#
-#     @test distance(Proportion{DifferentMutation}, dna1, dna2) == ((12 / 16), 16)
-#     @test distance(Proportion{TransitionMutation}, dna1, dna2) == ((4 / 16), 16)
-#     @test distance(Proportion{TransversionMutation}, dna1, dna2) == ((8 / 16), 16)
-#
-#     @test distance(Proportion{DifferentMutation}, dna3, dna4) == ((12 / 18), 18)
-#     @test distance(Proportion{TransitionMutation}, dna3, dna4) == ((4 / 18), 18)
-#     @test distance(Proportion{TransversionMutation}, dna3, dna4) == ((8 / 18), 18)
+
+    @test distance(Proportion{DifferentMutation}, dnas1) == ([(12 / 16)], [16])
+    @test distance(Proportion{TransitionMutation}, dnas1) == ([(4 / 16)], [16])
+    @test distance(Proportion{TransversionMutation}, dnas1) == ([(8 / 16)], [16])
+
+    @test distance(Proportion{DifferentMutation}, dnas2) == ([(12 / 18)], [18])
+    @test distance(Proportion{TransitionMutation}, dnas2) == ([(4 / 18)], [18])
+    @test distance(Proportion{TransversionMutation}, dnas2) == ([(8 / 18)], [18])
 #
 #     @test distance(JukesCantor69, dna1, dna2) == (Inf, Inf) # Returns infinity as 12/16 is 0.75 - mutation saturation.
 #
