@@ -166,7 +166,7 @@ function count_mutations{A<:NucleotideAlphabet}(sequences::Vector{BioSequence{A}
                 s2 = seqs[(i2 - 1) * S + s]
                 isamb = is_ambiguous_strict(s1, s2)
                 isdiff = s1 != s2
-                istrans = (ispurine(a) & ispurine(b)) | (ispyrimidine(a) & ispyrimidine(b))
+                istrans = (ispurine(s1) & ispurine(s2)) | (ispyrimidine(s1) & ispyrimidine(s2))
                 L -= isamb
                 Ns += !isamb & isdiff & istrans
                 Nv += !isamb & isdiff & !istrans
