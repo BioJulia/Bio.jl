@@ -59,6 +59,16 @@ immutable Kimura80 <: TsTv end
 # Distance computation internals
 # ------------------------------
 
+## Jukes and Cantor 1969 distance computation.
+
+@inline function expected_distance(::Type{JukesCantor69}, p::Float64)
+    return -0.75 * log(1 - 4 * p / 3)
+end
+
+@inline function variance(::Type{JukesCantor69}, p::Float64, l::Float64)
+    return p * (1 - p) / (((1 - 4 * p / 3) ^ 2) * l)
+end
+
 
 ## Kimura80 Distance computation internals
 
@@ -151,9 +161,9 @@ function distance{A<:NucleotideAlphabet}(::Type{JukesCantor69}, seqs::Vector{Bio
     p, l = distance(Proportion{DifferentMutation}, seqs)
     D = Vector{Float64}(length(p))
     V = Vector{Float64}(length(p))
-    for i in 1:length(p)
-        D[i] = -0.75 * log(1 - 4 * p[i] / 3)
-        V[i] = p[i] * (1 - p[i]) / (((1 - 4 * p[i] / 3) ^ 2) * l[i])
+    @inbounds for i in 1:length(p)
+        D[i] = expected_distance(JukesCantor69, p[i])
+        V[i] = variance(JukesCantor69, p[i], l[i])
     end
     return D, V
 end
