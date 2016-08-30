@@ -69,9 +69,49 @@ export
     score,
     distance,
     alignment,
-    hasalignment
+    hasalignment,
+    # HTS
+    SAM,
+    SAMHeader,
+    SAMRecord,
+    BAM,
+    BAMRecord,
+    BAI,
+    AuxDataDict,
+    ismapped,
+    refname,
+    nextrefname,
+    refindex,
+    nextrefindex,
+    position,
+    nextposition,
+    mappingquality,
+    flag,
+    templatelength,
+    seqname,
+    cigar,
+    sequence,
+    qualities,
+    header,
+    isoverlapping,  # re-export from Bio.Intervals
+    # SAM flags
+    SAM_FLAG_PAIRED,
+    SAM_FLAG_PROPER_PAIR,
+    SAM_FLAG_UNMAP,
+    SAM_FLAG_MUNMAP,
+    SAM_FLAG_REVERSE,
+    SAM_FLAG_MREVERSE,
+    SAM_FLAG_READ1,
+    SAM_FLAG_READ2,
+    SAM_FLAG_SECONDARY,
+    SAM_FLAG_QCFAIL,
+    SAM_FLAG_DUP,
+    SAM_FLAG_SUPPLEMENTARY
 
+import Bio
 using Bio.Seq
+using Bio.Intervals
+import Bio.StringFields: StringField
 import IntervalTrees
 
 include("operations.jl")
@@ -81,5 +121,6 @@ include("types.jl")
 include("submat.jl")
 include("models.jl")
 include("pairwise/pairalign.jl")
+include("hts/hts.jl")
 
 end

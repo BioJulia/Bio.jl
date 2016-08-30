@@ -5,7 +5,9 @@ using Base.Test
 using Bio
 using Bio.Seq
 using Bio.Align
+using BGZFStreams
 using TestFunctions
+using YAML
 
 
 # Generate a random valid alignment of a sequence of length n against a sequence
@@ -86,6 +88,16 @@ function anchors_from_path(path)
     return anchors
 end
 
+# Generate a random range within `range`.
+function randrange(range)
+    x = rand(range)
+    y = rand(range)
+    if x < y
+        return x:y
+    else
+        return y:x
+    end
+end
 
 @testset "Alignments" begin
     @testset "Operations" begin
@@ -930,6 +942,304 @@ end
         @testset "indel" begin
             @test_throws Exception pairalign(HammingDistance(), "ACGT", "ACG")
             @test_throws Exception pairalign(HammingDistance(), "ACG", "ACGT")
+        end
+    end
+end
+
+@testset "High-throughput Sequencing" begin
+    get_bio_fmt_specimens()
+
+    @testset "AuxDataDict" begin
+        dict = AuxDataDict()
+        @test length(dict) == 0
+        @test isempty(dict)
+        @test_throws KeyError dict["NM"]
+
+        dict = AuxDataDict(
+            "X1" => UInt8(1),
+            "X2" => UInt16(2),
+            "X3" => UInt32(3),
+            "X4" => Int8(4),
+            "X5" => Int16(5),
+            "X6" => Int32(6),
+            "X7" => Float32(7),
+            "X8" => "eight",
+            "X9" => Int32[9])
+        @test length(dict) == 9
+        @test !isempty(dict)
+        @test dict["X1"] === UInt8(1)
+        @test dict["X2"] === UInt16(2)
+        @test dict["X3"] === UInt32(3)
+        @test dict["X4"] === Int8(4)
+        @test dict["X5"] === Int16(5)
+        @test dict["X6"] === Int32(6)
+        @test dict["X7"] === Float32(7)
+        @test dict["X8"] == "eight"
+        @test typeof(dict["X8"]) == String
+        @test dict["X9"] == Int32[9]
+        @test typeof(dict["X9"]) == Vector{Int32}
+
+        dict = AuxDataDict("NM" => 0x01, "XY" => Int32(100), "XZ" => [0x11, 0x23])
+        @test length(dict) == 3
+        @test dict["NM"] === 0x01
+        @test dict["XY"] === Int32(100)
+        @test dict["XZ"] == [0x11, 0x23]
+        @test eltype(dict["XZ"]) == UInt8
+
+        dict = AuxDataDict("NM" => 0x01, "MD" => "8T1T39")
+        @test length(dict) == 2
+        @test dict["NM"] === 0x01
+        @test dict["MD"] == "8T1T39"
+        dict["NM"] = 0x00
+        @test dict["NM"] === 0x00
+        dict["MD"] = "50"
+        @test dict["MD"] == "50"
+        @test collect(dict) == ["NM" => 0x00, "MD" => "50"]
+        dict["XY"] = "foobar"
+        @test dict["XY"] == "foobar"
+        @test collect(dict) == ["NM" => 0x00, "MD" => "50", "XY" => "foobar"]
+        delete!(dict, "NM")
+        @test length(dict) == 2
+        @test collect(dict) == ["MD" => "50", "XY" => "foobar"]
+    end
+
+    @testset "SAM" begin
+        samdir = Pkg.dir("Bio", "test", "BioFmtSpecimens", "SAM")
+
+        @testset "SAMHeader" begin
+            h = SAMHeader()
+            @test isa(h, Associative)
+            @test isempty(h)
+            h["HD"] = Dict("VN" => "100.100", "SO" => "unknown")
+            @test length(h) == 1
+            @test h["HD"]["VN"] == "100.100"
+            h["CO"] = ["comment1", "comment2"]
+            @test length(h) == 2
+            @test h["CO"] == ["comment1", "comment2"]
+            delete!(h, "CO")
+            @test length(h) == 1
+        end
+
+        @testset "Record" begin
+            rec = SAMRecord()
+            @test !ismapped(rec)
+            # default values
+            @test seqname(rec) == "*"
+            @test flag(rec) == 0x0000
+            @test refname(rec) == "*"
+            @test position(rec) == 0
+            @test nextrefname(rec) == "*"
+            @test nextposition(rec) == 0
+            @test templatelength(rec) == 0
+            @test cigar(rec) == "*"
+            @test sequence(rec) == "*"
+            @test qualities(rec) == "*"
+
+            # set & delete tags
+            rec = SAMRecord()
+            @test !haskey(rec, "MN")
+            rec["MN"] = 0x01
+            @test rec["MN"] === 0x01
+            @test haskey(rec, "MN")
+            @test !haskey(rec, "XY")
+            rec["XY"] = "foobar"
+            @test rec["XY"] == "foobar"
+            @test haskey(rec, "XY")
+            delete!(rec, "MN")
+            @test !haskey(rec, "MN")
+        end
+
+        @testset "Reader" begin
+            reader = open(joinpath(samdir, "ce#1.sam"), SAM)
+            @test isa(reader, Align.SAMReader)
+
+            # header
+            h = header(reader)
+            @test h["SQ"] == [Dict("SN" => "CHROMOSOME_I", "LN" => "1009800")]
+
+            # first record
+            rec = SAMRecord()
+            read!(reader, rec)
+            @test refname(rec) == "CHROMOSOME_I"
+            @test position(rec) == 2
+            @test seqname(rec) == "SRR065390.14978392"
+            @test sequence(rec)  == "CCTAGCCCTAACCCTAACCCTAACCCTAGCCTAAGCCTAAGCCTAAGCCTAAGCCTAAGCCTAAGCCTAAGCCTAAGCCTAAGCCTAAGCCTAAGCCTAA"
+            @test qualities(rec) == "#############################@B?8B?BA@@DDBCDDCBC@CDCDCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCC"
+            @test flag(rec) == 16
+            @test cigar(rec) == "27M1D73M"
+            @test rec["XG"] == 1
+            @test rec["XM"] == 5
+            @test rec["XN"] == 0
+            @test rec["XO"] == 1
+            @test rec["AS"] == -18
+            @test rec["XS"] == -18
+            @test rec["YT"] == "UU"
+            @test eof(reader)
+            close(reader)
+
+            # iterator
+            @test length(collect(open(joinpath(samdir, "ce#1.sam"), SAM))) == 1
+            @test length(collect(open(joinpath(samdir, "ce#2.sam"), SAM))) == 2
+        end
+
+        @testset "Round trip" begin
+            for specimen in YAML.load_file(joinpath(samdir, "index.yml"))
+                filepath = joinpath(samdir, specimen["filename"])
+                mktemp() do path, io
+                    # copy
+                    reader = open(filepath, SAM)
+                    writer = Align.SAMWriter(io)
+                    write(writer, header(reader))
+                    records = SAMRecord[]
+                    for rec in reader
+                        push!(records, rec)
+                        write(writer, rec)
+                    end
+                    close(reader)
+                    close(writer)
+
+                    # read again
+                    reader = open(path, SAM)
+                    @test collect(reader) == records
+                    close(reader)
+                end
+            end
+        end
+    end
+
+    @testset "BAM" begin
+        bamdir = Pkg.dir("Bio", "test", "BioFmtSpecimens", "BAM")
+
+        @testset "Record" begin
+            rec = BAMRecord()
+            @test !ismapped(rec)
+
+            # default values
+            @test refname(rec) == "*"
+            @test refindex(rec) == 0
+            @test position(rec) == 0
+            @test mappingquality(rec) == 0
+            @test flag(rec) == 0
+            @test nextrefname(rec) == "*"
+            @test nextrefindex(rec) == 0
+            @test nextposition(rec) == 0
+            @test templatelength(rec) == 0
+            @test seqname(rec) == ""
+            @test cigar(rec) == ""
+            @test sequence(rec) == dna""
+            @test qualities(rec) == UInt8[]
+
+            @test Align.rightmost_position(rec) === Int32(-1)
+            @test Align.alignment_length(rec) === 0
+
+            # set & delete tags
+            rec = BAMRecord()
+            @test !haskey(rec, "MN")
+            rec["MN"] = 0x01
+            @test rec["MN"] === 0x01
+            @test haskey(rec, "MN")
+            @test !haskey(rec, "XY")
+            rec["XY"] = "foobar"
+            @test rec["XY"] == "foobar"
+            @test haskey(rec, "XY")
+            delete!(rec, "MN")
+            @test !haskey(rec, "MN")
+        end
+
+        @testset "Reader" begin
+            reader = open(joinpath(bamdir, "ce#1.bam"), BAM)
+            @test isa(reader, Align.BAMReader)
+
+            # header
+            h = header(reader)
+            @test h["SQ"] == [Dict("SN" => "CHROMOSOME_I", "LN" => "1009800")]
+
+            # first record
+            rec = BAMRecord()
+            read!(reader, rec)
+            @test refindex(rec) == 1
+            @test position(rec) == 2
+            @test seqname(rec) == "SRR065390.14978392"
+            @test sequence(rec) == dna"""
+            CCTAGCCCTAACCCTAACCCTAACCCTAGCCTAAGCCTAAGCCTAAGCCT
+            AAGCCTAAGCCTAAGCCTAAGCCTAAGCCTAAGCCTAAGCCTAAGCCTAA
+            """
+            @test flag(rec) == 16
+            @test cigar(rec) == "27M1D73M"
+            @test rec["XG"] == 1
+            @test rec["XM"] == 5
+            @test rec["XN"] == 0
+            @test rec["XO"] == 1
+            @test rec["AS"] == -18
+            @test rec["XS"] == -18
+            @test rec["YT"] == "UU"
+            @test eof(reader)
+            close(reader)
+
+            # iterator
+            @test length(collect(open(joinpath(bamdir, "ce#1.bam"), BAM))) == 1
+            @test length(collect(open(joinpath(bamdir, "ce#2.bam"), BAM))) == 2
+        end
+
+        @testset "Round trip" begin
+            for specimen in YAML.load_file(joinpath(bamdir, "index.yml"))
+                filepath = joinpath(bamdir, specimen["filename"])
+                mktemp() do path, _
+                    # copy
+                    reader = open(filepath, BAM)
+                    writer = Align.BAMWriter(
+                        BGZFStream(path, "w"),
+                        header(reader, true))
+                    records = BAMRecord[]
+                    for rec in reader
+                        push!(records, rec)
+                        write(writer, rec)
+                    end
+                    close(reader)
+                    close(writer)
+
+                    # read again
+                    reader = open(path, BAM)
+                    @test collect(reader) == records
+                    close(reader)
+                end
+            end
+        end
+
+        @testset "Random access" begin
+            filepath = joinpath(bamdir, "GSE25840_GSM424320_GM06985_gencode_spliced.head.bam")
+            reader = open(filepath, BAM)
+
+            # expected values are counted using samtools
+            for (refname, interval, expected) in [
+                    ("chr1", 1000:10000,      21),
+                    ("chr1", 8000:10000,      20),
+                    ("chr1", 766_000:800_000, 142),
+                    ("chr1", 786_000:800_000, 1),
+                    ("chr1", 796_000:800_000, 0)]
+                n = 0
+                for rec in intersect(reader, refname, interval)
+                    n += 1
+                end
+                @test n == expected
+            end
+
+            # randomized tests
+            for n in 1:50
+                refindex = 1
+                refname = "chr1"
+                range = randrange(1:1_000_000)
+                seekstart(reader)
+                # linear scan
+                expected = collect(filter(reader) do rec
+                    isoverlapping(rec, refindex, range)
+                end)
+                # indexed scan
+                actual = collect(intersect(reader, refname, range))
+                @test actual == expected
+            end
+
+            close(reader)
         end
     end
 end
