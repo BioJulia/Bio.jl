@@ -55,10 +55,10 @@ end
 
     @test round(distance(JukesCantor69, dnas2)[1][1], 3) == 1.648
     @test round(distance(JukesCantor69, dnas2)[2][1], 3) == 1
-#
-#     @test round(distance(Kimura80, dna3, dna4)[1], 3) == 1.648
-#     @test round(distance(Kimura80, dna3, dna4)[2], 3) == 1
-#
+
+    @test round(distance(Kimura80, dnas2)[1][1], 3) == 1.648
+    @test round(distance(Kimura80, dnas2)[2][1], 3) == 1
+
 end
 
 end # module TestVar

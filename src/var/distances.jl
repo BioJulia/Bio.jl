@@ -136,7 +136,7 @@ end
 end
 
 """
-    distance{T<:MutationType}(::Type{Proportion{T}}, a::BioSequence, b::BioSequence)
+    distance{T<:MutationType,A<:NucleotideAlphabet}(::Type{Proportion{T}}, seqs::Vector{BioSequence{A}})
 
 This method of distance returns a tuple of the p-distance, and the number of valid
 (i.e. non-ambiguous sites) counted by the function.
@@ -151,8 +151,7 @@ function distance{T<:MutationType,A<:NucleotideAlphabet}(::Type{Proportion{T}}, 
 end
 
 """
-    distance(::Type{JukesCantor69}, a::BioSequence, b::BioSequence)
-    distance(::Type{JukesCantor69}, a::BioSequence, b::BioSequence)
+    distance{A<:NucleotideAlphabet}(::Type{JukesCantor69}, seqs::Vector{BioSequence{A}})
 
 This method of distance returns a tuple of the expected JukesCantor69 distance
 estimate, and the computed variance.
@@ -169,20 +168,24 @@ function distance{A<:NucleotideAlphabet}(::Type{JukesCantor69}, seqs::Vector{Bio
 end
 
 
-# """
-#     distance(::Type{Kimura80}, a::BioSequence, b::BioSequence)
-#     distance(::Type{Kimura80}, a::BioSequence, b::BioSequence)
-#
-# This method of distance returns a tuple of the expected Kimura80 distance
-# estimate, and the computed variance.
-# """
-# function distance(::Type{Kimura80}, a::BioSequence, b::BioSequence)
-#     ns, nv, l = distance(Count{Kimura80}, a, b)
-#     P = ns / l
-#     Q = nv / l
-#     a1 = 1 - 2 * P - Q
-#     a2 = 1 - 2 * Q
-#     D = expected_distance(Kimura80, a1, a2)
-#     V = variance(Kimura80, P, Q, l, a1, a2)
-#     return D, V
-# end
+"""
+    distance{A<:NucleotideAlphabet}(::Type{Kimura80}, seqs::Vector{BioSequence{A}})
+
+This method of distance returns a tuple of the expected Kimura80 distance
+estimate, and the computed variance.
+"""
+function distance{A<:NucleotideAlphabet}(::Type{Kimura80}, seqs::Vector{BioSequence{A}})
+    ns, nv, l = distance(Count{Kimura80}, seqs)
+    D = Vector{Float64}(length(ns))
+    V = Vector{Float64}(length(ns))
+    @inbounds for i in 1:length(ns)
+        L = l[i]
+        P = ns[i] / L
+        Q = nv[i] / L
+        a1 = 1 - 2 * P - Q
+        a2 = 1 - 2 * Q
+        D[i] = expected_distance(Kimura80, a1, a2)
+        V[i] = variance(Kimura80, P, Q, L, a1, a2)
+    end
+    return D, V
+end
