@@ -451,44 +451,57 @@ end
 
         function check_intersection(filename_a, filename_b)
             ic_a = IntervalCollection{BEDMetadata}()
-            for interval in open(filename_a, BED)
-                push!(ic_a, interval)
+            open(filename_a, BED) do intervals
+                for interval in intervals
+                    push!(ic_a, interval)
+                end
             end
 
             ic_b = IntervalCollection{BEDMetadata}()
-            for interval in open(filename_b, BED)
-                push!(ic_b, interval)
+            open(filename_b, BED) do intervals
+                for interval in intervals
+                    push!(ic_b, interval)
+                end
             end
 
-            xs = sort(collect(intersect(open(filename_a, BED), open(filename_b, BED))))
+            # This is refactored out to close streams
+            fa = open(filename_a, BED)
+            fb = open(filename_b, BED)
+            xs = sort(collect(intersect(fa, fb)))
+            close(fa)
+            close(fb)
+
             ys = sort(collect(intersect(ic_a, ic_b)))
 
             return xs == ys
         end
 
+        function write_intervals(filename, intervals)
+            open(filename, "w") do out
+                for interval in sort(intervals)
+                    println(out, interval.seqname, "\t", interval.first - 1,
+                            "\t", interval.last, "\t", interval.metadata, "\t",
+                            1000, "\t", interval.strand)
+                end
+            end
+
+        end
+
         n = 10000
         srand(1234)
-        intervals_a = random_intervals(["one", "two", "three", "four", "five"], 1000000, n)
-        filename_a = Pkg.dir("Bio", "test", "intervals", "test_a.bed")
-        out = open(filename_a, "w")
-        for interval in sort(intervals_a)
-            println(out, interval.seqname, "\t", interval.first - 1, "\t",
-                    interval.last, "\t", interval.metadata, "\t", 1000, "\t", interval.strand)
-        end
-        close(out)
+        intervals_a = random_intervals(["one", "two", "three", "four", "five"],
+                                       1000000, n)
+        intervals_b = random_intervals(["one", "two", "three", "four", "five"],
+                                       1000000, n)
 
-        intervals_b = random_intervals(["one", "two", "three", "four", "five"], 1000000, n)
-        filename_b = Pkg.dir("Bio", "test", "intervals", "test_b.bed")
-        ic_b = IntervalCollection{Int}()
-        out = open(filename_b, "w")
-        for interval in sort(intervals_b)
-            println(out, interval.seqname, "\t", interval.first - 1, "\t",
-                    interval.last, "\t", interval.metadata, "\t", 1000, "\t", interval.strand)
-            push!(ic_b, interval)
+        filename_a = "test_a.bed"
+        filename_b = "test_b.bed"
+        intempdir() do
+            write_intervals(filename_a, intervals_a)
+            write_intervals(filename_b, intervals_b)
+            @test check_intersection(filename_a, filename_b)
         end
-        close(out)
 
-        @test check_intersection(filename_a, filename_b)
     end
 end
 

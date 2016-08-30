@@ -115,6 +115,10 @@ function Base.eof(parser::BEDParser)
     return eof(parser.state.stream)
 end
 
+function Base.close(parser::BEDParser)
+    return close(parser.state.stream)
+end
+
 function Base.open(input::BufferedInputStream, ::Type{BED})
     return BEDParser(input)
 end
