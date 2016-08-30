@@ -91,7 +91,7 @@ Test if two nucleotides constitute a `TransversionMutation`.
 end
 
 """
-    count_mutations(sequences::Vector{BioSequence{A}}, ::Type{T})
+    count_mutations{A<:NucleotideAlphabet,T<:MutationType}(sequences::Vector{BioSequence{A}}, ::Type{T})
 
 Count the number of mutations between DNA sequences in a pairwise manner.
 
@@ -103,7 +103,7 @@ possible pair of sequences, and 2. a vector containing the number of sites
 considered (sites with any ambiguity characters are not considered) for each
 possible pair of sequences.
 """
-function count_mutations{A<:NucleotideAlphabets,T<:MutationType}(sequences::Vector{BioSequence{A}}, ::Type{T})
+function count_mutations{A<:NucleotideAlphabet,T<:MutationType}(sequences::Vector{BioSequence{A}}, ::Type{T})
     # This method has been written with the aim of improving performance by taking
     # advantage of the memory layout of matrices of nucleotides, as well as
     # getting julia to emit simd code for the innermost loop.
@@ -134,7 +134,7 @@ function count_mutations{A<:NucleotideAlphabets,T<:MutationType}(sequences::Vect
 end
 
 """
-    count_mutations(sequences::Vector{BioSequence{A}}, ::Type{TransitionMutation}, ::Type{TransversionMutation})
+    count_mutations{A<:NucleotideAlphabet}(sequences::Vector{BioSequence{A}}, ::Type{TransitionMutation}, ::Type{TransversionMutation})
 
 Count the number of `TransitionMutation`s and `TransversionMutation`s in a
 pairwise manner, between each possible pair of sequences.
@@ -145,7 +145,7 @@ transversions between each, possible pair of sequences, and 3. a vector
 containing the number of sites considered (sites with any ambiguity characters
 are not considered) for each possible pair of sequences.
 """
-function count_mutations{A<:NucleotideAlphabets}(sequences::Vector{BioSequence{A}}, ::Type{TransitionMutation}, ::Type{TransversionMutation})
+function count_mutations{A<:NucleotideAlphabet}(sequences::Vector{BioSequence{A}}, ::Type{TransitionMutation}, ::Type{TransversionMutation})
     # This method has been written with the aim of improving performance by taking
     # advantage of the memory layout of matrices of nucleotides, as well as
     # getting julia to emit simd code for the innermost loop.
@@ -180,6 +180,6 @@ function count_mutations{A<:NucleotideAlphabets}(sequences::Vector{BioSequence{A
     return ntransition, ntransversion, lengths
 end
 
-function count_mutations{A<:NucleotideAlphabets}(sequences::Vector{BioSequence{A}}, ::Type{TransversionMutation}, ::Type{TransitionMutation})
+function count_mutations{A<:NucleotideAlphabet}(sequences::Vector{BioSequence{A}}, ::Type{TransversionMutation}, ::Type{TransitionMutation})
     return count_mutations(sequences, TransitionMutation, TransversionMutation)
 end
