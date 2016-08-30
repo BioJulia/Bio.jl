@@ -61,23 +61,23 @@ immutable Kimura80 <: TsTv end
 
 ## Jukes and Cantor 1969 distance computation.
 
-@inline function expected_distance(::Type{JukesCantor69}, p::Float64)
+@inline function expected_distance(::Type{JukesCantor69}, p::AbstractFloat)
     return -0.75 * log(1 - 4 * p / 3)
 end
 
-@inline function variance(::Type{JukesCantor69}, p::Float64, l::Float64)
+@inline function variance(::Type{JukesCantor69}, p::AbstractFloat, l::AbstractFloat)
     return p * (1 - p) / (((1 - 4 * p / 3) ^ 2) * l)
 end
 
 
 ## Kimura80 Distance computation internals
 
-@inline function expected_distance(::Type{Kimura80}, a1::Float64, a2::Float64)
+@inline function expected_distance(::Type{Kimura80}, a1::AbstractFloat, a2::AbstractFloat)
     return -0.5 * log(a1 * sqrt(a2))
 end
 
-@inline function expected_distance(::Type{Kimura80}, a1::Float64, a2::Float64,
-    gamma::Float64)
+@inline function expected_distance(::Type{Kimura80}, a1::AbstractFloat, a2::AbstractFloat,
+    gamma::AbstractFloat)
     b = -1 / alpha
     return alpha * ((a1 ^ b) + 0.5 * (a2 ^ b) - 1.5) / 2
 end
