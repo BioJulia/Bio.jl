@@ -111,12 +111,12 @@ function Base.eltype(::Type{BEDReader})
     return BEDInterval
 end
 
-function Base.eof(parser::BEDReader)
-    return eof(parser.state.stream)
+function Base.eof(reader::BEDReader)
+    return eof(reader.state.stream)
 end
 
-function Base.close(parser::BEDReader)
-    return close(parser.state.stream)
+function Base.close(reader::BEDReader)
+    return close(reader.state.stream)
 end
 
 function Base.open(input::BufferedInputStream, ::Type{BED})

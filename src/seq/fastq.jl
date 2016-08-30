@@ -52,7 +52,7 @@ function Base.open(
         filepath::AbstractString,
         mode::AbstractString,
         ::Type{FASTQ};
-        # parser options
+        # reader options
         quality_encoding::QualityEncoding=EMPTY_QUAL_ENCODING,
         # writer options
         quality_header::Bool=false,
@@ -78,7 +78,7 @@ end
 # Reader
 # ------
 
-"A type encapsulating the current state of a FASTQ parser"
+"A type encapsulating the current state of a FASTQ reader"
 type FASTQReader{S<:Sequence} <: AbstractReader
     state::Ragel.State
     seqbuf::BufferedOutputStream{BufferedStreams.EmptyStream}
@@ -105,12 +105,12 @@ end
 
 Base.eltype{S}(::Type{FASTQReader{S}}) = FASTQSeqRecord{S}
 
-function Base.eof(parser::FASTQReader)
-    return eof(parser.state.stream)
+function Base.eof(reader::FASTQReader)
+    return eof(reader.state.stream)
 end
 
-function Base.close(parser::FASTQReader)
-    close(parser.state.stream)
+function Base.close(reader::FASTQReader)
+    close(reader.state.stream)
 end
 
 include("fastq-parser.jl")

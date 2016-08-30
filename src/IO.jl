@@ -23,7 +23,7 @@ abstract FileFormat
 """
 Abstract data reader type.
 
-See `subtypes(AbstractReader)` for all available data parsers.
+See `subtypes(AbstractReader)` for all available data readers.
 """
 abstract AbstractReader
 

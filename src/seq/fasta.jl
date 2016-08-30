@@ -70,7 +70,7 @@ end
 
 include("fai.jl")
 
-"A type encapsulating the current state of a FASTA parser"
+"A type encapsulating the current state of a FASTA reader"
 type FASTAReader{S<:Sequence} <: AbstractReader
     state::Ragel.State
     seqbuf::BufferedOutputStream{BufferedStreams.EmptyStream}
@@ -84,21 +84,21 @@ end
 
 Base.eltype{S}(::Type{FASTAReader{S}}) = FASTASeqRecord{S}
 
-function Base.eof(parser::FASTAReader)
-    return eof(parser.state.stream)
+function Base.eof(reader::FASTAReader)
+    return eof(reader.state.stream)
 end
 
-function Base.close(parser::FASTAReader)
-    close(parser.state.stream)
+function Base.close(reader::FASTAReader)
+    close(reader.state.stream)
 end
 
-function Base.getindex(parser::FASTAReader, name::AbstractString)
-    if isnull(parser.index)
+function Base.getindex(reader::FASTAReader, name::AbstractString)
+    if isnull(reader.index)
         error("no index")
     end
-    seekrecord(parser.state.stream, get(parser.index), name)
-    parser.state.cs = fastaparser_start
-    return read(parser)
+    seekrecord(reader.state.stream, get(reader.index), name)
+    reader.state.cs = fastaparser_start
+    return read(reader)
 end
 
 include("fasta-parser.jl")
