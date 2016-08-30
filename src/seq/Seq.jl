@@ -150,6 +150,7 @@ export
     seqmatrix,
     majorityvote
 
+import Bio
 using
     BufferedStreams,
     Iterators,
@@ -157,11 +158,6 @@ using
     Bio.Ragel,
     Bio.StringFields,
     Combinatorics
-
-import Bio.IO:
-    FileFormat,
-    AbstractReader,
-    AbstractWriter
 
 import ..Ragel: tryread!
 export tryread!
