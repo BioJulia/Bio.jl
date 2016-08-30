@@ -61,11 +61,11 @@ immutable Kimura80 <: TsTv end
 
 ## Jukes and Cantor 1969 distance computation.
 
-@inline function expected_distance(::Type{JukesCantor69}, p::AbstractFloat)
+@inline function expected_distance(::Type{JukesCantor69}, p::Float64)
     return -0.75 * log(1 - 4 * p / 3)
 end
 
-@inline function variance(::Type{JukesCantor69}, p::AbstractFloat, l::AbstractFloat)
+@inline function variance(::Type{JukesCantor69}, p::Float64, l::Int64)
     return p * (1 - p) / (((1 - 4 * p / 3) ^ 2) * l)
 end
 
