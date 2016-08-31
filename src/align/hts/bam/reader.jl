@@ -2,7 +2,6 @@
 # ==========
 
 type BAMReader <: Bio.IO.AbstractReader
-    filepath::String
     stream::BGZFStream
     header::SAMHeader
     start_offset::VirtualOffset
@@ -17,7 +16,6 @@ end
 
 function Base.show(io::IO, reader::BAMReader)
     println(io, summary(reader), ":")
-    println("  filepath: ", reader.filepath)
     println("  header: ", reader.header)
       print("  reference sequences:")
     for (i, (name, len)) in enumerate(zip(reader.refseqnames, reader.refseqlens))
@@ -50,7 +48,16 @@ function Base.seekstart(reader::BAMReader)
 end
 
 function Base.open(filename::AbstractString, ::Type{BAM})
-    stream = BGZFStream(filename)
+    reader = open(open(filename), BAM)
+    indexpath = filename * ".bai"
+    if isfile(indexpath)
+        reader.index = BAI(indexpath)
+    end
+    return reader
+end
+
+function Base.open(input::IO, ::Type{BAM})
+    stream = BGZFStream(input)
 
     # magic bytes
     B = read(stream, UInt8)
@@ -79,18 +86,12 @@ function Base.open(filename::AbstractString, ::Type{BAM})
     end
 
     reader = BAMReader(
-        filename,
         stream,
         samheader,
         virtualoffset(stream),
         refseqnames,
         refseqlens,
         Nullable())
-
-    index_filepath = reader.filepath * ".bai"
-    if isfile(index_filepath)
-        loadindex!(reader, index_filepath)
-    end
 
     return reader
 end
@@ -118,9 +119,4 @@ end
 function Base.next(reader::BAMReader, rec)
     read!(reader, rec)
     return copy(rec), rec
-end
-
-function loadindex!(reader, filepath)
-    reader.index = BAI(filepath)
-    return reader
 end
