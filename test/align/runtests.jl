@@ -1127,6 +1127,7 @@ end
             @test seqname(rec) == ""
             @test cigar(rec) == ""
             @test sequence(rec) == dna""
+            @test alignment(rec) == Alignment(AlignmentAnchor[])
             @test qualities(rec) == UInt8[]
 
             @test Align.rightmost_position(rec) === Int32(-1)
@@ -1167,6 +1168,11 @@ end
             """
             @test flag(rec) == 16
             @test cigar(rec) == "27M1D73M"
+            @test alignment(rec) == Alignment([
+                AlignmentAnchor(  0,   1, OP_START),
+                AlignmentAnchor( 27,  28, OP_MATCH),
+                AlignmentAnchor( 27,  29, OP_DELETE),
+                AlignmentAnchor(100, 102, OP_MATCH)])
             @test rec["XG"] == 1
             @test rec["XM"] == 5
             @test rec["XN"] == 0

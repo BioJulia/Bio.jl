@@ -244,6 +244,29 @@ function qualities(rec::BAMRecord)
     return [rec.data[i+offset] for i in 1:seqlen]
 end
 
+function alignment(rec::BAMRecord)
+    if !ismapped(rec)
+        return Alignment(AlignmentAnchor[])
+    end
+    seqpos = 0
+    refpos = position(rec) - 1
+    anchors = [AlignmentAnchor(seqpos, refpos, OP_START)]
+    for (op, len) in zip(cigar_rle(rec)...)
+        if ismatchop(op)
+            seqpos += len
+            refpos += len
+        elseif isinsertop(op)
+            seqpos += len
+        elseif isdeleteop(op)
+            refpos += len
+        else
+            error("operation $(op) is not supported")
+        end
+        push!(anchors, AlignmentAnchor(seqpos, refpos, op))
+    end
+    return Alignment(anchors)
+end
+
 function Base.getindex(rec::BAMRecord, tag::AbstractString)
     checkkeytag(tag)
     return getvalue(rec.data, auxdata_position(rec), UInt8(tag[1]), UInt8(tag[2]))
@@ -286,8 +309,8 @@ function alignment_length(rec::BAMRecord)
     length::Int = 0
     for i in offset+1:4:offset+n_cigar_op(rec)*4
         x = unsafe_load(Ptr{UInt32}(pointer(rec.data, i)))
-        op = Bio.Align.Operation(x & 0x0f)
-        if Bio.Align.ismatchop(op) || Bio.Align.isdeleteop(op)
+        op = Operation(x & 0x0f)
+        if ismatchop(op) || isdeleteop(op)
             length += x >> 4
         end
     end

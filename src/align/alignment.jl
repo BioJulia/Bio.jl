@@ -14,42 +14,7 @@ immutable Alignment
     function Alignment(anchors::Vector{AlignmentAnchor}, check::Bool=true)
         # optionally check coherence of the anchors
         if check
-            # empty alignments are valid, representing an unaligned sequence
-            if !isempty(anchors)
-                if anchors[1].op != OP_START
-                    error("Alignments must begin with on OP_START anchor.")
-                end
-
-                for i in 2:length(anchors)
-                    if anchors[i].refpos < anchors[i-1].refpos ||
-                       anchors[i].seqpos < anchors[i-1].seqpos
-                        error("Alignment anchors must be sorted.")
-                    end
-
-                    op = anchors[i].op
-                    if convert(UInt8, op) > convert(UInt8, OP_MAX_VALID)
-                        error("Anchor at index $(i) has an invalid operation.")
-                    end
-
-                    # reference skip/delete operations
-                    if isdeleteop(op)
-                        if anchors[i].seqpos != anchors[i-1].seqpos
-                            error("Invalid anchor positions for reference deletion.")
-                        end
-                    # reference insertion operations
-                    elseif isinsertop(op)
-                        if anchors[i].refpos != anchors[i-1].refpos
-                            error("Invalid anchor positions for reference insertion.")
-                        end
-                    # match operations
-                    elseif ismatchop(op)
-                        if anchors[i].refpos - anchors[i-1].refpos !=
-                           anchors[i].seqpos - anchors[i-1].seqpos
-                            error("Invalid anchor positions for match operation.")
-                        end
-                    end
-                end
-            end
+            check_alignment_anchors(anchors)
         end
 
         # compute first and last aligned reference positions
@@ -115,41 +80,9 @@ function Base.:(==)(a::Alignment, b::Alignment)
 end
 
 function Base.show(io::IO, aln::Alignment)
-    # print a representation of the reference sequence
-    anchors = aln.anchors
-    for i in 2:length(anchors)
-        if ismatchop(anchors[i].op)
-            for _ in anchors[i-1].refpos+1:anchors[i].refpos
-                write(io, '·')
-            end
-        elseif isinsertop(anchors[i].op)
-            for _ in anchors[i-1].seqpos+1:anchors[i].seqpos
-                write(io, '-')
-            end
-        elseif isdeleteop(anchors[i].op)
-            for _ in anchors[i-1].refpos+1:anchors[i].refpos
-                write(io, '·')
-            end
-        end
-    end
-    write(io, '\n')
-
-    # print a representation of the aligned sequence
-    for i in 2:length(anchors)
-        if ismatchop(anchors[i].op)
-            for i in anchors[i-1].seqpos+1:anchors[i].seqpos
-                write(io, '·')
-            end
-        elseif isinsertop(anchors[i].op)
-            for i in anchors[i-1].seqpos+1:anchors[i].seqpos
-                write(io, '·')
-            end
-        elseif isdeleteop(anchors[i].op)
-            for _ in anchors[i-1].refpos+1:anchors[i].refpos
-                write(io, '-')
-            end
-        end
-    end
+    println(io, summary(aln), ':')
+    println(io, "  alignment: ", cigar(aln))
+      print(io, "  aligned range: ", aln.firstref, '-', aln.lastref)
 end
 
 """
@@ -188,6 +121,72 @@ function ref2seq(i::Integer, aln::Alignment)
     return seqpos, anchor.op
 end
 
+"""
+    cigar(aln::Alignment)
+
+Make a CIGAR string encoding of `aln`.
+
+This is not entirely lossless as it discards the alignments start positions.
+"""
+function cigar(aln::Alignment)
+    anchors = aln.anchors
+    if isempty(anchors)
+        return ""
+    end
+    seqpos = anchors[1].seqpos
+    refpos = anchors[1].refpos
+    @assert anchors[1].op == OP_START
+    out = IOBuffer()
+    for i in 2:length(anchors)
+        n = max(anchors[i].seqpos - anchors[i-1].seqpos,
+                anchors[i].refpos - anchors[i-1].refpos)
+        print(out, n, Char(anchors[i].op))
+    end
+    return takebuf_string(out)
+end
+
+# Check validity of a sequence of anchors.
+function check_alignment_anchors(anchors)
+    if isempty(anchors)
+        # empty alignments are valid, representing an unaligned sequence
+        return
+    end
+
+    if anchors[1].op != OP_START
+        error("Alignments must begin with on OP_START anchor.")
+    end
+
+    for i in 2:endof(anchors)
+        if anchors[i].refpos < anchors[i-1].refpos ||
+           anchors[i].seqpos < anchors[i-1].seqpos
+            error("Alignment anchors must be sorted.")
+        end
+
+        op = anchors[i].op
+        if convert(UInt8, op) > convert(UInt8, OP_MAX_VALID)
+            error("Anchor at index $(i) has an invalid operation.")
+        end
+
+        # reference skip/delete operations
+        if isdeleteop(op)
+            if anchors[i].seqpos != anchors[i-1].seqpos
+                error("Invalid anchor positions for reference deletion.")
+            end
+        # reference insertion operations
+        elseif isinsertop(op)
+            if anchors[i].refpos != anchors[i-1].refpos
+                error("Invalid anchor positions for reference insertion.")
+            end
+        # match operations
+        elseif ismatchop(op)
+            if anchors[i].refpos - anchors[i-1].refpos !=
+               anchors[i].seqpos - anchors[i-1].seqpos
+                error("Invalid anchor positions for match operation.")
+            end
+        end
+    end
+end
+
 # find the index of the first anchor that satisfies `i ≤ pos`
 @generated function findanchor{isseq}(aln::Alignment, i::Integer, ::Type{Val{isseq}})
     pos = isseq ? :seqpos : :refpos
@@ -219,25 +218,4 @@ end
         @assert false
         return 0
     end
-end
-
-"""
-    cigar(aln::Alignment)
-
-Make a CIGAR string encoding of `aln`.
-
-This is not entirely lossless as it discards the alignments start positions.
-"""
-function cigar(aln::Alignment)
-    anchors = aln.anchors
-    out = IOBuffer()
-    seqpos = anchors[1].seqpos
-    refpos = anchors[1].refpos
-
-    for i in 2:length(anchors)
-        n = max(anchors[i].seqpos - anchors[i-1].seqpos,
-                anchors[i].refpos - anchors[i-1].refpos)
-        print(out, n, Char(anchors[i].op))
-    end
-    return takebuf_string(out)
 end
