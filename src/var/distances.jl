@@ -129,6 +129,20 @@ function distance{T<:MutationType,A<:NucleotideAlphabet}(::Type{Count{T}}, seqs:
     return count_mutations(T, seqs)
 end
 
+"""
+    distance{T<:MutationType,N<:Nucleotide}(::Type{Count{T}}, seqs::Matrix{N})
+
+Compute the number of mutations of type `T` between a set of sequences in a
+pairwise manner.
+
+This method of distance returns a tuple of the number of mutations of type T
+between sequences and the number of valid
+(i.e. non-ambiguous sites) counted by the function.
+
+**Note: This method assumes that the sequences are stored in the `Matrix{N}`
+provided as `seqs` in sequence major order i.e. each column of the matrix is one
+complete nucleotide sequence.**
+"""
 function distance{T<:MutationType,N<:Nucleotide}(::Type{Count{T}}, seqs::Matrix{N})
     return count_mutations(T, seqs)
 end
@@ -137,13 +151,36 @@ function distance{T<:TsTv,A<:NucleotideAlphabet}(::Type{Count{T}}, seqs::Vector{
     return count_mutations(TransitionMutation, TransversionMutation, seqs)
 end
 
+function distance{T<:TsTv,N<:Nucleotide}(::Type{Count{T}}, seqs::Matrix{N})
+    return count_mutations(TransitionMutation, TransversionMutation, seqs)
+end
+
 """
     distance{T<:MutationType,A<:NucleotideAlphabet}(::Type{Proportion{T}}, seqs::Vector{BioSequence{A}})
 
-This method of distance returns a tuple of the p-distance, and the number of valid
-(i.e. non-ambiguous sites) counted by the function.
+This method of distance returns a tuple of a vector of the p-distances, and a
+vector of the number of valid (i.e. non-ambiguous sites) counted by the function.
 """
 function distance{T<:MutationType,A<:NucleotideAlphabet}(::Type{Proportion{T}}, seqs::Vector{BioSequence{A}})
+    d, l = distance(Count{T}, seqs)
+    D = Vector{Float64}(length(d))
+    @inbounds for i in 1:length(D)
+        D[i] = d[i] / l[i]
+    end
+    return D, l
+end
+
+"""
+    distance{T<:MutationType,N<:Nucleotide}(::Type{Proportion{T}}, seqs::Matrix{N})
+
+This method of distance returns a tuple of a vector of the p-distances, and a
+vector of the number of valid (i.e. non-ambiguous sites) counted by the function.
+
+**Note: This method assumes that the sequences are stored in the `Matrix{N}`
+provided as `seqs` in sequence major order i.e. each column of the matrix is one
+complete nucleotide sequence.**
+"""
+function distance{T<:MutationType,N<:Nucleotide}(::Type{Proportion{T}}, seqs::Matrix{N})
     d, l = distance(Count{T}, seqs)
     D = Vector{Float64}(length(d))
     @inbounds for i in 1:length(D)
@@ -169,6 +206,27 @@ function distance{A<:NucleotideAlphabet}(::Type{JukesCantor69}, seqs::Vector{Bio
     return D, V
 end
 
+"""
+    distance{N<:Nucleotide}(::Type{JukesCantor69}, seqs::Matrix{N})
+
+This method of distance returns a tuple of the expected JukesCantor69 distance
+estimate, and the computed variance.
+
+**Note: This method assumes that the sequences are stored in the `Matrix{N}`
+provided as `seqs` in sequence major order i.e. each column of the matrix is one
+complete nucleotide sequence.**
+"""
+function distance{N<:Nucleotide}(::Type{JukesCantor69}, seqs::Matrix{N})
+    p, l = distance(Proportion{DifferentMutation}, seqs)
+    D = Vector{Float64}(length(p))
+    V = Vector{Float64}(length(p))
+    @inbounds for i in 1:length(p)
+        D[i] = expected_distance(JukesCantor69, p[i])
+        V[i] = variance(JukesCantor69, p[i], l[i])
+    end
+    return D, V
+end
+
 
 """
     distance{A<:NucleotideAlphabet}(::Type{Kimura80}, seqs::Vector{BioSequence{A}})
@@ -177,6 +235,32 @@ This method of distance returns a tuple of the expected Kimura80 distance
 estimate, and the computed variance.
 """
 function distance{A<:NucleotideAlphabet}(::Type{Kimura80}, seqs::Vector{BioSequence{A}})
+    ns, nv, l = distance(Count{Kimura80}, seqs)
+    D = Vector{Float64}(length(ns))
+    V = Vector{Float64}(length(ns))
+    @inbounds for i in 1:length(ns)
+        L = l[i]
+        P = ns[i] / L
+        Q = nv[i] / L
+        a1 = 1 - 2 * P - Q
+        a2 = 1 - 2 * Q
+        D[i] = expected_distance(Kimura80, a1, a2)
+        V[i] = variance(Kimura80, P, Q, L, a1, a2)
+    end
+    return D, V
+end
+
+"""
+    distance{N<:Nucleotide}(::Type{Kimura80}, seqs::Matrix{N})
+
+This method of distance returns a tuple of the expected Kimura80 distance
+estimate, and the computed variance.
+
+**Note: This method assumes that the sequences are stored in the `Matrix{N}`
+provided as `seqs` in sequence major order i.e. each column of the matrix is one
+complete nucleotide sequence.**
+"""
+function distance{N<:Nucleotide}(::Type{Kimura80}, seqs::Matrix{N})
     ns, nv, l = distance(Count{Kimura80}, seqs)
     D = Vector{Float64}(length(ns))
     V = Vector{Float64}(length(ns))
