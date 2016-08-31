@@ -116,6 +116,8 @@ import IntervalTrees
 
 include("operations.jl")
 include("anchors.jl")
+include("alignment.jl")
+include("alignedseq.jl")
 
 include("types.jl")
 include("submat.jl")
