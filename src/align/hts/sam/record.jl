@@ -48,9 +48,9 @@ end
 function Base.show(io::IO, rec::SAMRecord)
     println(summary(rec), ':')
     println(io, "reference name: ", refname(rec))
+    println(io, "leftmost position: ", leftposition(rec))
     println(io, "next reference name: ", nextrefname(rec))
-    println(io, "position: ", position(rec))
-    println(io, "next position: ", nextposition(rec))
+    println(io, "next leftmost position: ", nextleftposition(rec))
     println(io, "mapping quality: ", mappingquality(rec))
     println(io, "flag: ", flag(rec))
     println(io, "template length: ", templatelength(rec))
@@ -97,11 +97,15 @@ function nextrefname(rec::SAMRecord)
     return rec.next_refname
 end
 
-function Base.position(rec::SAMRecord)
+function leftposition(rec::SAMRecord)
     return rec.pos
 end
 
-function nextposition(rec::SAMRecord)
+function rightposition(rec::SAMRecord)
+    return leftposition(rec) + alignment_length(rec) - 1
+end
+
+function nextleftposition(rec::SAMRecord)
     return rec.next_pos
 end
 
@@ -119,7 +123,7 @@ end
 
 function alignment(rec::SAMRecord)
     if ismapped(rec)
-        return Alignment(rec.cigar, 1, position(rec))
+        return Alignment(rec.cigar, 1, leftposition(rec))
     else
         return Alignment(AlignmentAnchor[])
     end
@@ -153,4 +157,27 @@ end
 function Base.haskey(rec::SAMRecord, tag::AbstractString)
     checkkeytag(tag)
     return haskey(rec.optional_fields, tag)
+end
+
+# Return the length of alignment.
+function alignment_length(rec::SAMRecord)
+    if rec.cigar == "*"
+        return 0
+    end
+    length = 0
+    len = 0  # operation length
+    for c in rec.cigar
+        if isnumber(c)
+            len = len * 10 + (c - '0')
+        elseif isalpha(c)
+            op = convert(Operation, c)
+            if ismatchop(op) || isdeleteop(op)
+                length += len
+                len = 0
+            end
+        else
+            error("invalid character in CIGAR: '$(c)'")
+        end
+    end
+    return length
 end
