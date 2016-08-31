@@ -480,6 +480,7 @@ close(reader)
 | `seqname`        | template name                                  |
 | `cigar`          | CIGAR string                                   |
 | `cigar_rle`      | run-length encoded CIGAR operations (BAM only) |
+| `alignment`      | sequence alignment                             |
 | `sequence`       | DNA sequence                                   |
 | `qualities`      | base qualities                                 |
 | `[<tag>]`        | value of an optional field with `tag`          |
