@@ -17,7 +17,7 @@ export
 Get the atomic coordinates of a `StructuralElementOrList` as a 2D `Array` with
 each column corresponding to one atom.
 Additional arguments are atom selector functions - only atoms that return
-`True` from the functions are retained.
+`true` from the functions are retained.
 """
 function coordarray(el::StructuralElementOrList, atom_selectors::Function...)
     atom_list = collectatoms(el, atom_selectors...)
@@ -39,7 +39,7 @@ Get the root-mean-square deviation (RMSD) between two `StructuralElementOrList`s
 or two coordinate `Array`s of the same size. Assumes they are already
 superimposed.
 Additional arguments are atom selector functions - only atoms that return
-`True` from the functions are retained.
+`true` from the functions are retained.
 """
 function rmsd(coords_one::Array{Float64}, coords_two::Array{Float64})
     @assert size(coords_one) == size(coords_two) "Sizes of coordinate arrays are different - cannot calculate RMSD"
@@ -55,7 +55,7 @@ Get the displacements between atomic coordinates from two
 `StructuralElementOrList`s or two coordinate `Array`s of the same size. Assumes
 they are already superimposed.
 Additional arguments are atom selector functions - only atoms that return
-`True` from the functions are retained.
+`true` from the functions are retained.
 """
 function displacements(coords_one::Array{Float64}, coords_two::Array{Float64})
     @assert size(coords_one) == size(coords_two) "Sizes of coordinate arrays are different - cannot calculate displacements"
@@ -69,7 +69,7 @@ displacements(el_one::StructuralElementOrList, el_two::StructuralElementOrList, 
 """
 Get the minimum square distance between two `StructuralElementOrList`s.
 Additional arguments are atom selector functions - only atoms that return
-`True` from the functions are retained.
+`true` from the functions are retained.
 """
 function sqdistance(el_one::StructuralElementOrList, el_two::StructuralElementOrList, atom_selectors::Function...)
     coords_one = coordarray(el_one, atom_selectors...)
@@ -92,7 +92,7 @@ sqdistance(atom_one::AbstractAtom, atom_two::AbstractAtom) = (x(atom_one) - x(at
 """
 Get the minimum distance between two `StructuralElementOrList`s.
 Additional arguments are atom selector functions - only atoms that return
-`True` from the functions are retained.
+`true` from the functions are retained.
 """
 distance(el_one::StructuralElementOrList, el_two::StructuralElementOrList, atom_selectors::Function...) = sqrt(sqdistance(
         el_one,
@@ -125,26 +125,26 @@ dihedralangle(vec_a::Vector{Float64}, vec_b::Vector{Float64}, vec_c::Vector{Floa
 
 # Be clear in docs that the argument order is not uniform
 function omegaangle(res::AbstractResidue, res_prev::AbstractResidue)
-    @assert haskey(atoms(res_prev), "CA") "Atom with atom name \"CA\" not found in previous residue"
-    @assert haskey(atoms(res_prev), "C") "Atom with atom name \"C\" not found in previous residue"
-    @assert haskey(atoms(res), "N") "Atom with atom name \"N\" not found in residue"
-    @assert haskey(atoms(res), "CA") "Atom with atom name \"CA\" not found in residue"
+    @assert "CA" in atomnames(res_prev) "Atom with atom name \"CA\" not found in previous residue"
+    @assert "C" in atomnames(res_prev) "Atom with atom name \"C\" not found in previous residue"
+    @assert "N" in atomnames(res) "Atom with atom name \"N\" not found in residue"
+    @assert "CA" in atomnames(res) "Atom with atom name \"CA\" not found in residue"
     return dihedralangle(res_prev["CA"], res_prev["C"], res["N"], res["CA"])
 end
 
 function phiangle(res::AbstractResidue, res_prev::AbstractResidue)
-    @assert haskey(atoms(res_prev), "C") "Atom with atom name \"C\" not found in previous residue"
-    @assert haskey(atoms(res), "N") "Atom with atom name \"N\" not found in residue"
-    @assert haskey(atoms(res), "CA") "Atom with atom name \"CA\" not found in residue"
-    @assert haskey(atoms(res), "C") "Atom with atom name \"C\" not found in residue"
+    @assert "C" in atomnames(res_prev) "Atom with atom name \"C\" not found in previous residue"
+    @assert "N" in atomnames(res) "Atom with atom name \"N\" not found in residue"
+    @assert "CA" in atomnames(res) "Atom with atom name \"CA\" not found in residue"
+    @assert "C" in atomnames(res) "Atom with atom name \"C\" not found in residue"
     return dihedralangle(res_prev["C"], res["N"], res["CA"], res["C"])
 end
 
 function psiangle(res::AbstractResidue, res_next::AbstractResidue)
-    @assert haskey(atoms(res), "N") "Atom with atom name \"N\" not found in residue"
-    @assert haskey(atoms(res), "CA") "Atom with atom name \"CA\" not found in residue"
-    @assert haskey(atoms(res), "C") "Atom with atom name \"C\" not found in residue"
-    @assert haskey(atoms(res_next), "N") "Atom with atom name \"N\" not found in next residue"
+    @assert "N" in atomnames(res) "Atom with atom name \"N\" not found in residue"
+    @assert "CA" in atomnames(res) "Atom with atom name \"CA\" not found in residue"
+    @assert "C" in atomnames(res) "Atom with atom name \"C\" not found in residue"
+    @assert "N" in atomnames(res_next) "Atom with atom name \"N\" not found in next residue"
     return dihedralangle(res["N"], res["CA"], res["C"], res_next["N"])
 end
 
@@ -152,7 +152,7 @@ end
 """
 
 Additional arguments are residue selector functions - only residues that return
-`True` from the functions are retained.
+`true` from the functions are retained.
 """
 function ramachandranangles(el::StructuralElementOrList, residue_selectors::Function...)
     res_list = collectresidues(el, residue_selectors...)

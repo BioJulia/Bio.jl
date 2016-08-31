@@ -851,7 +851,8 @@ function collectmodels{T <: Union{Chain, AbstractResidue, AbstractAtom}}(els::Ve
     return sort(mod_out)
 end
 
-collectmodels(el::StructuralElementOrList, model_selectors::Function...) = applyselectors(collectmodels(el), model_selectors...)
+# One selector explicitly defined to prevent this being called without selectors
+collectmodels(el::StructuralElementOrList, model_selector::Function, model_selectors::Function...) = applyselectors(collectmodels(el), model_selector, model_selectors...)
 
 
 """
@@ -905,7 +906,7 @@ function collectchains{T <: Union{AbstractResidue, AbstractAtom}}(els::Vector{T}
     return sort(chains_out)
 end
 
-collectchains(el::StructuralElementOrList, chain_selectors::Function...) = applyselectors(collectchains(el), chain_selectors...)
+collectchains(el::StructuralElementOrList, chain_selector::Function, chain_selectors::Function...) = applyselectors(collectchains(el), chain_selector, chain_selectors...)
 
 
 """
@@ -961,7 +962,7 @@ function collectresidues{T <: AbstractAtom}(atom_list::Vector{T})
     return sort(res_list)
 end
 
-collectresidues(el::StructuralElementOrList, residue_selectors::Function...) = applyselectors(collectresidues(el), residue_selectors...)
+collectresidues(el::StructuralElementOrList, residue_selector::Function, residue_selectors::Function...) = applyselectors(collectresidues(el), residue_selector, residue_selectors...)
 
 
 """
@@ -1005,7 +1006,7 @@ collectatoms(at::AbstractAtom) = AbstractAtom[at]
 # Vector{DisorderedAtom}, in which case output is same type as input type
 collectatoms{T <: AbstractAtom}(atom_list::Vector{T}) = sort(atom_list)
 
-collectatoms(el::StructuralElementOrList, atom_selectors::Function...) = applyselectors(collectatoms(el), atom_selectors...)
+collectatoms(el::StructuralElementOrList, atom_selector::Function, atom_selectors::Function...) = applyselectors(collectatoms(el), atom_selector, atom_selectors...)
 
 
 """

@@ -73,9 +73,9 @@ function Base.read(input::IO,
         end
     end
     # Remove any models that were not added to
-    for model_number in modelnumbers(struc)
-        if countchains(struc[model_number]) == 0
-            delete!(models(struc), model_number)
+    for model in struc
+        if countchains(model) == 0
+            delete!(models(struc), modelnumber(model))
         end
     end
     fixlists!(struc)
@@ -87,7 +87,7 @@ function Base.read(filepath::AbstractString,
             structure_name::AbstractString=splitdir(filepath)[2],
             kwargs...)
     open(filepath, "r") do input
-        read(input, PDB, structure_name=structure_name, kwargs...)
+        read(input, PDB; structure_name=structure_name, kwargs...)
     end
 end
 
@@ -266,48 +266,56 @@ Write a `StructuralElementOrList` to a Protein Data Bank (PDB) format file. Only
 ATOM, HETATM, MODEL and ENDMDL records are written - there is no header and no
 TER records.
 Additional arguments are atom selector functions - only atoms that return
-`True` from the functions are retained.
+`true` from the functions are retained.
 """
-function writepdb(output::IO, element::Union{ProteinStructure, Vector{Model}}, atom_selectors::Function...)
+function writepdb(output::IO, el::Union{ProteinStructure, Vector{Model}}, atom_selectors::Function...)
     # If there are multiple models, write out MODEL/ENDMDL lines
-    if length(element) > 1
-        for model in element
-            println(output, "MODEL     ", spacestring(modelnumber(model), 4), repeat(" ", 66))
-            writepdblines(output, model, atom_selectors...)
+    if length(el) > 1
+        for mod in sort(collect(el))
+            println(output, "MODEL     ", spacestring(modelnumber(mod), 4), repeat(" ", 66))
+            writepdb(output, mod, atom_selectors...)
             println(output, "ENDMDL$(repeat(" ", 74))")
         end
     # If there is only one model, do not write out MODEL/ENDMDL lines
+    elseif isa(el, ProteinStructure)
+        writepdb(output, defaultmodel(el), atom_selectors...)
     else
-        writepdblines(output, element, atom_selectors...)
-    end
-end
-
-writepdb(output::IO, element::StructuralElementOrList, atom_selectors::Function...) = writepdblines(output, element, atom_selectors...)
-
-function writepdb(filepath::AbstractString, element::StructuralElementOrList, atom_selectors::Function...)
-    open(filepath, "w") do output
-        writepdb(output, element, atom_selectors...)
+        writepdb(output, el[1], atom_selectors...)
     end
 end
 
 
-function writepdblines(output::IO, element::StructuralElementOrList, atom_selectors::Function...)
+function writepdb(output::IO, el::Union{Model, Chain, AbstractResidue, Vector{Chain}, Vector{AbstractResidue}, Vector{Residue}, Vector{DisorderedResidue}}, atom_selectors::Function...)
     # Collect residues then expand out disordered residues and atoms
-    for res in collectresidues(element)
+    for res in collectresidues(el)
         if isa(res, Residue)
             for at in collectatoms(res, atom_selectors...)
-                for atom_record in at
-                    println(output, pdbline(atom_record)...)
-                end
+                writepdb(output, at)
             end
         else
             for res_name in resnames(res)
                 for at in collectatoms(disorderedres(res, res_name), atom_selectors...)
-                    for atom_record in at
-                        println(output, pdbline(atom_record)...)
-                    end
+                    writepdb(output, at)
                 end
             end
         end
+    end
+end
+
+function writepdb(output::IO, at::AbstractAtom, atom_selectors::Function...)
+    for atom_record in at
+        println(output, pdbline(atom_record)...)
+    end
+end
+
+function writepdb{T <: AbstractAtom}(output::IO, ats::Vector{T}, atom_selectors::Function...)
+    for at in collectatoms(ats, atom_selectors...)
+        writepdb(output, at)
+    end
+end
+
+function writepdb(filepath::AbstractString, el::StructuralElementOrList, atom_selectors::Function...)
+    open(filepath, "w") do output
+        writepdb(output, el, atom_selectors...)
     end
 end
