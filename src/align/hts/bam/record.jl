@@ -217,6 +217,34 @@ function cigar(rec::BAMRecord)
 end
 
 """
+    alignment(rec::BAMRecord)
+
+Make an alignment object from `rec`.
+"""
+function alignment(rec::BAMRecord)
+    if !ismapped(rec)
+        return Alignment(AlignmentAnchor[])
+    end
+    seqpos = 0
+    refpos = position(rec) - 1
+    anchors = [AlignmentAnchor(seqpos, refpos, OP_START)]
+    for (op, len) in zip(cigar_rle(rec)...)
+        if ismatchop(op)
+            seqpos += len
+            refpos += len
+        elseif isinsertop(op)
+            seqpos += len
+        elseif isdeleteop(op)
+            refpos += len
+        else
+            error("operation $(op) is not supported")
+        end
+        push!(anchors, AlignmentAnchor(seqpos, refpos, op))
+    end
+    return Alignment(anchors)
+end
+
+"""
     sequence(rec::BAMRecord)
 
 Return a DNA sequence of the alignment `rec`.
@@ -286,8 +314,8 @@ function alignment_length(rec::BAMRecord)
     length::Int = 0
     for i in offset+1:4:offset+n_cigar_op(rec)*4
         x = unsafe_load(Ptr{UInt32}(pointer(rec.data, i)))
-        op = Bio.Align.Operation(x & 0x0f)
-        if Bio.Align.ismatchop(op) || Bio.Align.isdeleteop(op)
+        op = Operation(x & 0x0f)
+        if ismatchop(op) || isdeleteop(op)
             length += x >> 4
         end
     end

@@ -117,6 +117,14 @@ function cigar(rec::SAMRecord)
     return rec.cigar
 end
 
+function alignment(rec::SAMRecord)
+    if ismapped(rec)
+        return Alignment(rec.cigar, 1, position(rec))
+    else
+        return Alignment(AlignmentAnchor[])
+    end
+end
+
 function sequence(rec::SAMRecord)
     return rec.seq
 end
