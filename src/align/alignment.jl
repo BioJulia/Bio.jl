@@ -38,9 +38,7 @@ immutable Alignment
     end
 end
 
-"""
-Construct an `Alignment`
-"""
+# Make an alignment object from a CIGAR string.
 function Alignment(cigar::AbstractString, seqpos::Int=1, refpos::Int=1)
     # path starts prior to the first aligned position pair
     seqpos -= 1

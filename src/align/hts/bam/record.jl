@@ -217,6 +217,34 @@ function cigar(rec::BAMRecord)
 end
 
 """
+    alignment(rec::BAMRecord)
+
+Make an alignment object from `rec`.
+"""
+function alignment(rec::BAMRecord)
+    if !ismapped(rec)
+        return Alignment(AlignmentAnchor[])
+    end
+    seqpos = 0
+    refpos = position(rec) - 1
+    anchors = [AlignmentAnchor(seqpos, refpos, OP_START)]
+    for (op, len) in zip(cigar_rle(rec)...)
+        if ismatchop(op)
+            seqpos += len
+            refpos += len
+        elseif isinsertop(op)
+            seqpos += len
+        elseif isdeleteop(op)
+            refpos += len
+        else
+            error("operation $(op) is not supported")
+        end
+        push!(anchors, AlignmentAnchor(seqpos, refpos, op))
+    end
+    return Alignment(anchors)
+end
+
+"""
     sequence(rec::BAMRecord)
 
 Return a DNA sequence of the alignment `rec`.
@@ -242,29 +270,6 @@ function qualities(rec::BAMRecord)
     seqlen = sequence_length(rec)
     offset = seqname_length(rec) + n_cigar_op(rec) * 4 + cld(seqlen, 2)
     return [rec.data[i+offset] for i in 1:seqlen]
-end
-
-function alignment(rec::BAMRecord)
-    if !ismapped(rec)
-        return Alignment(AlignmentAnchor[])
-    end
-    seqpos = 0
-    refpos = position(rec) - 1
-    anchors = [AlignmentAnchor(seqpos, refpos, OP_START)]
-    for (op, len) in zip(cigar_rle(rec)...)
-        if ismatchop(op)
-            seqpos += len
-            refpos += len
-        elseif isinsertop(op)
-            seqpos += len
-        elseif isdeleteop(op)
-            refpos += len
-        else
-            error("operation $(op) is not supported")
-        end
-        push!(anchors, AlignmentAnchor(seqpos, refpos, op))
-    end
-    return Alignment(anchors)
 end
 
 function Base.getindex(rec::BAMRecord, tag::AbstractString)
