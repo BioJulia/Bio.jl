@@ -11,7 +11,6 @@ module Align
 export
     Operation,
     AlignmentAnchor,
-    hasop,
     Alignment,
     AlignedSequence,
     seq2ref,
