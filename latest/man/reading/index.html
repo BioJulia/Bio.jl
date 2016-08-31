@@ -200,7 +200,7 @@
     
         <li class="first-level active"><a href="#reading-and-writing-data">Reading and writing data</a></li>
         
-            <li class="second-level"><a href="#parsing-by-iteration">Parsing by iteration</a></li>
+            <li class="second-level"><a href="#reading-by-iteration">Reading by iteration</a></li>
             
         
             <li class="second-level"><a href="#in-place-parsing">In-place parsing</a></li>
@@ -231,24 +231,24 @@
 
 <p><a id='Reading-and-writing-data-1'></a></p>
 <h1 id="reading-and-writing-data">Reading and writing data</h1>
-<p>Bio.jl has a unified interface for reading and writing files in a variety of formats. To initialize a parser for a particular format, the <code>open</code> method is extended with a file format type parameter <code>T</code>:</p>
+<p>Bio.jl has a unified interface for reading and writing files in a variety of formats. To initialize a reader for a particular format, the <code>open</code> method is extended with a file format type parameter <code>T</code>:</p>
 <div class="codehilite"><pre><span></span><span class="n">open</span><span class="p">{</span><span class="n">T</span><span class="o">&lt;:</span><span class="n">FileFormat</span><span class="p">}(</span><span class="n">filename</span><span class="p">::</span><span class="n">AbstractString</span><span class="p">,</span> <span class="p">::</span><span class="n">Type</span><span class="p">{</span><span class="n">T</span><span class="p">})</span>
 <span class="n">open</span><span class="p">{</span><span class="n">T</span><span class="o">&lt;:</span><span class="n">FileFormat</span><span class="p">}(</span><span class="n">source</span><span class="p">::</span><span class="n">IO</span><span class="p">,</span> <span class="p">::</span><span class="n">Type</span><span class="p">{</span><span class="n">T</span><span class="p">})</span>
 <span class="n">open</span><span class="p">{</span><span class="n">T</span><span class="o">&lt;:</span><span class="n">FileFormat</span><span class="p">}(</span><span class="n">data</span><span class="p">::</span><span class="n">Vector</span><span class="p">{</span><span class="n">UInt8</span><span class="p">},</span> <span class="p">::</span><span class="n">Type</span><span class="p">{</span><span class="n">T</span><span class="p">})</span>
 </pre></div>
 
 
-<p>For example, when reading a FASTA file, a parser for the FASTA file format can be initialized as:</p>
+<p>For example, when reading a FASTA file, a reader for the FASTA file format can be initialized as:</p>
 <div class="codehilite"><pre><span></span><span class="k">using</span> <span class="n">Bio</span><span class="o">.</span><span class="n">Seq</span>  <span class="c"># import FASTA</span>
-<span class="n">parser</span> <span class="o">=</span> <span class="n">open</span><span class="p">(</span><span class="s">&quot;hg38.fa&quot;</span><span class="p">,</span> <span class="n">FASTA</span><span class="p">)</span>
+<span class="n">reader</span> <span class="o">=</span> <span class="n">open</span><span class="p">(</span><span class="s">&quot;hg38.fa&quot;</span><span class="p">,</span> <span class="n">FASTA</span><span class="p">)</span>
 </pre></div>
 
 
-<p><a id='Parsing-by-iteration-1'></a></p>
-<h2 id="parsing-by-iteration">Parsing by iteration</h2>
-<p>Parsers in Bio.jl all read and return entries one at a time. The most convenient way to do this by iteration.</p>
-<div class="codehilite"><pre><span></span><span class="n">stream</span> <span class="o">=</span> <span class="n">open</span><span class="p">(</span><span class="s">&quot;input.bed&quot;</span><span class="p">,</span> <span class="n">BED</span><span class="p">)</span>
-<span class="k">for</span> <span class="n">entry</span> <span class="k">in</span> <span class="n">stream</span>
+<p><a id='Reading-by-iteration-1'></a></p>
+<h2 id="reading-by-iteration">Reading by iteration</h2>
+<p>Readers in Bio.jl all read and return entries one at a time. The most convenient way to do this by iteration.</p>
+<div class="codehilite"><pre><span></span><span class="n">reader</span> <span class="o">=</span> <span class="n">open</span><span class="p">(</span><span class="s">&quot;input.bed&quot;</span><span class="p">,</span> <span class="n">BED</span><span class="p">)</span>
+<span class="k">for</span> <span class="n">record</span> <span class="k">in</span> <span class="n">reader</span>
     <span class="c"># perform some operation on entry</span>
 <span class="k">end</span>
 </pre></div>
@@ -256,41 +256,40 @@
 
 <p><a id='In-place-parsing-1'></a></p>
 <h2 id="in-place-parsing">In-place parsing</h2>
-<p>Iterating through entries in a file is convenient, but for each entry in the file, the parser must allocate, and ultimately the garbage collector must spend time to deallocate it. For performance critical applications, a separate lower level parsing interface can be used that avoid unnecessary allocation by overwriting one entry. For files with a large number of small entries, this can greatly speed up reading.</p>
-<p>Instead of looping over a parser stream <code>read!</code> is called with a preallocated entry.</p>
-<div class="codehilite"><pre><span></span><span class="n">stream</span> <span class="o">=</span> <span class="n">open</span><span class="p">(</span><span class="s">&quot;input.bed&quot;</span><span class="p">,</span> <span class="n">BED</span><span class="p">)</span>
-<span class="n">entry</span> <span class="o">=</span> <span class="n">BEDInterval</span><span class="p">()</span>
-<span class="k">while</span> <span class="o">!</span><span class="n">eof</span><span class="p">(</span><span class="n">stream</span><span class="p">)</span>
-    <span class="n">read!</span><span class="p">(</span><span class="n">input</span><span class="p">,</span> <span class="n">entry</span><span class="p">)</span>
+<p>Iterating through entries in a file is convenient, but for each entry in the file, the reader must allocate, and ultimately the garbage collector must spend time to deallocate it. For performance critical applications, a separate lower level parsing interface can be used that avoid unnecessary allocation by overwriting one entry. For files with a large number of small entries, this can greatly speed up reading.</p>
+<p>Instead of looping over a reader stream <code>read!</code> is called with a preallocated entry.</p>
+<div class="codehilite"><pre><span></span><span class="n">reader</span> <span class="o">=</span> <span class="n">open</span><span class="p">(</span><span class="s">&quot;input.bed&quot;</span><span class="p">,</span> <span class="n">BED</span><span class="p">)</span>
+<span class="n">record</span> <span class="o">=</span> <span class="n">BEDInterval</span><span class="p">()</span>
+<span class="k">while</span> <span class="o">!</span><span class="n">eof</span><span class="p">(</span><span class="n">reader</span><span class="p">)</span>
+    <span class="n">read!</span><span class="p">(</span><span class="n">reader</span><span class="p">,</span> <span class="n">record</span><span class="p">)</span>
     <span class="c"># perform some operation on `entry`</span>
 <span class="k">end</span>
 </pre></div>
 
 
 <p>Some care is necessary when using this interface. Because <code>entry</code> is completely overwritten on each iteration, one must manually copy any field from <code>entry</code> that should be preserved. For example, if we wish to save the <code>seqname</code> field from <code>entry</code> when parsing BED, we must call <code>copy(entry.seqname)</code>.</p>
-<p>Empty entry types that correspond to the file format be found using <code>eltype</code>, making it easy to allocate an empty entry for any parser stream.</p>
+<p>Empty entry types that correspond to the file format be found using <code>eltype</code>, making it easy to allocate an empty entry for any reader stream.</p>
 <div class="codehilite"><pre><span></span><span class="n">entry</span> <span class="o">=</span> <span class="n">eltype</span><span class="p">(</span><span class="n">stream</span><span class="p">)()</span>
 </pre></div>
 
 
 <p><a id='Writing-data-1'></a></p>
 <h2 id="writing-data">Writing data</h2>
-<p>Writing data into a stream has a uniform interface consistent with parsers. The following code is a template of formatted serialization into a file:</p>
+<p>Writing data into a stream has a uniform interface consistent with readers. The following code is a template of formatted serialization into a file:</p>
 <div class="codehilite"><pre><span></span><span class="c"># open a file of a particular file format in writing mode</span>
-<span class="n">out</span> <span class="o">=</span> <span class="n">open</span><span class="p">(</span><span class="o">&lt;</span><span class="n">filepath</span><span class="o">&gt;</span><span class="p">,</span> <span class="s">&quot;w&quot;</span><span class="p">,</span> <span class="o">&lt;</span><span class="n">format</span><span class="o">&gt;</span><span class="p">)</span>
+<span class="n">writer</span> <span class="o">=</span> <span class="n">open</span><span class="p">(</span><span class="o">&lt;</span><span class="n">filepath</span><span class="o">&gt;</span><span class="p">,</span> <span class="s">&quot;w&quot;</span><span class="p">,</span> <span class="o">&lt;</span><span class="n">format</span><span class="o">&gt;</span><span class="p">)</span>
 <span class="c"># write a record into it</span>
-<span class="n">write</span><span class="p">(</span><span class="n">out</span><span class="p">,</span> <span class="o">&lt;</span><span class="n">record</span><span class="o">&gt;</span><span class="p">)</span>
+<span class="n">write</span><span class="p">(</span><span class="n">writer</span><span class="p">,</span> <span class="o">&lt;</span><span class="n">record</span><span class="o">&gt;</span><span class="p">)</span>
 <span class="c"># finally close it</span>
-<span class="n">close</span><span class="p">(</span><span class="n">out</span><span class="p">)</span>
+<span class="n">close</span><span class="p">(</span><span class="n">writer</span><span class="p">)</span>
 </pre></div>
 
 
 <p>For example, a FASTA file will be created as follows:</p>
-<div class="codehilite"><pre><span></span><span class="n">out</span> <span class="o">=</span> <span class="n">open</span><span class="p">(</span><span class="s">&quot;out.fasta&quot;</span><span class="p">,</span> <span class="s">&quot;w&quot;</span><span class="p">,</span> <span class="n">FASTA</span><span class="p">)</span>
-<span class="n">write</span><span class="p">(</span><span class="n">out</span><span class="p">,</span> <span class="n">FASTASeqRecord</span><span class="p">(</span><span class="s">&quot;seq1&quot;</span><span class="p">,</span> <span class="n">dna</span><span class="s">&quot;ACGTN&quot;</span><span class="p">))</span>
-<span class="n">write</span><span class="p">(</span><span class="n">out</span><span class="p">,</span> <span class="n">FASTASeqRecord</span><span class="p">(</span><span class="s">&quot;seq2&quot;</span><span class="p">,</span> <span class="n">dna</span><span class="s">&quot;TTATATTATTGTAAA&quot;</span><span class="p">,</span> <span class="s">&quot;AT rich&quot;</span><span class="p">))</span>
-<span class="c"># and more records</span>
-<span class="n">close</span><span class="p">(</span><span class="n">out</span><span class="p">)</span>
+<div class="codehilite"><pre><span></span><span class="n">writer</span> <span class="o">=</span> <span class="n">open</span><span class="p">(</span><span class="s">&quot;out.fasta&quot;</span><span class="p">,</span> <span class="s">&quot;w&quot;</span><span class="p">,</span> <span class="n">FASTA</span><span class="p">)</span>
+<span class="n">write</span><span class="p">(</span><span class="n">writer</span><span class="p">,</span> <span class="n">FASTASeqRecord</span><span class="p">(</span><span class="s">&quot;seq1&quot;</span><span class="p">,</span> <span class="n">dna</span><span class="s">&quot;ACGTN&quot;</span><span class="p">))</span>
+<span class="n">write</span><span class="p">(</span><span class="n">writer</span><span class="p">,</span> <span class="n">FASTASeqRecord</span><span class="p">(</span><span class="s">&quot;seq2&quot;</span><span class="p">,</span> <span class="n">dna</span><span class="s">&quot;TTATATTATTGTAAA&quot;</span><span class="p">,</span> <span class="s">&quot;AT rich&quot;</span><span class="p">))</span>
+<span class="n">close</span><span class="p">(</span><span class="n">writer</span><span class="p">)</span>
 </pre></div>
 
 
@@ -348,7 +347,7 @@
 <p><a id='FASTA-1'></a></p>
 <h3 id="fasta">FASTA</h3>
 <ul>
-<li>Parser type: <code>FASTAParser{S&lt;:Sequence}</code></li>
+<li>Reader type: <code>FASTAReader{S&lt;:Sequence}</code></li>
 <li>Writer type: <code>FASTAWriter{T&lt;:IO}</code></li>
 <li>Element type: <code>SeqRecord{S,FASTAMetadata}</code> (alias: <code>FASTASeqRecord{S}</code>)</li>
 </ul>
@@ -365,16 +364,16 @@ CACACACACACATCCTAACACTACCCTAACACAGCCCTAATCTAACCCTG
 </pre></div>
 
 
-<p>Usually sequence records will be read sequentially from a file by iteration. But if the FASTA file has an auxiliary index file formatted in <a href="http://www.htslib.org/doc/faidx.html">fai</a>, the parser supports random access to FASTA records, which would be useful when accessing specific parts of a huge genome sequence:</p>
-<div class="codehilite"><pre><span></span><span class="n">parser</span> <span class="o">=</span> <span class="n">open</span><span class="p">(</span><span class="s">&quot;sacCer.fa&quot;</span><span class="p">,</span> <span class="n">FASTA</span><span class="p">)</span>  <span class="c"># find and read &quot;sacCer.fa.fai&quot; file</span>
-<span class="n">chrIV</span> <span class="o">=</span> <span class="n">parser</span><span class="p">[</span><span class="s">&quot;chrIV&quot;</span><span class="p">]</span>  <span class="c"># directly read chromosome 4</span>
+<p>Usually sequence records will be read sequentially from a file by iteration. But if the FASTA file has an auxiliary index file formatted in <a href="http://www.htslib.org/doc/faidx.html">fai</a>, the reader supports random access to FASTA records, which would be useful when accessing specific parts of a huge genome sequence:</p>
+<div class="codehilite"><pre><span></span><span class="n">reader</span> <span class="o">=</span> <span class="n">open</span><span class="p">(</span><span class="s">&quot;sacCer.fa&quot;</span><span class="p">,</span> <span class="n">FASTA</span><span class="p">)</span>  <span class="c"># find and read &quot;sacCer.fa.fai&quot; file</span>
+<span class="n">chrIV</span> <span class="o">=</span> <span class="n">reader</span><span class="p">[</span><span class="s">&quot;chrIV&quot;</span><span class="p">]</span>  <span class="c"># directly read chromosome 4</span>
 </pre></div>
 
 
 <p><a id='FASTQ-1'></a></p>
 <h3 id="fastq">FASTQ</h3>
 <ul>
-<li>Parser type: <code>FASTQParser{S&lt;:Sequence}</code></li>
+<li>Reader type: <code>FASTQReader{S&lt;:Sequence}</code></li>
 <li>Writer type: <code>FASTQWriter{T&lt;:IO}</code></li>
 <li>Element type: <code>SeqRecord{S,FASTQMetadata}</code> (alias: <code>FASTQSeqRecord{S}</code>)</li>
 </ul>
@@ -394,11 +393,11 @@ tcagTTAAGATGGGAT
 </pre></div>
 
 
-<p>To parse a file containing such records, one could use:</p>
-<div class="codehilite"><pre><span></span><span class="n">parser</span> <span class="o">=</span> <span class="n">open</span><span class="p">(</span><span class="s">&quot;reads.fastq&quot;</span><span class="p">,</span> <span class="n">FASTQ</span><span class="p">,</span> <span class="n">Seq</span><span class="o">.</span><span class="n">SANGER_QUAL_ENCODING</span><span class="p">)</span>
-<span class="n">seqrec</span> <span class="o">=</span> <span class="n">eltype</span><span class="p">(</span><span class="n">parser</span><span class="p">)()</span>
-<span class="k">while</span> <span class="o">!</span><span class="n">eof</span><span class="p">(</span><span class="n">parser</span><span class="p">)</span>
-    <span class="n">read!</span><span class="p">(</span><span class="n">parser</span><span class="p">,</span> <span class="n">seqrec</span><span class="p">)</span>
+<p>To read a file containing such records, one could use:</p>
+<div class="codehilite"><pre><span></span><span class="n">reader</span> <span class="o">=</span> <span class="n">open</span><span class="p">(</span><span class="s">&quot;reads.fastq&quot;</span><span class="p">,</span> <span class="n">FASTQ</span><span class="p">,</span> <span class="n">Seq</span><span class="o">.</span><span class="n">SANGER_QUAL_ENCODING</span><span class="p">)</span>
+<span class="n">seqrec</span> <span class="o">=</span> <span class="n">eltype</span><span class="p">(</span><span class="n">reader</span><span class="p">)()</span>
+<span class="k">while</span> <span class="o">!</span><span class="n">eof</span><span class="p">(</span><span class="n">reader</span><span class="p">)</span>
+    <span class="n">read!</span><span class="p">(</span><span class="n">reader</span><span class="p">,</span> <span class="n">seqrec</span><span class="p">)</span>
     <span class="c"># ... process sequence</span>
 <span class="k">end</span>
 </pre></div>
@@ -408,21 +407,21 @@ tcagTTAAGATGGGAT
 <p><a id='.2bit-1'></a></p>
 <h3 id="2bit">.2bit</h3>
 <ul>
-<li>Parser type: <code>TwoBitParser{T&lt;:IO}</code></li>
+<li>Reader type: <code>TwoBitReader{T&lt;:IO}</code></li>
 <li>Writer type: <code>TwoBitWriter{T&lt;:IO}</code></li>
 <li>Element type: <code>SeqRecord{ReferenceSequence,Vector{UnitRange{Int}}}</code></li>
 </ul>
 <p>.2bit is a binary file format designed for storing a genome consists of multiple chromosomal sequences. The reading speed is often an order of magnitude faster than that of FASTA and the file size is smaller. However, since the .2bit file format is specialized for genomic sequences, it cannot store either RNA or amino acid sequences.</p>
-<p>Like FASTA, the .2bit parser supports random access using an index included in the header section of a .2bit file:</p>
-<div class="codehilite"><pre><span></span><span class="n">parser</span> <span class="o">=</span> <span class="n">open</span><span class="p">(</span><span class="s">&quot;sacCer.2bit&quot;</span><span class="p">,</span> <span class="n">TwoBit</span><span class="p">)</span>  <span class="c"># parse the header and load a random access index</span>
-<span class="n">chrIV</span> <span class="o">=</span> <span class="n">parser</span><span class="p">[</span><span class="s">&quot;chrIV&quot;</span><span class="p">]</span>  <span class="c"># directly read chromosome 4</span>
+<p>Like FASTA, the .2bit reader supports random access using an index included in the header section of a .2bit file:</p>
+<div class="codehilite"><pre><span></span><span class="n">reader</span> <span class="o">=</span> <span class="n">open</span><span class="p">(</span><span class="s">&quot;sacCer.2bit&quot;</span><span class="p">,</span> <span class="n">TwoBit</span><span class="p">)</span>  <span class="c"># read the header and load a random access index</span>
+<span class="n">chrIV</span> <span class="o">=</span> <span class="n">reader</span><span class="p">[</span><span class="s">&quot;chrIV&quot;</span><span class="p">]</span>  <span class="c"># directly read chromosome 4</span>
 </pre></div>
 
 
 <p><a id='BED-1'></a></p>
 <h3 id="bed">BED</h3>
 <ul>
-<li>Parser type: <code>BEDParser</code></li>
+<li>Reader type: <code>BEDReader</code></li>
 <li>Writer type: <code>BEDWriter{T&lt;:IO}</code></li>
 <li>Element type: <code>Interval{BEDMetadata}</code> (alias: <code>BEDInterval</code>)</li>
 </ul>
@@ -438,7 +437,7 @@ chr9    68456943    68486659    NM_001206   0   -
 <p>BigBed is a binary file format for representing genomic annotations and often created from BED files. The bigBed files are indexed to quickly fetch specific regions.</p>
 <p><a id='PDB-1'></a></p>
 <h3 id="pdb">PDB</h3>
-<p>PDB is a text-based file format for representing 3D macromolecular structures. This has different parser interfaces from other file formats. Please consult the <a href="../structure/">Bio.Structure</a> chapter for details.</p></div>
+<p>PDB is a text-based file format for representing 3D macromolecular structures. This has different reader interfaces from other file formats. Please consult the <a href="../structure/">Bio.Structure</a> chapter for details.</p></div>
         
     </div>
 
