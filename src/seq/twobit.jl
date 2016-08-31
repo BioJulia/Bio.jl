@@ -11,9 +11,9 @@ The 2bit file format stores multiple DNA sequences (up to 4 Gbp total) as a
 compact randomly-accessible format.
 See https://genome.ucsc.edu/FAQ/FAQformat.html#format7 for the details.
 """
-immutable TwoBit <: FileFormat end
+immutable TwoBit <: Bio.IO.FileFormat end
 
-type TwoBitReader{T<:IO} <: AbstractReader
+type TwoBitReader{T<:IO} <: Bio.IO.AbstractReader
     # input stream
     input::T
 
@@ -34,16 +34,12 @@ function TwoBitReader(input::IO)
     return TwoBitReader(input, names, offsets, swapped)
 end
 
+function Bio.IO.stream(reader::TwoBitReader)
+    return reader.input
+end
+
 function Base.open(filename::AbstractString, ::Type{TwoBit})
     return TwoBitReader(open(filename))
-end
-
-function Base.close(p::TwoBitReader)
-    close(p.input)
-end
-
-function Base.eof(p::TwoBitReader)
-    return eof(p.input)
 end
 
 function Base.eltype(::Type{TwoBitReader})
@@ -229,7 +225,7 @@ end
 # Writer
 # ------
 
-type TwoBitWriter{T<:IO} <: AbstractWriter
+type TwoBitWriter{T<:IO} <: Bio.IO.AbstractWriter
     # output stream
     output::T
 
@@ -245,6 +241,10 @@ function TwoBitWriter(output::IO, names::AbstractVector)
     write_header(writer)
     write_index(writer)
     return writer
+end
+
+function Bio.IO.stream(writer::TwoBitWriter)
+    return writer.output
 end
 
 function Base.close(writer::TwoBitWriter)

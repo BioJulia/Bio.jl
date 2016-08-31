@@ -11,6 +11,10 @@ type BAMReader <: Bio.IO.AbstractReader
     index::Nullable{BAI}
 end
 
+function Bio.IO.stream(reader::BAMReader)
+    return reader.stream
+end
+
 function Base.show(io::IO, reader::BAMReader)
     println(io, summary(reader), ":")
     println("  filepath: ", reader.filepath)
@@ -35,14 +39,6 @@ function header(reader::BAMReader, fillSQ::Bool=false)
         end
     end
     return reader.header
-end
-
-function Base.eof(reader::BAMReader)
-    return eof(reader.stream)
-end
-
-function Base.close(reader::BAMReader)
-    close(reader.stream)
 end
 
 function Base.seek(reader::BAMReader, voffset::VirtualOffset)

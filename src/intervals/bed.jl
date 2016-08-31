@@ -6,7 +6,7 @@
 # This file is a part of BioJulia.
 # License is MIT: https://github.com/BioJulia/Bio.jl/blob/master/LICENSE.md
 
-immutable BED <: FileFormat end
+immutable BED <: Bio.IO.FileFormat end
 
 """Metadata for BED interval records"""
 type BEDMetadata
@@ -88,7 +88,7 @@ end
 # Reader
 # ------
 
-type BEDReader <: AbstractReader
+type BEDReader <: Bio.IO.AbstractReader
     state::Ragel.State
 
     # intermediate values used during parsing
@@ -103,20 +103,16 @@ type BEDReader <: AbstractReader
     end
 end
 
+function Bio.IO.stream(reader::BEDReader)
+    return reader.state.stream
+end
+
 function Intervals.metadatatype(::BEDReader)
     return BEDMetadata
 end
 
 function Base.eltype(::Type{BEDReader})
     return BEDInterval
-end
-
-function Base.eof(reader::BEDReader)
-    return eof(reader.state.stream)
-end
-
-function Base.close(reader::BEDReader)
-    return close(reader.state.stream)
 end
 
 function Base.open(input::BufferedInputStream, ::Type{BED})
@@ -133,22 +129,16 @@ include("bed-parser.jl")
 # Writer
 # ------
 
-type BEDWriter{T<:IO} <: AbstractWriter
+type BEDWriter{T<:IO} <: Bio.IO.AbstractWriter
     output::T
 
     # number of written additional fields (-1: inferred from the first interval)
     n_fields::Int
 end
 
-function Base.flush(writer::BEDWriter)
-    # TODO: This can be removed on Julia v0.5
-    # (because flush will be defined for IOBuffer).
-    if applicable(flush, writer.output)
-        flush(writer.output)
-    end
+function Bio.IO.stream(writer::BEDWriter)
+    return writer.output
 end
-
-Base.close(writer::BEDWriter) = close(writer.output)
 
 function Base.write(writer::BEDWriter, interval::BEDInterval)
     if writer.n_fields == -1

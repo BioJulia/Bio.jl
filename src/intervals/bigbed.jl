@@ -345,8 +345,8 @@ function Base.write(io::IO, node::BigBedRTreeInternalNode)
     write(io, node.data_offset)
 end
 
-immutable BigBed <: FileFormat end
-immutable BigWig <: FileFormat end
+immutable BigBed <: Bio.IO.FileFormat end
+immutable BigWig <: Bio.IO.FileFormat end
 
 type BigBedData <: IntervalStream{BEDMetadata}
     stream::BufferedInputStream
@@ -366,7 +366,9 @@ type BigBedData <: IntervalStream{BEDMetadata}
     uncompressed_data::Vector{UInt8}
 end
 
-type BigBedDataReader <: AbstractReader
+Base.iteratorsize(::BigBedData) = Base.SizeUnknown()
+
+type BigBedDataReader <: Bio.IO.AbstractReader
     state::Ragel.State
 
     # intermediate values used during parsing
@@ -387,9 +389,11 @@ type BigBedDataReader <: AbstractReader
     end
 end
 
-include("bigbed-parser.jl")
+function Bio.IO.stream(reader::BigBedDataReader)
+    return reader.state.stream
+end
 
-Base.iteratorsize(::BigBedData) = Base.SizeUnknown()
+include("bigbed-parser.jl")
 
 # Open a BigBed file for reading.  Once opened, entries can be read from the
 # file either by iterating over it, or by indexing into it with an interval.

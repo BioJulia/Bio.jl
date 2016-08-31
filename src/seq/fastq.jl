@@ -6,7 +6,7 @@
 # This file is a part of BioJulia.
 # License is MIT: https://github.com/BioJulia/Bio.jl/blob/master/LICENSE.md
 
-immutable FASTQ <: FileFormat end
+immutable FASTQ <: Bio.IO.FileFormat end
 
 """
 Metadata for FASTQ sequence records containing a `description` field,
@@ -79,7 +79,7 @@ end
 # ------
 
 "A type encapsulating the current state of a FASTQ reader"
-type FASTQReader{S<:Sequence} <: AbstractReader
+type FASTQReader{S<:Sequence} <: Bio.IO.AbstractReader
     state::Ragel.State
     seqbuf::BufferedOutputStream{BufferedStreams.EmptyStream}
     qualbuf::BufferedOutputStream{BufferedStreams.EmptyStream}
@@ -103,15 +103,11 @@ type FASTQReader{S<:Sequence} <: AbstractReader
     end
 end
 
+function Bio.IO.stream(reader::FASTQReader)
+    return reader.state.stream
+end
+
 Base.eltype{S}(::Type{FASTQReader{S}}) = FASTQSeqRecord{S}
-
-function Base.eof(reader::FASTQReader)
-    return eof(reader.state.stream)
-end
-
-function Base.close(reader::FASTQReader)
-    close(reader.state.stream)
-end
 
 include("fastq-parser.jl")
 
@@ -119,7 +115,7 @@ include("fastq-parser.jl")
 # Writer
 # ------
 
-type FASTQWriter{T<:IO} <: AbstractWriter
+type FASTQWriter{T<:IO} <: Bio.IO.AbstractWriter
     output::T
 
     # write sequence name and description header at the third line
@@ -129,14 +125,9 @@ type FASTQWriter{T<:IO} <: AbstractWriter
     ascii_offset::Int
 end
 
-function Base.flush(writer::FASTQWriter)
-    # TODO: This can be removed on Julia v0.5
-    # (because flush will be defined for IOBuffer).
-    if applicable(flush, writer.output)
-        flush(writer.output)
-    end
+function Bio.IO.stream(writer::FASTQWriter)
+    return writer.output
 end
-Base.close(writer::FASTQWriter) = close(writer.output)
 
 function Base.write(writer::FASTQWriter, seqrec::FASTQSeqRecord)
     if writer.ascii_offset == typemin(Int)

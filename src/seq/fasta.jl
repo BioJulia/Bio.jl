@@ -6,7 +6,7 @@
 # This file is a part of BioJulia.
 # License is MIT: https://github.com/BioJulia/Bio.jl/blob/master/LICENSE.md
 
-immutable FASTA <: FileFormat end
+immutable FASTA <: Bio.IO.FileFormat end
 
 "Metadata for FASTA sequence records containing just a `description` field"
 type FASTAMetadata
@@ -71,7 +71,7 @@ end
 include("fai.jl")
 
 "A type encapsulating the current state of a FASTA reader"
-type FASTAReader{S<:Sequence} <: AbstractReader
+type FASTAReader{S<:Sequence} <: Bio.IO.AbstractReader
     state::Ragel.State
     seqbuf::BufferedOutputStream{BufferedStreams.EmptyStream}
     index::Nullable{FASTAIndex}
@@ -82,15 +82,11 @@ type FASTAReader{S<:Sequence} <: AbstractReader
     end
 end
 
+function Bio.IO.stream(reader::FASTAReader)
+    return reader.state.stream
+end
+
 Base.eltype{S}(::Type{FASTAReader{S}}) = FASTASeqRecord{S}
-
-function Base.eof(reader::FASTAReader)
-    return eof(reader.state.stream)
-end
-
-function Base.close(reader::FASTAReader)
-    close(reader.state.stream)
-end
 
 function Base.getindex(reader::FASTAReader, name::AbstractString)
     if isnull(reader.index)
@@ -108,21 +104,15 @@ include("fasta-parser.jl")
 # ------
 
 # Serializer for the FASTA file format.
-type FASTAWriter{T<:IO} <: AbstractWriter
+type FASTAWriter{T<:IO} <: Bio.IO.AbstractWriter
     output::T
     # maximum sequence width (no limit when width ≤ 0)
     width::Int
 end
 
-function Base.flush(writer::FASTAWriter)
-    # TODO: This can be removed on Julia v0.5
-    # (because flush will be defined for IOBuffer).
-    if applicable(flush, writer.output)
-        flush(writer.output)
-    end
+function Bio.IO.stream(writer::FASTAWriter)
+    return writer.output
 end
-
-Base.close(writer::FASTAWriter) = close(writer.output)
 
 function Base.write(writer::FASTAWriter, seqrec::FASTASeqRecord)
     output = writer.output

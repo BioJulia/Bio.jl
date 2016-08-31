@@ -172,7 +172,7 @@ Interval{T} objects in sorted order.
 """
 abstract IntervalStream{T}
 
-typealias IntervalStreamOrArray{T} Union{Vector{Interval{T}},IntervalStream{T},AbstractReader}
+typealias IntervalStreamOrArray{T} Union{Vector{Interval{T}},IntervalStream{T},Bio.IO.AbstractReader}
 
 function metadatatype{T}(::IntervalStream{T})
     return T
