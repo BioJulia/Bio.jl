@@ -108,12 +108,10 @@ end
 # ----------------------------
 
 """
-    distance(::Type{EvolutionaryDistance}, a::BioSequence, b::BioSequence)
-
-Compute the genetic distance between two nucleotide sequences of equal length.
+Compute the pairwise genetic distances for a set of aligned nucleotide sequences.
 
 The distance measure to compute is determined by the type provided as the first
-parameter. The second and third parameter provide the two nucleotide sequences.
+parameter. The second parameter provides the set of nucleotide sequences.
 """
 function distance end
 
@@ -127,11 +125,15 @@ This method of distance returns a tuple of the number of mutations of type T
 between sequences and the number of valid
 (i.e. non-ambiguous sites) counted by the function.
 """
-@inline function distance{T<:MutationType,A<:NucleotideAlphabet}(::Type{Count{T}}, seqs::Vector{BioSequence{A}})
+function distance{T<:MutationType,A<:NucleotideAlphabet}(::Type{Count{T}}, seqs::Vector{BioSequence{A}})
     return count_mutations(T, seqs)
 end
 
-@inline function distance{T<:TsTv,A<:NucleotideAlphabet}(::Type{Count{T}}, seqs::Vector{BioSequence{A}})
+function distance{T<:MutationType,N<:Nucleotide}(::Type{Count{T}}, seqs::Matrix{N})
+    return count_mutations(T, seqs)
+end
+
+function distance{T<:TsTv,A<:NucleotideAlphabet}(::Type{Count{T}}, seqs::Vector{BioSequence{A}})
     return count_mutations(TransitionMutation, TransversionMutation, seqs)
 end
 

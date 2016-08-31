@@ -91,7 +91,23 @@ Test if two nucleotides constitute a `TransversionMutation`.
 end
 
 
+"""
+    count_mutations{T<:MutationType,N<:Nucleotide}(::Type{T}, seqs::Matrix{N})
 
+Count the number of mutations between DNA sequences in a pairwise manner.
+
+Different types of mutation can be counted:
+`DifferentMutation`, `TransitionMutation`, `TransversionMutation`.
+
+Returns a tuple of: 1. A vector containing the number of mutations between each,
+possible pair of sequences, and 2. a vector containing the number of sites
+considered (sites with any ambiguity characters are not considered) for each
+possible pair of sequences.
+
+**Note: This method assumes that the sequences are stored in the `Matrix{N}`
+provided as `seqs` in sequence major order i.e. each column of the matrix is one
+complete nucleotide sequence.**
+"""
 function count_mutations{T<:MutationType,N<:Nucleotide}(::Type{T}, seqs::Matrix{N})
     # This method has been written with the aim of improving performance by taking
     # advantage of the memory layout of matrices of nucleotides, as well as
@@ -139,6 +155,22 @@ function count_mutations{T<:MutationType,A<:NucleotideAlphabet}(::Type{T}, seque
     return count_mutations(T, seqs)
 end
 
+"""
+    count_mutations{N<:Nucleotide}(::Type{TransitionMutation}, ::Type{TransversionMutation}, sequences::Matrix{N})
+
+Count the number of `TransitionMutation`s and `TransversionMutation`s in a
+pairwise manner, between each possible pair of sequences.
+
+Returns a tuple of: 1. A vector containing the number of transitions between
+each, possible pair of sequences, and 2. a vector containing the number of
+transversions between each, possible pair of sequences, and 3. a vector
+containing the number of sites considered (sites with any ambiguity characters
+are not considered) for each possible pair of sequences.
+
+**Note: This method assumes that the sequences are stored in the `Matrix{N}`
+provided as `seqs` in sequence major order i.e. each column of the matrix is one
+complete nucleotide sequence.**
+"""
 function count_mutations{A<:Nucleotide}(::Type{TransitionMutation}, ::Type{TransversionMutation}, seqs::Matrix{A})
     # This method has been written with the aim of improving performance by taking
     # advantage of the memory layout of matrices of nucleotides, as well as
