@@ -1157,6 +1157,7 @@ end
             # first record
             rec = BAMRecord()
             read!(reader, rec)
+            @test refname(rec) == "CHROMOSOME_I"
             @test refindex(rec) == 1
             @test position(rec) == 2
             @test seqname(rec) == "SRR065390.14978392"
@@ -1179,6 +1180,10 @@ end
             # iterator
             @test length(collect(open(joinpath(bamdir, "ce#1.bam"), BAM))) == 1
             @test length(collect(open(joinpath(bamdir, "ce#2.bam"), BAM))) == 2
+
+            # IOStream
+            @test length(collect(open(open(joinpath(bamdir, "ce#1.bam")), BAM))) == 1
+            @test length(collect(open(open(joinpath(bamdir, "ce#2.bam")), BAM))) == 2
         end
 
         @testset "Round trip" begin
