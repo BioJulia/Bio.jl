@@ -30,10 +30,8 @@ purine has mutated into another purine, or a pyrimadine has mutated into another
 pyrimadine.
 
 Possible transition mutations are:
-A -> G
-G -> A
-C -> T
-T -> C
+A <-> G
+C <-> T
 """
 immutable TransitionMutation <: MutationType end
 
@@ -42,14 +40,10 @@ immutable TransitionMutation <: MutationType end
 where a purine has mutated into a pyrimadine or vice versa.
 
 Possible transversion mutations are:
-A -> T
-T -> A
-C -> G
-G -> C
-A -> C
-C -> A
-T -> G
-G -> T
+A <-> T
+C <-> G
+A <-> C
+T <-> G
 """
 immutable TransversionMutation <: MutationType end
 
