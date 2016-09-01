@@ -15,7 +15,7 @@ using LightGraphs
 using Bio: Tokenize, Indexers
 using Bio.Seq: Nucleotide, BioSequence, isambiguous
 using Bio.Var: MutationType,
-    DifferentMutation,
+    AnyMutation,
     TransitionMutation,
     TransversionMutation,
     count_mutations
