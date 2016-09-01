@@ -512,7 +512,6 @@ end
 end
 
 
-#= FIXME
 @testset "BigBed" begin
     @testset "BED → BigBed → BED round-trip" begin
         path = Pkg.dir("Bio", "test", "BioFmtSpecimens", "BED")
@@ -526,10 +525,10 @@ end
                 open(BEDReader, joinpath(path, specimen["filename"])))
             out = IOBuffer()
             write(out, BigBed, intervals)
-            bigbed_data = takebuf_array(out)
 
             # BigBed → BED
-            bb = open(bigbed_data, BigBed)
+            seekstart(out)
+            bb = Intervals.BigBedData(out)
             intervals2 = IntervalCollection(bb)
 
             @test intervals == intervals2
@@ -547,7 +546,8 @@ end
         # convert to bigbed in memory
         out = IOBuffer()
         write(out, BigBed, intervals)
-        bb = open(takebuf_array(out), BigBed)
+        seekstart(out)
+        bb = Intervals.BigBedData(out)
 
         # intersection queries
         num_queries = 1000
@@ -560,6 +560,5 @@ end
 
     # TODO: test summary information against output from kent's bigBedSummary
 end
-=#
 
 end # module TestIntervals
