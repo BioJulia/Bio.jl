@@ -24,19 +24,20 @@ function (::Type{SeqRecord{S,T}}){S,T}()
     return SeqRecord{S,T}(StringField(), S(), T())
 end
 
+function seqname(rec::SeqRecord)
+    return rec.name
+end
+
+function sequence(rec::SeqRecord)
+    return rec.seq
+end
+
+function metadata(rec::SeqRecord)
+    return rec.metadata
+end
+
 function seqtype{S,T}(::Type{SeqRecord{S,T}})
     return S
-end
-
-# Degelgate sequence operations
-"Return a `SeqRecord` holding just the nucleotide at position `i`"
-function Base.getindex(seqrec::SeqRecord, i::Integer)
-    return SeqRecord(seqreq.name, seqrec.seq[i], seqreq.metadata)
-end
-
-"Return a `SeqRecord` holding the specified subsequence"
-function Base.getindex(seqrec::SeqRecord, r::UnitRange)
-    return SeqRecord(seqrec.name, seqrec.seq[r], seqrec.metadata)
 end
 
 function Base.:(==){T<:SeqRecord}(a::T, b::T)
@@ -44,9 +45,17 @@ function Base.:(==){T<:SeqRecord}(a::T, b::T)
 end
 
 function Base.copy{T <: SeqRecord}(seqrec::T)
-    return T(copy(seqrec.name), copy(seqrec.seq), copy(seqrec.metadata))
+    if seqrec.metadata == nothing
+        # no copy method for the Void type
+        return T(copy(seqrec.name), copy(seqrec.seq), nothing)
+    else
+        return T(copy(seqrec.name), copy(seqrec.seq), copy(seqrec.metadata))
+    end
 end
 
-typealias DNASeqRecord{T}       SeqRecord{DNASequence, T}
-typealias RNASeqRecord{T}       SeqRecord{RNASequence, T}
-typealias AminoAcidSeqRecord{T} SeqRecord{AminoAcidSequence, T}
+function Base.show(io::IO, rec::SeqRecord)
+    println(io, summary(rec), ':')
+    println(io, "  name: ", seqname(rec))
+    println(io, "  sequence: ", string_compact(sequence(rec)))
+      print(io, "  metadata: ", metadata(rec))
+end

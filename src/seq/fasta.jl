@@ -33,8 +33,8 @@ Create a sequence record for the FASTA file format.
 typealias FASTASeqRecord{S} SeqRecord{S,FASTAMetadata}
 
 function (::Type{FASTASeqRecord})(name::AbstractString,
-                                          seq::Sequence,
-                                          description::AbstractString="")
+                                  seq::Sequence,
+                                  description::AbstractString="")
     return SeqRecord(name, seq, FASTAMetadata(description))
 end
 
@@ -138,33 +138,4 @@ function Base.write(writer::FASTAWriter, seqrec::FASTASeqRecord)
     n += write(output, '\n')
 
     return n
-end
-
-function Base.show(io::IO, seqrec::FASTASeqRecord)
-    print(io, ">", seqrec.name)
-    if !isempty(seqrec.metadata.description)
-        print(io, " ", seqrec.metadata.description)
-    end
-    print(io, '\n')
-    print(io, seqrec.seq)
-end
-
-# This function is almost deprecated in favor of FASTAWriter.
-function Base.write{T}(io::IO, seqrec::SeqRecord{T,FASTAMetadata})
-    write(io, ">", seqrec.name)
-    if !isempty(seqrec.metadata.description)
-        write(io, " ", seqrec.metadata.description)
-    end
-    write(io, "\n")
-    maxchars = 79
-    counter = 1
-    len = length(seqrec.seq)
-    for nt in seqrec.seq
-        print(io, nt)
-        if counter % maxchars == 0 && counter < len
-            write(io, "\n")
-        end
-        counter += 1
-    end
-    write(io, "\n")
 end

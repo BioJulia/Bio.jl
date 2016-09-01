@@ -249,4 +249,10 @@ function Base.showcompact(io::IO, seq::Sequence)
     end
 end
 
+function string_compact(seq::Sequence)
+    buf = IOBuffer()
+    showcompact(buf, seq)
+    return takebuf_string(buf)
+end
+
 Base.parse{S<:Sequence}(::Type{S}, str::AbstractString) = convert(S, str)
