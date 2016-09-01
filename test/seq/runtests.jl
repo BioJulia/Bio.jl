@@ -107,7 +107,6 @@ function random_interval(minstart, maxstop)
     return start:rand(start:maxstop)
 end
 
-#=
 @testset "Nucleotides" begin
     @testset "Conversions" begin
         @testset "UInt8" begin
@@ -2861,7 +2860,6 @@ end
     @test rec != rec3
     @test rec == copy(rec)
 end
-=#
 
 @testset "Parsing" begin
     @testset "FASTA" begin
@@ -2891,10 +2889,6 @@ end
                 end
                 return
             end
-
-            # Reading from a memory mapped file
-            #for seqrec in open(filename, FASTA, memory_map=true)
-            #end
 
             # in-place parsing
             stream = open(FASTAReader, filename)
@@ -3055,10 +3049,6 @@ end
                 end
                 return
             end
-
-            # Reading from a memory mapped file
-            #for seqrec in open(filename, FASTQ, Seq.SANGER_QUAL_ENCODING, memory_map=true)
-            #end
 
             # in-place parsing
             stream = open(FASTQReader, filename, qualenc)

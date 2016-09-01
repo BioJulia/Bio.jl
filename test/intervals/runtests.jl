@@ -403,14 +403,6 @@ end
             for interval in open(BEDReader, filename)
             end
 
-            # Reading from a memory mapped file
-            #for interval in open(filename, BED, memory_map=true)
-            #end
-
-            # Reading from a regular file
-            #for interval in open(filename, BED, memory_map=false)
-            #end
-
             # in-place parsing
             stream = open(BEDReader, filename)
             entry = eltype(stream)()
