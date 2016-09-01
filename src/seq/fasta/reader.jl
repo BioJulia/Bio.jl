@@ -1,10 +1,34 @@
-# Prediction
-# ==========
-#
-# Sequence type predictor.
-#
-# This file is a part of BioJulia.
-# License is MIT: https://github.com/BioJulia/Bio.jl/blob/master/LICENSE.md
+# FASTA Reader
+# ============
+
+"A type encapsulating the current state of a FASTA reader"
+type FASTAReader{S<:Sequence} <: Bio.IO.AbstractReader
+    state::Ragel.State
+    seqbuf::BufferedOutputStream{BufferedStreams.EmptyStream}
+    index::Nullable{FASTAIndex}
+
+    function FASTAReader(input::BufferedInputStream, index=Nullable())
+        return new(Ragel.State(fastaparser_start, input),
+                   BufferedOutputStream(), index)
+    end
+end
+
+function Bio.IO.stream(reader::FASTAReader)
+    return reader.state.stream
+end
+
+function Base.eltype{S}(::Type{FASTAReader{S}})
+    return FASTASeqRecord{S}
+end
+
+function Base.getindex(reader::FASTAReader, name::AbstractString)
+    if isnull(reader.index)
+        error("no index")
+    end
+    seekrecord(reader.state.stream, get(reader.index), name)
+    reader.state.cs = fastaparser_start
+    return read(reader)
+end
 
 # Predict sequence type based on character frequencies in `seq[start:stop]`.
 function predict(seq::Vector{UInt8}, start, stop)

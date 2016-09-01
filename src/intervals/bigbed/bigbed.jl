@@ -393,7 +393,7 @@ function Bio.IO.stream(reader::BigBedDataReader)
     return reader.state.stream
 end
 
-include("bigbed-parser.jl")
+include("parser.jl")
 
 # Open a BigBed file for reading.  Once opened, entries can be read from the
 # file either by iterating over it, or by indexing into it with an interval.
