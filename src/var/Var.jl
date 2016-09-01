@@ -14,7 +14,7 @@ export
 
     # Mutation counting
     MutationType,
-    DifferentMutation,
+    AnyMutation,
     TransitionMutation,
     TransversionMutation,
 

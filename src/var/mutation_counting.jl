@@ -17,12 +17,12 @@
 abstract MutationType
 
 """
-`DifferentMutation` describes a site where two aligned nucleotides are not the
+`AnyMutation` describes a site where two aligned nucleotides are not the
 same.
 
 Every kind of difference is counted.
 """
-immutable DifferentMutation <: MutationType end
+immutable AnyMutation <: MutationType end
 
 """
 `TransitionMutation` describes a situation with two aligned nucleotides, where a
@@ -64,11 +64,11 @@ A, T, G, or C, then this function returns true.
 end
 
 """
-    is_mutation{T<:Nucleotide}(::Type{DifferentMutation}, a::T, b::T)
+    is_mutation{T<:Nucleotide}(::Type{AnyMutation}, a::T, b::T)
 
-Test if two nucleotides constitute a `DifferentMutation`.
+Test if two nucleotides constitute a `AnyMutation`.
 """
-@inline function is_mutation{T<:Nucleotide}(::Type{DifferentMutation}, a::T, b::T)
+@inline function is_mutation{T<:Nucleotide}(::Type{AnyMutation}, a::T, b::T)
     return a != b
 end
 
@@ -97,7 +97,7 @@ end
 Count the number of mutations between DNA sequences in a pairwise manner.
 
 Different types of mutation can be counted:
-`DifferentMutation`, `TransitionMutation`, `TransversionMutation`.
+`AnyMutation`, `TransitionMutation`, `TransversionMutation`.
 
 Returns a tuple of: 1. A vector containing the number of mutations between each,
 possible pair of sequences, and 2. a vector containing the number of sites
@@ -143,7 +143,7 @@ end
 Count the number of mutations between DNA sequences in a pairwise manner.
 
 Different types of mutation can be counted:
-`DifferentMutation`, `TransitionMutation`, `TransversionMutation`.
+`AnyMutation`, `TransitionMutation`, `TransversionMutation`.
 
 Returns a tuple of: 1. A vector containing the number of mutations between each,
 possible pair of sequences, and 2. a vector containing the number of sites

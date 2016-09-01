@@ -196,7 +196,7 @@ This method of distance returns a tuple of the expected JukesCantor69 distance
 estimate, and the computed variance.
 """
 function distance{A<:NucleotideAlphabet}(::Type{JukesCantor69}, seqs::Vector{BioSequence{A}})
-    p, l = distance(Proportion{DifferentMutation}, seqs)
+    p, l = distance(Proportion{AnyMutation}, seqs)
     D = Vector{Float64}(length(p))
     V = Vector{Float64}(length(p))
     @inbounds for i in 1:length(p)
@@ -217,7 +217,7 @@ provided as `seqs` in sequence major order i.e. each column of the matrix is one
 complete nucleotide sequence.**
 """
 function distance{N<:Nucleotide}(::Type{JukesCantor69}, seqs::Matrix{N})
-    p, l = distance(Proportion{DifferentMutation}, seqs)
+    p, l = distance(Proportion{AnyMutation}, seqs)
     D = Vector{Float64}(length(p))
     V = Vector{Float64}(length(p))
     @inbounds for i in 1:length(p)

@@ -19,7 +19,7 @@ using Bio.Var
 
     rnas = [rna"AUUG-ACCUGGNUUUCCGAA", rna"A-ACAGAGUAUACRGUCGUC"]
 
-    @test count_mutations(DifferentMutation, dnas) == count_mutations(DifferentMutation, rnas) == ([12], [16])
+    @test count_mutations(AnyMutation, dnas) == count_mutations(AnyMutation, rnas) == ([12], [16])
     @test count_mutations(TransitionMutation, dnas) == count_mutations(TransitionMutation, rnas) == ([4], [16])
     @test count_mutations(TransversionMutation, dnas) == count_mutations(TransversionMutation, rnas) == ([8], [16])
     @test count_mutations(TransitionMutation, TransversionMutation, dnas) == count_mutations(TransitionMutation, TransversionMutation, rnas) == ([4], [8], [16])
@@ -33,21 +33,21 @@ end
 
     dnas2 = [dna"attgaacctggntttccgaa", dna"atacagagtatacrgtcgtc"]
 
-    @test distance(Count{DifferentMutation}, dnas1) == ([12], [16])
+    @test distance(Count{AnyMutation}, dnas1) == ([12], [16])
     @test distance(Count{TransitionMutation}, dnas1) == ([4], [16])
     @test distance(Count{TransversionMutation}, dnas1) == ([8], [16])
     @test distance(Count{Kimura80}, dnas1) == ([4], [8], [16])
 
-    @test distance(Count{DifferentMutation}, dnas2) == ([12], [18])
+    @test distance(Count{AnyMutation}, dnas2) == ([12], [18])
     @test distance(Count{TransitionMutation}, dnas2) == ([4], [18])
     @test distance(Count{TransversionMutation}, dnas2) == ([8], [18])
     @test distance(Count{Kimura80}, dnas2) == ([4], [8], [18])
 
-    @test distance(Proportion{DifferentMutation}, dnas1) == ([(12 / 16)], [16])
+    @test distance(Proportion{AnyMutation}, dnas1) == ([(12 / 16)], [16])
     @test distance(Proportion{TransitionMutation}, dnas1) == ([(4 / 16)], [16])
     @test distance(Proportion{TransversionMutation}, dnas1) == ([(8 / 16)], [16])
 
-    @test distance(Proportion{DifferentMutation}, dnas2) == ([(12 / 18)], [18])
+    @test distance(Proportion{AnyMutation}, dnas2) == ([(12 / 18)], [18])
     @test distance(Proportion{TransitionMutation}, dnas2) == ([(4 / 18)], [18])
     @test distance(Proportion{TransversionMutation}, dnas2) == ([(8 / 18)], [18])
 
