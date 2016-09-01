@@ -20,6 +20,7 @@ export
     coverage,
     isoverlapping,
     seqname,
+    metadata,
     strand,
     BED,
     BEDMetadata,
@@ -39,7 +40,8 @@ using
     IntervalTrees,
     Libz,
     Bio.Ragel,
-    Bio.StringFields
+    Bio.StringFields,
+    Bio.Seq
 
 using Base.Collections:
     heappush!,

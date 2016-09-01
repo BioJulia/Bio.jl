@@ -81,7 +81,7 @@ function ismapped(rec::SAMRecord)
     return rec.pos != 0
 end
 
-function Bio.Intervals.seqname(rec::SAMRecord)
+function Bio.Seq.seqname(rec::SAMRecord)
     return rec.name
 end
 
@@ -129,7 +129,7 @@ function alignment(rec::SAMRecord)
     end
 end
 
-function sequence(rec::SAMRecord)
+function Bio.Seq.sequence(rec::SAMRecord)
     return rec.seq
 end
 

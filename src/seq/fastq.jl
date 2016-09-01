@@ -200,6 +200,7 @@ function Base.show(io::IO, seqrec::FASTQSeqRecord)
         end
     end
     write(io, '\n')
+    return
 end
 
 function Base.write(io::IO, seqrec::FASTQSeqRecord;

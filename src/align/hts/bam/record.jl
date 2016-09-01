@@ -184,12 +184,7 @@ function templatelength(rec::BAMRecord)
     return rec.tlen
 end
 
-"""
-    seqname(rec::BAMRecord)
-
-Return the read name of the alignment `rec`.
-"""
-function Bio.Intervals.seqname(rec::BAMRecord)
+function Bio.Seq.seqname(rec::BAMRecord)
     # drop the last NUL character
     return unsafe_string(pointer(rec.data), max(seqname_length(rec) - 1, 0))
 end
@@ -254,12 +249,7 @@ function alignment(rec::BAMRecord)
     return Alignment(anchors)
 end
 
-"""
-    sequence(rec::BAMRecord)
-
-Return a DNA sequence of the alignment `rec`.
-"""
-function sequence(rec::BAMRecord)
+function Bio.Seq.sequence(rec::BAMRecord)
     seqlen = sequence_length(rec)
     data = Vector{UInt64}(cld(seqlen, 16))
     src::Ptr{UInt64} = pointer(rec.data, seqname_length(rec) + n_cigar_op(rec) * 4 + 1)

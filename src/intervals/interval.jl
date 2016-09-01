@@ -39,8 +39,17 @@ function Base.copy{T}(interval::Interval{T})
                        interval.strand, copy(interval.metadata))
 end
 
-seqname(i::Interval) = i.seqname
-strand(i::Interval) = i.strand
+function Bio.Seq.seqname(i::Interval)
+    return i.seqname
+end
+
+function Bio.Seq.metadata(i::Interval)
+    return i.metadata
+end
+
+function strand(i::Interval)
+    return i.strand
+end
 
 IntervalTrees.first(i::Interval) = i.first
 IntervalTrees.last(i::Interval) = i.last

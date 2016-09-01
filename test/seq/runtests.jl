@@ -2845,6 +2845,22 @@ end
     end
 end
 
+@testset "SeqRecord" begin
+    rec = SeqRecord("seq1", dna"ACGTN")
+    @test isa(rec, SeqRecord{DNASequence,Void})
+    @test seqname(rec) == "seq1"
+    @test sequence(rec) == dna"ACGTN"
+    @test metadata(rec) == nothing
+
+    rec1 = SeqRecord("seq1", dna"ACGTN")
+    rec2 = SeqRecord("seq2", dna"ACGTN")
+    rec3 = SeqRecord("seq1", dna"GGAGT")
+    @test rec == rec1
+    @test rec != rec2
+    @test rec != rec3
+    @test rec == copy(rec)
+end
+
 @testset "Parsing" begin
     @testset "FASTA" begin
         output = IOBuffer()
