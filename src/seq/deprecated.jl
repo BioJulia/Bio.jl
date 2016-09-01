@@ -118,28 +118,12 @@ immutable FASTA <: Bio.IO.FileFormat end
 immutable FASTQ <: Bio.IO.FileFormat end
 immutable TwoBit <: Bio.IO.FileFormat end
 
-function Base.open(filepath::AbstractString, ::Type{FASTA})
-    input = BufferedInputStream(open(filepath))
-    indexpath = filepath * ".fai"
-    if isfile(indexpath)
-        return FASTAReader{BioSequence}(input, FASTAIndex(indexpath))
-    else
-        return FASTAReader{BioSequence}(input)
-    end
+export FASTA, FASTQ, TwoBit
+
+function Base.open{F<:Union{FASTA,FASTQ,TwoBit}}(::AbstractString, ::Type{F})
+    error("open(filepath, format) syntax has been removed. Please use open(reader|writer, filepath) instead.")
 end
 
-function Base.open(filepath::AbstractString, mode::AbstractString, ::Type{FASTA};
-                   width::Integer=60)
-    io = open(filepath, mode)
-    if mode[1] == 'r'
-        return open(BufferedInputStream(io), FASTA)
-    elseif mode[1] ∈ ('w', 'a')
-        return FASTAWriter(io, width)
-    end
-    error("invalid open mode")
-end
-
-function Base.open{S}(input::BufferedInputStream, ::Type{FASTA},
-                      ::Type{S}=BioSequence)
-    return FASTAReader{S}(input)
+function Base.open{F<:Union{FASTA,FASTQ,TwoBit}}(::AbstractString, ::AbstractString, ::Type{F})
+    error("open(filepath, mode, format) syntax has been removed. Please use open(reader|writer, filepath) instead.")
 end

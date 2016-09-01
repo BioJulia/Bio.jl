@@ -1,19 +1,13 @@
-
 immutable BED <: Bio.IO.FileFormat end
+immutable BigBed <: Bio.IO.FileFormat end
+immutable BigWig <: Bio.IO.FileFormat end
 
 export BED
 
-function Base.open(filepath::AbstractString, mode::AbstractString, ::Type{BED};
-                   n_fields::Integer=-1)
-    io = open(filepath, mode)
-    if mode[1] == 'r'
-        return open(BufferedInputStream(io), BED)
-    elseif mode[1] ∈ ('w', 'o')
-        return BEDWriter(io, n_fields)
-    end
-    error("invalid open mode")
+function Base.open{F<:Union{BED,BigBed}}(::AbstractString, ::Type{F})
+    error("open(filepath, format) syntax has been removed. Please use open(reader|writer, filepath) instead.")
 end
 
-function Base.open(input::BufferedInputStream, ::Type{BED})
-    return BEDReader(input)
+function Base.open{F<:Union{BED}}(::AbstractString, ::AbstractString, ::Type{F})
+    error("open(filepath, mode, format) syntax has been removed. Please use open(reader|writer, filepath) instead.")
 end
