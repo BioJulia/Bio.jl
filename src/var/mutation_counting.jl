@@ -106,18 +106,18 @@ function count_mutations{T<:MutationType,N<:Nucleotide}(::Type{T}, seqs::Matrix{
     # This method has been written with the aim of improving performance by taking
     # advantage of the memory layout of matrices of nucleotides, as well as
     # getting julia to emit simd code for the innermost loop.
-    S, N = size(seqs)
-    c = binomial(N, 2)
+    seqsize, nseqs = size(seqs)
+    c = binomial(nseqs, 2)
     lengths = Vector{Int}(c)
     nmutations = Vector{Int}(c)
     target = 1
-    @inbounds for i1 in 1:N
-        for i2 in i1+1:N
-            L = S
+    @inbounds for i1 in 1:nseqs
+        for i2 in i1+1:nseqs
+            L = seqsize
             Nd = 0
-            for s in 1:S
-                s1 = seqs[(i1 - 1) * S + s]
-                s2 = seqs[(i2 - 1) * S + s]
+            for s in 1:seqsize
+                s1 = seqs[(i1 - 1) * seqsize + s]
+                s2 = seqs[(i2 - 1) * seqsize + s]
                 isamb = is_ambiguous_strict(s1, s2)
                 ismut = is_mutation(T, s1, s2)
                 L -= isamb
@@ -169,20 +169,20 @@ function count_mutations{A<:Nucleotide}(::Type{TransitionMutation}, ::Type{Trans
     # This method has been written with the aim of improving performance by taking
     # advantage of the memory layout of matrices of nucleotides, as well as
     # getting julia to emit simd code for the innermost loop.
-    S, N = size(seqs)
-    c = binomial(N, 2)
+    seqsize, nseqs = size(seqs)
+    c = binomial(nseqs, 2)
     lengths = Vector{Int}(c)
     ntransition = Vector{Int}(c)
     ntransversion = Vector{Int}(c)
     target = 1
-    @inbounds for i1 in 1:N
-        for i2 in i1+1:N
-            L = S
+    @inbounds for i1 in 1:nseqs
+        for i2 in i1+1:nseqs
+            L = seqsize
             Ns = 0
             Nv = 0
-            for s in 1:S
-                s1 = seqs[(i1 - 1) * S + s]
-                s2 = seqs[(i2 - 1) * S + s]
+            for s in 1:seqsize
+                s1 = seqs[(i1 - 1) * seqsize + s]
+                s2 = seqs[(i2 - 1) * seqsize + s]
                 isamb = is_ambiguous_strict(s1, s2)
                 isdiff = s1 != s2
                 istrans = (ispurine(s1) & ispurine(s2)) | (ispyrimidine(s1) & ispyrimidine(s2))
