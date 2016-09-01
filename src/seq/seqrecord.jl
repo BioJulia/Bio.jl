@@ -24,14 +24,29 @@ function (::Type{SeqRecord{S,T}}){S,T}()
     return SeqRecord{S,T}(StringField(), S(), T())
 end
 
+"""
+    seqname(record)
+
+Return the sequence name of `record`.
+"""
 function seqname(rec::SeqRecord)
     return rec.name
 end
 
+"""
+    sequence(record)
+
+Return the sequence of `record`.
+"""
 function sequence(rec::SeqRecord)
     return rec.seq
 end
 
+"""
+    metadata(record)
+
+Return the metadata of `record`.
+"""
 function metadata(rec::SeqRecord)
     return rec.metadata
 end

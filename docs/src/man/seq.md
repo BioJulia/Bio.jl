@@ -962,6 +962,13 @@ For example, if a record is read from a FASTA file, metadata contains the
 description field. If from a FASTQ file, a quality scores assigned to base calls
 during sequencing.
 
+The following accessors are defined for the `SeqRecord` type:
+```@docs
+seqname
+sequence
+metadata
+```
+
 
 ## Sequence demultiplexing
 
