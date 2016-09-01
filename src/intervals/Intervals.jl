@@ -11,6 +11,8 @@ module Intervals
 export
     Strand,
     Interval,
+    leftposition,
+    rightposition,
     IntervalCollection,
     IntervalStream,
     STRAND_NA,

@@ -139,7 +139,7 @@ Return the leftmost mapping position of `rec`.
 
 The index is 1-based and will be 0 for an alignment without mapping position.
 """
-function leftposition(rec::BAMRecord)
+function Bio.Intervals.leftposition(rec::BAMRecord)
     return rec.pos + 1
 end
 
@@ -148,7 +148,7 @@ end
 
 Return the rightmost mapping position of `rec`.
 """
-function rightposition(rec::BAMRecord)
+function Bio.Intervals.rightposition(rec::BAMRecord)
     return Int32(leftposition(rec) + alignment_length(rec) - 1)
 end
 
