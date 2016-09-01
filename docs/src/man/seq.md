@@ -317,7 +317,7 @@ TTANC
 Using `convert`, these operations are reversible: sequences can be converted to
 strings or arrays:
 ```jlcon
-julia> convert(ASCIIString, dna"TTANGTA")
+julia> convert(String, dna"TTANGTA")
 "TTANGTA"
 
 julia> convert(Vector{DNANucleotide}, dna"TTANGTA")

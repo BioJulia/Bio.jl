@@ -220,7 +220,7 @@ cost of substitution, insertion, and deletion:
 julia> costmodel = CostModel(match=0, mismatch=1, insertion=1, deletion=1);
 
 julia> pairalign(EditDistance(), "abcd", "adcde", costmodel)
-Bio.Align.PairwiseAlignmentResult{Int64,ASCIIString,ASCIIString}:
+Bio.Align.PairwiseAlignmentResult{Int64,String,String}:
   distance: 2
   seq: 1 abcd- 4
          | ||
