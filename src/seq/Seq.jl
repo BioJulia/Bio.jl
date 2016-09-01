@@ -199,15 +199,13 @@ include("refseq.jl")
 include("eachkmer.jl")
 include("composition.jl")
 include("geneticcode.jl")
-include("quality.jl")
 include("seqrecord.jl")
 include("demultiplexer.jl")
 
 # Parsing file types
-include("predict.jl")
-include("fasta.jl")
-include("fastq.jl")
-include("twobit.jl")
+include("fasta/fasta.jl")
+include("fastq/fastq.jl")
+include("twobit/twobit.jl")
 
 include("search/exact.jl")
 include("search/approx.jl")

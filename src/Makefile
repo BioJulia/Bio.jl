@@ -1,9 +1,14 @@
 RAGEL=ragel
+PARSERS=seq/fasta/parser.jl \
+		seq/fastq/parser.jl \
+		intervals/bed/parser.jl \
+		intervals/bigbed/parser.jl \
+		align/hts/sam/parser.jl
 
-all: parser.jl
+all: $(PARSERS)
 
 clean:
-	rm -f parser.jl
+	rm -f $(PARSERS)
 
 %.jl: %.rl
 	$(RAGEL) -Y --goto-backend -G2 $< -o $@.tmp
@@ -12,7 +17,7 @@ clean:
 	rm $@.tmp
 
 %.dot: %.rl
-	ragel -p -V $< > $@
+	$(RAGEL) -p -V $< > $@
 
 %.svg: %.dot
 	dot -Tsvg < $< > $@
