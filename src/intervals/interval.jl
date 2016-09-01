@@ -51,6 +51,24 @@ function strand(i::Interval)
     return i.strand
 end
 
+"""
+    leftposition(i::Interval)
+
+Return the leftmost position of `i`.
+"""
+function leftposition(i::Interval)
+    return i.first
+end
+
+"""
+    rightposition(i::Interval)
+
+Return the rightmost position of `i`.
+"""
+function rightposition(i::Interval)
+    return i.last
+end
+
 IntervalTrees.first(i::Interval) = i.first
 IntervalTrees.last(i::Interval) = i.last
 
@@ -109,7 +127,16 @@ function isoverlapping{S, T}(a::Interval{S}, b::Interval{T})
 end
 
 function Base.show(io::IO, i::Interval)
-    print(io, i.seqname, ":", i.first, "-", i.last, "    ", i.strand, "    ", i.metadata)
+    if get(io, :compact, false)
+        print(io, i.seqname, ":", i.first, "-", i.last, "  ", i.strand, "  ", i.metadata)
+    else
+        println(io, summary(i), ':')
+        println(io, "  sequence name: ", i.seqname)
+        println(io, "  leftmost position: ", i.first)
+        println(io, "  rightmost position: ", i.last)
+        println(io, "  strand: ", i.strand)
+          print(io, "  metadata: ", i.metadata)
+    end
 end
 
 """

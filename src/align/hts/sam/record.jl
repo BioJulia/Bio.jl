@@ -97,11 +97,11 @@ function nextrefname(rec::SAMRecord)
     return rec.next_refname
 end
 
-function leftposition(rec::SAMRecord)
+function Bio.Intervals.leftposition(rec::SAMRecord)
     return rec.pos
 end
 
-function rightposition(rec::SAMRecord)
+function Bio.Intervals.rightposition(rec::SAMRecord)
     return leftposition(rec) + alignment_length(rec) - 1
 end
 

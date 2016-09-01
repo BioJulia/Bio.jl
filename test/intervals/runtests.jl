@@ -165,8 +165,8 @@ end
     @testset "Constructor" begin
         i = Interval("chr1", 10, 20)
         @test seqname(i) == "chr1"
-        @test first(i) == 10
-        @test last(i) == 20
+        @test leftposition(i) == 10
+        @test rightposition(i) == 20
         @test strand(i) == STRAND_BOTH
 
         i1 = Interval("chr1", 10, 20, '+')
