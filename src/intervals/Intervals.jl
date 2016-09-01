@@ -24,7 +24,8 @@ export
     seqname,
     metadata,
     strand,
-    BED,
+    BEDReader,
+    BEDWriter,
     BEDMetadata,
     BEDInterval,
     BigBed,
@@ -61,5 +62,7 @@ include("index/index.jl")
 # Parsing file types
 include("bed/bed.jl")
 include("bigbed/bigbed.jl")
+
+include("deprecated.jl")
 
 end # module Intervals

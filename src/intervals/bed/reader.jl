@@ -28,8 +28,8 @@ function Base.eltype(::Type{BEDReader})
     return BEDInterval
 end
 
-function Base.open(input::BufferedInputStream, ::Type{BED})
-    return BEDReader(input)
+function BEDReader(input::IO)
+    return BEDReader(BufferedInputStream(input))
 end
 
 function IntervalCollection(interval_stream::BEDReader)

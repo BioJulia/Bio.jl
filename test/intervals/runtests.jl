@@ -396,36 +396,42 @@ end
 
         function check_bed_parse(filename)
             # Reading from a stream
-            for interval in open(open(filename), BED)
-            end
-
-            # Reading from a memory mapped file
-            for interval in open(filename, BED, memory_map=true)
+            for interval in BEDReader(open(filename))
             end
 
             # Reading from a regular file
-            for interval in open(filename, BED, memory_map=false)
+            for interval in open(BEDReader, filename)
             end
 
+            # Reading from a memory mapped file
+            #for interval in open(filename, BED, memory_map=true)
+            #end
+
+            # Reading from a regular file
+            #for interval in open(filename, BED, memory_map=false)
+            #end
+
             # in-place parsing
-            stream = open(filename, BED)
+            stream = open(BEDReader, filename)
             entry = eltype(stream)()
             while !eof(stream)
                 read!(stream, entry)
             end
+            close(stream)
 
             # Check round trip
             output = IOBuffer()
-            writer = Intervals.BEDWriter(output, -1)
+            writer = BEDWriter(output)
             expected_entries = Any[]
-            for interval in open(filename, BED)
+            for interval in open(BEDReader, filename)
                 write(writer, interval)
                 push!(expected_entries, interval)
             end
             flush(writer)
 
+            seekstart(output)
             read_entries = Any[]
-            for interval in open(takebuf_array(output), BED)
+            for interval in BEDReader(output)
                 push!(read_entries, interval)
             end
 
