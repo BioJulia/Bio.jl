@@ -10,6 +10,19 @@ type BAMReader <: Bio.IO.AbstractReader
     index::Nullable{BAI}
 end
 
+function BAMReader(input::IO; index=nothing)
+    if isa(index, AbstractString)
+        index = BAI(index)
+    else
+        if index != nothing
+            error("unrecognizable index argument")
+        end
+    end
+    reader = init_bam_reader(input)
+    reader.index = index
+    return reader
+end
+
 function Bio.IO.stream(reader::BAMReader)
     return reader.stream
 end
@@ -47,16 +60,8 @@ function Base.seekstart(reader::BAMReader)
     seek(reader.stream, reader.start_offset)
 end
 
-function Base.open(filename::AbstractString, ::Type{BAM})
-    reader = open(open(filename), BAM)
-    indexpath = filename * ".bai"
-    if isfile(indexpath)
-        reader.index = BAI(indexpath)
-    end
-    return reader
-end
-
-function Base.open(input::IO, ::Type{BAM})
+# Initialize a BAM reader by reading the header section.
+function init_bam_reader(input::IO)
     stream = BGZFStream(input)
 
     # magic bytes

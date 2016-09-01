@@ -1053,8 +1053,8 @@ end
         end
 
         @testset "Reader" begin
-            reader = open(joinpath(samdir, "ce#1.sam"), SAM)
-            @test isa(reader, Align.SAMReader)
+            reader = open(SAMReader, joinpath(samdir, "ce#1.sam"))
+            @test isa(reader, SAMReader)
 
             # header
             h = header(reader)
@@ -1087,8 +1087,12 @@ end
             close(reader)
 
             # iterator
-            @test length(collect(open(joinpath(samdir, "ce#1.sam"), SAM))) == 1
-            @test length(collect(open(joinpath(samdir, "ce#2.sam"), SAM))) == 2
+            @test length(collect(open(SAMReader, joinpath(samdir, "ce#1.sam")))) == 1
+            @test length(collect(open(SAMReader, joinpath(samdir, "ce#2.sam")))) == 2
+
+            # IOStream
+            @test length(collect(SAMReader(open(joinpath(samdir, "ce#1.sam"))))) == 1
+            @test length(collect(SAMReader(open(joinpath(samdir, "ce#2.sam"))))) == 2
         end
 
         @testset "Round trip" begin
@@ -1096,8 +1100,8 @@ end
                 filepath = joinpath(samdir, specimen["filename"])
                 mktemp() do path, io
                     # copy
-                    reader = open(filepath, SAM)
-                    writer = Align.SAMWriter(io)
+                    reader = open(SAMReader, filepath)
+                    writer = SAMWriter(io)
                     write(writer, header(reader))
                     records = SAMRecord[]
                     for rec in reader
@@ -1108,7 +1112,7 @@ end
                     close(writer)
 
                     # read again
-                    reader = open(path, SAM)
+                    reader = open(SAMReader, path)
                     @test collect(reader) == records
                     close(reader)
                 end
@@ -1156,8 +1160,8 @@ end
         end
 
         @testset "Reader" begin
-            reader = open(joinpath(bamdir, "ce#1.bam"), BAM)
-            @test isa(reader, Align.BAMReader)
+            reader = open(BAMReader, joinpath(bamdir, "ce#1.bam"))
+            @test isa(reader, BAMReader)
 
             # header
             h = header(reader)
@@ -1193,12 +1197,12 @@ end
             close(reader)
 
             # iterator
-            @test length(collect(open(joinpath(bamdir, "ce#1.bam"), BAM))) == 1
-            @test length(collect(open(joinpath(bamdir, "ce#2.bam"), BAM))) == 2
+            @test length(collect(open(BAMReader, joinpath(bamdir, "ce#1.bam")))) == 1
+            @test length(collect(open(BAMReader, joinpath(bamdir, "ce#2.bam")))) == 2
 
             # IOStream
-            @test length(collect(open(open(joinpath(bamdir, "ce#1.bam")), BAM))) == 1
-            @test length(collect(open(open(joinpath(bamdir, "ce#2.bam")), BAM))) == 2
+            @test length(collect(BAMReader(open(joinpath(bamdir, "ce#1.bam"))))) == 1
+            @test length(collect(BAMReader(open(joinpath(bamdir, "ce#2.bam"))))) == 2
         end
 
         @testset "Round trip" begin
@@ -1206,8 +1210,8 @@ end
                 filepath = joinpath(bamdir, specimen["filename"])
                 mktemp() do path, _
                     # copy
-                    reader = open(filepath, BAM)
-                    writer = Align.BAMWriter(
+                    reader = open(BAMReader, filepath)
+                    writer = BAMWriter(
                         BGZFStream(path, "w"),
                         header(reader, true))
                     records = BAMRecord[]
@@ -1219,7 +1223,7 @@ end
                     close(writer)
 
                     # read again
-                    reader = open(path, BAM)
+                    reader = open(BAMReader, path)
                     @test collect(reader) == records
                     close(reader)
                 end
@@ -1228,7 +1232,7 @@ end
 
         @testset "Random access" begin
             filepath = joinpath(bamdir, "GSE25840_GSM424320_GM06985_gencode_spliced.head.bam")
-            reader = open(filepath, BAM)
+            reader = open(BAMReader, filepath, index=filepath * ".bai")
 
             # expected values are counted using samtools
             for (refname, interval, expected) in [
