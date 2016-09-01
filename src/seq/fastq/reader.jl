@@ -33,3 +33,11 @@ end
 function Base.eltype{S}(::Type{FASTQReader{S}})
     return FASTQSeqRecord{S}
 end
+
+function FASTQReader(input::IO, quality_encoding::QualityEncoding)
+    return FASTQReader{DNASequence}(BufferedInputStream(input), quality_encoding)
+end
+
+function (::Type{FASTQReader{S}}){S<:Sequence}(input::IO, quality_encoding::QualityEncoding)
+    return FASTQReader{S}(BufferedInputStream(input), quality_encoding)
+end

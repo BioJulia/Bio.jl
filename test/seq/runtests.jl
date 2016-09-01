@@ -107,6 +107,7 @@ function random_interval(minstart, maxstop)
     return start:rand(start:maxstop)
 end
 
+#=
 @testset "Nucleotides" begin
     @testset "Conversions" begin
         @testset "UInt8" begin
@@ -2860,6 +2861,7 @@ end
     @test rec != rec3
     @test rec == copy(rec)
 end
+=#
 
 @testset "Parsing" begin
     @testset "FASTA" begin
@@ -2878,7 +2880,7 @@ end
 
         function test_fasta_parse(filename, valid)
             # Reading from a stream
-            stream = open(filename, FASTA)
+            stream = open(FASTAReader, filename)
             if valid
                 for seqrec in stream end
                 @test true  # no error
@@ -2891,11 +2893,11 @@ end
             end
 
             # Reading from a memory mapped file
-            for seqrec in open(filename, FASTA, memory_map=true)
-            end
+            #for seqrec in open(filename, FASTA, memory_map=true)
+            #end
 
             # in-place parsing
-            stream = open(filename, FASTA)
+            stream = open(FASTAReader, filename)
             entry = eltype(stream)()
             while !eof(stream)
                 read!(stream, entry)
@@ -2905,14 +2907,15 @@ end
             output = IOBuffer()
             writer = Seq.FASTAWriter(output, 60)
             expected_entries = Any[]
-            for seqrec in open(filename, FASTA)
+            for seqrec in open(FASTAReader, filename)
                 write(writer, seqrec)
                 push!(expected_entries, seqrec)
             end
             flush(writer)
 
+            seekstart(output)
             read_entries = Any[]
-            for seqrec in open(takebuf_array(output), FASTA)
+            for seqrec in FASTAReader(output)
                 push!(read_entries, seqrec)
             end
 
@@ -2940,8 +2943,9 @@ end
                       RNAAlphabet{2}, RNAAlphabet{4},
                       AminoAcidAlphabet)
                 seekstart(input)
-                seq = first(open(input, FASTA, BioSequence{A})).seq
-                @test typeof(seq) == BioSequence{A}
+                record = first(FASTAReader{BioSequence{A}}(input))
+                @test record.name == "xxx"
+                @test typeof(record.seq) == BioSequence{A}
             end
 
             input = IOBuffer("""
@@ -2949,7 +2953,7 @@ end
             NNNAAACGTATN
             NNNTTACGGNNN
             """)
-            record = first(collect(open(input, FASTA, ReferenceSequence)))
+            record = first(FASTAReader{ReferenceSequence}(input))
             @test record.name == "chr1"
             @test record.seq == dna"NNNAAACGTATNNNNTTACGGNNN"
             @test isa(record.seq, ReferenceSequence)
@@ -2958,8 +2962,8 @@ end
         @testset "genomic sequence" begin
             path = Pkg.dir("Bio", "test", "BioFmtSpecimens",
                            "FASTA", "genomic-seq.fasta")
-            dnaseq = first(open(path, FASTA, DNASequence)).seq
-            refseq = first(open(path, FASTA, ReferenceSequence)).seq
+            dnaseq = open(first, FASTAReader{DNASequence}, path).seq
+            refseq = open(first, FASTAReader{ReferenceSequence}, path).seq
             @test dnaseq == refseq
         end
 
@@ -2987,8 +2991,7 @@ end
                 filepath = joinpath(dir, "test.fa")
                 write(filepath, fastastr)
                 write(filepath * ".fai", faistr)
-                open(filepath, FASTA) do reader
-
+                open(FASTAReader, filepath, index=filepath * ".fai") do reader
                     chr3 = reader["chr3"]
                     @test chr3.name == "chr3"
                     @test chr3.seq == dna"""
@@ -3024,7 +3027,7 @@ end
     @testset "FASTQ" begin
         output = IOBuffer()
         # no headers before quality lines and the ASCII offset is 33
-        writer = Seq.FASTQWriter(output, false, 33)
+        writer = FASTQWriter(output, Seq.SANGER_QUAL_ENCODING)
         write(writer, FASTQSeqRecord("1", dna"AN", Int8[11, 25]))
         write(writer, FASTQSeqRecord("2", dna"TGA", Int8[40, 41, 45], "high quality"))
         flush(writer)
@@ -3039,9 +3042,9 @@ end
         IJN
         """
 
-        function test_fastq_parse(filename, valid)
+        function test_fastq_parse(filename, valid, qualenc)
             # Reading from a stream
-            stream = open(filename, FASTQ, Seq.SANGER_QUAL_ENCODING)
+            stream = open(FASTQReader, filename, qualenc)
             if valid
                 for seqrec in stream end
                 @test true  # no error
@@ -3054,11 +3057,11 @@ end
             end
 
             # Reading from a memory mapped file
-            for seqrec in open(filename, FASTQ, Seq.SANGER_QUAL_ENCODING, memory_map=true)
-            end
+            #for seqrec in open(filename, FASTQ, Seq.SANGER_QUAL_ENCODING, memory_map=true)
+            #end
 
             # in-place parsing
-            stream = open(filename, FASTQ, Seq.SANGER_QUAL_ENCODING)
+            stream = open(FASTQReader, filename, qualenc)
             entry = eltype(stream)()
             while !eof(stream)
                 read!(stream, entry)
@@ -3066,16 +3069,17 @@ end
 
             # Check round trip
             output = IOBuffer()
-            writer = Seq.FASTQWriter(output, false, typemin(Int))
+            writer = FASTQWriter(output, qualenc)
             expected_entries = Any[]
-            for seqrec in open(filename, FASTQ, Seq.SANGER_QUAL_ENCODING)
+            for seqrec in open(FASTQReader, filename, qualenc)
                 write(writer, seqrec)
                 push!(expected_entries, seqrec)
             end
             flush(writer)
 
+            seekstart(output)
             read_entries = Any[]
-            for seqrec in open(takebuf_array(output), FASTQ, Seq.SANGER_QUAL_ENCODING)
+            for seqrec in FASTQReader(output, qualenc)
                 push!(read_entries, seqrec)
             end
 
@@ -3092,7 +3096,14 @@ end
                contains(tags, "comments") || contains(tags, "ambiguity")
                 continue
             end
-            test_fastq_parse(joinpath(path, specimen["filename"]), valid)
+            filename = specimen["filename"]
+            # FIXME
+            qualenc = (
+                #contains(filename, "sanger") ? Seq.SANGER_QUAL_ENCODING :
+                #contains(filename, "solexa") ? Seq.SOLEXA_QUAL_ENCODING :
+                #contains(filename, "illumina") ? Seq.ILLUMINA15_QUAL_ENCODING :
+                Seq.SANGER_QUAL_ENCODING)
+            test_fastq_parse(joinpath(path, filename), valid, qualenc)
         end
 
         @testset "specified sequence type" begin
@@ -3104,21 +3115,22 @@ end
             """)
             for A in (DNAAlphabet{2}, DNAAlphabet{4})
                 seekstart(input)
-                seq = first(open(input, FASTQ, Seq.SANGER_QUAL_ENCODING, BioSequence{A})).seq
-                @test typeof(seq) == BioSequence{A}
+                record = first(FASTQReader{BioSequence{A}}(input, Seq.SANGER_QUAL_ENCODING))
+                @test record.name == "foobar"
+                @test typeof(record.seq) == BioSequence{A}
             end
         end
     end
 
     @testset "2bit" begin
         buffer = IOBuffer()
-        writer = Seq.TwoBitWriter(buffer, ["chr1", "chr2"])
+        writer = TwoBitWriter(buffer, ["chr1", "chr2"])
         chr1 = dna"ACGTNN"
         chr2 = dna"N"^100 * dna"ACGT"^100 * dna"N"^100
         write(writer, SeqRecord("chr1", chr1))
         write(writer, SeqRecord("chr2", chr2))
         seekstart(buffer)
-        reader = Seq.TwoBitReader(buffer)
+        reader = TwoBitReader(buffer)
         @test length(reader) == 2
         @test reader["chr1"].name == "chr1"
         @test reader["chr1"].seq == chr1
@@ -3130,13 +3142,13 @@ end
 
         function check_2bit_parse(filename)
             # read from a stream
-            for record in open(filename, TwoBit)
+            for record in open(TwoBitReader, filename)
             end
 
             # round trip
             buffer = IOBuffer()
-            reader = open(filename, TwoBit)
-            writer = Seq.TwoBitWriter(buffer, reader.names)
+            reader = open(TwoBitReader, filename)
+            writer = TwoBitWriter(buffer, reader.names)
             expected_entries = Any[]
             for record in reader
                 write(writer, record)
@@ -3145,7 +3157,7 @@ end
 
             read_entries = Any[]
             seekstart(buffer)
-            for record in Seq.TwoBitReader(buffer)
+            for record in TwoBitReader(buffer)
                 push!(read_entries, record)
             end
 

@@ -7,7 +7,7 @@ type FASTAReader{S<:Sequence} <: Bio.IO.AbstractReader
     seqbuf::BufferedOutputStream{BufferedStreams.EmptyStream}
     index::Nullable{FASTAIndex}
 
-    function FASTAReader(input::BufferedInputStream, index=Nullable())
+    function FASTAReader(input::BufferedInputStream, index)
         return new(Ragel.State(fastaparser_start, input),
                    BufferedOutputStream(), index)
     end
@@ -19,6 +19,22 @@ end
 
 function Base.eltype{S}(::Type{FASTAReader{S}})
     return FASTASeqRecord{S}
+end
+
+function FASTAReader(input::IO; index=nothing)
+    # alphabet type will be inferred from data
+    return FASTAReader{BioSequence}(input, index=index)
+end
+
+function (::Type{FASTAReader{S}}){S<:Sequence}(input::IO; index=nothing)
+    if isa(index, AbstractString)
+        index = FASTAIndex(index)
+    else
+        if index != nothing
+            error("unrecognizable index argument")
+        end
+    end
+    return FASTAReader{S}(BufferedInputStream(input), index)
 end
 
 function Base.getindex(reader::FASTAReader, name::AbstractString)

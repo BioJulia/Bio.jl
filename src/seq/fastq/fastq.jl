@@ -3,10 +3,12 @@
 #
 # Reader and writer of the FASTQ file format.
 #
+# Cock, Peter JA, et al. "The Sanger FASTQ file format for sequences with
+# quality scores, and the Solexa/Illumina FASTQ variants." Nucleic acids
+# research 38.6 (2010): 1767-1771.
+#
 # This file is a part of BioJulia.
 # License is MIT: https://github.com/BioJulia/Bio.jl/blob/master/LICENSE.md
-
-immutable FASTQ <: Bio.IO.FileFormat end
 
 """
 Metadata for FASTQ sequence records containing a `description` field,
@@ -52,29 +54,3 @@ include("quality.jl")
 include("reader.jl")
 include("parser.jl")
 include("writer.jl")
-
-function Base.open(
-        filepath::AbstractString,
-        mode::AbstractString,
-        ::Type{FASTQ};
-        # reader options
-        quality_encoding::QualityEncoding=EMPTY_QUAL_ENCODING,
-        # writer options
-        quality_header::Bool=false,
-        ascii_offset::Integer=typemin(Int))
-    io = open(filepath, mode)
-    if mode[1] == 'r'
-        return open(BufferedInputStream(io), FASTQ, quality_encoding)
-    elseif mode[1] ∈ ('w', 'a')
-        return FASTQWriter(io, quality_header, ascii_offset)
-    end
-    error("invalid open mode")
-end
-
-function Base.open{S}(input::BufferedInputStream, ::Type{FASTQ},
-                      quality_encoding::QualityEncoding,
-                      ::Type{S}=DNASequence;
-                      # TODO: remove this option after v0.2
-                      qualenc=quality_encoding)
-    return FASTQReader{S}(input, quality_encoding)
-end

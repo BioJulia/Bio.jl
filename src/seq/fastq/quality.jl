@@ -38,6 +38,13 @@ const ILLUMINA15_QUAL_ENCODING = convert(QualityEncoding, UInt16(0b01000))
 "Illumina 1.8 (Phred+33) quality score encoding"
 const ILLUMINA18_QUAL_ENCODING = convert(QualityEncoding, UInt16(0b10000))
 
+const ascii_encoding_offsets = Dict(
+    SANGER_QUAL_ENCODING     => 33,
+    SOLEXA_QUAL_ENCODING     => 64,
+    ILLUMINA13_QUAL_ENCODING => 64,
+    ILLUMINA15_QUAL_ENCODING => 64,
+    ILLUMINA18_QUAL_ENCODING => 33)
+
 "`QualityEncoding` indicating all known encodings are compatible."
 const ALL_QUAL_ENCODINGS =
     SANGER_QUAL_ENCODING | SOLEXA_QUAL_ENCODING | ILLUMINA13_QUAL_ENCODING |
