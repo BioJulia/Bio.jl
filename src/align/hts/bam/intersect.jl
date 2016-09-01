@@ -49,8 +49,8 @@ end
 function Bio.Intervals.isoverlapping(rec, refindex_, interval)
     return ismapped(rec) &&
         refindex(rec) == refindex_ &&
-        position(rec) ≤ last(interval) &&
-        rightmost_position(rec) ≥ first(interval)
+        leftposition(rec) ≤ last(interval) &&
+        rightposition(rec) ≥ first(interval)
 end
 
 function Base.intersect(reader::BAMReader, interval::Interval)

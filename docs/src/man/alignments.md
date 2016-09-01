@@ -469,11 +469,12 @@ close(reader)
 | Accessor         | Description                                    |
 | :--------------- | :--------------------------------------------- |
 | `refname`        | reference sequence name                        |
-| `position`       | 1-based leftmost mapping position              |
+| `leftposition`   | 1-based leftmost mapping position              |
+| `rightposition`  | 1-based rightmost mapping position             |
 | `refindex`       | 1-based reference sequence index (BAM only)    |
 | `nextrefname`    | `refname` of the mate/next read                |
-| `nextposition`   | `position` of the mate/next read               |
-| `nextrefindex`   | `refid` of the mate/next read (BAM only)       |
+| `nextleftposition` | `leftposition` of the mate/next read         |
+| `nextrefindex`   | `refindex` of the mate/next read (BAM only)    |
 | `mappingquality` | mapping quality                                |
 | `flag`           | bitwise flag                                   |
 | `templatelength` | observed template length                       |

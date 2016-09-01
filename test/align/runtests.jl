@@ -1027,14 +1027,16 @@ end
             @test seqname(rec) == "*"
             @test flag(rec) == 0x0000
             @test refname(rec) == "*"
-            @test position(rec) == 0
+            @test leftposition(rec) == 0
+            @test rightposition(rec) == -1
             @test nextrefname(rec) == "*"
-            @test nextposition(rec) == 0
+            @test nextleftposition(rec) == 0
             @test templatelength(rec) == 0
             @test cigar(rec) == "*"
             @test alignment(rec) == Alignment(AlignmentAnchor[])
             @test sequence(rec) == "*"
             @test qualities(rec) == "*"
+            @test Align.alignment_length(rec) === 0
 
             # set & delete tags
             rec = SAMRecord()
@@ -1062,7 +1064,8 @@ end
             rec = SAMRecord()
             read!(reader, rec)
             @test refname(rec) == "CHROMOSOME_I"
-            @test position(rec) == 2
+            @test leftposition(rec) == 2
+            @test rightposition(rec) == 102
             @test seqname(rec) == "SRR065390.14978392"
             @test sequence(rec)  == "CCTAGCCCTAACCCTAACCCTAACCCTAGCCTAAGCCTAAGCCTAAGCCTAAGCCTAAGCCTAAGCCTAAGCCTAAGCCTAAGCCTAAGCCTAAGCCTAA"
             @test qualities(rec) == "#############################@B?8B?BA@@DDBCDDCBC@CDCDCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCC"
@@ -1123,20 +1126,19 @@ end
             # default values
             @test refname(rec) == "*"
             @test refindex(rec) == 0
-            @test position(rec) == 0
+            @test leftposition(rec) == 0
+            @test rightposition(rec) == -1
             @test mappingquality(rec) == 0
             @test flag(rec) == 0
             @test nextrefname(rec) == "*"
             @test nextrefindex(rec) == 0
-            @test nextposition(rec) == 0
+            @test nextleftposition(rec) == 0
             @test templatelength(rec) == 0
             @test seqname(rec) == ""
             @test cigar(rec) == ""
             @test sequence(rec) == dna""
             @test alignment(rec) == Alignment(AlignmentAnchor[])
             @test qualities(rec) == UInt8[]
-
-            @test Align.rightmost_position(rec) === Int32(-1)
             @test Align.alignment_length(rec) === 0
 
             # set & delete tags
@@ -1166,7 +1168,8 @@ end
             read!(reader, rec)
             @test refname(rec) == "CHROMOSOME_I"
             @test refindex(rec) == 1
-            @test position(rec) == 2
+            @test leftposition(rec) == 2
+            @test rightposition(rec) == 102
             @test seqname(rec) == "SRR065390.14978392"
             @test sequence(rec) == dna"""
             CCTAGCCCTAACCCTAACCCTAACCCTAGCCTAAGCCTAAGCCTAAGCCT

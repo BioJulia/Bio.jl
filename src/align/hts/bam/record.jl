@@ -65,11 +65,11 @@ function Base.:(==)(rec1::BAMRecord, rec2::BAMRecord)
 end
 
 function Base.show(io::IO, rec::BAMRecord)
-    println(summary(rec), ":")
+    println(summary(rec), ':')
     println(io, "  reference name: ", refname(rec))
-    println(io, "  position: ", position(rec))
+    println(io, "  leftmost position: ", leftposition(rec))
     println(io, "  next reference name: ", nextrefname(rec))
-    println(io, "  next position: ", nextposition(rec))
+    println(io, "  next leftmost position: ", nextleftposition(rec))
     println(io, "  mapping quality: ", mappingquality(rec))
     println(io, "  flag: ", flag(rec))
     println(io, "  template length: ", templatelength(rec))
@@ -133,17 +133,27 @@ function nextrefname(rec::BAMRecord)
 end
 
 """
-    position(rec::BAMRecord)
+    leftposition(rec::BAMRecord)
 
-Return the position of a mapped read.
+Return the leftmost mapping position of `rec`.
 
 The index is 1-based and will be 0 for an alignment without mapping position.
 """
-function Base.position(rec::BAMRecord)
+function leftposition(rec::BAMRecord)
     return rec.pos + 1
 end
 
-function nextposition(rec::BAMRecord)
+"""
+    rightposition(rec::BAMRecord)
+
+Return the rightmost mapping position of `rec`.
+"""
+function rightposition(rec::BAMRecord)
+    return Int32(leftposition(rec) + alignment_length(rec) - 1)
+end
+
+
+function nextleftposition(rec::BAMRecord)
     return rec.next_pos + 1
 end
 
@@ -226,7 +236,7 @@ function alignment(rec::BAMRecord)
         return Alignment(AlignmentAnchor[])
     end
     seqpos = 0
-    refpos = position(rec) - 1
+    refpos = leftposition(rec) - 1
     anchors = [AlignmentAnchor(seqpos, refpos, OP_START)]
     for (op, len) in zip(cigar_rle(rec)...)
         if ismatchop(op)
@@ -301,11 +311,6 @@ end
 function auxdata_position(rec)
     seqlen = sequence_length(rec)
     return seqname_length(rec) + n_cigar_op(rec) * 4 + cld(seqlen, 2) + seqlen + 1
-end
-
-# Return the right-most position of alignment.
-function rightmost_position(rec::BAMRecord)
-    return Int32(position(rec) + alignment_length(rec) - 1)
 end
 
 # Return the length of alignment.
