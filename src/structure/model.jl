@@ -36,6 +36,7 @@ export
     defaultaltlocid,
     defaultatom,
     altlocids,
+    atomid,
     resid,
     ishetres,
     atomnames,
@@ -894,10 +895,10 @@ function collectchains(mods::Vector{Model})
     return sort(ch_list)
 end
 
-collectchains(chs::Vector{Chain}) = sort(chains)
+collectchains(chs::Vector{Chain}) = sort(chs)
 
 function collectchains{T <: Union{AbstractResidue, AbstractAtom}}(els::Vector{T})
-    chains_out = Model[]
+    chains_out = Chain[]
     for el in els
         if !(chain(el) in chains_out)
             push!(chains_out, chain(el))
@@ -914,11 +915,11 @@ Return the number of `Chain`s in a `StructuralElementOrList`.
 Additional arguments are chain selector functions - only chains that return
 `true` from the functions are counted.
 """
-countchains(el::StructuralElement, chain_selectors::Function...) = length(collectchains(el, chain_selectors...))
+countchains(el::StructuralElementOrList, chain_selectors::Function...) = length(collectchains(el, chain_selectors...))
 
 countchains(mod::Model) = length(mod)
 
-countchains(chs::Vector{Chain}) = length(chains)
+countchains(chs::Vector{Chain}) = length(chs)
 
 
 """
@@ -1229,26 +1230,24 @@ where possible, otherwise uses the atom name.
 hydrogenselector(at::AbstractAtom) = element(at, spaces=false) == "H" || (element(at, spaces=false) == "" && 'H' in atomname(at) && !ismatch(r"[a-zA-Z]", atomname(at)[1:findfirst(atomname(at), 'H')-1]))
 
 
-function AminoAcidSequence(ch::Chain, residue_selectors::Function...)
-    # Residues are ordered with all hetero residues after
-    # For obtaining sequence we will re-order them numerically
-    sorted_res = sort(collectresidues(ch, residue_selectors...), by=resnumber)
+# Residues are ordered with all hetero residues after
+# For obtaining sequence we will re-order them numerically
+AminoAcidSequence(ch::Chain, residue_selectors::Function...) = AminoAcidSequence(sort(collectresidues(ch, residue_selectors...), by=resnumber))
+
+function AminoAcidSequence{T <: AbstractResidue}(res::Vector{T})
     seq = AminoAcid[]
-    for i in 1:length(sorted_res)
-        if resname(sorted_res[i]) in keys(threeletter_to_aa)
-            push!(seq, threeletter_to_aa[resname(sorted_res[i])])
+    for i in 1:length(res)
+        if resname(res[i]) in keys(threeletter_to_aa)
+            push!(seq, threeletter_to_aa[resname(res[i])])
         else
             push!(seq, AA_X)
         end
-        if i+1 <= length(sorted_res) && resnumber(sorted_res[i+1]) - resnumber(sorted_res[i]) > 1
-            append!(seq, [AA_Gap for _ in 1:(resnumber(sorted_res[i+1]) - resnumber(sorted_res[i]) - 1)])
+        if i+1 <= length(res) && resnumber(res[i+1]) - resnumber(res[i]) > 1
+            append!(seq, [AA_Gap for _ in 1:(resnumber(res[i+1]) - resnumber(res[i]) - 1)])
         end
     end
     return AminoAcidSequence(seq)
 end
-
-
-proteinsequences(el::StructuralElementOrList) = map(AminoAcidSequence, collectchains(el))
 
 
 # Descriptive showing of elements

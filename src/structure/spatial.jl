@@ -67,7 +67,7 @@ displacements(el_one::StructuralElementOrList, el_two::StructuralElementOrList, 
 
 
 """
-Get the minimum square distance between two `StructuralElementOrList`s.
+Minimum square distance between two `StructuralElementOrList`s.
 Additional arguments are atom selector functions - only atoms that return
 `true` from the functions are retained.
 """
@@ -90,7 +90,7 @@ sqdistance(atom_one::AbstractAtom, atom_two::AbstractAtom) = (x(atom_one) - x(at
 
 
 """
-Get the minimum distance between two `StructuralElementOrList`s.
+Minimum distance between two `StructuralElementOrList`s.
 Additional arguments are atom selector functions - only atoms that return
 `true` from the functions are retained.
 """
@@ -103,7 +103,10 @@ distance(el_one::StructuralElementOrList, el_two::StructuralElementOrList, atom_
 distance(atom_one::AbstractAtom, atom_two::AbstractAtom) = sqrt(sqdistance(atom_one, atom_two))
 
 
-# in docs say we assume they are in a bond, and degrees/rads
+"""
+Calculate the bond angle in radians between three `AbstractAtom`s, which are
+assumed to be in a bond.
+"""
 bondangle(atom_a::AbstractAtom, atom_b::AbstractAtom, atom_c::AbstractAtom) = bondangle(
         coords(atom_a) - coords(atom_b),
         coords(atom_c) - coords(atom_b)
@@ -112,7 +115,10 @@ bondangle(vec_a::Vector{Float64}, vec_b::Vector{Float64}) = acos(
     dot(vec_a, vec_b) / (norm(vec_a) * norm(vec_b)))
 
 
-# say that b and c are in common - angle between planes defined by (a,b,c) and (b,c,d)
+"""
+Calculate the dihedral angle in radians defined by four `AbstractAtom`s. This is
+the angle between the planes defined by atoms (a,b,c) and (b,c,d).
+"""
 dihedralangle(atom_a::AbstractAtom, atom_b::AbstractAtom, atom_c::AbstractAtom, atom_d::AbstractAtom) = dihedralangle(
         coords(atom_b) - coords(atom_a),
         coords(atom_c) - coords(atom_b),
@@ -123,7 +129,11 @@ dihedralangle(vec_a::Vector{Float64}, vec_b::Vector{Float64}, vec_c::Vector{Floa
     )
 
 
-# Be clear in docs that the argument order is not uniform
+"""
+Calculate the omega angle in radians for an `AbstractResidue`. Arguments are the
+residue (atoms "N" and "CA" required) and the previous residue (atoms "CA" and
+"C" required).
+"""
 function omegaangle(res::AbstractResidue, res_prev::AbstractResidue)
     @assert "CA" in atomnames(res_prev) "Atom with atom name \"CA\" not found in previous residue"
     @assert "C" in atomnames(res_prev) "Atom with atom name \"C\" not found in previous residue"
@@ -132,6 +142,11 @@ function omegaangle(res::AbstractResidue, res_prev::AbstractResidue)
     return dihedralangle(res_prev["CA"], res_prev["C"], res["N"], res["CA"])
 end
 
+"""
+Calculate the phi angle in radians for an `AbstractResidue`. Arguments are the
+residue (atoms "N", "CA" and "C" required) and the previous residue (atom "C"
+required).
+"""
 function phiangle(res::AbstractResidue, res_prev::AbstractResidue)
     @assert "C" in atomnames(res_prev) "Atom with atom name \"C\" not found in previous residue"
     @assert "N" in atomnames(res) "Atom with atom name \"N\" not found in residue"
@@ -140,6 +155,11 @@ function phiangle(res::AbstractResidue, res_prev::AbstractResidue)
     return dihedralangle(res_prev["C"], res["N"], res["CA"], res["C"])
 end
 
+"""
+Calculate the psi angle in radians for an `AbstractResidue`. Arguments are the
+residue (atoms "N", "CA" and "C" required) and the next residue (atom "N"
+required).
+"""
 function psiangle(res::AbstractResidue, res_next::AbstractResidue)
     @assert "N" in atomnames(res) "Atom with atom name \"N\" not found in residue"
     @assert "CA" in atomnames(res) "Atom with atom name \"CA\" not found in residue"
@@ -150,33 +170,57 @@ end
 
 
 """
-
+Calculate the `Vector`s of phi and psi angles of a `StructuralElementOrList`.
+The vectors have `nothing` for residues where an angle cannot be calculated,
+for example due to missing atoms or no adjacent residue.
 Additional arguments are residue selector functions - only residues that return
 `true` from the functions are retained.
 """
 function ramachandranangles(el::StructuralElementOrList, residue_selectors::Function...)
     res_list = collectresidues(el, residue_selectors...)
-    @assert length(res_list) > 2 "Multiple residues required to calculate Ramachandran angles"
-    phi_angles = Float64[]
-    psi_angles = Float64[]
-    for i in 2:length(res_list)-1
+    @assert length(res_list) > 1 "Multiple residues required to calculate Ramachandran angles"
+    phi_angles = Union{Float64, Void}[nothing] # First res has no previous res
+    psi_angles = Union{Float64, Void}[]
+    for i in 2:length(res_list)
         res = res_list[i]
         res_prev = res_list[i-1]
-        res_next = res_list[i+1]
-        if sequentialresidues(res_prev, res) && sequentialresidues(res, res_next)
-            # Eliminate this try
+        if sequentialresidues(res_prev, res)
             try
                 phi_angle = phiangle(res, res_prev)
-                psi_angle = psiangle(res, res_next)
                 push!(phi_angles, phi_angle)
-                push!(psi_angles, psi_angle)
+            catch ex
+                isa(ex, AssertionError) || rethrow()
+                push!(phi_angles, nothing)
             end
+        else
+            push!(phi_angles, nothing)
         end
     end
+    for i in 1:length(res_list)-1
+        res = res_list[i]
+        res_next = res_list[i+1]
+        if sequentialresidues(res, res_next)
+            try
+                psi_angle = psiangle(res, res_next)
+                push!(psi_angles, psi_angle)
+            catch ex
+                isa(ex, AssertionError) || rethrow()
+                push!(psi_angles, nothing)
+            end
+        else
+            push!(psi_angles, nothing)
+        end
+    end
+    push!(psi_angles, nothing) # Last res has no next res
     return phi_angles, psi_angles
 end
 
 
+"""
+Calculate the contact map for a `StructuralElementOrList`, or between two
+`StructuralElementOrList`s. This is an `Array` with `true` where the
+sub-elements are closer than the contact distance and `false` otherwise.
+"""
 function contactmap(el_one::StructuralElementOrList, el_two::StructuralElementOrList, contact_dist::Real)
     sq_contact_dist = contact_dist ^ 2
     contacts = falses(length(el_one), length(el_two))
