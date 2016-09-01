@@ -133,7 +133,7 @@ But if the FASTA file has an auxiliary index file formatted in
 to FASTA records, which would be useful when accessing specific parts of a huge
 genome sequence:
 ```julia
-reader = open(FASTAReader, "sacCer.fa")  # find and read "sacCer.fa.fai" file
+reader = open(FASTAReader, "sacCer.fa", index="sacCer.fa.fai")
 chrIV = reader["chrIV"]  # directly read chromosome 4
 ```
 

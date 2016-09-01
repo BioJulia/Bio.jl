@@ -457,7 +457,7 @@ SAM and BAM are the most popular file formats and have the same reading and
 writing interface as all other formats in Bio.jl (see [Reading and writing
 data](reading/)]):
 ```julia
-reader = open("data.bam", BAM)  # same for SAM
+reader = open(BAMReader, "data.bam")  # same for SAM
 for record in reader
     # do something
 end
@@ -512,7 +512,7 @@ mentioned above allocates an object for each record and that may be a bottleneck
 of reading data from a BAM file. In-place reading reuses a preallocated object
 for every record and no memory allocation happens in reading:
 ```julia
-reader = open("data.bam", BAM)
+reader = open(BAMReader, "data.bam")
 record = BAMRecord()
 while !eof(reader)
     read!(reader, record)
@@ -524,7 +524,7 @@ Accessing optional fields will results in type instability in Julia, which has a
 significant negative impact on performance. If the user knows the type of a
 value in advance, specifying it as a type annotation will alleviate the problem:
 ```julia
-for record in open("data.bam", BAM)
+for record in open(BAMReader, "data.bam")
     nm = record["NM"]::UInt8
     # do something
 end
