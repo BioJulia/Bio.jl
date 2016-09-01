@@ -22,17 +22,6 @@ function FASTQWriter(output::IO, quality_encoding::QualityEncoding;
 end
 
 function Base.write(writer::FASTQWriter, seqrec::FASTQSeqRecord)
-    #=
-    if writer.ascii_offset == typemin(Int)
-        # infer quality encoding based on data
-        if !isempty(seqrec.metadata.quality) && minimum(seqrec.metadata.quality) < 0
-            writer.ascii_offset = 64  # solexa
-        else
-            writer.ascii_offset = 33  # others
-        end
-    end
-    =#
-
     output = writer.output
     n = 0
 
