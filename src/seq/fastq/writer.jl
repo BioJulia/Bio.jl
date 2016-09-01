@@ -56,7 +56,6 @@ function Base.write(writer::FASTQWriter, seqrec::FASTQSeqRecord)
     return n
 end
 
-#=
 function Base.show(io::IO, seqrec::FASTQSeqRecord)
     write(io, "@", seqrec.name, " ", seqrec.metadata.description, "\n")
     for c in seqrec.seq
@@ -124,4 +123,3 @@ function Base.write(io::IO, seqrec::FASTQSeqRecord;
     end
     write(io, "\n")
 end
-=#
