@@ -121,9 +121,9 @@ function distance end
 Compute the number of mutations of type `T` between a set of sequences in a
 pairwise manner.
 
-This method of distance returns a tuple of the number of mutations of type T
-between sequences and the number of valid
-(i.e. non-ambiguous sites) counted by the function.
+This method of distance returns a tuple of the number of mutations of type `T`
+between sequences and the number of valid (i.e. non-ambiguous sites) counted by
+the function.
 """
 function distance{T<:MutationType,A<:NucleotideAlphabet}(::Type{Count{T}}, seqs::Vector{BioSequence{A}})
     return count_mutations(T, seqs)
@@ -135,9 +135,9 @@ end
 Compute the number of mutations of type `T` between a set of sequences in a
 pairwise manner.
 
-This method of distance returns a tuple of the number of mutations of type T
-between sequences and the number of valid
-(i.e. non-ambiguous sites) counted by the function.
+This method of distance returns a tuple of the number of mutations of type `T`
+between sequences and the number of valid (i.e. non-ambiguous sites) counted by
+the function.
 
 **Note: This method assumes that the sequences are stored in the `Matrix{N}`
 provided as `seqs` in sequence major order i.e. each column of the matrix is one
