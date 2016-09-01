@@ -99,7 +99,7 @@ Test if nucleotide is surely a purine.
 """
 @inline function ispurine(nt::Nucleotide)
     bits = reinterpret(UInt8, nt)
-    return (bits != 0) & ((bits & 0b1010) == 0)
+    return bits != 0 && (bits & 0b1010) == 0
 end
 
 """
@@ -109,7 +109,7 @@ Test if nucleotide is surely a pyrimidine.
 """
 @inline function ispyrimidine(nt::Nucleotide)
     bits = reinterpret(UInt8, nt)
-    return (bits != 0) & ((bits & 0b0101) == 0)
+    return bits != 0 && (bits & 0b0101) == 0
 end
 
 """
