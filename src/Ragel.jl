@@ -237,6 +237,7 @@ end
 # Open functions for various sources
 # ----------------------------------
 
+#=
 function Base.open{T<:FileFormat}(filename::AbstractString, ::Type{T}, args...; kwargs...)
     memory_map = false
     i = 0
@@ -263,6 +264,7 @@ end
 function Base.open{T<:FileFormat}(source::Union{IO,Vector{UInt8}}, ::Type{T}, args...; kwargs...)
     return open(BufferedInputStream(source), T, args...; kwargs...)
 end
+=#
 
 
 # Iterator
