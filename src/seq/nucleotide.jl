@@ -70,7 +70,7 @@ function Base.isless{N<:Nucleotide}(x::N, y::N)
     return isless(reinterpret(UInt8, x), reinterpret(UInt8, y))
 end
 
-function Base.count_ones(nt::Nucleotide)
+@inline function Base.count_ones(nt::Nucleotide)
     return count_ones(reinterpret(UInt8, nt))
 end
 
@@ -97,7 +97,7 @@ end
 
 Test if nucleotide is surely a purine.
 """
-function ispurine(nt::Nucleotide)
+@inline function ispurine(nt::Nucleotide)
     bits = reinterpret(UInt8, nt)
     return bits != 0 && (bits & 0b1010) == 0
 end
@@ -107,7 +107,7 @@ end
 
 Test if nucleotide is surely a pyrimidine.
 """
-function ispyrimidine(nt::Nucleotide)
+@inline function ispyrimidine(nt::Nucleotide)
     bits = reinterpret(UInt8, nt)
     return bits != 0 && (bits & 0b0101) == 0
 end
@@ -117,7 +117,7 @@ end
 
 Test if `nt` is ambiguous nucleotide.
 """
-function isambiguous(nt::Nucleotide)
+@inline function isambiguous(nt::Nucleotide)
     return count_ones(nt) != 1
 end
 

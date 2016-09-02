@@ -141,6 +141,7 @@ export
     Alphabet,
     DNAAlphabet,
     RNAAlphabet,
+    NucleotideAlphabets,
     AminoAcidAlphabet,
     CharAlphabet,
     NucleotideAlphabet,
