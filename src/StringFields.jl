@@ -107,7 +107,7 @@ function Base.write(io::IO, field::StringField)
 end
 
 function Base.show(io::IO, field::StringField)
-    print(io, convert(String, field))
+    show(io, convert(String, field))
 end
 
 function Base.copy(field::StringField)

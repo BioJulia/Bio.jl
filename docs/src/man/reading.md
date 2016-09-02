@@ -1,5 +1,9 @@
 # Reading and writing data
 
+```@meta
+CurrentModule = Bio
+```
+
 Bio.jl has a unified interface for reading and writing files in a variety of
 formats. Reader and writer type names have a prefix of the file format. For
 example, files of a format `X` can be read using `XReader` and can be written
@@ -164,16 +168,17 @@ tcagTTAAGATGGGAT
 
 To read a file containing such records, one could use:
 ```julia
-reader = open(FASTQReader, "reads.fastq", Seq.SANGER_QUAL_ENCODING)
-seqrec = eltype(reader)()
-while !eof(reader)
-    read!(reader, seqrec)
-    # ... process sequence
+reader = open(FASTQReader, "reads.fastq")
+for record in reader
+    # do something
 end
+close(reader)
 ```
 
-This assumes that the quality scores are in [Sanger
-encoding](https://en.wikipedia.org/wiki/FASTQ_format#Encoding).
+```@docs
+Bio.Seq.FASTQReader
+Bio.Seq.FASTQWriter
+```
 
 
 ### .2bit

@@ -43,11 +43,11 @@
 
         # sequence
         resize!(output.seq, input.seqbuf.position - 1)
-        if input.fillN != DNA_N
-            byte = convert(UInt8, convert(Char, input.fillN))
+        if !isnull(input.fill_ambiguous)
+            byte = convert(UInt8, convert(Char, get(input.fill_ambiguous)))
             for i in 1:input.seqbuf.position-1
                 b = input.seqbuf.buffer[i]
-                if b == 0x4e || b == 0x6e
+                if isambiguous(convert(DNANucleotide, convert(Char, b)))
                     input.seqbuf.buffer[i] = byte
                 end
             end

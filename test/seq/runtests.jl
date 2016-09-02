@@ -107,7 +107,6 @@ function random_interval(minstart, maxstop)
     return start:rand(start:maxstop)
 end
 
-#=
 @testset "Nucleotides" begin
     @testset "Conversions" begin
         @testset "UInt8" begin
@@ -2861,7 +2860,6 @@ end
     @test rec != rec3
     @test rec == copy(rec)
 end
-=#
 
 @testset "Reading and Writing" begin
     @testset "FASTA" begin
@@ -3105,7 +3103,7 @@ end
             qualenc = (
                 contains(filename, "_sanger") ? :sanger :
                 contains(filename, "_solexa") ? :solexa :
-                contains(filename, "_illumina") ? :illumina : :sanger)
+                contains(filename, "_illumina") ? :illumina13 : :sanger)
             test_fastq_parse(joinpath(path, filename), valid, qualenc)
         end
 
@@ -3126,7 +3124,7 @@ end
             end
 
             # the range is enough in these encodings
-            for encoding in (:sanger, :illumina18, :illumina)
+            for encoding in (:sanger, :illumina18)
                 seekstart(input)
                 reader = FASTQReader(input, quality_encoding=encoding)
                 @test metadata(first(reader)).quality == collect(0:93)
@@ -3148,20 +3146,22 @@ end
             end
         end
 
-        @testset "fillN" begin
+        @testset "fill ambiguous nucleotides" begin
             input = IOBuffer("""
             @seq1
-            ACGTNacgtn
+            ACGTNRacgtnr
             +
-            BBBB#AAAA#
+            BBBB##AAAA##
             """)
-            @test first(FASTQReader(input, fillN=DNA_N)).seq == dna"ACGTNACGTN"
+            @test first(FASTQReader(input, fill_ambiguous=nothing)).seq == dna"ACGTNRACGTNR"
             seekstart(input)
-            @test first(FASTQReader(input, fillN=DNA_A)).seq == dna"ACGTAACGTA"
+            @test first(FASTQReader(input, fill_ambiguous=DNA_A)).seq == dna"ACGTAAACGTAA"
             seekstart(input)
-            @test first(FASTQReader(input, fillN=DNA_G)).seq == dna"ACGTGACGTG"
+            @test first(FASTQReader(input, fill_ambiguous=DNA_G)).seq == dna"ACGTGGACGTGG"
             seekstart(input)
-            @test first(FASTQReader{BioSequence{DNAAlphabet{2}}}(input, fillN=DNA_A)).seq == dna"ACGTAACGTA"
+            @test first(FASTQReader(input, fill_ambiguous=DNA_N)).seq == dna"ACGTNNACGTNN"
+            seekstart(input)
+            @test first(FASTQReader{BioSequence{DNAAlphabet{2}}}(input, fill_ambiguous=DNA_A)).seq == dna"ACGTAAACGTAA"
         end
     end
 
