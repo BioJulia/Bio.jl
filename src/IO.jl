@@ -80,4 +80,13 @@ function Base.open{T<:AbstractWriter}(::Type{T}, filepath::AbstractString, args.
     return T(open(filepath, append ? "a" : "w"), args...; kwargs...)
 end
 
+# removed function calls
+function Base.open{F<:FileFormat}(::AbstractString, ::Type{F})
+    error("open(filepath, format) syntax has been removed. Please use open(reader|writer, filepath) instead.")
+end
+
+function Base.open{F<:FileFormat}(::AbstractString, ::AbstractString, ::Type{F})
+    error("open(filepath, mode, format) syntax has been removed. Please use open(reader|writer, filepath) instead.")
+end
+
 end  # module Bio.IO

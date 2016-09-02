@@ -117,13 +117,4 @@ end
 immutable FASTA <: Bio.IO.FileFormat end
 immutable FASTQ <: Bio.IO.FileFormat end
 immutable TwoBit <: Bio.IO.FileFormat end
-
 export FASTA, FASTQ, TwoBit
-
-function Base.open{F<:Union{FASTA,FASTQ,TwoBit}}(::AbstractString, ::Type{F})
-    error("open(filepath, format) syntax has been removed. Please use open(reader|writer, filepath) instead.")
-end
-
-function Base.open{F<:Union{FASTA,FASTQ,TwoBit}}(::AbstractString, ::AbstractString, ::Type{F})
-    error("open(filepath, mode, format) syntax has been removed. Please use open(reader|writer, filepath) instead.")
-end
