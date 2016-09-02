@@ -1181,7 +1181,9 @@ nucleotides cast an equal vote for each of their possible states.
 For each site a winner(s) out of A, T(U), C, or G is determined, in the cases
 of ties the ambiguity symbol that unifies all the winners is returned.
 E.g if A and T tie, then W is inserted in the consensus. If all A, T, C, and G
-tie at a site, then N is inserted in the consensus.
+tie at a site, then N is inserted in the consensus. Note this means that if a
+nucletide e.g. 'C' and a gap '-' draw, the nucleotide will always win over the
+gap, even though they tied.
 
 # Examples
 ```julia
@@ -1215,16 +1217,11 @@ function majorityvote{A<:NucleotideAlphabet}(seqs::AbstractVector{BioSequence{A}
             votes[9] += (nuc & 0x08) != 0x00
         end
         m = maximum(votes)
-        winners = convert(Vector{UInt8}, findin(votes, m))
-        if length(winners) == 1
-            result[site] = reinterpret(eltype(A), winners[1] - 0x01)
-        else
-            merged = 0x00
-            for winner in winners
-                merged |= (winner - 0x01)
-            end
-            result[site] = reinterpret(eltype(A), merged)
+        merged = 0x00
+        for i in 0x01:0x10
+            merged |= ifelse(votes[i] == m, i - 0x01, 0x00)
         end
+        result[site] = reinterpret(eltype(A), merged)
     end
     return result
 end
