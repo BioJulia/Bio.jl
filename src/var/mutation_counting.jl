@@ -1,5 +1,5 @@
 # phylo/mutation_counting.jl
-# ==================
+# ==========================
 #
 # Types and methods for counting different kinds of mutations between two
 # DNA or RNA sequences.
@@ -83,6 +83,44 @@ Test if two nucleotides constitute a `TransversionMutation`.
 @inline function is_mutation{T<:Nucleotide}(::Type{TransversionMutation}, a::T, b::T)
     return (a != b) & ((ispurine(a) & ispyrimidine(b)) | (ispyrimidine(a) & ispurine(b)))
 end
+
+
+
+
+
+"""
+    is_mutation{M<:MutationType,N<:Nucleotide}(::Type{M}, seqs::Matrix{N})
+
+
+**Note: This method assumes that the sequences are stored in the `Matrix{N}`
+provided as `seqs` in sequence major order i.e. each column of the matrix is one
+complete nucleotide sequence.**
+"""
+function is_mutation{M<:MutationType,N<:Nucleotide}(::Type{M}, seqs::Matrix{N})
+    seqsize, nseqs = size(seqs)
+    ismutant = Matrix{Bool}(seqsize, binomial(nseqs, 2))
+    isambiguous = Matrix{Bool}(seqsize, binomial(nseqs, 2))
+
+    col = 1
+    @inbounds for i1 in 1:nseqs
+        for i2 in i1+1:nseqs
+            for s in 1:seqsize
+                s1 = seqs[(i1 - 1) * seqsize + s]
+                s2 = seqs[(i2 - 1) * seqsize + s]
+                isamb = is_ambiguous_strict(s1, s2)
+                ismut = is_mutation(T, s1, s2)
+                isambiguous[(col - 1) * seqsize + s] = isamb
+                ismutant[(col - 1) * seqsize + s] = !isamb & ismut
+            end
+            col += 1
+        end
+    end
+
+    return ismutant, isambiguous
+
+end
+
+
 
 
 """
