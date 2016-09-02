@@ -12,13 +12,15 @@ using Bio.Seq
 
 export
 
-    # Mutation counting
+    # Mutation types
     MutationType,
     AnyMutation,
     TransitionMutation,
     TransversionMutation,
 
+    # Identifying and counting mutations
     count_mutations,
+    is_mutation,
 
     # Genetic and Evolutionary distances
     EvolutionaryDistance,

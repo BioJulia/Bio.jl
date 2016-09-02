@@ -7,7 +7,7 @@ DocTestSetup = quote
 end
 ```
 
-## Counting mutations
+## Identifying and counting mutations
 
 You can count the numbers of different types of mutations in a pairwise manner
 for a set of nucleotide sequences.
@@ -23,7 +23,7 @@ TransitionMutation
 TransversionMutation
 ```
 
-### `count_mutations` method
+### The `count_mutations` method
 
 Mutations are counted using the `count_mutations` method.
 The method outputs a tuple. The first value is the number of mutations counted.
@@ -49,6 +49,12 @@ count_mutations(TransversionMutation, [rna"AUCGAUCG", rna"ACCGAUCG"])
 count_mutations(TransitionMutation, TransversionMutation, [rna"AUCGAUCG", rna"ACCGAUCG"])
 ```
 
+### The `is_mutation` method
+
+```@docs
+is_mutation{M<:MutationType,N<:Nucleotide}(::Type{M}, seqs::Matrix{N})
+```
+
 ## Computing evolutionary and genetic distances
 
 Just as you can count the number of mutations between two nucleotide sequences,
@@ -69,4 +75,8 @@ Kimura80
 
 ```@docs
 distance
+distance{T<:MutationType,A<:NucleotideAlphabet}(::Type{Count{T}}, seqs::Vector{BioSequence{A}})
+distance{T<:MutationType,A<:NucleotideAlphabet}(::Type{Proportion{T}}, seqs::Vector{BioSequence{A}})
+distance{A<:NucleotideAlphabet}(::Type{JukesCantor69}, seqs::Vector{BioSequence{A}})
+distance{A<:NucleotideAlphabet}(::Type{Kimura80}, seqs::Vector{BioSequence{A}})
 ```
