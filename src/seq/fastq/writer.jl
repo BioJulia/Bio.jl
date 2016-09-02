@@ -7,18 +7,18 @@ type FASTQWriter{T<:IO} <: Bio.IO.AbstractWriter
     # write sequence name and description header at the third line
     quality_header::Bool
 
-    # encoding offset of base qualities (ASCII code = Phred quality + offset)
-    ascii_offset::Int
+    # quality encoding used for writing
+    quality_encoding::QualityEncoding
 end
 
 function Bio.IO.stream(writer::FASTQWriter)
     return writer.output
 end
 
-function FASTQWriter(output::IO, quality_encoding::QualityEncoding;
-                     quality_header::Bool=false)
-    offset = ascii_encoding_offsets[quality_encoding]
-    return FASTQWriter(output, quality_header, offset)
+function FASTQWriter(output::IO;
+                     quality_header::Bool=false,
+                     quality_encoding::Symbol=:sanger)
+    return FASTQWriter(output, quality_header, sym2qualenc(quality_encoding))
 end
 
 function Base.write(writer::FASTQWriter, seqrec::FASTQSeqRecord)
@@ -49,7 +49,7 @@ function Base.write(writer::FASTQWriter, seqrec::FASTQSeqRecord)
     n += write(output, '\n')
 
     for q in seqrec.metadata.quality
-        n += write(output, Char(q + writer.ascii_offset))
+        n += write(output, Char(q + ascii_offset(writer.quality_encoding)))
     end
     n += write(output, '\n')
 

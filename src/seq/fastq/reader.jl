@@ -9,20 +9,13 @@ type FASTQReader{S<:Sequence} <: Bio.IO.AbstractReader
     name2buf::StringField
     desc2buf::StringField
     qualcount::Int
-    quality_encodings::QualityEncoding
+    quality_encoding::QualityEncoding
+    fillN::DNANucleotide
 
-    function FASTQReader(input::BufferedInputStream,
-                         quality_encodings::QualityEncoding)
-        if quality_encodings == EMPTY_QUAL_ENCODING
-            error("The `quality_encodings` argument is required when parsing FASTQ.")
-        elseif count_ones(convert(UInt16, quality_encodings)) > 1
-            error("The `quality_encodings` argument must specify exactly one encoding.")
-        elseif count_ones(convert(UInt16, quality_encodings & ALL_QUAL_ENCODINGS)) != 1
-            error("Unknown quality encoding.")
-        end
+    function FASTQReader(input::BufferedInputStream, quality_encoding::QualityEncoding, fillN::DNANucleotide)
         return new(Ragel.State(fastqparser_start, input),
                    BufferedOutputStream(), BufferedOutputStream(),
-                   StringField(), StringField(), 0, quality_encodings)
+                   StringField(), StringField(), 0, quality_encoding, fillN)
     end
 end
 
@@ -34,10 +27,28 @@ function Base.eltype{S}(::Type{FASTQReader{S}})
     return FASTQSeqRecord{S}
 end
 
-function FASTQReader(input::IO, quality_encoding::QualityEncoding)
-    return FASTQReader{DNASequence}(BufferedInputStream(input), quality_encoding)
+function FASTQReader(input::IO; quality_encoding::Symbol=:sanger, fillN::DNANucleotide=DNA_N)
+    return FASTQReader{DNASequence}(BufferedInputStream(input), sym2qualenc(quality_encoding), fillN)
 end
 
-function (::Type{FASTQReader{S}}){S<:Sequence}(input::IO, quality_encoding::QualityEncoding)
-    return FASTQReader{S}(BufferedInputStream(input), quality_encoding)
+function (::Type{FASTQReader{S}}){S<:Sequence}(input::IO;
+                                               quality_encoding::Symbol=:sanger,
+                                               fillN::DNANucleotide=DNA_N)
+    return FASTQReader{S}(BufferedInputStream(input), sym2qualenc(quality_encoding), fillN)
+end
+
+# Map the quality encoding name to a corresponding QualityEncoding object.
+function sym2qualenc(name::Symbol)
+    if name == :sanger
+        return SANGER_QUAL_ENCODING
+    elseif name == :solexa
+        return SOLEXA_QUAL_ENCODING
+    elseif name == :illumina13
+        return ILLUMINA13_QUAL_ENCODING
+    elseif name == :illumina15
+        return ILLUMINA15_QUAL_ENCODING
+    elseif name == :illumina18 || name == :illumina
+        return ILLUMINA18_QUAL_ENCODING
+    end
+    error("quality encoding ':$(name)' is not supported")
 end

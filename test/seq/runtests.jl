@@ -107,6 +107,7 @@ function random_interval(minstart, maxstop)
     return start:rand(start:maxstop)
 end
 
+#=
 @testset "Nucleotides" begin
     @testset "Conversions" begin
         @testset "UInt8" begin
@@ -2860,6 +2861,7 @@ end
     @test rec != rec3
     @test rec == copy(rec)
 end
+=#
 
 @testset "Reading and Writing" begin
     @testset "FASTA" begin
@@ -3034,8 +3036,7 @@ end
 
     @testset "FASTQ" begin
         output = IOBuffer()
-        # no headers before quality lines and the ASCII offset is 33
-        writer = FASTQWriter(output, Seq.SANGER_QUAL_ENCODING)
+        writer = FASTQWriter(output)
         write(writer, FASTQSeqRecord("1", dna"AN", Int8[11, 25]))
         write(writer, FASTQSeqRecord("2", dna"TGA", Int8[40, 41, 45], "high quality"))
         flush(writer)
@@ -3050,9 +3051,9 @@ end
         IJN
         """
 
-        function test_fastq_parse(filename, valid, qualenc)
+        function test_fastq_parse(filename, valid, encoding)
             # Reading from a stream
-            stream = open(FASTQReader, filename, qualenc)
+            stream = open(FASTQReader, filename, quality_encoding=encoding)
             if valid
                 for seqrec in stream end
                 @test true  # no error
@@ -3065,7 +3066,7 @@ end
             end
 
             # in-place parsing
-            stream = open(FASTQReader, filename, qualenc)
+            stream = open(FASTQReader, filename, quality_encoding=encoding)
             entry = eltype(stream)()
             while !eof(stream)
                 read!(stream, entry)
@@ -3073,9 +3074,9 @@ end
 
             # Check round trip
             output = IOBuffer()
-            writer = FASTQWriter(output, qualenc)
+            writer = FASTQWriter(output, quality_encoding=encoding)
             expected_entries = Any[]
-            for seqrec in open(FASTQReader, filename, qualenc)
+            for seqrec in open(FASTQReader, filename, quality_encoding=encoding)
                 write(writer, seqrec)
                 push!(expected_entries, seqrec)
             end
@@ -3083,7 +3084,7 @@ end
 
             seekstart(output)
             read_entries = Any[]
-            for seqrec in FASTQReader(output, qualenc)
+            for seqrec in FASTQReader(output, quality_encoding=encoding)
                 push!(read_entries, seqrec)
             end
 
@@ -3101,13 +3102,35 @@ end
                 continue
             end
             filename = specimen["filename"]
-            # FIXME
             qualenc = (
-                #contains(filename, "sanger") ? Seq.SANGER_QUAL_ENCODING :
-                #contains(filename, "solexa") ? Seq.SOLEXA_QUAL_ENCODING :
-                #contains(filename, "illumina") ? Seq.ILLUMINA15_QUAL_ENCODING :
-                Seq.SANGER_QUAL_ENCODING)
+                contains(filename, "_sanger") ? :sanger :
+                contains(filename, "_solexa") ? :solexa :
+                contains(filename, "_illumina") ? :illumina : :sanger)
             test_fastq_parse(joinpath(path, filename), valid, qualenc)
+        end
+
+        @testset "invalid quality encoding" begin
+            # Sanger full range (note escape characters before '$' and '\')
+            input = IOBuffer("""
+            @FAKE0001 Original version has PHRED scores from 0 to 93 inclusive (in that order)
+            ACGTACGTACGTACGTACGTACGTACGTACGTACGTACGTACGTACGTACGTACGTACGTACGTACGTACGTACGTACGTACGTACGTACGTAC
+            +
+            !"#\$%&'()*+,-./0123456789:;<=>?@ABCDEFGHIJKLMNOPQRSTUVWXYZ[\\]^_`abcdefghijklmnopqrstuvwxyz{|}~
+            """)
+
+            # the range is not enough in these encodings
+            for encoding in (:solexa, :illumina13, :illumina15)
+                seekstart(input)
+                reader = FASTQReader(input, quality_encoding=encoding)
+                @test_throws Exception first(reader)
+            end
+
+            # the range is enough in these encodings
+            for encoding in (:sanger, :illumina18, :illumina)
+                seekstart(input)
+                reader = FASTQReader(input, quality_encoding=encoding)
+                @test metadata(first(reader)).quality == collect(0:93)
+            end
         end
 
         @testset "specified sequence type" begin
@@ -3119,10 +3142,26 @@ end
             """)
             for A in (DNAAlphabet{2}, DNAAlphabet{4})
                 seekstart(input)
-                record = first(FASTQReader{BioSequence{A}}(input, Seq.SANGER_QUAL_ENCODING))
+                record = first(FASTQReader{BioSequence{A}}(input))
                 @test record.name == "foobar"
                 @test typeof(record.seq) == BioSequence{A}
             end
+        end
+
+        @testset "fillN" begin
+            input = IOBuffer("""
+            @seq1
+            ACGTNacgtn
+            +
+            BBBB#AAAA#
+            """)
+            @test first(FASTQReader(input, fillN=DNA_N)).seq == dna"ACGTNACGTN"
+            seekstart(input)
+            @test first(FASTQReader(input, fillN=DNA_A)).seq == dna"ACGTAACGTA"
+            seekstart(input)
+            @test first(FASTQReader(input, fillN=DNA_G)).seq == dna"ACGTGACGTG"
+            seekstart(input)
+            @test first(FASTQReader{BioSequence{DNAAlphabet{2}}}(input, fillN=DNA_A)).seq == dna"ACGTAACGTA"
         end
     end
 
@@ -3183,20 +3222,10 @@ end
 end
 
 @testset "Quality scores" begin
-    @testset "Decoding PHRED scores" begin
+    @testset "Decoding base quality scores" begin
         function test_decode(encoding, values, expected)
-            result = Array(Int8, length(expected))
+            result = Array{Int8}(length(expected))
             Seq.decode_quality_string!(encoding, values, result, 1, length(result))
-            @test result == expected
-
-            # Without start and end does the entire string
-            Seq.decode_quality_string!(encoding, values, result)
-            @test result == expected
-
-            # Non in-place version of the above
-            result = Seq.decode_quality_string(encoding, values, 1, length(result))
-            @test result == expected
-            resutlt = Seq.decode_quality_string(encoding, values)
             @test result == expected
         end
 
@@ -3221,19 +3250,10 @@ end
                     Int8[0, 2, 3, 4, 5, 40, 93])
     end
 
-    @testset "Encoding PHRED scores" begin
+    @testset "Encoding base quality scores" begin
         function test_encode(encoding, values, expected)
-            # With start & end
-            result = Array(UInt8, length(expected))
+            result = Array{UInt8}(length(expected))
             Seq.encode_quality_string!(encoding, values, result, 1, length(result))
-            @test result == expected
-            # Without start & end means the entire length
-            Seq.encode_quality_string!(encoding, values, result)
-            @test result == expected
-
-            result = Seq.encode_quality_string(encoding, values, 1, length(result))
-            @test result == expected
-            result = Seq.encode_quality_string(encoding, values)
             @test result == expected
         end
 
