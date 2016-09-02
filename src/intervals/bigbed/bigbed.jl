@@ -345,6 +345,9 @@ function Base.write(io::IO, node::BigBedRTreeInternalNode)
     write(io, node.data_offset)
 end
 
+immutable BigBed <: Bio.IO.FileFormat end
+immutable BigWig <: Bio.IO.FileFormat end
+
 # TODO: This should be renamed to BigBedReader
 type BigBedData <: Bio.IO.AbstractReader
     stream::BufferedInputStream

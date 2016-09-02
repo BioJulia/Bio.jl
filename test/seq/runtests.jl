@@ -2861,7 +2861,7 @@ end
     @test rec == copy(rec)
 end
 
-@testset "Parsing" begin
+@testset "Reading and Writing" begin
     @testset "FASTA" begin
         output = IOBuffer()
         writer = Seq.FASTAWriter(output, 5)
@@ -3014,6 +3014,20 @@ end
 
                     @test_throws Exception reader["chr5"]
                 end
+            end
+        end
+
+        @testset "append" begin
+            intempdir() do
+                filepath = "test.fa"
+                writer = open(FASTAWriter, filepath)
+                write(writer, FASTASeqRecord("seq1", dna"AAA"))
+                close(writer)
+                writer = open(FASTAWriter, filepath, append=true)
+                write(writer, FASTASeqRecord("seq2", dna"CCC"))
+                close(writer)
+                seqs = open(collect, FASTAReader, filepath)
+                @test length(seqs) == 2
             end
         end
     end

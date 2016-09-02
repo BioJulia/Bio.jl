@@ -69,10 +69,11 @@ abstract AbstractWriter <: AbstractFormattedIO
 function Base.open{T<:AbstractWriter}(::Type{T}, filepath::AbstractString, args...; kwargs...)
     i = findfirst(kwarg -> kwarg[1] == :append, kwargs)
     if i > 0
-        append = kwargs[i][1]
+        append = kwargs[i][2]
         if !isa(append, Bool)
             throw(ArgumentError("append must be boolean"))
         end
+        deleteat!(kwargs, i)
     else
         append = false
     end
