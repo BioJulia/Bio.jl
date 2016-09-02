@@ -108,7 +108,7 @@ function is_mutation{M<:MutationType,N<:Nucleotide}(::Type{M}, seqs::Matrix{N})
                 s1 = seqs[(i1 - 1) * seqsize + s]
                 s2 = seqs[(i2 - 1) * seqsize + s]
                 isamb = is_ambiguous_strict(s1, s2)
-                ismut = is_mutation(T, s1, s2)
+                ismut = is_mutation(M, s1, s2)
                 isambiguous[(col - 1) * seqsize + s] = isamb
                 ismutant[(col - 1) * seqsize + s] = !isamb & ismut
             end
