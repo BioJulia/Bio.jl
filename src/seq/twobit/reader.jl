@@ -26,10 +26,6 @@ function Bio.IO.stream(reader::TwoBitReader)
     return reader.input
 end
 
-function Base.open(filename::AbstractString, ::Type{TwoBit})
-    return TwoBitReader(open(filename))
-end
-
 function Base.eltype(::Type{TwoBitReader})
     return SeqRecord{ReferenceSequence,Vector{UnitRange{Int}}}
 end

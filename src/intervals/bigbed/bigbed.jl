@@ -348,7 +348,8 @@ end
 immutable BigBed <: Bio.IO.FileFormat end
 immutable BigWig <: Bio.IO.FileFormat end
 
-type BigBedData <: IntervalStream{BEDMetadata}
+# TODO: This should be renamed to BigBedReader
+type BigBedData <: Bio.IO.AbstractReader
     stream::BufferedInputStream
     header::BigBedHeader
     zoom_headers::Vector{BigBedZoomHeader}
@@ -367,6 +368,15 @@ type BigBedData <: IntervalStream{BEDMetadata}
 end
 
 Base.iteratorsize(::BigBedData) = Base.SizeUnknown()
+Base.eltype(::Type{BigBedData}) = BEDInterval
+
+function Bio.IO.stream(reader::BigBedData)
+    return reader.stream
+end
+
+function BigBedData(input::IO)
+    return init_bigbed_reader(input)
+end
 
 type BigBedDataReader <: Bio.IO.AbstractReader
     state::Ragel.State
@@ -395,9 +405,9 @@ end
 
 include("parser.jl")
 
-# Open a BigBed file for reading.  Once opened, entries can be read from the
+# Initialize BgiBedData for reading.  Once opened, entries can be read from the
 # file either by iterating over it, or by indexing into it with an interval.
-function Base.open(stream::BufferedInputStream, ::Type{BigBed})
+function init_bigbed_reader(stream::IO)
     # header
     header = read(stream, BigBedHeader)
     if header.magic != BIGBED_MAGIC
@@ -449,7 +459,7 @@ function Base.open(stream::BufferedInputStream, ::Type{BigBed})
         error("BigBed R-Tree magic number was incorrect. File may be corrupt or malformed.")
     end
 
-    return BigBedData(stream, header, zoom_headers, autosql, summary,
+    return BigBedData(BufferedInputStream(stream), header, zoom_headers, autosql, summary,
                       btree_header, rtree_header, data_count,
                       BigBedBTreeInternalNode[BigBedBTreeInternalNode(btree_header.key_size)
                                               for _ in 1:btree_header.block_size],

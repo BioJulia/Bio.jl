@@ -1,11 +1,6 @@
 # SAM
 # ===
 
-"""
-The SAM file format.
-"""
-immutable SAM <: Bio.IO.FileFormat end
-
 function checkkeytag(tag)
     if !isa(tag, AbstractString)
         throw(ArgumentError("tag must be a string"))

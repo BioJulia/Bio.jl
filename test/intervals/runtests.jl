@@ -396,36 +396,34 @@ end
 
         function check_bed_parse(filename)
             # Reading from a stream
-            for interval in open(open(filename), BED)
-            end
-
-            # Reading from a memory mapped file
-            for interval in open(filename, BED, memory_map=true)
+            for interval in BEDReader(open(filename))
             end
 
             # Reading from a regular file
-            for interval in open(filename, BED, memory_map=false)
+            for interval in open(BEDReader, filename)
             end
 
             # in-place parsing
-            stream = open(filename, BED)
+            stream = open(BEDReader, filename)
             entry = eltype(stream)()
             while !eof(stream)
                 read!(stream, entry)
             end
+            close(stream)
 
             # Check round trip
             output = IOBuffer()
-            writer = Intervals.BEDWriter(output, -1)
+            writer = BEDWriter(output)
             expected_entries = Any[]
-            for interval in open(filename, BED)
+            for interval in open(BEDReader, filename)
                 write(writer, interval)
                 push!(expected_entries, interval)
             end
             flush(writer)
 
+            seekstart(output)
             read_entries = Any[]
-            for interval in open(takebuf_array(output), BED)
+            for interval in BEDReader(output)
                 push!(read_entries, interval)
             end
 
@@ -451,22 +449,22 @@ end
 
         function check_intersection(filename_a, filename_b)
             ic_a = IntervalCollection{BEDMetadata}()
-            open(filename_a, BED) do intervals
+            open(BEDReader, filename_a) do intervals
                 for interval in intervals
                     push!(ic_a, interval)
                 end
             end
 
             ic_b = IntervalCollection{BEDMetadata}()
-            open(filename_b, BED) do intervals
+            open(BEDReader, filename_b) do intervals
                 for interval in intervals
                     push!(ic_b, interval)
                 end
             end
 
             # This is refactored out to close streams
-            fa = open(filename_a, BED)
-            fb = open(filename_b, BED)
+            fa = open(BEDReader, filename_a)
+            fb = open(BEDReader, filename_b)
             xs = sort(collect(intersect(fa, fb)))
             close(fa)
             close(fb)
@@ -516,13 +514,13 @@ end
 
             # BED → BigBed
             intervals = IntervalCollection(
-                open(open(joinpath(path, specimen["filename"])), BED))
+                open(BEDReader, joinpath(path, specimen["filename"])))
             out = IOBuffer()
             write(out, BigBed, intervals)
-            bigbed_data = takebuf_array(out)
 
             # BigBed → BED
-            bb = open(bigbed_data, BigBed)
+            seekstart(out)
+            bb = Intervals.BigBedData(out)
             intervals2 = IntervalCollection(bb)
 
             @test intervals == intervals2
@@ -540,7 +538,8 @@ end
         # convert to bigbed in memory
         out = IOBuffer()
         write(out, BigBed, intervals)
-        bb = open(takebuf_array(out), BigBed)
+        seekstart(out)
+        bb = Intervals.BigBedData(out)
 
         # intersection queries
         num_queries = 1000

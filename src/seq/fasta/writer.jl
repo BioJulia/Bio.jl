@@ -12,6 +12,10 @@ function Bio.IO.stream(writer::FASTAWriter)
     return writer.output
 end
 
+function FASTAWriter(output::IO; width::Integer=70)
+    return FASTAWriter(output, width)
+end
+
 function Base.write(writer::FASTAWriter, seqrec::FASTASeqRecord)
     output = writer.output
     n = 0

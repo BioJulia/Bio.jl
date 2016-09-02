@@ -12,6 +12,10 @@ function Bio.IO.stream(writer::BEDWriter)
     return writer.output
 end
 
+function BEDWriter(output::IO, n_fields::Integer=-1)
+    return BEDWriter{typeof(output)}(output, n_fields)
+end
+
 function Base.write(writer::BEDWriter, interval::BEDInterval)
     if writer.n_fields == -1
         writer.n_fields = interval.metadata.used_fields

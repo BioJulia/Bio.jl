@@ -6,8 +6,6 @@
 # This file is a part of BioJulia.
 # License is MIT: https://github.com/BioJulia/Bio.jl/blob/master/LICENSE.md
 
-immutable BED <: Bio.IO.FileFormat end
-
 """Metadata for BED interval records"""
 type BEDMetadata
     used_fields::Int # how many of the first n fields are used
@@ -72,17 +70,6 @@ end
 
 "An `Interval` with associated metadata from a BED file"
 typealias BEDInterval Interval{BEDMetadata}
-
-function Base.open(filepath::AbstractString, mode::AbstractString, ::Type{BED};
-                   n_fields::Integer=-1)
-    io = open(filepath, mode)
-    if mode[1] == 'r'
-        return open(BufferedInputStream(io), BED)
-    elseif mode[1] ∈ ('w', 'o')
-        return BEDWriter(io, n_fields)
-    end
-    error("invalid open mode")
-end
 
 include("reader.jl")
 include("parser.jl")

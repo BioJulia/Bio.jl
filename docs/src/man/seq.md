@@ -317,7 +317,7 @@ TTANC
 Using `convert`, these operations are reversible: sequences can be converted to
 strings or arrays:
 ```jlcon
-julia> convert(ASCIIString, dna"TTANGTA")
+julia> convert(String, dna"TTANGTA")
 "TTANGTA"
 
 julia> convert(Vector{DNANucleotide}, dna"TTANGTA")
@@ -663,7 +663,7 @@ ERROR: ArgumentError: invalid symbol M ∉ {A,C,G,T,N} at 4
 When reading reference sequences from a FASTA file, the following snippet will
 avoid allocating temporary sequences and conversion:
 ```julia
-for record in open("hg38.fa", FASTA, ReferenceSequence)
+for record in open(FASTAReader{ReferenceSequence}, "hg38.fa")
     # do something
 end
 ```

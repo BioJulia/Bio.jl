@@ -15,16 +15,13 @@ function Bio.IO.stream(writer::FASTQWriter)
     return writer.output
 end
 
-function Base.write(writer::FASTQWriter, seqrec::FASTQSeqRecord)
-    if writer.ascii_offset == typemin(Int)
-        # infer quality encoding based on data
-        if !isempty(seqrec.metadata.quality) && minimum(seqrec.metadata.quality) < 0
-            writer.ascii_offset = 64  # solexa
-        else
-            writer.ascii_offset = 33  # others
-        end
-    end
+function FASTQWriter(output::IO, quality_encoding::QualityEncoding;
+                     quality_header::Bool=false)
+    offset = ascii_encoding_offsets[quality_encoding]
+    return FASTQWriter(output, quality_header, offset)
+end
 
+function Base.write(writer::FASTQWriter, seqrec::FASTQSeqRecord)
     output = writer.output
     n = 0
 
@@ -126,4 +123,3 @@ function Base.write(io::IO, seqrec::FASTQSeqRecord;
     end
     write(io, "\n")
 end
-

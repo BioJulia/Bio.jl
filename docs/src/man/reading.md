@@ -1,36 +1,44 @@
 # Reading and writing data
 
 Bio.jl has a unified interface for reading and writing files in a variety of
-formats. To initialize a reader for a particular format, the `open` method is
-extended with a file format type parameter `T`:
+formats. Reader and writer type names have a prefix of the file format. For
+example, files of a format `X` can be read using `XReader` and can be written
+using `XWriter`.  To initialize a reader/writer of `X`, you can use one of the
+following syntaxes:
 ```julia
-open{T<:FileFormat}(filename::AbstractString, ::Type{T})
-open{T<:FileFormat}(source::IO, ::Type{T})
-open{T<:FileFormat}(data::Vector{UInt8}, ::Type{T})
+# reader
+open(::Type{XReader}, filepath::AbstractString, args...)
+XReader(stream::IO, args...)
+
+# writer
+open(::Type{XWriter}, filepath::AbstractString, args...)
+XWriter(stream::IO, args...)
 ```
 
 For example, when reading a FASTA file, a reader for the FASTA file format can
 be initialized as:
 ```julia
-using Bio.Seq  # import FASTA
-reader = open("hg38.fa", FASTA)
+using Bio.Seq  # import FASTAReader
+reader = open(FASTAReader, "hg38.fa")
+# do something
+close(reader)
 ```
 
 
 ## Reading by iteration
 
 Readers in Bio.jl all read and return entries one at a time. The most convenient
-way to do this by iteration.
-
+way to do this by iteration:
 ```julia
-reader = open("input.bed", BED)
+reader = open(BEDReader, "input.bed")
 for record in reader
     # perform some operation on entry
 end
+close(reader)
 ```
 
 
-## In-place parsing
+## In-place reading
 
 Iterating through entries in a file is convenient, but for each entry in the
 file, the reader must allocate, and ultimately the garbage collector must spend
@@ -42,12 +50,13 @@ greatly speed up reading.
 Instead of looping over a reader stream `read!` is called with a preallocated
 entry.
 ```julia
-reader = open("input.bed", BED)
+reader = open(BEDReader, "input.bed")
 record = BEDInterval()
 while !eof(reader)
     read!(reader, record)
     # perform some operation on `entry`
 end
+close(reader)
 ```
 
 Some care is necessary when using this interface. Because `entry` is completely
@@ -65,23 +74,21 @@ entry = eltype(stream)()
 
 ## Writing data
 
-Writing data into a stream has a uniform interface consistent with readers. The
-following code is a template of formatted serialization into a file:
+A FASTA file will be created as follows:
 ```julia
-# open a file of a particular file format in writing mode
-writer = open(<filepath>, "w", <format>)
-# write a record into it
-write(writer, <record>)
-# finally close it
+writer = open(FASTAWriter, "out.fa")
+write(writer, FASTASeqRecord("seq1", dna"ACGTN"))
+write(writer, FASTASeqRecord("seq2", dna"TTATA", "AT rich"))
 close(writer)
 ```
 
-For example, a FASTA file will be created as follows:
+Another way is using Julia's do-block syntax, which closes the data file after
+finished writing:
 ```julia
-writer = open("out.fasta", "w", FASTA)
-write(writer, FASTASeqRecord("seq1", dna"ACGTN"))
-write(writer, FASTASeqRecord("seq2", dna"TTATATTATTGTAAA", "AT rich"))
-close(writer)
+open(FASTAWriter, "out.fa") do writer
+    write(writer, FASTASeqRecord("seq1", dna"ACGTN"))
+    write(writer, FASTASeqRecord("seq2", dna"TTATA", "AT rich"))
+end
 ```
 
 
@@ -89,14 +96,14 @@ close(writer)
 
 The following table summarizes supported file formats.
 
-| File format | Type parameter | Module          | Specification                                                               |
-| :---------- | :------------- | :-----          | :------------                                                               |
-| FASTA       | `FASTA`        | `Bio.Seq`       | <https://en.wikipedia.org/wiki/FASTA_format>                                |
-| FASTQ       | `FASTQ`        | `Bio.Seq`       | <https://en.wikipedia.org/wiki/FASTQ_format>                                |
-| .2bit       | `TwoBit`       | `Bio.Seq`       | <http://genome.ucsc.edu/FAQ/FAQformat.html#format7>                         |
-| BED         | `BED`          | `Bio.Intervals` | <https://genome.ucsc.edu/FAQ/FAQformat.html#format1>                        |
-| bigBed      | `BigBed`       | `Bio.Intervals` | <https://doi.org/10.1093/bioinformatics/btq351>                             |
-| PDB         | `PDB`          | `Bio.Structure` | <http://www.wwpdb.org/documentation/file-format-content/format33/v3.3.html> |
+| File format | Prefix   | Module          | Specification                                                               |
+| :---------- | :------- | :-----          | :------------                                                               |
+| FASTA       | `FASTA`  | `Bio.Seq`       | <https://en.wikipedia.org/wiki/FASTA_format>                                |
+| FASTQ       | `FASTQ`  | `Bio.Seq`       | <https://en.wikipedia.org/wiki/FASTQ_format>                                |
+| .2bit       | `TwoBit` | `Bio.Seq`       | <http://genome.ucsc.edu/FAQ/FAQformat.html#format7>                         |
+| BED         | `BED`    | `Bio.Intervals` | <https://genome.ucsc.edu/FAQ/FAQformat.html#format1>                        |
+| bigBed      | `BigBed` | `Bio.Intervals` | <https://doi.org/10.1093/bioinformatics/btq351>                             |
+| PDB         | `PDB`    | `Bio.Structure` | <http://www.wwpdb.org/documentation/file-format-content/format33/v3.3.html> |
 
 
 ### FASTA
@@ -126,7 +133,7 @@ But if the FASTA file has an auxiliary index file formatted in
 to FASTA records, which would be useful when accessing specific parts of a huge
 genome sequence:
 ```julia
-reader = open("sacCer.fa", FASTA)  # find and read "sacCer.fa.fai" file
+reader = open(FASTAReader, "sacCer.fa", index="sacCer.fa.fai")
 chrIV = reader["chrIV"]  # directly read chromosome 4
 ```
 
@@ -157,7 +164,7 @@ tcagTTAAGATGGGAT
 
 To read a file containing such records, one could use:
 ```julia
-reader = open("reads.fastq", FASTQ, Seq.SANGER_QUAL_ENCODING)
+reader = open(FASTQReader, "reads.fastq", Seq.SANGER_QUAL_ENCODING)
 seqrec = eltype(reader)()
 while !eof(reader)
     read!(reader, seqrec)
@@ -184,7 +191,7 @@ acid sequences.
 Like FASTA, the .2bit reader supports random access using an index included in
 the header section of a .2bit file:
 ```julia
-reader = open("sacCer.2bit", TwoBit)  # read the header and load a random access index
+reader = open(TwoBitReader, "sacCer.2bit")  # read the header and load a random access index
 chrIV = reader["chrIV"]  # directly read chromosome 4
 ```
 

@@ -87,6 +87,10 @@ function IntervalCollection{T}(interval_stream::IntervalStream{T})
     return IntervalCollection{T}(intervals, true)
 end
 
+function IntervalCollection(intervals)
+    return IntervalCollection(collect(intervals), true)
+end
+
 function update_ordered_trees!{T}(ic::IntervalCollection{T})
     if ic.ordered_trees_outdated
         ic.ordered_trees = collect(IntervalCollectionTree{T}, values(ic.trees))

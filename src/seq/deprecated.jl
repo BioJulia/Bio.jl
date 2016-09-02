@@ -112,3 +112,9 @@ function Base.getindex{T}(r::SymbolRange{T}, ir::UnitRange)
         return SymbolRange(r[first(ir)], r[last(ir)])
     end
 end
+
+
+immutable FASTA <: Bio.IO.FileFormat end
+immutable FASTQ <: Bio.IO.FileFormat end
+immutable TwoBit <: Bio.IO.FileFormat end
+export FASTA, FASTQ, TwoBit

@@ -96,7 +96,7 @@ intervals, and parsers over interval file formats. This allows for a very
 general notion of intersection.
 
 ```julia
-for (x, y) in intersect(open("x_features.bed", BED), open("y_features.bed", BED))
+for (x, y) in intersect(open(BEDReader, "x_features.bed"), open(BEDReader, "y_features.bed"))
     println("Intersection found between ", x, " and ", y)
 end
 ```
@@ -142,7 +142,7 @@ gzip-compliant data format and readable using standard command-line tools like
 Once a BGZF file and its index file are prepared using `bgzip` and `tabix`, the
 user can iterate over intervals overlapping with a specified region:
 ```julia
-reader = open("data.bed.gz", BED)
+reader = open(BEDReader, "data.bed.gz")
 for interval in intersect(reader, "chr2", 1_000_000:2_000_000)
     # do something
 end

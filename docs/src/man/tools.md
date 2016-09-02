@@ -37,8 +37,8 @@ These functions return a `Vector{BLASTResult}`. Each element is a hit which incl
 immutable BLASTResult
     bitscore::Float64
     expect::Float64
-    queryname::ASCIIString
-    hitname::ASCIIString
+    queryname::String
+    hitname::String
     hit::BioSequence
     alignment::AlignedSequence
 end
