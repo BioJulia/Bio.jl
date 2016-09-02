@@ -223,53 +223,34 @@
 <h1 id="biovar-biological-variation">Bio.Var: Biological Variation.</h1>
 <p><a id='Counting-mutations-1'></a></p>
 <h2 id="counting-mutations">Counting mutations</h2>
-<p>You can count the numbers of different types of mutations between two aligned (i.e. of equal length) nucleotide sequences.</p>
+<p>You can count the numbers of different types of mutations in a pairwise manner for a set of nucleotide sequences.</p>
 <p><a id='Different-types-of-mutation-1'></a></p>
 <h3 id="different-types-of-mutation">Different types of mutation</h3>
-<p>The types of mutations that can currently be counted are displayed in the following table.</p>
-<table>
-<thead>
-<tr>
-<th align="left">Type</th>
-<th align="left">Meaning</th>
-</tr>
-</thead>
-<tbody>
-<tr>
-<td align="left"><code>DifferentMutation</code></td>
-<td align="left">Nucleotides that are different</td>
-</tr>
-<tr>
-<td align="left"><code>TransitionMutation</code></td>
-<td align="left">Transition mutations</td>
-</tr>
-<tr>
-<td align="left"><code>TransversionMutation</code></td>
-<td align="left">Transversion mutations</td>
-</tr>
-</tbody>
-</table>
-<p><code>DifferentMutation</code> simply compares two nucleotides to see if they can be deemed the same or different. Ambiguous cases are detected and excluded from the computation.</p>
-<p><code>TransitionMutation</code> compares two nucleotides to see if they can be determined to be a transition mutation. As with <code>DifferentMutation</code>, cases where a nucleotide is ambiguous are excluded from the computation.</p>
-<p><code>TransversionMutation</code> compares two nucleotides to see if they can be determined to be a transversion mutation. As with <code>DifferentMutation</code>, cases where a nucleotide is ambiguous are excluded from the computation.</p>
+<p>The types of mutations that can currently be counted are <code>DifferentMutation</code>,s <code>TransitionMutation</code>s, and <code>TransversionMutation</code>s.</p>
+<div class="codehilite"><pre><span></span>DifferentMutation
+TransitionMutation
+TransversionMutation
+</pre></div>
+
+
 <p><a id='count_mutations-method-1'></a></p>
 <h3 id="count_mutations-method"><code>count_mutations</code> method</h3>
 <p>Mutations are counted using the <code>count_mutations</code> method. The method outputs a tuple. The first value is the number of mutations counted. The second value is the number of sites examined. Sites which have gaps and uncertain nucleotides are not examined and so this second value will be less than the length of the two biological sequences.</p>
-<div class="codehilite"><pre><span></span><span class="n">count_mutations</span><span class="p">(</span><span class="n">dna</span><span class="s">&quot;ATCGATCG&quot;</span><span class="p">,</span> <span class="n">dna</span><span class="s">&quot;ACCGATCG&quot;</span><span class="p">,</span> <span class="n">DifferentMutation</span><span class="p">)</span>
+<div class="codehilite"><pre><span></span><span class="n">count_mutations</span><span class="p">(</span><span class="n">DifferentMutation</span><span class="p">,</span> <span class="p">[</span><span class="n">dna</span><span class="s">&quot;ATCGATCG&quot;</span><span class="p">,</span> <span class="n">dna</span><span class="s">&quot;ACCGATCG&quot;</span><span class="p">])</span>
 
-<span class="n">count_mutations</span><span class="p">(</span><span class="n">dna</span><span class="s">&quot;ATCGATCG&quot;</span><span class="p">,</span> <span class="n">dna</span><span class="s">&quot;ACCGATCG&quot;</span><span class="p">,</span> <span class="n">TransitionMutation</span><span class="p">)</span>
+<span class="n">count_mutations</span><span class="p">(</span><span class="n">TransitionMutation</span><span class="p">,</span> <span class="p">[</span><span class="n">dna</span><span class="s">&quot;ATCGATCG&quot;</span><span class="p">,</span> <span class="n">dna</span><span class="s">&quot;ACCGATCG&quot;</span><span class="p">])</span>
 
-<span class="n">count_mutations</span><span class="p">(</span><span class="n">dna</span><span class="s">&quot;ATCGATCG&quot;</span><span class="p">,</span> <span class="n">dna</span><span class="s">&quot;ACCGATCG&quot;</span><span class="p">,</span> <span class="n">TransversionMutation</span><span class="p">)</span>
+<span class="n">count_mutations</span><span class="p">(</span><span class="n">TransversionMutation</span><span class="p">,</span> <span class="p">[</span><span class="n">dna</span><span class="s">&quot;ATCGATCG&quot;</span><span class="p">,</span> <span class="n">dna</span><span class="s">&quot;ACCGATCG&quot;</span><span class="p">])</span>
 
-<span class="n">count_mutations</span><span class="p">(</span><span class="n">dna</span><span class="s">&quot;ATCGATCG&quot;</span><span class="p">,</span> <span class="n">dna</span><span class="s">&quot;ACCGATCG&quot;</span><span class="p">,</span> <span class="n">TransitionMutation</span><span class="p">,</span> <span class="n">TransversionMutation</span><span class="p">)</span>
+<span class="n">count_mutations</span><span class="p">(</span><span class="n">TransitionMutation</span><span class="p">,</span> <span class="n">TransversionMutation</span><span class="p">,</span> <span class="p">[</span><span class="n">dna</span><span class="s">&quot;ATCGATCG&quot;</span><span class="p">,</span> <span class="n">dna</span><span class="s">&quot;ACCGATCG&quot;</span><span class="p">])</span>
 
-<span class="n">count_mutations</span><span class="p">(</span><span class="n">rna</span><span class="s">&quot;AUCGAUCG&quot;</span><span class="p">,</span> <span class="n">rna</span><span class="s">&quot;ACCGAUCG&quot;</span><span class="p">,</span> <span class="n">DifferentMutation</span><span class="p">)</span>
+<span class="n">count_mutations</span><span class="p">(</span><span class="n">DifferentMutation</span><span class="p">,</span> <span class="p">[</span><span class="n">rna</span><span class="s">&quot;AUCGAUCG&quot;</span><span class="p">,</span> <span class="n">rna</span><span class="s">&quot;ACCGAUCG&quot;</span><span class="p">])</span>
 
-<span class="n">count_mutations</span><span class="p">(</span><span class="n">rna</span><span class="s">&quot;AUCGAUCG&quot;</span><span class="p">,</span> <span class="n">rna</span><span class="s">&quot;ACCGAUCG&quot;</span><span class="p">,</span> <span class="n">TransitionMutation</span><span class="p">)</span>
+<span class="n">count_mutations</span><span class="p">(</span><span class="n">TransitionMutation</span><span class="p">,</span> <span class="p">[</span><span class="n">rna</span><span class="s">&quot;AUCGAUCG&quot;</span><span class="p">,</span> <span class="n">rna</span><span class="s">&quot;ACCGAUCG&quot;</span><span class="p">])</span>
 
-<span class="n">count_mutations</span><span class="p">(</span><span class="n">rna</span><span class="s">&quot;AUCGAUCG&quot;</span><span class="p">,</span> <span class="n">rna</span><span class="s">&quot;ACCGAUCG&quot;</span><span class="p">,</span> <span class="n">TransversionMutation</span><span class="p">)</span>
+<span class="n">count_mutations</span><span class="p">(</span><span class="n">TransversionMutation</span><span class="p">,</span> <span class="p">[</span><span class="n">rna</span><span class="s">&quot;AUCGAUCG&quot;</span><span class="p">,</span> <span class="n">rna</span><span class="s">&quot;ACCGAUCG&quot;</span><span class="p">])</span>
 
-<span class="n">count_mutations</span><span class="p">(</span><span class="n">rna</span><span class="s">&quot;AUCGAUCG&quot;</span><span class="p">,</span> <span class="n">rna</span><span class="s">&quot;ACCGAUCG&quot;</span><span class="p">,</span> <span class="n">TransitionMutation</span><span class="p">,</span> <span class="n">TransversionMutation</span><span class="p">)</span>
+<span class="n">count_mutations</span><span class="p">(</span><span class="n">TransitionMutation</span><span class="p">,</span> <span class="n">TransversionMutation</span><span class="p">,</span> <span class="p">[</span><span class="n">rna</span><span class="s">&quot;AUCGAUCG&quot;</span><span class="p">,</span> <span class="n">rna</span><span class="s">&quot;ACCGAUCG&quot;</span><span class="p">])</span>
 </pre></div>
 
 
@@ -282,33 +263,29 @@
 <p><a id='Bio.Var.Count' href='#Bio.Var.Count'>#</a>
 <strong><code>Bio.Var.Count</code></strong> &mdash; <em>Type</em>.</p>
 <p>A distance which is the count of the mutations of type T that exist between the two sequences.</p>
-<p><a target='_blank' href='https://github.com/BioJulia/Bio.jl/tree/0d1e0d784f3e593aae3c96e87ec347b3ab8e05eb/src/var/distances.jl#L18-L21' class='documenter-source'>source</a><br></p>
+<p><a target='_blank' href='https://github.com/BioJulia/Bio.jl/tree/ef634ed538bd37dae11647764b197aaa51fb10c5/src/var/distances.jl#L18-L21' class='documenter-source'>source</a><br></p>
 <p><a id='Bio.Var.Proportion' href='#Bio.Var.Proportion'>#</a>
 <strong><code>Bio.Var.Proportion</code></strong> &mdash; <em>Type</em>.</p>
 <p>Proportion{T} is a distance which is the count of the mutations of type T that exist between the two biological sequences, divided by the number of valid sites examined (sites which don't have gap or ambiguous symbols).</p>
 <p>In other words this so called p-distance is simply the proportion of sites between each pair of sequences, that are mutated (again where T determines what kind of mutation).</p>
-<p><a target='_blank' href='https://github.com/BioJulia/Bio.jl/tree/0d1e0d784f3e593aae3c96e87ec347b3ab8e05eb/src/var/distances.jl#L24-L32' class='documenter-source'>source</a><br></p>
+<p><a target='_blank' href='https://github.com/BioJulia/Bio.jl/tree/ef634ed538bd37dae11647764b197aaa51fb10c5/src/var/distances.jl#L24-L32' class='documenter-source'>source</a><br></p>
 <p><a id='Bio.Var.JukesCantor69' href='#Bio.Var.JukesCantor69'>#</a>
 <strong><code>Bio.Var.JukesCantor69</code></strong> &mdash; <em>Type</em>.</p>
 <p>The JukesCantor69 distance is a p-distance adjusted/corrected by the substitution model developed by Jukes and Cantor in 1969.</p>
 <p>The Jukes and Cantor model assumes that all substitutions (i.e. a change of a base by another one) have the same probability. This probability is the same for all sites along the DNA sequence.</p>
-<p><a target='_blank' href='https://github.com/BioJulia/Bio.jl/tree/0d1e0d784f3e593aae3c96e87ec347b3ab8e05eb/src/var/distances.jl#L35-L42' class='documenter-source'>source</a><br></p>
+<p><a target='_blank' href='https://github.com/BioJulia/Bio.jl/tree/ef634ed538bd37dae11647764b197aaa51fb10c5/src/var/distances.jl#L35-L42' class='documenter-source'>source</a><br></p>
 <p><a id='Bio.Var.Kimura80' href='#Bio.Var.Kimura80'>#</a>
 <strong><code>Bio.Var.Kimura80</code></strong> &mdash; <em>Type</em>.</p>
 <p>The Kimura80 distance uses a substitution model developed by Kimura in 1980. It is somtimes called Kimura's 2 parameter distance.</p>
 <p>The model makes the same assumptions as Jukes and Cantor's model, but with a crucial difference: two-kinds of mutation are considered called Transitions and Transversions. Transitions and transversions can occur with different probabilities in this model, however, both transition and transversion rates/probabilities are the same for all sites along the DNA sequence.</p>
-<p><a target='_blank' href='https://github.com/BioJulia/Bio.jl/tree/0d1e0d784f3e593aae3c96e87ec347b3ab8e05eb/src/var/distances.jl#L45-L55' class='documenter-source'>source</a><br></p>
+<p><a target='_blank' href='https://github.com/BioJulia/Bio.jl/tree/ef634ed538bd37dae11647764b197aaa51fb10c5/src/var/distances.jl#L45-L55' class='documenter-source'>source</a><br></p>
 <p><a id='The-distance-method-1'></a></p>
 <h3 id="the-distance-method">The distance method</h3>
 <p><a id='Bio.Var.distance' href='#Bio.Var.distance'>#</a>
 <strong><code>Bio.Var.distance</code></strong> &mdash; <em>Function</em>.</p>
-<div class="codehilite"><pre><span></span>distance(::Type{EvolutionaryDistance}, a::BioSequence, b::BioSequence)
-</pre></div>
-
-
-<p>Compute the genetic distance between two nucleotide sequences of equal length.</p>
-<p>The distance measure to compute is determined by the type provided as the first parameter. The second and third parameter provide the two nucleotide sequences.</p>
-<p><a target='_blank' href='https://github.com/BioJulia/Bio.jl/tree/0d1e0d784f3e593aae3c96e87ec347b3ab8e05eb/src/var/distances.jl#L100-L107' class='documenter-source'>source</a><br></p></div>
+<p>Compute the pairwise genetic distances for a set of aligned nucleotide sequences.</p>
+<p>The distance measure to compute is determined by the type provided as the first parameter. The second parameter provides the set of nucleotide sequences.</p>
+<p><a target='_blank' href='https://github.com/BioJulia/Bio.jl/tree/ef634ed538bd37dae11647764b197aaa51fb10c5/src/var/distances.jl#L110-L115' class='documenter-source'>source</a><br></p></div>
         
     </div>
 
