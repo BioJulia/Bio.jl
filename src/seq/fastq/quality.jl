@@ -45,16 +45,10 @@ const ILLUMINA18_QUAL_ENCODING = QualityEncoding('!':'~', 0:93)
 # Check quality encoding of `input[start:stop]`.
 function check_quality_string(encoding, input, start, stop)
     ascii_lo, ascii_hi = encoding.ascii
-    qual_lo, qual_hi = encoding.qual
-    offset = ascii_offset(encoding)
     for i in start:stop
         @inbounds a = input[i]
         if !(ascii_lo ≤ a ≤ ascii_hi)
             error("base quality '$(Char(a))' is out of range")
-        end
-        q = a - offset
-        if !(qual_lo ≤ q ≤ qual_hi)
-            error("base quality $(q) is out of range")
         end
     end
 end
