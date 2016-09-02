@@ -47,7 +47,13 @@ function rmsd(coords_one::Array{Float64}, coords_two::Array{Float64})
     return sqrt(sum(diff .* diff) / size(coords_one, 2))
 end
 
-rmsd(el_one::StructuralElementOrList, el_two::StructuralElementOrList, atom_selectors::Function...) = rmsd(coordarray(el_one, atom_selectors...), coordarray(el_two, atom_selectors...))
+function rmsd(el_one::StructuralElementOrList,
+            el_two::StructuralElementOrList,
+            atom_selectors::Function...)
+    return rmsd(
+        coordarray(el_one, atom_selectors...),
+        coordarray(el_two, atom_selectors...))
+end
 
 
 """
@@ -63,15 +69,23 @@ function displacements(coords_one::Array{Float64}, coords_two::Array{Float64})
     return sqrt(sum(diff .* diff, 1))[:]
 end
 
-displacements(el_one::StructuralElementOrList, el_two::StructuralElementOrList, atom_selectors::Function...) = displacements(coordarray(el_one, atom_selectors...), coordarray(el_two, atom_selectors...))
+function displacements(el_one::StructuralElementOrList,
+                    el_two::StructuralElementOrList,
+                    atom_selectors::Function...)
+    return displacements(
+        coordarray(el_one, atom_selectors...),
+        coordarray(el_two, atom_selectors...))
+end
 
 
 """
-Minimum square distance between two `StructuralElementOrList`s.
+Get the minimum square distance between two `StructuralElementOrList`s.
 Additional arguments are atom selector functions - only atoms that return
 `true` from the functions are retained.
 """
-function sqdistance(el_one::StructuralElementOrList, el_two::StructuralElementOrList, atom_selectors::Function...)
+function sqdistance(el_one::StructuralElementOrList,
+                    el_two::StructuralElementOrList,
+                    atom_selectors::Function...)
     coords_one = coordarray(el_one, atom_selectors...)
     coords_two = coordarray(el_two, atom_selectors...)
     min_sq_dist = Inf
@@ -86,47 +100,68 @@ function sqdistance(el_one::StructuralElementOrList, el_two::StructuralElementOr
     return min_sq_dist
 end
 
-sqdistance(atom_one::AbstractAtom, atom_two::AbstractAtom) = (x(atom_one) - x(atom_two)) ^ 2 + (y(atom_one) - y(atom_two)) ^ 2 + (z(atom_one) - z(atom_two)) ^ 2
+function sqdistance(at_one::AbstractAtom, at_two::AbstractAtom)
+    return (x(at_one) - x(at_two)) ^ 2 +
+           (y(at_one) - y(at_two)) ^ 2 +
+           (z(at_one) - z(at_two)) ^ 2
+end
 
 
 """
-Minimum distance between two `StructuralElementOrList`s.
+Get the minimum distance between two `StructuralElementOrList`s.
 Additional arguments are atom selector functions - only atoms that return
 `true` from the functions are retained.
 """
-distance(el_one::StructuralElementOrList, el_two::StructuralElementOrList, atom_selectors::Function...) = sqrt(sqdistance(
-        el_one,
-        el_two,
-        atom_selectors...
-    ))
+function distance(el_one::StructuralElementOrList,
+                el_two::StructuralElementOrList,
+                atom_selectors::Function...)
+    return sqrt(sqdistance(el_one, el_two, atom_selectors...))
+end
 
-distance(atom_one::AbstractAtom, atom_two::AbstractAtom) = sqrt(sqdistance(atom_one, atom_two))
+function distance(at_one::AbstractAtom, at_two::AbstractAtom)
+    return sqrt(sqdistance(at_one, at_two))
+end
 
 
 """
-Calculate the bond angle in radians between three `AbstractAtom`s, which are
-assumed to be in a bond.
+Calculate the bond angle in radians between three `AbstractAtom`s, where A-B and
+B-C are assumed to be bonded.
 """
-bondangle(atom_a::AbstractAtom, atom_b::AbstractAtom, atom_c::AbstractAtom) = bondangle(
-        coords(atom_a) - coords(atom_b),
-        coords(atom_c) - coords(atom_b)
+function bondangle(at_a::AbstractAtom,
+                at_b::AbstractAtom,
+                at_c::AbstractAtom)
+    return bondangle(
+        coords(at_a) - coords(at_b),
+        coords(at_c) - coords(at_b)
     )
-bondangle(vec_a::Vector{Float64}, vec_b::Vector{Float64}) = acos(
-    dot(vec_a, vec_b) / (norm(vec_a) * norm(vec_b)))
+end
+
+function bondangle(vec_a::Vector{Float64}, vec_b::Vector{Float64})
+    return acos(dot(vec_a, vec_b) / (norm(vec_a) * norm(vec_b)))
+end
 
 
 """
 Calculate the dihedral angle in radians defined by four `AbstractAtom`s. This is
-the angle between the planes defined by atoms (a,b,c) and (b,c,d).
+the angle between the planes defined by atoms (A,B,C) and (B,C,D).
 """
-dihedralangle(atom_a::AbstractAtom, atom_b::AbstractAtom, atom_c::AbstractAtom, atom_d::AbstractAtom) = dihedralangle(
-        coords(atom_b) - coords(atom_a),
-        coords(atom_c) - coords(atom_b),
-        coords(atom_d) - coords(atom_c)
-    )
-dihedralangle(vec_a::Vector{Float64}, vec_b::Vector{Float64}, vec_c::Vector{Float64}) = atan2(
-        dot(cross(cross(vec_a, vec_b), cross(vec_b, vec_c)), vec_b / norm(vec_b)), dot(cross(vec_a, vec_b), cross(vec_b, vec_c))
-    )
+function dihedralangle(at_a::AbstractAtom,
+            at_b::AbstractAtom,
+            at_c::AbstractAtom,
+            at_d::AbstractAtom)
+    return dihedralangle(
+        coords(at_b) - coords(at_a),
+        coords(at_c) - coords(at_b),
+        coords(at_d) - coords(at_c))
+end
+
+function dihedralangle(vec_a::Vector{Float64},
+                    vec_b::Vector{Float64},
+                    vec_c::Vector{Float64})
+    return atan2(
+        dot(cross(cross(vec_a, vec_b), cross(vec_b, vec_c)), vec_b / norm(vec_b)),
+        dot(cross(vec_a, vec_b), cross(vec_b, vec_c)))
+end
 
 
 """
@@ -172,15 +207,17 @@ end
 """
 Calculate the `Vector`s of phi and psi angles of a `StructuralElementOrList`.
 The vectors have `nothing` for residues where an angle cannot be calculated,
-for example due to missing atoms or no adjacent residue.
+e.g. due to missing atoms or lack of an adjacent residue.
 Additional arguments are residue selector functions - only residues that return
 `true` from the functions are retained.
 """
-function ramachandranangles(el::StructuralElementOrList, residue_selectors::Function...)
+function ramachandranangles(el::StructuralElementOrList,
+                    residue_selectors::Function...)
     res_list = collectresidues(el, residue_selectors...)
     @assert length(res_list) > 1 "Multiple residues required to calculate Ramachandran angles"
     phi_angles = Union{Float64, Void}[nothing] # First res has no previous res
     psi_angles = Union{Float64, Void}[]
+    # Phi angles
     for i in 2:length(res_list)
         res = res_list[i]
         res_prev = res_list[i-1]
@@ -196,6 +233,7 @@ function ramachandranangles(el::StructuralElementOrList, residue_selectors::Func
             push!(phi_angles, nothing)
         end
     end
+    # Psi angles
     for i in 1:length(res_list)-1
         res = res_list[i]
         res_next = res_list[i+1]
@@ -221,7 +259,9 @@ Calculate the contact map for a `StructuralElementOrList`, or between two
 `StructuralElementOrList`s. This is an `Array` with `true` where the
 sub-elements are closer than the contact distance and `false` otherwise.
 """
-function contactmap(el_one::StructuralElementOrList, el_two::StructuralElementOrList, contact_dist::Real)
+function contactmap(el_one::StructuralElementOrList,
+                el_two::StructuralElementOrList,
+                contact_dist::Real)
     sq_contact_dist = contact_dist ^ 2
     contacts = falses(length(el_one), length(el_two))
     el_one_list = collect(el_one)

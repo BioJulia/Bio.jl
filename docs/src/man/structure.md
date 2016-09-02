@@ -12,7 +12,7 @@ DocTestSetup = quote
 end
 ```
 
-The `Bio.Structure` module provides functionality to read [Protein Data Bank](http://www.rcsb.org/pdb/home/home.do) (PDB) files and manipulate macromolecular structures. It is designed to be used as a platform on which others can build to create tools for macromolecular structure analysis.
+The `Bio.Structure` module provides functionality to manipulate macromolecular structures, and in particular to read and write [Protein Data Bank](http://www.rcsb.org/pdb/home/home.do) (PDB) files. It is designed to be used for standard structural analysis tasks, as well as acting as a platform on which others can build to create more specific tools.
 
 
 ## Parsing PDB files
@@ -219,7 +219,7 @@ PDB format files can be written:
 writepdb("1EN2_out.pdb", struc)
 ```
 
-Any element type can be given as input. Selectors can also be given as additional arguments:
+Any element type can be given as input. Atom selectors can also be given as additional arguments:
 
 ```julia
 writepdb("1EN2_out.pdb", struc, backboneselector)

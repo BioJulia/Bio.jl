@@ -51,15 +51,42 @@ pdbfilepath(filename::AbstractString) = Pkg.dir("Bio", "test", "BioFmtSpecimens"
     disorderedres(dis_res, "ILE")[" O  "] = Atom(400, " O  ", ' ', [1.0, 2.0, 3.0], 1.0, 10.0, " O", "  ", disorderedres(dis_res, "ILE"))
     fixlists!(struc)
 
+
+    # Test alternate constructors
+    ProteinStructure("struc", Dict(1=> Model()))
+    ProteinStructure()
+
+    Model(1, Dict('A'=> Chain()), ProteinStructure())
+    Model(ProteinStructure())
+    Model(1)
+    Model()
+
+    Chain('A', ["1"], Dict("1"=> Residue()), Model())
+    Chain(Model())
+    Chain('A')
+    Chain()
+
+    Residue("ALA", 1, ' ', false, ["CA"], Dict("CA"=> Atom()), Chain())
+    Residue(Chain())
+    Residue("ALA", 1, ' ', false)
+    Residue()
+
+    Atom(1, "CA", ' ', [0.0, 0.0, 0.0], 1.0, 0.0, "  ", "  ")
+    Atom(Residue())
+    Atom()
+
+
     # Test show
     show(DevNull, at)
-    showcompact(DevNull, at)
     show(DevNull, dis_at)
     show(DevNull, res)
     show(DevNull, dis_res)
     show(DevNull, ch)
     show(DevNull, mod)
     show(DevNull, struc)
+
+    showcompact(DevNull, at)
+
 
     # Test getters/setters
     @test !ishetatom(at)
@@ -348,6 +375,8 @@ pdbfilepath(filename::AbstractString) = Pkg.dir("Bio", "test", "BioFmtSpecimens"
     @test calphaselector(atom_a)
     @test !calphaselector(atom_b)
     @test !calphaselector(Atom(100, "CA", ' ', [1.0, 2.0, 3.0], 1.0, 10.0, " C", "  ", res_b))
+    @test !cbetaselector(atom_a)
+    @test cbetaselector(Atom(100, "CB", ' ', [1.0, 2.0, 3.0], 1.0, 10.0, " H", "  ", res_a))
     @test backboneselector(atom_a)
     @test !backboneselector(atom_b)
     @test !backboneselector(Atom(100, "CA", ' ', [1.0, 2.0, 3.0], 1.0, 10.0, " C", "  ", res_b))
@@ -512,6 +541,8 @@ end
     line_d = "ATOM    669  CA  ILE A  90      31.743   "
     line_e = "REMARK   1 REFERENCE 1                                                          "
     at = AtomRecord(line_a, 10)
+    show(DevNull, at)
+    showcompact(DevNull, at)
     @test !at.het_atom
     @test at.serial == 669
     @test at.atom_name == " CA "
@@ -709,6 +740,16 @@ end
     @test y(res[10]["O"]) == -6.421
     @test y(res[100]["O"]) == -15.66
     @test countresidues(Model[struc[5], struc[10]]) == 102
+    chs = collectchains(Model[struc[5], struc[10]])
+    @test length(chs) == 2
+    @test map(chainid, chs) == ['A', 'A']
+    @test z(chs[2][5]["CA"]) == -5.667
+    @test countchains(Model[struc[5], struc[10]]) == 2
+    mods = collectmodels(Model[struc[10], struc[5]])
+    @test length(mods) == 2
+    @test map(modelnumber, mods) == [5, 10]
+    @test z(mods[2]['A'][5]["CA"]) == -5.667
+    @test countmodels(Model[struc[10], struc[5]]) == 2
 
 
     # Test collectatoms
