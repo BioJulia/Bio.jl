@@ -1203,8 +1203,9 @@ function majorityvote{A<:NucleotideAlphabet}(seqs::AbstractVector{BioSequence{A}
     nsites = size(mat, 2)
     nseqs = size(mat, 1)
     result = BioSequence{A}(nsites)
+    votes = Array{Int}(16)
     @inbounds for site in 1:nsites
-        votes = zeros(Int, 16)
+        fill!(votes, 0)
         for seq in 1:nseqs
             nuc = mat[seq, site]
             votes[1] += nuc == 0x00
