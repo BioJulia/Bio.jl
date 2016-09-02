@@ -168,8 +168,18 @@ tcagTTAAGATGGGAT
 
 To read a file containing such records, one could use:
 ```julia
+# The default base quality encoding is Sanger.
 reader = open(FASTQReader, "reads.fastq")
 for record in reader
+    # do something
+end
+close(reader)
+
+# If performance is important, in-place reading will be much faster.
+reader = open(FASTQReader, "reads.fastq")
+record = FASTQSeqRecord{DNASequence}()
+while !eof(reader)
+    read!(reader, record)
     # do something
 end
 close(reader)
