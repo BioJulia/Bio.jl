@@ -5,13 +5,13 @@
         state.linenum += 1
     }
 
-    action anchor { Ragel.@anchor! }
+    action anchor { Ragel.@anchor!; }
 
-    action identifier   { Ragel.@copy_from_anchor!(output.name) }
-    action description  { Ragel.@copy_from_anchor!(output.metadata.description) }
-    action identifier2  { Ragel.@copy_from_anchor!(input.name2buf) }
-    action description2 { Ragel.@copy_from_anchor!(input.desc2buf) }
-    action letters      { Ragel.@append_from_anchor!(input.seqbuf) }
+    action identifier   { Ragel.@copy_from_anchor!(output.name); }
+    action description  { Ragel.@copy_from_anchor!(output.metadata.description); }
+    action identifier2  { Ragel.@copy_from_anchor!(input.name2buf); }
+    action description2 { Ragel.@copy_from_anchor!(input.desc2buf); }
+    action letters      { Ragel.@append_from_anchor!(input.seqbuf); }
     action qletters {
         Ragel.@append_from_anchor!(input.qualbuf)
         input.qualcount = 0
@@ -43,15 +43,20 @@
 
         # sequence
         resize!(output.seq, input.seqbuf.position - 1)
+        if !isnull(input.fill_ambiguous)
+            byte = convert(UInt8, convert(Char, get(input.fill_ambiguous)))
+            for i in 1:input.seqbuf.position-1
+                b = input.seqbuf.buffer[i]
+                if isambiguous(convert(DNANucleotide, convert(Char, b)))
+                    input.seqbuf.buffer[i] = byte
+                end
+            end
+        end
         encode_copy!(output.seq, 1, input.seqbuf.buffer, 1, input.seqbuf.position - 1)
 
         # quality
-        encoding, input.quality_encodings =
-            infer_quality_encoding(input.qualbuf.buffer, 1,
-                                   input.qualbuf.position - 1,
-                                   input.quality_encodings)
-
-        decode_quality_string!(encoding, input.qualbuf.buffer,
+        check_quality_string(input.quality_encoding, input.qualbuf.buffer, 1, input.qualbuf.position - 1)
+        decode_quality_string!(input.quality_encoding, input.qualbuf.buffer,
                                output.metadata.quality, 1,
                                input.qualbuf.position - 1)
 
