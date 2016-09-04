@@ -376,6 +376,34 @@ CACACACACACATCCTAACACTACCCTAACACAGCCCTAATCTAACCCTG
 </pre></div>
 
 
+<p><a id='Bio.Seq.FASTAReader' href='#Bio.Seq.FASTAReader'>#</a>
+<strong><code>Bio.Seq.FASTAReader</code></strong> &mdash; <em>Type</em>.</p>
+<div class="codehilite"><pre><span></span><span class="nt">FASTAReader</span><span class="o">(</span><span class="nt">input</span><span class="o">:</span><span class="nd">:IO</span><span class="o">;</span> <span class="nt">index</span><span class="o">=</span><span class="nt">nothing</span><span class="o">)</span>
+<span class="nt">FASTAReader</span><span class="p">{</span><span class="n">S</span><span class="p">}</span><span class="o">(</span><span class="nt">input</span><span class="o">:</span><span class="nd">:IO</span><span class="o">;</span> <span class="nt">index</span><span class="o">=</span><span class="nt">nothing</span><span class="o">)</span>
+</pre></div>
+
+
+<p>Create a data reader of the FASTA file format.</p>
+<p>When type parameter <code>S</code> is specified, the reader reads sequences in that type; otherwise the reader tries to infer the sequence type based on the frequencies of characters from the input.</p>
+<p><strong>Arguments</strong></p>
+<ul>
+<li><code>input</code>: data source</li>
+<li><code>index=nothing</code>: filepath to a random access index (currently <em>fai</em> is supported)</li>
+</ul>
+<p><a target='_blank' href='https://github.com/BioJulia/Bio.jl/tree/ec5e0359e115110d874774199ae433f18ff3d7c2/src/seq/fasta/reader.jl#L4-L17' class='documenter-source'>source</a><br></p>
+<p><a id='Bio.Seq.FASTAWriter' href='#Bio.Seq.FASTAWriter'>#</a>
+<strong><code>Bio.Seq.FASTAWriter</code></strong> &mdash; <em>Type</em>.</p>
+<div class="codehilite"><pre><span></span><span class="nt">FASTAWriter</span><span class="o">(</span><span class="nt">output</span><span class="o">:</span><span class="nd">:IO</span><span class="o">;</span> <span class="nt">width</span><span class="o">=</span><span class="nt">70</span><span class="o">)</span>
+</pre></div>
+
+
+<p>Create a data writer of the FASTA file format.</p>
+<p><strong>Arguments</strong></p>
+<ul>
+<li><code>output</code>: data sink</li>
+<li><code>width=70</code>: wrapping width of sequence characters</li>
+</ul>
+<p><a target='_blank' href='https://github.com/BioJulia/Bio.jl/tree/ec5e0359e115110d874774199ae433f18ff3d7c2/src/seq/fasta/writer.jl#L4-L12' class='documenter-source'>source</a><br></p>
 <p><a id='FASTQ-1'></a></p>
 <h3 id="fastq">FASTQ</h3>
 <ul>
@@ -473,7 +501,7 @@ tcagTTAAGATGGGAT
 </tr>
 </tbody>
 </table>
-<p><a target='_blank' href='https://github.com/BioJulia/Bio.jl/tree/597ed6c36cb10c2300bf35a95dd0d401565f211c/src/seq/fastq/reader.jl#L4-L21' class='documenter-source'>source</a><br></p>
+<p><a target='_blank' href='https://github.com/BioJulia/Bio.jl/tree/ec5e0359e115110d874774199ae433f18ff3d7c2/src/seq/fastq/reader.jl#L4-L21' class='documenter-source'>source</a><br></p>
 <p><a id='Bio.Seq.FASTQWriter' href='#Bio.Seq.FASTQWriter'>#</a>
 <strong><code>Bio.Seq.FASTQWriter</code></strong> &mdash; <em>Type</em>.</p>
 <div class="codehilite"><pre><span></span><span class="nt">FASTQWriter</span><span class="o">(</span><span class="nt">output</span><span class="o">:</span><span class="nd">:IO</span><span class="o">;</span> <span class="nt">quality_header</span><span class="o">=</span><span class="nt">false</span><span class="o">,</span> <span class="nt">quality_encoding</span><span class="o">=</span><span class="nd">:sanger</span><span class="o">)</span>
@@ -487,7 +515,7 @@ tcagTTAAGATGGGAT
 <li><code>quality_header=false</code>: output the title line at the third line just after '+'</li>
 <li><code>quality_encoding=:sanger</code>: encoding of base qualities; see <code>FASTQReader</code> for available values</li>
 </ul>
-<p><a target='_blank' href='https://github.com/BioJulia/Bio.jl/tree/597ed6c36cb10c2300bf35a95dd0d401565f211c/src/seq/fastq/writer.jl#L4-L13' class='documenter-source'>source</a><br></p>
+<p><a target='_blank' href='https://github.com/BioJulia/Bio.jl/tree/ec5e0359e115110d874774199ae433f18ff3d7c2/src/seq/fastq/writer.jl#L4-L13' class='documenter-source'>source</a><br></p>
 <p><a id='.2bit-1'></a></p>
 <h3 id="2bit">.2bit</h3>
 <ul>
@@ -497,11 +525,36 @@ tcagTTAAGATGGGAT
 </ul>
 <p>.2bit is a binary file format designed for storing a genome consists of multiple chromosomal sequences. The reading speed is often an order of magnitude faster than that of FASTA and the file size is smaller. However, since the .2bit file format is specialized for genomic sequences, it cannot store either RNA or amino acid sequences.</p>
 <p>Like FASTA, the .2bit reader supports random access using an index included in the header section of a .2bit file:</p>
-<div class="codehilite"><pre><span></span><span class="n">reader</span> <span class="o">=</span> <span class="n">open</span><span class="p">(</span><span class="n">TwoBitReader</span><span class="p">,</span> <span class="s">&quot;sacCer.2bit&quot;</span><span class="p">)</span>  <span class="c"># read the header and load a random access index</span>
-<span class="n">chrIV</span> <span class="o">=</span> <span class="n">reader</span><span class="p">[</span><span class="s">&quot;chrIV&quot;</span><span class="p">]</span>  <span class="c"># directly read chromosome 4</span>
+<div class="codehilite"><pre><span></span><span class="n">reader</span> <span class="o">=</span> <span class="n">open</span><span class="p">(</span><span class="n">TwoBitReader</span><span class="p">,</span> <span class="s">&quot;sacCer.2bit&quot;</span><span class="p">)</span>  <span class="c"># load a random access index in the header</span>
+<span class="n">chrIV</span> <span class="o">=</span> <span class="n">reader</span><span class="p">[</span><span class="s">&quot;chrIV&quot;</span><span class="p">]</span>                     <span class="c"># directly read chromosome 4</span>
 </pre></div>
 
 
+<p><a id='Bio.Seq.TwoBitReader' href='#Bio.Seq.TwoBitReader'>#</a>
+<strong><code>Bio.Seq.TwoBitReader</code></strong> &mdash; <em>Type</em>.</p>
+<div class="codehilite"><pre><span></span>TwoBitReader(input::IO)
+</pre></div>
+
+
+<p>Create a data reader of the 2bit file format.</p>
+<p><strong>Arguments</strong></p>
+<ul>
+<li><code>input</code>: data source</li>
+</ul>
+<p><a target='_blank' href='https://github.com/BioJulia/Bio.jl/tree/ec5e0359e115110d874774199ae433f18ff3d7c2/src/seq/twobit/reader.jl#L4-L11' class='documenter-source'>source</a><br></p>
+<p><a id='Bio.Seq.TwoBitWriter' href='#Bio.Seq.TwoBitWriter'>#</a>
+<strong><code>Bio.Seq.TwoBitWriter</code></strong> &mdash; <em>Type</em>.</p>
+<div class="codehilite"><pre><span></span>TwoBitWriter(output::IO, names::AbstractVector)
+</pre></div>
+
+
+<p>Create a data writer of the 2bit file format.</p>
+<p><strong>Arguments</strong></p>
+<ul>
+<li><code>output</code>: data sink</li>
+<li><code>names</code>: a vector of sequence names written to <code>output</code></li>
+</ul>
+<p><a target='_blank' href='https://github.com/BioJulia/Bio.jl/tree/ec5e0359e115110d874774199ae433f18ff3d7c2/src/seq/twobit/writer.jl#L4-L12' class='documenter-source'>source</a><br></p>
 <p><a id='BED-1'></a></p>
 <h3 id="bed">BED</h3>
 <ul>
