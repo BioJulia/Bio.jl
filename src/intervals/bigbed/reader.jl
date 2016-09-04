@@ -151,6 +151,10 @@ function first_btree_leaf_position(bb::BigBedData)
     return leafpos
 end
 
+
+# Iterator
+# --------
+
 """
 An iterator over all entries in a BigBed file.
 """
