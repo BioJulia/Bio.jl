@@ -1,6 +1,14 @@
 # 2bit Reader
 # ===========
 
+"""
+    TwoBitReader(input::IO)
+
+Create a data reader of the 2bit file format.
+
+# Arguments
+* `input`: data source
+"""
 type TwoBitReader{T<:IO} <: Bio.IO.AbstractReader
     # input stream
     input::T

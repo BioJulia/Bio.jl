@@ -1,6 +1,15 @@
-# Writer
-# ------
+# 2bit Writer
+# ===========
 
+"""
+    TwoBitWriter(output::IO, names::AbstractVector)
+
+Create a data writer of the 2bit file format.
+
+# Arguments
+* `output`: data sink
+* `names`: a vector of sequence names written to `output`
+"""
 type TwoBitWriter{T<:IO} <: Bio.IO.AbstractWriter
     # output stream
     output::T

@@ -1,7 +1,15 @@
 # FASTA Writer
 # ============
 
-# Serializer for the FASTA file format.
+"""
+    FASTAWriter(output::IO; width=70)
+
+Create a data writer of the FASTA file format.
+
+# Arguments
+* `output`: data sink
+* `width=70`: wrapping width of sequence characters
+"""
 type FASTAWriter{T<:IO} <: Bio.IO.AbstractWriter
     output::T
     # maximum sequence width (no limit when width ≤ 0)

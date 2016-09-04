@@ -1,7 +1,20 @@
 # FASTA Reader
 # ============
 
-"A type encapsulating the current state of a FASTA reader"
+"""
+    FASTAReader(input::IO; index=nothing)
+    FASTAReader{S}(input::IO; index=nothing)
+
+Create a data reader of the FASTA file format.
+
+When type parameter `S` is specified, the reader reads sequences in that type;
+otherwise the reader tries to infer the sequence type based on the frequencies
+of characters from the input.
+
+# Arguments
+* `input`: data source
+* `index=nothing`: filepath to a random access index (currently *fai* is supported)
+"""
 type FASTAReader{S<:Sequence} <: Bio.IO.AbstractReader
     state::Ragel.State
     seqbuf::BufferedOutputStream{BufferedStreams.EmptyStream}

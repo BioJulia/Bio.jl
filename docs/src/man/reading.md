@@ -141,6 +141,11 @@ reader = open(FASTAReader, "sacCer.fa", index="sacCer.fa.fai")
 chrIV = reader["chrIV"]  # directly read chromosome 4
 ```
 
+```@docs
+Bio.Seq.FASTAReader
+Bio.Seq.FASTAWriter
+```
+
 
 ### FASTQ
 
@@ -206,8 +211,13 @@ acid sequences.
 Like FASTA, the .2bit reader supports random access using an index included in
 the header section of a .2bit file:
 ```julia
-reader = open(TwoBitReader, "sacCer.2bit")  # read the header and load a random access index
-chrIV = reader["chrIV"]  # directly read chromosome 4
+reader = open(TwoBitReader, "sacCer.2bit")  # load a random access index in the header
+chrIV = reader["chrIV"]                     # directly read chromosome 4
+```
+
+```@docs
+Bio.Seq.TwoBitReader
+Bio.Seq.TwoBitWriter
 ```
 
 
