@@ -20,8 +20,13 @@ type BigBedData <: Bio.IO.AbstractReader
     uncompressed_data::Vector{UInt8}
 end
 
-Base.iteratorsize(::BigBedData) = Base.SizeUnknown()
-Base.eltype(::Type{BigBedData}) = BEDInterval
+function Base.iteratorsize(::BigBedData)
+    return Base.SizeUnknown()
+end
+
+function Base.eltype(::Type{BigBedData})
+    return BEDInterval
+end
 
 function Bio.IO.stream(reader::BigBedData)
     return reader.stream
@@ -30,33 +35,6 @@ end
 function BigBedData(input::IO)
     return init_bigbed_reader(input)
 end
-
-type BigBedDataReader <: Bio.IO.AbstractReader
-    state::Ragel.State
-
-    # intermediate values used during parsing
-    chrom_id::UInt32
-    red::Float32
-    green::Float32
-    blue::Float32
-    block_size_idx::Int
-    block_first_idx::Int
-    seq_names::Nullable{Vector{StringField}}
-    assumed_seqname::Nullable{StringField}
-
-    function BigBedDataReader(input::BufferedInputStream;
-                              seq_names::Nullable{Vector{StringField}}=Nullable{Vector{StringField}}(),
-                              assumed_seqname::Nullable{StringField}=Nullable{StringField}())
-        cs = _bigbedparser_start
-        return new(Ragel.State(cs, input), 0, 0.0, 0.0, 0.0, 1, 1, seq_names, assumed_seqname)
-    end
-end
-
-function Bio.IO.stream(reader::BigBedDataReader)
-    return reader.state.stream
-end
-
-include("parser.jl")
 
 # Initialize BgiBedData for reading.  Once opened, entries can be read from the
 # file either by iterating over it, or by indexing into it with an interval.
@@ -152,12 +130,41 @@ function first_btree_leaf_position(bb::BigBedData)
 end
 
 
+# Parser
+# ------
+
+type BigBedDataReader <: Bio.IO.AbstractReader
+    state::Ragel.State
+
+    # intermediate values used during parsing
+    chrom_id::UInt32
+    red::Float32
+    green::Float32
+    blue::Float32
+    block_size_idx::Int
+    block_first_idx::Int
+    seq_names::Nullable{Vector{StringField}}
+    assumed_seqname::Nullable{StringField}
+
+    function BigBedDataReader(input::BufferedInputStream;
+                              seq_names::Nullable{Vector{StringField}}=Nullable{Vector{StringField}}(),
+                              assumed_seqname::Nullable{StringField}=Nullable{StringField}())
+        cs = _bigbedparser_start
+        return new(Ragel.State(cs, input), 0, 0.0, 0.0, 0.0, 1, 1, seq_names, assumed_seqname)
+    end
+end
+
+function Bio.IO.stream(reader::BigBedDataReader)
+    return reader.state.stream
+end
+
+include("parser.jl")
+
+
 # Iterator
 # --------
 
-"""
-An iterator over all entries in a BigBed file.
-"""
+# An iterator over all entries in a BigBed file.
 type BigBedIteratorState
     seq_names::Vector{StringField}
     data_count::Int

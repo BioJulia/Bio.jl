@@ -1,11 +1,8 @@
-# Intersect
-# =========
+# Intersection
+# ============
 
-"""
-An iterator over entries in a BigBed file that intersect a given interval.
-
-Constructed by indexing into `BigBedData` with an interval.
-"""
+# An iterator over entries in a BigBed file that intersect a given interval.
+# Constructed by indexing into `BigBedData` with an interval.
 type BigBedIntersectIterator
     bb::BigBedData
 
@@ -27,45 +24,8 @@ type BigBedIntersectIterator
     done::Bool
 end
 
-Base.iteratorsize(::BigBedIntersectIterator) = Base.SizeUnknown()
-
-# Find the given seqname in the BigBed file's index and read the corresponding
-# sequence id and length.
-function lookup_seqname(bb::BigBedData, seqname::AbstractString)
-    seek(bb.stream, bb.header.chromosome_tree_offset + sizeof(BigBedBTreeHeader))
-
-    fill!(bb.key, 0)
-    copy!(bb.key, seqname)
-
-    while true
-        node = read(bb.stream, BigBedBTreeNode)
-        if node.isleaf == 0
-            for i in 1:bb.btree_header.block_size
-                read!(bb.stream, bb.btree_internal_nodes[i])
-                bb.node_keys[i] = bb.btree_internal_nodes[i].key
-            end
-            i = searchsortedfirst(bb.node_keys, bb.key, Base.Order.Lt(memisless))
-            if !(1 <= i <= bb.btree_header.block_size)
-                break
-            end
-
-            seek(bb.stream, bb.btree_internal_nodes[i].child_offset)
-        else
-            for i in 1:bb.btree_header.block_size
-                read!(bb.stream, bb.btree_leaf_nodes[i])
-                bb.node_keys[i] = bb.btree_leaf_nodes[i].key
-            end
-            i = searchsortedfirst(bb.node_keys, bb.key, Base.Order.Lt(memisless))
-            if !(1 <= i <= bb.btree_header.block_size) ||
-                bb.btree_leaf_nodes[i].key != bb.key
-                break
-            end
-
-            return (bb.btree_leaf_nodes[i].chrom_id,
-                    bb.btree_leaf_nodes[i].chrom_size)
-        end
-    end
-    error(string("Seqname \"", seqname, "\" is not present in the BigBed file."))
+function Base.iteratorsize(::BigBedIntersectIterator)
+    return Base.SizeUnknown()
 end
 
 function Base.intersect(bb::BigBedData, query::Interval)
@@ -111,6 +71,60 @@ function Base.intersect(bb::BigBedData, query::Interval)
                                    BEDInterval(), false)
 end
 
+function Base.start(it::BigBedIntersectIterator)
+    find_next_intersection!(it)
+    return nothing
+end
+
+function Base.next(it::BigBedIntersectIterator, ::Void)
+    value = copy(it.nextinterval)
+    find_next_intersection!(it)
+    return value, nothing
+end
+
+function Base.done(it::BigBedIntersectIterator, ::Void)
+    return it.done
+end
+
+# Find the given seqname in the BigBed file's index and read the corresponding
+# sequence id and length.
+function lookup_seqname(bb::BigBedData, seqname::AbstractString)
+    seek(bb.stream, bb.header.chromosome_tree_offset + sizeof(BigBedBTreeHeader))
+
+    fill!(bb.key, 0)
+    copy!(bb.key, seqname)
+
+    while true
+        node = read(bb.stream, BigBedBTreeNode)
+        if node.isleaf == 0
+            for i in 1:bb.btree_header.block_size
+                read!(bb.stream, bb.btree_internal_nodes[i])
+                bb.node_keys[i] = bb.btree_internal_nodes[i].key
+            end
+            i = searchsortedfirst(bb.node_keys, bb.key, Base.Order.Lt(memisless))
+            if !(1 <= i <= bb.btree_header.block_size)
+                break
+            end
+
+            seek(bb.stream, bb.btree_internal_nodes[i].child_offset)
+        else
+            for i in 1:bb.btree_header.block_size
+                read!(bb.stream, bb.btree_leaf_nodes[i])
+                bb.node_keys[i] = bb.btree_leaf_nodes[i].key
+            end
+            i = searchsortedfirst(bb.node_keys, bb.key, Base.Order.Lt(memisless))
+            if !(1 <= i <= bb.btree_header.block_size) ||
+                bb.btree_leaf_nodes[i].key != bb.key
+                break
+            end
+
+            return (bb.btree_leaf_nodes[i].chrom_id,
+                    bb.btree_leaf_nodes[i].chrom_size)
+        end
+    end
+    error(string("Seqname \"", seqname, "\" is not present in the BigBed file."))
+end
+
 function find_next_intersection!(it::BigBedIntersectIterator)
     it.done = true
     while !isnull(it.reader) || it.block_num < length(it.blocks)
@@ -150,21 +164,6 @@ function find_next_intersection!(it::BigBedIntersectIterator)
             return
         end
     end
-end
-
-function Base.start(it::BigBedIntersectIterator)
-    find_next_intersection!(it)
-    return nothing
-end
-
-function Base.next(it::BigBedIntersectIterator, ::Void)
-    value = copy(it.nextinterval)
-    find_next_intersection!(it)
-    return value, nothing
-end
-
-function Base.done(it::BigBedIntersectIterator, ::Void)
-    return it.done
 end
 
 function memisless(a::Vector{UInt8}, b::Vector{UInt8})

@@ -1,12 +1,6 @@
 # Writer
 # ======
 
-function write_zeros(out::IO, n::Integer)
-    for i in 1:n
-        write(out, 0x00)
-    end
-end
-
 immutable BigBedChromInfo
     name::StringField   # chromosome name
     id::UInt32          # unique id for chromosome
@@ -1102,3 +1096,8 @@ function write_bigbed_bigwig(out::IO, fmt::Union{Type{BigBed}, Type{BigWig}},
     write(out, convert(UInt32, fmt == BigBed ? BIGBED_MAGIC : BIGWIG_MAGIC))
 end
 
+function write_zeros(out::IO, n::Integer)
+    for i in 1:n
+        write(out, 0x00)
+    end
+end

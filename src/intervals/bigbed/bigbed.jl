@@ -17,5 +17,5 @@ immutable BigWig <: Bio.IO.FileFormat end
 
 include("types.jl")
 include("reader.jl")
-include("intersect.jl")
 include("writer.jl")
+include("intersection.jl")
