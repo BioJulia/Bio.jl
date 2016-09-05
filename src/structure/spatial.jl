@@ -20,12 +20,12 @@ Additional arguments are atom selector functions - only atoms that return
 `true` from the functions are retained.
 """
 function coordarray(el::StructuralElementOrList, atom_selectors::Function...)
-    atom_list = collectatoms(el, atom_selectors...)
-    coords_out = zeros(3, length(atom_list))
-    for j in eachindex(atom_list)
-        coords_out[1,j] = x(atom_list[j])
-        coords_out[2,j] = y(atom_list[j])
-        coords_out[3,j] = z(atom_list[j])
+    at_list = collectatoms(el, atom_selectors...)
+    coords_out = zeros(3, length(at_list))
+    for j in eachindex(at_list)
+        coords_out[1,j] = x(at_list[j])
+        coords_out[2,j] = y(at_list[j])
+        coords_out[3,j] = z(at_list[j])
     end
     return coords_out
 end

@@ -41,17 +41,16 @@ Number of disordered atoms  -  27
 
 The elements of `struc` can be accessed as follows:
 
-| Command                     | Returns                                                                         | Return type      |
-| :-------------------------- | :------------------------------------------------------------------------------ | :--------------- |
-| `struc[1]`                  | Model 1                                                                         | `Model`          |
-| `struc[1]['A']`             | Model 1, chain A                                                                | `Chain`          |
-| `struc['A']`                | The lowest model (model 1), chain A                                             | `Chain`          |
-| `struc['A']["50"]`          | Model 1, chain A, residue 50                                                    | `Residue`        |
-| `struc['A'][50]`            | Shortcut to above if it is not a hetero residue and the insertion code is blank | `Residue`        |
-| `struc['A']["H_90"]`        | Model 1, chain A, hetero residue 90                                             | `Residue`        |
-| `struc['A'][50]["CA"]`      | Model 1, chain A, residue 50, atom name CA                                      | `Atom`           |
-| `struc['A'][15]["CG"]['A']` | For disordered atoms, access a specific location                                | `DisorderedAtom` |
-| `struc['A'][15]["CG"]`      | For disordered atoms, access the default location                               | `Atom`           |
+| Command                     | Returns                                                                         | Return type       |
+| :-------------------------- | :------------------------------------------------------------------------------ | :---------------- |
+| `struc[1]`                  | Model 1                                                                         | `Model`           |
+| `struc[1]['A']`             | Model 1, chain A                                                                | `Chain`           |
+| `struc['A']`                | The lowest model (model 1), chain A                                             | `Chain`           |
+| `struc['A']["50"]`          | Model 1, chain A, residue 50                                                    | `AbstractResidue` |
+| `struc['A'][50]`            | Shortcut to above if it is not a hetero residue and the insertion code is blank | `AbstractResidue` |
+| `struc['A']["H_90"]`        | Model 1, chain A, hetero residue 90                                             | `AbstractResidue` |
+| `struc['A'][50]["CA"]`      | Model 1, chain A, residue 50, atom name CA                                      | `AbstractAtom`    |
+| `struc['A'][15]["CG"]['A']` | For disordered atoms, access a specific location                                | `DisorderedAtom`  |
 
 Disordered atoms are stored in a `DisorderedAtom` container but calls fall back to the default atom, so disorder can be ignored if you are not interested in it.
 
@@ -61,43 +60,46 @@ The idea is that disorder will only bother you if you want it to. See the [Biopy
 
 Properties can be retrieved as follows:
 
-| Command                  | Returns                                          | Return type            |
-| :----------------------- | :----------------------------------------------- | :--------------------- |
-| `structurename(struc)`   | Name of a structure                              | `ASCIIString`          |
-| `modelnumbers(struc)`    | Model numbers in a structure                     | `Array{Int64,1}`       |
-| `chainids(struc)`        | Chain IDs in a structure                         | `Array{Char,1}`        |
-| `modelnumber(model)`     | Number of a model                                | `Int64`                |
-| `chainids(model)`        | Chain IDs in a model                             | `Array{Char,1}`        |
-| `chainid(chain)`         | Chain ID of a chain                              | `Char`                 |
-| `resids(chain)`          | Residue IDs in a chain                           | `Array{ASCIIString,1}` |
-| `resname(res)`           | Name of a residue                                | `ASCIIString`          |
-| `chainid(res)`           | Chain ID of a residue                            | `Char`                 |
-| `resnumber(res)`         | Residue number of a residue                      | `Int64`                |
-| `inscode(res)`           | Insertion code of a residue                      | `Char`                 |
-| `ishetres(res)`          | `true` if the residue consists of hetero atoms   | `Bool`                 |
-| `atomnames(res)`         | Atom names in a residue                          | `Array{ASCIIString,1}` |
-| `isdisorderedres(res)`   | `true` if the residue has multiple residue names | `Bool`                 |
-| `resid(res)`             | Residue ID of a residue                          | `ASCIIString`          |
-| `resid(res; full=true)`  | Residue ID of a residue including chain          | `ASCIIString`          |
-| `ishetatom(atom)`        | `true` if the atom is a hetero atom              | `Bool`                 |
-| `serial(atom)`           | Serial number of an atom                         | `Int64`                |
-| `atomname(atom)`         | Name of an atom                                  | `ASCIIString`          |
-| `altlocid(atom)`         | Alternative location ID of an atom               | `Char`                 |
-| `resname(atom)`          | Residue name of an atom                          | `ASCIIString`          |
-| `chainid(atom)`          | Chain ID of an atom                              | `Char`                 |
-| `resnumber(atom)`        | Residue number of an atom                        | `Int64`                |
-| `inscode(atom)`          | Insertion code of an atom                        | `Char`                 |
-| `x(atom)`                | x coordinate of an atom                          | `Float64`              |
-| `y(atom)`                | y coordinate of an atom                          | `Float64`              |
-| `z(atom)`                | z coordinate of an atom                          | `Float64`              |
-| `coords(atom)`           | coordinates of an atom                           | `Array{Float64,1}`     |
-| `occupancy(atom)`        | Occupancy of an atom (default is `1.0`)          | `Float64`              |
-| `tempfac(atom)`          | Temperature factor of an atom (default is `0.0`) | `Float64`              |
-| `element(atom)`          | Element of an atom (default is `""`)             | `ASCIIString`          |
-| `charge(atom)`           | Charge of an atom (default is `""`)              | `ASCIIString`          |
-| `isdisorderedatom(atom)` | `true` if the atom is disordered                 | `Bool`                 |
-| `resid(atom)`            | Residue ID of an atom                            | `ASCIIString`          |
-| `resid(atom; full=true)` | Residue ID of an atom including chain            | `ASCIIString`          |
+| Function           | Returns                                                       | Return type                     |
+| :----------------- | :------------------------------------------------------------ | :------------------------------ |
+| `serial`           | Serial number of an atom                                      | `Int`                           |
+| `atomname`         | Name of an atom                                               | `String`                        |
+| `altlocid`         | Alternative location ID of an atom                            | `Char`                          |
+| `x`                | x coordinate of an atom                                       | `Float64`                       |
+| `y`                | y coordinate of an atom                                       | `Float64`                       |
+| `z`                | z coordinate of an atom                                       | `Float64`                       |
+| `coords`           | coordinates of an atom                                        | `Array{Float64,1}`              |
+| `occupancy`        | Occupancy of an atom (default is `1.0`)                       | `Float64`                       |
+| `tempfac`          | Temperature factor of an atom (default is `0.0`)              | `Float64`                       |
+| `element`          | Element of an atom (default is `"  "`)                        | `String`                        |
+| `charge`           | Charge of an atom (default is `"  "`)                         | `String`                        |
+| `residue`          | Residue an atom belongs to                                    | `Residue`                       |
+| `ishetatom`        | `true` if the atom is a hetero atom                           | `Bool`                          |
+| `isdisorderedatom` | `true` if the atom is disordered                              | `Bool`                          |
+| `resname`          | Residue name of a residue or atom                             | `String`                        |
+| `resnumber`        | Residue number of a residue or atom                           | `Int`                           |
+| `inscode`          | Insertion code of a residue or atom                           | `Char`                          |
+| `ishetres`         | `true` if the residue consists of hetero atoms                | `Bool`                          |
+| `ishetero`         | `true` if the residue or atom is a hetero residue/atom        | `Bool`                          |
+| `resid`            | Residue ID of an atom or residue (`full=true` includes chain) | `String`                        |
+| `atomnames`        | Atom names of the atoms in a residue, sorted by serial        | `Array{String,1}`               |
+| `atoms`            | Dictionary of atoms in a residue                              | `Dict{String, AbstractAtom}`    |
+| `isdisorderedres`  | `true` if the residue has multiple residue names              | `Bool`                          |
+| `disorderedres`    | Access a particular residue name in a `DisorderedResidue`     | `Residue`                       |
+| `chain`            | Chain a residue or atom belongs to                            | `Chain`                         |
+| `chainid`          | Chain ID of a chain, residue or atom                          | `Char`                          |
+| `resids`           | Sorted residue IDs in a chain                                 | `Array{String,1}`               |
+| `residues`         | Dictionary of residues in a chain                             | `Dict{String, AbstractResidue}` |
+| `model`            | Model a chain, residue or atom belongs to                     | `Model`                         |
+| `modelnumber`      | Model number of a model, chain, residue or atom               | `Int`                           |
+| `chainids`         | Sorted chain IDs in a model or structure                      | `Array{Char,1}`                 |
+| `chains`           | Dictionary of chains in a model or structure                  | `Dict{Char, Chain}`             |
+| `structure`        | Structure a model, chain, residue or atom belongs to          | `ProteinStructure`              |
+| `structurename`    | Name of the structure an element belongs to                   | `String`                        |
+| `modelnumbers`     | Sorted model numbers in a structure                           | `Array{Int,1}`                  |
+| `models`           | Dictionary of models in a structure                           | `Dict{Int, Model}`              |
+
+The `spaces` keyword argument determines whether surrounding whitespace is retained for `atomname`, `element`, `charge`, `resname` and `atomnames` (default `false`).
 
 The coordinates of an atom can be set using `x!`, `y!`, `z!` and `coords!`.
 
@@ -107,10 +109,10 @@ The coordinates of an atom can be set using `x!`, `y!`, `z!` and `coords!`.
 Elements can be looped over to reveal the sub-elements in the correct order:
 
 ```julia
-for model in struc
-    for chain in model
-        for res in chain
-            for atom in res
+for mod in struc
+    for ch in mod
+        for res in ch
+            for at in res
                 # Do something
             end
         end
@@ -120,9 +122,9 @@ end
 
 Models are ordered numerically; chains are ordered by character, except the empty chain is last; residues are ordered by residue number and insertion code with hetero residues after standard residues; atoms are ordered by atom serial.
 
-`collect`, `collectresidues` and `collectatoms` can be used to get lists of sub-elements.
+`collect` can be used to get lists of sub-elements. `collectatoms`, `collectresidues`, `collectchains` and `collectmodels` return lists of a particular type from a structural element or element list.
 
-Selectors are functions passed as additional arguments to `collectresidues` and `collectatoms`. Only residues/atoms that return `true` when passed to the selector are retained.
+Selectors are functions passed as additional arguments to these functions. Only elements that return `true` when passed to the selector are retained.
 
 | Command                                                 | Action                                                            | Return type                |
 | :------------------------------------------------------ | :---------------------------------------------------------------- | :------------------------- |
@@ -132,20 +134,20 @@ Selectors are functions passed as additional arguments to `collectresidues` and 
 | `collectatoms(struc, calphaselector)`                   | Collect the C-alpha atoms of an element                           | `Array{AbstractAtom,1}`    |
 | `collectatoms(struc, calphaselector, disorderselector)` | Collect the disordered C-alpha atoms of an element                | `Array{AbstractAtom,1}`    |
 
-It is easy to define your own atom or residue selectors. The below will collect all atoms with x coordinate less than 0:
+It is easy to define your own atom, residue, chain or model selectors. The below will collect all atoms with x coordinate less than 0:
 
 ```julia
-xselector(atom::AbstractAtom) = x(atom) < 0
+xselector(at::AbstractAtom) = x(at) < 0
 collectatoms(struc, xselector)
 ```
 
 Alternatively, you can use an anonymous function:
 
 ```julia
-collectatoms(struc, atom -> x(atom) < 0)
+collectatoms(struc, at -> x(at) < 0)
 ```
 
-`countmodels`, `countchains`, `countresidues` and `countatoms` can be used to count elements. For example:
+`countatoms`, `countresidues`, `countchains` and `countmodels` can be used to count elements. For example:
 
 ```@meta
 DocTestSetup = quote
@@ -166,23 +168,27 @@ julia> countresidues(struc, stdresselector)
 85
 ```
 
-`organise`, `organisemodel` and `organisestructure` can be used to organise sub-elements into elements:
-
-| Command                                  | Action                                    | Return type                |
-| :--------------------------------------- | :---------------------------------------- | :------------------------- |
-| `organise(collectatoms(struc))`          | Organise an atom list into a residue list | `Array{AbstractResidue,1}` |
-| `organise(collectresidues(struc))`       | Organise a residue list into a chain list | `Array{Chain,1}`           |
-| `organise(struc['A'])`                   | Organise chain(s) into a model            | `Model`                    |
-| `organise(struc[1])`                     | Organise model(s) into a structure        | `ProteinStructure`         |
-| `organisemodel(collectatoms(struc))`     | Organise elements into a model            | `Model`                    |
-| `organisestructure(collectatoms(struc))` | Organise elements into a structure        | `ProteinStructure`         |
-
-The sequence of a protein can be retrieved:
+The sequence of a protein can be retrieved by passing a `Chain` or list of residues to `AminoAcidSequence`:
 
 ```julia
-julia> AminoAcidSequence(struc, stdresselector)
+julia> AminoAcidSequence(struc['A'], stdresselector)
 85aa Amino Acid Sequence:
 RCGSQGGGSTCPGLRCCSIWGWCGDSEPYCGRTCENKCWSGERSDHRCGAAVGNPPCGQDRCCSVHGWCGGGNDYCSGGNCQYRC
+```
+
+
+## Writing PDB files
+
+PDB format files can be written:
+
+```julia
+writepdb("1EN2_out.pdb", struc)
+```
+
+Any element type can be given as input to `writepdb`. Atom selectors can also be given as additional arguments:
+
+```julia
+writepdb("1EN2_out.pdb", struc, backboneselector)
 ```
 
 
@@ -208,22 +214,7 @@ julia> rad2deg(psiangle(struc['A'][50], struc['A'][51]))
 -177.38288114072924
 ```
 
-Further spatial functions including `contactmap`, `ramachandranangles`, `rmsd` and `displacements` are described in the Examples section below.
-
-
-## Writing PDB files
-
-PDB format files can be written:
-
-```julia
-writepdb("1EN2_out.pdb", struc)
-```
-
-Any element type can be given as input. Atom selectors can also be given as additional arguments:
-
-```julia
-writepdb("1EN2_out.pdb", struc, backboneselector)
-```
+Further spatial functions including `contactmap`, `ramachandranangles`, `rmsd` and `displacements` are described in the examples below.
 
 
 ## Examples
@@ -234,9 +225,9 @@ A few examples of `Bio.Structure` usage are given below.
 
 ```julia
 using Gadfly
-calpha_atoms = collectatoms(struc, calphaselector)
-res_numbers = map(resnumber, calpha_atoms)
-temp_facs = map(tempfac, calpha_atoms)
+calphas = collectatoms(struc, calphaselector)
+res_numbers = map(resnumber, calphas)
+temp_facs = map(tempfac, calphas)
 plot(x=res_numbers,
     y=temp_facs,
     Guide.xlabel("Residue number"),
@@ -247,9 +238,9 @@ plot(x=res_numbers,
 **B)** To find all C-alpha atoms within 5 Angstroms of residue 38:
 
 ```julia
-for atom in calpha_atoms
-    if distance(struc['A'][38], atom) < 5.0 && resnumber(atom) != 38
-        show(atom)
+for at in calphas
+    if distance(struc['A'][38], at) < 5.0 && resnumber(at) != 38
+        show(at)
     end
 end
 ```
@@ -258,8 +249,8 @@ end
 
 ```julia
 using Hinton
-cbeta_atoms = collectatoms(struc, cbetaselector)
-contacts = contactmap(cbeta_atoms, 7.0)
+cbetas = collectatoms(struc, cbetaselector)
+contacts = contactmap(cbetas, 7.0)
 println(hintontxt(contacts))
 ```
 

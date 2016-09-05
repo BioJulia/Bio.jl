@@ -15,7 +15,9 @@ using Bio.Structure:
 get_bio_fmt_specimens()
 
 # Access a PDB file in BioFmtSpecimens
-pdbfilepath(filename::AbstractString) = Pkg.dir("Bio", "test", "BioFmtSpecimens", "PDB", filename)
+function pdbfilepath(filename::AbstractString)
+    return Pkg.dir("Bio", "test", "BioFmtSpecimens", "PDB", filename)
+end
 
 
 @testset "Model" begin
@@ -33,12 +35,13 @@ pdbfilepath(filename::AbstractString) = Pkg.dir("Bio", "test", "BioFmtSpecimens"
     res = struc['A'][10]
     @test isa(res, Residue)
     struc['A']["H_20A"] = DisorderedResidue(Dict(
-        "VAL"=> Residue("VAL", 20, 'A', true, ch),
+        " VA"=> Residue(" VA", 20, 'A', true, ch),
         "ILE"=> Residue("ILE", 20, 'A', true, ch)
-    ), "VAL")
+    ), " VA")
     dis_res = struc['A']["H_20A"]
     @test isa(dis_res, DisorderedResidue)
-    struc['A'][10][" CA "] = Atom(100, " CA ", ' ', [1.0, 2.0, 3.0], 1.0, 10.0, " C", "  ", res)
+    struc['A'][10][" CA "] = Atom(
+        100, " CA ", ' ', [1.0, 2.0, 3.0], 1.0, 10.0, " C", "  ", res)
     at = struc['A'][10]["CA"]
     @test isa(at, Atom)
     struc['A'][10][" CB "] = DisorderedAtom(Dict(
@@ -47,8 +50,10 @@ pdbfilepath(filename::AbstractString) = Pkg.dir("Bio", "test", "BioFmtSpecimens"
     ), 'A')
     dis_at = struc['A'][10]["CB"]
     @test isa(dis_at, DisorderedAtom)
-    struc['A']["H_20A"][" CG "] = Atom(300, " CG ", ' ', [1.0, 2.0, 3.0], 1.0, 10.0, " C", "  ", defaultresidue(dis_res))
-    disorderedres(dis_res, "ILE")[" O  "] = Atom(400, " O  ", ' ', [1.0, 2.0, 3.0], 1.0, 10.0, " O", "  ", disorderedres(dis_res, "ILE"))
+    struc['A']["H_20A"][" CG "] = Atom(
+        300, " CG ", ' ', [1.0, 2.0, 3.0], 1.0, 10.0, " C", "  ", defaultresidue(dis_res))
+    disorderedres(dis_res, "ILE")[" O  "] = Atom(
+        400, " O  ", ' ', [1.0, 2.0, 3.0], 1.0, 10.0, " O", "  ", disorderedres(dis_res, "ILE"))
     fixlists!(struc)
 
 
@@ -89,9 +94,6 @@ pdbfilepath(filename::AbstractString) = Pkg.dir("Bio", "test", "BioFmtSpecimens"
 
 
     # Test getters/setters
-    @test !ishetatom(at)
-    @test !ishetatom(dis_at)
-
     @test serial(at) == 100
     @test serial(dis_at) == 200
 
@@ -103,29 +105,45 @@ pdbfilepath(filename::AbstractString) = Pkg.dir("Bio", "test", "BioFmtSpecimens"
     @test altlocid(at) == ' '
     @test altlocid(dis_at) == 'A'
 
-    @test resname(at) == "ALA"
-    @test resname(dis_at) == "ALA"
-
-    @test chainid(at) == 'A'
-    @test chainid(dis_at) == 'A'
-
-    @test resnumber(at) == 10
-    @test resnumber(dis_at) == 10
-
-    @test inscode(at) == ' '
-    @test inscode(dis_at) == ' '
-
     @test x(at) == 1.0
     @test x(dis_at) == 10.0
+
+    x!(at, 5.0)
+    @test coords(at) == [5.0, 2.0, 3.0]
+    # Only the coordinates on the default atom are changed
+    x!(dis_at, 12.0)
+    @test coords(dis_at) == [12.0, 20.0, 30.0]
+    @test coords(dis_at['B']) == [11.0, 21.0, 31.0]
 
     @test y(at) == 2.0
     @test y(dis_at) == 20.0
 
+    y!(at, 6.0)
+    @test coords(at) == [5.0, 6.0, 3.0]
+    y!(dis_at, 22.0)
+    @test coords(dis_at) == [12.0, 22.0, 30.0]
+    @test coords(dis_at['B']) == [11.0, 21.0, 31.0]
+
     @test z(at) == 3.0
     @test z(dis_at) == 30.0
 
-    @test coords(at) == [1.0, 2.0, 3.0]
-    @test coords(dis_at) == [10.0, 20.0, 30.0]
+    z!(at, 7.0)
+    @test coords(at) == [5.0, 6.0, 7.0]
+    z!(dis_at, 32.0)
+    @test coords(dis_at) == [12.0, 22.0, 32.0]
+    @test coords(dis_at['B']) == [11.0, 21.0, 31.0]
+
+    coords!(at, [40.0, 50.0, 60.0])
+    @test coords(at) == [40.0, 50.0, 60.0]
+    coords!(dis_at, [40.0, 50.0, 60.0])
+    @test coords(dis_at) == [40.0, 50.0, 60.0]
+    @test coords(dis_at['B']) == [11.0, 21.0, 31.0]
+    x!(dis_at['A'], 100.0)
+    @test coords(dis_at) == [100.0, 50.0, 60.0]
+    @test coords(dis_at['B']) == [11.0, 21.0, 31.0]
+    x!(dis_at['B'], 110.0)
+    @test coords(dis_at) == [100.0, 50.0, 60.0]
+    @test coords(dis_at['B']) == [110.0, 21.0, 31.0]
 
     @test occupancy(at) == 1.0
     @test occupancy(dis_at) == 0.6
@@ -141,192 +159,153 @@ pdbfilepath(filename::AbstractString) = Pkg.dir("Bio", "test", "BioFmtSpecimens"
     @test charge(at) == "  "
     @test charge(dis_at) == "  "
 
-    @test !ishetero(at)
-    @test !ishetero(dis_at)
+    @test residue(at) == res
+    @test residue(dis_at) == res
+    @test residue(res) == res
+    @test residue(dis_res) == dis_res
+
+    @test !ishetatom(at)
+    @test !ishetatom(dis_at)
 
     @test !isdisorderedatom(at)
     @test isdisorderedatom(dis_at)
 
-    @test atomid(at) == ("10:A", "ALA", "CA")
-    @test atomid(dis_at) == ("10:A", "ALA", "CB")
-
-    @test resid(at) == "10"
-    @test resid(dis_at) == "10"
-    @test resid(at, full=true) == "10:A"
-    @test resid(dis_at, full=true) == "10:A"
-
-    x!(at, 5.0)
-    @test coords(at) == [5.0, 2.0, 3.0]
-    y!(at, 6.0)
-    @test coords(at) == [5.0, 6.0, 3.0]
-    z!(at, 7.0)
-    @test coords(at) == [5.0, 6.0, 7.0]
-    coords!(at, [40.0, 50.0, 60.0])
-    @test coords(at) == [40.0, 50.0, 60.0]
-
-    # Only the coordinates on the default atom are changed
-    x!(dis_at, 12.0)
-    @test coords(dis_at) == [12.0, 20.0, 30.0]
-    @test coords(dis_at['B']) == [11.0, 21.0, 31.0]
-    y!(dis_at, 22.0)
-    @test coords(dis_at) == [12.0, 22.0, 30.0]
-    @test coords(dis_at['B']) == [11.0, 21.0, 31.0]
-    z!(dis_at, 32.0)
-    @test coords(dis_at) == [12.0, 22.0, 32.0]
-    @test coords(dis_at['B']) == [11.0, 21.0, 31.0]
-    coords!(dis_at, [40.0, 50.0, 60.0])
-    @test coords(dis_at) == [40.0, 50.0, 60.0]
-    @test coords(dis_at['B']) == [11.0, 21.0, 31.0]
-    x!(dis_at['A'], 100.0)
-    @test coords(dis_at) == [100.0, 50.0, 60.0]
-    @test coords(dis_at['B']) == [11.0, 21.0, 31.0]
-    x!(dis_at['B'], 110.0)
-    @test coords(dis_at) == [100.0, 50.0, 60.0]
-    @test coords(dis_at['B']) == [110.0, 21.0, 31.0]
-
-    # Test Atom iteration
-    atom_list = collect(at)
-    @test isa(atom_list, Vector{Atom})
-    @test length(atom_list) == 1
-    @test serial(atom_list[1]) == 100
-
-    # Test DisorderedAtom getters/setters
     @test defaultaltlocid(dis_at) == 'A'
-    @test isa(defaultatom(dis_at), Atom)
-    @test serial(defaultatom(dis_at)) == 200
-    @test altlocids(dis_at) == ['A', 'B']
 
     dis_at_mod = DisorderedAtom(dis_at, 'B')
     @test defaultaltlocid(dis_at_mod) == 'B'
     @test serial(dis_at_mod) == 201
     @test_throws AssertionError DisorderedAtom(dis_at, 'C')
 
-    # Test DisorderedAtom indices
-    @test isa(dis_at['A'], Atom)
-    @test serial(dis_at['A']) == 200
-    @test serial(dis_at['B']) == 201
-    @test_throws KeyError dis_at['C']
-    @test_throws MethodError dis_at["A"]
+    @test isa(defaultatom(dis_at), Atom)
+    @test serial(defaultatom(dis_at)) == 200
 
-    # Test DisorderedAtom iteration
-    dis_at_list = collect(dis_at)
-    @test isa(dis_at_list, Vector{Atom})
-    @test length(dis_at_list) == 2
-    @test serial(dis_at_list[2]) == 201
+    @test altlocids(at) == [' ']
+    @test altlocids(dis_at) == ['A', 'B']
+
+    @test atomid(at) == ("10:A", "ALA", "CA")
+    @test atomid(dis_at) == ("10:A", "ALA", "CB")
 
     @test resname(res) == "ALA"
-    @test chainid(res) == 'A'
+    @test resname(at) == "ALA"
+    @test resname(dis_at) == "ALA"
+    @test resname(dis_res) == "VA"
+    @test resname(dis_res, spaces=true) == " VA"
+
     @test resnumber(res) == 10
+    @test resnumber(at) == 10
+    @test resnumber(dis_at) == 10
+    @test resnumber(dis_res) == 20
+
     @test inscode(res) == ' '
+    @test inscode(at) == ' '
+    @test inscode(dis_at) == ' '
+    @test inscode(dis_res) == 'A'
+
     @test !ishetres(res)
+    @test ishetres(dis_res)
+
+    @test !ishetero(res)
+    @test !ishetero(at)
+    @test !ishetero(dis_at)
+    @test ishetero(dis_res)
+
+    @test resid(at) == "10"
+    @test resid(dis_at) == "10"
+    @test resid(at, full=true) == "10:A"
+    @test resid(dis_at, full=true) == "10:A"
+    @test resid(res) == "10"
+    @test resid(res, full=true) == "10:A"
+    @test resid(dis_res) == "H_20A"
+    @test resid(dis_res, full=true) == "H_20A:A"
+
     @test atomnames(res) == ["CA", "CB"]
+    @test atomnames(dis_res) == ["CG"]
+    @test atomnames(res, spaces=true) == [" CA ", " CB "]
+    @test atomnames(dis_res, spaces=true) == [" CG "]
+
     @test isa(atoms(res), Dict{String, AbstractAtom})
     @test length(atoms(res)) == 2
     @test serial(atoms(res)[" CA "]) == 100
-
-    @test !ishetero(res)
-    @test !isdisorderedres(res)
-    @test resid(res) == "10"
-    @test resid(res, full=true) == "10:A"
-
-    # Test Residue indices
-    @test isa(res["CA"], AbstractAtom)
-    @test serial(res["CA"]) == 100
-    @test serial(res["CB"]) == 200
-    @test_throws KeyError res["N"]
-
-    # Test Residue iteration
-    res_list = collect(res)
-    @test isa(res_list, Vector{AbstractAtom})
-    @test length(res_list) == 2
-    @test serial(res_list[2]) == 200
-
-    # Test DisorderedResidue getters/setters
-    @test isa(disorderedres(dis_res, "ILE"), AbstractResidue)
-    @test resname(disorderedres(dis_res, "ILE")) == "ILE"
-    @test defaultresname(dis_res) == "VAL"
-    @test isa(defaultresidue(dis_res), Residue)
-    @test resname(defaultresidue(dis_res)) == "VAL"
-    @test resnames(dis_res) == ["VAL", "ILE"]
-
-    @test resname(dis_res) == "VAL"
-    @test chainid(dis_res) == 'A'
-    @test resnumber(dis_res) == 20
-    @test inscode(dis_res) == 'A'
-    @test ishetres(dis_res)
-
-    @test atomnames(dis_res) == ["CG"]
     @test isa(atoms(dis_res), Dict{String, AbstractAtom})
     @test length(atoms(dis_res)) == 1
     @test serial(atoms(dis_res)[" CG "]) == 300
 
-    @test ishetero(dis_res)
+    @test !isdisorderedres(res)
     @test isdisorderedres(dis_res)
-    @test resid(dis_res) == "H_20A"
-    @test resid(dis_res, full=true) == "H_20A:A"
+
+    @test isa(disorderedres(dis_res, "ILE"), AbstractResidue)
+    @test resname(disorderedres(dis_res, "ILE")) == "ILE"
+
+    @test defaultresname(dis_res) == " VA"
+
+    @test isa(defaultresidue(dis_res), Residue)
+    @test resname(defaultresidue(dis_res)) == "VA"
+
+    @test resnames(res) == ["ALA"]
+    @test resnames(dis_res) == [" VA", "ILE"]
 
     dis_res_mod = DisorderedResidue(dis_res, "ILE")
     @test defaultresname(dis_res_mod) == "ILE"
     @test atomnames(dis_res_mod) == ["O"]
     @test_throws AssertionError DisorderedResidue(dis_res, "SER")
 
-    # Test DisorderedResidue indices
-    @test isa(dis_res["CG"], AbstractAtom)
-    @test serial(dis_res["CG"]) == 300
-    @test_throws KeyError dis_res["N"]
+    @test chain(at) == ch
+    @test chain(dis_at) == ch
+    @test chain(res) == ch
+    @test chain(dis_res) == ch
+    @test chain(ch) == ch
 
-    # Test DisorderedResidue iteration
-    dis_res_list = collect(dis_res)
-    @test isa(dis_res_list, Vector{AbstractAtom})
-    @test length(dis_res_list) == 1
-    @test serial(dis_res_list[1]) == 300
-
-    # Test Chain getters/setters
+    @test chainid(at) == 'A'
+    @test chainid(dis_at) == 'A'
+    @test chainid(res) == 'A'
+    @test chainid(dis_res) == 'A'
     @test chainid(ch) == 'A'
+
     @test resids(ch) == ["10", "H_20A"]
+
     @test isa(residues(ch), Dict{String, AbstractResidue})
     @test length(residues(ch)) == 2
     @test serial(residues(ch)["10"]["CA"]) == 100
 
-    # Test Chain indices
-    @test isa(ch["10"], AbstractResidue)
-    @test isa(ch[10], AbstractResidue)
-    @test_throws KeyError ch["H_10"]
-    @test serial(ch["10"]["CA"]) == 100
-    @test serial(ch[10]["CA"]) == 100
-    @test resname(ch["H_20A"]) == "VAL"
-    @test_throws KeyError ch["11"]
-    @test_throws KeyError ch[11]
+    @test model(at) == mod
+    @test model(dis_at) == mod
+    @test model(res) == mod
+    @test model(dis_res) == mod
+    @test model(ch) == mod
+    @test model(mod) == mod
 
-    # Test Chain iteration
-    chain_list = collect(ch)
-    @test isa(chain_list, Vector{AbstractResidue})
-    @test length(chain_list) == 2
-    @test resname(chain_list[2]) == "VAL"
-
-    # Test Model getters/setters
+    @test modelnumber(at) == 1
+    @test modelnumber(dis_at) == 1
+    @test modelnumber(res) == 1
+    @test modelnumber(dis_res) == 1
+    @test modelnumber(ch) == 1
     @test modelnumber(mod) == 1
+
     @test chainids(mod) == ['A', 'B']
+
     @test isa(chains(mod), Dict{Char, Chain})
     @test length(chains(mod)) == 2
-    @test resname(chains(mod)['A']["H_20A"]) == "VAL"
+    @test resname(chains(mod)['A']["H_20A"]) == "VA"
 
-    # Test Model indices
-    @test isa(mod['A'], Chain)
-    @test resname(mod['A']["H_20A"]) == "VAL"
-    @test_throws KeyError mod['C']
-    @test_throws MethodError mod["A"]
+    @test structure(at) == struc
+    @test structure(dis_at) == struc
+    @test structure(res) == struc
+    @test structure(dis_res) == struc
+    @test structure(ch) == struc
+    @test structure(mod) == struc
+    @test structure(struc) == struc
 
-    # Test Model iteration
-    model_list = collect(mod)
-    @test isa(model_list, Vector{Chain})
-    @test length(model_list) == 2
-    @test chainid(model_list[2]) == 'B'
-
-
-    # Test ProteinStructure getters/setters
+    @test structurename(at) == "Test structure"
+    @test structurename(dis_at) == "Test structure"
+    @test structurename(res) == "Test structure"
+    @test structurename(dis_res) == "Test structure"
+    @test structurename(ch) == "Test structure"
+    @test structurename(mod) == "Test structure"
     @test structurename(struc) == "Test structure"
+
     @test modelnumbers(struc) == [1, 3]
+
     @test isa(models(struc), Dict{Int, Model})
     @test length(models(struc)) == 2
     @test resids(models(struc)[1]['A']) == ["10", "H_20A"]
@@ -335,7 +314,74 @@ pdbfilepath(filename::AbstractString) = Pkg.dir("Bio", "test", "BioFmtSpecimens"
     @test modelnumber(defaultmodel(struc)) == 1
     @test chainids(struc) == ['A', 'B']
 
-    # Test ProteinStructure indices
+
+    # Test iteration over elements
+    at_col = collect(at)
+    @test isa(at_col, Vector{Atom})
+    @test length(at_col) == 1
+    @test serial(at_col[1]) == 100
+
+    dis_at_col = collect(dis_at)
+    @test isa(dis_at_col, Vector{Atom})
+    @test length(dis_at_col) == 2
+    @test serial(dis_at_col[2]) == 201
+
+    res_col = collect(res)
+    @test isa(res_col, Vector{AbstractAtom})
+    @test length(res_col) == 2
+    @test serial(res_col[2]) == 200
+
+    dis_res_col = collect(dis_res)
+    @test isa(dis_res_col, Vector{AbstractAtom})
+    @test length(dis_res_col) == 1
+    @test serial(dis_res_col[1]) == 300
+
+    ch_col = collect(ch)
+    @test isa(ch_col, Vector{AbstractResidue})
+    @test length(ch_col) == 2
+    @test resname(ch_col[2]) == "VA"
+
+    mod_col = collect(mod)
+    @test isa(mod_col, Vector{Chain})
+    @test length(mod_col) == 2
+    @test chainid(mod_col[2]) == 'B'
+
+    struc_col = collect(struc)
+    @test isa(struc_col, Vector{Model})
+    @test length(struc_col) == 2
+    @test modelnumber(struc_col[2]) == 3
+
+
+    # Test element indices
+    @test isa(dis_at['A'], Atom)
+    @test serial(dis_at['A']) == 200
+    @test serial(dis_at['B']) == 201
+    @test_throws KeyError dis_at['C']
+    @test_throws MethodError dis_at["A"]
+
+    @test isa(res["CA"], AbstractAtom)
+    @test serial(res["CA"]) == 100
+    @test serial(res["CB"]) == 200
+    @test_throws KeyError res["N"]
+
+    @test isa(dis_res["CG"], AbstractAtom)
+    @test serial(dis_res["CG"]) == 300
+    @test_throws KeyError dis_res["N"]
+
+    @test isa(ch["10"], AbstractResidue)
+    @test isa(ch[10], AbstractResidue)
+    @test_throws KeyError ch["H_10"]
+    @test serial(ch["10"]["CA"]) == 100
+    @test serial(ch[10]["CA"]) == 100
+    @test resname(ch["H_20A"]) == "VA"
+    @test_throws KeyError ch["11"]
+    @test_throws KeyError ch[11]
+
+    @test isa(mod['A'], Chain)
+    @test resname(mod['A']["H_20A"]) == "VA"
+    @test_throws KeyError mod['C']
+    @test_throws MethodError mod["A"]
+
     @test isa(struc[1], Model)
     @test isa(struc[3], Model)
     @test isa(struc['A'], Chain)
@@ -343,12 +389,6 @@ pdbfilepath(filename::AbstractString) = Pkg.dir("Bio", "test", "BioFmtSpecimens"
     @test_throws KeyError struc['C']
     @test_throws MethodError struc["A"]
     @test ishetres(struc[1]['A']["H_20A"])
-
-    # Test ProteinStructure iteration
-    struc_list = collect(struc)
-    @test isa(struc_list, Vector{Model})
-    @test length(struc_list) == 2
-    @test modelnumber(struc_list[2]) == 3
 
 
     # Test selector functions
@@ -359,33 +399,39 @@ pdbfilepath(filename::AbstractString) = Pkg.dir("Bio", "test", "BioFmtSpecimens"
     res_b = ch_a["H_11"]
     ch_a["H_100"] = Residue("HOH", 100, ' ', true, ch_a)
     res_c = ch_a["H_100"]
-    ch_a["10"]["CA"] = Atom(100, " CA ", ' ', [1.0, 2.0, 3.0], 1.0, 10.0, " C", "  ", res_a)
-    atom_a = ch_a["10"]["CA"]
-    ch_a["H_11"]["MG"] = Atom(110, "MG", ' ', [1.0, 2.0, 3.0], 1.0, 10.0, " C", "  ", res_b)
-    atom_b = ch_a["H_11"]["MG"]
+    ch_a["10"]["CA"] = Atom(
+        100, " CA ", ' ', [1.0, 2.0, 3.0], 1.0, 10.0, " C", "  ", res_a)
+    at_a = ch_a["10"]["CA"]
+    ch_a["H_11"]["MG"] = Atom(
+        110, "MG", ' ', [1.0, 2.0, 3.0], 1.0, 10.0, " C", "  ", res_b)
+    at_b = ch_a["H_11"]["MG"]
 
-    @test stdatomselector(atom_a)
-    @test !stdatomselector(atom_b)
-    @test !hetatomselector(atom_a)
-    @test hetatomselector(atom_b)
-    @test atomnameselector(atom_a, Set(["CA", "N", "C"]))
-    @test atomnameselector(atom_a, ["CA", "N", "C"])
-    @test !atomnameselector(atom_b, Set(["CA", "N", "C"]))
-    @test !atomnameselector(atom_a, ["CA", "N", "C"], spaces=true)
-    @test calphaselector(atom_a)
-    @test !calphaselector(atom_b)
-    @test !calphaselector(Atom(100, "CA", ' ', [1.0, 2.0, 3.0], 1.0, 10.0, " C", "  ", res_b))
-    @test !cbetaselector(atom_a)
-    @test cbetaselector(Atom(100, "CB", ' ', [1.0, 2.0, 3.0], 1.0, 10.0, " H", "  ", res_a))
-    @test backboneselector(atom_a)
-    @test !backboneselector(atom_b)
-    @test !backboneselector(Atom(100, "CA", ' ', [1.0, 2.0, 3.0], 1.0, 10.0, " C", "  ", res_b))
-    @test heavyatomselector(atom_a)
-    @test !heavyatomselector(atom_b)
-    @test !heavyatomselector(Atom(100, "H1", ' ', [1.0, 2.0, 3.0], 1.0, 10.0, " H", "  ", res_a))
-    @test resnameselector(atom_a, Set(["ALA"]))
-    @test resnameselector(atom_a, ["ALA"])
-    @test !resnameselector(atom_b, Set(["ALA"]))
+    @test stdatomselector(at_a)
+    @test !stdatomselector(at_b)
+    @test !hetatomselector(at_a)
+    @test hetatomselector(at_b)
+    @test atomnameselector(at_a, Set(["CA", "N", "C"]))
+    @test atomnameselector(at_a, ["CA", "N", "C"])
+    @test !atomnameselector(at_b, Set(["CA", "N", "C"]))
+    @test !atomnameselector(at_a, ["CA", "N", "C"], spaces=true)
+    @test calphaselector(at_a)
+    @test !calphaselector(at_b)
+    @test !calphaselector(Atom(
+        100, "CA", ' ', [1.0, 2.0, 3.0], 1.0, 10.0, " C", "  ", res_b))
+    @test !cbetaselector(at_a)
+    @test cbetaselector(Atom(
+        100, "CB", ' ', [1.0, 2.0, 3.0], 1.0, 10.0, " H", "  ", res_a))
+    @test backboneselector(at_a)
+    @test !backboneselector(at_b)
+    @test !backboneselector(Atom(
+        100, "CA", ' ', [1.0, 2.0, 3.0], 1.0, 10.0, " C", "  ", res_b))
+    @test heavyatomselector(at_a)
+    @test !heavyatomselector(at_b)
+    @test !heavyatomselector(Atom(
+        100, "H1", ' ', [1.0, 2.0, 3.0], 1.0, 10.0, " H", "  ", res_a))
+    @test resnameselector(at_a, Set(["ALA"]))
+    @test resnameselector(at_a, ["ALA"])
+    @test !resnameselector(at_b, Set(["ALA"]))
     @test resnameselector(res_a, Set(["ALA"]))
     @test !resnameselector(res_b, Set(["ALA"]))
     @test !waterselector(res_a)
@@ -394,15 +440,20 @@ pdbfilepath(filename::AbstractString) = Pkg.dir("Bio", "test", "BioFmtSpecimens"
     @test !stdresselector(res_b)
     @test !hetresselector(res_a)
     @test hetresselector(res_b)
-    @test !disorderselector(atom_a)
+    @test !disorderselector(at_a)
     @test disorderselector(dis_at)
     @test !disorderselector(res_a)
     @test disorderselector(dis_res)
-    @test hydrogenselector(Atom(100, "H", ' ', [1.0, 2.0, 3.0], 1.0, 10.0, " H", "  ", res_a))
-    @test !hydrogenselector(Atom(100, "H", ' ', [1.0, 2.0, 3.0], 1.0, 10.0, " C", "  ", res_a))
-    @test hydrogenselector(Atom(100, "H1", ' ', [1.0, 2.0, 3.0], 1.0, 10.0, "  ", "  ", res_a))
-    @test hydrogenselector(Atom(100, "1H", ' ', [1.0, 2.0, 3.0], 1.0, 10.0, "  ", "  ", res_a))
-    @test !hydrogenselector(Atom(100, "NH1", ' ', [1.0, 2.0, 3.0], 1.0, 10.0, "  ", "  ", res_a))
+    @test hydrogenselector(Atom(
+        100, "H", ' ', [1.0, 2.0, 3.0], 1.0, 10.0, " H", "  ", res_a))
+    @test !hydrogenselector(Atom(
+        100, "H", ' ', [1.0, 2.0, 3.0], 1.0, 10.0, " C", "  ", res_a))
+    @test hydrogenselector(Atom(
+        100, "H1", ' ', [1.0, 2.0, 3.0], 1.0, 10.0, "  ", "  ", res_a))
+    @test hydrogenselector(Atom(
+        100, "1H", ' ', [1.0, 2.0, 3.0], 1.0, 10.0, "  ", "  ", res_a))
+    @test !hydrogenselector(Atom(
+        100, "NH1", ' ', [1.0, 2.0, 3.0], 1.0, 10.0, "  ", "  ", res_a))
 
 
     # Further tests for structural element ordering
@@ -415,7 +466,7 @@ pdbfilepath(filename::AbstractString) = Pkg.dir("Bio", "test", "BioFmtSpecimens"
     @test altlocids(dis_at_ord) == ['C', 'B', 'A']
 
     # Order when sorting an atom list is the atom serial
-    atom_list_ord = AbstractAtom[
+    at_list_ord = AbstractAtom[
         DisorderedAtom(Dict(
             'A' => Atom(100, "CA", 'A', [1.0, 2.0, 3.0], 0.4, 10.0, "C", ""),
             'B' => Atom(104, "CA", 'B', [1.0, 2.0, 3.0], 0.6, 10.0, "C", "")
@@ -423,32 +474,45 @@ pdbfilepath(filename::AbstractString) = Pkg.dir("Bio", "test", "BioFmtSpecimens"
         Atom(102, "CB", ' ', [1.0, 2.0, 3.0], 1.0, 10.0, "C", ""),
         Atom(103, "CG", ' ', [1.0, 2.0, 3.0], 1.0, 10.0, "C", "")
     ]
-    @test map(atomname, sort(atom_list_ord)) == ["CB", "CG", "CA"]
-    sort!(atom_list_ord)
-    @test map(atomname, atom_list_ord) == ["CB", "CG", "CA"]
+    @test map(atomname, sort(at_list_ord)) == ["CB", "CG", "CA"]
+    sort!(at_list_ord)
+    @test map(atomname, at_list_ord) == ["CB", "CG", "CA"]
 
     # Order when sorting a residue list is chain ID, then stdres/hetres,
     # then residue number, then insertion code
-    residues_ord = AbstractResidue[
+    res_ord = AbstractResidue[
         Residue("ALA", 201, 'A', false, Chain('A')),
         Residue("ALA", 203, ' ', false, Chain('A')),
-        Residue("ALA", 200, ' ', true, Chain('A')),
+        Residue("ALA", 200, ' ', true,  Chain('A')),
         Residue("ALA", 201, 'B', false, Chain('A')),
         Residue("ALA", 202, ' ', false, Chain('A')),
         Residue("ALA", 300, ' ', false, Chain('B')),
-        Residue("ALA", 201, ' ', true, Chain('A')),
+        Residue("ALA", 201, ' ', true,  Chain('A')),
         Residue("ALA", 201, ' ', false, Chain('A')),
-        Residue("ALA", 201, 'A', true, Chain('A')),
+        Residue("ALA", 201, 'A', true,  Chain('A')),
         Residue("ALA", 100, ' ', false, Chain('B')),
-        Residue("ALA", 203, ' ', true, Chain('A')),
+        Residue("ALA", 203, ' ', true,  Chain('A')),
         Residue("ALA", 200, ' ', false, Chain('A')),
     ]
-    # Test resid
-    @test map(resid, residues_ord) == ["201A", "203", "H_200", "201B", "202", "300", "H_201", "201", "H_201A", "100", "H_203", "200"]
-    @test map(res -> resid(res, full=true), residues_ord) == ["201A:A", "203:A", "H_200:A", "201B:A", "202:A", "300:B", "H_201:A", "201:A", "H_201A:A", "100:B", "H_203:A", "200:A"]
-    @test map(res -> resid(res, full=true), sort(residues_ord)) == ["200:A", "201:A", "201A:A", "201B:A", "202:A", "203:A", "H_200:A", "H_201:A", "H_201A:A", "H_203:A", "100:B", "300:B"]
-    sort!(residues_ord)
-    @test map(res -> resid(res, full=true), residues_ord) == ["200:A", "201:A", "201A:A", "201B:A", "202:A", "203:A", "H_200:A", "H_201:A", "H_201A:A", "H_203:A", "100:B", "300:B"]
+
+    # Test sequentialresidues
+    @test sequentialresidues(res_ord[3], res_ord[7])
+    @test !sequentialresidues(res_ord[7], res_ord[3])
+    @test sequentialresidues(res_ord[7], res_ord[9])
+
+    @test map(resid, res_ord) == [
+        "201A", "203", "H_200", "201B", "202", "300", "H_201", "201", "H_201A",
+        "100", "H_203", "200"]
+    @test map(res -> resid(res, full=true), res_ord) == [
+        "201A:A", "203:A", "H_200:A", "201B:A", "202:A", "300:B", "H_201:A",
+        "201:A", "H_201A:A", "100:B", "H_203:A", "200:A"]
+    @test map(res -> resid(res, full=true), sort(res_ord)) == [
+        "200:A", "201:A", "201A:A", "201B:A", "202:A", "203:A", "H_200:A",
+        "H_201:A", "H_201A:A", "H_203:A", "100:B", "300:B"]
+    sort!(res_ord)
+    @test map(res -> resid(res, full=true), res_ord) == [
+        "200:A", "201:A", "201A:A", "201B:A", "202:A", "203:A", "H_200:A",
+        "H_201:A", "H_201A:A", "H_203:A", "100:B", "300:B"]
 
     # Order of listing residue names in a DisorderedResidue is default then alphabetical
     dis_res_ord = DisorderedResidue(Dict(
@@ -462,14 +526,14 @@ pdbfilepath(filename::AbstractString) = Pkg.dir("Bio", "test", "BioFmtSpecimens"
     @test resnames(dis_res_ord) == ["SER", "ALA", "ILE", "THR", "VAL"]
 
     # Order when sorting chain IDs is character ordering with the empty chain ID at the end
-    model_ord = Model(1, Dict(
+    mod_ord = Model(1, Dict(
         'A' => Chain('A'),
         ' ' => Chain(' '),
         '1' => Chain('1'),
         'a' => Chain('a'),
         'X' => Chain('X'),
     ), ProteinStructure())
-    @test chainids(model_ord) == ['1', 'A', 'X', 'a', ' ']
+    @test chainids(mod_ord) == ['1', 'A', 'X', 'a', ' ']
 
 
     # Test sequence extraction
@@ -512,6 +576,7 @@ end
     @test_throws ErrorException parsevalue(line, 1, 4, Bool)
     @test_throws ErrorException parsevalue(line, 79, 100, Int)
 
+
     # Test parsestrict
     line =   "ATOM    591  C   GLY A  80      29.876  54.131  35.806  1.00 40.97           C  "
     line_a = "ATOM    591  C   GLY A  80              54.131  35.806  1.00 40.97           C  "
@@ -521,6 +586,7 @@ end
     @test_throws PDBParseError parsestrict(line_a, 31, 38, Float64, "could not read x coordinate", 10)
     @test_throws PDBParseError parsestrict(line_b, 31, 38, Float64, "could not read x coordinate", 10)
     @test_throws PDBParseError parsestrict(line, 7, 11, Bool, "could not read atom serial number", 10)
+
 
     # Test parselenient
     line =   "ATOM     40  CB  LEU A   5      22.088  45.547  29.675  1.00 22.23           C  "
@@ -533,6 +599,7 @@ end
     @test parselenient(line_b, 77, 78, String, " C") == " C"
     @test parselenient(line_c, 55, 60, Float64, 1.0) == 1.0
     @test parselenient(line, 77, 78, Bool, " N") == " N"
+
 
     # Test AtomRecord constructor
     line_a = "ATOM    669  CA  ILE A  90      31.743  33.110  31.221  1.00 25.76           C  "
@@ -573,6 +640,7 @@ end
     @test_throws PDBParseError AtomRecord(line_c)
     @test_throws PDBParseError AtomRecord(line_d)
 
+
     # Test parsing 1AKE (multiple chains, disordered atoms)
     struc = read(pdbfilepath("1AKE.pdb"), PDB)
     @test structurename(struc) == "1AKE.pdb"
@@ -591,17 +659,28 @@ end
     @test x(struc['A'][167]["CD"]) == 24.502
     @test x(struc['A'][167]["CD"]['A']) == 24.502
     @test x(struc['A'][167]["CD"]['B']) == 24.69
+    mods = collect(struc)
+    @test modelnumber(mods[1]) == 1
+    chs = collect(mods[1])
+    @test map(chainid, chs) == ['A', 'B']
+    res = collect(chs[1])
+    @test length(res) == 456
+    @test resid(res[20]) == "20"
+    ats = collect(res[20])
+    @test length(ats) == 8
+    @test map(atomname, ats) == ["N", "CA", "C", "O", "CB", "CG1", "CG2", "CD1"]
 
 
     # Test choosedefaultaltlocid
-    atom_a = Atom(100, "CA", 'A', [1.0, 2.0, 3.0], 0.4, 10.0, "C", "")
-    atom_b = Atom(101, "CA", 'B', [1.0, 2.0, 3.0], 0.6, 10.0, "C", "")
-    @test choosedefaultaltlocid(atom_a, atom_b) == 'B'
-    @test choosedefaultaltlocid(atom_b, atom_a) == 'B'
-    atom_a = Atom(100, "CA", 'A', [1.0, 2.0, 3.0], 0.5, 10.0, "C", "")
-    atom_b = Atom(101, "CA", 'B', [1.0, 2.0, 3.0], 0.5, 10.0, "C", "")
-    @test choosedefaultaltlocid(atom_a, atom_b) == 'A'
-    @test choosedefaultaltlocid(atom_b, atom_a) == 'A'
+    at_a = Atom(100, "CA", 'A', [1.0, 2.0, 3.0], 0.4, 10.0, "C", "")
+    at_b = Atom(101, "CA", 'B', [1.0, 2.0, 3.0], 0.6, 10.0, "C", "")
+    @test choosedefaultaltlocid(at_a, at_b) == 'B'
+    @test choosedefaultaltlocid(at_b, at_a) == 'B'
+    at_a = Atom(100, "CA", 'A', [1.0, 2.0, 3.0], 0.5, 10.0, "C", "")
+    at_b = Atom(101, "CA", 'B', [1.0, 2.0, 3.0], 0.5, 10.0, "C", "")
+    @test choosedefaultaltlocid(at_a, at_b) == 'A'
+    @test choosedefaultaltlocid(at_b, at_a) == 'A'
+
 
     # Test applyselectors
     ats = collectatoms(struc)
@@ -681,6 +760,7 @@ end
         @test countatoms(struc) == 3804
         @test countresidues(struc) == 808
     end
+
 
     # Test parsing 1EN2 (disordered residue)
     struc = read(pdbfilepath("1EN2.pdb"), PDB)
@@ -1115,7 +1195,9 @@ end
     @test modelnumbers(struc_written) == collect(1:20)
     @test countatoms(struc_written) == 756
     @test z(struc_written[4]['A']["30"]["OG"]) == -2.177
-    @test atomnames(struc_written[15]['A']["39"]) == ["N", "CA", "C", "O", "CB", "SG", "H", "HA", "HB2", "HB3"]
+    @test atomnames(struc_written[15]['A']["39"]) == [
+        "N", "CA", "C", "O", "CB", "SG", "H", "HA", "HB2", "HB3"]
+
 
     # Test writing to stream
     open(temp_filename, "w") do file
@@ -1126,7 +1208,9 @@ end
     @test modelnumbers(struc_written) == collect(1:20)
     @test countatoms(struc_written) == 756
     @test z(struc_written[4]['A']["30"]["OG"]) == -2.177
-    @test atomnames(struc_written[15]['A']["39"]) == ["N", "CA", "C", "O", "CB", "SG", "H", "HA", "HB2", "HB3"]
+    @test atomnames(struc_written[15]['A']["39"]) == [
+        "N", "CA", "C", "O", "CB", "SG", "H", "HA", "HB2", "HB3"]
+
 
     # Test selectors
     struc = read(pdbfilepath("1AKE.pdb"), PDB)
@@ -1160,7 +1244,8 @@ end
     struc_written = read(temp_filename, PDB)
     @test chainids(struc_written) == ['A']
     @test countresidues(struc_written) == 1
-    @test atomnames(struc_written['A'][50]) == ["N", "CA", "C", "O", "CB", "CG", "CD", "CE", "NZ"]
+    @test atomnames(struc_written['A'][50]) == [
+        "N", "CA", "C", "O", "CB", "CG", "CD", "CE", "NZ"]
     writepdb(temp_filename, struc['A'][50]["CA"])
     @test countlines(temp_filename) == 1
     struc_written = read(temp_filename, PDB)
@@ -1193,6 +1278,7 @@ end
     @test countatoms(struc_written) == 2
     @test !ishetatom(struc_written['A'][51]["CA"])
 
+
     # Test multiple model writing
     struc = read(pdbfilepath("1SSU.pdb"), PDB)
     writepdb(temp_filename, Model[struc[10], struc[5]])
@@ -1203,6 +1289,7 @@ end
     @test countatoms(struc_written[5]) == 756
     @test countatoms(struc_written[10]) == 756
     @test_throws KeyError struc_written[1]
+
 
     # Test disordered residue writing
     struc = read(pdbfilepath("1EN2.pdb"), PDB)
@@ -1230,16 +1317,18 @@ end
     @test countatoms(struc_written['A'][10]) == 6
     @test countatoms(struc_written['A'][16]) == 11
 
-    @test_throws AssertionError writepdb(temp_filename, Atom(1, "11H11", ' ', [0.0, 0.0, 0.0], 1.0, 0.0, " H", "  "))
+    @test_throws AssertionError writepdb(temp_filename, Atom(
+        1, "11H11", ' ', [0.0, 0.0, 0.0], 1.0, 0.0, " H", "  "))
 
+    # Delete temporary file
     rm(temp_filename)
 end
 
 
 @testset "Spatial" begin
     # Test coordarray
-    atom = Atom(100, "CA", ' ', [1.0, 2.0, 3.0], 1.0, 10.0, " C", "  ")
-    cs = coordarray(atom)
+    at = Atom(100, "CA", ' ', [1.0, 2.0, 3.0], 1.0, 10.0, " C", "  ")
+    cs = coordarray(at)
     @test size(cs) == (3,1)
     @test cs[1] == 1.0
     @test cs[2] == 2.0
@@ -1325,10 +1414,10 @@ end
 
 
     # Test sqdistance and distance
-    atom_a = Atom(100, "CA", ' ', [1.0, 2.0, 3.0], 1.0, 10.0, " C", "  ")
-    atom_b = Atom(110, "CA", ' ', [0.0, -1.0, 3.0], 1.0, 10.0, " C", "  ")
-    @test sqdistance(atom_a, atom_b) == 10.0
-    @test isapprox(distance(atom_a, atom_b), sqrt(10))
+    at_a = Atom(100, "CA", ' ', [1.0, 2.0, 3.0], 1.0, 10.0, " C", "  ")
+    at_b = Atom(110, "CA", ' ', [0.0, -1.0, 3.0], 1.0, 10.0, " C", "  ")
+    @test sqdistance(at_a, at_b) == 10.0
+    @test isapprox(distance(at_a, at_b), sqrt(10))
 
     @test isapprox(distance(struc_1AKE['A'], struc_1AKE['B']), sqrt(6.852947))
     @test isapprox(distance(struc_1AKE['A'], struc_1AKE['B'][50]), sqrt(530.645746))
@@ -1339,27 +1428,26 @@ end
 
 
     # Test bondangle
-    atom_a = Atom(100, "CA", ' ', [1.0, 0.0, 1.0], 1.0, 10.0, " C", "  ")
-    atom_b = Atom(100, "CA", ' ', [0.0, 0.0, 0.0], 1.0, 10.0, " C", "  ")
-    atom_c = Atom(100, "CA", ' ', [3.0, 2.0, 1.0], 1.0, 10.0, " C", "  ")
-    @test isapprox(bondangle(atom_a, atom_b, atom_c), 0.713724378944765)
+    at_a = Atom(100, "CA", ' ', [1.0, 0.0, 1.0], 1.0, 10.0, " C", "  ")
+    at_b = Atom(100, "CA", ' ', [0.0, 0.0, 0.0], 1.0, 10.0, " C", "  ")
+    at_c = Atom(100, "CA", ' ', [3.0, 2.0, 1.0], 1.0, 10.0, " C", "  ")
+    @test isapprox(bondangle(at_a, at_b, at_c), 0.713724378944765)
     vec_a = [2.0, 0.0, 0.0]
     vec_b = [2.0, 1.0, 1.0]
     @test isapprox(bondangle(vec_a, vec_b), 0.615479708670387)
 
 
     # Test dihedralangle
-    atom_a = Atom(100, "CA", ' ', [-1.0, -1.0, 0.0], 1.0, 10.0, " C", "  ")
-    atom_b = Atom(100, "CA", ' ', [0.0, 0.0, 0.0], 1.0, 10.0, " C", "  ")
-    atom_c = Atom(100, "CA", ' ', [1.0, 0.0, 0.0], 1.0, 10.0, " C", "  ")
-    atom_d = Atom(100, "CA", ' ', [2.0, 1.0, -1.0], 1.0, 10.0, " C", "  ")
-    @test isapprox(dihedralangle(atom_a, atom_b, atom_c, atom_d), 2.356194490192345)
+    at_a = Atom(100, "CA", ' ', [-1.0, -1.0, 0.0], 1.0, 10.0, " C", "  ")
+    at_b = Atom(100, "CA", ' ', [0.0, 0.0, 0.0], 1.0, 10.0, " C", "  ")
+    at_c = Atom(100, "CA", ' ', [1.0, 0.0, 0.0], 1.0, 10.0, " C", "  ")
+    at_d = Atom(100, "CA", ' ', [2.0, 1.0, -1.0], 1.0, 10.0, " C", "  ")
+    @test isapprox(dihedralangle(at_a, at_b, at_c, at_d), 2.356194490192345)
     vec_a = [1.0, 1.0, 0.0]
     vec_b = [1.0, 0.0, 0.0]
     vec_c = [1.0, -1.0, 1.0]
     @test isapprox(dihedralangle(vec_a, vec_b, vec_c), -0.785398163397448)
 
-    # Compared to Biopython
     @test isapprox(omegaangle(struc_1AKE['A'][20], struc_1AKE['A'][19]), -3.091913621551854, atol=1e-5)
     @test isapprox(phiangle(struc_1AKE['A'][7], struc_1AKE['A'][6]), 2.851151641716221, atol=1e-5)
     @test isapprox(psiangle(struc_1AKE['A'][8], struc_1AKE['A'][9]), 2.838265381719911, atol=1e-5)

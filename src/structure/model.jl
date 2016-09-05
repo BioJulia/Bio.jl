@@ -11,14 +11,9 @@ export
     ProteinStructure,
     AtomRecord,
     StructuralElementOrList,
-    ishetatom,
     serial,
     atomname,
     altlocid,
-    resname,
-    chainid,
-    resnumber,
-    inscode,
     x,
     x!,
     y,
@@ -31,14 +26,19 @@ export
     tempfac,
     element,
     charge,
-    ishetero,
+    residue,
+    ishetatom,
     isdisorderedatom,
     defaultaltlocid,
     defaultatom,
     altlocids,
     atomid,
-    resid,
+    resname,
+    resnumber,
+    inscode,
     ishetres,
+    ishetero,
+    resid,
     atomnames,
     atoms,
     isdisorderedres,
@@ -46,11 +46,15 @@ export
     defaultresname,
     defaultresidue,
     resnames,
+    chain,
+    chainid,
     resids,
     residues,
+    model,
     modelnumber,
     chainids,
     chains,
+    structure,
     structurename,
     modelnumbers,
     models,
@@ -461,7 +465,9 @@ function coords!(at::Atom, new_coords::Vector{Float64})
     return at
 end
 
-coords!(dis_at::DisorderedAtom, coords::Vector{Float64}) = coords!(defaultatom(dis_at), coords)
+function coords!(dis_at::DisorderedAtom, coords::Vector{Float64})
+    coords!(defaultatom(dis_at), coords)
+end
 
 
 "Get the occupancy of an `AbstractAtom`. Defaults to `1.0`."
@@ -551,12 +557,15 @@ defaultatom(dis_at::DisorderedAtom) = dis_at[defaultaltlocid(dis_at)]
 
 
 """
-Get the list of alternative location IDs in a `DisorderedAtom`, sorted by atom
+Get the list of alternative location IDs in an `AbstractAtom`, sorted by atom
 serial.
 """
 function altlocids(dis_at::DisorderedAtom)
-    return sort(collect(keys(dis_at.alt_loc_ids)), by= alt_loc_id -> dis_at[alt_loc_id])
+    return sort(collect(keys(dis_at.alt_loc_ids)),
+        by= alt_loc_id -> dis_at[alt_loc_id])
 end
+
+altlocids(at::Atom) = [altlocid(at)]
 
 
 """
@@ -614,55 +623,6 @@ represents a hetero molecule, e.g. consists of HETATM records from a PDB file.
 """
 ishetero(at::AbstractAtom) = ishetatom(at)
 ishetero(res::AbstractResidue) = ishetres(res)
-
-
-"Get the `Chain` that an `AbstractAtom` or `AbstractResidue` belongs to."
-chain(at::Atom) = chain(residue(at))
-chain(dis_at::DisorderedAtom) = chain(defaultatom(dis_at))
-chain(res::Residue) = res.chain
-chain(dis_res::DisorderedResidue) = chain(defaultresidue(dis_res))
-chain(ch::Chain) = ch
-
-
-"Get the chain ID of an `AbstractAtom`, `AbstractResidue` or `Chain`."
-chainid(el::Union{AbstractResidue, AbstractAtom}) = chainid(chain(el))
-chainid(ch::Chain) = ch.id
-
-
-"""
-Get the `Model` that an `AbstractAtom`, `AbstractResidue` or `Chain` belongs to.
-"""
-model(at::Atom) = model(chain(at))
-model(dis_at::DisorderedAtom) = model(defaultatom(dis_at))
-model(res::Residue) = model(chain(res))
-model(dis_res::DisorderedResidue) = model(defaultresidue(dis_res))
-model(ch::Chain) = ch.model
-model(mod::Model) = mod
-
-
-"""
-Get the model number of a `Model`, `Chain`, `AbstractResidue` or `AbstractAtom`.
-"""
-modelnumber(mod::Model) = mod.number
-modelnumber(el::Union{Chain, AbstractResidue, AbstractAtom}) = modelnumber(model(el))
-
-
-"""
-Get the `ProteinStructure` that an `AbstractAtom`, `AbstractResidue`, `Chain`
-or `Model` belongs to.
-"""
-structure(at::Atom) = structure(model(at))
-structure(dis_at::DisorderedAtom) = structure(defaultatom(dis_at))
-structure(res::Residue) = structure(model(res))
-structure(dis_res::DisorderedResidue) = structure(defaultresidue(dis_res))
-structure(ch::Chain) = structure(model(ch))
-structure(mod::Model) = mod.structure
-structure(struc::ProteinStructure) = struc
-
-
-"Get the structure name of a `StructuralElement`."
-structurename(el::Union{Model, Chain, AbstractResidue, AbstractAtom}) = structurename(structure(el))
-structurename(struc::ProteinStructure) = struc.name
 
 
 """
@@ -723,9 +683,20 @@ function resid(hetatm::Bool, resnum::Int, inscode::Char)
 end
 
 
-"Get the sorted list of `AbstractAtom`s in an `AbstractResidue`."
-atomnames(res::Residue) = res.atom_list
-atomnames(dis_res::DisorderedResidue) = atomnames(defaultresidue(dis_res))
+"""
+Get the sorted list of `AbstractAtom`s in an `AbstractResidue`.
+`spaces` determines whether surrounding whitespace is retained (default
+`false`).
+"""
+function atomnames(res::Residue; spaces::Bool=false)
+    if spaces
+        return res.atom_list
+    else
+        return map(strip, res.atom_list)
+    end
+end
+
+atomnames(dis_res::DisorderedResidue; spaces::Bool=false) = atomnames(defaultresidue(dis_res), spaces=spaces)
 
 
 "Access the dictionary of `AbstractAtom`s in an `AbstractResidue`."
@@ -759,8 +730,9 @@ defaultresidue(dis_res::DisorderedResidue) = dis_res.names[defaultresname(dis_re
 
 
 """
-Get the residue names in a `DisorderedResidue`. Default residue name is placed
-first, then others are ordered alphabetically.
+Get the residue names in an `AbstractResidue`. For a `DisorderedResidue` there
+will be multiple residue names - in this case the default residue name is placed
+first, then the others are ordered alphabetically.
 """
 function resnames(dis_res::DisorderedResidue)
     return sort(collect(keys(dis_res.names)),
@@ -770,6 +742,8 @@ function resnames(dis_res::DisorderedResidue)
     )
 end
 
+resnames(res::Residue) = [resname(res, spaces=true)]
+
 
 # Constructor acts as a setter for the default residue name
 function DisorderedResidue(dis_res::DisorderedResidue, default::AbstractString)
@@ -778,12 +752,43 @@ function DisorderedResidue(dis_res::DisorderedResidue, default::AbstractString)
 end
 
 
+"Get the `Chain` that an `AbstractAtom` or `AbstractResidue` belongs to."
+chain(at::Atom) = chain(residue(at))
+chain(dis_at::DisorderedAtom) = chain(defaultatom(dis_at))
+chain(res::Residue) = res.chain
+chain(dis_res::DisorderedResidue) = chain(defaultresidue(dis_res))
+chain(ch::Chain) = ch
+
+
+"Get the chain ID of an `AbstractAtom`, `AbstractResidue` or `Chain`."
+chainid(el::Union{AbstractResidue, AbstractAtom}) = chainid(chain(el))
+chainid(ch::Chain) = ch.id
+
+
 "Get the sorted list of `AbstractResidue`s in a `Chain`."
 resids(ch::Chain) = ch.res_list
 
 
 "Access the dictionary of `AbstractResidue`s in a `Chain`."
 residues(ch::Chain) = ch.residues
+
+
+"""
+Get the `Model` that an `AbstractAtom`, `AbstractResidue` or `Chain` belongs to.
+"""
+model(at::Atom) = model(chain(at))
+model(dis_at::DisorderedAtom) = model(defaultatom(dis_at))
+model(res::Residue) = model(chain(res))
+model(dis_res::DisorderedResidue) = model(defaultresidue(dis_res))
+model(ch::Chain) = ch.model
+model(mod::Model) = mod
+
+
+"""
+Get the model number of a `Model`, `Chain`, `AbstractResidue` or `AbstractAtom`.
+"""
+modelnumber(mod::Model) = mod.number
+modelnumber(el::Union{Chain, AbstractResidue, AbstractAtom}) = modelnumber(model(el))
 
 
 """
@@ -814,6 +819,24 @@ function chains(struc::ProteinStructure)
         return Dict{Char, Chain}()
     end
 end
+
+
+"""
+Get the `ProteinStructure` that an `AbstractAtom`, `AbstractResidue`, `Chain`
+or `Model` belongs to.
+"""
+structure(at::Atom) = structure(model(at))
+structure(dis_at::DisorderedAtom) = structure(defaultatom(dis_at))
+structure(res::Residue) = structure(model(res))
+structure(dis_res::DisorderedResidue) = structure(defaultresidue(dis_res))
+structure(ch::Chain) = structure(model(ch))
+structure(mod::Model) = mod.structure
+structure(struc::ProteinStructure) = struc
+
+
+"Get the structure name of a `StructuralElement`."
+structurename(el::Union{Model, Chain, AbstractResidue, AbstractAtom}) = structurename(structure(el))
+structurename(struc::ProteinStructure) = struc.name
 
 
 "Get the sorted model numbers from a `ProteinStructure`."
@@ -880,16 +903,22 @@ end
 
 """
 Determine if the second residue follows the first in sequence. For this to be
-`true` the residues need to be part of the same chain, both need to be
+`true` the residues need to have the same chain ID, both need to be
 standard/hetero residues and the residue number of the second needs to be one
-greater than that of the first.
+greater than that of the first (or the residue numbers the same and the
+insertion code of the second greater than the first).
 """
 function sequentialresidues(res_first::AbstractResidue, res_second::AbstractResidue)
-    if resnumber(res_second) == resnumber(res_first) + 1 && chain(res_second) == chain(res_first) && ishetres(res_second) == ishetres(res_first)
-        return true
-    else
-        return false
+    if chainid(res_second) == chainid(res_first) &&
+            ishetres(res_second) == ishetres(res_first)
+        if resnumber(res_second) == resnumber(res_first) + 1
+            return true
+        elseif resnumber(res_second) == resnumber(res_first) &&
+                inscode(res_second) > inscode(res_first)
+            return true
+        end
     end
+    return false
 end
 
 
@@ -1132,7 +1161,10 @@ end
 
 countresidues(ch::Chain) = length(ch)
 
-countresidues{T <: AbstractResidue}(res_list::Vector{T}) = length(res_list)
+function countresidues(res_list::Union{Vector{AbstractResidue},
+        Vector{Residue}, Vector{DisorderedResidue}})
+    return length(res_list)
+end
 
 
 """
@@ -1181,107 +1213,110 @@ end
 
 countatoms(res::AbstractResidue) = length(res)
 
-countatoms{T <: AbstractAtom}(at_list::Vector{T}) = length(at_list)
+function countatoms(at_list::Union{Vector{AbstractAtom},
+        Vector{Atom}, Vector{DisorderedAtom}})
+    return length(at_list)
+end
 
 
 # Add an atom represented in an AtomRecord to a Model
 # Unsafe as sub-element lists are not updated (for speed)
 # fixlists! should be run after all additions to update the sub-element lists
 function unsafe_addatomtomodel!(mod::Model,
-                    atom_record::AtomRecord;
+                    atom_rec::AtomRecord;
                     remove_disorder::Bool=false)
     # Add chain to model if necessary
-    if !haskey(chains(mod), atom_record.chain_id)
-        mod[atom_record.chain_id] = Chain(atom_record.chain_id, mod)
+    if !haskey(chains(mod), atom_rec.chain_id)
+        mod[atom_rec.chain_id] = Chain(atom_rec.chain_id, mod)
     end
-    ch = mod[atom_record.chain_id]
-    res_id = resid(atom_record.het_atom, atom_record.res_number, atom_record.ins_code)
+    ch = mod[atom_rec.chain_id]
+    res_id = resid(atom_rec.het_atom, atom_rec.res_number, atom_rec.ins_code)
     # If residue does not exist in the chain, create a Residue
     if !haskey(residues(ch), res_id)
         ch[res_id] = Residue(
-                    atom_record.res_name,
-                    atom_record.res_number,
-                    atom_record.ins_code,
-                    atom_record.het_atom,
+                    atom_rec.res_name,
+                    atom_rec.res_number,
+                    atom_rec.ins_code,
+                    atom_rec.het_atom,
                     ch)
         res = ch[res_id]
     elseif isa(ch[res_id], Residue)
         # Residue exists in the chain and the residue names match
         # Add to that Residue
-        if resname(ch[res_id]) == atom_record.res_name
+        if resname(ch[res_id]) == atom_rec.res_name
             res = ch[res_id]
         # Residue exists in the chain but the residue names do not match
         # Create a DisorderedResidue
         else
             ch[res_id] = DisorderedResidue(Dict(
                 resname(ch[res_id]) => ch[res_id],
-                atom_record.res_name => Residue(
-                    atom_record.res_name,
-                    atom_record.res_number,
-                    atom_record.ins_code,
-                    atom_record.het_atom,
+                atom_rec.res_name => Residue(
+                    atom_rec.res_name,
+                    atom_rec.res_number,
+                    atom_rec.ins_code,
+                    atom_rec.het_atom,
                     ch)
             ), resname(ch[res_id]))
-            res = disorderedres(ch[res_id], atom_record.res_name)
+            res = disorderedres(ch[res_id], atom_rec.res_name)
         end
     else
         # DisorderedResidue exists in the chain and the residue names match
         # Add to that DisorderedResidue
-        if atom_record.res_name in resnames(ch[res_id])
-            res = disorderedres(ch[res_id], atom_record.res_name)
+        if atom_rec.res_name in resnames(ch[res_id])
+            res = disorderedres(ch[res_id], atom_rec.res_name)
         # DisorderedResidue exists in the chain and the residue names do not match
         # Create a new Residue in the DisorderedResidue
         else
-            ch[res_id].names[atom_record.res_name] = Residue(
-                    atom_record.res_name,
-                    atom_record.res_number,
-                    atom_record.ins_code,
-                    atom_record.het_atom,
+            ch[res_id].names[atom_rec.res_name] = Residue(
+                    atom_rec.res_name,
+                    atom_rec.res_number,
+                    atom_rec.ins_code,
+                    atom_rec.het_atom,
                     ch)
-            res = disorderedres(ch[res_id], atom_record.res_name)
+            res = disorderedres(ch[res_id], atom_rec.res_name)
         end
     end
     at = Atom(
-        atom_record.serial,
-        atom_record.atom_name,
-        atom_record.alt_loc_id,
-        atom_record.coords,
-        atom_record.occupancy,
-        atom_record.temp_fac,
-        atom_record.element,
-        atom_record.charge,
+        atom_rec.serial,
+        atom_rec.atom_name,
+        atom_rec.alt_loc_id,
+        atom_rec.coords,
+        atom_rec.occupancy,
+        atom_rec.temp_fac,
+        atom_rec.element,
+        atom_rec.charge,
         res)
     # If atom does not exist in the residue, create an Atom
-    if !haskey(atoms(res), atom_record.atom_name)
-        res[atom_record.atom_name] = at
+    if !haskey(atoms(res), atom_rec.atom_name)
+        res[atom_rec.atom_name] = at
     # Atom exists in the residue, atom names match and alt loc IDs are different
-    elseif isa(res[atom_record.atom_name], Atom) &&
-            atom_record.alt_loc_id != altlocid(res[atom_record.atom_name])
+    elseif isa(res[atom_rec.atom_name], Atom) &&
+            atom_rec.alt_loc_id != altlocid(res[atom_rec.atom_name])
         # If we are removing disorder and the new atom is preferred to the old one, replace the old one
         if remove_disorder &&
-                choosedefaultaltlocid(at, res[atom_record.atom_name]) == atom_record.alt_loc_id
-            res[atom_record.atom_name] = at
+                choosedefaultaltlocid(at, res[atom_rec.atom_name]) == atom_rec.alt_loc_id
+            res[atom_rec.atom_name] = at
         # If we are not removing disorder, create a new disordered atom container and add both atoms
         elseif !remove_disorder
-            res[atom_record.atom_name] = DisorderedAtom(Dict(
-                atom_record.alt_loc_id => at,
-                altlocid(res[atom_record.atom_name]) => res[atom_record.atom_name]
-            ), choosedefaultaltlocid(at, res[atom_record.atom_name]))
+            res[atom_rec.atom_name] = DisorderedAtom(Dict(
+                atom_rec.alt_loc_id => at,
+                altlocid(res[atom_rec.atom_name]) => res[atom_rec.atom_name]
+            ), choosedefaultaltlocid(at, res[atom_rec.atom_name]))
         end
     # A disordered atom container already exists and the alt loc ID is not taken
-    elseif isa(res[atom_record.atom_name], DisorderedAtom) &&
-            !(atom_record.alt_loc_id in altlocids(res[atom_record.atom_name]))
+    elseif isa(res[atom_rec.atom_name], DisorderedAtom) &&
+            !(atom_rec.alt_loc_id in altlocids(res[atom_rec.atom_name]))
         # Add the new atom to the disordered atom container
-        res[atom_record.atom_name][atom_record.alt_loc_id] = at
+        res[atom_rec.atom_name][atom_rec.alt_loc_id] = at
         # If the default alt loc requires changing, change it
-        if choosedefaultaltlocid(defaultatom(res[atom_record.atom_name]), atom) != defaultaltlocid(res[atom_record.atom_name])
-            res[atom_record.atom_name] = DisorderedAtom(
-                        res[atom_record.atom_name],
-                        atom_record.alt_loc_id)
+        if choosedefaultaltlocid(defaultatom(res[atom_rec.atom_name]), atom) != defaultaltlocid(res[atom_rec.atom_name])
+            res[atom_rec.atom_name] = DisorderedAtom(
+                        res[atom_rec.atom_name],
+                        atom_rec.alt_loc_id)
         end
     else
         error("Two copies of the same atom have the same alternative location ID:\n" *
-              "$(res[atom_record.atom_name])$(atom_record)")
+              "$(res[atom_rec.atom_name])$(atom_rec)")
     end
 end
 
@@ -1305,8 +1340,10 @@ function fixlists!(struc::ProteinStructure)
 end
 
 function fixlists!(res::Residue)
-    append!(res.atom_list, map(atomname, sort(collect(values(atoms(res))))))
+    append!(res.atom_list, map(fullatomname, sort(collect(values(atoms(res))))))
 end
+
+fullatomname(at::AbstractAtom) = atomname(at, spaces=true)
 
 
 """
@@ -1315,13 +1352,13 @@ as the default location. The `Atom` with the highest occupancy is chosen; in the
 case of ties the `Atom` with the lowest alternative location ID in alphabetical
 order is chosen.
 """
-function choosedefaultaltlocid(atom_one::Atom, atom_two::Atom)
-    if occupancy(atom_one) > occupancy(atom_two) ||
-            (occupancy(atom_one) == occupancy(atom_two) &&
-            Int(altlocid(atom_one)) < Int(altlocid(atom_two)))
-        return altlocid(atom_one)
+function choosedefaultaltlocid(at_one::Atom, at_two::Atom)
+    if occupancy(at_one) > occupancy(at_two) ||
+            (occupancy(at_one) == occupancy(at_two) &&
+            Int(altlocid(at_one)) < Int(altlocid(at_two)))
+        return altlocid(at_one)
     else
-        return altlocid(atom_two)
+        return altlocid(at_two)
     end
 end
 
