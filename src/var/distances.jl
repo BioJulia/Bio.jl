@@ -129,6 +129,32 @@ function distance{T<:MutationType,A<:NucleotideAlphabet}(::Type{Count{T}}, seqs:
     return count_mutations(T, seqs)
 end
 
+function distance{T<:MutationType,A<:NucleotideAlphabet}(::Type{Count{T}}, seqs::Vector{BioSequence{A}}, width::Int, step::Int)
+    mutationFlags, ambiguousFlags = flagmutations(T, seqs)
+    nbases, npairs = size(mutationFlags)
+    @assert width >= 1 "Window width must be ≥ 1."
+    @assert step >= 1 "step must be ≥ 1."
+    @assert width <= nbases "The window size cannot be greater than number of data elements."
+    starts = 1:step:nbases
+    ends = width+1:step:nbases
+    nwindows = length(ends)
+    mcounts = Matrix{Int}(nwindows, npairs)
+    acounts = Matrix{Int}(nwindows, npairs)
+    ranges = Vector{Pair{Int,Int}}(nwindows)
+
+    @inbounds for pair in 1:npairs
+        for i in 1:nwindows
+            for j in starts[i]:ends[i]
+                mcounts[i, pair] += mutationFlags[(pair - 1) * nbases + j]
+                acounts[i, pair] += ambiguousFlags[(pair - 1) * nbases + j]
+            end
+        end
+    end
+
+    return mcounts, acounts
+
+end
+
 """
     distance{T<:MutationType,N<:Nucleotide}(::Type{Count{T}}, seqs::Matrix{N})
 

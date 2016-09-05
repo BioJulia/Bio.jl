@@ -196,8 +196,9 @@ function flagmutations{M<:MutationType,N<:Nucleotide}(::Type{M}, seqs::Matrix{N}
     return ismutant, isambiguous
 end
 
-
-
+function flagmutations{M<:MutationType,N<:NucleotideAlphabet}(::Type{M}, seqs::Vector{BioSequence{A}})
+    return flagmutations(M, seqmatrix(seqs, :seq))
+end
 
 """
     count_mutations{T<:MutationType,N<:Nucleotide}(::Type{T}, seqs::Matrix{N})
