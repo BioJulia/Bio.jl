@@ -2,9 +2,9 @@
 # ============
 
 # An iterator over entries in a BigBed file that intersect a given interval.
-# Constructed by indexing into `BigBedData` with an interval.
+# Constructed by indexing into `BigBedReader` with an interval.
 type BigBedIntersectIterator
-    bb::BigBedData
+    bb::BigBedReader
 
     query_seqname::StringField
     query_first::Int64
@@ -28,7 +28,7 @@ function Base.iteratorsize(::BigBedIntersectIterator)
     return Base.SizeUnknown()
 end
 
-function Base.intersect(bb::BigBedData, query::Interval)
+function Base.intersect(bb::BigBedReader, query::Interval)
     seqname, first, last = query.seqname, query.first, query.last
     chrom_id, chrom_size = lookup_seqname(bb, seqname)
 
@@ -88,7 +88,7 @@ end
 
 # Find the given seqname in the BigBed file's index and read the corresponding
 # sequence id and length.
-function lookup_seqname(bb::BigBedData, seqname::AbstractString)
+function lookup_seqname(bb::BigBedReader, seqname::AbstractString)
     seek(bb.stream, bb.header.chromosome_tree_offset + sizeof(BigBedBTreeHeader))
 
     fill!(bb.key, 0)

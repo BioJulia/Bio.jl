@@ -520,7 +520,7 @@ end
 
             # BigBed → BED
             seekstart(out)
-            bb = Intervals.BigBedData(out)
+            bb = BigBedReader(out)
             intervals2 = IntervalCollection(bb)
 
             @test intervals == intervals2
@@ -539,7 +539,7 @@ end
         out = IOBuffer()
         write(out, BigBed, intervals)
         seekstart(out)
-        bb = Intervals.BigBedData(out)
+        bb = BigBedReader(out)
 
         # intersection queries
         num_queries = 1000

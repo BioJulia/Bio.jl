@@ -1,8 +1,7 @@
 # Reader
 # ======
 
-# TODO: This should be renamed to BigBedReader
-type BigBedData <: Bio.IO.AbstractReader
+type BigBedReader <: Bio.IO.AbstractReader
     stream::BufferedInputStream
     header::BigBedHeader
     zoom_headers::Vector{BigBedZoomHeader}
@@ -20,19 +19,19 @@ type BigBedData <: Bio.IO.AbstractReader
     uncompressed_data::Vector{UInt8}
 end
 
-function Base.iteratorsize(::BigBedData)
+function Base.iteratorsize(::BigBedReader)
     return Base.SizeUnknown()
 end
 
-function Base.eltype(::Type{BigBedData})
+function Base.eltype(::Type{BigBedReader})
     return BEDInterval
 end
 
-function Bio.IO.stream(reader::BigBedData)
+function Bio.IO.stream(reader::BigBedReader)
     return reader.stream
 end
 
-function BigBedData(input::IO)
+function BigBedReader(input::IO)
     return init_bigbed_reader(input)
 end
 
@@ -90,7 +89,7 @@ function init_bigbed_reader(stream::IO)
         error("BigBed R-Tree magic number was incorrect. File may be corrupt or malformed.")
     end
 
-    return BigBedData(BufferedInputStream(stream), header, zoom_headers, autosql, summary,
+    return BigBedReader(BufferedInputStream(stream), header, zoom_headers, autosql, summary,
                       btree_header, rtree_header, data_count,
                       BigBedBTreeInternalNode[BigBedBTreeInternalNode(btree_header.key_size)
                                               for _ in 1:btree_header.block_size],
@@ -102,7 +101,7 @@ function init_bigbed_reader(stream::IO)
 end
 
 # Return all sequence (name, id, size) tuples in a BigBed B-tree.
-function first_btree_leaf_position(bb::BigBedData)
+function first_btree_leaf_position(bb::BigBedReader)
     # find the first leaf-node in the b-tree
     offset = bb.header.chromosome_tree_offset + sizeof(BigBedBTreeHeader)
     seek(bb.stream, offset)
@@ -175,7 +174,7 @@ type BigBedIteratorState
     next_interval::Interval{BEDMetadata}
 end
 
-function Base.start(bb::BigBedData)
+function Base.start(bb::BigBedReader)
     # read sequence names
     leafpos = first_btree_leaf_position(bb)
     seq_names = Array(StringField, bb.btree_header.item_count)
@@ -215,7 +214,7 @@ function Base.start(bb::BigBedData)
                                reader, reader_isdone, next_interval)
 end
 
-function Base.next(bb::BigBedData, state::BigBedIteratorState)
+function Base.next(bb::BigBedReader, state::BigBedIteratorState)
     value = copy(state.next_interval)
 
     state.data_num += 1
@@ -243,6 +242,6 @@ function Base.next(bb::BigBedData, state::BigBedIteratorState)
     return value, state
 end
 
-function Base.done(bb::BigBedData, state::BigBedIteratorState)
+function Base.done(bb::BigBedReader, state::BigBedIteratorState)
     return state.data_num > state.data_count
 end
