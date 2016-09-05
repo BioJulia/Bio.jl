@@ -5,7 +5,7 @@ type BigBedReader <: Bio.IO.AbstractReader
     stream::BufferedInputStream
     header::BigBedHeader
     zoom_headers::Vector{BigBedZoomHeader}
-    autosql::AbstractString
+    autosql::String
     summary::BigBedTotalSummary
     btree_header::BigBedBTreeHeader
     rtree_header::BigBedRTreeHeader

@@ -516,7 +516,7 @@ end
             intervals = IntervalCollection(
                 open(BEDReader, joinpath(path, specimen["filename"])))
             out = IOBuffer()
-            write(out, BigBed, intervals)
+            write(BigBedWriter(out), intervals)
 
             # BigBed → BED
             seekstart(out)
@@ -537,7 +537,7 @@ end
 
         # convert to bigbed in memory
         out = IOBuffer()
-        write(out, BigBed, intervals)
+        write(BigBedWriter(out), intervals)
         seekstart(out)
         bb = BigBedReader(out)
 

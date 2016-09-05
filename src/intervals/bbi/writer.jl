@@ -1,6 +1,35 @@
 # Writer
 # ======
 
+type BigBedWriter{T<:IO} <: Bio.IO.AbstractWriter
+    output::T
+    block_size::Int
+    items_per_slot::Int
+    compress::Bool
+end
+
+function Bio.IO.stream(writer::BigBedWriter)
+    return writer.output
+end
+
+function BigBedWriter(
+        output::IO;
+        block_size::Integer=256,
+        items_per_slot::Integer=512,
+        compress::Bool=true)
+    return BigBedWriter(output, block_size, items_per_slot, compress)
+end
+
+function Base.write(writer::BigBedWriter, intervals::IntervalCollection{BEDMetadata})
+    return write_bigbed_bigwig(
+        writer.output,
+        :bigbed,
+        intervals,
+        writer.block_size,
+        writer.items_per_slot,
+        writer.compress)
+end
+
 immutable BigBedChromInfo
     name::StringField   # chromosome name
     id::UInt32          # unique id for chromosome
@@ -912,33 +941,25 @@ function bed_field_count(intervals::IntervalCollection{BEDMetadata})
     return num_fields
 end
 
-function Base.write(out::IO, ::Type{BigBed}, intervals::IntervalCollection{BEDMetadata};
-                    block_size::Int=256, items_per_slot::Int=512,
-                    compressed::Bool=true)
-    write_bigbed_bigwig(out, BigBed, intervals, block_size, items_per_slot, compressed)
-end
-
-function Base.write{T<:Number}(out::IO, ::Type{BigWig}, intervals::IntervalCollection{T};
-                               block_size::Int=256, items_per_slot::Int=512,
-                               compressed::Bool=true)
-    write_bigbed_bigwig(out, BigWig, intervals, block_size, items_per_slot, compressed)
-end
-
 # Unified write function for bigwig and bigbed
-function write_bigbed_bigwig(out::IO, fmt::Union{Type{BigBed}, Type{BigWig}},
-                             intervals::IntervalCollection,
-                             block_size::Int=256, items_per_slot::Int=512,
-                             compressed::Bool=true)
+function write_bigbed_bigwig(
+        out::IO,
+        fmt::Symbol,
+        intervals::IntervalCollection,
+        block_size::Int,
+        items_per_slot::Int,
+        compressed::Bool)
 
     # See the function bbFileCreate in bedToBigBed.c in kent to see the only
     # other implementation of this I'm aware of. Also bedGraphToBigWig in
     # bedGraphToBigWig.c
+    @assert fmt ∈ (:bigwig, :bigbed)
 
     if !applicable(seek, out, 1)
         error("BigBed can only be written to seekable output streams.")
     end
 
-    field_count = fmt == BigBed ? bed_field_count(intervals) : 0
+    field_count = fmt == :bigbed ? bed_field_count(intervals) : 0
 
     # write dummy headers, come back and fill them later
     write_zeros(out, sizeof(BigBedHeader))
@@ -987,7 +1008,7 @@ function write_bigbed_bigwig(out::IO, fmt::Union{Type{BigBed}, Type{BigWig}},
     block_count = bigbed_count_sections_needed(chrom_info, items_per_slot)
     bounds = Array(BigBedBounds, block_count)
 
-    if fmt == BigBed
+    if fmt == :bigbed
         max_block_size = bigbed_write_blocks(out, intervals, chrom_info, items_per_slot,
                                              bounds, block_count, compressed,
                                              res_try_count, res_scales, res_sizes)
@@ -1031,7 +1052,7 @@ function write_bigbed_bigwig(out::IO, fmt::Union{Type{BigBed}, Type{BigWig}},
             zoom_increment = 4
             rezoomed_list, total_summary = bigbed_write_reduced_once_return_reduced_twice(
                     out, intervals,
-                    fmt == BigBed ? coverage : identity,
+                    fmt == :bigbed ? coverage : identity,
                     chrom_info, initial_reduction,
                     initial_reduced_count, zoom_increment, block_size,
                     items_per_slot, compressed)
@@ -1070,7 +1091,7 @@ function write_bigbed_bigwig(out::IO, fmt::Union{Type{BigBed}, Type{BigWig}},
     # go back and rewrite header
     seek(out, 0)
     write(out,
-        BigBedHeader(fmt == BigBed ? BIGBED_MAGIC : BIGWIG_MAGIC,
+        BigBedHeader(fmt == :bigbed ? BIGBED_MAGIC : BIGWIG_MAGIC,
                      BIGBED_CURRENT_VERSION, zoom_levels,
                      chrom_tree_offset, data_offset, index_offset,
                      field_count, min(field_count, 12), as_offset,
@@ -1093,7 +1114,7 @@ function write_bigbed_bigwig(out::IO, fmt::Union{Type{BigBed}, Type{BigWig}},
 
     # write end signature
     seekend(out)
-    write(out, convert(UInt32, fmt == BigBed ? BIGBED_MAGIC : BIGWIG_MAGIC))
+    write(out, convert(UInt32, fmt == :bigbed ? BIGBED_MAGIC : BIGWIG_MAGIC))
 end
 
 function write_zeros(out::IO, n::Integer)

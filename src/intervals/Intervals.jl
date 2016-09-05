@@ -29,6 +29,7 @@ export
     BEDMetadata,
     BEDInterval,
     BigBedReader,
+    BigBedWriter,
     Tabix,
     overlapchunks
 

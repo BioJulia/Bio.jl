@@ -12,10 +12,6 @@
 # This file is a part of BioJulia.
 # License is MIT: https://github.com/BioJulia/Bio.jl/blob/master/LICENSE.md
 
-immutable BigWig <: Bio.IO.FileFormat end
-immutable BigBed <: Bio.IO.FileFormat end
-export BigWig, BigBed
-
 include("types.jl")
 include("reader.jl")
 include("writer.jl")
