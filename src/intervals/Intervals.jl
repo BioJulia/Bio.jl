@@ -28,8 +28,6 @@ export
     BEDWriter,
     BEDMetadata,
     BEDInterval,
-    BigBed,
-    BigWig,
     Tabix,
     overlapchunks
 
@@ -61,7 +59,7 @@ include("index/index.jl")
 
 # Parsing file types
 include("bed/bed.jl")
-include("bigbed/bigbed.jl")
+include("bbi/bbi.jl")
 
 include("deprecated.jl")
 

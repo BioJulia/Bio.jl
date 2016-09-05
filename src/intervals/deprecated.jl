@@ -1,2 +1,3 @@
 immutable BED <: Bio.IO.FileFormat end
-export BED
+immutable BigBed <: Bio.IO.FileFormat end
+export BED, BigBed

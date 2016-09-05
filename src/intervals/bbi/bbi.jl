@@ -1,5 +1,5 @@
-# BigBed
-# ======
+# BBI
+# ===
 #
 # The BigBed format is documented in
 #   Kent, W. James, et al. "BigWig and BigBed: # enabling browsing of large
@@ -11,9 +11,6 @@
 #
 # This file is a part of BioJulia.
 # License is MIT: https://github.com/BioJulia/Bio.jl/blob/master/LICENSE.md
-
-immutable BigBed <: Bio.IO.FileFormat end
-immutable BigWig <: Bio.IO.FileFormat end
 
 include("types.jl")
 include("reader.jl")
