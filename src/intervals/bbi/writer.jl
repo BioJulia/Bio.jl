@@ -1,6 +1,14 @@
 # Writer
 # ======
 
+"""
+    BigBedWriter(output::IO)
+
+Create a data writer of the BigBed file format.
+
+# Arguments
+* `output`: data sink
+"""
 type BigBedWriter{T<:IO} <: Bio.IO.AbstractWriter
     output::T
     block_size::Int
@@ -12,11 +20,11 @@ function Bio.IO.stream(writer::BigBedWriter)
     return writer.output
 end
 
-function BigBedWriter(
-        output::IO;
-        block_size::Integer=256,
-        items_per_slot::Integer=512,
-        compress::Bool=true)
+function BigBedWriter(output::IO)
+    # These parameters are constants for now since valid values are uncertain.
+    block_size = 256
+    items_per_slot = 512
+    compress = true
     return BigBedWriter(output, block_size, items_per_slot, compress)
 end
 

@@ -1,6 +1,14 @@
 # Reader
 # ======
 
+"""
+    BigBedReader(input::IO)
+
+Create a data reader of the BigBed file format.
+
+# Arguments
+* `input`: data source
+"""
 type BigBedReader <: Bio.IO.AbstractReader
     stream::BufferedInputStream
     header::BigBedHeader
