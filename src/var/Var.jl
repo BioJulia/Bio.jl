@@ -21,6 +21,7 @@ export
     # Identifying and counting mutations
     count_mutations,
     is_mutation,
+    flagmutations,
 
     # Genetic and Evolutionary distances
     EvolutionaryDistance,

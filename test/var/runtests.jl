@@ -33,8 +33,8 @@ using Bio.Var
     @test count_mutations(TransversionMutation, TransitionMutation, m1) == count_mutations(TransversionMutation, TransitionMutation, m2) == ([4], [8], [16])
 
     ans = Bool[false, false, true, true, false, true, true, true, false, true, true, false, true, false, true, true, false, false, true, true]
-    @test is_mutation(AnyMutation, m1)[1] == ans
-    @test is_mutation(AnyMutation, m2)[1] == ans
+    @test flagmutations(AnyMutation, m1)[1][:,1] == ans
+    @test flagmutations(AnyMutation, m2)[1][:,1] == ans
 
 
 end

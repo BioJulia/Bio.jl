@@ -89,7 +89,7 @@ end
 
 
 """
-    is_mutation{M<:MutationType,N<:Nucleotide}(::Type{M}, seqs::Matrix{N})
+    flagmutations{M<:MutationType,N<:Nucleotide}(::Type{M}, seqs::Matrix{N})
 
 For every pair of sequences, flag which base positions are mutations of type `T`.
 
@@ -141,7 +141,7 @@ julia> m = seqmatrix(dnas, :seq)
   DNA_A    DNA_T
   DNA_A    DNA_C
 
-julia> r = is_mutation(AnyMutation, m)
+julia> r = flagmutations(AnyMutation, m)
 (
 Bool[false; false; … ; true; true],
 
@@ -172,10 +172,10 @@ julia> r[1]
 ```
 
 In the above example of two sequences, positions 3:4, 7:8 are mutations and
-positions 1:2, 5, 19:20 are not mutations. 
+positions 1:2, 5, 19:20 are not mutations.
 
 """
-function is_mutation{M<:MutationType,N<:Nucleotide}(::Type{M}, seqs::Matrix{N})
+function flagmutations{M<:MutationType,N<:Nucleotide}(::Type{M}, seqs::Matrix{N})
     seqsize, nseqs = size(seqs)
     ismutant = Matrix{Bool}(seqsize, binomial(nseqs, 2))
     isambiguous = Matrix{Bool}(seqsize, binomial(nseqs, 2))
@@ -311,6 +311,10 @@ function count_mutations{A<:Nucleotide}(::Type{TransitionMutation}, ::Type{Trans
         end
     end
     return ntransition, ntransversion, lengths
+end
+
+function count_mutations{A<:Nucleotide}(::Type{TransversionMutation}, ::Type{TransitionMutation}, seqs::Matrix{A})
+    return count_mutations(TransitionMutation, TransversionMutation, seqs)
 end
 
 """
