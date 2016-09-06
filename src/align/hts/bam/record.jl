@@ -269,7 +269,7 @@ Return base qualities of the alignment `rec`.
 function qualities(rec::BAMRecord)
     seqlen = sequence_length(rec)
     offset = seqname_length(rec) + n_cigar_op(rec) * 4 + cld(seqlen, 2)
-    return [rec.data[i+offset] for i in 1:seqlen]
+    return [reinterpret(Int8, rec.data[i+offset]) for i in 1:seqlen]
 end
 
 function Base.getindex(rec::BAMRecord, tag::AbstractString)
