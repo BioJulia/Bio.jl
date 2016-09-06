@@ -136,7 +136,7 @@ function distance{T<:MutationType,A<:NucleotideAlphabet}(::Type{Count{T}}, seqs:
     @assert step >= 1 "step must be ≥ 1."
     @assert width <= nbases "The window size cannot be greater than number of data elements."
     starts = 1:step:nbases
-    ends = width+1:step:nbases
+    ends = width:step:nbases
     nwindows = length(ends)
     mcounts = Matrix{Int}(nwindows, npairs)
     acounts = Matrix{Int}(nwindows, npairs)
