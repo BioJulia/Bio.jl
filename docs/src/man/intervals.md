@@ -27,17 +27,73 @@ type Interval{T} <: AbstractInterval{Int64}
 end
 ```
 
-Similarly to the `SeqRecord` type in the `Seq` module, `Interval` is
-parameterized on metadata type, which lets it efficiently and precisely
-be specialized to represent intervals from a variety of formats.
+The first three fields (`seqname`, `first`, and `last`) are mandatory arguments
+when constructing an `Interval` object. `seqname` is the sequence name
+associated with the interval. The `first` and `last` fields are the leftmost and
+rightmost positions of the interval, which can be accessed with `leftposition`
+and `rightposition` functions, respectively.
 
-Strand is represented by the `Strand` type which can take four possible values:
-```julia
-STRAND_NA   # strand is unknown or inapplicable
-STRAND_POS  # positive strand
-STRAND_NEG  # negative strand
-STRAND_BOTH # non-strand-specific feature
+The `strand` field can take four kinds of values listed in the next table:
+
+| Symbol | Constant      | Meaning                           |
+| :----- | :------------ | :-------------------------------- |
+| `'?'`  | `STRAND_NA`   | strand is unknown or inapplicable |
+| `'+'`  | `STRAND_POS`  | positive strand                   |
+| `'-'`  | `STRAND_NEG`  | negative strand                   |
+| `'.'`  | `STRAND_BOTH` | non-strand-specific feature       |
+
+Similarly to the `SeqRecord` type in the `Bio.Seq` module, `Interval` is
+parameterized on metadata type, which lets it efficiently and precisely be
+specialized to represent intervals from a variety of formats.
+
+
+The default strand and metadata values are `STRAND_BOTH` and `nothing`:
+```jlcon
+julia> Interval("chr1", 10000, 20000)
+Bio.Intervals.Interval{Void}:
+  sequence name: chr1
+  leftmost position: 10000
+  rightmost position: 20000
+  strand: .
+  metadata: nothing
+
+julia> Interval("chr1", 10000, 20000, '+')
+Bio.Intervals.Interval{Void}:
+  sequence name: chr1
+  leftmost position: 10000
+  rightmost position: 20000
+  strand: +
+  metadata: nothing
+
 ```
+
+The following example shows all accessor functions for the five fields:
+```jlcon
+julia> i = Interval("chr1", 10000, 20000, '+', "some annotation")
+Bio.Intervals.Interval{String}:
+  sequence name: chr1
+  leftmost position: 10000
+  rightmost position: 20000
+  strand: +
+  metadata: some annotation
+
+julia> seqname(i)
+"chr1"
+
+julia> leftposition(i)
+10000
+
+julia> rightposition(i)
+20000
+
+julia> strand(i)
+STRAND_POS
+
+julia> metadata(i)
+"some annotation"
+
+```
+
 
 ## Collections of intervals
 
