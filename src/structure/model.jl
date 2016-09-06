@@ -181,17 +181,17 @@ file.
 immutable AtomRecord
     het_atom::Bool
     serial::Int
-    atom_name::Compat.ASCIIString
+    atom_name::String
     alt_loc_id::Char
-    res_name::Compat.ASCIIString
+    res_name::String
     chain_id::Char
     res_number::Int
     ins_code::Char
     coords::Vector{Float64}
     occupancy::Float64
     temp_fac::Float64
-    element::Compat.ASCIIString
-    charge::Compat.ASCIIString
+    element::String
+    charge::String
 end
 
 
@@ -394,8 +394,9 @@ serial(dis_at::DisorderedAtom) = serial(defaultatom(dis_at))
 
 
 """
-Get the atom name of an `AbstractAtom`. `spaces` determines whether surrounding
-whitespace is retained (default `false`).
+Get the atom name of an `AbstractAtom`.
+`spaces` determines whether surrounding whitespace is retained (default
+`false`).
 """
 function atomname(at::Atom; spaces::Bool=false)
     if spaces

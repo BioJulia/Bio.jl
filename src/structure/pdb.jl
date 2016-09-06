@@ -251,7 +251,7 @@ pdbline(at::Atom) = String[
         spacestring(charge(at), 2),
     ]
 
-pdbline(at_rec::AtomRecord) = Compat.ASCIIString[
+pdbline(at_rec::AtomRecord) = String[
         at_rec.het_atom ? "HETATM" : "ATOM  ",
         spacestring(at_rec.serial, 5),
         " ",

@@ -45,8 +45,8 @@ end
     at = struc['A'][10]["CA"]
     @test isa(at, Atom)
     struc['A'][10][" CB "] = DisorderedAtom(Dict(
-        'A'=> Atom(200, " CB ", 'A', [10.0, 20.0, 30.0], 0.6, 20.0, " C", "  ", res),
-        'B'=> Atom(201, " CB ", 'B', [11.0, 21.0, 31.0], 0.4, 30.0, " C", "  ", res)
+        'A'=> Atom(200, " CB ", 'A', [10.0, 20.0, 30.0], 0.6, 20.0, " C", "1+", res),
+        'B'=> Atom(201, " CB ", 'B', [11.0, 21.0, 31.0], 0.4, 30.0, " C", "1+", res)
     ), 'A')
     dis_at = struc['A'][10]["CB"]
     @test isa(dis_at, DisorderedAtom)
@@ -156,8 +156,10 @@ end
     @test element(at, spaces=true) == " C"
     @test element(dis_at, spaces=true) == " C"
 
-    @test charge(at) == "  "
-    @test charge(dis_at) == "  "
+    @test charge(at) == ""
+    @test charge(dis_at) == "1+"
+    @test charge(at, spaces=true) == "  "
+    @test charge(dis_at, spaces=true) == "1+"
 
     @test residue(at) == res
     @test residue(dis_at) == res
