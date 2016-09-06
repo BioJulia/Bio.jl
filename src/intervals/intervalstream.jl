@@ -205,25 +205,20 @@ function coverage_process_lasts_heap!(cov::IntervalCollection{UInt32},
 end
 
 """
-Compute the coverage of a collection of intervals.
+    coverage(intervals)
 
-### Arguments
-  * `intervals`: any IntervalStream
+Compute the coverage of a collection of intervals and return an
+`IntervalCollection` that contains run-length encoded coverage data.
 
-### Returns
-An IntervalCollection that contains run-length encoded coverage data.
+For example, given intervals like:
 
-E.g. for intervals like
-```{execute="false"}
     [------]     [------------]
        [---------------]
-```
 
-this function would return a new set of disjoint intervals with annotated
+This function would return a new set of disjoint intervals with annotated
 coverage like:
-```{execute="false"}
+
     [1][-2-][-1-][--2--][--1--]
-```
 """
 function coverage(stream::Union{IntervalStreamOrArray, IntervalTree},
                   seqname_isless::Function=isless)
