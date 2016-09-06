@@ -27,17 +27,73 @@ type Interval{T} <: AbstractInterval{Int64}
 end
 ```
 
-Similarly to the `SeqRecord` type in the `Seq` module, `Interval` is
-parameterized on metadata type, which lets it efficiently and precisely
-be specialized to represent intervals from a variety of formats.
+The first three fields (`seqname`, `first`, and `last`) are mandatory arguments
+when constructing an `Interval` object. `seqname` is the sequence name
+associated with the interval. The `first` and `last` fields are the leftmost and
+rightmost positions of the interval, which can be accessed with `leftposition`
+and `rightposition` functions, respectively.
 
-Strand is represented by the `Strand` type which can take four possible values:
-```julia
-STRAND_NA   # strand is unknown or inapplicable
-STRAND_POS  # positive strand
-STRAND_NEG  # negative strand
-STRAND_BOTH # non-strand-specific feature
+The `strand` field can take four kinds of values listed in the next table:
+
+| Symbol | Constant      | Meaning                           |
+| :----- | :------------ | :-------------------------------- |
+| `'?'`  | `STRAND_NA`   | strand is unknown or inapplicable |
+| `'+'`  | `STRAND_POS`  | positive strand                   |
+| `'-'`  | `STRAND_NEG`  | negative strand                   |
+| `'.'`  | `STRAND_BOTH` | non-strand-specific feature       |
+
+Similarly to the `SeqRecord` type in the `Bio.Seq` module, `Interval` is
+parameterized on metadata type, which lets it efficiently and precisely be
+specialized to represent intervals from a variety of formats.
+
+
+The default strand and metadata values are `STRAND_BOTH` and `nothing`:
+```jlcon
+julia> Interval("chr1", 10000, 20000)
+Bio.Intervals.Interval{Void}:
+  sequence name: chr1
+  leftmost position: 10000
+  rightmost position: 20000
+  strand: .
+  metadata: nothing
+
+julia> Interval("chr1", 10000, 20000, '+')
+Bio.Intervals.Interval{Void}:
+  sequence name: chr1
+  leftmost position: 10000
+  rightmost position: 20000
+  strand: +
+  metadata: nothing
+
 ```
+
+The following example shows all accessor functions for the five fields:
+```jlcon
+julia> i = Interval("chr1", 10000, 20000, '+', "some annotation")
+Bio.Intervals.Interval{String}:
+  sequence name: chr1
+  leftmost position: 10000
+  rightmost position: 20000
+  strand: +
+  metadata: some annotation
+
+julia> seqname(i)
+"chr1"
+
+julia> leftposition(i)
+10000
+
+julia> rightposition(i)
+20000
+
+julia> strand(i)
+STRAND_POS
+
+julia> metadata(i)
+"some annotation"
+
+```
+
 
 ## Collections of intervals
 
@@ -53,7 +109,7 @@ Interval collections can be initialized by inserting elements one by one using
 incol = IntervalCollection{Void}()
 
 for i in 1:100:10000
-    push!(incol, Interval("chr1", i, i + 99, STRAND_POS, nothing))
+    push!(incol, Interval("chr1", i, i + 99))
 end
 ```
 
@@ -62,7 +118,7 @@ Incrementally building an interval collection like this works, but
 the indexed data structure extremely efficiently from an array of intervals.
 
 ```julia
-incol = IntervalCollection([Interval("chr1", i, i + 99, STRAND_POS, nothing) for i in 1:100:10000])
+incol = IntervalCollection([Interval("chr1", i, i + 99) for i in 1:100:10000])
 ```
 
 Bulding `IntervalCollections` in one shot like this should be preferred when
@@ -123,47 +179,4 @@ against itself to produce "coverage intervals".
 
 ```@docs
 coverage
-```
-
-
-## Random access of intervals
-
-It is often the case that the user is interested in specific regions of a file.
-In such a case, reading all data from top to the specific regions is a
-time-wasting process when handing a big data file.
-
-[Tabix](http://www.htslib.org/doc/tabix.html) is a tool to index an interval
-data file and makes it possible to quickly retrieve data overlapping with a
-specific genomic region. Indexing a file using the tabix tool requires that the
-data file is sorted and then compressed in a special file format called
-[BGZF](https://github.com/BioJulia/BGZFStreams.jl). The BGZF file format is a
-gzip-compliant data format and readable using standard command-line tools like
-`gzip`. However, creating a BGZF file needs a purpose-built tool called `bgzip`.
-Once a BGZF file and its index file are prepared using `bgzip` and `tabix`, the
-user can iterate over intervals overlapping with a specified region:
-```julia
-reader = open(BEDReader, "data.bed.gz")
-for interval in intersect(reader, "chr2", 1_000_000:2_000_000)
-    # do something
-end
-```
-
-Internally, this random accessing function uses an index type named
-`Tabix`.  If the user knows well about the BGZF file format, it is also possible
-to use its interfaces to read a formatted file that are not supported in Bio.jl:
-```julia
-index = Tabix("data.xxx.gz.tbi")
-stream = BGZFStream("data.xxx.gz")
-for chunk in overlapchunks(index, "chr2", 1_000_000:2_000_000)
-    seekstart(stream, chunk.start)
-    for line in eachline(stream)
-        values = split(chomp(line), '\t')
-        seqname = values[index.columns[1]]
-        start = parse(Int, values[index.columns[2]])
-        stop = parse(Int, values[index.columns[3]])
-        if seqname == "chr2" && intersect(start:stop, 1_000_000:2_000_000)
-            # do something
-        end
-    end
-end
 ```
