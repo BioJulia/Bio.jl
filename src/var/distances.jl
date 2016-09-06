@@ -145,18 +145,21 @@ function distance{T<:MutationType,A<:NucleotideAlphabet}(::Type{Count{T}}, seqs:
     ranges = Vector{Pair{Int,Int}}(nwindows)
 
     @inbounds for pair in 1:npairs
+        pairoffset = pair - 1
+        windowoffset = pairoffset * nwindows
+        flagsoffset = pairoffset * nbases
         for i in 1:nwindows
             from = starts[i]
             to = ends[i]
             mcount = 0
             acount = 0
             @simd for j in from:to
-                mcount += mutationFlags[(pair - 1) * nbases + j]
-                acount += ambiguousFlags[(pair - 1) * nbases + j]
+                mcount += mutationFlags[flagsoffset + j]
+                acount += ambiguousFlags[flagsoffset + j]
             end
             ranges[i] = Pair(starts[i],ends[i])
-            mcounts[(pair - 1) * nwindows + i] = mcount
-            acounts[(pair - 1) * nwindows + i] = acount
+            mcounts[windowoffset + i] = mcount
+            acounts[windowoffset + i] = acount
         end
     end
 
