@@ -150,10 +150,11 @@ function distance{T<:MutationType,A<:NucleotideAlphabet}(::Type{Count{T}}, seqs:
                 mcounts[i, pair] += mutationFlags[(pair - 1) * nbases + j]
                 acounts[i, pair] += ambiguousFlags[(pair - 1) * nbases + j]
             end
+            ranges[i] = Pair(starts[i],ends[i])
         end
     end
 
-    return mcounts, acounts
+    return mcounts, acounts, ranges
 
 end
 
