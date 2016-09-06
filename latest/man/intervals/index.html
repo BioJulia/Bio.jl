@@ -212,9 +212,6 @@
             <li class="second-level"><a href="#interval-streams">Interval streams</a></li>
             
         
-            <li class="second-level"><a href="#random-access-of-intervals">Random access of intervals</a></li>
-            
-        
     
     </ul>
 </div></div>
@@ -237,12 +234,82 @@
 </pre></div>
 
 
-<p>Similarly to the <code>SeqRecord</code> type in the <code>Seq</code> module, <code>Interval</code> is parameterized on metadata type, which lets it efficiently and precisely be specialized to represent intervals from a variety of formats.</p>
-<p>Strand is represented by the <code>Strand</code> type which can take four possible values:</p>
-<div class="codehilite"><pre><span></span><span class="n">STRAND_NA</span>   <span class="c"># strand is unknown or inapplicable</span>
-<span class="n">STRAND_POS</span>  <span class="c"># positive strand</span>
-<span class="n">STRAND_NEG</span>  <span class="c"># negative strand</span>
-<span class="n">STRAND_BOTH</span> <span class="c"># non-strand-specific feature</span>
+<p>The first three fields (<code>seqname</code>, <code>first</code>, and <code>last</code>) are mandatory arguments when constructing an <code>Interval</code> object. <code>seqname</code> is the sequence name associated with the interval. The <code>first</code> and <code>last</code> fields are the leftmost and rightmost positions of the interval, which can be accessed with <code>leftposition</code> and <code>rightposition</code> functions, respectively.</p>
+<p>The <code>strand</code> field can take four kinds of values listed in the next table:</p>
+<table>
+<thead>
+<tr>
+<th align="left">Symbol</th>
+<th align="left">Constant</th>
+<th align="left">Meaning</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td align="left"><code>'?'</code></td>
+<td align="left"><code>STRAND_NA</code></td>
+<td align="left">strand is unknown or inapplicable</td>
+</tr>
+<tr>
+<td align="left"><code>'+'</code></td>
+<td align="left"><code>STRAND_POS</code></td>
+<td align="left">positive strand</td>
+</tr>
+<tr>
+<td align="left"><code>'-'</code></td>
+<td align="left"><code>STRAND_NEG</code></td>
+<td align="left">negative strand</td>
+</tr>
+<tr>
+<td align="left"><code>'.'</code></td>
+<td align="left"><code>STRAND_BOTH</code></td>
+<td align="left">non-strand-specific feature</td>
+</tr>
+</tbody>
+</table>
+<p>Similarly to the <code>SeqRecord</code> type in the <code>Bio.Seq</code> module, <code>Interval</code> is parameterized on metadata type, which lets it efficiently and precisely be specialized to represent intervals from a variety of formats.</p>
+<p>The default strand and metadata values are <code>STRAND_BOTH</code> and <code>nothing</code>:</p>
+<div class="codehilite"><pre><span></span><span class="gp">julia&gt;</span> <span class="n">Interval</span><span class="p">(</span><span class="s">&quot;chr1&quot;</span><span class="p">,</span> <span class="mi">10000</span><span class="p">,</span> <span class="mi">20000</span><span class="p">)</span>
+<span class="go">Bio.Intervals.Interval{Void}:</span>
+<span class="go">  sequence name: chr1</span>
+<span class="go">  leftmost position: 10000</span>
+<span class="go">  rightmost position: 20000</span>
+<span class="go">  strand: .</span>
+<span class="go">  metadata: nothing</span>
+
+<span class="gp">julia&gt;</span> <span class="n">Interval</span><span class="p">(</span><span class="s">&quot;chr1&quot;</span><span class="p">,</span> <span class="mi">10000</span><span class="p">,</span> <span class="mi">20000</span><span class="p">,</span> <span class="sc">&#39;+&#39;</span><span class="p">)</span>
+<span class="go">Bio.Intervals.Interval{Void}:</span>
+<span class="go">  sequence name: chr1</span>
+<span class="go">  leftmost position: 10000</span>
+<span class="go">  rightmost position: 20000</span>
+<span class="go">  strand: +</span>
+<span class="go">  metadata: nothing</span>
+</pre></div>
+
+
+<p>The following example shows all accessor functions for the five fields:</p>
+<div class="codehilite"><pre><span></span><span class="gp">julia&gt;</span> <span class="n">i</span> <span class="o">=</span> <span class="n">Interval</span><span class="p">(</span><span class="s">&quot;chr1&quot;</span><span class="p">,</span> <span class="mi">10000</span><span class="p">,</span> <span class="mi">20000</span><span class="p">,</span> <span class="sc">&#39;+&#39;</span><span class="p">,</span> <span class="s">&quot;some annotation&quot;</span><span class="p">)</span>
+<span class="go">Bio.Intervals.Interval{String}:</span>
+<span class="go">  sequence name: chr1</span>
+<span class="go">  leftmost position: 10000</span>
+<span class="go">  rightmost position: 20000</span>
+<span class="go">  strand: +</span>
+<span class="go">  metadata: some annotation</span>
+
+<span class="gp">julia&gt;</span> <span class="n">seqname</span><span class="p">(</span><span class="n">i</span><span class="p">)</span>
+<span class="go">&quot;chr1&quot;</span>
+
+<span class="gp">julia&gt;</span> <span class="n">leftposition</span><span class="p">(</span><span class="n">i</span><span class="p">)</span>
+<span class="go">10000</span>
+
+<span class="gp">julia&gt;</span> <span class="n">rightposition</span><span class="p">(</span><span class="n">i</span><span class="p">)</span>
+<span class="go">20000</span>
+
+<span class="gp">julia&gt;</span> <span class="n">strand</span><span class="p">(</span><span class="n">i</span><span class="p">)</span>
+<span class="go">STRAND_POS</span>
+
+<span class="gp">julia&gt;</span> <span class="n">metadata</span><span class="p">(</span><span class="n">i</span><span class="p">)</span>
+<span class="go">&quot;some annotation&quot;</span>
 </pre></div>
 
 
@@ -254,13 +321,13 @@
 <span class="n">incol</span> <span class="o">=</span> <span class="n">IntervalCollection</span><span class="p">{</span><span class="n">Void</span><span class="p">}()</span>
 
 <span class="k">for</span> <span class="n">i</span> <span class="k">in</span> <span class="mi">1</span><span class="p">:</span><span class="mi">100</span><span class="p">:</span><span class="mi">10000</span>
-    <span class="n">push!</span><span class="p">(</span><span class="n">incol</span><span class="p">,</span> <span class="n">Interval</span><span class="p">(</span><span class="s">&quot;chr1&quot;</span><span class="p">,</span> <span class="n">i</span><span class="p">,</span> <span class="n">i</span> <span class="o">+</span> <span class="mi">99</span><span class="p">,</span> <span class="n">STRAND_POS</span><span class="p">,</span> <span class="n">nothing</span><span class="p">))</span>
+    <span class="n">push!</span><span class="p">(</span><span class="n">incol</span><span class="p">,</span> <span class="n">Interval</span><span class="p">(</span><span class="s">&quot;chr1&quot;</span><span class="p">,</span> <span class="n">i</span><span class="p">,</span> <span class="n">i</span> <span class="o">+</span> <span class="mi">99</span><span class="p">))</span>
 <span class="k">end</span>
 </pre></div>
 
 
 <p>Incrementally building an interval collection like this works, but <code>IntervalCollection</code> also has a bulk insertion constructor that is able to build the indexed data structure extremely efficiently from an array of intervals.</p>
-<div class="codehilite"><pre><span></span><span class="n">incol</span> <span class="o">=</span> <span class="n">IntervalCollection</span><span class="p">([</span><span class="n">Interval</span><span class="p">(</span><span class="s">&quot;chr1&quot;</span><span class="p">,</span> <span class="n">i</span><span class="p">,</span> <span class="n">i</span> <span class="o">+</span> <span class="mi">99</span><span class="p">,</span> <span class="n">STRAND_POS</span><span class="p">,</span> <span class="n">nothing</span><span class="p">)</span> <span class="k">for</span> <span class="n">i</span> <span class="k">in</span> <span class="mi">1</span><span class="p">:</span><span class="mi">100</span><span class="p">:</span><span class="mi">10000</span><span class="p">])</span>
+<div class="codehilite"><pre><span></span><span class="n">incol</span> <span class="o">=</span> <span class="n">IntervalCollection</span><span class="p">([</span><span class="n">Interval</span><span class="p">(</span><span class="s">&quot;chr1&quot;</span><span class="p">,</span> <span class="n">i</span><span class="p">,</span> <span class="n">i</span> <span class="o">+</span> <span class="mi">99</span><span class="p">)</span> <span class="k">for</span> <span class="n">i</span> <span class="k">in</span> <span class="mi">1</span><span class="p">:</span><span class="mi">100</span><span class="p">:</span><span class="mi">10000</span><span class="p">])</span>
 </pre></div>
 
 
@@ -299,52 +366,23 @@
 <p>A special sort of intersection can also be performed on a <code>IntervalStreams</code> against itself to produce "coverage intervals".</p>
 <p><a id='Bio.Intervals.coverage' href='#Bio.Intervals.coverage'>#</a>
 <strong><code>Bio.Intervals.coverage</code></strong> &mdash; <em>Function</em>.</p>
-<p>Compute the coverage of a collection of intervals.</p>
-<p><strong>Arguments</strong></p>
-<ul>
-<li><code>intervals</code>: any IntervalStream</li>
-</ul>
-<p><strong>Returns</strong></p>
-<p>An IntervalCollection that contains run-length encoded coverage data.</p>
-<p>E.g. for intervals like</p>
-<p>```{execute="false"}
-    [------]     [------------]
-       [---------------]</p>
-<div class="codehilite"><pre><span></span>this function would return a new set of disjoint intervals with annotated coverage like:
-
-```{execute=&quot;false&quot;}
-    [1][-2-][-1-][--2--][--1--]
+<div class="codehilite"><pre><span></span>coverage(intervals)
 </pre></div>
 
 
-<p><a target='_blank' href='https://github.com/BioJulia/Bio.jl/tree/3aaf3c6a12fd967d103a326486be9349310a6f76/src/intervals/intervalstream.jl#L207-L227' class='documenter-source'>source</a><br></p>
-<p><a id='Random-access-of-intervals-1'></a></p>
-<h2 id="random-access-of-intervals">Random access of intervals</h2>
-<p>It is often the case that the user is interested in specific regions of a file. In such a case, reading all data from top to the specific regions is a time-wasting process when handing a big data file.</p>
-<p><a href="http://www.htslib.org/doc/tabix.html">Tabix</a> is a tool to index an interval data file and makes it possible to quickly retrieve data overlapping with a specific genomic region. Indexing a file using the tabix tool requires that the data file is sorted and then compressed in a special file format called <a href="https://github.com/BioJulia/BGZFStreams.jl">BGZF</a>. The BGZF file format is a gzip-compliant data format and readable using standard command-line tools like <code>gzip</code>. However, creating a BGZF file needs a purpose-built tool called <code>bgzip</code>. Once a BGZF file and its index file are prepared using <code>bgzip</code> and <code>tabix</code>, the user can iterate over intervals overlapping with a specified region:</p>
-<div class="codehilite"><pre><span></span><span class="n">reader</span> <span class="o">=</span> <span class="n">open</span><span class="p">(</span><span class="n">BEDReader</span><span class="p">,</span> <span class="s">&quot;data.bed.gz&quot;</span><span class="p">)</span>
-<span class="k">for</span> <span class="n">interval</span> <span class="k">in</span> <span class="n">intersect</span><span class="p">(</span><span class="n">reader</span><span class="p">,</span> <span class="s">&quot;chr2&quot;</span><span class="p">,</span> <span class="mi">1_000_000</span><span class="p">:</span><span class="mi">2_000_000</span><span class="p">)</span>
-    <span class="c"># do something</span>
-<span class="k">end</span>
+<p>Compute the coverage of a collection of intervals and return an <code>IntervalCollection</code> that contains run-length encoded coverage data.</p>
+<p>For example, given intervals like:</p>
+<div class="codehilite"><pre><span></span><span class="k">[------]     [------------]</span>
+   <span class="k">[---------------]</span>
 </pre></div>
 
 
-<p>Internally, this random accessing function uses an index type named <code>Tabix</code>.  If the user knows well about the BGZF file format, it is also possible to use its interfaces to read a formatted file that are not supported in Bio.jl:</p>
-<div class="codehilite"><pre><span></span><span class="n">index</span> <span class="o">=</span> <span class="n">Tabix</span><span class="p">(</span><span class="s">&quot;data.xxx.gz.tbi&quot;</span><span class="p">)</span>
-<span class="n">stream</span> <span class="o">=</span> <span class="n">BGZFStream</span><span class="p">(</span><span class="s">&quot;data.xxx.gz&quot;</span><span class="p">)</span>
-<span class="k">for</span> <span class="n">chunk</span> <span class="k">in</span> <span class="n">overlapchunks</span><span class="p">(</span><span class="n">index</span><span class="p">,</span> <span class="s">&quot;chr2&quot;</span><span class="p">,</span> <span class="mi">1_000_000</span><span class="p">:</span><span class="mi">2_000_000</span><span class="p">)</span>
-    <span class="n">seekstart</span><span class="p">(</span><span class="n">stream</span><span class="p">,</span> <span class="n">chunk</span><span class="o">.</span><span class="n">start</span><span class="p">)</span>
-    <span class="k">for</span> <span class="n">line</span> <span class="k">in</span> <span class="n">eachline</span><span class="p">(</span><span class="n">stream</span><span class="p">)</span>
-        <span class="n">values</span> <span class="o">=</span> <span class="n">split</span><span class="p">(</span><span class="n">chomp</span><span class="p">(</span><span class="n">line</span><span class="p">),</span> <span class="sc">&#39;\t&#39;</span><span class="p">)</span>
-        <span class="n">seqname</span> <span class="o">=</span> <span class="n">values</span><span class="p">[</span><span class="n">index</span><span class="o">.</span><span class="n">columns</span><span class="p">[</span><span class="mi">1</span><span class="p">]]</span>
-        <span class="n">start</span> <span class="o">=</span> <span class="n">parse</span><span class="p">(</span><span class="kt">Int</span><span class="p">,</span> <span class="n">values</span><span class="p">[</span><span class="n">index</span><span class="o">.</span><span class="n">columns</span><span class="p">[</span><span class="mi">2</span><span class="p">]])</span>
-        <span class="n">stop</span> <span class="o">=</span> <span class="n">parse</span><span class="p">(</span><span class="kt">Int</span><span class="p">,</span> <span class="n">values</span><span class="p">[</span><span class="n">index</span><span class="o">.</span><span class="n">columns</span><span class="p">[</span><span class="mi">3</span><span class="p">]])</span>
-        <span class="k">if</span> <span class="n">seqname</span> <span class="o">==</span> <span class="s">&quot;chr2&quot;</span> <span class="o">&amp;&amp;</span> <span class="n">intersect</span><span class="p">(</span><span class="n">start</span><span class="p">:</span><span class="n">stop</span><span class="p">,</span> <span class="mi">1_000_000</span><span class="p">:</span><span class="mi">2_000_000</span><span class="p">)</span>
-            <span class="c"># do something</span>
-        <span class="k">end</span>
-    <span class="k">end</span>
-<span class="k">end</span>
-</pre></div></div>
+<p>This function would return a new set of disjoint intervals with annotated coverage like:</p>
+<div class="codehilite"><pre><span></span>[1][-2-][-1-][--2--][--1--]
+</pre></div>
+
+
+<p><a target='_blank' href='https://github.com/BioJulia/Bio.jl/tree/d1a9c4c6efdb4fdea34f371fdd23875896f92def/src/intervals/intervalstream.jl#L207-L222' class='documenter-source'>source</a><br></p></div>
         
     </div>
 
