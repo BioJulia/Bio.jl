@@ -109,7 +109,7 @@ Interval collections can be initialized by inserting elements one by one using
 incol = IntervalCollection{Void}()
 
 for i in 1:100:10000
-    push!(incol, Interval("chr1", i, i + 99, STRAND_POS, nothing))
+    push!(incol, Interval("chr1", i, i + 99))
 end
 ```
 
@@ -118,7 +118,7 @@ Incrementally building an interval collection like this works, but
 the indexed data structure extremely efficiently from an array of intervals.
 
 ```julia
-incol = IntervalCollection([Interval("chr1", i, i + 99, STRAND_POS, nothing) for i in 1:100:10000])
+incol = IntervalCollection([Interval("chr1", i, i + 99) for i in 1:100:10000])
 ```
 
 Bulding `IntervalCollections` in one shot like this should be preferred when
