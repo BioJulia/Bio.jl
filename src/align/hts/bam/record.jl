@@ -75,7 +75,7 @@ function Base.show(io::IO, rec::BAMRecord)
     println(io, "  template length: ", templatelength(rec))
     println(io, "  sequence name: ", seqname(rec))
     println(io, "  CIGAR string: ", cigar(rec))
-    println(io, "  sequence: ", sequence(rec))
+    println(io, "  sequence: ", String(sequence(rec)))
     println(io, "  base qualities: ", qualities(rec))
       print(io, "  optional fields: ", optinal_fields(rec))
 end
