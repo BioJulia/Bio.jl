@@ -46,7 +46,7 @@ function Base.:(==)(rec1::SAMRecord, rec2::SAMRecord)
 end
 
 function Base.show(io::IO, rec::SAMRecord)
-    println(summary(rec), ':')
+    println(io, summary(rec), ':')
     println(io, "  reference name: ", refname(rec))
     println(io, "  leftmost position: ", leftposition(rec))
     println(io, "  next reference name: ", nextrefname(rec))
