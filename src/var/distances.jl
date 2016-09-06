@@ -140,6 +140,8 @@ function distance{T<:MutationType,A<:NucleotideAlphabet}(::Type{Count{T}}, seqs:
     nwindows = length(ends)
     mcounts = Matrix{Int}(nwindows, npairs)
     acounts = Matrix{Int}(nwindows, npairs)
+    fill!(mcounts, 0)
+    fill!(acounts, 0)
     ranges = Vector{Pair{Int,Int}}(nwindows)
 
     @inbounds for pair in 1:npairs
