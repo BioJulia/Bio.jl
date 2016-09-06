@@ -269,6 +269,20 @@ function distance{A<:NucleotideAlphabet}(::Type{JukesCantor69}, seqs::Vector{Bio
     return D, V
 end
 
+function distance{T<:MutationType,A<:NucleotideAlphabet}(::Type{JukesCantor69}, seqs::Vector{BioSequence{A}}, width::Int, step::Int)
+    ps, wsizes, ranges = distance(Proportion{AnyMutation}, seqs, width, step)
+    a, b = size(ps)
+    est = Matrix{Float64}(a, b)
+    var = Matrix{Float64}(a, b)
+    @inbounds for i in 1:endof(counts)
+        p = ps[i]
+        l = esizes[i]
+        est[i] = expected_distance(JukesCantor69, p)
+        var[i] = variance(JukesCantor69, p, l)
+    end
+    return est, var, ranges
+end
+
 """
     distance{N<:Nucleotide}(::Type{JukesCantor69}, seqs::Matrix{N})
 
