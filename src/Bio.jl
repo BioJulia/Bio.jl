@@ -1,12 +1,21 @@
+__precompile__()
+
 module Bio
 
-abstract AbstractParser
-abstract FileFormat
-
-include("StringFields.jl")
+include("IO.jl")
 include("Ragel.jl")
+include("StringFields.jl")
+include("util/Util.jl")
 include("seq/Seq.jl")
 include("intervals/Intervals.jl")
 include("align/Align.jl")
+include("util/tokenize.jl")
+include("util/indexing.jl")
+include("var/Var.jl")
+include("phylo/Phylo.jl")
+include("structure/Structure.jl")
+include("tools/Tools.jl")
+include("util/windows.jl")
+include("precompile.jl")
 
-end # module Bio
+end  # module Bio

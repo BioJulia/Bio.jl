@@ -1,153 +1,194 @@
-# Assign flags for sequence types so we can maintain a set of compatible
-# alphabets in an integer.
+# Alphabet
+# ========
+#
+# Alphabet of biological symbols.
+#
+# Subtypes of `Alphabet` represent a domain of biological characters. For
+# example, `DNAAlphabet{2}` has a domain of unambiguous nucleotides (i.e. A, C,
+# G, and T). These types are used for parameterizing biological sequences and so
+# on. A pair of encoder and decoder is associated with an alphabet, which maps
+# values between binary and Julia-level representation.
+#
+# This file is a part of BioJulia.
+# License is MIT: https://github.com/BioJulia/Bio.jl/blob/master/LICENSE.md
 
 """
-Type representing an alphabet
-
-An `Alphabet` value holds a set of alphabets compatible with a sequence.
-Usually this is just one.
+Alphabet of biological characters.
 """
-bitstype 16 Alphabet
-
-function convert(::Type{Alphabet}, nt::UInt16)
-    return box(Alphabet, unbox(UInt16, nt))
-end
-
-
-function convert(::Type{UInt16}, nt::Alphabet)
-    return box(UInt16, unbox(Alphabet, nt))
-end
-
-
-function (|)(a::Alphabet, b::Alphabet)
-    return convert(Alphabet, convert(UInt16, a) | convert(UInt16, b))
-end
-
-
-function (&)(a::Alphabet, b::Alphabet)
-    return convert(Alphabet, convert(UInt16, a) & convert(UInt16, b))
-end
-
-# for safe module precompilation
-hash(a::Alphabet) = hash(convert(UInt16, a))
-
-"`Alphabet` value indicating no compatible alphabets."
-const EMPTY_ALPHABET = convert(Alphabet, UInt16(0))
-
-"DNA alphabet"
-const DNA_ALPHABET   = convert(Alphabet, UInt16(0b0001))
-
-"RNA alphabet"
-const RNA_ALPHABET   = convert(Alphabet, UInt16(0b0010))
-
-"amino acid alphabet"
-const AA_ALPHABET    = convert(Alphabet, UInt16(0b0100))
-
-"`Alphabet` value indicating that all known alphabets are compatible"
-const ALL_ALPHABETS =
-    DNA_ALPHABET | RNA_ALPHABET | AA_ALPHABET
-
-
-const alphabet_type = Dict{Alphabet, Type}(
-    DNA_ALPHABET => DNASequence,
-    RNA_ALPHABET => RNASequence,
-    AA_ALPHABET  => AminoAcidSequence
-)
-
-
-# When a sequence has multiple compatible alphabets, we choose the first
-# compatible alphabet in this list.
-const preferred_sequence_alphabets = [
-    DNA_ALPHABET, RNA_ALPHABET, AA_ALPHABET
-]
-
-
-# Lookup table mapping a character in 'A':'z' to an integer representing the set
-# of alphabets that character is compatible with.
-const compatible_alphabets = [
-    # A                                          B
-      DNA_ALPHABET | RNA_ALPHABET | AA_ALPHABET, AA_ALPHABET,
-    # C                                          D
-      DNA_ALPHABET | RNA_ALPHABET | AA_ALPHABET, AA_ALPHABET,
-    # E            F            G
-      AA_ALPHABET, AA_ALPHABET, DNA_ALPHABET | RNA_ALPHABET | AA_ALPHABET,
-    # H            I            J            K            L
-      AA_ALPHABET, AA_ALPHABET, AA_ALPHABET, AA_ALPHABET, AA_ALPHABET,
-    # M            N                                          O
-      AA_ALPHABET, DNA_ALPHABET | RNA_ALPHABET | AA_ALPHABET, AA_ALPHABET,
-    # P            Q            R            S
-      AA_ALPHABET, AA_ALPHABET, AA_ALPHABET, AA_ALPHABET,
-    # T                           U                           V
-      DNA_ALPHABET | AA_ALPHABET, RNA_ALPHABET | AA_ALPHABET, AA_ALPHABET,
-    # W,           X            Y            Z
-      AA_ALPHABET, AA_ALPHABET, AA_ALPHABET, AA_ALPHABET,
-
-    # [               \               ]               ^
-      EMPTY_ALPHABET, EMPTY_ALPHABET, EMPTY_ALPHABET, EMPTY_ALPHABET,
-    #  _              `
-      EMPTY_ALPHABET, EMPTY_ALPHABET,
-
-    # a                                          b
-      DNA_ALPHABET | RNA_ALPHABET | AA_ALPHABET, AA_ALPHABET,
-    # c                                          d
-      DNA_ALPHABET | RNA_ALPHABET | AA_ALPHABET, AA_ALPHABET,
-    # e            f            g
-      AA_ALPHABET, AA_ALPHABET, DNA_ALPHABET | RNA_ALPHABET | AA_ALPHABET,
-    # h            i            j            k            l
-      AA_ALPHABET, AA_ALPHABET, AA_ALPHABET, AA_ALPHABET, AA_ALPHABET,
-    # m            n                                          o
-      AA_ALPHABET, DNA_ALPHABET | RNA_ALPHABET | AA_ALPHABET, AA_ALPHABET,
-    # p            q            r            s
-      AA_ALPHABET, AA_ALPHABET, AA_ALPHABET, AA_ALPHABET,
-    # t                           u                           v
-      DNA_ALPHABET | AA_ALPHABET, RNA_ALPHABET | AA_ALPHABET, AA_ALPHABET,
-    # w            x            y            z
-      AA_ALPHABET, AA_ALPHABET, AA_ALPHABET, AA_ALPHABET
-]
-
+abstract Alphabet
 
 """
-Infer the sequence type by inspecting a string.
-
-### Arguments
-   * `data`: sequence data in a string
-   * `start`: first position to consider in data
-   * `stop`: last position to consider in data
-   * `default`: if there are multiple compatible alphabets, default
-             to this one if it's compatible.
-
-### Returns
-A type T to which the string data can be converted.
+DNA nucleotide alphabet.
 """
-function infer_alphabet(data::Vector{UInt8}, start, stop, default)
-    alphabets = ALL_ALPHABETS
-    if start > stop
-        return default
+immutable DNAAlphabet{n} <: Alphabet end
+
+"""
+RNA nucleotide alphabet.
+"""
+immutable RNAAlphabet{n} <: Alphabet end
+
+"""
+Amino acid alphabet.
+"""
+immutable AminoAcidAlphabet <: Alphabet end
+
+"""
+General character alphabet.
+"""
+immutable CharAlphabet <: Alphabet end
+
+"""
+Void alphabet (internal use only).
+"""
+immutable VoidAlphabet <: Alphabet end
+
+typealias NucleotideAlphabet Union{DNAAlphabet,RNAAlphabet}
+
+"""
+The number of bits to represent the alphabet.
+"""
+function bitsof end
+
+for n in (2, 4)
+    @eval begin
+        bitsof(::Type{DNAAlphabet{$n}}) = $n
+        bitsof(::Type{RNAAlphabet{$n}}) = $n
     end
+end
+bitsof(::Type{AminoAcidAlphabet}) = 8
+bitsof(::Type{CharAlphabet}) = 32
+bitsof(::Type{VoidAlphabet}) = 0
 
-    if start < 1 ||  stop > length(data)
-        throw(BoundsError())
-    end
+Base.eltype(::Type{DNAAlphabet}) = DNANucleotide
+Base.eltype(::Type{RNAAlphabet}) = RNANucleotide
+Base.eltype{n}(::Type{DNAAlphabet{n}}) = DNANucleotide
+Base.eltype{n}(::Type{RNAAlphabet{n}}) = RNANucleotide
+Base.eltype(::Type{AminoAcidAlphabet}) = AminoAcid
+Base.eltype(::Type{CharAlphabet}) = Char
+Base.eltype(::Type{VoidAlphabet}) = Void
 
-    @inbounds for i in start:stop
-        c = data[i]
-        if UInt8('A') <= c <= UInt8('z')
-            alphabets &= compatible_alphabets[c - UInt8('A') + 1]
-        else
-            error("Character $(c) is not compatible with any sequence type.")
-        end
-    end
+alphabet(::Type{DNAAlphabet{2}}) = ACGT
+alphabet(::Type{RNAAlphabet{2}}) = ACGU
+alphabet(::Type{DNAAlphabet{4}}) = alphabet(DNANucleotide)
+alphabet(::Type{RNAAlphabet{4}}) = alphabet(RNANucleotide)
+alphabet(::Type{AminoAcidAlphabet}) = alphabet(AminoAcid)
+# TODO: this alphabet includes invalid Unicode scalar values
+alphabet(::Type{CharAlphabet}) = typemin(Char):typemax(Char)
+alphabet(::Type{VoidAlphabet}) = nothing
 
-    if count_ones(convert(UInt16, alphabets)) == 0
-        error("String is not compatible with any known sequence type.")
-    elseif alphabets & default != EMPTY_ALPHABET
-        return default
-    else
-        for alphabet in preferred_sequence_alphabets
-            if alphabet & alphabets != EMPTY_ALPHABET
-                return alphabet
+
+# Encoders & Decoders
+# -------------------
+
+"""
+Encode biological characters to binary representation.
+"""
+function encode end
+
+immutable EncodeError{A<:Alphabet,T} <: Exception
+    val::T
+end
+
+EncodeError{A,T}(::Type{A}, val::T) = EncodeError{A,T}(val)
+
+function Base.showerror{A}(io::IO, err::EncodeError{A})
+    print(io, "cannot encode ", err.val, " in ", A)
+end
+
+"""
+Decode biological characters from binary representation.
+"""
+function decode end
+
+immutable DecodeError{A<:Alphabet,T} <: Exception
+    val::T
+end
+
+DecodeError{A,T}(::Type{A}, val::T) = DecodeError{A,T}(val)
+
+function Base.showerror{A}(io::IO, err::DecodeError{A})
+    print(io, "cannot decode ", err.val, " in ", A)
+end
+
+
+# DNA and RNA alphabets
+# ---------------------
+
+for A in (DNAAlphabet, RNAAlphabet)
+    T = eltype(A)
+    @eval begin
+        # 2-bit encoding
+        @inline function encode(::Type{$(A){2}}, nt::$(T))
+            if count_ones(nt) != 1 || !isvalid(nt)
+                throw(EncodeError($(A){2}, nt))
             end
+            return convert(UInt8, trailing_zeros(nt))
         end
+        @inline function decode(::Type{$(A){2}}, x::UInt8)
+            if x > 0x03
+                throw(DecodeError($(A){2}, x))
+            end
+            return reinterpret($(T), 0x01 << x)
+        end
+        @inline decode(::Type{$(A){2}}, x::Unsigned) = decode($(A){2}, UInt8(x))
+
+        # 4-bit encoding
+        @inline function encode(::Type{$(A){4}}, nt::$(T))
+            if !isvalid(nt)
+                throw(EncodeError($(A){4}, nt))
+            end
+            return reinterpret(UInt8, nt)
+        end
+        @inline function decode(::Type{$(A){4}}, x::UInt8)
+            if !isvalid($(T), x)
+                throw(DecodeError($(A){4}, x))
+            end
+            return reinterpret($(T), x)
+        end
+        @inline decode(::Type{$(A){4}}, x::Unsigned) = decode($(A){4}, UInt8(x))
     end
-    return default
+end
+
+
+# AminoAcidAlphabet
+# -----------------
+
+@inline function encode(::Type{AminoAcidAlphabet}, aa::AminoAcid)
+    if aa > AA_Gap
+        throw(EncodeError(AminoAcidAlphabet, aa))
+    end
+    return reinterpret(UInt8, aa)
+end
+
+@inline function decode(::Type{AminoAcidAlphabet}, x::UInt8)
+    if x > 0x1b
+        throw(DecodeError(AminoAcidAlphabet, x))
+    end
+    return reinterpret(AminoAcid, x)
+end
+
+@inline function decode(::Type{AminoAcidAlphabet}, x::Unsigned)
+    return decode(AminoAcidAlphabet, UInt8(x))
+end
+
+
+# CharAlphabet
+# ------------
+
+@inline function encode(::Type{CharAlphabet}, char::Char)
+    if char > '\U10ffff'
+        throw(EncodeError(CharAlphabet, char))
+    end
+    return reinterpret(UInt32, char)
+end
+
+@inline function decode(::Type{CharAlphabet}, x::UInt32)
+    if x > 0x10ffff
+        throw(DecodeError(CharAlphabet, x))
+    end
+    return reinterpret(Char, x)
+end
+
+@inline function decode(::Type{CharAlphabet}, x::Unsigned)
+    return decode(CharAlphabet, UInt32(x))
 end

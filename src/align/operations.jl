@@ -1,21 +1,23 @@
-# =====================
-# Alignment operations
-# =====================
+# Alignment Operations
+# ====================
+#
+# Alignment operation type.
+#
+# This file is a part of BioJulia.
+# License is MIT: https://github.com/BioJulia/Bio.jl/blob/master/LICENSE.md
 
-
-# Single operations are encoded in one byte each
-# ----------------------------------------------
+# An alignment operation type
 bitstype 8 Operation
 
 
 # Conversion to and from integers
 # -------------------------------
 
-convert(::Type{Operation}, num::UInt8) = box(Operation, unbox(UInt8, num))
-convert(::Type{UInt8}, op::Operation) = box(UInt8, unbox(Operation, op))
+Base.convert(::Type{Operation}, op::UInt8) = reinterpret(Operation, op)
+Base.convert(::Type{UInt8}, op::Operation) = reinterpret(UInt8, op)
 
-convert{T<:Unsigned}(::Type{Operation}, unint::T) = convert(Operation, convert(UInt8, unint))
-convert{T<:Unsigned}(::Type{T}, op::Operation) = convert(T, convert(UInt8, op))
+Base.convert{T<:Unsigned}(::Type{Operation}, op::T) = Operation(UInt8(op))
+Base.convert{T<:Unsigned}(::Type{T}, op::Operation) = T(UInt8(op))
 
 
 # Operation encoding definitions
@@ -36,12 +38,10 @@ const OP_INVALID      = convert(Operation, 0xff)
 
 const OP_MAX_VALID = OP_START
 
-
 # classify operations
 function ismatchop(op::Operation)
     return op == OP_MATCH || op == OP_SEQ_MATCH || op == OP_SEQ_MISMATCH
 end
-
 
 function isinsertop(op::Operation)
     return op == OP_INSERT || op == OP_SOFT_CLIP || op == OP_HARD_CLIP
@@ -65,9 +65,9 @@ const char_to_op = [
     OP_INVALID,   OP_INVALID, OP_SOFT_CLIP, OP_INVALID,
     OP_INVALID,   OP_INVALID, OP_INVALID,   OP_SEQ_MISMATCH ]
 
-
-function convert(::Type{Operation}, c::Char)
-    @inbounds op = '=' <= c <= 'X' ? char_to_op[c - '=' + 1] : OP_INVALID
+function Base.convert(::Type{Operation}, c::Char)
+    @inbounds op = '=' <= c <= 'X' ? char_to_op[c - '=' + 1] :
+                          c == '0' ? OP_START                : OP_INVALID
     if op == OP_INVALID
         error("Invalid alignment operation '$c'")
     end
@@ -80,11 +80,12 @@ end
 
 const op_to_char = ['M', 'I', 'D', 'N', 'S', 'H', 'P', '=', 'X', 'B', '0']
 
-function convert(::Type{Char}, op::Operation)
+function Base.convert(::Type{Char}, op::Operation)
     @assert op != OP_INVALID error("Alignment operation is not valid.")
     return op_to_char[convert(UInt8, op) + 1]
 end
 
-function show(io::IO, op::Operation)
+function Base.show(io::IO, op::Operation)
     write(io, convert(Char, op))
+    return
 end

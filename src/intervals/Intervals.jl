@@ -1,7 +1,18 @@
+# Bio.Intervals
+# =============
+#
+# Module for genomic intervals.
+#
+# This file is a part of BioJulia.
+# License is MIT: https://github.com/BioJulia/Bio.jl/blob/master/LICENSE.md
+
 module Intervals
 
-export Strand,
+export
+    Strand,
     Interval,
+    leftposition,
+    rightposition,
     IntervalCollection,
     IntervalStream,
     STRAND_NA,
@@ -11,67 +22,47 @@ export Strand,
     coverage,
     isoverlapping,
     seqname,
+    metadata,
     strand,
-    BED,
+    BEDReader,
+    BEDWriter,
     BEDMetadata,
     BEDInterval,
-    BigBed,
-    BigWig
+    BigBedReader,
+    BigBedWriter,
+    Tabix,
+    overlapchunks
 
-using Base.Intrinsics,
-    Bio.Ragel,
-    Bio.StringFields,
+import ..Ragel: tryread!
+export tryread!
+
+import Bio
+using
     BufferedStreams,
+    Colors,
     IntervalTrees,
     Libz,
-    Colors
+    Bio.Ragel,
+    Bio.StringFields,
+    Bio.Seq
 
 using Base.Collections:
     heappush!,
     heappop!
 
-using Bio:
-    AbstractParser,
-    FileFormat
-
 import Iterators
 
-import Base:
-    show,
-    isless,
-    push!,
-    shift!,
-    intersect,
-    start,
-    next,
-    done,
-    length,
-    convert,
-    read,
-    read!,
-    write,
-    getindex,
-    get,
-    isempty,
-    endof,
-    ==,
-    reverse!,
-    open,
-    eltype,
-    copy
-
-import IntervalTrees:
-    first,
-    last
-
-
+include("strand.jl")
 include("interval.jl")
 include("stream_buffer.jl")
 include("intervalcollection.jl")
 include("intervalstream.jl")
+include("index/index.jl")
 
 # Parsing file types
-include("bed.jl")
-include("bigbed.jl")
+include("bed/bed.jl")
+include("bbi/bbi.jl")
+
+include("deprecated.jl")
 
 end # module Intervals

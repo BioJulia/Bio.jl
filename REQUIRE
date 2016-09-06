@@ -1,6 +1,13 @@
-julia 0.4-
-BufferedStreams
+julia 0.5-
+BGZFStreams
+BufferedStreams 0.1
 Colors
-IntervalTrees
+Distributions
+IndexableBitVectors 0.1.1
+IntervalTrees 0.1
 Iterators
-Libz
+Libz 0.2
+LightGraphs
+LightXML
+Roots
+Combinatorics

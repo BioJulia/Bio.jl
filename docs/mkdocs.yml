@@ -1,0 +1,53 @@
+# Project information
+site_name:   Bio.jl
+site_description: Bioinformatics and Computational Biology Infrastructure for Julia
+site_author: The BioJulia Organisation
+site_url: https://biojulia.github.io/Bio.jl/
+
+# Repository
+repo_url:  https://github.com/BioJulia/Bio.jl
+
+# Copyright
+copyright: Copyright (c) 2016 The BioJulia Organisation
+
+# Documentation and theme
+theme: biojulia
+docs_dir: 'build'
+
+# Options
+extra:
+  logo: images/biojl.png
+  author:
+    github: BioJulia
+
+extra_css:
+  - assets/Documenter.css
+
+extra_javascript:
+  - https://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS_HTML
+  - assets/mathjaxhelper.js
+
+# Extensions
+markdown_extensions:
+  - extra
+  - tables
+  - fenced_code
+  - codehilite
+  - def_list
+
+# Page tree
+pages:
+- Home: index.md
+- Manual:
+  - Installation: man/install.md
+  - IO API: man/reading.md
+  - Biological Sequences: man/seq.md
+  - Alignments: man/alignments.md
+  - Intervals: man/intervals.md
+  - Biological Variation: man/var.md
+  - Structure: man/structure.md
+  - Util: man/util.md
+  - Tools: man/tools.md
+- Reference:
+  - Seq: lib/seq.md
+- Contributing: man/contributing.md

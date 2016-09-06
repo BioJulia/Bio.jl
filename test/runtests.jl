@@ -1,14 +1,29 @@
+# all test targets
+available_targets = [
+    "align",
+    "phylo",
+    "intervals",
+    "seq",
+    "var",
+    "services",
+    "structure",
+    "tools",
+    "util"
+]
 
-function get_bio_fmt_specimens()
-    path = Pkg.dir("Bio", "test", "BioFmtSpecimens")
-    if !isdir(path)
-        run(`git clone --depth 1 https://github.com/BioJulia/BioFmtSpecimens.git $(path)`)
+if isempty(ARGS)
+    # run all available test targets
+    targets = available_targets
+else
+    targets = ARGS
+    invalids = setdiff(targets, available_targets)
+    if !isempty(invalids)
+        error("there are invalid test targets: ", join(invalids, ", "))
     end
 end
 
-include("align/TestAlign.jl")
-include("phylo/TestPhylo.jl")
-include("intervals/TestIntervals.jl")
-include("seq/TestSeq.jl")
-include("services/TestServices.jl")
-include("tools/TestTools.jl")
+include("TestFunctions.jl")
+
+for target in targets
+    include("$target/runtests.jl")
+end

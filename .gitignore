@@ -1,0 +1,16 @@
+docs/build/
+docs/site/
+
+# BioFmtSpecimens gets cloned here by test suite
+test/BioFmtSpecimens
+
+# OSX temp
+.DS_Store
+
+# KDE directory preferences
+.directory
+
+# Vim/vi temp files
+*.sw?
+tags
+*~

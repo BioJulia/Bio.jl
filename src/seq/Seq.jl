@@ -1,51 +1,107 @@
+# Bio.Seq
+# =======
+#
+# Module for biological sequences.
+#
+# This file is a part of BioJulia.
+# License is MIT: https://github.com/BioJulia/Bio.jl/blob/master/LICENSE.md
+
 module Seq
 
-export Nucleotide,
+export
+    Nucleotide,
     DNANucleotide,
     RNANucleotide,
     DNA_A,
     DNA_C,
     DNA_G,
     DNA_T,
+    DNA_M,
+    DNA_R,
+    DNA_W,
+    DNA_S,
+    DNA_Y,
+    DNA_K,
+    DNA_V,
+    DNA_H,
+    DNA_D,
+    DNA_B,
     DNA_N,
+    DNA_Gap,
+    ACGT,
     RNA_A,
     RNA_C,
     RNA_G,
     RNA_U,
+    RNA_M,
+    RNA_R,
+    RNA_W,
+    RNA_S,
+    RNA_Y,
+    RNA_K,
+    RNA_V,
+    RNA_H,
+    RNA_D,
+    RNA_B,
     RNA_N,
+    RNA_Gap,
+    ACGU,
+    iscompatible,
+    isambiguous,
+    ispurine,
+    ispyrimidine,
     Sequence,
-    NucleotideSequence,
+    BioSequence,
     DNASequence,
     RNASequence,
+    AminoAcidSequence,
+    CharSequence,
+    NucleotideSequence,
+    SeqRecord,
+    seqname,
+    sequence,
+    metadata,
     @dna_str,
     @rna_str,
-    ismutable,
-    mutable!,
-    immutable!,
+    @aa_str,
+    @char_str,
+    @biore_str,
+    @prosite_str,
+    matched,
+    captured,
+    alphabet,
+    gap,
+    complement,
+    complement!,
     reverse_complement,
+    reverse_complement!,
     mismatches,
+    ispalindromic,
+    hasambiguity,
+    isrepetitive,
+    ambiguous_positions,
     npositions,
     hasn,
-    eachsubseq,
+    gc_content,
+    SequenceGenerator,
+    randdnaseq,
+    randrnaseq,
+    randaaseq,
     canonical,
     neighbors,
     eachkmer,
     each,
+    Composition,
+    composition,
     NucleotideCounts,
     Kmer,
     DNAKmer,
     RNAKmer,
-    dnakmer,
-    rnakmer,
-    kmer,
-    KmerCounts,
-    DNAKmerCounts,
-    RNAKmerCounts,
-    AminoAcid,
-    AminoAcidSequence,
-    @aa_str,
+    DNACodon,
+    RNACodon,
     translate,
     ncbi_trans_table,
+    AminoAcid,
     AA_A,
     AA_R,
     AA_N,
@@ -69,75 +125,96 @@ export Nucleotide,
     AA_O,
     AA_U,
     AA_B,
-    AA_Z,
     AA_J,
+    AA_Z,
     AA_X,
-    FASTA,
-    FASTQ,
-    Alphabet
+    AA_Term,
+    AA_Gap,
+    FASTAReader,
+    FASTAWriter,
+    FASTASeqRecord,
+    FASTQReader,
+    FASTQWriter,
+    FASTQSeqRecord,
+    TwoBitReader,
+    TwoBitWriter,
+    Alphabet,
+    DNAAlphabet,
+    RNAAlphabet,
+    NucleotideAlphabets,
+    AminoAcidAlphabet,
+    CharAlphabet,
+    NucleotideAlphabet,
+    ExactSearchQuery,
+    ApproximateSearchQuery,
+    approxsearch,
+    approxsearchindex,
+    approxrsearch,
+    approxrsearchindex,
+    ReferenceSequence,
+    Demultiplexer,
+    demultiplex,
+    seqmatrix,
+    majorityvote
 
-using BufferedStreams,
-    Base.Intrinsics,
+import Bio
+using
+    BufferedStreams,
+    Iterators,
+    IndexableBitVectors,
+    Bio.Ragel,
     Bio.StringFields,
-    Bio.Ragel
+    Combinatorics
 
-using Bio:
-    FileFormat,
-    AbstractParser
+import ..Ragel: tryread!
+export tryread!
 
-import Base:
-    convert,
-    complement,
-    show,
-    length,
-    start,
-    next,
-    done,
-    copy,
-    copy!,
-    reverse,
-    show,
-    endof,
-    isless,
-    clipboard,
-    parse,
-    repeat,
-    unsafe_copy!,
-    read,
-    read!,
-    write,
-    open,
-    eltype,
-    getindex,
-    setindex!,
-    hash,
-    ==,
-    *,
-    ^,
-    |,
-    &
+"""
+    alphabet(typ)
 
+Return an iterator of symbols of `typ`.
 
-abstract Sequence
+`typ` is one of `DNANucleotide`, `RNANucleotide`, or `AminoAcid`.
+"""
+function alphabet end
 
-# This is useful for obscure reasons. We use SeqRecord{Sequence} for reading
-# sequence in an undetermined alphabet, but a consequence that we need to be
-# able to construct a `Sequence`.
-function Sequence()
-    return DNASequence()
-end
+"""
+    gap(typ)
 
+Return the gap symbol of `typ`.
+
+`typ` is one of `DNANucleotide`, `RNANucleotide`, `AminoAcid`, or `Char`.
+"""
+function gap end
+
+gap(::Type{Char}) = '-'
+
+include("sequence.jl")
 include("nucleotide.jl")
 include("aminoacid.jl")
-include("geneticcode.jl")
-include("util.jl")
 include("alphabet.jl")
-include("quality.jl")
+include("bitindex.jl")
+include("bioseq.jl")
+include("hash.jl")
+include("randseq.jl")
+include("kmer.jl")
+include("nmask.jl")
+include("refseq.jl")
+include("eachkmer.jl")
+include("composition.jl")
+include("geneticcode.jl")
 include("seqrecord.jl")
+include("demultiplexer.jl")
 
 # Parsing file types
-include("fasta.jl")
-include("fastq.jl")
+include("fasta/fasta.jl")
+include("fastq/fastq.jl")
+include("twobit/twobit.jl")
 
+include("search/exact.jl")
+include("search/approx.jl")
+include("search/re.jl")
 
-end # module Seq
+include("deprecated.jl")
+
+end  # module Bio.Seq
