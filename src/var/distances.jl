@@ -327,6 +327,20 @@ function distance{A<:NucleotideAlphabet}(::Type{Kimura80}, seqs::Vector{BioSeque
     return D, V
 end
 
+function distance{T<:TsTv,A<:NucleotideAlphabet}(::Type{T}, seqs::Vector{BioSequence{A}}, width::Int, step::Int)
+    ps, wsizes, ranges = distance(Count{Kimura80}, seqs, width, step)
+    a, b = size(ps)
+    est = Matrix{Float64}(a, b)
+    var = Matrix{Float64}(a, b)
+    @inbounds for i in 1:endof(counts)
+        p = ps[i]
+        l = esizes[i]
+        est[i] = expected_distance(JukesCantor69, p)
+        var[i] = variance(JukesCantor69, p, l)
+    end
+    return est, var, ranges
+end
+
 """
     distance{N<:Nucleotide}(::Type{Kimura80}, seqs::Matrix{N})
 
