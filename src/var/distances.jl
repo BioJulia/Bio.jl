@@ -244,7 +244,7 @@ function distance{T<:MutationType,A<:NucleotideAlphabet}(::Type{Proportion{T}}, 
     counts, wsizes, ranges = distance(Count{T}, seqs, width, step)
     res = Matrix{Float64}(size(counts))
     @inbounds for i in 1:endof(counts)
-        res[i] = expected_distance(Proportion{T}, counts[i] / wsizes[i])
+        res[i] = expected_distance(Proportion{T}, counts[i], wsizes[i])
     end
     return res, wsizes, ranges
 end
