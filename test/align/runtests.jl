@@ -1055,6 +1055,7 @@ end
         @testset "Reader" begin
             reader = open(SAMReader, joinpath(samdir, "ce#1.sam"))
             @test isa(reader, SAMReader)
+            @test eltype(reader) === SAMRecord
 
             # header
             h = header(reader)
@@ -1162,6 +1163,7 @@ end
         @testset "Reader" begin
             reader = open(BAMReader, joinpath(bamdir, "ce#1.bam"))
             @test isa(reader, BAMReader)
+            @test eltype(reader) === BAMRecord
 
             # header
             h = header(reader)
