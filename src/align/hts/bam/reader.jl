@@ -23,6 +23,10 @@ function BAMReader(input::IO; index=nothing)
     return reader
 end
 
+function Base.eltype(::Type{BAMReader})
+    return BAMRecord
+end
+
 function Bio.IO.stream(reader::BAMReader)
     return reader.stream
 end
