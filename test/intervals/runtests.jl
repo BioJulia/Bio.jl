@@ -516,11 +516,11 @@ end
             intervals = IntervalCollection(
                 open(BEDReader, joinpath(path, specimen["filename"])))
             out = IOBuffer()
-            write(out, BigBed, intervals)
+            write(BigBedWriter(out), intervals)
 
             # BigBed → BED
             seekstart(out)
-            bb = Intervals.BigBedData(out)
+            bb = BigBedReader(out)
             intervals2 = IntervalCollection(bb)
 
             @test intervals == intervals2
@@ -537,9 +537,9 @@ end
 
         # convert to bigbed in memory
         out = IOBuffer()
-        write(out, BigBed, intervals)
+        write(BigBedWriter(out), intervals)
         seekstart(out)
-        bb = Intervals.BigBedData(out)
+        bb = BigBedReader(out)
 
         # intersection queries
         num_queries = 1000

@@ -240,9 +240,18 @@ chr9	68456943	68486659	NM_001206	0	-
 
 ### bigBed
 
+* Reader type: `BigBedReader`
+* Writer type: `BigBedWriter{T<:IO}`
+* Element type: `Interval{BEDMetadata}` (alias: `BEDInterval`)
+
 BigBed is a binary file format for representing genomic annotations and often
 created from BED files. The bigBed files are indexed to quickly fetch specific
 regions.
+
+```@docs
+Bio.Intervals.BigBedReader
+Bio.Intervals.BigBedWriter
+```
 
 
 ### PDB
