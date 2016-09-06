@@ -59,6 +59,10 @@ immutable Kimura80 <: TsTv end
 # Distance computation internals
 # ------------------------------
 
+@inline function expected_distance{T}(::Type{Proportion{T}}, n::Int64, l::Int64)
+    return n / l
+end
+
 ## Jukes and Cantor 1969 distance computation.
 
 @inline function expected_distance(::Type{JukesCantor69}, p::Float64)
@@ -139,9 +143,7 @@ function distance{T<:MutationType,A<:NucleotideAlphabet}(::Type{Count{T}}, seqs:
     ends = width:step:nbases
     nwindows = length(ends)
     mcounts = Matrix{Int}(nwindows, npairs)
-    acounts = Matrix{Int}(nwindows, npairs)
-    fill!(mcounts, 0)
-    fill!(acounts, 0)
+    wsizes = Matrix{Int}(nwindows, npairs)
     ranges = Vector{Pair{Int,Int}}(nwindows)
 
     @inbounds for pair in 1:npairs
@@ -152,20 +154,19 @@ function distance{T<:MutationType,A<:NucleotideAlphabet}(::Type{Count{T}}, seqs:
             from = starts[i]
             to = ends[i]
             mcount = 0
-            acount = 0
+            nsites = width
             @simd for j in from:to
                 mcount += mutationFlags[flagsoffset + j]
-                acount += ambiguousFlags[flagsoffset + j]
+                nsites -= ambiguousFlags[flagsoffset + j]
             end
             ranges[i] = Pair(starts[i],ends[i])
             mcounts[windowoffset + i] = mcount
-            acounts[windowoffset + i] = acount
+            wsizes[windowoffset + i] = nsites
         end
     end
-
-    return mcounts, acounts, ranges
-
+    return mcounts, wsizes, ranges
 end
+
 
 """
     distance{T<:MutationType,N<:Nucleotide}(::Type{Count{T}}, seqs::Matrix{N})
@@ -212,7 +213,7 @@ end
     distance{T<:MutationType,N<:Nucleotide}(::Type{Proportion{T}}, seqs::Matrix{N})
 
 This method of distance returns a tuple of a vector of the p-distances, and a
-vector of the number of valid (i.e. non-ambiguous sites) counted by the function.
+vector of the number of valid (i.e. non-ambiguous) sites counted by the function.
 
 **Note: This method assumes that the sequences are stored in the `Matrix{N}`
 provided as `seqs` in sequence major order i.e. each column of the matrix is one
@@ -226,6 +227,30 @@ function distance{T<:MutationType,N<:Nucleotide}(::Type{Proportion{T}}, seqs::Ma
     end
     return D, l
 end
+
+"""
+    distance{T<:MutationType,A<:NucleotideAlphabet}(::Type{Proportion{T}}, seqs::Vector{BioSequence{A}}, width::Int, step::Int)
+
+A distance method which computes pairwise distances using a sliding window.
+
+As the window of `width` base pairs in size moves across a pair of sequences it
+computes the distance between the two sequences in that window.
+
+This method computes p-distances for every window, and returns a tuple of the
+matrix of p-distances for every window, a matrix of the number of valid sites
+counted by the function for each window.
+"""
+function distance{T<:MutationType,A<:NucleotideAlphabet}(::Type{Proportion{T}}, seqs::Vector{BioSequence{A}}, width::Int, step::Int)
+    counts, wsizes, ranges = distance(Count{T}, seqs, width, step)
+    res = Matrix{Float64}(size(counts))
+    @inbounds for i in 1:endof(counts)
+        res[i] = expected_distance(Proportion{T}, counts[i] / wsizes[i])
+    end
+    return res, wsizes, ranges
+end
+
+
+
 
 """
     distance{A<:NucleotideAlphabet}(::Type{JukesCantor69}, seqs::Vector{BioSequence{A}})
