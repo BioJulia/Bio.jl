@@ -1179,6 +1179,8 @@ end
             CCTAGCCCTAACCCTAACCCTAACCCTAGCCTAAGCCTAAGCCTAAGCCT
             AAGCCTAAGCCTAAGCCTAAGCCTAAGCCTAAGCCTAAGCCTAAGCCTAA
             """
+            @test eltype(qualities(rec)) == Int8
+            @test qualities(rec) == [Int(x) - 33 for x in "#############################@B?8B?BA@@DDBCDDCBC@CDCDCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCC"]
             @test flag(rec) == 16
             @test cigar(rec) == "27M1D73M"
             @test alignment(rec) == Alignment([
