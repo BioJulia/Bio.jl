@@ -190,7 +190,7 @@ function liftsecond( block, orig_el, orig_state, istream_el )
             return liftinternal( block_el, istream_el.last )
         elseif istream_el.last < block_el.first
             # last coordinate is deleted
-            if prev_el == orig_el
+            if prev_el == nothing
                 error("End coordinate cannot be less than the first!")
             else
                 return liftlast( prev_el )
