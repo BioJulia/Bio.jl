@@ -32,6 +32,8 @@ export
     BigBedWriter,
     Tabix,
     overlapchunks
+    LiftOverChain
+    liftover
 
 import ..Ragel: tryread!
 export tryread!
@@ -62,6 +64,7 @@ include("index/index.jl")
 # Parsing file types
 include("bed/bed.jl")
 include("bbi/bbi.jl")
+include("chain.jl")
 
 include("deprecated.jl")
 

@@ -1,5 +1,12 @@
+# Bio.Intervals
+# =============
+#
+# Module for genomic intervals.
+#
+# This file is a part of BioJulia.
+# License is MIT: https://github.com/BioJulia/Bio.jl/blob/master/LICENSE.md
 
-using Bio.Intervals
+
 
 #=
 
@@ -14,12 +21,12 @@ immutable ChainBlock
    qsize::Int64
    qstart::Int64
    qend::Int64
-   qstrand::Bio.Intervals.Strand
+   qstrand::Strand
    id::Int64
    blocks::IntervalMap{Int64,Int64}
 end
 
-typealias LiftOverChain Bio.Intervals.IntervalCollection{ChainBlock}
+typealias LiftOverChain IntervalCollection{ChainBlock}
 
 # Replace this default io constructor with ragel parser?
 function LiftOverChain(io)
@@ -68,8 +75,8 @@ function LiftOverChain(io)
          blocksize = parse(Int, spl[1])
          blocks[(tcur,tcur+blocksize)] = qcur
          block = ChainBlock(score, tsize, String(qname), qsize, qstart, qend, 
-                            Bio.Intervals.Strand(Char(qstrand)), id, blocks)
-         targ  = Bio.Intervals.Interval(String(tname), tstart, tend, Char(tstrand), block)
+                            Strand(Char(qstrand)), id, blocks)
+         targ  = Interval(String(tname), tstart, tend, Char(tstrand), block)
          push!(chain, targ)
       else
          error("Malformed chain input file!")
@@ -78,13 +85,13 @@ function LiftOverChain(io)
    chain
 end
 
-function liftover{T}( chain::LiftOverChain, istream::Bio.Intervals.IntervalStreamOrArray{T}; minidentity=0.95 )
-   lifted  = Vector{Nullable{Bio.Intervals.Interval{T}}}()
+function liftover{T}( chain::LiftOverChain, istream::IntervalStreamOrArray{T}; minidentity=0.95 )
+   lifted  = Vector{Nullable{Interval{T}}}()
 
    cname   = ""
    cfirst  = 0
    clast   = 0
-   cstrand = Bio.Intervals.STRAND_NA
+   cstrand = STRAND_NA
 
    overlap = 0
 
@@ -103,16 +110,16 @@ function liftover{T}( chain::LiftOverChain, istream::Bio.Intervals.IntervalStrea
          istream_el, istream_state = next(istream, istream_state)
       end
 
-      if precedes( chain_el, istream_el, Bio.Intervals.alphanum_isless ) 
+      if precedes( chain_el, istream_el, alphanum_isless ) 
          done(chain, chain_state) && break
          # increment chain
          chain_el, chain_state = next(chain, chain_state)
          cname   = chain_el.metadata.qname
          cstrand = chain_el.metadata.qstrand
 
-      elseif precedes( istream_el, chain_el, Bio.Intervals.alphanum_isless )
+      elseif precedes( istream_el, chain_el, alphanum_isless )
          # push nullable{}
-         push!( lifted, Nullable{Bio.Intervals.Interval{T}}() )
+         push!( lifted, Nullable{Interval{T}}() )
          done(istream, istream_state) && break
          # increment istream
          istream_el, istream_state = next(istream, istream_state)
@@ -137,7 +144,7 @@ function liftover{T}( chain::LiftOverChain, istream::Bio.Intervals.IntervalStrea
 
             elseif istream_el.last < block_el.first
                # push empty 'deleted' coordinate as Nullable{I}
-               push!( lifted, Nullable{Bio.Intervals.Interval{T}}() )
+               push!( lifted, Nullable{Interval{T}}() )
                # increment istream
                istream_el, istream_state = next(istream, istream_state)
 
@@ -153,7 +160,7 @@ function liftover{T}( chain::LiftOverChain, istream::Bio.Intervals.IntervalStrea
                   cfirst   = liftinternal( block_el, istream_el.first )
                end
                clast = liftsecond( block, block_el, block_state, istream_el )
-               interval = Bio.Intervals.Interval(cname, cfirst, clast, cstrand, istream_el.metadata)
+               interval = Interval(cname, cfirst, clast, cstrand, istream_el.metadata)
                push!( lifted, Nullable(interval) )
                done(istream, istream_state) && return lifted
                istream_el, istream_state = next(istream, istream_state)
@@ -211,11 +218,6 @@ function liftinternal( i::IntervalValue{Int64,Int64}, tolift::Int64 )
    else
       error( "Cannot lift coordinate that is not within block!" )
    end
-end
-
-function precedes{S,T}(a::Bio.Intervals.Interval{S}, b::Bio.Intervals.Interval{T}, func::Function)
-    return (a.last < b.first && a.seqname == b.seqname) ||
-        Bio.Intervals.alphanum_isless(a.seqname, b.seqname)::Bool
 end
 
 function Base.collect( chain::LiftOverChain )
