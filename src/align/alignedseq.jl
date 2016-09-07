@@ -74,12 +74,12 @@ function IntervalTrees.last(alnseq::AlignedSequence)
     return alnseq.aln.lastref
 end
 
-function seq2ref(i::Integer, alnseq::AlignedSequence)
-    return seq2ref(i, alnseq.aln)
+function seq2ref(alnseq::AlignedSequence, i::Integer)
+    return seq2ref(alnseq.aln, i)
 end
 
-function ref2seq(i::Integer, alnseq::AlignedSequence)
-    return ref2seq(i, alnseq.aln)
+function ref2seq(alnseq::AlignedSequence, i::Integer)
+    return ref2seq(alnseq.aln, i)
 end
 
 # simple letters and dashes representation of an alignment

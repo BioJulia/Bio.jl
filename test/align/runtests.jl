@@ -193,16 +193,16 @@ end
         @test Bio.Align.last(alnseq)  == 27
         # OP_MATCH
         for (seqpos, refpos) in [(1, 5), (2, 6), (4, 8), (13, 18), (19, 27)]
-            @test seq2ref(seqpos, alnseq) == (refpos, OP_MATCH)
-            @test ref2seq(refpos, alnseq) == (seqpos, OP_MATCH)
+            @test seq2ref(alnseq, seqpos) == (refpos, OP_MATCH)
+            @test ref2seq(alnseq, refpos) == (seqpos, OP_MATCH)
         end
         # OP_INSERT
-        @test seq2ref(10, alnseq) == (17, OP_INSERT)
-        @test seq2ref(11, alnseq) == (17, OP_INSERT)
+        @test seq2ref(alnseq, 10) == (17, OP_INSERT)
+        @test seq2ref(alnseq, 11) == (17, OP_INSERT)
         # OP_DELETE
-        @test ref2seq( 9, alnseq) == ( 4, OP_DELETE)
-        @test ref2seq(10, alnseq) == ( 4, OP_DELETE)
-        @test ref2seq(23, alnseq) == (15, OP_DELETE)
+        @test ref2seq(alnseq,  9) == ( 4, OP_DELETE)
+        @test ref2seq(alnseq, 10) == ( 4, OP_DELETE)
+        @test ref2seq(alnseq, 23) == (15, OP_DELETE)
 
         seq = dna"ACGG--TGAAAGGT"
         ref = dna"-CGGGGA----TTT"
@@ -479,12 +479,12 @@ end
         @test isa(result, PairwiseAlignmentResult)
         aln = alignment(result)
         @test isa(aln, PairwiseAlignment)
-        @test seq2ref(1, aln) == (1, OP_SEQ_MATCH)
-        @test seq2ref(2, aln) == (3, OP_SEQ_MATCH)
-        @test seq2ref(3, aln) == (4, OP_SEQ_MATCH)
-        @test ref2seq(1, aln) == (1, OP_SEQ_MATCH)
-        @test ref2seq(2, aln) == (1, OP_DELETE)
-        @test ref2seq(3, aln) == (2, OP_SEQ_MATCH)
+        @test seq2ref(aln, 1) == (1, OP_SEQ_MATCH)
+        @test seq2ref(aln, 2) == (3, OP_SEQ_MATCH)
+        @test seq2ref(aln, 3) == (4, OP_SEQ_MATCH)
+        @test ref2seq(aln, 1) == (1, OP_SEQ_MATCH)
+        @test ref2seq(aln, 2) == (1, OP_DELETE)
+        @test ref2seq(aln, 3) == (2, OP_SEQ_MATCH)
     end
 
     @testset "GlobalAlignment" begin

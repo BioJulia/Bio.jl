@@ -128,12 +128,12 @@ function count_aligned(aln::PairwiseAlignment)
     return n
 end
 
-function ref2seq(i::Integer, aln::PairwiseAlignment)
-    return ref2seq(i, aln.a)
+function ref2seq(aln::PairwiseAlignment, i::Integer)
+    return ref2seq(aln.a, i)
 end
 
-function seq2ref(i::Integer, aln::PairwiseAlignment)
-    return seq2ref(i, aln.a)
+function seq2ref(aln::PairwiseAlignment, i::Integer)
+    return seq2ref(aln.a, i)
 end
 
 
