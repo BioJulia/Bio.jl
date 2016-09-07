@@ -54,11 +54,11 @@ function Base.convert(::Type{Char}, strand::Strand)
 end
 
 function flip( strand::Strand )
-   if strand == STRAND_NA || strand == STRAND_BOTH
-      return strand
-   else
-      return convert(Strand, convert(UInt8, strand) $ 0b11 )
-   end
+    if strand == STRAND_NA || strand == STRAND_BOTH
+        return strand
+    else
+        return convert(Strand, convert(UInt8, strand) $ 0b11 )
+    end
 end
 
 function Base.show(io::IO, strand::Strand)

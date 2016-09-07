@@ -27,14 +27,14 @@ function LiftOverChain(io)
     tname      = ""
     tsize      = 0
     tstart     = 0
-    tend        = 0
+    tend       = 0
     tstrand    = '?'
     qname      = ""
     qsize      = 0
     qstart     = 0
-    qend        = 0
+    qend       = 0
     qstrand    = '?'
-    id          = 0
+    id         = 0
     blocks  = IntervalMap{Int64,Int64}()
 
     chain = LiftOverChain()
@@ -50,11 +50,11 @@ function LiftOverChain(io)
             # header
             score = parse(Float64, spl[2])
             tname,tsize,tstrand = spl[3], parse(Int, spl[4]), spl[5][1] 
-            tstart,tend            = parse(Int, spl[6]), parse(Int, spl[7] )
+            tstart,tend         = parse(Int, spl[6]), parse(Int, spl[7] )
             qname,qsize,qstrand = spl[8], parse(Int, spl[9]), spl[10][1]
-            qstart,qend            = parse(Int, spl[11]), parse(Int, spl[12])
-            id                        = parse(Int, spl[13])
-            blocks = IntervalTrees.IntervalMap{Int64,Int64}()
+            qstart,qend         = parse(Int, spl[11]), parse(Int, spl[12])
+            id                  = parse(Int, spl[13])
+            blocks    = IntervalTrees.IntervalMap{Int64,Int64}()
             tcur,qcur = tstart,qstart
         elseif length(spl) == 3
             # chain block
@@ -68,7 +68,7 @@ function LiftOverChain(io)
             blocksize = parse(Int, spl[1])
             blocks[(tcur,tcur+blocksize)] = qcur
             block = ChainBlock(score, tsize, String(qname), qsize, qstart, qend, 
-                                     Strand(Char(qstrand)), id, blocks)
+                               Strand(Char(qstrand)), id, blocks)
             targ  = Interval(String(tname), tstart, tend, Char(tstrand), block)
             push!(chain, targ)
         else
@@ -84,25 +84,25 @@ function liftover{T}( chain::LiftOverChain, istream::IntervalStreamOrArray{T}; m
     lifted  = Vector{Nullable{Interval{T}}}()
 
     cname    = ""
-    cfirst  = 0
+    cfirst   = 0
     clast    = 0
-    cstrand = STRAND_NA
+    cstrand  = STRAND_NA
 
-    overlap = 0
+    overlap  = 0
 
     # initialize
-    chain_state    = start(chain)
+    chain_state   = start(chain)
     istream_state = start(istream)
 
     if !done(chain, chain_state) && !done(istream, istream_state)
-        chain_el    = next(chain, chain_state)
+        chain_el   = next(chain, chain_state)
         istream_el = next(istream, istream_state)
     end
 
     while !done(chain, chain_state)
 
         if chain_state == start(chain) && istream_state == start(istream)
-            chain_el,    chain_state    = next(chain, chain_state)
+            chain_el, chain_state     = next(chain, chain_state)
             istream_el, istream_state = next(istream, istream_state)
         end
 
@@ -110,7 +110,7 @@ function liftover{T}( chain::LiftOverChain, istream::IntervalStreamOrArray{T}; m
             # increment chain
             done(chain, chain_state) && break
             chain_el, chain_state = next(chain, chain_state)
-            cname    = chain_el.metadata.qname
+            cname   = chain_el.metadata.qname
             cstrand = chain_el.metadata.qstrand
 
         elseif precedes( istream_el, chain_el, alphanum_isless )
@@ -122,7 +122,7 @@ function liftover{T}( chain::LiftOverChain, istream::IntervalStreamOrArray{T}; m
         else # chain entry and interval overlap, now liftover
 
             # initialize block
-            block         = chain_el.metadata.blocks
+            block       = chain_el.metadata.blocks
             block_state = start(block)
             if !done(block, block_state)
                 block_el = next(block, block_state)
@@ -155,8 +155,8 @@ function liftover{T}( chain::LiftOverChain, istream::IntervalStreamOrArray{T}; m
                     else
                         cfirst    = liftinternal( block_el, istream_el.first )
                     end
-                    clast = liftsecond( block, block_el, block_state, istream_el )
-                    rstrand = istream_el.strand == chain_el.strand ? cstrand : flip(cstrand)
+                    clast    = liftsecond( block, block_el, block_state, istream_el )
+                    rstrand  = istream_el.strand == chain_el.strand ? cstrand : flip(cstrand)
                     interval = Interval(cname, cfirst, clast, cstrand, istream_el.metadata)
                     push!( lifted, Nullable(interval) )
                     done(istream, istream_state) && return lifted
@@ -176,8 +176,8 @@ end
 function liftsecond( block, orig_el, orig_state, istream_el )
 
     block_state = deepcopy(orig_state)
-    block_el     = orig_el
-    prev_el      = nothing
+    block_el    = orig_el
+    prev_el     = nothing
 
     while !done(block, block_state)
 
@@ -207,7 +207,7 @@ function liftsecond( block, orig_el, orig_state, istream_el )
 end
 
 liftfirst( i::IntervalValue{Int64,Int64} ) = i.value
-liftlast( i::IntervalValue{Int64,Int64} ) = i.value + (i.last - i.first)
+liftlast(  i::IntervalValue{Int64,Int64} ) = i.value + (i.last - i.first)
 
 function liftinternal( i::IntervalValue{Int64,Int64}, tolift::Int64 )
     if i.first <= tolift <= i.last
