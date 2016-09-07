@@ -551,6 +551,17 @@ end
     end
 
     # TODO: test summary information against output from kent's bigBedSummary
-end
+
+    @testset "LiftOverChain Building" begin
+       chainfile = IOBuffer("")
+       for i in 0:10
+          write(chainfile, "$i\t$i\t$i\n")
+       end
+       seek(chainfile, 0)
+       chain = LiftOverChain( chainfile )
+       @test typeof(chain) == IntervalCollection{ChainBlock}
+       @test length(chain) == 1
+    end
+ end
 
 end # module TestIntervals

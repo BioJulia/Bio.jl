@@ -79,6 +79,7 @@ function LiftOverChain(io)
 end
 
 # TODO: add min-identity handling. & clean up iterators.
+# strand operations
 function liftover{T}( chain::LiftOverChain, istream::IntervalStreamOrArray{T}; minidentity=0.95 )
     lifted  = Vector{Nullable{Interval{T}}}()
 
@@ -155,6 +156,7 @@ function liftover{T}( chain::LiftOverChain, istream::IntervalStreamOrArray{T}; m
                         cfirst    = liftinternal( block_el, istream_el.first )
                     end
                     clast = liftsecond( block, block_el, block_state, istream_el )
+                    rstrand = istream_el.strand == chain_el.strand ? cstrand : flip(cstrand)
                     interval = Interval(cname, cfirst, clast, cstrand, istream_el.metadata)
                     push!( lifted, Nullable(interval) )
                     done(istream, istream_state) && return lifted
@@ -221,3 +223,4 @@ function Base.collect( chain::LiftOverChain )
     # where each pair describes a chain block in the
     # form of `from->to`
 end
+
