@@ -34,6 +34,24 @@ function Interval(seqname::AbstractString, first::Integer, last::Integer,
     return Interval{Void}(seqname, first, last, strand, nothing)
 end
 
+# "chrX:32049-32077"
+function Interval(genome_coord::AbstractString, strand::Union{Strand,Char}=STRAND_BOTH)
+    spl_a = split( genome_coord, ':' )
+    if length(spl_a) != 2
+        error("Invalid genome coord to build Interval!")
+    else
+        spl_b = split( spl_a[2], '-' )
+        if length(spl_b) != 2
+           error("Invalid genome coord to build Interval!")
+        else
+           return Interval(String(spl_a[1]),
+                           parse(Int, spl_b[1]),
+                           parse(Int, spl_b[2]),
+                           strand)
+        end
+    end      
+end
+
 function Base.copy{T}(interval::Interval{T})
     return Interval{T}(copy(interval.seqname), interval.first, interval.last,
                        interval.strand, copy(interval.metadata))
