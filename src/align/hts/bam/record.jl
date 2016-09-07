@@ -24,7 +24,7 @@ type BAMRecord
 end
 
 function BAMRecord()
-    return BAMRecord(-1, -1, 0, 0, 0, -1, -1, 0, UInt8[], 0, String[])
+    return BAMRecord(-1, -1, 0, UInt32(SAM_FLAG_UNMAP) << 16, 0, -1, -1, 0, UInt8[], 0, String[])
 end
 
 # NOTE: this does not copy `refseqnames`.
@@ -89,7 +89,7 @@ const BAM_FIXED_FIELDS_BYTES = 32
 Return `true` if and only if `rec` is mapped to a reference sequence.
 """
 function ismapped(rec::BAMRecord)
-    return rec.pos != -1
+    return flag(rec) & SAM_FLAG_UNMAP == 0
 end
 
 """
