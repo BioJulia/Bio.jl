@@ -1,6 +1,6 @@
 julia 0.5-
 BGZFStreams
-BufferedStreams 0.1
+BufferedStreams 0.2
 Colors
 Distributions
 IndexableBitVectors 0.1.1
