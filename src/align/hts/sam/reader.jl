@@ -1,6 +1,14 @@
 # SAM Reader
 # ==========
 
+"""
+    SAMReader(input::IO)
+
+Create a data reader of the SAM file format.
+
+# Arguments
+* `input`: data source
+"""
 type SAMReader <: Bio.IO.AbstractReader
     state::Ragel.State
     header::SAMHeader

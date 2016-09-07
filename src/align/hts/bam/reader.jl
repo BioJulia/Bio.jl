@@ -1,6 +1,15 @@
 # BAM Reader
 # ==========
 
+"""
+    BAMReader(input::IO; index=nothing)
+
+Create a data reader of the BAM file format.
+
+# Arguments
+* `input`: data source
+* `index=nothing`: filepath to a random access index (currently *bai* is Supported)
+"""
 type BAMReader <: Bio.IO.AbstractReader
     stream::BGZFStream
     header::SAMHeader

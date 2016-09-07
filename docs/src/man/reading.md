@@ -108,6 +108,8 @@ The following table summarizes supported file formats.
 | BED         | `BED`    | `Bio.Intervals` | <https://genome.ucsc.edu/FAQ/FAQformat.html#format1>                        |
 | bigBed      | `BigBed` | `Bio.Intervals` | <https://doi.org/10.1093/bioinformatics/btq351>                             |
 | PDB         | `PDB`    | `Bio.Structure` | <http://www.wwpdb.org/documentation/file-format-content/format33/v3.3.html> |
+| SAM         | `SAM`    | `Bio.Align`     | <https://samtools.github.io/hts-specs/SAMv1.pdf>                            |
+| BAM         | `BAM`    | `Bio.Align`     | <https://samtools.github.io/hts-specs/SAMv1.pdf>                            |
 
 
 ### FASTA
@@ -259,3 +261,36 @@ Bio.Intervals.BigBedWriter
 PDB is a text-based file format for representing 3D macromolecular structures.
 This has different reader interfaces from other file formats. Please consult the
 [Bio.Structure](structure/) chapter for details.
+
+
+### SAM
+
+* Reader type: `SAMReader`
+* Writer type: `SAMWriter{T<:IO}`
+* Element type: `SAMRecord`
+
+SAM is a text-based file format for representing sequence alignments.
+
+```@docs
+Bio.Align.SAMReader
+Bio.Align.SAMWriter
+```
+
+
+### BAM
+
+* Reader type: `BAMReader`
+* Writer type: `BAMWriter`
+* Element type: `BAMRecord`
+
+BAM is a binary counterpart of the SAM file format.
+
+When writing data in the BAM file format, the underlying output stream needs to
+be wrapped with a `BGZFStream` object provided from
+[BGZFStreams.jl](https://github.com/BioJulia/BGZFStreams.jl).
+
+```@docs
+Bio.Align.BAMReader
+Bio.Align.BAMWriter
+```
+

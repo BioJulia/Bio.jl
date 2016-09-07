@@ -1,6 +1,15 @@
 # BAM Writer
 # ==========
 
+"""
+    BAMWriter(output::BGZFStream, header::SAMHeader)
+
+Create a data writer of the BAM file format.
+
+# Arguments
+* `output`: data sink
+* `header`: SAM header object
+"""
 type BAMWriter <: Bio.IO.AbstractWriter
     stream::BGZFStream
 end
