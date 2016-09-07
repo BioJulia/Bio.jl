@@ -1102,8 +1102,7 @@ end
                 mktemp() do path, io
                     # copy
                     reader = open(SAMReader, filepath)
-                    writer = SAMWriter(io)
-                    write(writer, header(reader))
+                    writer = SAMWriter(io, header(reader))
                     records = SAMRecord[]
                     for rec in reader
                         push!(records, rec)
