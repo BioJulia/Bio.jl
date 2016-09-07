@@ -17,7 +17,7 @@ type SAMRecord
 end
 
 function SAMRecord()
-    return SAMRecord("*", 0x0000, "*", 0, 0, "*", "*", 0, 0, "*", "*", Dict())
+    return SAMRecord("*", SAM_FLAG_UNMAP, "*", 0, 0, "*", "*", 0, 0, "*", "*", Dict())
 end
 
 function Base.isless(rec1::SAMRecord, rec2::SAMRecord)
@@ -78,7 +78,7 @@ function Base.copy(rec::SAMRecord)
 end
 
 function ismapped(rec::SAMRecord)
-    return rec.pos != 0
+    return flag(rec) & SAM_FLAG_UNMAP == 0
 end
 
 function Bio.Seq.seqname(rec::SAMRecord)

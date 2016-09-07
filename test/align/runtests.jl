@@ -1023,9 +1023,10 @@ end
         @testset "Record" begin
             rec = SAMRecord()
             @test !ismapped(rec)
+
             # default values
             @test seqname(rec) == "*"
-            @test flag(rec) == 0x0000
+            @test flag(rec) == SAM_FLAG_UNMAP
             @test refname(rec) == "*"
             @test leftposition(rec) == 0
             @test rightposition(rec) == -1
@@ -1064,6 +1065,7 @@ end
             # first record
             rec = SAMRecord()
             read!(reader, rec)
+            @test ismapped(rec)
             @test refname(rec) == "CHROMOSOME_I"
             @test leftposition(rec) == 2
             @test rightposition(rec) == 102
@@ -1134,7 +1136,7 @@ end
             @test leftposition(rec) == 0
             @test rightposition(rec) == -1
             @test mappingquality(rec) == 0
-            @test flag(rec) == 0
+            @test flag(rec) == SAM_FLAG_UNMAP
             @test nextrefname(rec) == "*"
             @test nextrefindex(rec) == 0
             @test nextleftposition(rec) == 0
@@ -1172,6 +1174,7 @@ end
             # first record
             rec = BAMRecord()
             read!(reader, rec)
+            @test ismapped(rec)
             @test refname(rec) == "CHROMOSOME_I"
             @test refindex(rec) == 1
             @test leftposition(rec) == 2
