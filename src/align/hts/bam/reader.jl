@@ -10,8 +10,8 @@ Create a data reader of the BAM file format.
 * `input`: data source
 * `index=nothing`: filepath to a random access index (currently *bai* is Supported)
 """
-type BAMReader <: Bio.IO.AbstractReader
-    stream::BGZFStream
+type BAMReader{T} <: Bio.IO.AbstractReader
+    stream::BGZFStream{T}
     header::SAMHeader
     start_offset::VirtualOffset
     refseqnames::Vector{String}
@@ -105,7 +105,7 @@ function init_bam_reader(input::IO)
         isa(input, Pipe) ? VirtualOffset(0, 0) : virtualoffset(stream),
         refseqnames,
         refseqlens,
-        Nullable())
+        Nullable{BAI}())
 
     return reader
 end
