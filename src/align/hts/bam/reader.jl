@@ -106,7 +106,7 @@ function init_bam_reader(input::IO)
     reader = BAMReader(
         stream,
         samheader,
-        virtualoffset(stream),
+        isa(input, Pipe) ? VirtualOffset(0, 0) : virtualoffset(stream),
         refseqnames,
         refseqlens,
         Nullable())
