@@ -42,12 +42,8 @@ end
 
 function Base.show(io::IO, reader::BAMReader)
     println(io, summary(reader), ":")
-    println("  header: ", reader.header)
-      print("  reference sequences:")
-    for (i, (name, len)) in enumerate(zip(reader.refseqnames, reader.refseqlens))
-        println(io)
-        print("    [", lpad(i, 2), "]: ", name, " (length: ", len, ")")
-    end
+    println(io, "  header keys: ", join(keys(reader.header), ", "))
+      print(io, "  number of contigs: ", length(reader.refseqnames))
 end
 
 function header(reader::BAMReader, fillSQ::Bool=false)

@@ -31,6 +31,11 @@ function Bio.IO.stream(reader::SAMReader)
     return reader.state.stream
 end
 
+function Base.show(io::IO, reader::SAMReader)
+    println(io, summary(reader), ":")
+      print(io, "  header keys: ", join(keys(reader.header), ", "))
+end
+
 function header(reader::SAMReader)
     return reader.header
 end
