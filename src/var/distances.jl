@@ -315,7 +315,7 @@ function distance{T<:MutationType,A<:NucleotideAlphabet}(::Type{JukesCantor69}, 
     var = Matrix{Float64}(a, b)
     @inbounds for i in 1:endof(counts)
         p = ps[i]
-        l = esizes[i]
+        l = wsizes[i]
         est[i] = expected_distance(JukesCantor69, p)
         var[i] = variance(JukesCantor69, p, l)
     end
@@ -367,15 +367,20 @@ function distance{A<:NucleotideAlphabet}(::Type{Kimura80}, seqs::Vector{BioSeque
 end
 
 function distance{A<:NucleotideAlphabet}(::Type{Kimura80}, seqs::Vector{BioSequence{A}}, width::Int, step::Int)
-    ps, wsizes, ranges = distance(Count{Kimura80}, seqs, width, step)
-    a, b = size(ps)
+    tss, tvs, wsizes, ranges = distance(Count{Kimura80}, seqs, width, step)
+    a, b = size(tss)
     est = Matrix{Float64}(a, b)
     var = Matrix{Float64}(a, b)
     @inbounds for i in 1:endof(counts)
-        p = ps[i]
-        l = esizes[i]
-        est[i] = expected_distance(JukesCantor69, p)
-        var[i] = variance(JukesCantor69, p, l)
+        L = l[i]
+        P = tss[i] / L
+        Q = tvs[i] / L
+        a1 = 1 - 2 * P - Q
+        a2 = 1 - 2 * Q
+        tv = tvs[i]
+        l = wsizes[i]
+        est[i] = expected_distance(Kimura80, a1, a2)
+        var[i] = variance(Kimura80, P, Q, L, a1, a2)
     end
     return est, var, ranges
 end
