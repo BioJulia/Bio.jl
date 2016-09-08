@@ -443,7 +443,8 @@ copy!(dst_seq, dest_offset, src_seq, src_offset, len)
 reverse!(seq)
 ```
 
-```@docs
+And these two are functions for nucleotide sequences:
+```julia
 complement!(seq)
 reverse_complement!(seq)
 ```
@@ -466,7 +467,7 @@ julia> reverse!(seq)
 6nt DNA Sequence:
 TATGCA
 
-julia> Seq.complement!(seq)  # semantically differs from Base.complement!
+julia> complement!(seq)
 6nt DNA Sequence:
 ATACGT
 
