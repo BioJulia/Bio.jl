@@ -334,19 +334,19 @@ end
     end
 
     @testset "complement" begin
-        @test Seq.complement(DNA_A) === DNA_T
-        @test Seq.complement(DNA_C) === DNA_G
-        @test Seq.complement(DNA_G) === DNA_C
-        @test Seq.complement(DNA_T) === DNA_A
-        @test Seq.complement(DNA_Gap) === DNA_Gap
-        @test Seq.complement(DNA_N) === DNA_N
+        @test complement(DNA_A) === DNA_T
+        @test complement(DNA_C) === DNA_G
+        @test complement(DNA_G) === DNA_C
+        @test complement(DNA_T) === DNA_A
+        @test complement(DNA_Gap) === DNA_Gap
+        @test complement(DNA_N) === DNA_N
 
-        @test Seq.complement(RNA_A) === RNA_U
-        @test Seq.complement(RNA_C) === RNA_G
-        @test Seq.complement(RNA_G) === RNA_C
-        @test Seq.complement(RNA_U) === RNA_A
-        @test Seq.complement(RNA_Gap) === RNA_Gap
-        @test Seq.complement(RNA_N) === RNA_N
+        @test complement(RNA_A) === RNA_U
+        @test complement(RNA_C) === RNA_G
+        @test complement(RNA_G) === RNA_C
+        @test complement(RNA_U) === RNA_A
+        @test complement(RNA_Gap) === RNA_Gap
+        @test complement(RNA_N) === RNA_N
     end
 
     @testset "Encoder" begin
@@ -1318,12 +1318,12 @@ end
         end
 
         function test_dna_complement(A, seq)
-            comp = Seq.complement(BioSequence{A}(seq))
+            comp = complement(BioSequence{A}(seq))
             @test convert(AbstractString, comp) == dna_complement(seq)
         end
 
         function test_rna_complement(A, seq)
-            comp = Seq.complement(BioSequence{A}(seq))
+            comp = complement(BioSequence{A}(seq))
             @test convert(AbstractString, comp) == rna_complement(seq)
         end
 
@@ -2319,12 +2319,12 @@ end
         end
 
         function test_dna_complement(seq)
-            comp = Seq.complement(DNAKmer{length(seq)}(seq))
+            comp = complement(DNAKmer{length(seq)}(seq))
             @test convert(AbstractString, comp) == dna_complement(seq)
         end
 
         function test_rna_complement(seq)
-            comp = Seq.complement(RNAKmer{length(seq)}(seq))
+            comp = complement(RNAKmer{length(seq)}(seq))
             @test convert(AbstractString, comp) == rna_complement(seq)
         end
 
