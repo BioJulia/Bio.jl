@@ -1,6 +1,14 @@
 # Reader
 # ======
 
+"""
+    BEDReader(input::IO)
+
+Create a data reader of the BED file format.
+
+# Arguments
+* `input`: data source
+"""
 type BEDReader <: Bio.IO.AbstractReader
     state::Ragel.State
 
