@@ -168,6 +168,45 @@ function distance{T<:MutationType,A<:NucleotideAlphabet}(::Type{Count{T}}, seqs:
 end
 
 
+function distance{T<:TsTv,A<:NucleotideAlphabet}(::Type{Count{T}}, seqs::Vector{BioSequence{A}}, width::Int, step::Int)
+    transitionFlags, transversionFlags, ambiguousFlags = flagmutations(TransitionMutation, TransversionMutation, seqs)
+    nbases, npairs = size(transitionFlags)
+    @assert width >= 1 "Window width must be ≥ 1."
+    @assert step >= 1 "step must be ≥ 1."
+    @assert width <= nbases "The window size cannot be greater than number of data elements."
+    starts = 1:step:nbases
+    ends = width:step:nbases
+    nwindows = length(ends)
+    tscounts = Matrix{Int}(nwindows, npairs)
+    tvcounts = Matrix{Int}(nwindows, npairs)
+    wsizes = Matrix{Int}(nwindows, npairs)
+    ranges = Vector{Pair{Int,Int}}(nwindows)
+
+    @inbounds for pair in 1:npairs
+        pairoffset = pair - 1
+        windowoffset = pairoffset * nwindows
+        flagsoffset = pairoffset * nbases
+        for i in 1:nwindows
+            from = starts[i]
+            to = ends[i]
+            tscount = 0
+            tvcount = 0
+            nsites = width
+            @simd for j in from:to
+                tscount += transitionFlags[flagsoffset + j]
+                tvcount += transversionFlags[flagsoffset + j]
+                nsites -= ambiguousFlags[flagsoffset + j]
+            end
+            ranges[i] = Pair(starts[i],ends[i])
+            tscounts[windowoffset + i] = tscount
+            tvcounts[windowoffset + i] = tvcount
+            wsizes[windowoffset + i] = nsites
+        end
+    end
+    return tscounts, tvcounts, wsizes, ranges
+end
+
+
 """
     distance{T<:MutationType,N<:Nucleotide}(::Type{Count{T}}, seqs::Matrix{N})
 
@@ -327,7 +366,7 @@ function distance{A<:NucleotideAlphabet}(::Type{Kimura80}, seqs::Vector{BioSeque
     return D, V
 end
 
-function distance{T<:TsTv,A<:NucleotideAlphabet}(::Type{T}, seqs::Vector{BioSequence{A}}, width::Int, step::Int)
+function distance{A<:NucleotideAlphabet}(::Type{Kimura80}, seqs::Vector{BioSequence{A}}, width::Int, step::Int)
     ps, wsizes, ranges = distance(Count{Kimura80}, seqs, width, step)
     a, b = size(ps)
     est = Matrix{Float64}(a, b)
