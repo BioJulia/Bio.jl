@@ -1039,6 +1039,14 @@ end
             @test qualities(rec) == "*"
             @test Align.alignment_length(rec) === 0
 
+            buf = IOBuffer()
+            show(buf, rec)
+            @test startswith(takebuf_string(buf), "Bio.Align.SAMRecord:")
+
+            buf = IOBuffer()
+            showcompact(buf, rec)
+            @test takebuf_string(buf) == "*\tunmapped"
+
             # set & delete tags
             rec = SAMRecord()
             @test !haskey(rec, "MN")
@@ -1147,6 +1155,14 @@ end
             @test alignment(rec) == Alignment(AlignmentAnchor[])
             @test qualities(rec) == UInt8[]
             @test Align.alignment_length(rec) === 0
+
+            buf = IOBuffer()
+            show(buf, rec)
+            @test startswith(takebuf_string(buf), "Bio.Align.BAMRecord:")
+
+            buf = IOBuffer()
+            showcompact(buf, rec)
+            @test takebuf_string(buf) == "(empty name)\tunmapped"
 
             # set & delete tags
             rec = BAMRecord()

@@ -45,22 +45,6 @@ function Base.:(==)(rec1::SAMRecord, rec2::SAMRecord)
         rec1.optional_fields == rec2.optional_fields)
 end
 
-function Base.show(io::IO, rec::SAMRecord)
-    println(io, summary(rec), ':')
-    println(io, "  reference name: ", refname(rec))
-    println(io, "  leftmost position: ", leftposition(rec))
-    println(io, "  next reference name: ", nextrefname(rec))
-    println(io, "  next leftmost position: ", nextleftposition(rec))
-    println(io, "  mapping quality: ", mappingquality(rec))
-    println(io, "  flag: ", flag(rec))
-    println(io, "  template length: ", templatelength(rec))
-    println(io, "  sequence name: ", seqname(rec))
-    println(io, "  CIGAR string: ", cigar(rec))
-    println(io, "  sequence: ", sequence(rec))
-    println(io, "  base qualities: ", qualities(rec))
-      print(io, "  optional fields: ", rec.optional_fields)
-end
-
 function Base.copy(rec::SAMRecord)
     return SAMRecord(
         copy(rec.name),
@@ -157,6 +141,10 @@ end
 function Base.haskey(rec::SAMRecord, tag::AbstractString)
     checkkeytag(tag)
     return haskey(rec.optional_fields, tag)
+end
+
+function optional_fields(rec::SAMRecord)
+    return rec.optional_fields
 end
 
 # Return the length of alignment.

@@ -64,22 +64,6 @@ function Base.:(==)(rec1::BAMRecord, rec2::BAMRecord)
         rec1.tlen       == rec2.tlen)  # TODO: check data
 end
 
-function Base.show(io::IO, rec::BAMRecord)
-    println(io, summary(rec), ':')
-    println(io, "  reference name: ", refname(rec))
-    println(io, "  leftmost position: ", leftposition(rec))
-    println(io, "  next reference name: ", nextrefname(rec))
-    println(io, "  next leftmost position: ", nextleftposition(rec))
-    println(io, "  mapping quality: ", mappingquality(rec))
-    println(io, "  flag: ", flag(rec))
-    println(io, "  template length: ", templatelength(rec))
-    println(io, "  sequence name: ", seqname(rec))
-    println(io, "  CIGAR string: ", cigar(rec))
-    println(io, "  sequence: ", String(sequence(rec)))
-    println(io, "  base qualities: ", qualities(rec))
-      print(io, "  optional fields: ", optinal_fields(rec))
-end
-
 # the data size of fixed-length fields (.refid-.tlen)
 const BAM_FIXED_FIELDS_BYTES = 32
 
@@ -294,7 +278,7 @@ function Base.haskey(rec::BAMRecord, tag::AbstractString)
     return findtag(rec.data, auxdata_position(rec), UInt8(tag[1]), UInt8(tag[2])) > 0
 end
 
-function optinal_fields(rec::BAMRecord)
+function optional_fields(rec::BAMRecord)
     return AuxDataDict(rec.data[auxdata_position(rec):rec.datasize])
 end
 
