@@ -664,45 +664,36 @@ end
     complement!(seq)
 
 Make a complement sequence of `seq` in place.
-
-Ambiguous nucleotides are left as-is.
 """
-@generated function complement!{A<:Union{DNAAlphabet,RNAAlphabet}}(seq::BioSequence{A})
-    n = bitsof(A)
-    if n == 2
-        nuccomp = :nuccomp2
-    elseif n == 4
-        nuccomp = :nuccomp4
-    else
-        error("n (= $n) ∉ (2, 4)")
+function complement!{A<:Union{DNAAlphabet{2},RNAAlphabet{2}}}(seq::BioSequence{A})
+    orphan!(seq)
+    next = bitindex(seq, 1)
+    stop = bitindex(seq, endof(seq) + 1)
+    @inbounds while next < stop
+        seq.data[index(next)] = ~seq.data[index(next)]
+        next += 64
     end
-
-    quote
-        orphan!(seq)
-        next = bitindex(seq, 1)
-        stop = bitindex(seq, endof(seq) + 1)
-        @inbounds while next < stop
-            seq.data[index(next)] = $nuccomp(seq.data[index(next)])
-            next += 64
-        end
-        return seq
-    end
+    return seq
 end
 
-nuccomp2(x::UInt64) = ~x
-
-@inline function nuccomp4(x::UInt64)
-    return (
-        ((x & 0x1111111111111111) << 3) | ((x & 0x8888888888888888) >> 3) |
-        ((x & 0x2222222222222222) << 1) | ((x & 0x4444444444444444) >> 1))
+function complement!{A<:Union{DNAAlphabet{4},RNAAlphabet{4}}}(seq::BioSequence{A})
+    orphan!(seq)
+    next = bitindex(seq, 1)
+    stop = bitindex(seq, endof(seq) + 1)
+    @inbounds while next < stop
+        x = seq.data[index(next)]
+        seq.data[index(next)] = (
+            ((x & 0x1111111111111111) << 3) | ((x & 0x8888888888888888) >> 3) |
+            ((x & 0x2222222222222222) << 1) | ((x & 0x4444444444444444) >> 1))
+        next += 64
+    end
+    return seq
 end
 
 """
     complement(seq)
 
 Make a complement sequence of `seq`.
-
-Ambiguous nucleotides are left as-is.
 """
 function complement{A<:Union{DNAAlphabet,RNAAlphabet}}(seq::BioSequence{A})
     return complement!(copy(seq))
