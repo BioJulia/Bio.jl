@@ -239,6 +239,11 @@ chr9	68331023	68424451	NM_015110	0	+
 chr9	68456943	68486659	NM_001206	0	-
 ```
 
+```@docs
+Bio.Intervals.BEDReader
+Bio.Intervals.BEDWriter
+```
+
 
 ### bigBed
 
