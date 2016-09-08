@@ -118,7 +118,7 @@ end
 Test if `nt` is ambiguous nucleotide.
 """
 @inline function isambiguous(nt::Nucleotide)
-    return count_ones(nt) != 1
+    return count_ones(nt) > 1
 end
 
 """
