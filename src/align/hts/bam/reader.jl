@@ -32,7 +32,7 @@ function BAMReader(input::IO; index=nothing)
     return reader
 end
 
-function Base.eltype(::Type{BAMReader})
+function Base.eltype{T}(::Type{BAMReader{T}})
     return BAMRecord
 end
 
