@@ -292,7 +292,7 @@ function flagmutations{N<:Nucleotide}(::Type{TransitionMutation}, ::Type{Transve
     return istransition, istransversion, isambiguous
 end
 
-function flagmutations{M<:MutationType,A<:NucleotideAlphabet}(::Type{TransitionMutation}, ::Type{TransversionMutation}, seqs::Vector{BioSequence{A}})
+function flagmutations{A<:NucleotideAlphabet}(::Type{TransitionMutation}, ::Type{TransversionMutation}, seqs::Vector{BioSequence{A}})
     return flagmutations(TransitionMutation, TransversionMutation, seqmatrix(seqs, :seq))
 end
 

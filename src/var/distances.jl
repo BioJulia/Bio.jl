@@ -308,7 +308,7 @@ function distance{A<:NucleotideAlphabet}(::Type{JukesCantor69}, seqs::Vector{Bio
     return D, V
 end
 
-function distance{T<:MutationType,A<:NucleotideAlphabet}(::Type{JukesCantor69}, seqs::Vector{BioSequence{A}}, width::Int, step::Int)
+function distance{A<:NucleotideAlphabet}(::Type{JukesCantor69}, seqs::Vector{BioSequence{A}}, width::Int, step::Int)
     ps, wsizes, ranges = distance(Proportion{AnyMutation}, seqs, width, step)
     a, b = size(ps)
     est = Matrix{Float64}(a, b)
