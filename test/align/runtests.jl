@@ -1182,7 +1182,7 @@ end
             reader = open(BAMReader, joinpath(bamdir, "ce#1.bam"))
             @test isa(reader, BAMReader)
             @test eltype(reader) === BAMRecord
-            @test startswith(repr(reader), "Bio.Align.BAMReader:")
+            @test startswith(repr(reader), "Bio.Align.BAMReader{IOStream}:")
 
             # header
             h = header(reader)
