@@ -1057,6 +1057,7 @@ end
             reader = open(SAMReader, joinpath(samdir, "ce#1.sam"))
             @test isa(reader, SAMReader)
             @test eltype(reader) === SAMRecord
+            @test startswith(repr(reader), "Bio.Align.SAMReader:")
 
             # header
             h = header(reader)
@@ -1165,6 +1166,7 @@ end
             reader = open(BAMReader, joinpath(bamdir, "ce#1.bam"))
             @test isa(reader, BAMReader)
             @test eltype(reader) === BAMRecord
+            @test startswith(repr(reader), "Bio.Align.BAMReader:")
 
             # header
             h = header(reader)
