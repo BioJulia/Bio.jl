@@ -117,6 +117,13 @@ function Bio.Seq.sequence(rec::SAMRecord)
     return rec.seq
 end
 
+function seqlength(rec::SAMRecord)
+    if rec.seq == "*"
+        throw(ArgumentError("no sequence available"))
+    end
+    return length(rec.seq)
+end
+
 function qualities(rec::SAMRecord)
     return rec.qual
 end

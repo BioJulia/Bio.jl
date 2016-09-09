@@ -1036,6 +1036,7 @@ end
             @test cigar(rec) == "*"
             @test alignment(rec) == Alignment(AlignmentAnchor[])
             @test sequence(rec) == "*"
+            @test_throws ArgumentError seqlength(rec)
             @test qualities(rec) == "*"
             @test Align.alignment_length(rec) === 0
 
@@ -1080,6 +1081,7 @@ end
             @test rightposition(rec) == 102
             @test seqname(rec) == "SRR065390.14978392"
             @test sequence(rec)  == "CCTAGCCCTAACCCTAACCCTAACCCTAGCCTAAGCCTAAGCCTAAGCCTAAGCCTAAGCCTAAGCCTAAGCCTAAGCCTAAGCCTAAGCCTAAGCCTAA"
+            @test seqlength(rec) == 100
             @test qualities(rec) == "#############################@B?8B?BA@@DDBCDDCBC@CDCDCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCC"
             @test flag(rec) == 16
             @test cigar(rec) == "27M1D73M"
@@ -1152,6 +1154,7 @@ end
             @test seqname(rec) == ""
             @test cigar(rec) == ""
             @test sequence(rec) == dna""
+            @test seqlength(rec) == 0
             @test alignment(rec) == Alignment(AlignmentAnchor[])
             @test qualities(rec) == UInt8[]
             @test Align.alignment_length(rec) === 0
@@ -1201,6 +1204,7 @@ end
             CCTAGCCCTAACCCTAACCCTAACCCTAGCCTAAGCCTAAGCCTAAGCCT
             AAGCCTAAGCCTAAGCCTAAGCCTAAGCCTAAGCCTAAGCCTAAGCCTAA
             """
+            @test seqlength(rec) == 100
             @test eltype(qualities(rec)) == Int8
             @test qualities(rec) == [Int(x) - 33 for x in "#############################@B?8B?BA@@DDBCDDCBC@CDCDCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCC"]
             @test flag(rec) == 16

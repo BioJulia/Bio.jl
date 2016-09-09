@@ -234,7 +234,7 @@ function alignment(rec::BAMRecord)
 end
 
 function Bio.Seq.sequence(rec::BAMRecord)
-    seqlen = sequence_length(rec)
+    seqlen = seqlength(rec)
     data = Vector{UInt64}(cld(seqlen, 16))
     src::Ptr{UInt64} = pointer(rec.data, seqname_length(rec) + n_cigar_op(rec) * 4 + 1)
     for i in 1:endof(data)
@@ -245,13 +245,23 @@ function Bio.Seq.sequence(rec::BAMRecord)
     return Bio.Seq.DNASequence(data, 1:seqlen, false)
 end
 
+
+"""
+    seqlength(rec::BAMRecord)
+
+Return the length of the DNA sequence.
+"""
+function seqlength(rec)
+    return rec.l_seq
+end
+
 """
     qualities(rec::BAMRecord)
 
 Return base qualities of the alignment `rec`.
 """
 function qualities(rec::BAMRecord)
-    seqlen = sequence_length(rec)
+    seqlen = seqlength(rec)
     offset = seqname_length(rec) + n_cigar_op(rec) * 4 + cld(seqlen, 2)
     return [reinterpret(Int8, rec.data[i+offset]) for i in 1:seqlen]
 end
@@ -283,7 +293,7 @@ function optional_fields(rec::BAMRecord)
 end
 
 function auxdata_position(rec)
-    seqlen = sequence_length(rec)
+    seqlen = seqlength(rec)
     return seqname_length(rec) + n_cigar_op(rec) * 4 + cld(seqlen, 2) + seqlen + 1
 end
 
@@ -309,9 +319,4 @@ end
 # Return the number of CIGAR operations.
 function n_cigar_op(rec)
     return rec.flag_nc & 0xffff
-end
-
-# Return the length of the DNA sequence.
-function sequence_length(rec)
-    return rec.l_seq
 end
