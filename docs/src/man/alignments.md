@@ -483,6 +483,7 @@ close(reader)
 | `cigar_rle`      | run-length encoded CIGAR operations (BAM only) |
 | `alignment`      | sequence alignment                             |
 | `sequence`       | DNA sequence                                   |
+| `seqlength`      | DNA sequence length                            |
 | `qualities`      | base qualities                                 |
 | `[<tag>]`        | value of an optional field with `tag`          |
 
