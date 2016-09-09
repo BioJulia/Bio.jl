@@ -1269,11 +1269,11 @@ end
                     ("chr1", 766_000:800_000, 142),
                     ("chr1", 786_000:800_000, 1),
                     ("chr1", 796_000:800_000, 0)]
-                n = 0
-                for rec in intersect(reader, refname, interval)
-                    n += 1
-                end
-                @test n == expected
+                intsect = intersect(reader, refname, interval)
+                @test eltype(intsect) == BAMRecord
+                @test count(_ -> true, intsect) == expected
+                # check that the intersection iterator is stateless
+                @test count(_ -> true, intsect) == expected
             end
 
             # randomized tests
