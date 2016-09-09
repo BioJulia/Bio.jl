@@ -80,8 +80,6 @@ export
     hasambiguity,
     isrepetitive,
     ambiguous_positions,
-    npositions,
-    hasn,
     gc_content,
     SequenceGenerator,
     randdnaseq,
