@@ -46,9 +46,11 @@ function advance!(iter, rec, i)
     return i, rec
 end
 
-function Bio.Intervals.isoverlapping(rec, refindex_, interval)
-    return ismapped(rec) &&
-        refindex(rec) == refindex_ &&
+function Bio.Intervals.isoverlapping(
+        rec::BAMRecord,
+        refindex_::Integer,
+        interval::UnitRange)
+    return refindex(rec) == refindex_ &&
         leftposition(rec) ≤ last(interval) &&
         rightposition(rec) ≥ first(interval)
 end
