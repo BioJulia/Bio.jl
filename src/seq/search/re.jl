@@ -716,8 +716,8 @@ immutable RegexMatchIterator{T,S}
     end
 end
 
-if VERSION > v"0.5-"
-    Base.iteratorsize(::RegexMatchIterator) = Base.SizeUnknown()
+function Base.iteratorsize{T,S}(::Type{RegexMatchIterator{T,S}})
+    return Base.SizeUnknown()
 end
 
 function Base.eltype{T,S}(::Type{RegexMatchIterator{T,S}})
