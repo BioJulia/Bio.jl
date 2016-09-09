@@ -93,6 +93,7 @@ export
     seqname,
     cigar,
     sequence,
+    seqlength,
     qualities,
     header,
     isoverlapping,  # re-export from Bio.Intervals
