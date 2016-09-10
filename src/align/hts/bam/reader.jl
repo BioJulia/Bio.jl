@@ -111,13 +111,15 @@ function init_bam_reader(input::IO)
 end
 
 function Base.read!(reader::BAMReader, record::BAMRecord)
-    datasize = read(reader.stream, Int32) - BAM_FIXED_FIELDS_BYTES
-    unsafe_read(reader.stream, pointer_from_objref(record), BAM_FIXED_FIELDS_BYTES)
-    if length(record.data) < datasize
-        resize!(record.data, datasize)
+    unsafe_read(
+        reader.stream,
+        pointer_from_objref(record),
+        BAM_FIXED_FIELDS_BYTES)
+    dsize = data_size(record)
+    if length(record.data) < dsize
+        resize!(record.data, dsize)
     end
-    unsafe_read(reader.stream, pointer(record.data), datasize)
-    record.datasize = datasize
+    unsafe_read(reader.stream, pointer(record.data), dsize)
     record.refseqnames = reader.refseqnames
     return record
 end
