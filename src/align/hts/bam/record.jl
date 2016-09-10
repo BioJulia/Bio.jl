@@ -1,9 +1,9 @@
 # BAM Record
 # ==========
 
-# NOTE: The order and size of fields are important; the data will be loaded
-# using memory copy. See specs for the details.
 type BAMRecord
+    # fixed-length fields (see BMA specs for the details)
+    block_size::Int32
     refid::Int32
     pos::Int32
     bin_mq_nl::UInt32
@@ -16,20 +16,22 @@ type BAMRecord
     # variable length data
     data::Vector{UInt8}
 
-    # filled bytes of data (≤ length(.data))
-    datasize::Int
-
-    # reference sequence names (shared)
+    # pointer to reference sequence names (shared)
     refseqnames::Vector{String}
 end
 
+# the data size of fixed-length fields (.block_size-.tlen)
+const BAM_FIXED_FIELDS_BYTES = 36
+
 function BAMRecord()
-    return BAMRecord(-1, -1, 0, UInt32(SAM_FLAG_UNMAP) << 16, 0, -1, -1, 0, UInt8[], 0, String[])
+    flag_nc = UInt32(SAM_FLAG_UNMAP) << 16
+    return BAMRecord(0, -1, -1, 0, flag_nc, 0, -1, -1, 0, UInt8[], String[])
 end
 
 # NOTE: this does not copy `refseqnames`.
 function Base.copy(rec::BAMRecord)
     return BAMRecord(
+        rec.block_size,
         rec.refid,
         rec.pos,
         rec.bin_mq_nl,
@@ -39,7 +41,6 @@ function Base.copy(rec::BAMRecord)
         rec.next_pos,
         rec.tlen,
         copy(rec.data),
-        rec.datasize,
         rec.refseqnames)
 end
 
@@ -63,9 +64,6 @@ function Base.:(==)(rec1::BAMRecord, rec2::BAMRecord)
         rec1.next_pos   == rec2.next_pos   &&
         rec1.tlen       == rec2.tlen)  # TODO: check data
 end
-
-# the data size of fixed-length fields (.refid-.tlen)
-const BAM_FIXED_FIELDS_BYTES = 32
 
 """
     ismapped(rec::BAMRecord)
@@ -289,12 +287,17 @@ function Base.haskey(rec::BAMRecord, tag::AbstractString)
 end
 
 function optional_fields(rec::BAMRecord)
-    return AuxDataDict(rec.data[auxdata_position(rec):rec.datasize])
+    return AuxDataDict(rec.data[auxdata_position(rec):data_size(rec)])
 end
 
 function auxdata_position(rec)
     seqlen = seqlength(rec)
     return seqname_length(rec) + n_cigar_op(rec) * 4 + cld(seqlen, 2) + seqlen + 1
+end
+
+# Return the size of the `.data` field.
+function data_size(rec::BAMRecord)
+    return rec.block_size - BAM_FIXED_FIELDS_BYTES + sizeof(rec.block_size)
 end
 
 # Return the length of alignment.
