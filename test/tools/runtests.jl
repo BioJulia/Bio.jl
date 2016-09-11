@@ -2,7 +2,6 @@ module TestTools
 
 using Base.Test
 
-using Compat
 using Bio.Seq,
       Bio.Tools.BLAST,
       TestFunctions
