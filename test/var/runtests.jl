@@ -44,7 +44,8 @@ end
     dnas1 = [dna"ATTG-ACCTGGNTTTCCGAA", dna"A-ACAGAGTATACRGTCGTC"]
     m1 = seqmatrix(dnas1, :seq)
 
-    dnas2 = [dna"attgaacctggntttccgaa", dna"atacagagtatacrgtcgtc"]
+    dnas2 = [dna"attgaacctggntttccgaa",
+             dna"atacagagtatacrgtcgtc"]
     m2 = seqmatrix(dnas2, :seq)
 
     @test distance(Count{AnyMutation}, dnas1) == ([12], [16])
@@ -55,6 +56,14 @@ end
     @test distance(Count{TransitionMutation}, m1) == ([4], [16])
     @test distance(Count{TransversionMutation}, m1) == ([8], [16])
     @test distance(Count{Kimura80}, m1) == ([4], [8], [16])
+
+    @test distance(Count{AnyMutation}, dnas2, 5, 5)[1] == [2; 4; 3; 3]
+    @test distance(Count{AnyMutation}, dnas2, 5, 5)[2] == [5; 5; 3; 5]
+    @test distance(Count{TransitionMutation}, dnas2)[1] == [0; 2; 1; 2]
+    @test distance(Count{TransitionMutation}, dnas2)[2] == [5; 5; 3; 5]
+    @test distance(Count{TransversionMutation}, dnas2)[1] == [2; 2; 2; 2]
+    @test distance(Count{TransversionMutation}, dnas2)[2] == [5; 5; 3; 5]
+    #@test distance(Count{Kimura80}, dnas1) == ([4], [8], [16])
 
     @test distance(Count{AnyMutation}, dnas2) == ([12], [18])
     @test distance(Count{TransitionMutation}, dnas2) == ([4], [18])
@@ -91,6 +100,8 @@ end
     @test round(distance(Kimura80, dnas2)[2][1], 3) == 1
     @test round(distance(Kimura80, m2)[1][1], 3) == 1.648
     @test round(distance(Kimura80, m2)[2][1], 3) == 1
+
+
 
 end
 
