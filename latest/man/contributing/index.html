@@ -200,12 +200,6 @@
     
         <li class="first-level active"><a href="#contributing">Contributing</a></li>
         
-            <li class="second-level"><a href="#style">Style</a></li>
-            
-        
-            <li class="second-level"><a href="#conduct">Conduct</a></li>
-            
-        
     
     </ul>
 </div></div>
@@ -213,52 +207,8 @@
 
 <p><a id='Contributing-1'></a></p>
 <h1 id="contributing">Contributing</h1>
-<p>We welcome contributions in the form of pull requests. For your code to be considered it must meet the following guidelines.</p>
-<ul>
-<li>By making a pull request, you're agreeing to license your code under an MIT license. See LICENSE.md.</li>
-<li>
-<p>Types and functions must be documented using Julia's <a href="http://docs.julialang.org/en/latest/manual/documentation/">docstrings</a>. Documentation regarding specific implementation details that aren't relevant to users should be in the form of comments.</p>
-<p>Documentation may be omitted if the function is not exported (i.e. only used internally) and is short and obvious. E.g. <code>cube(x) = x^3</code>.
-  * In addition to documenting code in the source files through docstrings, we encourage contributers to create documentation which is more akin to  a manual, with user guides, tutorials, or R-like vignettes. We use Documenter.jl  and mkdocs, to generate such documentation and host it on our website. The source markdown files for such documentation, guides, and vignettes are located in the <code>docs/src/man</code> folder of the Bio.jl git repo.
-  * All significant code must be tested. Tests should be organized into contexts, and into separate files based on module. Files for tests for a module go into an appropriately named folder, within the <code>test</code> folder in the Bio.jl git repo. E.g. tests for the Seq module go in <code>test/seq</code>.
-  * Contributions are included if the code has been reviewed by at least two team members who are <strong>not</strong> the author of the proposed contribution, and there is general consensus (or general lack of objections) that it's useful and fits with the intended scope of Bio.jl.
-  * Code must be consistent with the prevailing style in Bio.jl, which includes, but is not necessarily limited to the following style guide.
-  * Code contributed should be compatible with Julia v0.4.</p>
-</li>
-</ul>
-<p><a id='Style-1'></a></p>
-<h2 id="style">Style</h2>
-<ul>
-<li>Indent with 4 spaces.</li>
-<li>Type names are camel case, with the first letter capitalized. E.g. <code>SomeVeryUsefulType</code>.</li>
-<li>Module names are also camel case.</li>
-<li>Function names, apart from constructors, are all lowercase. Include underscores between words only if the name would be hard to read without. E.g.  <code>start</code>, <code>stop</code>, <code>findletter</code> <code>find_last_digit</code>.</li>
-<li>Generally try to keep lines below 80-columns, unless splitting a long line onto multiple lines makes it harder to read.</li>
-<li>
-<p>Files that declare modules should only declare the module, and import any modules that it requires. Any code should be included from separate files. E.g.</p>
-<p>```julia
-module AwesomeFeatures</p>
-<p>using IntervalTrees, JSON</p>
-<p>include("feature1.jl")
-include("feature2.jl")</p>
-<p>end
-<code>``
-  * Files that declare modules should have the same name name of the module, e.g the module</code>SomeModule<code>is declared under the file</code>SomeModule.jl`.
-  * Separate logical blocks of code with one blank line, or two blank lines for function/type definitions.
-  * When extending method definitions, explicitly import the method.</p>
-<p><code>julia
-import Base: start, next, done</code>
-  * Document functions using bare docstrings before a definition:</p>
-</li>
-</ul>
-<p><code>julia   "This function foo's something"   foo(x) = 2*x</code></p>
-<ul>
-<li>Functions that get or set variables in a type should not be prefixed with 'get' or 'set'. The getter should be named for the variable it sets, and the setter should have the same name as the getter, with the suffix <code>!</code>. For exmaple, for the variable <code>names</code>:</li>
-</ul>
-<p><code>julia   name(node) # get node name   name!(node, "somename") # set node name</code></p>
-<p><a id='Conduct-1'></a></p>
-<h2 id="conduct">Conduct</h2>
-<p>We adhere to the Julia <a href="http://julialang.org/community/standards/">community standards</a>.</p></div>
+<p>The BioJulia organisation has a set of contribution guidelines which apply to all BioJulia projects.</p>
+<p>These guidelines are available <a href="../biojulia.github.io/Contributing/latest">here</a> and it is recommended all new contributors read these guidelines before opening a pull request.</p></div>
         
     </div>
 
