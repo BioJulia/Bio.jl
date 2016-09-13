@@ -199,12 +199,12 @@ possible. This function is generally not required as spacing is recorded when
 atom names are read in from a Protein Data Bank (PDB) file.
 """
 function spaceatomname(at::Atom)
-    at_name = atomname(at, spaces=true)
+    at_name = atomname(at, strip=false)
     chars = length(at_name)
     if chars == 4
         return at_name
     end
-    strip_el = element(at, spaces=false)
+    strip_el = element(at, strip=true)
     @assert chars <= 4 "Atom name is greater than four characters: \"$at_name\""
     # In the absence of the element, the first index goes in column two
     if strip_el == "" || findfirst(at_name, strip_el[1]) == 0

@@ -99,8 +99,8 @@ end
 
     @test atomname(at) == "CA"
     @test atomname(dis_at) == "CB"
-    @test atomname(at, spaces=true) == " CA "
-    @test atomname(dis_at, spaces=true) == " CB "
+    @test atomname(at, strip=false) == " CA "
+    @test atomname(dis_at, strip=false) == " CB "
 
     @test altlocid(at) == ' '
     @test altlocid(dis_at) == 'A'
@@ -153,13 +153,13 @@ end
 
     @test element(at) == "C"
     @test element(dis_at) == "C"
-    @test element(at, spaces=true) == " C"
-    @test element(dis_at, spaces=true) == " C"
+    @test element(at, strip=false) == " C"
+    @test element(dis_at, strip=false) == " C"
 
     @test charge(at) == ""
     @test charge(dis_at) == "1+"
-    @test charge(at, spaces=true) == "  "
-    @test charge(dis_at, spaces=true) == "1+"
+    @test charge(at, strip=false) == "  "
+    @test charge(dis_at, strip=false) == "1+"
 
     @test residue(at) == res
     @test residue(dis_at) == res
@@ -192,7 +192,7 @@ end
     @test resname(at) == "ALA"
     @test resname(dis_at) == "ALA"
     @test resname(dis_res) == "VA"
-    @test resname(dis_res, spaces=true) == " VA"
+    @test resname(dis_res, strip=false) == " VA"
 
     @test resnumber(res) == 10
     @test resnumber(at) == 10
@@ -223,8 +223,8 @@ end
 
     @test atomnames(res) == ["CA", "CB"]
     @test atomnames(dis_res) == ["CG"]
-    @test atomnames(res, spaces=true) == [" CA ", " CB "]
-    @test atomnames(dis_res, spaces=true) == [" CG "]
+    @test atomnames(res, strip=false) == [" CA ", " CB "]
+    @test atomnames(dis_res, strip=false) == [" CG "]
 
     @test isa(atoms(res), Dict{String, AbstractAtom})
     @test length(atoms(res)) == 2
@@ -285,10 +285,12 @@ end
     @test modelnumber(mod) == 1
 
     @test chainids(mod) == ['A', 'B']
+    @test chainids(struc) == ['A', 'B']
 
     @test isa(chains(mod), Dict{Char, Chain})
     @test length(chains(mod)) == 2
     @test resname(chains(mod)['A']["H_20A"]) == "VA"
+    @test length(chains(struc)) == 2
 
     @test structure(at) == struc
     @test structure(dis_at) == struc
@@ -314,7 +316,6 @@ end
 
     @test isa(defaultmodel(struc), Model)
     @test modelnumber(defaultmodel(struc)) == 1
-    @test chainids(struc) == ['A', 'B']
 
 
     # Test iteration over elements
@@ -415,7 +416,7 @@ end
     @test atomnameselector(at_a, Set(["CA", "N", "C"]))
     @test atomnameselector(at_a, ["CA", "N", "C"])
     @test !atomnameselector(at_b, Set(["CA", "N", "C"]))
-    @test !atomnameselector(at_a, ["CA", "N", "C"], spaces=true)
+    @test !atomnameselector(at_a, ["CA", "N", "C"], strip=false)
     @test calphaselector(at_a)
     @test !calphaselector(at_b)
     @test !calphaselector(Atom(
@@ -438,6 +439,10 @@ end
     @test !resnameselector(res_b, Set(["ALA"]))
     @test !waterselector(res_a)
     @test waterselector(res_c)
+    @test !waterselector(at_a)
+    @test notwaterselector(res_a)
+    @test !notwaterselector(res_c)
+    @test notwaterselector(at_a)
     @test stdresselector(res_a)
     @test !stdresselector(res_b)
     @test !hetresselector(res_a)

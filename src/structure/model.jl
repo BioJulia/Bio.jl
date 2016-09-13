@@ -84,6 +84,7 @@ export
     resnameselector,
     waterresnames,
     waterselector,
+    notwaterselector,
     stdresselector,
     hetresselector,
     disorderselector,
@@ -353,31 +354,31 @@ end
 # Check if an atom name exists in a residue as a whitespace-padded version
 function findatombyname(res::Residue, atom_name::AbstractString)
     # Look for atom name directly
-    if atom_name in keys(res.atoms)
+    if haskey(res.atoms, atom_name)
         return res.atoms[atom_name]
     # Pad out name to 4 characters to read PDB atom names with whitespace
     elseif length(atom_name) == 3
-        if " $atom_name" in keys(res.atoms)
+        if haskey(res.atoms, " $atom_name")
             return res.atoms[" $atom_name"]
-        elseif "$atom_name " in keys(res.atoms)
+        elseif haskey(res.atoms, "$atom_name ")
             return res.atoms["$atom_name "]
         end
     elseif length(atom_name) == 2
-        if " $atom_name " in keys(res.atoms)
+        if haskey(res.atoms, " $atom_name ")
             return res.atoms[" $atom_name "]
-        elseif "  $atom_name" in keys(res.atoms)
+        elseif haskey(res.atoms, "  $atom_name")
             return res.atoms["  $atom_name"]
-        elseif "$atom_name  " in keys(res.atoms)
+        elseif haskey(res.atoms, "$atom_name  ")
             return res.atoms["$atom_name  "]
         end
     elseif length(atom_name) == 1
-        if " $atom_name  " in keys(res.atoms)
+        if haskey(res.atoms, " $atom_name  ")
             return res.atoms[" $atom_name  "]
-        elseif "  $atom_name " in keys(res.atoms)
+        elseif haskey(res.atoms, "  $atom_name ")
             return res.atoms["  $atom_name "]
-        elseif "   $atom_name" in keys(res.atoms)
+        elseif haskey(res.atoms, "   $atom_name")
             return res.atoms["   $atom_name"]
-        elseif "$atom_name   " in keys(res.atoms)
+        elseif haskey(res.atoms, "$atom_name   ")
             return res.atoms["$atom_name   "]
         end
     end
@@ -395,18 +396,17 @@ serial(dis_at::DisorderedAtom) = serial(defaultatom(dis_at))
 
 """
 Get the atom name of an `AbstractAtom`.
-`spaces` determines whether surrounding whitespace is retained (default
-`false`).
+`strip` determines whether surrounding whitespace is stripped (default `true`).
 """
-function atomname(at::Atom; spaces::Bool=false)
-    if spaces
-        return at.name
+function atomname(at::Atom; strip::Bool=true)
+    if strip
+        return Base.strip(at.name)
     else
-        return strip(at.name)
+        return at.name
     end
 end
 
-atomname(dis_at::DisorderedAtom; spaces::Bool=false) = atomname(defaultatom(dis_at), spaces=spaces)
+atomname(dis_at::DisorderedAtom; strip::Bool=true) = atomname(defaultatom(dis_at), strip=strip)
 
 
 "Get the alternative location ID of an `AbstractAtom`."
@@ -483,34 +483,32 @@ tempfac(dis_at::DisorderedAtom) = tempfac(defaultatom(dis_at))
 
 """
 Get the element of an `AbstractAtom`. Defaults to `\"  \"`.
-`spaces` determines whether surrounding whitespace is retained (default
-`false`).
+`strip` determines whether surrounding whitespace is stripped (default `true`).
 """
-function element(at::Atom; spaces::Bool=false)
-    if spaces
-        return at.element
+function element(at::Atom; strip::Bool=true)
+    if strip
+        return Base.strip(at.element)
     else
-        return strip(at.element)
+        return at.element
     end
 end
 
-element(dis_at::DisorderedAtom; spaces::Bool=false) = element(defaultatom(dis_at), spaces=spaces)
+element(dis_at::DisorderedAtom; strip::Bool=true) = element(defaultatom(dis_at), strip=strip)
 
 
 """
 Get the charge on an `AbstractAtom`. Defaults to `\"  \"`.
-`spaces` determines whether surrounding whitespace is retained (default
-`false`).
+`strip` determines whether surrounding whitespace is stripped (default `true`).
 """
-function charge(at::Atom; spaces::Bool=false)
-    if spaces
-        return at.charge
+function charge(at::Atom; strip::Bool=true)
+    if strip
+        return Base.strip(at.charge)
     else
-        return strip(at.charge)
+        return at.charge
     end
 end
 
-charge(dis_at::DisorderedAtom; spaces::Bool=false) = charge(defaultatom(dis_at), spaces=spaces)
+charge(dis_at::DisorderedAtom; strip::Bool=true) = charge(defaultatom(dis_at), strip=strip)
 
 
 "Get the `Residue` that an `AbstractAtom` belongs to."
@@ -579,20 +577,19 @@ atomid(dis_at::DisorderedAtom) = atomid(defaultatom(dis_at))
 
 """
 Get the residue name of an `AbstractAtom` or `AbstractResidue`.
-`spaces` determines whether surrounding whitespace is retained (default
-`false`).
+`strip` determines whether surrounding whitespace is stripped (default `true`).
 """
-function resname(res::Residue; spaces::Bool=false)
-    if spaces
-        return res.name
+function resname(res::Residue; strip::Bool=true)
+    if strip
+        return Base.strip(res.name)
     else
-        return strip(res.name)
+        return res.name
     end
 end
 
-resname(at::Atom; spaces::Bool=false) = resname(residue(at), spaces=spaces)
-resname(dis_at::DisorderedAtom; spaces::Bool=false) = resname(defaultatom(dis_at), spaces=spaces)
-resname(dis_res::DisorderedResidue; spaces::Bool=false) = resname(defaultresidue(dis_res), spaces=spaces)
+resname(at::Atom; strip::Bool=true) = resname(residue(at), strip=strip)
+resname(dis_at::DisorderedAtom; strip::Bool=true) = resname(defaultatom(dis_at), strip=strip)
+resname(dis_res::DisorderedResidue; strip::Bool=true) = resname(defaultresidue(dis_res), strip=strip)
 
 
 "Get the residue number of an `AbstractAtom` or `AbstractResidue`."
@@ -686,18 +683,17 @@ end
 
 """
 Get the sorted list of `AbstractAtom`s in an `AbstractResidue`.
-`spaces` determines whether surrounding whitespace is retained (default
-`false`).
+`strip` determines whether surrounding whitespace is stripped (default `true`).
 """
-function atomnames(res::Residue; spaces::Bool=false)
-    if spaces
-        return res.atom_list
+function atomnames(res::Residue; strip::Bool=true)
+    if strip
+        return map(Base.strip, res.atom_list)
     else
-        return map(strip, res.atom_list)
+        return res.atom_list
     end
 end
 
-atomnames(dis_res::DisorderedResidue; spaces::Bool=false) = atomnames(defaultresidue(dis_res), spaces=spaces)
+atomnames(dis_res::DisorderedResidue; strip::Bool=true) = atomnames(defaultresidue(dis_res), strip=strip)
 
 
 "Access the dictionary of `AbstractAtom`s in an `AbstractResidue`."
@@ -743,7 +739,7 @@ function resnames(dis_res::DisorderedResidue)
     )
 end
 
-resnames(res::Residue) = [resname(res, spaces=true)]
+resnames(res::Residue) = [resname(res, strip=false)]
 
 
 # Constructor acts as a setter for the default residue name
@@ -1310,7 +1306,7 @@ function unsafe_addatomtomodel!(mod::Model,
         # Add the new atom to the disordered atom container
         res[atom_rec.atom_name][atom_rec.alt_loc_id] = at
         # If the default alt loc requires changing, change it
-        if choosedefaultaltlocid(defaultatom(res[atom_rec.atom_name]), atom) != defaultaltlocid(res[atom_rec.atom_name])
+        if choosedefaultaltlocid(defaultatom(res[atom_rec.atom_name]), at) != defaultaltlocid(res[atom_rec.atom_name])
             res[atom_rec.atom_name] = DisorderedAtom(
                         res[atom_rec.atom_name],
                         atom_rec.alt_loc_id)
@@ -1344,7 +1340,7 @@ function fixlists!(res::Residue)
     append!(res.atom_list, map(fullatomname, sort(collect(values(atoms(res))))))
 end
 
-fullatomname(at::AbstractAtom) = atomname(at, spaces=true)
+fullatomname(at::AbstractAtom) = atomname(at, strip=false)
 
 
 """
@@ -1381,20 +1377,19 @@ hetatomselector(at::AbstractAtom) = ishetatom(at)
 """
 Determines if an `AbstractAtom` has its atom name in the given `Set` or
 `Vector`.
-`spaces` determines whether surrounding whitespace is retained
-(default `false`).
+`strip` determines whether surrounding whitespace is stripped (default `true`).
 """
 function atomnameselector(at::AbstractAtom,
                     atom_names::Set{String};
-                    spaces::Bool=false)
-    return atomname(at, spaces=spaces) in atom_names
+                    strip::Bool=true)
+    return atomname(at, strip=strip) in atom_names
 end
 
 # Set is faster but Vector method is retained for ease of use
 function atomnameselector(at::AbstractAtom,
                     atom_names::Vector{String};
-                    spaces::Bool=false)
-    return atomname(at, spaces=spaces) in atom_names
+                    strip::Bool=true)
+    return atomname(at, strip=strip) in atom_names
 end
 
 
@@ -1475,6 +1470,15 @@ end
 
 
 """
+Determines if an `AbstractResidue` or `AbstractAtom` does not represent a water
+molecule.
+"""
+function notwaterselector(el::Union{AbstractResidue, AbstractAtom})
+    return !waterselector(el)
+end
+
+
+"""
 Determines if an `AbstractResidue` represents a standard protein residue,
 e.g. consists of ATOM records in a Protein Data Bank (PDB) file.
 """
@@ -1506,8 +1510,8 @@ Determines if an `AbstractAtom` represents hydrogen. Uses the element field
 where possible, otherwise uses the atom name.
 """
 function hydrogenselector(at::AbstractAtom)
-    return element(at, spaces=false) == "H" ||
-        (element(at, spaces=false) == "" &&
+    return element(at, strip=true) == "H" ||
+        (element(at, strip=true) == "" &&
         'H' in atomname(at) &&
         !ismatch(r"[a-zA-Z]", atomname(at)[1:findfirst(atomname(at), 'H')-1]))
 end
@@ -1523,7 +1527,7 @@ end
 function AminoAcidSequence{T <: AbstractResidue}(res::Vector{T})
     seq = AminoAcid[]
     for i in 1:length(res)
-        if resname(res[i]) in keys(threeletter_to_aa)
+        if haskey(threeletter_to_aa, resname(res[i]))
             push!(seq, threeletter_to_aa[resname(res[i])])
         else
             push!(seq, AA_X)
