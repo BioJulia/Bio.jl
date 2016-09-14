@@ -43,6 +43,7 @@ pages:
   - IO API: man/reading.md
   - Biological Sequences: man/seq.md
   - Alignments: man/alignments.md
+  - Phylogenetics: man/phylo.md
   - Intervals: man/intervals.md
   - Biological Variation: man/var.md
   - Structure: man/structure.md
