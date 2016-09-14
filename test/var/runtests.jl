@@ -46,6 +46,8 @@ end
 
     dnas2 = [dna"attgaacctggntttccgaa",
              dna"atacagagtatacrgtcgtc"]
+    dnas3 = [dna"attgaacctgtntttccgaa",
+             dna"atagaacgtatatrgccgtc"]
     m2 = seqmatrix(dnas2, :seq)
 
     @test distance(Count{AnyMutation}, dnas1) == ([12], [16])
@@ -114,6 +116,14 @@ end
     @test round(distance(JukesCantor69, dnas2)[2][1], 3) == 1
     @test round(distance(JukesCantor69, m2)[1][1], 3) == 1.648
     @test round(distance(JukesCantor69, m2)[2][1], 3) == 1
+    @test_throws DomainError distance(JukesCantor69, dnas2, 5, 5)
+    d = distance(JukesCantor69, dnas3, 5, 5)
+    a = [0.232616, 0.571605, 0.44084, 0.571605]
+    v = [0.0595041, 0.220408, 0.24, 0.220408]
+    for i in 1:length(d[1])
+        @test_approx_eq_eps d[1][i] a[i] 1e-5
+        @test_approx_eq_eps d[2][i] v[i] 1e-5
+    end
 
     @test round(distance(Kimura80, dnas2)[1][1], 3) == 1.648
     @test round(distance(Kimura80, dnas2)[2][1], 3) == 1
