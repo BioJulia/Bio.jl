@@ -74,12 +74,22 @@ end
     @test distance(Count{TransversionMutation}, m2) == ([8], [18])
     @test distance(Count{Kimura80}, m2) == ([4], [8], [18])
 
-    @test distance(Proportion{AnyMutation}, dnas2, 5, 5)[1][:] == [0.4, 0.8, 1.0, 0.6]
-    @test distance(Proportion{AnyMutation}, dnas2, 5, 5)[2][:] == [5, 5, 3, 5]
-    @test distance(Proportion{TransitionMutation}, dnas2, 5, 5)[1][:] == [0.0, 0.4, 0.333333, 0.2]
-    @test distance(Proportion{TransitionMutation}, dnas2, 5, 5)[2][:] == [5, 5, 3, 5]
-    @test distance(Proportion{TransversionMutation}, dnas2, 5, 5)[1][:] == [0.4, 0.4, 0.666667, 0.4]
-    @test distance(Proportion{TransversionMutation}, dnas2, 5, 5)[2][:] == [5, 5, 3, 5]
+    d = distance(Proportion{AnyMutation}, dnas2, 5, 5)
+    a = [0.4, 0.8, 1.0, 0.6]
+    for i in 1:length(d[1])
+        @test isapprox(d[1][i], a[i])
+    end
+    @test d[2][:] == [5, 5, 3, 5]
+    d = distance(Proportion{TransitionMutation}, dnas2, 5, 5)
+    a = [0.0, 0.4, 0.333333, 0.2]
+    for i in 1:length(d[1])
+        @test isapprox(d[1][i], a[i])
+    @test d[2][:] == [5, 5, 3, 5]
+    d = distance(Proportion{TransversionMutation}, dnas2, 5, 5)
+    a = [0.4, 0.4, 0.666667, 0.4]
+    for i in 1:length(d[1])
+        @test isapprox(d[1][i], a[i])
+    @test d[2][:] == [5, 5, 3, 5]
 
     @test distance(Proportion{AnyMutation}, dnas1) == ([(12 / 16)], [16])
     @test distance(Proportion{TransitionMutation}, dnas1) == ([(4 / 16)], [16])
