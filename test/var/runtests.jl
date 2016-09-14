@@ -84,11 +84,13 @@ end
     a = [0.0, 0.4, 0.333333, 0.2]
     for i in 1:length(d[1])
         @test isapprox(d[1][i], a[i])
+    end
     @test d[2][:] == [5, 5, 3, 5]
     d = distance(Proportion{TransversionMutation}, dnas2, 5, 5)
     a = [0.4, 0.4, 0.666667, 0.4]
     for i in 1:length(d[1])
         @test isapprox(d[1][i], a[i])
+    end
     @test d[2][:] == [5, 5, 3, 5]
 
     @test distance(Proportion{AnyMutation}, dnas1) == ([(12 / 16)], [16])
