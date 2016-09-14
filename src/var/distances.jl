@@ -134,7 +134,7 @@ function distance{T<:MutationType,A<:NucleotideAlphabet}(::Type{Count{T}}, seqs:
 end
 
 """
-    distance{T<:MutationType,A<:NucleotideAlphabet}(::Type{Proportion{T}}, seqs::Vector{BioSequence{A}}, width::Int, step::Int)
+    distance{T<:MutationType,A<:NucleotideAlphabet}(::Type{Count{T}}, seqs::Vector{BioSequence{A}}, width::Int, step::Int)
 
 A distance method which computes pairwise distances using a sliding window.
 
