@@ -59,10 +59,10 @@ end
 
     @test distance(Count{AnyMutation}, dnas2, 5, 5)[1][1:4] == [2, 4, 3, 3]
     @test distance(Count{AnyMutation}, dnas2, 5, 5)[2][1:4] == [5, 5, 3, 5]
-    @test distance(Count{TransitionMutation}, dnas2)[1][1:4] == [0, 2, 1, 2]
-    @test distance(Count{TransitionMutation}, dnas2)[2][1:4] == [5, 5, 3, 5]
-    @test distance(Count{TransversionMutation}, dnas2)[1][1:4] == [2, 2, 2, 2]
-    @test distance(Count{TransversionMutation}, dnas2)[2][1:4] == [5, 5, 3, 5]
+    @test distance(Count{TransitionMutation}, dnas2, 5, 5)[1][1:4] == [0, 2, 1, 1]
+    @test distance(Count{TransitionMutation}, dnas2, 5, 5)[2][1:4] == [5, 5, 3, 5]
+    @test distance(Count{TransversionMutation}, dnas2, 5, 5)[1][1:4] == [2, 2, 2, 2]
+    @test distance(Count{TransversionMutation}, dnas2, 5, 5)[2][1:4] == [5, 5, 3, 5]
     #@test distance(Count{Kimura80}, dnas1) == ([4], [8], [16])
 
     @test distance(Count{AnyMutation}, dnas2) == ([12], [18])
