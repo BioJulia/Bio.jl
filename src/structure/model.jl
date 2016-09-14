@@ -205,20 +205,14 @@ ProteinStructure() = ProteinStructure("")
 
 Model(number::Integer, struc::ProteinStructure) = Model(number, Dict(), struc)
 
-Model(struc::ProteinStructure) = Model(1, struc)
-
 Model(number::Integer) = Model(number, ProteinStructure())
 
-Model() = Model(ProteinStructure())
+Model() = Model(1)
 
 
 Chain(id::Char, mod::Model) = Chain(id, [], Dict(), mod)
 
-Chain(mod::Model) = Chain('A', mod)
-
 Chain(id::Char) = Chain(id, Model())
-
-Chain() = Chain('A')
 
 
 function Residue(name::AbstractString,
@@ -228,33 +222,6 @@ function Residue(name::AbstractString,
                 ch::Chain)
     return Residue(name, number, ins_code, het_res, [], Dict(), ch)
 end
-
-Residue(ch::Chain) = Residue("ALA", 1, ' ', false, ch)
-
-function Residue(name::AbstractString,
-                number::Integer,
-                ins_code::Char,
-                het_res::Bool)
-    return Residue(name, number, ins_code, het_res, Chain())
-end
-
-Residue() = Residue("ALA", 1, ' ', false)
-
-
-function Atom(serial::Integer,
-                name::AbstractString,
-                alt_loc_id::Char,
-                coords::Vector{Float64},
-                occupancy::Float64,
-                temp_fac::Float64,
-                element::AbstractString,
-                charge::AbstractString)
-    return Atom(serial, name, alt_loc_id, coords, occupancy, temp_fac, element, charge, Residue())
-end
-
-Atom(res::Residue) = Atom(1, "CA", ' ', [0.0, 0.0, 0.0], 1.0, 0.0, "  ", "  ", res)
-
-Atom() = Atom(1, "CA", ' ', [0.0, 0.0, 0.0], 1.0, 0.0, "  ", "  ")
 
 
 "A `StructuralElement` or `Vector` of `StructuralElement`s."

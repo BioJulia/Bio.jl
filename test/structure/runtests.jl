@@ -61,24 +61,19 @@ end
     ProteinStructure("struc", Dict(1=> Model()))
     ProteinStructure()
 
-    Model(1, Dict('A'=> Chain()), ProteinStructure())
-    Model(ProteinStructure())
+    Model(1, Dict('A'=> Chain('A')), ProteinStructure())
+    Model(1, ProteinStructure())
     Model(1)
     Model()
 
-    Chain('A', ["1"], Dict("1"=> Residue()), Model())
-    Chain(Model())
+    Chain('A', ["1"], Dict("1"=> Residue("ALA", 1, ' ', false, Chain('A'))), Model())
+    Chain('A', Model())
     Chain('A')
-    Chain()
 
-    Residue("ALA", 1, ' ', false, ["CA"], Dict("CA"=> Atom()), Chain())
-    Residue(Chain())
-    Residue("ALA", 1, ' ', false)
-    Residue()
-
-    Atom(1, "CA", ' ', [0.0, 0.0, 0.0], 1.0, 0.0, "  ", "  ")
-    Atom(Residue())
-    Atom()
+    Residue("ALA", 1, ' ', false, ["CA"], Dict("CA"=>
+        Atom(1, "CA", ' ', [0.0, 0.0, 0.0], 1.0, 0.0, "  ", "  ",
+        Residue("ALA", 1, ' ', false, Chain('A')))), Chain('A'))
+    Residue("ALA", 1, ' ', false, Chain('A'))
 
 
     # Test show
@@ -466,21 +461,22 @@ end
 
     # Further tests for structural element ordering
     # Order when looping over a DisorderedAtom is the atom serial
+    res = Residue("ALA", 1, ' ', false, Chain('A'))
     dis_at_ord = DisorderedAtom(Dict(
-        'A' => Atom(102, "CA", 'A', [1.0, 2.0, 3.0], 0.3, 10.0, "C", ""),
-        'B' => Atom(101, "CA", 'B', [1.0, 2.0, 3.0], 0.4, 10.0, "C", ""),
-        'C' => Atom(100, "CA", 'C', [1.0, 2.0, 3.0], 0.3, 10.0, "C", ""),
+        'A' => Atom(102, "CA", 'A', [1.0, 2.0, 3.0], 0.3, 10.0, "C", "", res),
+        'B' => Atom(101, "CA", 'B', [1.0, 2.0, 3.0], 0.4, 10.0, "C", "", res),
+        'C' => Atom(100, "CA", 'C', [1.0, 2.0, 3.0], 0.3, 10.0, "C", "", res),
     ), 'B')
     @test altlocids(dis_at_ord) == ['C', 'B', 'A']
 
     # Order when sorting an atom list is the atom serial
     at_list_ord = AbstractAtom[
         DisorderedAtom(Dict(
-            'A' => Atom(100, "CA", 'A', [1.0, 2.0, 3.0], 0.4, 10.0, "C", ""),
-            'B' => Atom(104, "CA", 'B', [1.0, 2.0, 3.0], 0.6, 10.0, "C", "")
+            'A' => Atom(100, "CA", 'A', [1.0, 2.0, 3.0], 0.4, 10.0, "C", "", res),
+            'B' => Atom(104, "CA", 'B', [1.0, 2.0, 3.0], 0.6, 10.0, "C", "", res)
         ), 'B'),
-        Atom(102, "CB", ' ', [1.0, 2.0, 3.0], 1.0, 10.0, "C", ""),
-        Atom(103, "CG", ' ', [1.0, 2.0, 3.0], 1.0, 10.0, "C", "")
+        Atom(102, "CB", ' ', [1.0, 2.0, 3.0], 1.0, 10.0, "C", "", res),
+        Atom(103, "CG", ' ', [1.0, 2.0, 3.0], 1.0, 10.0, "C", "", res)
     ]
     @test map(atomname, sort(at_list_ord)) == ["CB", "CG", "CA"]
     sort!(at_list_ord)
@@ -524,11 +520,11 @@ end
 
     # Order of listing residue names in a DisorderedResidue is default then alphabetical
     dis_res_ord = DisorderedResidue(Dict(
-        "THR" => Residue("THR", 201, ' ', false),
-        "ALA" => Residue("ALA", 201, ' ', false),
-        "ILE" => Residue("ILE", 201, ' ', false),
-        "SER" => Residue("SER", 201, ' ', false),
-        "VAL" => Residue("VAL", 201, ' ', false)
+        "THR" => Residue("THR", 201, ' ', false, Chain('A')),
+        "ALA" => Residue("ALA", 201, ' ', false, Chain('A')),
+        "ILE" => Residue("ILE", 201, ' ', false, Chain('A')),
+        "SER" => Residue("SER", 201, ' ', false, Chain('A')),
+        "VAL" => Residue("VAL", 201, ' ', false, Chain('A'))
     ), "SER")
     @test defaultresname(dis_res_ord) == "SER"
     @test resnames(dis_res_ord) == ["SER", "ALA", "ILE", "THR", "VAL"]
@@ -680,12 +676,13 @@ end
 
 
     # Test choosedefaultaltlocid
-    at_a = Atom(100, "CA", 'A', [1.0, 2.0, 3.0], 0.4, 10.0, "C", "")
-    at_b = Atom(101, "CA", 'B', [1.0, 2.0, 3.0], 0.6, 10.0, "C", "")
+    res = Residue("ALA", 1, ' ', false, Chain('A'))
+    at_a = Atom(100, "CA", 'A', [1.0, 2.0, 3.0], 0.4, 10.0, "C", "", res)
+    at_b = Atom(101, "CA", 'B', [1.0, 2.0, 3.0], 0.6, 10.0, "C", "", res)
     @test choosedefaultaltlocid(at_a, at_b) == 'B'
     @test choosedefaultaltlocid(at_b, at_a) == 'B'
-    at_a = Atom(100, "CA", 'A', [1.0, 2.0, 3.0], 0.5, 10.0, "C", "")
-    at_b = Atom(101, "CA", 'B', [1.0, 2.0, 3.0], 0.5, 10.0, "C", "")
+    at_a = Atom(100, "CA", 'A', [1.0, 2.0, 3.0], 0.5, 10.0, "C", "", res)
+    at_b = Atom(101, "CA", 'B', [1.0, 2.0, 3.0], 0.5, 10.0, "C", "", res)
     @test choosedefaultaltlocid(at_a, at_b) == 'A'
     @test choosedefaultaltlocid(at_b, at_a) == 'A'
 
@@ -918,7 +915,7 @@ end
     @test countatoms(ProteinStructure()) == 0
     @test countatoms(Model()) == 0
     @test countatoms(Chain('X')) == 0
-    @test countatoms(Residue("ALA", 100, ' ', false)) == 0
+    @test countatoms(Residue("ALA", 100, ' ', false, Chain('A'))) == 0
 
 
     # Test collectresidues
@@ -998,7 +995,7 @@ end
     @test countresidues(ProteinStructure()) == 0
     @test countresidues(Model()) == 0
     @test countresidues(Chain('X')) == 0
-    @test countresidues(Residue("ALA", 100, ' ', false)) == 1
+    @test countresidues(Residue("ALA", 100, ' ', false, Chain('A'))) == 1
 
 
     # Test collectchains
@@ -1059,7 +1056,7 @@ end
     @test countchains(ProteinStructure()) == 0
     @test countchains(Model()) == 0
     @test countchains(Chain('X')) == 1
-    @test countchains(Residue("ALA", 100, ' ', false)) == 1
+    @test countchains(Residue("ALA", 100, ' ', false, Chain('A'))) == 1
 
 
     # Test collectmodels
@@ -1122,7 +1119,7 @@ end
     @test countmodels(ProteinStructure()) == 0
     @test countmodels(Model()) == 1
     @test countmodels(Chain('X')) == 1
-    @test countmodels(Residue("ALA", 100, ' ', false)) == 1
+    @test countmodels(Residue("ALA", 100, ' ', false, Chain('A'))) == 1
 
 
     # Test parser error handling
@@ -1151,19 +1148,20 @@ end
 
 
     # Test spaceatomname
-    @test spaceatomname(Atom(1, " CA ", ' ', [0.0, 0.0, 0.0], 1.0, 0.0, " C", "  ")) == " CA "
-    @test spaceatomname(Atom(1, "N",    ' ', [0.0, 0.0, 0.0], 1.0, 0.0, " N", "  ")) == " N  "
-    @test spaceatomname(Atom(1, "N",    ' ', [0.0, 0.0, 0.0], 1.0, 0.0, "  ", "  ")) == " N  "
-    @test spaceatomname(Atom(1, "CA",   ' ', [0.0, 0.0, 0.0], 1.0, 0.0, " C", "  ")) == " CA "
-    @test spaceatomname(Atom(1, "NE1",  ' ', [0.0, 0.0, 0.0], 1.0, 0.0, " N", "  ")) == " NE1"
-    @test spaceatomname(Atom(1, "2HD1", ' ', [0.0, 0.0, 0.0], 1.0, 0.0, " H", "  ")) == "2HD1"
-    @test spaceatomname(Atom(1, "HH11", ' ', [0.0, 0.0, 0.0], 1.0, 0.0, " H", "  ")) == "HH11"
-    @test spaceatomname(Atom(1, "1H",   ' ', [0.0, 0.0, 0.0], 1.0, 0.0, " H", "  ")) == "1H  "
-    @test spaceatomname(Atom(1, "MG",   ' ', [0.0, 0.0, 0.0], 1.0, 0.0, "MG", "  ")) == "MG  "
-    @test spaceatomname(Atom(1, "MG",   ' ', [0.0, 0.0, 0.0], 1.0, 0.0, "  ", "  ")) == " MG "
-    @test_throws ArgumentError spaceatomname(Atom(1, "11H",   ' ', [0.0, 0.0, 0.0], 1.0, 0.0, " H", "  "))
-    @test_throws ArgumentError spaceatomname(Atom(1, "11H11", ' ', [0.0, 0.0, 0.0], 1.0, 0.0, " H", "  "))
-    @test_throws ArgumentError spaceatomname(Atom(1, "1MG",   ' ', [0.0, 0.0, 0.0], 1.0, 0.0, "MG", "  "))
+    res = Residue("ALA", 1, ' ', false, Chain('A'))
+    @test spaceatomname(Atom(1, " CA ", ' ', [0.0, 0.0, 0.0], 1.0, 0.0, " C", "  ", res)) == " CA "
+    @test spaceatomname(Atom(1, "N",    ' ', [0.0, 0.0, 0.0], 1.0, 0.0, " N", "  ", res)) == " N  "
+    @test spaceatomname(Atom(1, "N",    ' ', [0.0, 0.0, 0.0], 1.0, 0.0, "  ", "  ", res)) == " N  "
+    @test spaceatomname(Atom(1, "CA",   ' ', [0.0, 0.0, 0.0], 1.0, 0.0, " C", "  ", res)) == " CA "
+    @test spaceatomname(Atom(1, "NE1",  ' ', [0.0, 0.0, 0.0], 1.0, 0.0, " N", "  ", res)) == " NE1"
+    @test spaceatomname(Atom(1, "2HD1", ' ', [0.0, 0.0, 0.0], 1.0, 0.0, " H", "  ", res)) == "2HD1"
+    @test spaceatomname(Atom(1, "HH11", ' ', [0.0, 0.0, 0.0], 1.0, 0.0, " H", "  ", res)) == "HH11"
+    @test spaceatomname(Atom(1, "1H",   ' ', [0.0, 0.0, 0.0], 1.0, 0.0, " H", "  ", res)) == "1H  "
+    @test spaceatomname(Atom(1, "MG",   ' ', [0.0, 0.0, 0.0], 1.0, 0.0, "MG", "  ", res)) == "MG  "
+    @test spaceatomname(Atom(1, "MG",   ' ', [0.0, 0.0, 0.0], 1.0, 0.0, "  ", "  ", res)) == " MG "
+    @test_throws ArgumentError spaceatomname(Atom(1, "11H",   ' ', [0.0, 0.0, 0.0], 1.0, 0.0, " H", "  ", res))
+    @test_throws ArgumentError spaceatomname(Atom(1, "11H11", ' ', [0.0, 0.0, 0.0], 1.0, 0.0, " H", "  ", res))
+    @test_throws ArgumentError spaceatomname(Atom(1, "1MG",   ' ', [0.0, 0.0, 0.0], 1.0, 0.0, "MG", "  ", res))
 
 
     # Test pdbline
@@ -1177,7 +1175,7 @@ end
     ch_b["H_20"]["C"] = Atom(101, "C", 'A', [10.5, 20.12345, -5.1227], 0.50, 50.126, "C", "1+", ch_b["H_20"])
     line = join(pdbline(ch_b["H_20"]["C"]))
     @test line == "HETATM  101  C  A  X B  20        10.5  20.123  -5.123   0.5 50.13           C1+"
-    ch_b["H_20"]["11H11"] = Atom(1, "11H11", ' ', [0.0, 0.0, 0.0], 1.0, 0.0, " H", "  ")
+    ch_b["H_20"]["11H11"] = Atom(1, "11H11", ' ', [0.0, 0.0, 0.0], 1.0, 0.0, " H", "  ", ch_b["H_20"])
     @test_throws ArgumentError pdbline(ch_b["H_20"]["11H11"])
 
 
@@ -1326,7 +1324,7 @@ end
     @test countatoms(struc_written['A'][16]) == 11
 
     @test_throws ArgumentError writepdb(temp_filename, Atom(
-        1, "11H11", ' ', [0.0, 0.0, 0.0], 1.0, 0.0, " H", "  "))
+        1, "11H11", ' ', [0.0, 0.0, 0.0], 1.0, 0.0, " H", "  ", res))
 
     # Delete temporary file
     rm(temp_filename)
@@ -1335,7 +1333,8 @@ end
 
 @testset "Spatial" begin
     # Test coordarray
-    at = Atom(100, "CA", ' ', [1.0, 2.0, 3.0], 1.0, 10.0, " C", "  ")
+    res = Residue("ALA", 1, ' ', false, Chain('A'))
+    at = Atom(100, "CA", ' ', [1.0, 2.0, 3.0], 1.0, 10.0, " C", "  ", res)
     cs = coordarray(at)
     @test size(cs) == (3,1)
     @test cs[1] == 1.0
@@ -1422,8 +1421,8 @@ end
 
 
     # Test sqdistance and distance
-    at_a = Atom(100, "CA", ' ', [1.0, 2.0, 3.0], 1.0, 10.0, " C", "  ")
-    at_b = Atom(110, "CA", ' ', [0.0, -1.0, 3.0], 1.0, 10.0, " C", "  ")
+    at_a = Atom(100, "CA", ' ', [1.0, 2.0, 3.0], 1.0, 10.0, " C", "  ", res)
+    at_b = Atom(110, "CA", ' ', [0.0, -1.0, 3.0], 1.0, 10.0, " C", "  ", res)
     @test sqdistance(at_a, at_b) == 10.0
     @test isapprox(distance(at_a, at_b), sqrt(10))
 
@@ -1436,9 +1435,9 @@ end
 
 
     # Test bondangle
-    at_a = Atom(100, "CA", ' ', [1.0, 0.0, 1.0], 1.0, 10.0, " C", "  ")
-    at_b = Atom(100, "CA", ' ', [0.0, 0.0, 0.0], 1.0, 10.0, " C", "  ")
-    at_c = Atom(100, "CA", ' ', [3.0, 2.0, 1.0], 1.0, 10.0, " C", "  ")
+    at_a = Atom(100, "CA", ' ', [1.0, 0.0, 1.0], 1.0, 10.0, " C", "  ", res)
+    at_b = Atom(100, "CA", ' ', [0.0, 0.0, 0.0], 1.0, 10.0, " C", "  ", res)
+    at_c = Atom(100, "CA", ' ', [3.0, 2.0, 1.0], 1.0, 10.0, " C", "  ", res)
     @test isapprox(bondangle(at_a, at_b, at_c), 0.713724378944765)
     vec_a = [2.0, 0.0, 0.0]
     vec_b = [2.0, 1.0, 1.0]
@@ -1446,10 +1445,10 @@ end
 
 
     # Test dihedralangle
-    at_a = Atom(100, "CA", ' ', [-1.0, -1.0, 0.0], 1.0, 10.0, " C", "  ")
-    at_b = Atom(100, "CA", ' ', [0.0, 0.0, 0.0], 1.0, 10.0, " C", "  ")
-    at_c = Atom(100, "CA", ' ', [1.0, 0.0, 0.0], 1.0, 10.0, " C", "  ")
-    at_d = Atom(100, "CA", ' ', [2.0, 1.0, -1.0], 1.0, 10.0, " C", "  ")
+    at_a = Atom(100, "CA", ' ', [-1.0, -1.0, 0.0], 1.0, 10.0, " C", "  ", res)
+    at_b = Atom(100, "CA", ' ', [0.0, 0.0, 0.0], 1.0, 10.0, " C", "  ", res)
+    at_c = Atom(100, "CA", ' ', [1.0, 0.0, 0.0], 1.0, 10.0, " C", "  ", res)
+    at_d = Atom(100, "CA", ' ', [2.0, 1.0, -1.0], 1.0, 10.0, " C", "  ", res)
     @test isapprox(dihedralangle(at_a, at_b, at_c, at_d), 2.356194490192345)
     vec_a = [1.0, 1.0, 0.0]
     vec_b = [1.0, 0.0, 0.0]
@@ -1459,9 +1458,9 @@ end
     @test isapprox(omegaangle(struc_1AKE['A'][20], struc_1AKE['A'][19]), -3.091913621551854, atol=1e-5)
     @test isapprox(phiangle(struc_1AKE['A'][7], struc_1AKE['A'][6]), 2.851151641716221, atol=1e-5)
     @test isapprox(psiangle(struc_1AKE['A'][8], struc_1AKE['A'][9]), 2.838265381719911, atol=1e-5)
-    @test_throws ArgumentError omegaangle(struc_1AKE['A'][20], Residue("ALA", 19, ' ', false))
-    @test_throws ArgumentError phiangle(struc_1AKE['A'][7], Residue("ALA", 6, ' ', false))
-    @test_throws ArgumentError psiangle(struc_1AKE['A'][8], Residue("ALA", 9, ' ', false))
+    @test_throws ArgumentError omegaangle(struc_1AKE['A'][20], Residue("ALA", 19, ' ', false, Chain('A')))
+    @test_throws ArgumentError phiangle(struc_1AKE['A'][7], Residue("ALA", 6, ' ', false, Chain('A')))
+    @test_throws ArgumentError psiangle(struc_1AKE['A'][8], Residue("ALA", 9, ' ', false, Chain('A')))
 
     phis, psis = ramachandranangles(struc_1AKE['A'])
     @test size(phis) == (456,)
