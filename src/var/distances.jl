@@ -133,6 +133,18 @@ function distance{T<:MutationType,A<:NucleotideAlphabet}(::Type{Count{T}}, seqs:
     return count_mutations(T, seqs)
 end
 
+"""
+    distance{T<:MutationType,A<:NucleotideAlphabet}(::Type{Proportion{T}}, seqs::Vector{BioSequence{A}}, width::Int, step::Int)
+
+A distance method which computes pairwise distances using a sliding window.
+
+As the window of `width` base pairs in size moves across a pair of sequences it
+computes the distance between the two sequences in that window.
+
+This method computes mutation counts for every window, and returns a tuple of the
+matrix of p-distances for every window, a matrix of the number of valid sites
+counted by the function for each window.
+"""
 function distance{T<:MutationType,A<:NucleotideAlphabet}(::Type{Count{T}}, seqs::Vector{BioSequence{A}}, width::Int, step::Int)
     mutationFlags, ambiguousFlags = flagmutations(T, seqs)
     nbases, npairs = size(mutationFlags)
@@ -308,6 +320,18 @@ function distance{A<:NucleotideAlphabet}(::Type{JukesCantor69}, seqs::Vector{Bio
     return D, V
 end
 
+"""
+    distance{T<:MutationType,A<:NucleotideAlphabet}(::Type{JukesCantor69}, seqs::Vector{BioSequence{A}}, width::Int, step::Int)
+
+A distance method which computes pairwise distances using a sliding window.
+
+As the window of `width` base pairs in size moves across a pair of sequences it
+computes the distance between the two sequences in that window.
+
+This method computes the JukesCantor69 distance for every window, and returns a tuple of the
+matrix of p-distances for every window, a matrix of the number of valid sites
+counted by the function for each window.
+"""
 function distance{A<:NucleotideAlphabet}(::Type{JukesCantor69}, seqs::Vector{BioSequence{A}}, width::Int, step::Int)
     ps, wsizes, ranges = distance(Proportion{AnyMutation}, seqs, width, step)
     a, b = size(ps)
@@ -366,6 +390,18 @@ function distance{A<:NucleotideAlphabet}(::Type{Kimura80}, seqs::Vector{BioSeque
     return D, V
 end
 
+"""
+    distance{T<:MutationType,A<:NucleotideAlphabet}(::Type{Kimura80}, seqs::Vector{BioSequence{A}}, width::Int, step::Int)
+
+A distance method which computes pairwise distances using a sliding window.
+
+As the window of `width` base pairs in size moves across a pair of sequences it
+computes the distance between the two sequences in that window.
+
+This method computes the Kimura80 distance for every window, and returns a tuple of the
+matrix of p-distances for every window, a matrix of the number of valid sites
+counted by the function for each window.
+"""
 function distance{A<:NucleotideAlphabet}(::Type{Kimura80}, seqs::Vector{BioSequence{A}}, width::Int, step::Int)
     tss, tvs, wsizes, ranges = distance(Count{Kimura80}, seqs, width, step)
     a, b = size(tss)
