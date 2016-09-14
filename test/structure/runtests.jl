@@ -85,8 +85,6 @@ end
     show(DevNull, mod)
     show(DevNull, struc)
 
-    showcompact(DevNull, at)
-
 
     # Test getters/setters
     @test serial(at) == 100
@@ -611,36 +609,35 @@ end
     line_c = "ATOM    669  CA  ILE A  90      xxxxxx  33.110  31.221  1.00 25.76           C  "
     line_d = "ATOM    669  CA  ILE A  90      31.743   "
     line_e = "REMARK   1 REFERENCE 1                                                          "
-    at = AtomRecord(line_a, 10)
-    show(DevNull, at)
-    showcompact(DevNull, at)
-    @test !at.het_atom
-    @test at.serial == 669
-    @test at.atom_name == " CA "
-    @test at.alt_loc_id == ' '
-    @test at.res_name == "ILE"
-    @test at.chain_id == 'A'
-    @test at.res_number == 90
-    @test at.ins_code == ' '
-    @test at.coords == [31.743, 33.110, 31.221]
-    @test at.occupancy == 1.00
-    @test at.temp_fac == 25.76
-    @test at.element == " C"
-    @test at.charge == "  "
-    at = AtomRecord(line_b)
-    @test at.het_atom
-    @test at.serial == 3474
-    @test at.atom_name == " O  "
-    @test at.alt_loc_id == 'B'
-    @test at.res_name == " XX"
-    @test at.chain_id == 'A'
-    @test at.res_number == 334
-    @test at.ins_code == 'A'
-    @test at.coords == [8.802, 62.0, 8.672]
-    @test at.occupancy == 1.00
-    @test at.temp_fac == 39.15
-    @test at.element == " O"
-    @test at.charge == "1-"
+    at_rec = AtomRecord(line_a, 10)
+    show(DevNull, at_rec)
+    @test !at_rec.het_atom
+    @test at_rec.serial == 669
+    @test at_rec.atom_name == " CA "
+    @test at_rec.alt_loc_id == ' '
+    @test at_rec.res_name == "ILE"
+    @test at_rec.chain_id == 'A'
+    @test at_rec.res_number == 90
+    @test at_rec.ins_code == ' '
+    @test at_rec.coords == [31.743, 33.110, 31.221]
+    @test at_rec.occupancy == 1.00
+    @test at_rec.temp_fac == 25.76
+    @test at_rec.element == " C"
+    @test at_rec.charge == "  "
+    at_rec = AtomRecord(line_b)
+    @test at_rec.het_atom
+    @test at_rec.serial == 3474
+    @test at_rec.atom_name == " O  "
+    @test at_rec.alt_loc_id == 'B'
+    @test at_rec.res_name == " XX"
+    @test at_rec.chain_id == 'A'
+    @test at_rec.res_number == 334
+    @test at_rec.ins_code == 'A'
+    @test at_rec.coords == [8.802, 62.0, 8.672]
+    @test at_rec.occupancy == 1.00
+    @test at_rec.temp_fac == 39.15
+    @test at_rec.element == " O"
+    @test at_rec.charge == "1-"
     @test_throws PDBParseError AtomRecord(line_c)
     @test_throws PDBParseError AtomRecord(line_d)
 
@@ -1177,6 +1174,13 @@ end
     @test line == "HETATM  101  C  A  X B  20        10.5  20.123  -5.123   0.5 50.13           C1+"
     ch_b["H_20"]["11H11"] = Atom(1, "11H11", ' ', [0.0, 0.0, 0.0], 1.0, 0.0, " H", "  ", ch_b["H_20"])
     @test_throws ArgumentError pdbline(ch_b["H_20"]["11H11"])
+
+    line_a = "ATOM    669  CA  ILE A  90      31.743  33.110  31.221  1.00 25.76           C  "
+    line_b = "HETATM 3474  O  B XX A 334A      8.802  62.000   8.672  1.00 39.15           O1-"
+    at_rec = AtomRecord(line_a)
+    @test join(pdbline(at_rec)) == "ATOM    669  CA  ILE A  90      31.743   33.11  31.221   1.0 25.76           C  "
+    at_rec = AtomRecord(line_b)
+    @test join(pdbline(at_rec)) == "HETATM 3474  O  B XX A 334A      8.802    62.0   8.672   1.0 39.15           O1-"
 
 
     # Test writepdb

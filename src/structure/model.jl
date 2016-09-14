@@ -1285,8 +1285,8 @@ function unsafe_addatomtomodel!(mod::Model,
                         atom_rec.alt_loc_id)
         end
     else
-        error("Two copies of the same atom have the same alternative location ID:\n" *
-              "$(res[atom_rec.atom_name])$(atom_rec)")
+        error("Two copies of the same atom have the same alternative location ID. Existing atom:\n" *
+              "$(res[atom_rec.atom_name])\nNew atom record to add:\n$(atom_rec)")
     end
 end
 
@@ -1516,6 +1516,7 @@ end
 # Descriptive showing of elements
 
 function Base.show(io::IO, struc::ProteinStructure)
+    println(io, summary(struc))
     if countmodels(struc) > 0
         mod = defaultmodel(struc)
         println(io, "Name                        -  ", structurename(struc))
@@ -1527,14 +1528,15 @@ function Base.show(io::IO, struc::ProteinStructure)
         println(io, "Number of water molecules   -  ", countresidues(mod, hetresselector, waterselector))
         println(io, "Number of atoms             -  ", countatoms(mod, stdatomselector))
         println(io, "Number of hydrogens         -  ", countatoms(mod, stdatomselector, hydrogenselector))
-        println(io, "Number of disordered atoms  -  ", countatoms(mod, stdatomselector, disorderselector))
+          print(io, "Number of disordered atoms  -  ", countatoms(mod, stdatomselector, disorderselector))
     else
         println(io, "Name                        -  ", structurename(struc))
-        println(io, "Number of models            -  0")
+          print(io, "Number of models            -  0")
     end
 end
 
 function Base.show(io::IO, mod::Model)
+    println(io, summary(mod))
     println(io, "Model number                -  ", modelnumber(mod))
     println(io, "Chain(s)                    -  ", join(chainids(mod)))
     println(io, "Number of residues          -  ", countresidues(mod, stdresselector))
@@ -1543,10 +1545,11 @@ function Base.show(io::IO, mod::Model)
     println(io, "Number of water molecules   -  ", countresidues(mod, hetresselector, waterselector))
     println(io, "Number of atoms             -  ", countatoms(mod, stdatomselector))
     println(io, "Number of hydrogens         -  ", countatoms(mod, stdatomselector, hydrogenselector))
-    println(io, "Number of disordered atoms  -  ", countatoms(mod, stdatomselector, disorderselector))
+      print(io, "Number of disordered atoms  -  ", countatoms(mod, stdatomselector, disorderselector))
 end
 
 function Base.show(io::IO, ch::Chain)
+    println(io, summary(ch))
     println(io, "Chain ID                    -  ", chainid(ch))
     println(io, "Number of residues          -  ", countresidues(ch, stdresselector))
     println(io, "Number of point mutations   -  ", countresidues(ch, stdresselector, disorderselector))
@@ -1554,37 +1557,83 @@ function Base.show(io::IO, ch::Chain)
     println(io, "Number of water molecules   -  ", countresidues(ch, hetresselector, waterselector))
     println(io, "Number of atoms             -  ", countatoms(ch, stdatomselector))
     println(io, "Number of hydrogens         -  ", countatoms(ch, stdatomselector, hydrogenselector))
-    println(io, "Number of disordered atoms  -  ", countatoms(ch, stdatomselector, disorderselector))
+      print(io, "Number of disordered atoms  -  ", countatoms(ch, stdatomselector, disorderselector))
 end
 
 function Base.show(io::IO, res::Residue)
+    println(io, summary(res))
     println(io, "Residue ID                  -  ", resid(res, full=true))
     println(io, "Residue name                -  ", resname(res))
     println(io, "Number of atoms             -  ", countatoms(res))
     println(io, "Number of hydrogens         -  ", countatoms(res, hydrogenselector))
-    println(io, "Number of disordered atoms  -  ", countatoms(res, disorderselector))
+      print(io, "Number of disordered atoms  -  ", countatoms(res, disorderselector))
 end
 
 function Base.show(io::IO, dis_res::DisorderedResidue)
+    println(io, summary(dis_res))
     println(io, "Residue ID                  -  ", resid(dis_res, full=true))
-    for res_name in resnames(dis_res)
+    for res_name in resnames(dis_res)[1:end-1]
         println(io, "Residue name                -  ", res_name)
         println(io, "Number of atoms             -  ", countatoms(disorderedres(dis_res, res_name)))
         println(io, "Number of hydrogens         -  ", countatoms(disorderedres(dis_res, res_name), hydrogenselector))
         println(io, "Number of disordered atoms  -  ", countatoms(disorderedres(dis_res, res_name), disorderselector))
     end
+    res_name = resnames(dis_res)[end]
+    println(io, "Residue name                -  ", res_name)
+    println(io, "Number of atoms             -  ", countatoms(disorderedres(dis_res, res_name)))
+    println(io, "Number of hydrogens         -  ", countatoms(disorderedres(dis_res, res_name), hydrogenselector))
+      print(io, "Number of disordered atoms  -  ", countatoms(disorderedres(dis_res, res_name), disorderselector))
 end
 
-Base.show(io::IO, at::Atom) = println(io, pdbline(at)...)
-
-Base.showcompact(io::IO, at::Atom) = print(io, pdbline(at)...)
+function Base.show(io::IO, at::Atom)
+    println(io, summary(at))
+    println(io, "Serial                   -  ", serial(at))
+    println(io, "Atom name                -  ", atomname(at))
+    println(io, "Residue ID               -  ", resid(at, full=true))
+    println(io, "Alternative location ID  -  ", altlocid(at))
+    println(io, "Coordinates              -  ", coords(at))
+    println(io, "Occupancy                -  ", occupancy(at))
+    println(io, "Temperature factor       -  ", tempfac(at))
+    println(io, "Element                  -  ", element(at))
+      print(io, "Charge                   -  ", charge(at))
+end
 
 function Base.show(io::IO, dis_at::DisorderedAtom)
-    for at in dis_at
-        show(io, at)
+    println(io, summary(dis_at))
+    println(io, "Atom name                -  ", atomname(dis_at))
+    println(io, "Residue ID               -  ", resid(dis_at, full=true))
+    for at in collect(dis_at)[1:end-1]
+        println(io, "Alternative location ID  -  ", altlocid(at))
+        println(io, "Serial                   -  ", serial(at))
+        println(io, "Coordinates              -  ", coords(at))
+        println(io, "Occupancy                -  ", occupancy(at))
+        println(io, "Temperature factor       -  ", tempfac(at))
+        println(io, "Element                  -  ", element(at))
+        println(io, "Charge                   -  ", charge(at))
     end
+    at = collect(dis_at)[end]
+    println(io, "Alternative location ID  -  ", altlocid(at))
+    println(io, "Serial                   -  ", serial(at))
+    println(io, "Coordinates              -  ", coords(at))
+    println(io, "Occupancy                -  ", occupancy(at))
+    println(io, "Temperature factor       -  ", tempfac(at))
+    println(io, "Element                  -  ", element(at))
+      print(io, "Charge                   -  ", charge(at))
 end
 
-Base.show(io::IO, at_rec::AtomRecord) = println(io, pdbline(at_rec)...)
-
-Base.showcompact(io::IO, at_rec::AtomRecord) = print(io, pdbline(at_rec)...)
+function Base.show(io::IO, at_rec::AtomRecord)
+    println(io, summary(at_rec))
+    println(io, "Hetero atom              -  ", at_rec.het_atom)
+    println(io, "Serial                   -  ", at_rec.serial)
+    println(io, "Atom name                -  ", strip(at_rec.atom_name))
+    println(io, "Alternative location ID  -  ", at_rec.alt_loc_id)
+    println(io, "Residue name             -  ", strip(at_rec.res_name))
+    println(io, "Chain ID                 -  ", at_rec.chain_id)
+    println(io, "Residue number           -  ", at_rec.res_number)
+    println(io, "Insertion code           -  ", at_rec.ins_code)
+    println(io, "Coordinates              -  ", at_rec.coords)
+    println(io, "Occupancy                -  ", at_rec.occupancy)
+    println(io, "Temperature factor       -  ", at_rec.temp_fac)
+    println(io, "Element                  -  ", strip(at_rec.element))
+      print(io, "Charge                   -  ", strip(at_rec.charge))
+end
