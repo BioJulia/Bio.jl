@@ -77,19 +77,19 @@ end
     d = distance(Proportion{AnyMutation}, dnas2, 5, 5)
     a = [0.4, 0.8, 1.0, 0.6]
     for i in 1:length(d[1])
-        @test isapprox(d[1][i], a[i])
+        @test_approx_eq_eps d[1][i] a[i] 1e-4
     end
     @test d[2][:] == [5, 5, 3, 5]
     d = distance(Proportion{TransitionMutation}, dnas2, 5, 5)
     a = [0.0, 0.4, 0.333333, 0.2]
     for i in 1:length(d[1])
-        @test isapprox(d[1][i], a[i])
+        @test_approx_eq_eps d[1][i] a[i] 1e-4
     end
     @test d[2][:] == [5, 5, 3, 5]
     d = distance(Proportion{TransversionMutation}, dnas2, 5, 5)
     a = [0.4, 0.4, 0.666667, 0.4]
     for i in 1:length(d[1])
-        @test isapprox(d[1][i], a[i])
+        @test_approx_eq_eps d[1][i] a[i] 1e-4
     end
     @test d[2][:] == [5, 5, 3, 5]
 
