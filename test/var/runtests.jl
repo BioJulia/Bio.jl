@@ -76,9 +76,9 @@ end
 
     @test distance(Proportion{AnyMutation}, dnas2, 5, 5)[1][:] == [0.4, 0.8, 1.0, 0.6]
     @test distance(Proportion{AnyMutation}, dnas2, 5, 5)[2][:] == [5, 5, 3, 5]
-    @test distance(Proportion{TransitionMutation}, dnas2, 5, 5)[1][:] == [0.0, 0.4, 0.333, 0.2]
+    @test distance(Proportion{TransitionMutation}, dnas2, 5, 5)[1][:] == [0.0, 0.4, 0.333333, 0.2]
     @test distance(Proportion{TransitionMutation}, dnas2, 5, 5)[2][:] == [5, 5, 3, 5]
-    @test distance(Proportion{TransversionMutation}, dnas2, 5, 5)[1][:] == [0.4, 0.4, 0.666, 0.4]
+    @test distance(Proportion{TransversionMutation}, dnas2, 5, 5)[1][:] == [0.4, 0.4, 0.666667, 0.4]
     @test distance(Proportion{TransversionMutation}, dnas2, 5, 5)[2][:] == [5, 5, 3, 5]
 
     @test distance(Proportion{AnyMutation}, dnas1) == ([(12 / 16)], [16])
