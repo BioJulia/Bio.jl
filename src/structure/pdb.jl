@@ -38,7 +38,9 @@ function downloadpdb(pdbid::AbstractString,
                     out_filepath::AbstractString="$pdbid.pdb";
                     ba_number::Integer=0)
     # Check PDB ID is 4 characters long and only consits of alphanumeric characters
-    @assert length(pdbid) == 4 && !ismatch(r"[^a-zA-Z0-9]", pdbid) "Not a valid PDB ID: \"$pdbid\""
+    if length(pdbid) != 4 || ismatch(r"[^a-zA-Z0-9]", pdbid)
+        throw(ArgumentError("Not a valid PDB ID: \"$pdbid\""))
+    end
     if ba_number == 0
         download("http://www.rcsb.org/pdb/files/$pdbid.pdb", out_filepath)
     else
@@ -186,7 +188,9 @@ Throws an error if the value is too long.
 """
 function spacestring(val_in, new_length::Integer)
     string_out = string(val_in)
-    @assert length(string_out) <= new_length "Cannot fit value \"$string_out\" into $new_length space(s)"
+    if length(string_out) > new_length
+        throw(ArgumentError("Cannot fit value \"$string_out\" into $new_length space(s)"))
+    end
     return lpad(string_out, new_length)
 end
 
@@ -205,7 +209,9 @@ function spaceatomname(at::Atom)
         return at_name
     end
     strip_el = element(at, strip=true)
-    @assert chars <= 4 "Atom name is greater than four characters: \"$at_name\""
+    if chars > 4
+        throw(ArgumentError("Atom name is greater than four characters: \"$at_name\""))
+    end
     # In the absence of the element, the first index goes in column two
     if strip_el == "" || findfirst(at_name, strip_el[1]) == 0
         cent_ind = 1
@@ -213,7 +219,9 @@ function spaceatomname(at::Atom)
     else
         cent_ind = findfirst(at_name, strip_el[1]) + length(strip_el) - 1
     end
-    @assert cent_ind <= 2 "Atom name is too long to space correctly: \"$at_name\""
+    if cent_ind > 2
+        throw(ArgumentError("Atom name is too long to space correctly: \"$at_name\""))
+    end
     if cent_ind == 1 && chars < 4
         out_string = " $at_name"
     else

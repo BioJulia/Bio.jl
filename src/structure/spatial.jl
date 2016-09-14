@@ -42,7 +42,9 @@ Additional arguments are atom selector functions - only atoms that return
 `true` from the functions are retained.
 """
 function rmsd(coords_one::Array{Float64}, coords_two::Array{Float64})
-    @assert size(coords_one) == size(coords_two) "Sizes of coordinate arrays are different - cannot calculate RMSD"
+    if size(coords_one) != size(coords_two)
+        throw(ArgumentError("Sizes of coordinate arrays are different - cannot calculate RMSD"))
+    end
     diff = coords_one - coords_two
     return sqrt(sum(diff .* diff) / size(coords_one, 2))
 end
@@ -64,7 +66,9 @@ Additional arguments are atom selector functions - only atoms that return
 `true` from the functions are retained.
 """
 function displacements(coords_one::Array{Float64}, coords_two::Array{Float64})
-    @assert size(coords_one) == size(coords_two) "Sizes of coordinate arrays are different - cannot calculate displacements"
+    if size(coords_one) != size(coords_two)
+        throw(ArgumentError("Sizes of coordinate arrays are different - cannot calculate displacements"))
+    end
     diff = coords_one - coords_two
     return sqrt(sum(diff .* diff, 1))[:]
 end
@@ -170,10 +174,10 @@ residue (atoms "N" and "CA" required) and the previous residue (atoms "CA" and
 "C" required).
 """
 function omegaangle(res::AbstractResidue, res_prev::AbstractResidue)
-    @assert "CA" in atomnames(res_prev) "Atom with atom name \"CA\" not found in previous residue"
-    @assert "C" in atomnames(res_prev) "Atom with atom name \"C\" not found in previous residue"
-    @assert "N" in atomnames(res) "Atom with atom name \"N\" not found in residue"
-    @assert "CA" in atomnames(res) "Atom with atom name \"CA\" not found in residue"
+    "CA" in atomnames(res_prev) ? nothing : throw(ArgumentError("Atom with atom name \"CA\" not found in previous residue"))
+    "C"  in atomnames(res_prev) ? nothing : throw(ArgumentError("Atom with atom name \"C\" not found in previous residue"))
+    "N"  in atomnames(res)      ? nothing : throw(ArgumentError("Atom with atom name \"N\" not found in residue"))
+    "CA" in atomnames(res)      ? nothing : throw(ArgumentError("Atom with atom name \"CA\" not found in residue"))
     return dihedralangle(res_prev["CA"], res_prev["C"], res["N"], res["CA"])
 end
 
@@ -183,10 +187,10 @@ residue (atoms "N", "CA" and "C" required) and the previous residue (atom "C"
 required).
 """
 function phiangle(res::AbstractResidue, res_prev::AbstractResidue)
-    @assert "C" in atomnames(res_prev) "Atom with atom name \"C\" not found in previous residue"
-    @assert "N" in atomnames(res) "Atom with atom name \"N\" not found in residue"
-    @assert "CA" in atomnames(res) "Atom with atom name \"CA\" not found in residue"
-    @assert "C" in atomnames(res) "Atom with atom name \"C\" not found in residue"
+    "C"  in atomnames(res_prev) ? nothing : throw(ArgumentError("Atom with atom name \"C\" not found in previous residue"))
+    "N"  in atomnames(res)      ? nothing : throw(ArgumentError("Atom with atom name \"N\" not found in residue"))
+    "CA" in atomnames(res)      ? nothing : throw(ArgumentError("Atom with atom name \"CA\" not found in residue"))
+    "C"  in atomnames(res)      ? nothing : throw(ArgumentError("Atom with atom name \"C\" not found in residue"))
     return dihedralangle(res_prev["C"], res["N"], res["CA"], res["C"])
 end
 
@@ -196,10 +200,10 @@ residue (atoms "N", "CA" and "C" required) and the next residue (atom "N"
 required).
 """
 function psiangle(res::AbstractResidue, res_next::AbstractResidue)
-    @assert "N" in atomnames(res) "Atom with atom name \"N\" not found in residue"
-    @assert "CA" in atomnames(res) "Atom with atom name \"CA\" not found in residue"
-    @assert "C" in atomnames(res) "Atom with atom name \"C\" not found in residue"
-    @assert "N" in atomnames(res_next) "Atom with atom name \"N\" not found in next residue"
+    "N"  in atomnames(res)      ? nothing : throw(ArgumentError("Atom with atom name \"N\" not found in residue"))
+    "CA" in atomnames(res)      ? nothing : throw(ArgumentError("Atom with atom name \"CA\" not found in residue"))
+    "C"  in atomnames(res)      ? nothing : throw(ArgumentError("Atom with atom name \"C\" not found in residue"))
+    "N"  in atomnames(res_next) ? nothing : throw(ArgumentError("Atom with atom name \"N\" not found in next residue"))
     return dihedralangle(res["N"], res["CA"], res["C"], res_next["N"])
 end
 
@@ -214,7 +218,9 @@ Additional arguments are residue selector functions - only residues that return
 function ramachandranangles(el::StructuralElementOrList,
                     residue_selectors::Function...)
     res_list = collectresidues(el, residue_selectors...)
-    @assert length(res_list) > 1 "Multiple residues required to calculate Ramachandran angles"
+    if length(res_list) < 2
+        throw(ArgumentError("Multiple residues required to calculate Ramachandran angles"))
+    end
     phi_angles = Union{Float64, Void}[nothing] # First res has no previous res
     psi_angles = Union{Float64, Void}[]
     # Phi angles
@@ -226,7 +232,7 @@ function ramachandranangles(el::StructuralElementOrList,
                 phi_angle = phiangle(res, res_prev)
                 push!(phi_angles, phi_angle)
             catch ex
-                isa(ex, AssertionError) || rethrow()
+                isa(ex, ArgumentError) || rethrow()
                 push!(phi_angles, nothing)
             end
         else
@@ -242,7 +248,7 @@ function ramachandranangles(el::StructuralElementOrList,
                 psi_angle = psiangle(res, res_next)
                 push!(psi_angles, psi_angle)
             catch ex
-                isa(ex, AssertionError) || rethrow()
+                isa(ex, ArgumentError) || rethrow()
                 push!(psi_angles, nothing)
             end
         else

@@ -459,7 +459,9 @@ Set the coordinates of an `AbstractAtom` to a `Vector{Float64}` of length 3. For
 `DisorderedAtom`s only the default atom is updated.
 """
 function coords!(at::Atom, new_coords::Vector{Float64})
-    @assert length(new_coords) == 3 "3 coordinates must be given"
+    if length(new_coords) != 3
+        throw(ArgumentError("3 coordinates must be given"))
+    end
     x!(at, new_coords[1])
     y!(at, new_coords[2])
     z!(at, new_coords[3])
@@ -542,7 +544,9 @@ defaultaltlocid(dis_at::DisorderedAtom) = dis_at.default
 
 # Constructor acts as a setter for the default alt loc ID
 function DisorderedAtom(dis_at::DisorderedAtom, default::Char)
-    @assert default in altlocids(dis_at) "The new default alternative location ID must be present in the atom"
+    if !(default in altlocids(dis_at))
+        throw(ArgumentError("The new default alternative location ID must be present in the atom"))
+    end
     return DisorderedAtom(dis_at.alt_loc_ids, default)
 end
 
@@ -744,7 +748,9 @@ resnames(res::Residue) = [resname(res, strip=false)]
 
 # Constructor acts as a setter for the default residue name
 function DisorderedResidue(dis_res::DisorderedResidue, default::AbstractString)
-    @assert default in resnames(dis_res) "The new default residue name must be present in the residue"
+    if !(default in resnames(dis_res))
+        throw(ArgumentError("The new default residue name must be present in the residue"))
+    end
     return DisorderedResidue(dis_res.names, default)
 end
 

@@ -138,6 +138,7 @@ end
     coords!(dis_at, [40.0, 50.0, 60.0])
     @test coords(dis_at) == [40.0, 50.0, 60.0]
     @test coords(dis_at['B']) == [11.0, 21.0, 31.0]
+    @test_throws ArgumentError coords!(at, [40.0, 50.0, 60.0, 70.0])
     x!(dis_at['A'], 100.0)
     @test coords(dis_at) == [100.0, 50.0, 60.0]
     @test coords(dis_at['B']) == [11.0, 21.0, 31.0]
@@ -177,7 +178,7 @@ end
     dis_at_mod = DisorderedAtom(dis_at, 'B')
     @test defaultaltlocid(dis_at_mod) == 'B'
     @test serial(dis_at_mod) == 201
-    @test_throws AssertionError DisorderedAtom(dis_at, 'C')
+    @test_throws ArgumentError DisorderedAtom(dis_at, 'C')
 
     @test isa(defaultatom(dis_at), Atom)
     @test serial(defaultatom(dis_at)) == 200
@@ -250,7 +251,7 @@ end
     dis_res_mod = DisorderedResidue(dis_res, "ILE")
     @test defaultresname(dis_res_mod) == "ILE"
     @test atomnames(dis_res_mod) == ["O"]
-    @test_throws AssertionError DisorderedResidue(dis_res, "SER")
+    @test_throws ArgumentError DisorderedResidue(dis_res, "SER")
 
     @test chain(at) == ch
     @test chain(dis_at) == ch
@@ -1145,8 +1146,8 @@ end
     @test spacestring(1.5, 5) == "  1.5"
     @test spacestring("A", 3) == "  A"
     @test spacestring('A', 3) == "  A"
-    @test_throws AssertionError spacestring(1.456789, 5)
-    @test_throws AssertionError spacestring("ABCDEF", 3)
+    @test_throws ArgumentError spacestring(1.456789, 5)
+    @test_throws ArgumentError spacestring("ABCDEF", 3)
 
 
     # Test spaceatomname
@@ -1160,9 +1161,9 @@ end
     @test spaceatomname(Atom(1, "1H",   ' ', [0.0, 0.0, 0.0], 1.0, 0.0, " H", "  ")) == "1H  "
     @test spaceatomname(Atom(1, "MG",   ' ', [0.0, 0.0, 0.0], 1.0, 0.0, "MG", "  ")) == "MG  "
     @test spaceatomname(Atom(1, "MG",   ' ', [0.0, 0.0, 0.0], 1.0, 0.0, "  ", "  ")) == " MG "
-    @test_throws AssertionError spaceatomname(Atom(1, "11H",   ' ', [0.0, 0.0, 0.0], 1.0, 0.0, " H", "  "))
-    @test_throws AssertionError spaceatomname(Atom(1, "11H11", ' ', [0.0, 0.0, 0.0], 1.0, 0.0, " H", "  "))
-    @test_throws AssertionError spaceatomname(Atom(1, "1MG",   ' ', [0.0, 0.0, 0.0], 1.0, 0.0, "MG", "  "))
+    @test_throws ArgumentError spaceatomname(Atom(1, "11H",   ' ', [0.0, 0.0, 0.0], 1.0, 0.0, " H", "  "))
+    @test_throws ArgumentError spaceatomname(Atom(1, "11H11", ' ', [0.0, 0.0, 0.0], 1.0, 0.0, " H", "  "))
+    @test_throws ArgumentError spaceatomname(Atom(1, "1MG",   ' ', [0.0, 0.0, 0.0], 1.0, 0.0, "MG", "  "))
 
 
     # Test pdbline
@@ -1177,7 +1178,7 @@ end
     line = join(pdbline(ch_b["H_20"]["C"]))
     @test line == "HETATM  101  C  A  X B  20        10.5  20.123  -5.123   0.5 50.13           C1+"
     ch_b["H_20"]["11H11"] = Atom(1, "11H11", ' ', [0.0, 0.0, 0.0], 1.0, 0.0, " H", "  ")
-    @test_throws AssertionError pdbline(ch_b["H_20"]["11H11"])
+    @test_throws ArgumentError pdbline(ch_b["H_20"]["11H11"])
 
 
     # Test writepdb
@@ -1324,7 +1325,7 @@ end
     @test countatoms(struc_written['A'][10]) == 6
     @test countatoms(struc_written['A'][16]) == 11
 
-    @test_throws AssertionError writepdb(temp_filename, Atom(
+    @test_throws ArgumentError writepdb(temp_filename, Atom(
         1, "11H11", ' ', [0.0, 0.0, 0.0], 1.0, 0.0, " H", "  "))
 
     # Delete temporary file
@@ -1378,12 +1379,12 @@ end
         2.0 0.0
         1.0 3.0
     ]
-    @test_throws AssertionError rmsd(cs_one, cs_two)
+    @test_throws ArgumentError rmsd(cs_one, cs_two)
 
     struc_1SSU = read(pdbfilepath("1SSU.pdb"), PDB)
     @test isapprox(rmsd(struc_1SSU[1], struc_1SSU[2], calphaselector), 4.1821925809691889)
     @test isapprox(rmsd(struc_1SSU[5], struc_1SSU[6], backboneselector), 5.2878196391279939)
-    @test_throws AssertionError rmsd(struc_1SSU[1]['A'][8], struc_1SSU[1]['A'][9])
+    @test_throws ArgumentError rmsd(struc_1SSU[1]['A'][8], struc_1SSU[1]['A'][9])
 
 
     # Test displacements
@@ -1409,7 +1410,7 @@ end
         2.0 0.0
         1.0 4.0
     ]
-    @test_throws AssertionError displacements(cs_one, cs_two)
+    @test_throws ArgumentError displacements(cs_one, cs_two)
 
     disps = displacements(struc_1SSU[5], struc_1SSU[10])
     @test isa(disps, Vector{Float64})
@@ -1458,6 +1459,9 @@ end
     @test isapprox(omegaangle(struc_1AKE['A'][20], struc_1AKE['A'][19]), -3.091913621551854, atol=1e-5)
     @test isapprox(phiangle(struc_1AKE['A'][7], struc_1AKE['A'][6]), 2.851151641716221, atol=1e-5)
     @test isapprox(psiangle(struc_1AKE['A'][8], struc_1AKE['A'][9]), 2.838265381719911, atol=1e-5)
+    @test_throws ArgumentError omegaangle(struc_1AKE['A'][20], Residue("ALA", 19, ' ', false))
+    @test_throws ArgumentError phiangle(struc_1AKE['A'][7], Residue("ALA", 6, ' ', false))
+    @test_throws ArgumentError psiangle(struc_1AKE['A'][8], Residue("ALA", 9, ' ', false))
 
     phis, psis = ramachandranangles(struc_1AKE['A'])
     @test size(phis) == (456,)
@@ -1468,6 +1472,7 @@ end
     @test psis[214] == nothing
     @test sum(map(x -> Int(x == nothing), phis)) == 243
     @test sum(map(x -> Int(x == nothing), psis)) == 243
+    @test_throws ArgumentError ramachandranangles(struc_1AKE['A'][10]["CA"])
 
 
     # Test contactmap
