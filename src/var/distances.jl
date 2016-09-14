@@ -337,7 +337,7 @@ function distance{A<:NucleotideAlphabet}(::Type{JukesCantor69}, seqs::Vector{Bio
     a, b = size(ps)
     est = Matrix{Float64}(a, b)
     var = Matrix{Float64}(a, b)
-    @inbounds for i in 1:endof(counts)
+    @inbounds for i in 1:endof(ps)
         p = ps[i]
         l = wsizes[i]
         est[i] = expected_distance(JukesCantor69, p)
