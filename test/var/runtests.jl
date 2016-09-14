@@ -57,12 +57,12 @@ end
     @test distance(Count{TransversionMutation}, m1) == ([8], [16])
     @test distance(Count{Kimura80}, m1) == ([4], [8], [16])
 
-    @test distance(Count{AnyMutation}, dnas2, 5, 5)[1][1:4] == [2, 4, 3, 3]
-    @test distance(Count{AnyMutation}, dnas2, 5, 5)[2][1:4] == [5, 5, 3, 5]
-    @test distance(Count{TransitionMutation}, dnas2, 5, 5)[1][1:4] == [0, 2, 1, 1]
-    @test distance(Count{TransitionMutation}, dnas2, 5, 5)[2][1:4] == [5, 5, 3, 5]
-    @test distance(Count{TransversionMutation}, dnas2, 5, 5)[1][1:4] == [2, 2, 2, 2]
-    @test distance(Count{TransversionMutation}, dnas2, 5, 5)[2][1:4] == [5, 5, 3, 5]
+    @test distance(Count{AnyMutation}, dnas2, 5, 5)[1][:] == [2, 4, 3, 3]
+    @test distance(Count{AnyMutation}, dnas2, 5, 5)[2][:] == [5, 5, 3, 5]
+    @test distance(Count{TransitionMutation}, dnas2, 5, 5)[1][:] == [0, 2, 1, 1]
+    @test distance(Count{TransitionMutation}, dnas2, 5, 5)[2][:] == [5, 5, 3, 5]
+    @test distance(Count{TransversionMutation}, dnas2, 5, 5)[1][:] == [2, 2, 2, 2]
+    @test distance(Count{TransversionMutation}, dnas2, 5, 5)[2][:] == [5, 5, 3, 5]
     #@test distance(Count{Kimura80}, dnas1) == ([4], [8], [16])
 
     @test distance(Count{AnyMutation}, dnas2) == ([12], [18])
@@ -73,6 +73,13 @@ end
     @test distance(Count{TransitionMutation}, m2) == ([4], [18])
     @test distance(Count{TransversionMutation}, m2) == ([8], [18])
     @test distance(Count{Kimura80}, m2) == ([4], [8], [18])
+
+    @test distance(Proportion{AnyMutation}, dnas2, 5, 5)[1][:] == [0.4, 0.8, 1.0, 0.6]
+    @test distance(Proportion{AnyMutation}, dnas2, 5, 5)[2][:] == [5, 5, 3, 5]
+    @test distance(Proportion{TransitionMutation}, dnas2, 5, 5)[1][:] == [0.0, 0.4, 0.333, 0.2]
+    @test distance(Proportion{TransitionMutation}, dnas2, 5, 5)[2][:] == [5, 5, 3, 5]
+    @test distance(Proportion{TransversionMutation}, dnas2, 5, 5)[1][:] == [0.4, 0.4, 0.666, 0.4]
+    @test distance(Proportion{TransversionMutation}, dnas2, 5, 5)[2][:] == [5, 5, 3, 5]
 
     @test distance(Proportion{AnyMutation}, dnas1) == ([(12 / 16)], [16])
     @test distance(Proportion{TransitionMutation}, dnas1) == ([(4 / 16)], [16])
