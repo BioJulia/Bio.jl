@@ -254,7 +254,7 @@ vector of the number of valid (i.e. non-ambiguous sites) counted by the function
 function distance{T<:MutationType,A<:NucleotideAlphabet}(::Type{Proportion{T}}, seqs::Vector{BioSequence{A}})
     d, l = distance(Count{T}, seqs)
     D = Vector{Float64}(length(d))
-    @inbounds for i in 1:length(D)
+    @inbounds @simd for i in 1:length(D)
         D[i] = d[i] / l[i]
     end
     return D, l
