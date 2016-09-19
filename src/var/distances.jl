@@ -136,7 +136,7 @@ end
 """
     distance{T<:MutationType,A<:NucleotideAlphabet}(::Type{Count{T}}, seqs::Vector{BioSequence{A}}, width::Int, step::Int)
 
-A distance method which computes pairwise distances using a sliding window.
+Compute pairwise distances using a sliding window.
 
 As the window of `width` base pairs in size moves across a pair of sequences it
 computes the distance between the two sequences in that window.
@@ -146,17 +146,23 @@ matrix of p-distances for every window, a matrix of the number of valid sites
 counted by the function for each window.
 """
 function distance{T<:MutationType,A<:NucleotideAlphabet}(::Type{Count{T}}, seqs::Vector{BioSequence{A}}, width::Int, step::Int)
-    mutationFlags, ambiguousFlags = flagmutations(T, seqs)
-    nbases, npairs = size(mutationFlags)
-    @assert width >= 1 "Window width must be ≥ 1."
-    @assert step >= 1 "step must be ≥ 1."
-    @assert width <= nbases "The window size cannot be greater than number of data elements."
+    mutation_flags, ambiguous_flags = flagmutations(T, seqs)
+    nbases, npairs = size(mutation_flags)
+    if width >= 1
+        throw(ArgumentError("`window` width must be ≥ 1."))
+    end
+    if step >= 1
+        throw(ArgumentError("`step` must be ≥ 1."))
+    end
+    if width <= nbases
+        throw(ArgumentError("The `window` size cannot be greater than number of data elements."))
+    end
     starts = 1:step:nbases
     ends = width:step:nbases
     nwindows = length(ends)
     mcounts = Matrix{Int}(nwindows, npairs)
     wsizes = Matrix{Int}(nwindows, npairs)
-    ranges = Vector{Pair{Int,Int}}(nwindows)
+    ranges = Vector{UnitRange{Int}}(nwindows)
 
     @inbounds for pair in 1:npairs
         pairoffset = pair - 1
@@ -168,10 +174,10 @@ function distance{T<:MutationType,A<:NucleotideAlphabet}(::Type{Count{T}}, seqs:
             mcount = 0
             nsites = width
             @simd for j in from:to
-                mcount += mutationFlags[flagsoffset + j]
-                nsites -= ambiguousFlags[flagsoffset + j]
+                mcount += mutation_flags[flagsoffset + j]
+                nsites -= ambiguous_flags[flagsoffset + j]
             end
-            ranges[i] = Pair(starts[i],ends[i])
+            ranges[i] = UnitRange(starts[i],ends[i])
             mcounts[windowoffset + i] = mcount
             wsizes[windowoffset + i] = nsites
         end
@@ -181,18 +187,24 @@ end
 
 
 function distance{T<:TsTv,A<:NucleotideAlphabet}(::Type{Count{T}}, seqs::Vector{BioSequence{A}}, width::Int, step::Int)
-    transitionFlags, transversionFlags, ambiguousFlags = flagmutations(TransitionMutation, TransversionMutation, seqs)
+    transitionFlags, transversionFlags, ambiguous_flags = flagmutations(TransitionMutation, TransversionMutation, seqs)
     nbases, npairs = size(transitionFlags)
-    @assert width >= 1 "Window width must be ≥ 1."
-    @assert step >= 1 "step must be ≥ 1."
-    @assert width <= nbases "The window size cannot be greater than number of data elements."
+    if width >= 1
+        throw(ArgumentError("`window` width must be ≥ 1."))
+    end
+    if step >= 1
+        throw(ArgumentError("`step` must be ≥ 1."))
+    end
+    if width <= nbases
+        throw(ArgumentError("The `window` size cannot be greater than number of data elements."))
+    end
     starts = 1:step:nbases
     ends = width:step:nbases
     nwindows = length(ends)
     tscounts = Matrix{Int}(nwindows, npairs)
     tvcounts = Matrix{Int}(nwindows, npairs)
     wsizes = Matrix{Int}(nwindows, npairs)
-    ranges = Vector{Pair{Int,Int}}(nwindows)
+    ranges = Vector{UnitRange{Int}}(nwindows)
 
     @inbounds for pair in 1:npairs
         pairoffset = pair - 1
@@ -207,9 +219,9 @@ function distance{T<:TsTv,A<:NucleotideAlphabet}(::Type{Count{T}}, seqs::Vector{
             @simd for j in from:to
                 tscount += transitionFlags[flagsoffset + j]
                 tvcount += transversionFlags[flagsoffset + j]
-                nsites -= ambiguousFlags[flagsoffset + j]
+                nsites -= ambiguous_flags[flagsoffset + j]
             end
-            ranges[i] = Pair(starts[i],ends[i])
+            ranges[i] = UnitRange(starts[i],ends[i])
             tscounts[windowoffset + i] = tscount
             tvcounts[windowoffset + i] = tvcount
             wsizes[windowoffset + i] = nsites
@@ -299,9 +311,6 @@ function distance{T<:MutationType,A<:NucleotideAlphabet}(::Type{Proportion{T}}, 
     end
     return res, wsizes, ranges
 end
-
-
-
 
 """
     distance{A<:NucleotideAlphabet}(::Type{JukesCantor69}, seqs::Vector{BioSequence{A}})

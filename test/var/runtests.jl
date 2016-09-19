@@ -130,8 +130,6 @@ end
     @test round(distance(Kimura80, m2)[1][1], 3) == 1.648
     @test round(distance(Kimura80, m2)[2][1], 3) == 1
 
-
-
 end
 
 end # module TestVar
