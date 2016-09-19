@@ -1448,7 +1448,7 @@ end
     @test isapprox(bondangle(vec_a, vec_b), 0.615479708670387)
 
 
-    # Test dihedralangle
+    # Test dihedral functions
     at_a = Atom(100, "CA", ' ', [-1.0, -1.0, 0.0], 1.0, 10.0, " C", "  ", res)
     at_b = Atom(100, "CA", ' ', [0.0, 0.0, 0.0], 1.0, 10.0, " C", "  ", res)
     at_c = Atom(100, "CA", ' ', [1.0, 0.0, 0.0], 1.0, 10.0, " C", "  ", res)
@@ -1471,10 +1471,10 @@ end
     @test size(psis) == (456,)
     @test isapprox(phis[5], -1.764512005880236, atol=1e-5)
     @test isapprox(psis[10], 0.4425094841355222, atol=1e-5)
-    @test phis[1] == nothing
-    @test psis[214] == nothing
-    @test sum(map(x -> Int(x == nothing), phis)) == 243
-    @test sum(map(x -> Int(x == nothing), psis)) == 243
+    @test isnan(phis[1])
+    @test isnan(psis[214])
+    @test sum(map(x -> Int(isnan(x)), phis)) == 243
+    @test sum(map(x -> Int(isnan(x)), psis)) == 243
     @test_throws ArgumentError ramachandranangles(struc_1AKE['A'][10]["CA"])
 
 

@@ -225,7 +225,7 @@ end
 
 """
 Calculate the `Vector`s of phi and psi angles of a `StructuralElementOrList`.
-The vectors have `nothing` for residues where an angle cannot be calculated,
+The vectors have `NaN` for residues where an angle cannot be calculated,
 e.g. due to missing atoms or lack of an adjacent residue.
 Additional arguments are residue selector functions - only residues that return
 `true` from the functions are retained.
@@ -236,8 +236,8 @@ function ramachandranangles(el::StructuralElementOrList,
     if length(res_list) < 2
         throw(ArgumentError("Multiple residues required to calculate Ramachandran angles"))
     end
-    phi_angles = Union{Float64, Void}[nothing] # First res has no previous res
-    psi_angles = Union{Float64, Void}[]
+    phi_angles = Float64[NaN] # First res has no previous res
+    psi_angles = Float64[]
     # Phi angles
     for i in 2:length(res_list)
         res = res_list[i]
@@ -248,10 +248,10 @@ function ramachandranangles(el::StructuralElementOrList,
                 push!(phi_angles, phi_angle)
             catch ex
                 isa(ex, ArgumentError) || rethrow()
-                push!(phi_angles, nothing)
+                push!(phi_angles, NaN)
             end
         else
-            push!(phi_angles, nothing)
+            push!(phi_angles, NaN)
         end
     end
     # Psi angles
@@ -264,20 +264,20 @@ function ramachandranangles(el::StructuralElementOrList,
                 push!(psi_angles, psi_angle)
             catch ex
                 isa(ex, ArgumentError) || rethrow()
-                push!(psi_angles, nothing)
+                push!(psi_angles, NaN)
             end
         else
-            push!(psi_angles, nothing)
+            push!(psi_angles, NaN)
         end
     end
-    push!(psi_angles, nothing) # Last res has no next res
+    push!(psi_angles, NaN) # Last res has no next res
     return phi_angles, psi_angles
 end
 
 
 """
 Calculate the contact map for a `StructuralElementOrList`, or between two
-`StructuralElementOrList`s. This is an `Array` with `true` where the
+`StructuralElementOrList`s. This is an `BitArray{2}` with `true` where the
 sub-elements are closer than the contact distance and `false` otherwise.
 """
 function contactmap(el_one::StructuralElementOrList,
@@ -299,9 +299,10 @@ end
 
 function contactmap(el::StructuralElementOrList, contact_dist::Real)
     sq_contact_dist = contact_dist ^ 2
-    contacts = eye(Bool, length(el))
+    contacts = falses(length(el), length(el))
     el_list = collect(el)
     for i in 1:length(el)
+        contacts[i,i] = true
         for j in 1:i-1
             if sqdistance(el_list[i], el_list[j]) <= sq_contact_dist
                 contacts[i,j] = true
