@@ -447,7 +447,7 @@ tempfactor(dis_at::DisorderedAtom) = tempfactor(defaultatom(dis_at))
 
 
 """
-Get the element of an `AbstractAtom`. Defaults to `\"  \"`.
+Get the element of an `AbstractAtom`. Defaults to `"  "`.
 `strip` determines whether surrounding whitespace is stripped (default `true`).
 """
 function element(at::Atom; strip::Bool=true)
@@ -462,7 +462,7 @@ element(dis_at::DisorderedAtom; strip::Bool=true) = element(defaultatom(dis_at),
 
 
 """
-Get the charge on an `AbstractAtom`. Defaults to `\"  \"`.
+Get the charge on an `AbstractAtom`. Defaults to `"  "`.
 `strip` determines whether surrounding whitespace is stripped (default `true`).
 """
 function charge(at::Atom; strip::Bool=true)
@@ -577,9 +577,9 @@ inscode(dis_res::DisorderedResidue) = inscode(defaultresidue(dis_res))
 
 """
 Get a descriptive residue ID string for an `AbstractAtom` or `AbstractResidue`.
-Format is residue number then insertion code with \"H_\" in front for hetero
+Format is residue number then insertion code with "H_" in front for hetero
 residues. If `full` equals `true` the chain ID is also added after a colon
-(default `false`). Examples are \"50A\", \"H_20\" and \"10:A\".
+(default `false`). Examples are "50A", "H_20" and "10:A".
 """
 function resid(res::AbstractResidue; full::Bool=false)
     if ishetero(res)

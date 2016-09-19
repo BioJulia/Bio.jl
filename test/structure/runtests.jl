@@ -1474,6 +1474,7 @@ end
 
     # Test contactmap
     cas = collectatoms(struc_1AKE, calphaselector)[1:10]
+    @test isa(contactmap(cas, 10), BitArray{2})
     @test contactmap(cas, 10) == [
         true  true  true  false false false false false false false
         true  true  true  true  false false false false false false

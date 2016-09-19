@@ -278,7 +278,7 @@ end
 """
 Calculate the contact map for a `StructuralElementOrList`, or between two
 `StructuralElementOrList`s. This is an `BitArray{2}` with `true` where the
-sub-elements are closer than the contact distance and `false` otherwise.
+sub-elements are no further than the contact distance and `false` otherwise.
 """
 function contactmap(el_one::StructuralElementOrList,
                 el_two::StructuralElementOrList,

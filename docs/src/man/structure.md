@@ -98,7 +98,7 @@ Properties can be retrieved as follows:
 | `modelnumbers`     | Sorted model numbers in a structure                           | `Array{Int,1}`                  |
 | `models`           | Dictionary of models in a structure                           | `Dict{Int, Model}`              |
 
-The `spaces` keyword argument determines whether surrounding whitespace is retained for `atomname`, `element`, `charge`, `resname` and `atomnames` (default `false`).
+The `strip` keyword argument determines whether surrounding whitespace is stripped for `atomname`, `element`, `charge`, `resname` and `atomnames` (default `true`).
 
 The coordinates of an atom can be set using `x!`, `y!`, `z!` and `coords!`.
 
@@ -193,7 +193,7 @@ writepdb("1EN2_out.pdb", struc, backboneselector)
 
 ## Spatial calculations
 
-Various functions are provided to calculate spatial quantities on proteins:
+Various functions are provided to calculate spatial quantities for proteins:
 
 | Command              | Returns                                                                                         |
 | :------------------- | :---------------------------------------------------------------------------------------------- |
@@ -201,9 +201,9 @@ Various functions are provided to calculate spatial quantities on proteins:
 | `sqdistance`         | Minimum square distance between two elements                                                    |
 | `bondangle`          | Angle between three atoms                                                                       |
 | `dihedralangle`      | Dihedral angle defined by four atoms                                                            |
-| `omegaangle`         | Omega angle between residue and previous residue                                                |
-| `phiangle`           | Phi angle between residue and previous residue                                                  |
-| `psiangle`           | Psi angle between residue and next residue                                                      |
+| `omegaangle`         | Omega angle between a residue and the previous residue                                          |
+| `phiangle`           | Phi angle between a residue and the previous residue                                            |
+| `psiangle`           | Psi angle between a residue and the next residue                                                |
 | `ramachandranangles` | `Vector`s of phi and psi angles of an element                                                   |
 | `contactmap`         | Contact map of two element, or one element with itself                                          |
 | `rmsd`               | RMSD between two elements of the same size - assumes they are superimposed                      |
