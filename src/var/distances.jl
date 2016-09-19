@@ -148,13 +148,13 @@ counted by the function for each window.
 function distance{T<:MutationType,A<:NucleotideAlphabet}(::Type{Count{T}}, seqs::Vector{BioSequence{A}}, width::Int, step::Int)
     mutation_flags, ambiguous_flags = flagmutations(T, seqs)
     nbases, npairs = size(mutation_flags)
-    if width >= 1
+    if width < 1
         throw(ArgumentError("`window` width must be ≥ 1."))
     end
-    if step >= 1
+    if step < 1
         throw(ArgumentError("`step` must be ≥ 1."))
     end
-    if width <= nbases
+    if width > nbases
         throw(ArgumentError("The `window` size cannot be greater than number of data elements."))
     end
     starts = 1:step:nbases
@@ -189,13 +189,13 @@ end
 function distance{T<:TsTv,A<:NucleotideAlphabet}(::Type{Count{T}}, seqs::Vector{BioSequence{A}}, width::Int, step::Int)
     transitionFlags, transversionFlags, ambiguous_flags = flagmutations(TransitionMutation, TransversionMutation, seqs)
     nbases, npairs = size(transitionFlags)
-    if width >= 1
+    if width < 1
         throw(ArgumentError("`window` width must be ≥ 1."))
     end
-    if step >= 1
+    if step < 1
         throw(ArgumentError("`step` must be ≥ 1."))
     end
-    if width <= nbases
+    if width > nbases
         throw(ArgumentError("The `window` size cannot be greater than number of data elements."))
     end
     starts = 1:step:nbases
