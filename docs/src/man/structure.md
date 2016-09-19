@@ -70,7 +70,7 @@ Properties can be retrieved as follows:
 | `z`                | z coordinate of an atom                                       | `Float64`                       |
 | `coords`           | coordinates of an atom                                        | `Array{Float64,1}`              |
 | `occupancy`        | Occupancy of an atom (default is `1.0`)                       | `Float64`                       |
-| `tempfac`          | Temperature factor of an atom (default is `0.0`)              | `Float64`                       |
+| `tempfactor`       | Temperature factor of an atom (default is `0.0`)              | `Float64`                       |
 | `element`          | Element of an atom (default is `"  "`)                        | `String`                        |
 | `charge`           | Charge of an atom (default is `"  "`)                         | `String`                        |
 | `residue`          | Residue an atom belongs to                                    | `Residue`                       |
@@ -227,7 +227,7 @@ A few examples of `Bio.Structure` usage are given below.
 using Gadfly
 calphas = collectatoms(struc, calphaselector)
 plot(x=resnumber.(calphas),
-    y=tempfac.(calphas),
+    y=tempfactor.(calphas),
     Guide.xlabel("Residue number"),
     Guide.ylabel("Temperature factor"),
     Geom.line)

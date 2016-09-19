@@ -23,7 +23,7 @@ export
     coords,
     coords!,
     occupancy,
-    tempfac,
+    tempfactor,
     element,
     charge,
     residue,
@@ -114,7 +114,7 @@ immutable Atom <: AbstractAtom
     alt_loc_id::Char
     coords::Vector{Float64}
     occupancy::Float64
-    temp_fac::Float64
+    temp_factor::Float64
     element::String
     charge::String
     residue::StructuralElement
@@ -190,7 +190,7 @@ immutable AtomRecord
     ins_code::Char
     coords::Vector{Float64}
     occupancy::Float64
-    temp_fac::Float64
+    temp_factor::Float64
     element::String
     charge::String
 end
@@ -446,8 +446,8 @@ occupancy(dis_at::DisorderedAtom) = occupancy(defaultatom(dis_at))
 
 
 "Get the temperature factor of an `AbstractAtom`. Defaults to `0.0`."
-tempfac(at::Atom) = at.temp_fac
-tempfac(dis_at::DisorderedAtom) = tempfac(defaultatom(dis_at))
+tempfactor(at::Atom) = at.temp_factor
+tempfactor(dis_at::DisorderedAtom) = tempfactor(defaultatom(dis_at))
 
 
 """
@@ -1252,7 +1252,7 @@ function unsafe_addatomtomodel!(mod::Model,
         atom_rec.alt_loc_id,
         atom_rec.coords,
         atom_rec.occupancy,
-        atom_rec.temp_fac,
+        atom_rec.temp_factor,
         atom_rec.element,
         atom_rec.charge,
         res)
@@ -1593,7 +1593,7 @@ function Base.show(io::IO, at::Atom)
     println(io, "Alternative location ID  -  ", altlocid(at))
     println(io, "Coordinates              -  ", coords(at))
     println(io, "Occupancy                -  ", occupancy(at))
-    println(io, "Temperature factor       -  ", tempfac(at))
+    println(io, "Temperature factor       -  ", tempfactor(at))
     println(io, "Element                  -  ", element(at))
       print(io, "Charge                   -  ", charge(at))
 end
@@ -1607,7 +1607,7 @@ function Base.show(io::IO, dis_at::DisorderedAtom)
         println(io, "Serial                   -  ", serial(at))
         println(io, "Coordinates              -  ", coords(at))
         println(io, "Occupancy                -  ", occupancy(at))
-        println(io, "Temperature factor       -  ", tempfac(at))
+        println(io, "Temperature factor       -  ", tempfactor(at))
         println(io, "Element                  -  ", element(at))
         println(io, "Charge                   -  ", charge(at))
     end
@@ -1616,7 +1616,7 @@ function Base.show(io::IO, dis_at::DisorderedAtom)
     println(io, "Serial                   -  ", serial(at))
     println(io, "Coordinates              -  ", coords(at))
     println(io, "Occupancy                -  ", occupancy(at))
-    println(io, "Temperature factor       -  ", tempfac(at))
+    println(io, "Temperature factor       -  ", tempfactor(at))
     println(io, "Element                  -  ", element(at))
       print(io, "Charge                   -  ", charge(at))
 end
@@ -1633,7 +1633,7 @@ function Base.show(io::IO, at_rec::AtomRecord)
     println(io, "Insertion code           -  ", at_rec.ins_code)
     println(io, "Coordinates              -  ", at_rec.coords)
     println(io, "Occupancy                -  ", at_rec.occupancy)
-    println(io, "Temperature factor       -  ", at_rec.temp_fac)
+    println(io, "Temperature factor       -  ", at_rec.temp_factor)
     println(io, "Element                  -  ", strip(at_rec.element))
       print(io, "Charge                   -  ", strip(at_rec.charge))
 end

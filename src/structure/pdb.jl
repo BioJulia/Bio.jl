@@ -253,7 +253,7 @@ pdbline(at::Atom) = String[
         spacestring(round(z(at), 3), 8),
         spacestring(round(occupancy(at), 2), 6),
         # This will throw an error for large temp facs, e.g. 1000.12
-        spacestring(round(tempfac(at), 2), 6),
+        spacestring(round(tempfactor(at), 2), 6),
         "          ",
         spacestring(element(at), 2),
         spacestring(charge(at), 2),
@@ -277,7 +277,7 @@ pdbline(at_rec::AtomRecord) = String[
         spacestring(round(at_rec.coords[3], 3), 8),
         spacestring(round(at_rec.occupancy, 2), 6),
         # This will throw an error for large temp facs, e.g. 1000.12
-        spacestring(round(at_rec.temp_fac, 2), 6),
+        spacestring(round(at_rec.temp_factor, 2), 6),
         "          ",
         spacestring(at_rec.element, 2),
         spacestring(at_rec.charge, 2),

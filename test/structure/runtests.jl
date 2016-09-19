@@ -142,8 +142,8 @@ end
     @test occupancy(at) == 1.0
     @test occupancy(dis_at) == 0.6
 
-    @test tempfac(at) == 10.0
-    @test tempfac(dis_at) == 20.0
+    @test tempfactor(at) == 10.0
+    @test tempfactor(dis_at) == 20.0
 
     @test element(at) == "C"
     @test element(dis_at) == "C"
@@ -621,7 +621,7 @@ end
     @test at_rec.ins_code == ' '
     @test at_rec.coords == [31.743, 33.110, 31.221]
     @test at_rec.occupancy == 1.00
-    @test at_rec.temp_fac == 25.76
+    @test at_rec.temp_factor == 25.76
     @test at_rec.element == " C"
     @test at_rec.charge == "  "
     at_rec = AtomRecord(line_b)
@@ -635,7 +635,7 @@ end
     @test at_rec.ins_code == 'A'
     @test at_rec.coords == [8.802, 62.0, 8.672]
     @test at_rec.occupancy == 1.00
-    @test at_rec.temp_fac == 39.15
+    @test at_rec.temp_factor == 39.15
     @test at_rec.element == " O"
     @test at_rec.charge == "1-"
     @test_throws PDBParseError AtomRecord(line_c)
@@ -754,7 +754,7 @@ end
     struc = read(pdbfilepath("1AKE.pdb"), PDB, remove_disorder=true)
     @test countatoms(struc) == 3804
     @test sum(map(isdisorderedatom, collectatoms(struc))) == 0
-    @test tempfac(struc['A'][167]["NE"]) == 23.32
+    @test tempfactor(struc['A'][167]["NE"]) == 23.32
 
     # Test parsing from stream
     open(pdbfilepath("1AKE.pdb"), "r") do file
@@ -1230,7 +1230,7 @@ end
     @test modelnumbers(struc_written) == [1]
     @test countatoms(struc_written) == 492
     @test chainids(struc_written) == ['A', 'B']
-    @test tempfac(struc_written['B']["H_705"]["O"]) == 64.17
+    @test tempfactor(struc_written['B']["H_705"]["O"]) == 64.17
     writepdb(temp_filename, struc, stdatomselector, disorderselector)
     @test countlines(temp_filename) == 10
     struc_written = read(temp_filename, PDB)
@@ -1268,7 +1268,7 @@ end
     @test countatoms(struc_written) == 1
     @test isdisorderedatom(collectatoms(struc_written)[1])
     @test length(collectatoms(struc_written)[1]) == 2
-    @test tempfac(collectatoms(struc_written)[1]) == 16.77
+    @test tempfactor(collectatoms(struc_written)[1]) == 16.77
     writepdb(temp_filename, Chain[struc['A'], struc['B']])
     @test countlines(temp_filename) == 3816
     struc_written = read(temp_filename, PDB)
