@@ -59,6 +59,10 @@ immutable Kimura80 <: TsTv end
 # Distance computation internals
 # ------------------------------
 
+@inline function expected_distance{T}(::Type{Proportion{T}}, n::Int64, l::Int64)
+    return n / l
+end
+
 ## Jukes and Cantor 1969 distance computation.
 
 @inline function expected_distance(::Type{JukesCantor69}, p::Float64)
@@ -130,6 +134,104 @@ function distance{T<:MutationType,A<:NucleotideAlphabet}(::Type{Count{T}}, seqs:
 end
 
 """
+    distance{T<:MutationType,A<:NucleotideAlphabet}(::Type{Count{T}}, seqs::Vector{BioSequence{A}}, width::Int, step::Int)
+
+Compute pairwise distances using a sliding window.
+
+As the window of `width` base pairs in size moves across a pair of sequences it
+computes the distance between the two sequences in that window.
+
+This method computes mutation counts for every window, and returns a tuple of the
+matrix of p-distances for every window, a matrix of the number of valid sites
+counted by the function for each window.
+"""
+function distance{T<:MutationType,A<:NucleotideAlphabet}(::Type{Count{T}}, seqs::Vector{BioSequence{A}}, width::Int, step::Int)
+    mutation_flags, ambiguous_flags = flagmutations(T, seqs)
+    nbases, npairs = size(mutation_flags)
+    if width < 1
+        throw(ArgumentError("`window` width must be ≥ 1."))
+    end
+    if step < 1
+        throw(ArgumentError("`step` must be ≥ 1."))
+    end
+    if width > nbases
+        throw(ArgumentError("The `window` size cannot be greater than number of data elements."))
+    end
+    starts = 1:step:nbases
+    ends = width:step:nbases
+    nwindows = length(ends)
+    mcounts = Matrix{Int}(nwindows, npairs)
+    wsizes = Matrix{Int}(nwindows, npairs)
+    ranges = Vector{UnitRange{Int}}(nwindows)
+
+    @inbounds for pair in 1:npairs
+        pairoffset = pair - 1
+        windowoffset = pairoffset * nwindows
+        flagsoffset = pairoffset * nbases
+        for i in 1:nwindows
+            from = starts[i]
+            to = ends[i]
+            mcount = 0
+            nsites = width
+            @simd for j in from:to
+                mcount += mutation_flags[flagsoffset + j]
+                nsites -= ambiguous_flags[flagsoffset + j]
+            end
+            ranges[i] = UnitRange(starts[i],ends[i])
+            mcounts[windowoffset + i] = mcount
+            wsizes[windowoffset + i] = nsites
+        end
+    end
+    return mcounts, wsizes, ranges
+end
+
+
+function distance{T<:TsTv,A<:NucleotideAlphabet}(::Type{Count{T}}, seqs::Vector{BioSequence{A}}, width::Int, step::Int)
+    transitionFlags, transversionFlags, ambiguous_flags = flagmutations(TransitionMutation, TransversionMutation, seqs)
+    nbases, npairs = size(transitionFlags)
+    if width < 1
+        throw(ArgumentError("`window` width must be ≥ 1."))
+    end
+    if step < 1
+        throw(ArgumentError("`step` must be ≥ 1."))
+    end
+    if width > nbases
+        throw(ArgumentError("The `window` size cannot be greater than number of data elements."))
+    end
+    starts = 1:step:nbases
+    ends = width:step:nbases
+    nwindows = length(ends)
+    tscounts = Matrix{Int}(nwindows, npairs)
+    tvcounts = Matrix{Int}(nwindows, npairs)
+    wsizes = Matrix{Int}(nwindows, npairs)
+    ranges = Vector{UnitRange{Int}}(nwindows)
+
+    @inbounds for pair in 1:npairs
+        pairoffset = pair - 1
+        windowoffset = pairoffset * nwindows
+        flagsoffset = pairoffset * nbases
+        for i in 1:nwindows
+            from = starts[i]
+            to = ends[i]
+            tscount = 0
+            tvcount = 0
+            nsites = width
+            @simd for j in from:to
+                tscount += transitionFlags[flagsoffset + j]
+                tvcount += transversionFlags[flagsoffset + j]
+                nsites -= ambiguous_flags[flagsoffset + j]
+            end
+            ranges[i] = UnitRange(starts[i],ends[i])
+            tscounts[windowoffset + i] = tscount
+            tvcounts[windowoffset + i] = tvcount
+            wsizes[windowoffset + i] = nsites
+        end
+    end
+    return tscounts, tvcounts, wsizes, ranges
+end
+
+
+"""
     distance{T<:MutationType,N<:Nucleotide}(::Type{Count{T}}, seqs::Matrix{N})
 
 Compute the number of mutations of type `T` between a set of sequences in a
@@ -164,7 +266,7 @@ vector of the number of valid (i.e. non-ambiguous sites) counted by the function
 function distance{T<:MutationType,A<:NucleotideAlphabet}(::Type{Proportion{T}}, seqs::Vector{BioSequence{A}})
     d, l = distance(Count{T}, seqs)
     D = Vector{Float64}(length(d))
-    @inbounds for i in 1:length(D)
+    @inbounds @simd for i in 1:length(D)
         D[i] = d[i] / l[i]
     end
     return D, l
@@ -174,7 +276,7 @@ end
     distance{T<:MutationType,N<:Nucleotide}(::Type{Proportion{T}}, seqs::Matrix{N})
 
 This method of distance returns a tuple of a vector of the p-distances, and a
-vector of the number of valid (i.e. non-ambiguous sites) counted by the function.
+vector of the number of valid (i.e. non-ambiguous) sites counted by the function.
 
 **Note: This method assumes that the sequences are stored in the `Matrix{N}`
 provided as `seqs` in sequence major order i.e. each column of the matrix is one
@@ -187,6 +289,27 @@ function distance{T<:MutationType,N<:Nucleotide}(::Type{Proportion{T}}, seqs::Ma
         D[i] = d[i] / l[i]
     end
     return D, l
+end
+
+"""
+    distance{T<:MutationType,A<:NucleotideAlphabet}(::Type{Proportion{T}}, seqs::Vector{BioSequence{A}}, width::Int, step::Int)
+
+A distance method which computes pairwise distances using a sliding window.
+
+As the window of `width` base pairs in size moves across a pair of sequences it
+computes the distance between the two sequences in that window.
+
+This method computes p-distances for every window, and returns a tuple of the
+matrix of p-distances for every window, a matrix of the number of valid sites
+counted by the function for each window.
+"""
+function distance{T<:MutationType,A<:NucleotideAlphabet}(::Type{Proportion{T}}, seqs::Vector{BioSequence{A}}, width::Int, step::Int)
+    counts, wsizes, ranges = distance(Count{T}, seqs, width, step)
+    res = Matrix{Float64}(size(counts))
+    @inbounds for i in 1:endof(counts)
+        res[i] = expected_distance(Proportion{T}, counts[i], wsizes[i])
+    end
+    return res, wsizes, ranges
 end
 
 """
@@ -204,6 +327,32 @@ function distance{A<:NucleotideAlphabet}(::Type{JukesCantor69}, seqs::Vector{Bio
         V[i] = variance(JukesCantor69, p[i], l[i])
     end
     return D, V
+end
+
+"""
+    distance{T<:MutationType,A<:NucleotideAlphabet}(::Type{JukesCantor69}, seqs::Vector{BioSequence{A}}, width::Int, step::Int)
+
+A distance method which computes pairwise distances using a sliding window.
+
+As the window of `width` base pairs in size moves across a pair of sequences it
+computes the distance between the two sequences in that window.
+
+This method computes the JukesCantor69 distance for every window, and returns a tuple of the
+matrix of p-distances for every window, a matrix of the number of valid sites
+counted by the function for each window.
+"""
+function distance{A<:NucleotideAlphabet}(::Type{JukesCantor69}, seqs::Vector{BioSequence{A}}, width::Int, step::Int)
+    ps, wsizes, ranges = distance(Proportion{AnyMutation}, seqs, width, step)
+    a, b = size(ps)
+    est = Matrix{Float64}(a, b)
+    var = Matrix{Float64}(a, b)
+    @inbounds for i in 1:endof(ps)
+        p = ps[i]
+        l = wsizes[i]
+        est[i] = expected_distance(JukesCantor69, p)
+        var[i] = variance(JukesCantor69, p, l)
+    end
+    return est, var, ranges
 end
 
 """
@@ -248,6 +397,37 @@ function distance{A<:NucleotideAlphabet}(::Type{Kimura80}, seqs::Vector{BioSeque
         V[i] = variance(Kimura80, P, Q, L, a1, a2)
     end
     return D, V
+end
+
+"""
+    distance{T<:MutationType,A<:NucleotideAlphabet}(::Type{Kimura80}, seqs::Vector{BioSequence{A}}, width::Int, step::Int)
+
+A distance method which computes pairwise distances using a sliding window.
+
+As the window of `width` base pairs in size moves across a pair of sequences it
+computes the distance between the two sequences in that window.
+
+This method computes the Kimura80 distance for every window, and returns a tuple of the
+matrix of p-distances for every window, a matrix of the number of valid sites
+counted by the function for each window.
+"""
+function distance{A<:NucleotideAlphabet}(::Type{Kimura80}, seqs::Vector{BioSequence{A}}, width::Int, step::Int)
+    tss, tvs, wsizes, ranges = distance(Count{Kimura80}, seqs, width, step)
+    a, b = size(tss)
+    est = Matrix{Float64}(a, b)
+    var = Matrix{Float64}(a, b)
+    @inbounds for i in 1:endof(counts)
+        L = l[i]
+        P = tss[i] / L
+        Q = tvs[i] / L
+        a1 = 1 - 2 * P - Q
+        a2 = 1 - 2 * Q
+        tv = tvs[i]
+        l = wsizes[i]
+        est[i] = expected_distance(Kimura80, a1, a2)
+        var[i] = variance(Kimura80, P, Q, L, a1, a2)
+    end
+    return est, var, ranges
 end
 
 """

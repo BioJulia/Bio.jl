@@ -39,7 +39,10 @@ end
     dnas1 = [dna"ATTG-ACCTGGNTTTCCGAA", dna"A-ACAGAGTATACRGTCGTC"]
     m1 = seqmatrix(dnas1, :seq)
 
-    dnas2 = [dna"attgaacctggntttccgaa", dna"atacagagtatacrgtcgtc"]
+    dnas2 = [dna"attgaacctggntttccgaa",
+             dna"atacagagtatacrgtcgtc"]
+    dnas3 = [dna"attgaacctgtntttccgaa",
+             dna"atagaacgtatatrgccgtc"]
     m2 = seqmatrix(dnas2, :seq)
 
     @test distance(Count{AnyMutation}, dnas1) == ([12], [16])
@@ -51,6 +54,14 @@ end
     @test distance(Count{TransversionMutation}, m1) == ([8], [16])
     @test distance(Count{Kimura80}, m1) == ([4], [8], [16])
 
+    @test distance(Count{AnyMutation}, dnas2, 5, 5)[1][:] == [2, 4, 3, 3]
+    @test distance(Count{AnyMutation}, dnas2, 5, 5)[2][:] == [5, 5, 3, 5]
+    @test distance(Count{TransitionMutation}, dnas2, 5, 5)[1][:] == [0, 2, 1, 1]
+    @test distance(Count{TransitionMutation}, dnas2, 5, 5)[2][:] == [5, 5, 3, 5]
+    @test distance(Count{TransversionMutation}, dnas2, 5, 5)[1][:] == [2, 2, 2, 2]
+    @test distance(Count{TransversionMutation}, dnas2, 5, 5)[2][:] == [5, 5, 3, 5]
+    @test distance(Count{Kimura80}, dnas1) == ([4], [8], [16])
+
     @test distance(Count{AnyMutation}, dnas2) == ([12], [18])
     @test distance(Count{TransitionMutation}, dnas2) == ([4], [18])
     @test distance(Count{TransversionMutation}, dnas2) == ([8], [18])
@@ -59,6 +70,25 @@ end
     @test distance(Count{TransitionMutation}, m2) == ([4], [18])
     @test distance(Count{TransversionMutation}, m2) == ([8], [18])
     @test distance(Count{Kimura80}, m2) == ([4], [8], [18])
+
+    d = distance(Proportion{AnyMutation}, dnas2, 5, 5)
+    a = [0.4, 0.8, 1.0, 0.6]
+    for i in 1:length(d[1])
+        @test_approx_eq_eps d[1][i] a[i] 1e-4
+    end
+    @test d[2][:] == [5, 5, 3, 5]
+    d = distance(Proportion{TransitionMutation}, dnas2, 5, 5)
+    a = [0.0, 0.4, 0.333333, 0.2]
+    for i in 1:length(d[1])
+        @test_approx_eq_eps d[1][i] a[i] 1e-4
+    end
+    @test d[2][:] == [5, 5, 3, 5]
+    d = distance(Proportion{TransversionMutation}, dnas2, 5, 5)
+    a = [0.4, 0.4, 0.666667, 0.4]
+    for i in 1:length(d[1])
+        @test_approx_eq_eps d[1][i] a[i] 1e-4
+    end
+    @test d[2][:] == [5, 5, 3, 5]
 
     @test distance(Proportion{AnyMutation}, dnas1) == ([(12 / 16)], [16])
     @test distance(Proportion{TransitionMutation}, dnas1) == ([(4 / 16)], [16])
@@ -81,6 +111,14 @@ end
     @test round(distance(JukesCantor69, dnas2)[2][1], 3) == 1
     @test round(distance(JukesCantor69, m2)[1][1], 3) == 1.648
     @test round(distance(JukesCantor69, m2)[2][1], 3) == 1
+    @test_throws DomainError distance(JukesCantor69, dnas2, 5, 5)
+    d = distance(JukesCantor69, dnas3, 5, 5)
+    a = [0.232616, 0.571605, 0.44084, 0.571605]
+    v = [0.0595041, 0.220408, 0.24, 0.220408]
+    for i in 1:length(d[1])
+        @test_approx_eq_eps d[1][i] a[i] 1e-5
+        @test_approx_eq_eps d[2][i] v[i] 1e-5
+    end
 
     @test round(distance(Kimura80, dnas2)[1][1], 3) == 1.648
     @test round(distance(Kimura80, dnas2)[2][1], 3) == 1
