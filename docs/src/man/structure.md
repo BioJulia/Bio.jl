@@ -226,10 +226,8 @@ A few examples of `Bio.Structure` usage are given below.
 ```julia
 using Gadfly
 calphas = collectatoms(struc, calphaselector)
-res_numbers = map(resnumber, calphas)
-temp_facs = map(tempfac, calphas)
-plot(x=res_numbers,
-    y=temp_facs,
+plot(x=resnumber.(calphas),
+    y=tempfac.(calphas),
     Guide.xlabel("Residue number"),
     Guide.ylabel("Temperature factor"),
     Geom.line)
@@ -261,8 +259,8 @@ println(hintontxt(contacts))
 ```julia
 using Gadfly
 phi_angles, psi_angles = ramachandranangles(struc, stdresselector)
-plot(x=map(rad2deg, phi_angles),
-    y=map(rad2deg, psi_angles),
+plot(x=rad2deg.(phi_angles),
+    y=rad2deg.(psi_angles),
     Guide.xlabel("Phi / degrees"),
     Guide.ylabel("Psi / degrees"),
     Guide.xticks(ticks=[-180,-90,0,90,180]),
