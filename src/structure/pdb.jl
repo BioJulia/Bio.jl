@@ -235,53 +235,53 @@ end
 Form a Protein Data Bank (PDB) format ATOM or HETATM record from an `Atom` or
 `AtomRecord`.
 """
-pdbline(at::Atom) = String[
-        ishetero(at) ? "HETATM" : "ATOM  ",
-        spacestring(serial(at), 5),
-        " ",
-        spaceatomname(at),
-        string(altlocid(at)),
-        spacestring(resname(at), 3),
-        " ",
-        string(chainid(at)),
-        spacestring(resnumber(at), 4),
-        string(inscode(at)),
-        "   ",
-        # This will throw an error for large coordinate values, e.g. -1000.123
-        spacestring(round(x(at), 3), 8),
-        spacestring(round(y(at), 3), 8),
-        spacestring(round(z(at), 3), 8),
-        spacestring(round(occupancy(at), 2), 6),
-        # This will throw an error for large temp facs, e.g. 1000.12
-        spacestring(round(tempfactor(at), 2), 6),
-        "          ",
-        spacestring(element(at), 2),
-        spacestring(charge(at), 2),
-    ]
+function pdbline(at::Atom)
+    return (ishetero(at) ? "HETATM" : "ATOM  ") *
+            spacestring(serial(at), 5) *
+            " " *
+            spaceatomname(at) *
+            string(altlocid(at)) *
+            spacestring(resname(at), 3) *
+            " " *
+            string(chainid(at)) *
+            spacestring(resnumber(at), 4) *
+            string(inscode(at)) *
+            "   " *
+            # This will throw an error for large coordinate values, e.g. -1000.123
+            spacestring(round(x(at), 3), 8) *
+            spacestring(round(y(at), 3), 8) *
+            spacestring(round(z(at), 3), 8) *
+            spacestring(round(occupancy(at), 2), 6) *
+            # This will throw an error for large temp facs, e.g. 1000.12
+            spacestring(round(tempfactor(at), 2), 6) *
+            "          " *
+            spacestring(element(at), 2) *
+            spacestring(charge(at), 2)
+end
 
-pdbline(at_rec::AtomRecord) = String[
-        at_rec.het_atom ? "HETATM" : "ATOM  ",
-        spacestring(at_rec.serial, 5),
-        " ",
-        spacestring(at_rec.atom_name, 4),
-        string(at_rec.alt_loc_id),
-        spacestring(at_rec.res_name, 3),
-        " ",
-        string(at_rec.chain_id),
-        spacestring(at_rec.res_number, 4),
-        string(at_rec.ins_code),
-        "   ",
-        # This will throw an error for large coordinate values, e.g. -1000.123
-        spacestring(round(at_rec.coords[1], 3), 8),
-        spacestring(round(at_rec.coords[2], 3), 8),
-        spacestring(round(at_rec.coords[3], 3), 8),
-        spacestring(round(at_rec.occupancy, 2), 6),
-        # This will throw an error for large temp facs, e.g. 1000.12
-        spacestring(round(at_rec.temp_factor, 2), 6),
-        "          ",
-        spacestring(at_rec.element, 2),
-        spacestring(at_rec.charge, 2),
-    ]
+function pdbline(at_rec::AtomRecord)
+    return (at_rec.het_atom ? "HETATM" : "ATOM  ") *
+            spacestring(at_rec.serial, 5) *
+            " " *
+            spacestring(at_rec.atom_name, 4) *
+            string(at_rec.alt_loc_id) *
+            spacestring(at_rec.res_name, 3) *
+            " " *
+            string(at_rec.chain_id) *
+            spacestring(at_rec.res_number, 4) *
+            string(at_rec.ins_code) *
+            "   " *
+            # This will throw an error for large coordinate values, e.g. -1000.123
+            spacestring(round(at_rec.coords[1], 3), 8) *
+            spacestring(round(at_rec.coords[2], 3), 8) *
+            spacestring(round(at_rec.coords[3], 3), 8) *
+            spacestring(round(at_rec.occupancy, 2), 6) *
+            # This will throw an error for large temp facs, e.g. 1000.12
+            spacestring(round(at_rec.temp_factor, 2), 6) *
+            "          " *
+            spacestring(at_rec.element, 2) *
+            spacestring(at_rec.charge, 2)
+end
 
 
 """
@@ -332,7 +332,7 @@ end
 
 function writepdb(output::IO, at::AbstractAtom, atom_selectors::Function...)
     for atom_record in at
-        println(output, pdbline(atom_record)...)
+        println(output, pdbline(atom_record))
     end
 end
 

@@ -77,6 +77,7 @@ Properties can be retrieved as follows:
 | `residue`          | Residue an atom belongs to                                    | `Residue`                       |
 | `ishetero`         | `true` if the residue or atom is a hetero residue/atom        | `Bool`                          |
 | `isdisorderedatom` | `true` if the atom is disordered                              | `Bool`                          |
+| `pdbline`          | PDB ATOM/HETATM record for an atom                            | `String`                        |
 | `resname`          | Residue name of a residue or atom                             | `String`                        |
 | `resnumber`        | Residue number of a residue or atom                           | `Int`                           |
 | `inscode`          | Insertion code of a residue or atom                           | `Char`                          |
@@ -247,7 +248,7 @@ plot(x=resnumber.(calphas),
 ```julia
 for at in calphas
     if distance(struc['A'][38], at) < 5.0 && resnumber(at) != 38
-        println(join(pdbline(at)))
+        println(pdbline(at))
     end
 end
 ```
