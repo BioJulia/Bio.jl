@@ -192,16 +192,28 @@ writepdb("1EN2_out.pdb", struc, backboneselector)
 
 ## Spatial calculations
 
-Distances can be calculated. The minimum distance between residue 10 and 20 is:
+Various functions are provided to calculate spatial quantities on proteins:
+
+| Command              | Returns                                                                                         |
+| :------------------- | :---------------------------------------------------------------------------------------------- |
+| `distance`           | Minimum distance between two elements                                                           |
+| `sqdistance`         | Minimum square distance between two elements                                                    |
+| `bondangle`          | Angle between three atoms                                                                       |
+| `dihedralangle`      | Dihedral angle defined by four atoms                                                            |
+| `omegaangle`         | Omega angle between residue and previous residue                                                |
+| `phiangle`           | Phi angle between residue and previous residue                                                  |
+| `psiangle`           | Psi angle between residue and next residue                                                      |
+| `ramachandranangles` | `Vector`s of phi and psi angles of an element                                                   |
+| `contactmap`         | Contact map of two element, or one element with itself                                          |
+| `rmsd`               | RMSD between two elements of the same size - assumes they are superimposed                      |
+| `displacements`      | `Vector` of displacements between two elements of the same size - assumes they are superimposed |
+
+For example:
 
 ```julia
 julia> distance(struc['A'][10], struc['A'][20])
 10.782158874733762
-```
 
-Bond angles and dihedral angles can be calculated:
-
-```julia
 julia> rad2deg(bondangle(struc['A'][50]["N"], struc['A'][50]["CA"], struc['A'][50]["C"]))
 69.22234153916602
 
@@ -212,12 +224,10 @@ julia> rad2deg(psiangle(struc['A'][50], struc['A'][51]))
 -177.38288114072924
 ```
 
-Further spatial functions including `contactmap`, `ramachandranangles`, `rmsd` and `displacements` are described in the examples below.
-
 
 ## Examples
 
-A few examples of `Bio.Structure` usage are given below.
+A few further examples of `Bio.Structure` usage are given below.
 
 **A)** To plot the temperature factors of a protein, if you have Gadfly installed:
 
@@ -225,10 +235,10 @@ A few examples of `Bio.Structure` usage are given below.
 using Gadfly
 calphas = collectatoms(struc, calphaselector)
 plot(x=resnumber.(calphas),
-    y=tempfactor.(calphas),
-    Guide.xlabel("Residue number"),
-    Guide.ylabel("Temperature factor"),
-    Geom.line)
+     y=tempfactor.(calphas),
+     Guide.xlabel("Residue number"),
+     Guide.ylabel("Temperature factor"),
+     Geom.line)
 ```
 
 **B)** To find all C-alpha atoms within 5 Angstroms of residue 38:
@@ -258,11 +268,11 @@ println(hintontxt(contacts))
 using Gadfly
 phi_angles, psi_angles = ramachandranangles(struc, standardselector)
 plot(x=rad2deg.(phi_angles),
-    y=rad2deg.(psi_angles),
-    Guide.xlabel("Phi / degrees"),
-    Guide.ylabel("Psi / degrees"),
-    Guide.xticks(ticks=[-180,-90,0,90,180]),
-    Guide.yticks(ticks=[-180,-90,0,90,180]))
+     y=rad2deg.(psi_angles),
+     Guide.xlabel("Phi / degrees"),
+     Guide.ylabel("Psi / degrees"),
+     Guide.xticks(ticks=[-180,-90,0,90,180]),
+     Guide.yticks(ticks=[-180,-90,0,90,180]))
 ```
 
 **F)** To calculate the RMSD and displacements between the heavy (non-hydrogen) atoms of two models in an NMR structure:
