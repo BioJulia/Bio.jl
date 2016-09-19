@@ -160,8 +160,10 @@ end
     @test residue(res) == res
     @test residue(dis_res) == dis_res
 
-    @test !ishetatom(at)
-    @test !ishetatom(dis_at)
+    @test !ishetero(res)
+    @test !ishetero(at)
+    @test !ishetero(dis_at)
+    @test ishetero(dis_res)
 
     @test !isdisorderedatom(at)
     @test isdisorderedatom(dis_at)
@@ -197,14 +199,6 @@ end
     @test inscode(at) == ' '
     @test inscode(dis_at) == ' '
     @test inscode(dis_res) == 'A'
-
-    @test !ishetres(res)
-    @test ishetres(dis_res)
-
-    @test !ishetero(res)
-    @test !ishetero(at)
-    @test !ishetero(dis_at)
-    @test ishetero(dis_res)
 
     @test resid(at) == "10"
     @test resid(dis_at) == "10"
@@ -385,7 +379,7 @@ end
     @test_throws KeyError struc[2]
     @test_throws KeyError struc['C']
     @test_throws MethodError struc["A"]
-    @test ishetres(struc[1]['A']["H_20A"])
+    @test ishetero(struc[1]['A']["H_20A"])
 
 
     # Test selector functions
@@ -403,10 +397,14 @@ end
         110, "MG", ' ', [1.0, 2.0, 3.0], 1.0, 10.0, " C", "  ", res_b)
     at_b = ch_a["H_11"]["MG"]
 
-    @test stdatomselector(at_a)
-    @test !stdatomselector(at_b)
-    @test !hetatomselector(at_a)
-    @test hetatomselector(at_b)
+    @test standardselector(at_a)
+    @test !standardselector(at_b)
+    @test standardselector(res_a)
+    @test !standardselector(res_b)
+    @test !heteroselector(at_a)
+    @test heteroselector(at_b)
+    @test !heteroselector(res_a)
+    @test heteroselector(res_b)
     @test atomnameselector(at_a, Set(["CA", "N", "C"]))
     @test atomnameselector(at_a, ["CA", "N", "C"])
     @test !atomnameselector(at_b, Set(["CA", "N", "C"]))
@@ -437,10 +435,6 @@ end
     @test notwaterselector(res_a)
     @test !notwaterselector(res_c)
     @test notwaterselector(at_a)
-    @test stdresselector(res_a)
-    @test !stdresselector(res_b)
-    @test !hetresselector(res_a)
-    @test hetresselector(res_b)
     @test !disorderselector(at_a)
     @test disorderselector(dis_at)
     @test !disorderselector(res_a)
@@ -553,7 +547,7 @@ end
         "XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX" *
         "XXXXXXXXXXXXXXX"
     )
-    seq = AminoAcidSequence(struc['B'], stdresselector)
+    seq = AminoAcidSequence(struc['B'], standardselector)
     @test seq == AminoAcidSequence(
         "MRIILLGAPGAGKGTQAQFIMEKYGIPQISTGDMLRAAVKSGSELGKQAKDIMDAGKLVTDELVIALVKERIAQEDCRNG" *
         "FLLDGFPRTIPQADAMKEAGINVDYVLEFDVPDELIVDRIVGRRVHAPSGRVYHVKFNPPKVEGKDDVTGEELTTRKDDQ" *
@@ -693,17 +687,17 @@ end
     applyselectors!(ats_min)
     @test length(ats_min) == length(ats)
     @test map(serial, ats_min) == map(serial, ats)
-    ats_min = applyselectors(ats, stdatomselector)
+    ats_min = applyselectors(ats, standardselector)
     @test length(ats_min) == 3312
     @test serial(ats_min[2000]) == 2006
-    applyselectors!(ats, stdatomselector)
+    applyselectors!(ats, standardselector)
     @test length(ats) == 3312
     @test serial(ats[2000]) == 2006
     ats = collectatoms(struc)
-    ats_min = applyselectors(ats, stdatomselector, disorderselector)
+    ats_min = applyselectors(ats, standardselector, disorderselector)
     @test length(ats_min) == 5
     @test serial(ats_min[4]) == 1294
-    applyselectors!(ats, stdatomselector, disorderselector)
+    applyselectors!(ats, standardselector, disorderselector)
     @test length(ats) == 5
     @test serial(ats[4]) == 1294
 
@@ -722,10 +716,10 @@ end
     @test resid(res[300], full=true) == "H_657:B"
     res = collectresidues(struc)
     # Test anonymous selector function
-    res_min = applyselectors(res, stdresselector, res -> chainid(res) == 'A')
+    res_min = applyselectors(res, standardselector, res -> chainid(res) == 'A')
     @test length(res_min) == 214
     @test resid(res_min[200], full=true) == "200:A"
-    applyselectors!(res, stdresselector, res -> chainid(res) == 'A')
+    applyselectors!(res, standardselector, res -> chainid(res) == 'A')
     @test length(res) == 214
     @test resid(res[200], full=true) == "200:A"
 
@@ -738,12 +732,12 @@ end
     struc = read(pdbfilepath("1AKE.pdb"), PDB, read_het_atoms=false)
     @test countatoms(struc) == 3312
     @test serial(collectatoms(struc)[2000]) == 2006
-    @test sum(map(ishetatom, collectatoms(struc))) == 0
+    @test sum(map(ishetero, collectatoms(struc))) == 0
 
     struc = read(pdbfilepath("1AKE.pdb"), PDB, read_std_atoms=false)
     @test countatoms(struc) == 492
     @test serial(collectatoms(struc)[400]) == 3726
-    @test sum(map(ishetatom, collectatoms(struc))) == 492
+    @test sum(map(ishetero, collectatoms(struc))) == 492
 
     struc = read(pdbfilepath("1AKE.pdb"), PDB, read_het_atoms=false, read_std_atoms=false)
     @test countatoms(struc) == 0
@@ -842,13 +836,13 @@ end
     @test isa(ats[70], Atom)
     @test isa(ats[1290], DisorderedAtom)
     @test serial(ats[1660]) == 1666
-    ats = collectatoms(struc, hetatomselector)
+    ats = collectatoms(struc, heteroselector)
     @test length(ats) == 492
     @test serial(ats[80]) == 3406
     ats = collectatoms(struc, disorderselector)
     @test length(ats) == 12
     @test serial(ats[10]) == 3338
-    ats = collectatoms(struc, stdatomselector, disorderselector)
+    ats = collectatoms(struc, standardselector, disorderselector)
     @test length(ats) == 5
     @test serial(ats[4]) == 1294
     ats = collectatoms(struc[1])
@@ -905,9 +899,9 @@ end
     @test countatoms(DisorderedAtom[struc['A'][167]["CZ"], struc['A'][167]["CD"]]) == 2
     @test countatoms(Atom[struc['A'][51]["CA"], struc['A'][50]["CA"]]) == 2
 
-    @test countatoms(struc['A'], stdatomselector) == 1656
-    @test countatoms(struc['A'], hetatomselector) == 298
-    @test countatoms(struc['A'], stdatomselector, disorderselector) == 5
+    @test countatoms(struc['A'], standardselector) == 1656
+    @test countatoms(struc['A'], heteroselector) == 298
+    @test countatoms(struc['A'], standardselector, disorderselector) == 5
 
     @test countatoms(ProteinStructure()) == 0
     @test countatoms(Model()) == 0
@@ -921,10 +915,10 @@ end
     @test isa(res, Vector{AbstractResidue})
     @test isa(res[50], Residue)
     @test resnumber(res[220]) == 305
-    res = collectresidues(struc, hetresselector)
+    res = collectresidues(struc, heteroselector)
     @test length(res) == 380
     @test resnumber(res[370]) == 725
-    res = collectresidues(struc, stdresselector, res -> chainid(res) == 'A')
+    res = collectresidues(struc, standardselector, res -> chainid(res) == 'A')
     @test length(res) == 214
     @test resnumber(res[200]) == 200
     res = collectresidues(struc[1])
@@ -985,9 +979,9 @@ end
     @test countresidues(DisorderedAtom[struc['A'][167]["CZ"], struc['A'][167]["CD"]]) == 1
     @test countresidues(Atom[struc['A'][51]["CA"], struc['A'][50]["CA"]]) == 2
 
-    @test countresidues(struc['A'], stdresselector) == 214
-    @test countresidues(struc['A'], hetresselector) == 242
-    @test countresidues(struc, stdresselector, res -> chainid(res) == 'A') == 214
+    @test countresidues(struc['A'], standardselector) == 214
+    @test countresidues(struc['A'], heteroselector) == 242
+    @test countresidues(struc, standardselector, res -> chainid(res) == 'A') == 214
 
     @test countresidues(ProteinStructure()) == 0
     @test countresidues(Model()) == 0
@@ -1224,14 +1218,14 @@ end
 
     # Test selectors
     struc = read(pdbfilepath("1AKE.pdb"), PDB)
-    writepdb(temp_filename, struc, hetatomselector)
+    writepdb(temp_filename, struc, heteroselector)
     @test countlines(temp_filename) == 499
     struc_written = read(temp_filename, PDB)
     @test modelnumbers(struc_written) == [1]
     @test countatoms(struc_written) == 492
     @test chainids(struc_written) == ['A', 'B']
     @test tempfactor(struc_written['B']["H_705"]["O"]) == 64.17
-    writepdb(temp_filename, struc, stdatomselector, disorderselector)
+    writepdb(temp_filename, struc, standardselector, disorderselector)
     @test countlines(temp_filename) == 10
     struc_written = read(temp_filename, PDB)
     @test countatoms(struc_written) == 5
@@ -1286,7 +1280,7 @@ end
     @test countlines(temp_filename) == 2
     struc_written = read(temp_filename, PDB)
     @test countatoms(struc_written) == 2
-    @test !ishetatom(struc_written['A'][51]["CA"])
+    @test !ishetero(struc_written['A'][51]["CA"])
 
 
     # Test multiple model writing
@@ -1434,7 +1428,7 @@ end
     @test isapprox(distance(struc_1AKE['A'], struc_1AKE['B'][50]), sqrt(530.645746))
     @test isapprox(distance(struc_1AKE['A'], struc_1AKE['B'][50]["CA"]), sqrt(574.699125))
     @test isapprox(distance(struc_1AKE['A'], struc_1AKE['B'], backboneselector), sqrt(17.350083))
-    @test isapprox(distance(struc_1AKE['A'], struc_1AKE['B'], stdatomselector), sqrt(11.252973))
+    @test isapprox(distance(struc_1AKE['A'], struc_1AKE['B'], standardselector), sqrt(11.252973))
     @test isapprox(distance(struc_1AKE['A'][50]["CA"], struc_1AKE['B'][50]["CA"]), sqrt(2607.154834))
 
 

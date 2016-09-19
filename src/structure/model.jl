@@ -27,7 +27,7 @@ export
     element,
     charge,
     residue,
-    ishetatom,
+    ishetero,
     isdisorderedatom,
     defaultaltlocid,
     defaultatom,
@@ -36,8 +36,6 @@ export
     resname,
     resnumber,
     inscode,
-    ishetres,
-    ishetero,
     resid,
     atomnames,
     atoms,
@@ -71,8 +69,8 @@ export
     collectatoms,
     countatoms,
     choosedefaultaltlocid,
-    stdatomselector,
-    hetatomselector,
+    standardselector,
+    heteroselector,
     atomnameselector,
     calphaatomnames,
     calphaselector,
@@ -85,8 +83,6 @@ export
     waterresnames,
     waterselector,
     notwaterselector,
-    stdresselector,
-    hetresselector,
     disorderselector,
     hydrogenselector,
     AminoAcidSequence
@@ -487,11 +483,13 @@ residue(res::AbstractResidue) = res
 
 
 """
-Determines if an `AbstractAtom` represents a non-hetero atom, e.g. came from an
-ATOM record in a Protein Data Bank (PDB) file.
+Determines if an `AbstractAtom` represents a hetero atom, e.g. came from a
+HETATM record in a Protein Data Bank (PDB) file, or if an `AbstractResidue`
+represents a hetero molecule, e.g. consists of HETATM records from a PDB file.
 """
-ishetatom(at::Atom) = ishetres(residue(at))
-ishetatom(dis_at::DisorderedAtom) = ishetatom(defaultatom(dis_at))
+ishetero(at::AbstractAtom) = ishetero(residue(at))
+ishetero(res::Residue) = res.het_res
+ishetero(dis_res::DisorderedResidue) = ishetero(defaultresidue(dis_res))
 
 
 """
@@ -575,23 +573,6 @@ inscode(at::Atom) = inscode(residue(at))
 inscode(dis_at::DisorderedAtom) = inscode(defaultatom(dis_at))
 inscode(res::Residue) = res.ins_code
 inscode(dis_res::DisorderedResidue) = inscode(defaultresidue(dis_res))
-
-
-"""
-Determines if an `AbstractResidue` represents a hetero molecule, e.g. consists
-of HETATM records from a Protein Data Bank (PDB) file.
-"""
-ishetres(res::Residue) = res.het_res
-ishetres(dis_res::DisorderedResidue) = ishetres(defaultresidue(dis_res))
-
-
-"""
-Determines if an `AbstractAtom` represents a hetero atom, e.g. came from a
-HETATM record in a Protein Data Bank (PDB) file, or if an `AbstractResidue`
-represents a hetero molecule, e.g. consists of HETATM records from a PDB file.
-"""
-ishetero(at::AbstractAtom) = ishetatom(at)
-ishetero(res::AbstractResidue) = ishetres(res)
 
 
 """
@@ -838,9 +819,9 @@ function Base.isless(res_one::AbstractResidue, res_two::AbstractResidue)
     if isless(chain(res_one), chain(res_two))
         return true
     elseif chainid(res_one) == chainid(res_two)
-        if !ishetres(res_one) && ishetres(res_two)
+        if !ishetero(res_one) && ishetero(res_two)
             return true
-        elseif ishetres(res_one) == ishetres(res_two)
+        elseif ishetero(res_one) == ishetero(res_two)
             if isless(resnumber(res_one), resnumber(res_two))
                 return true
             elseif resnumber(res_one) == resnumber(res_two)
@@ -880,7 +861,7 @@ insertion code of the second greater than the first).
 """
 function sequentialresidues(res_first::AbstractResidue, res_second::AbstractResidue)
     if chainid(res_second) == chainid(res_first) &&
-            ishetres(res_second) == ishetres(res_first)
+            ishetero(res_second) == ishetero(res_first)
         if resnumber(res_second) == resnumber(res_first) + 1
             return true
         elseif resnumber(res_second) == resnumber(res_first) &&
@@ -1334,17 +1315,21 @@ end
 
 
 """
-Determines if an `AbstractAtom` represents a non-hetero atom, e.g. came from an
-ATOM record in a Protein Data Bank (PDB) file.
+Determines if an `AbstractAtom` represents a standard atom, e.g. came from a
+ATOM record in a Protein Data Bank (PDB) file, or if an `AbstractResidue`
+represents a standard molecule, e.g. consists of ATOM records from a PDB file.
 """
-stdatomselector(at::AbstractAtom) = !ishetatom(at)
+standardselector(at::AbstractAtom) = !ishetero(at)
+standardselector(res::AbstractResidue) = !ishetero(res)
 
 
 """
-Determines if an `AbstractAtom` is a hetero atom, e.g. came from a HETATM
-record in a Protein Data Bank (PDB) file.
+Determines if an `AbstractAtom` represents a hetero atom, e.g. came from a
+HETATM record in a Protein Data Bank (PDB) file, or if an `AbstractResidue`
+represents a hetero molecule, e.g. consists of HETATM records from a PDB file.
 """
-hetatomselector(at::AbstractAtom) = ishetatom(at)
+heteroselector(at::AbstractAtom) = ishetero(at)
+heteroselector(res::AbstractResidue) = ishetero(res)
 
 
 """
@@ -1375,7 +1360,7 @@ Determines if an `AbstractAtom` is not a hetero-atom and corresponds to a
 C-alpha atom.
 """
 function calphaselector(at::AbstractAtom)
-    return stdatomselector(at) && atomnameselector(at, calphaatomnames)
+    return standardselector(at) && atomnameselector(at, calphaatomnames)
 end
 
 
@@ -1388,7 +1373,7 @@ Determines if an `AbstractAtom` is not a hetero-atom and corresponds to a
 C-beta atom, or a C-alpha atom in glycine.
 """
 function cbetaselector(at::AbstractAtom)
-    return stdatomselector(at) &&
+    return standardselector(at) &&
         (atomnameselector(at, cbetaatomnames) ||
         (resname(at) == "GLY" && atomnameselector(at, calphaatomnames)))
 end
@@ -1403,7 +1388,7 @@ Determines if an `AbstractAtom` is not a hetero-atom and corresponds to a
 protein backbone atom.
 """
 function backboneselector(at::AbstractAtom)
-    return stdatomselector(at) && atomnameselector(at, backboneatomnames)
+    return standardselector(at) && atomnameselector(at, backboneatomnames)
 end
 
 
@@ -1411,7 +1396,7 @@ end
 Determines if an `AbstractAtom` corresponds to a heavy (non-hydrogen) atom and
 is not a hetero-atom.
 """
-heavyatomselector(at::AbstractAtom) = stdatomselector(at) && !hydrogenselector(at)
+heavyatomselector(at::AbstractAtom) = standardselector(at) && !hydrogenselector(at)
 
 
 """
@@ -1452,26 +1437,11 @@ end
 
 
 """
-Determines if an `AbstractResidue` represents a standard protein residue,
-e.g. consists of ATOM records in a Protein Data Bank (PDB) file.
-"""
-stdresselector(res::AbstractResidue) = !ishetres(res)
-
-
-"""
-Determines if an `AbstractResidue` represents a hetero molecule, e.g. consists
-of HETATM records in a Protein Data Bank (PDB) file.
-"""
-hetresselector(res::AbstractResidue) = ishetres(res)
-
-
-"""
 Determines whether an `AbstractAtom` or `AbstractResidue` is disordered, i.e.
 has multiple locations in the case of atoms or multiple residue names (point
 mutants) in the case of residues.
 """
 disorderselector(at::AbstractAtom) = isdisorderedatom(at)
-
 disorderselector(res::AbstractResidue) = isdisorderedres(res)
 
 
@@ -1522,13 +1492,13 @@ function Base.show(io::IO, struc::ProteinStructure)
         println(io, "Name                        -  ", structurename(struc))
         println(io, "Number of models            -  ", countmodels(struc))
         println(io, "Chain(s)                    -  ", join(chainids(mod)))
-        println(io, "Number of residues          -  ", countresidues(mod, stdresselector))
-        println(io, "Number of point mutations   -  ", countresidues(mod, stdresselector, disorderselector))
-        println(io, "Number of other molecules   -  ", countresidues(mod, hetresselector) - countresidues(mod, hetresselector, waterselector))
-        println(io, "Number of water molecules   -  ", countresidues(mod, hetresselector, waterselector))
-        println(io, "Number of atoms             -  ", countatoms(mod, stdatomselector))
-        println(io, "Number of hydrogens         -  ", countatoms(mod, stdatomselector, hydrogenselector))
-          print(io, "Number of disordered atoms  -  ", countatoms(mod, stdatomselector, disorderselector))
+        println(io, "Number of residues          -  ", countresidues(mod, standardselector))
+        println(io, "Number of point mutations   -  ", countresidues(mod, standardselector, disorderselector))
+        println(io, "Number of other molecules   -  ", countresidues(mod, heteroselector) - countresidues(mod, heteroselector, waterselector))
+        println(io, "Number of water molecules   -  ", countresidues(mod, heteroselector, waterselector))
+        println(io, "Number of atoms             -  ", countatoms(mod, standardselector))
+        println(io, "Number of hydrogens         -  ", countatoms(mod, standardselector, hydrogenselector))
+          print(io, "Number of disordered atoms  -  ", countatoms(mod, standardselector, disorderselector))
     else
         println(io, "Name                        -  ", structurename(struc))
           print(io, "Number of models            -  0")
@@ -1539,25 +1509,25 @@ function Base.show(io::IO, mod::Model)
     println(io, summary(mod))
     println(io, "Model number                -  ", modelnumber(mod))
     println(io, "Chain(s)                    -  ", join(chainids(mod)))
-    println(io, "Number of residues          -  ", countresidues(mod, stdresselector))
-    println(io, "Number of point mutations   -  ", countresidues(mod, stdresselector, disorderselector))
-    println(io, "Number of other molecules   -  ", countresidues(mod, hetresselector) - countresidues(mod, hetresselector, waterselector))
-    println(io, "Number of water molecules   -  ", countresidues(mod, hetresselector, waterselector))
-    println(io, "Number of atoms             -  ", countatoms(mod, stdatomselector))
-    println(io, "Number of hydrogens         -  ", countatoms(mod, stdatomselector, hydrogenselector))
-      print(io, "Number of disordered atoms  -  ", countatoms(mod, stdatomselector, disorderselector))
+    println(io, "Number of residues          -  ", countresidues(mod, standardselector))
+    println(io, "Number of point mutations   -  ", countresidues(mod, standardselector, disorderselector))
+    println(io, "Number of other molecules   -  ", countresidues(mod, heteroselector) - countresidues(mod, heteroselector, waterselector))
+    println(io, "Number of water molecules   -  ", countresidues(mod, heteroselector, waterselector))
+    println(io, "Number of atoms             -  ", countatoms(mod, standardselector))
+    println(io, "Number of hydrogens         -  ", countatoms(mod, standardselector, hydrogenselector))
+      print(io, "Number of disordered atoms  -  ", countatoms(mod, standardselector, disorderselector))
 end
 
 function Base.show(io::IO, ch::Chain)
     println(io, summary(ch))
     println(io, "Chain ID                    -  ", chainid(ch))
-    println(io, "Number of residues          -  ", countresidues(ch, stdresselector))
-    println(io, "Number of point mutations   -  ", countresidues(ch, stdresselector, disorderselector))
-    println(io, "Number of other molecules   -  ", countresidues(ch, hetresselector) - countresidues(ch, hetresselector, waterselector))
-    println(io, "Number of water molecules   -  ", countresidues(ch, hetresselector, waterselector))
-    println(io, "Number of atoms             -  ", countatoms(ch, stdatomselector))
-    println(io, "Number of hydrogens         -  ", countatoms(ch, stdatomselector, hydrogenselector))
-      print(io, "Number of disordered atoms  -  ", countatoms(ch, stdatomselector, disorderselector))
+    println(io, "Number of residues          -  ", countresidues(ch, standardselector))
+    println(io, "Number of point mutations   -  ", countresidues(ch, standardselector, disorderselector))
+    println(io, "Number of other molecules   -  ", countresidues(ch, heteroselector) - countresidues(ch, heteroselector, waterselector))
+    println(io, "Number of water molecules   -  ", countresidues(ch, heteroselector, waterselector))
+    println(io, "Number of atoms             -  ", countatoms(ch, standardselector))
+    println(io, "Number of hydrogens         -  ", countatoms(ch, standardselector, hydrogenselector))
+      print(io, "Number of disordered atoms  -  ", countatoms(ch, standardselector, disorderselector))
 end
 
 function Base.show(io::IO, res::Residue)

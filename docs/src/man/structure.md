@@ -74,13 +74,11 @@ Properties can be retrieved as follows:
 | `element`          | Element of an atom (default is `"  "`)                        | `String`                        |
 | `charge`           | Charge of an atom (default is `"  "`)                         | `String`                        |
 | `residue`          | Residue an atom belongs to                                    | `Residue`                       |
-| `ishetatom`        | `true` if the atom is a hetero atom                           | `Bool`                          |
+| `ishetero`         | `true` if the residue or atom is a hetero residue/atom        | `Bool`                          |
 | `isdisorderedatom` | `true` if the atom is disordered                              | `Bool`                          |
 | `resname`          | Residue name of a residue or atom                             | `String`                        |
 | `resnumber`        | Residue number of a residue or atom                           | `Int`                           |
 | `inscode`          | Insertion code of a residue or atom                           | `Char`                          |
-| `ishetres`         | `true` if the residue consists of hetero atoms                | `Bool`                          |
-| `ishetero`         | `true` if the residue or atom is a hetero residue/atom        | `Bool`                          |
 | `resid`            | Residue ID of an atom or residue (`full=true` includes chain) | `String`                        |
 | `atomnames`        | Atom names of the atoms in a residue, sorted by serial        | `Array{String,1}`               |
 | `atoms`            | Dictionary of atoms in a residue                              | `Dict{String, AbstractAtom}`    |
@@ -164,14 +162,14 @@ julia> countatoms(struc)
 julia> countatoms(struc, calphaselector)
 85
 
-julia> countresidues(struc, stdresselector)
+julia> countresidues(struc, standardselector)
 85
 ```
 
 The sequence of a protein can be retrieved by passing a `Chain` or list of residues to `AminoAcidSequence`:
 
 ```julia
-julia> AminoAcidSequence(struc['A'], stdresselector)
+julia> AminoAcidSequence(struc['A'], standardselector)
 85aa Amino Acid Sequence:
 RCGSQGGGSTCPGLRCCSIWGWCGDSEPYCGRTCENKCWSGERSDHRCGAAVGNPPCGQDRCCSVHGWCGGGNDYCSGGNCQYRC
 ```
@@ -258,7 +256,7 @@ println(hintontxt(contacts))
 
 ```julia
 using Gadfly
-phi_angles, psi_angles = ramachandranangles(struc, stdresselector)
+phi_angles, psi_angles = ramachandranangles(struc, standardselector)
 plot(x=rad2deg.(phi_angles),
     y=rad2deg.(psi_angles),
     Guide.xlabel("Phi / degrees"),

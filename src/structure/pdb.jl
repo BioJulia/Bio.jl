@@ -236,7 +236,7 @@ Form a Protein Data Bank (PDB) format ATOM or HETATM record from an `Atom` or
 `AtomRecord`.
 """
 pdbline(at::Atom) = String[
-        ishetatom(at) ? "HETATM" : "ATOM  ",
+        ishetero(at) ? "HETATM" : "ATOM  ",
         spacestring(serial(at), 5),
         " ",
         spaceatomname(at),
