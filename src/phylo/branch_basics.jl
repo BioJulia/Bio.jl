@@ -10,12 +10,10 @@
 #
 # This file is a part of BioJulia. License is MIT: https://github.com/BioJulia/Bio.jl/blob/master/LICENSE.md
 
-typealias BranchFields Union{Symbol, AbstractString, Integer}
 
-immutable Branch{T <: BranchFields}
-    from::T
-    to::T
-end
+# Any type used as branch metadata should have the following methods defined.
+
+# branchlength, branchlength!
 
 
 """
@@ -35,7 +33,6 @@ end
 
 Getter for metadata associated with branch represented by `edge`.
 """
-# Functions responsible for getting and setting branch data.
 function branchdata{C,B}(tree::Phylogeny{C,B}, edge::Edge)
     return get(tree.edgedata, edge, empty_branch_data(B))
 end
@@ -49,7 +46,7 @@ function branchdata!{C,B}(tree::Phylogeny{C,B}, edge::Edge, data::B)
     if has_edge(tree.graph, edge)
         tree.edgedata[edge] = data
     else
-        warn("You tried to set branch data to a non-existant branch. Consequently, nothing was done.")
+        warn("You tried to assign branch data to a non-existant branch. Consequently, nothing was done.")
     end
     return tree
 end
