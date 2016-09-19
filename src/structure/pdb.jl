@@ -20,7 +20,7 @@ end
 
 
 function Base.showerror(io::IO, e::PDBParseError)
-    return println(io,
+    return print(io,
             e.message,
             " at line ",
             e.line_number,
