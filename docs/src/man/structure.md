@@ -27,6 +27,7 @@ To parse a PDB file into a Structure-Model-Chain-Residue-Atom framework:
 
 ```julia
 julia> struc = read(filepath_1EN2, PDB)
+Bio.Structure.ProteinStructure
 Name                        -  1EN2.pdb
 Number of models            -  1
 Chain(s)                    -  A
@@ -50,7 +51,7 @@ The elements of `struc` can be accessed as follows:
 | `struc['A'][50]`            | Shortcut to above if it is not a hetero residue and the insertion code is blank | `AbstractResidue` |
 | `struc['A']["H_90"]`        | Model 1, chain A, hetero residue 90                                             | `AbstractResidue` |
 | `struc['A'][50]["CA"]`      | Model 1, chain A, residue 50, atom name CA                                      | `AbstractAtom`    |
-| `struc['A'][15]["CG"]['A']` | For disordered atoms, access a specific location                                | `DisorderedAtom`  |
+| `struc['A'][15]["CG"]['A']` | For disordered atoms, access a specific location                                | `Atom`            |
 
 Disordered atoms are stored in a `DisorderedAtom` container but calls fall back to the default atom, so disorder can be ignored if you are not interested in it.
 
@@ -120,7 +121,7 @@ end
 
 Models are ordered numerically; chains are ordered by character, except the empty chain is last; residues are ordered by residue number and insertion code with hetero residues after standard residues; atoms are ordered by atom serial.
 
-`collect` can be used to get lists of sub-elements. `collectatoms`, `collectresidues`, `collectchains` and `collectmodels` return lists of a particular type from a structural element or element list.
+`collect` can be used to get arrays of sub-elements. `collectatoms`, `collectresidues`, `collectchains` and `collectmodels` return arrays of a particular type from a structural element or element array.
 
 Selectors are functions passed as additional arguments to these functions. Only elements that return `true` when passed to the selector are retained.
 
@@ -166,7 +167,7 @@ julia> countresidues(struc, standardselector)
 85
 ```
 
-The sequence of a protein can be retrieved by passing a `Chain` or list of residues to `AminoAcidSequence`:
+The sequence of a protein can be retrieved by passing a `Chain` or array of residues to `AminoAcidSequence`:
 
 ```julia
 julia> AminoAcidSequence(struc['A'], standardselector)
@@ -215,7 +216,7 @@ julia> distance(struc['A'][10], struc['A'][20])
 10.782158874733762
 
 julia> rad2deg(bondangle(struc['A'][50]["N"], struc['A'][50]["CA"], struc['A'][50]["C"]))
-69.22234153916602
+110.77765846083398
 
 julia> rad2deg(dihedralangle(struc['A'][50]["N"], struc['A'][50]["CA"], struc['A'][50]["C"], struc['A'][51]["N"]))
 -177.38288114072924
@@ -241,23 +242,31 @@ plot(x=resnumber.(calphas),
      Geom.line)
 ```
 
-**B)** To find all C-alpha atoms within 5 Angstroms of residue 38:
+**B)** To print the PDB records for all C-alpha atoms within 5 Angstroms of residue 38:
 
 ```julia
 for at in calphas
     if distance(struc['A'][38], at) < 5.0 && resnumber(at) != 38
-        show(at)
+        println(join(pdbline(at)))
     end
 end
 ```
 
-**D)** To show the contact map of a structure, if you have Hinton installed:
+**D)** To view the contact map of a structure:
 
 ```julia
-using Hinton
 cbetas = collectatoms(struc, cbetaselector)
 contacts = contactmap(cbetas, 7.0)
-println(hintontxt(contacts))
+for i in 1:length(cbetas)
+    for j in 1:length(cbetas)
+        if contacts[i,j]
+            print("█")
+        else
+            print(" ")
+        end
+    end
+    println()
+end
 ```
 
 `cbetaselector` selects C-beta atoms, or C-alpha atoms for glycine residues. `contactmap` can also be given two structural elements as arguments, in which case a non-symmetrical 2D array is returned showing contacts between the elements.
