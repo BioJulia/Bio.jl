@@ -46,7 +46,7 @@ function rmsd(coords_one::Array{Float64}, coords_two::Array{Float64})
         throw(ArgumentError("Sizes of coordinate arrays are different - cannot calculate RMSD"))
     end
     diff = coords_one - coords_two
-    return sqrt.(sum(diff .* diff) / size(coords_one, 2))
+    return sqrt.(dot(diff, diff) / size(coords_one, 2))
 end
 
 function rmsd(el_one::StructuralElementOrList,
@@ -174,10 +174,15 @@ residue (atoms "N" and "CA" required) and the previous residue (atoms "CA" and
 "C" required).
 """
 function omegaangle(res::AbstractResidue, res_prev::AbstractResidue)
-    "CA" in atomnames(res_prev) ? nothing : throw(ArgumentError("Atom with atom name \"CA\" not found in previous residue"))
-    "C"  in atomnames(res_prev) ? nothing : throw(ArgumentError("Atom with atom name \"C\" not found in previous residue"))
-    "N"  in atomnames(res)      ? nothing : throw(ArgumentError("Atom with atom name \"N\" not found in residue"))
-    "CA" in atomnames(res)      ? nothing : throw(ArgumentError("Atom with atom name \"CA\" not found in residue"))
+    if !("CA" in atomnames(res_prev))
+        throw(ArgumentError("Atom with atom name \"CA\" not found in previous residue"))
+    elseif !("C"  in atomnames(res_prev))
+        throw(ArgumentError("Atom with atom name \"C\" not found in previous residue"))
+    elseif !("N"  in atomnames(res))
+        throw(ArgumentError("Atom with atom name \"N\" not found in residue"))
+    elseif !("CA" in atomnames(res))
+        throw(ArgumentError("Atom with atom name \"CA\" not found in residue"))
+    end
     return dihedralangle(res_prev["CA"], res_prev["C"], res["N"], res["CA"])
 end
 
@@ -187,10 +192,15 @@ residue (atoms "N", "CA" and "C" required) and the previous residue (atom "C"
 required).
 """
 function phiangle(res::AbstractResidue, res_prev::AbstractResidue)
-    "C"  in atomnames(res_prev) ? nothing : throw(ArgumentError("Atom with atom name \"C\" not found in previous residue"))
-    "N"  in atomnames(res)      ? nothing : throw(ArgumentError("Atom with atom name \"N\" not found in residue"))
-    "CA" in atomnames(res)      ? nothing : throw(ArgumentError("Atom with atom name \"CA\" not found in residue"))
-    "C"  in atomnames(res)      ? nothing : throw(ArgumentError("Atom with atom name \"C\" not found in residue"))
+    if !("C"  in atomnames(res_prev))
+        throw(ArgumentError("Atom with atom name \"C\" not found in previous residue"))
+    elseif !("N"  in atomnames(res))
+        throw(ArgumentError("Atom with atom name \"N\" not found in residue"))
+    elseif !("CA" in atomnames(res))
+        throw(ArgumentError("Atom with atom name \"CA\" not found in residue"))
+    elseif !("C"  in atomnames(res))
+        throw(ArgumentError("Atom with atom name \"C\" not found in residue"))
+    end
     return dihedralangle(res_prev["C"], res["N"], res["CA"], res["C"])
 end
 
@@ -200,10 +210,15 @@ residue (atoms "N", "CA" and "C" required) and the next residue (atom "N"
 required).
 """
 function psiangle(res::AbstractResidue, res_next::AbstractResidue)
-    "N"  in atomnames(res)      ? nothing : throw(ArgumentError("Atom with atom name \"N\" not found in residue"))
-    "CA" in atomnames(res)      ? nothing : throw(ArgumentError("Atom with atom name \"CA\" not found in residue"))
-    "C"  in atomnames(res)      ? nothing : throw(ArgumentError("Atom with atom name \"C\" not found in residue"))
-    "N"  in atomnames(res_next) ? nothing : throw(ArgumentError("Atom with atom name \"N\" not found in next residue"))
+    if !("N"  in atomnames(res))
+        throw(ArgumentError("Atom with atom name \"N\" not found in residue"))
+    elseif !("CA" in atomnames(res))
+        throw(ArgumentError("Atom with atom name \"CA\" not found in residue"))
+    elseif !("C"  in atomnames(res))
+        throw(ArgumentError("Atom with atom name \"C\" not found in residue"))
+    elseif !("N"  in atomnames(res_next))
+        throw(ArgumentError("Atom with atom name \"N\" not found in next residue"))
+    end
     return dihedralangle(res["N"], res["CA"], res["C"], res_next["N"])
 end
 
