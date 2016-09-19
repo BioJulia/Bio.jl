@@ -121,7 +121,7 @@ using Bio.Var: AnyMutation, TransitionMutation, TransversionMutation
             @test branchlength(branchlength!(tree, Edge(4, 1), 0.237), Edge(4, 1)) == 0.237
             @test parent_branch(tree, 1) == Edge(4, 1)
             @test child_branches(tree, 4) == [Edge(4, 1), Edge(4, 2), Edge(4, 3)]
-            @test child_branches(rem_branch!(tree, Edge(4, 1)), 4) == [Edge(4, 2), Edge(4, 3)]
+            @test child_branches(destroy_branch!(tree, Edge(4, 1)), 4) == [Edge(4, 2), Edge(4, 3)]
             @test child_branches(add_branch!(tree, Edge(4, 1), 0.5), 4) == [Edge(4, 1), Edge(4, 2), Edge(4, 3)]
         end
 
