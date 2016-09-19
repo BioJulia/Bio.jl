@@ -987,7 +987,7 @@ function collectmodels{T <: Union{Chain, AbstractResidue, AbstractAtom}}(els::Ve
             push!(mod_list, model(el))
         end
     end
-    return sort(mod_list)
+    return sort!(mod_list)
 end
 
 # One selector explicitly defined to prevent this being called without selectors
@@ -1036,7 +1036,7 @@ function collectchains(mods::Vector{Model})
     for mod in mods
         append!(ch_list, collectchains(mod))
     end
-    return sort(ch_list)
+    return sort!(ch_list)
 end
 
 collectchains(chs::Vector{Chain}) = sort(chs)
@@ -1048,7 +1048,7 @@ function collectchains{T <: Union{AbstractResidue, AbstractAtom}}(els::Vector{T}
             push!(ch_list, chain(el))
         end
     end
-    return sort(ch_list)
+    return sort!(ch_list)
 end
 
 function collectchains(el::StructuralElementOrList,
@@ -1090,7 +1090,7 @@ function collectresidues(el::Union{Model, Vector{Model}, Vector{Chain}})
     for sub_el in el
         append!(res_list, collectresidues(sub_el))
     end
-    return sort(res_list)
+    return sort!(res_list)
 end
 
 collectresidues(ch::Chain) = collect(ch)
@@ -1110,7 +1110,7 @@ function collectresidues{T <: AbstractAtom}(at_list::Vector{T})
             push!(res_list, residue(at))
         end
     end
-    return sort(res_list)
+    return sort!(res_list)
 end
 
 function collectresidues(el::StructuralElementOrList,
@@ -1156,7 +1156,7 @@ function collectatoms(el::Union{Model, Chain, Vector{Model}, Vector{Chain},
     for sub_el in el
         append!(at_list, collectatoms(sub_el))
     end
-    return sort(at_list)
+    return sort!(at_list)
 end
 
 collectatoms(res::AbstractResidue) = collect(res)
