@@ -2,7 +2,7 @@ RAGEL=ragel
 PARSERS=seq/fasta/parser.jl \
 		seq/fastq/parser.jl \
 		intervals/bed/parser.jl \
-		intervals/bigbed/parser.jl \
+		intervals/bbi/parser.jl \
 		intervals/gff3/parser.jl \
 		align/hts/sam/parser.jl
 
