@@ -520,6 +520,8 @@ end
                 read!(stream, entry)
             end
             close(stream)
+
+            return true
         end
 
         path = Pkg.dir("Bio", "test", "BioFmtSpecimens", "GFF3")

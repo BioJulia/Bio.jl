@@ -9,7 +9,7 @@
     }
 
     action count_line { input.state.linenum += 1 }
-    action anchor { Ragel.anchor!(state, p) }
+    action anchor { Ragel.@anchor! }
 
     action directive {
         directive = Ragel.@ascii_from_anchor!
@@ -40,31 +40,33 @@
     action phase      { output.metadata.phase = Nullable(Ragel.@int64_from_anchor!) }
     action nullphase  { output.metadata.phase = Nullable{Int}() }
     action attributes { Ragel.@copy_from_anchor!(output.metadata.attributes) }
+    # TODO: Think about how to store these efficiently. What did we do in
+    # isolator? Some kind of map that can only grow and get overwritten.
 
     newline        = '\r'? '\n' >count_line;
     hspace         = [ \t\v];
     blankline      = hspace* newline;
-    #floating_point = [\-+]?[0-9]* '.'? [0-9]+([eE][\-+]?[0-9]+)?;
-    floating_point = [\-+] digit* '.'? digit+;
+    # Just check that there's a digit. Actualy validation happens when we parse
+    # the float.
+    floating_point = [ -~]* digit [ -~]*;
 
-    comment   = '#' (any - newline)* newline;
+    comment   = '#' (any - newline - '#')* newline;
     directive = ("##" (any - newline)* newline) >anchor %directive;
 
-    seqname    = [ -~]* >anchor %seqname;
+    seqname    = [a-zA-Z0-9.:^*$@!+_?\-|%]* >anchor %seqname;
     source     = [ -~]* >anchor %source;
     kind       = [ -~]* >anchor %kind;
     start      = digit+ >anchor %start;
     end        = digit+ >anchor %end;
     score      = ((floating_point %score) | ('.' %nullscore)) >anchor;
     strand     = [+\-\.?] >strand;
-    phase      = (([1-3] %phase) | ('.' %nullphase)) >anchor;
+    phase      = (([0-2] %phase) | ('.' %nullphase)) >anchor;
     attributes = (any - newline)* >anchor %attributes;
 
-    gff3_entry = seqname '\t' source '\t' kind  '\t' start '\t' end '\t'
-                 score   '\t' strand '\t' phase '\t' attributes newline
-                 (comment | blankline)*;
+    gff3_entry = seqname '\t' source '\t' kind '\t' start '\t' end '\t'
+                 score   '\t' strand '\t' phase '\t' attributes newline;
 
-    main := directive* comment* (gff3_entry %finish_match)*;
+    main := (blankline | directive | comment | (gff3_entry %finish_match))*;
 }%%
 
 %% write data;
