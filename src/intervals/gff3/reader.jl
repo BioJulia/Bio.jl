@@ -5,7 +5,7 @@ type GFF3Reader <: Bio.IO.AbstractReader
     sequence_regions::Vector{Interval{Void}}
 
     function GFF3Reader(input::BufferedInputStream)
-        return new(Ragel.State(cs, input), VersionNumber(0), [])
+        return new(Ragel.State(gff3parser_start, input), VersionNumber(0), [])
     end
 end
 
