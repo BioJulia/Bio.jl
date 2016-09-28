@@ -30,6 +30,11 @@ function StringField(data::Vector{UInt8})
     return StringField(data, 1:length(data))
 end
 
+function StringField(data::SubString)
+    part = data.string.data[1+data.offset:data.offset+nextind(data, data.endof)-1]
+    StringField(part, 1:length(data))
+end
+
 # From base unicode/utf8.jl
 function Base.endof(s::StringField)
     d = s.data
@@ -92,6 +97,10 @@ end
 
 function Base.convert(::Type{StringField}, str::String)
     return StringField(copy(str.data), 1:length(str.data))
+end
+
+function Base.convert(::Type{StringField}, str::SubString)
+    return StringField(str)
 end
 
 function Base.convert(::Type{String}, field::StringField)

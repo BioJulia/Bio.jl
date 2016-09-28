@@ -4,9 +4,8 @@
     machine gff3parser;
 
     action finish_match {
-        yield = true
         Ragel.@anchor!
-        fbreak;
+        Ragel.@yield ftargs
     }
 
     action count_line { input.state.linenum += 1 }
@@ -70,7 +69,7 @@
 
 %% write data;
 
-Ragel.@generate_read!_fuction(
+Ragel.@generate_read!_function(
     "gff3parser",
     GFF3Reader,
     GFF3Interval,

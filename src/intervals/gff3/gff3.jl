@@ -4,8 +4,6 @@
 #
 # https://github.com/The-Sequence-Ontology/Specifications/blob/master/gff3.md
 
-immutable GFF3 <: FileFormat end
-
 type GFF3Metadata
     source::StringField
     # use "kind" instead of "type" since "type" is a keyword of Julia

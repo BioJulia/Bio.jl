@@ -9,7 +9,7 @@ const _gff3parser_nfa_targs = Int8[ 0, 0 ,  ]
 const _gff3parser_nfa_offsets = Int8[ 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 ,  ]
 const _gff3parser_nfa_push_actions = Int8[ 0, 0 ,  ]
 const _gff3parser_nfa_pop_trans = Int8[ 0, 0 ,  ]
-Ragel.@generate_read!_fuction(
+Ragel.@generate_read!_function(
 "gff3parser",
 GFF3Reader,
 GFF3Interval,
@@ -923,15 +923,8 @@ end
 @goto st17
 @label ctr212
 begin
-yield = true
 Ragel.@anchor!
-begin
-p+= 1;
-cs = 17;
-@goto _out
-
-end
-
+Ragel.@yield 17
 end
 begin
 Ragel.anchor!(state, p)
@@ -956,15 +949,8 @@ else
 end
 end
 begin
-yield = true
 Ragel.@anchor!
-begin
-p+= 1;
-cs = 17;
-@goto _out
-
-end
-
+Ragel.@yield 17
 end
 begin
 Ragel.anchor!(state, p)
@@ -1345,15 +1331,8 @@ begin
 end
 @label ctr213
 begin
-yield = true
 Ragel.@anchor!
-begin
-p+= 1;
-cs = 26;
-@goto _out
-
-end
-
+Ragel.@yield 26
 end
 begin
 Ragel.anchor!(state, p)
@@ -1375,15 +1354,8 @@ else
 end
 end
 begin
-yield = true
 Ragel.@anchor!
-begin
-p+= 1;
-cs = 26;
-@goto _out
-
-end
-
+Ragel.@yield 26
 end
 begin
 Ragel.anchor!(state, p)
@@ -1440,15 +1412,8 @@ end
 @goto st27
 @label ctr214
 begin
-yield = true
 Ragel.@anchor!
-begin
-p+= 1;
-cs = 27;
-@goto _out
-
-end
-
+Ragel.@yield 27
 end
 begin
 Ragel.anchor!(state, p)
@@ -1489,15 +1454,8 @@ else
 end
 end
 begin
-yield = true
 Ragel.@anchor!
-begin
-p+= 1;
-cs = 27;
-@goto _out
-
-end
-
+Ragel.@yield 27
 end
 begin
 Ragel.anchor!(state, p)
@@ -1530,15 +1488,8 @@ begin
 end
 @label ctr215
 begin
-yield = true
 Ragel.@anchor!
-begin
-p+= 1;
-cs = 28;
-@goto _out
-
-end
-
+Ragel.@yield 28
 end
 begin
 Ragel.anchor!(state, p)
@@ -3041,15 +2992,8 @@ begin
 end
 @label ctr217
 begin
-yield = true
 Ragel.@anchor!
-begin
-p+= 1;
-cs = 71;
-@goto _out
-
-end
-
+Ragel.@yield 71
 end
 begin
 Ragel.anchor!(state, p)
@@ -4587,15 +4531,8 @@ begin
 Ragel.anchor!(state, p)
 end
 begin
-yield = true
 Ragel.@anchor!
-begin
-p+= 1;
-cs = 115;
-@goto _out
-
-end
-
+Ragel.@yield 115
 end
 @goto st115
 @label st115
@@ -5903,15 +5840,8 @@ begin
 if ( cs  == 143 )
 elseif ( cs  == 145 )
 begin
-yield = true
 Ragel.@anchor!
-begin
-p+= 1;
-cs = 0;
-@goto _out
-
-end
-
+Ragel.@yield 0
 end
 
 break;
@@ -5948,15 +5878,8 @@ else
 end
 end
 begin
-yield = true
 Ragel.@anchor!
-begin
-p+= 1;
-cs = 0;
-@goto _out
-
-end
-
+Ragel.@yield 0
 end
 
 break;

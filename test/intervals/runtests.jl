@@ -501,6 +501,37 @@ end
         end
 
     end
+
+    @testset "GFF3 Parsing" begin
+    get_bio_fmt_specimens()
+        function check_gff3_parse(filename)
+            # Reading from a stream
+            for interval in GFF3Reader(open(filename))
+            end
+
+            # Reading from a regular file
+            for interval in open(GFF3Reader, filename)
+            end
+
+            # in-place parsing
+            stream = open(GFF3Reader, filename)
+            entry = eltype(stream)()
+            while !eof(stream)
+                read!(stream, entry)
+            end
+            close(stream)
+        end
+
+        path = Pkg.dir("Bio", "test", "BioFmtSpecimens", "GFF3")
+        for specimen in YAML.load_file(joinpath(path, "index.yml"))
+            valid = get(specimen, "valid", true)
+            if valid
+                @test check_gff3_parse(joinpath(path, specimen["filename"]))
+            else
+                @test_throws Exception check_gff3_parse(joinpath(path, specimen["filename"]))
+            end
+        end
+    end
 end
 
 
