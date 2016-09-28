@@ -1,39 +1,7 @@
 #
-# Generic Feature Format Version 3 (GFF3)
-# =======================================
-#
-# http://www.sequenceontology.org/gff3.shtml
-
-immutable GFF3 <: FileFormat end
-
-type GFF3Metadata
-    source::StringField
-    # use "kind" instead of "type" since "type" is a keyword of Julia
-    kind::StringField
-    score::Nullable{Float64}
-    phase::Nullable{Int}
-    attributes::StringField
-end
-
-function GFF3Metadata()
-    return GFF3Metadata("", "", NaN, 0, "")
-end
-
-function Base.copy(metadata::GFF3Metadata)
-    return GFF3Metadata(
-        copy(metadata.source),
-        copy(metadata.kind),
-        metadata.score,
-        metadata.phase,
-        copy(metadata.attributes)
-    )
-end
-
-"An `Interval` with associated metadata from a GFF3 file"
-typealias GFF3Interval Interval{GFF3Metadata}
 
 %%{
-    machine _gff3parser;
+    machine gff3parser;
 
     action finish_match {
         yield = true
@@ -102,32 +70,10 @@ typealias GFF3Interval Interval{GFF3Metadata}
 
 %% write data;
 
-
-type GFF3Parser <: AbstractParser
-    state::Ragel.State
-    version::VersionNumber
-    sequence_regions::Vector{Interval{Void}}
-
-    function GFF3Parser(input::BufferedInputStream)
-        %% write init;
-
-        return new(Ragel.State(cs, input), VersionNumber(0), [])
-    end
-end
-
-function Intervals.metadatatype(::GFF3Parser)
-    return GFF3Metadata
-end
-
-function Base.eltype(::Type{GFF3Parser})
-    return GFF3Interval
-end
-
-function open(input::BufferedInputStream, ::Type{GFF3})
-    return GFF3Parser(input)
-end
-
-Ragel.@generate_read_fuction("_gff3parser", GFF3Parser, GFF3Interval,
+Ragel.@generate_read!_fuction(
+    "gff3parser",
+    GFF3Reader,
+    GFF3Interval,
     begin
         %% write exec;
     end)
