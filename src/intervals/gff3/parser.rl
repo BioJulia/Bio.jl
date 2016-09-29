@@ -39,14 +39,18 @@
     action nullscore  { output.metadata.score = Nullable{Float64}() }
     action phase      { output.metadata.phase = Nullable(Ragel.@int64_from_anchor!) }
     action nullphase  { output.metadata.phase = Nullable{Int}() }
-    action attributes { Ragel.@copy_from_anchor!(output.metadata.attributes) }
-    # TODO: Think about how to store these efficiently. What did we do in
-    # isolator? Some kind of map that can only grow and get overwritten.
+    action attribute_key {
+        Ragel.@copy_from_anchor!(input.key)
+    }
+    action attribute_value {
+        pushindex!(output.metadata.attributes, input.key,
+                   input.state.stream.buffer, upanchor!(input.state.stream), p)
+    }
 
     newline        = '\r'? '\n' >count_line;
     hspace         = [ \t\v];
     blankline      = hspace* newline;
-    # Just check that there's a digit. Actualy validation happens when we parse
+    # Just check that there's a digit. Actual validation happens when we parse
     # the float.
     floating_point = [ -~]* digit [ -~]*;
 
@@ -61,7 +65,12 @@
     score      = ((floating_point %score) | ('.' %nullscore)) >anchor;
     strand     = [+\-\.?] >strand;
     phase      = (([0-2] %phase) | ('.' %nullphase)) >anchor;
-    attributes = (any - newline)* >anchor %attributes;
+
+    attribute_char = [ -~] - [=;,];
+    attribute_key = attribute_char* >anchor %attribute_key;
+    attribute_value = attribute_char* >anchor %attribute_value;
+    attribute = attribute_key '=' attribute_value (',' attribute_value)*;
+    attributes = (attribute ';')* attribute?;
 
     gff3_entry = seqname '\t' source '\t' kind '\t' start '\t' end '\t'
                  score   '\t' strand '\t' phase '\t' attributes newline;
