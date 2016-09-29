@@ -77,10 +77,10 @@ end
 
 function Base.copy!(field::StringField, data::Vector{UInt8},
                start::Integer, stop::Integer)
-    if length(field.data) < length(data)
-        resize!(field.data, length(data))
-    end
     n = stop - start + 1
+    if length(field.data) < n
+        resize!(field.data, n)
+    end
     copy!(field.data, 1, data, start, n)
     field.part = 1:n
     return n

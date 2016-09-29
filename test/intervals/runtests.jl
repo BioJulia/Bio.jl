@@ -503,7 +503,7 @@ end
     end
 
     @testset "GFF3 Parsing" begin
-    get_bio_fmt_specimens()
+        get_bio_fmt_specimens()
         function check_gff3_parse(filename)
             # Reading from a stream
             for interval in GFF3Reader(open(filename))

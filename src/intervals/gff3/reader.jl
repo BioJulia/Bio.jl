@@ -3,9 +3,11 @@ type GFF3Reader <: Bio.IO.AbstractReader
     state::Ragel.State
     version::VersionNumber
     sequence_regions::Vector{Interval{Void}}
+    key::StringField
 
     function GFF3Reader(input::BufferedInputStream)
-        return new(Ragel.State(gff3parser_start, input), VersionNumber(0), [])
+        return new(Ragel.State(gff3parser_start, input), VersionNumber(0), [],
+                   StringField())
     end
 end
 
