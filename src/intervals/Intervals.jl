@@ -35,6 +35,7 @@ export
     GFF3Interval,
     hasfasta,
     getfasta,
+    directives,
     Tabix,
     overlapchunks
 
