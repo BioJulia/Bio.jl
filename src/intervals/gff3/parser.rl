@@ -35,6 +35,18 @@
         end
     }
 
+    action implicit_fasta {
+        input.fasta_seen = true
+        input.state.finished = true
+        if input.entry_seen
+            p -= 2
+            Ragel.@yield ftargs
+        else
+            p -= 1
+            fbreak;
+        end
+    }
+
     # interval
     action seqname {
         input.entry_seen = true
@@ -77,6 +89,7 @@
 
     comment   = '#' (any - newline - '#')* newline;
     directive = ("##" (any - newline)*) >anchor %directive newline;
+    implicit_fasta = '>' >implicit_fasta;
 
     seqname    = [a-zA-Z0-9.:^*$@!+_?\-|%]* >anchor %seqname;
     source     = [ -~]* >anchor %source;
@@ -93,7 +106,7 @@
     attribute = attribute_key '=' attribute_value (',' attribute_value)*;
     attributes = (attribute ';')* attribute?;
 
-    non_entry = blankline | directive | comment;
+    non_entry = blankline | directive | comment | implicit_fasta;
 
     gff3_entry = seqname '\t' source '\t' kind '\t' start '\t' end '\t'
                  score   '\t' strand '\t' phase '\t' attributes
