@@ -517,7 +517,13 @@ end
             stream = open(GFF3Reader, filename)
             entry = eltype(stream)()
             while !eof(stream)
-                read!(stream, entry)
+                try
+                    read!(stream, entry)
+                catch ex
+                    if isa(ex, EOFError)
+                        break
+                    end
+                end
             end
             close(stream)
 

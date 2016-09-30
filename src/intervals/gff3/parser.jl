@@ -149,16 +149,35 @@ begin
 	input.state.linenum += 1
 end
 @goto st43
+@label ctr77
+begin
+input.fasta_seen = true
+input.state.finished = true
+if input.entry_seen
+		p -= 2
+		Ragel.@yield 43
+		else
+p -= 1
+		begin
+	p+= 1;
+cs = 43;
+@goto _out
+
+end
+
+end
+end
+@goto st43
 @label st43
 p+= 1;
 if ( p == pe  )
-	@goto _test_eof43
+@goto _test_eof43
 
 end
 @label st_case_43
 if ( (data[1+(p )]) == 9 )
 begin
-	@goto ctr74
+@goto ctr74
 
 end
 elseif ( (data[1+(p )]) == 10 )
@@ -189,6 +208,11 @@ end
 elseif ( (data[1+(p )]) == 35 )
 begin
 @goto ctr76
+
+end
+elseif ( (data[1+(p )]) == 62 )
+begin
+@goto ctr77
 
 end
 elseif ( (data[1+(p )]) == 124 )
@@ -977,6 +1001,25 @@ begin
 input.state.linenum += 1
 end
 @goto st44
+@label ctr81
+begin
+input.fasta_seen = true
+input.state.finished = true
+if input.entry_seen
+p -= 2
+Ragel.@yield 44
+else
+p -= 1
+begin
+p+= 1;
+cs = 44;
+@goto _out
+
+end
+
+end
+end
+@goto st44
 @label st44
 p+= 1;
 if ( p == pe  )
@@ -986,7 +1029,7 @@ end
 @label st_case_44
 if ( (data[1+(p )]) == 9 )
 begin
-@goto ctr77
+@goto ctr78
 
 end
 elseif ( (data[1+(p )]) == 10 )
@@ -1011,17 +1054,22 @@ begin
 end
 elseif ( (data[1+(p )]) == 33 )
 begin
-@goto ctr78
+@goto ctr79
 
 end
 elseif ( (data[1+(p )]) == 35 )
 begin
-@goto ctr79
+@goto ctr80
+
+end
+elseif ( (data[1+(p )]) == 62 )
+begin
+@goto ctr81
 
 end
 elseif ( (data[1+(p )]) == 124 )
 begin
-@goto ctr78
+@goto ctr79
 
 end
 end
@@ -1031,7 +1079,7 @@ if ( (data[1+(p )])< 42  )
 begin
 if ( 36 <= (data[1+(p )])&& (data[1+(p )])<= 37  )
 begin
-@goto ctr78
+@goto ctr79
 
 end
 
@@ -1043,7 +1091,7 @@ elseif ( (data[1+(p )])> 43  )
 begin
 if ( 45 <= (data[1+(p )])&& (data[1+(p )])<= 46  )
 begin
-@goto ctr78
+@goto ctr79
 
 end
 
@@ -1053,7 +1101,7 @@ end
 
 else
 begin
-@goto ctr78
+@goto ctr79
 
 end
 
@@ -1067,7 +1115,7 @@ if ( (data[1+(p )])< 94  )
 begin
 if ( 63 <= (data[1+(p )])&& (data[1+(p )])<= 90  )
 begin
-@goto ctr78
+@goto ctr79
 
 end
 
@@ -1079,7 +1127,7 @@ elseif ( (data[1+(p )])> 95  )
 begin
 if ( 97 <= (data[1+(p )])&& (data[1+(p )])<= 122  )
 begin
-@goto ctr78
+@goto ctr79
 
 end
 
@@ -1089,7 +1137,7 @@ end
 
 else
 begin
-@goto ctr78
+@goto ctr79
 
 end
 
@@ -1099,7 +1147,7 @@ end
 
 else
 begin
-@goto ctr78
+@goto ctr79
 
 end
 
@@ -1108,7 +1156,7 @@ begin
 @goto st0
 
 end
-@label ctr77
+@label ctr78
 begin
 Ragel.@anchor!
 Ragel.@yield 17
@@ -1590,7 +1638,7 @@ begin
 Ragel.@anchor!
 end
 @goto st28
-@label ctr78
+@label ctr79
 begin
 Ragel.@anchor!
 Ragel.@yield 28
@@ -1738,7 +1786,7 @@ begin
 @goto st0
 
 end
-@label ctr79
+@label ctr80
 begin
 Ragel.@anchor!
 end
