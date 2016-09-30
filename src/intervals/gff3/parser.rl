@@ -8,7 +8,7 @@
         Ragel.@yield ftargs
     }
 
-    action count_line { input.state.linenum += 1 }
+    action count_line { state.linenum += 1 }
     action anchor { Ragel.@anchor! }
 
     action directive {
@@ -61,7 +61,10 @@
         input.entry_seen = true
         empty!(output.metadata.attributes)
         Ragel.@copy_from_anchor!(output.seqname)
-        unescape_as_needed!(output.seqname)
+        if input.unescape_needed
+            unescape!(output.metadata.source)
+            input.unescape_needed = false
+        end
     }
     action start   { output.first = Ragel.@int64_from_anchor! }
     action end     { output.last = Ragel.@int64_from_anchor! }
@@ -70,23 +73,31 @@
     # metadata
     action source     {
         Ragel.@copy_from_anchor!(output.metadata.source)
-        unescape_as_needed!(output.metadata.source)
+        if input.unescape_needed
+            unescape!(output.metadata.source)
+            input.unescape_needed = false
+        end
     }
-    action kind       {
-        Ragel.@copy_from_anchor!(output.metadata.kind)
-        unescape_as_needed!(output.metadata.kind)
-    }
+    action kind       { Ragel.@copy_from_anchor!(output.metadata.kind) }
     action score      { output.metadata.score = Nullable(Ragel.@float64_from_anchor!) }
     action nullscore  { output.metadata.score = Nullable{Float64}() }
     action phase      { output.metadata.phase = Nullable(Ragel.@int64_from_anchor!) }
     action nullphase  { output.metadata.phase = Nullable{Int}() }
     action attribute_key {
         Ragel.@copy_from_anchor!(input.key)
-        unescape_as_needed!(input.key)
+        if input.unescape_needed
+            unescape!(output.metadata.source)
+            input.unescape_needed = false
+        end
     }
     action attribute_value {
         pushindex!(output.metadata.attributes, input.key,
-                   input.state.stream.buffer, upanchor!(input.state.stream), p)
+                   input.state.stream.buffer, upanchor!(input.state.stream), p,
+                   input.unescape_needed)
+        input.unescape_needed = false
+    }
+    action check_percent {
+        input.unescape_needed = input.unescape_needed || data[p] == UInt32('%')
     }
 
     newline        = '\r'? '\n' >count_line;
@@ -100,8 +111,8 @@
     directive = "##" ((any - newline)* >anchor %directive) newline;
     implicit_fasta = '>' >implicit_fasta;
 
-    seqname    = [a-zA-Z0-9.:^*$@!+_?\-|%]* >anchor %seqname;
-    source     = [ -~]* >anchor %source;
+    seqname    = ([a-zA-Z0-9.:^*$@!+_?\-|%] %check_percent)* >anchor %seqname;
+    source     = ([ -~] %check_percent)* >anchor %source;
     kind       = [ -~]* >anchor %kind;
     start      = digit+ >anchor %start;
     end        = digit+ >anchor %end;
@@ -109,7 +120,7 @@
     strand     = [+\-\.?] >strand;
     phase      = (([0-2] %phase) | ('.' %nullphase)) >anchor;
 
-    attribute_char = [ -~] - [=;,];
+    attribute_char = ([ -~] - [=;,] %check_percent);
     attribute_key = attribute_char* >anchor %attribute_key;
     attribute_value = attribute_char* >anchor %attribute_value;
     attribute = attribute_key '=' attribute_value (',' attribute_value)*;

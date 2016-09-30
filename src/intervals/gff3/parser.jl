@@ -117,7 +117,7 @@ end
 @goto st_out
 @label ctr2
 begin
-input.state.linenum += 1
+state.linenum += 1
 end
 @goto st45
 @label ctr77
@@ -158,7 +158,7 @@ copy!(input.directives[input.directive_count += 1], input.directive)
 end
 end
 begin
-input.state.linenum += 1
+state.linenum += 1
 end
 @goto st45
 @label ctr80
@@ -196,7 +196,7 @@ copy!(input.directives[input.directive_count += 1], input.directive)
 end
 end
 begin
-input.state.linenum += 1
+state.linenum += 1
 end
 @goto st45
 @label ctr85
@@ -371,7 +371,10 @@ input.directive_count = 0;
 input.entry_seen = true
 empty!(output.metadata.attributes)
 Ragel.@copy_from_anchor!(output.seqname)
-unescape_as_needed!(output.seqname)
+if input.unescape_needed
+unescape!(output.metadata.source)
+input.unescape_needed = false
+end
 end
 @goto st1
 @label st1
@@ -424,13 +427,22 @@ Ragel.@anchor!
 end
 begin
 Ragel.@copy_from_anchor!(output.metadata.source)
-unescape_as_needed!(output.metadata.source)
+if input.unescape_needed
+unescape!(output.metadata.source)
+input.unescape_needed = false
+end
 end
 @goto st2
 @label ctr72
 begin
+input.unescape_needed = input.unescape_needed || data[p] == UInt32('%')
+end
+begin
 Ragel.@copy_from_anchor!(output.metadata.source)
-unescape_as_needed!(output.metadata.source)
+if input.unescape_needed
+unescape!(output.metadata.source)
+input.unescape_needed = false
+end
 end
 @goto st2
 @label st2
@@ -483,13 +495,11 @@ Ragel.@anchor!
 end
 begin
 Ragel.@copy_from_anchor!(output.metadata.kind)
-unescape_as_needed!(output.metadata.kind)
 end
 @goto st3
 @label ctr70
 begin
 Ragel.@copy_from_anchor!(output.metadata.kind)
-unescape_as_needed!(output.metadata.kind)
 end
 @goto st3
 @label st3
@@ -925,13 +935,17 @@ Ragel.@anchor!
 end
 begin
 pushindex!(output.metadata.attributes, input.key,
-input.state.stream.buffer, upanchor!(input.state.stream), p)
+input.state.stream.buffer, upanchor!(input.state.stream), p,
+input.unescape_needed)
+input.unescape_needed = false
 end
 @goto st16
 @label ctr67
 begin
 pushindex!(output.metadata.attributes, input.key,
-input.state.stream.buffer, upanchor!(input.state.stream), p)
+input.state.stream.buffer, upanchor!(input.state.stream), p,
+input.unescape_needed)
+input.unescape_needed = false
 end
 @goto st16
 @label ctr68
@@ -999,7 +1013,7 @@ begin
 end
 @label ctr27
 begin
-input.state.linenum += 1
+state.linenum += 1
 end
 @goto st46
 @label ctr51
@@ -1040,7 +1054,7 @@ copy!(input.directives[input.directive_count += 1], input.directive)
 end
 end
 begin
-input.state.linenum += 1
+state.linenum += 1
 end
 @goto st46
 @label ctr54
@@ -1078,7 +1092,7 @@ copy!(input.directives[input.directive_count += 1], input.directive)
 end
 end
 begin
-input.state.linenum += 1
+state.linenum += 1
 end
 @goto st46
 @label ctr58
@@ -1087,19 +1101,23 @@ Ragel.@anchor!
 end
 begin
 pushindex!(output.metadata.attributes, input.key,
-input.state.stream.buffer, upanchor!(input.state.stream), p)
+input.state.stream.buffer, upanchor!(input.state.stream), p,
+input.unescape_needed)
+input.unescape_needed = false
 end
 begin
-input.state.linenum += 1
+state.linenum += 1
 end
 @goto st46
 @label ctr63
 begin
 pushindex!(output.metadata.attributes, input.key,
-input.state.stream.buffer, upanchor!(input.state.stream), p)
+input.state.stream.buffer, upanchor!(input.state.stream), p,
+input.unescape_needed)
+input.unescape_needed = false
 end
 begin
-input.state.linenum += 1
+state.linenum += 1
 end
 @goto st46
 @label ctr89
@@ -1274,7 +1292,10 @@ input.directive_count = 0;
 input.entry_seen = true
 empty!(output.metadata.attributes)
 Ragel.@copy_from_anchor!(output.seqname)
-unescape_as_needed!(output.seqname)
+if input.unescape_needed
+unescape!(output.metadata.source)
+input.unescape_needed = false
+end
 end
 @goto st17
 @label st17
@@ -1327,13 +1348,22 @@ Ragel.@anchor!
 end
 begin
 Ragel.@copy_from_anchor!(output.metadata.source)
-unescape_as_needed!(output.metadata.source)
+if input.unescape_needed
+unescape!(output.metadata.source)
+input.unescape_needed = false
+end
 end
 @goto st18
 @label ctr40
 begin
+input.unescape_needed = input.unescape_needed || data[p] == UInt32('%')
+end
+begin
 Ragel.@copy_from_anchor!(output.metadata.source)
-unescape_as_needed!(output.metadata.source)
+if input.unescape_needed
+unescape!(output.metadata.source)
+input.unescape_needed = false
+end
 end
 @goto st18
 @label st18
@@ -1386,13 +1416,11 @@ Ragel.@anchor!
 end
 begin
 Ragel.@copy_from_anchor!(output.metadata.kind)
-unescape_as_needed!(output.metadata.kind)
 end
 @goto st19
 @label ctr36
 begin
 Ragel.@copy_from_anchor!(output.metadata.kind)
-unescape_as_needed!(output.metadata.kind)
 end
 @goto st19
 @label st19
@@ -1481,13 +1509,17 @@ Ragel.@anchor!
 end
 begin
 pushindex!(output.metadata.attributes, input.key,
-input.state.stream.buffer, upanchor!(input.state.stream), p)
+input.state.stream.buffer, upanchor!(input.state.stream), p,
+input.unescape_needed)
+input.unescape_needed = false
 end
 @goto st21
 @label ctr64
 begin
 pushindex!(output.metadata.attributes, input.key,
-input.state.stream.buffer, upanchor!(input.state.stream), p)
+input.state.stream.buffer, upanchor!(input.state.stream), p,
+input.unescape_needed)
+input.unescape_needed = false
 end
 @goto st21
 @label st21
@@ -1593,13 +1625,11 @@ Ragel.@anchor!
 end
 begin
 Ragel.@copy_from_anchor!(output.metadata.kind)
-unescape_as_needed!(output.metadata.kind)
 end
 @goto st24
 @label ctr39
 begin
 Ragel.@copy_from_anchor!(output.metadata.kind)
-unescape_as_needed!(output.metadata.kind)
 end
 @goto st24
 @label st24
@@ -1623,6 +1653,11 @@ end
 @label ctr33
 begin
 Ragel.@anchor!
+end
+@goto st25
+@label ctr41
+begin
+input.unescape_needed = input.unescape_needed || data[p] == UInt32('%')
 end
 @goto st25
 @label st25
@@ -1654,13 +1689,13 @@ begin
 end
 elseif ( (data[1+(p )]) == 32 )
 begin
-@goto st25
+@goto ctr41
 
 end
 end
 if ( 33 <= (data[1+(p )])&& (data[1+(p )])<= 126  )
 begin
-@goto st26
+@goto ctr42
 
 end
 
@@ -1672,6 +1707,11 @@ end
 @label ctr6
 begin
 Ragel.@anchor!
+end
+@goto st26
+@label ctr42
+begin
+input.unescape_needed = input.unescape_needed || data[p] == UInt32('%')
 end
 @goto st26
 @label st26
@@ -1690,7 +1730,7 @@ end
 end
 if ( 32 <= (data[1+(p )])&& (data[1+(p )])<= 126  )
 begin
-@goto st26
+@goto ctr42
 
 end
 
@@ -1705,13 +1745,22 @@ Ragel.@anchor!
 end
 begin
 Ragel.@copy_from_anchor!(output.metadata.source)
-unescape_as_needed!(output.metadata.source)
+if input.unescape_needed
+unescape!(output.metadata.source)
+input.unescape_needed = false
+end
 end
 @goto st27
 @label ctr43
 begin
+input.unescape_needed = input.unescape_needed || data[p] == UInt32('%')
+end
+begin
 Ragel.@copy_from_anchor!(output.metadata.source)
-unescape_as_needed!(output.metadata.source)
+if input.unescape_needed
+unescape!(output.metadata.source)
+input.unescape_needed = false
+end
 end
 @goto st27
 @label st27
@@ -1744,6 +1793,11 @@ begin
 Ragel.@anchor!
 end
 @goto st28
+@label ctr46
+begin
+input.unescape_needed = input.unescape_needed || data[p] == UInt32('%')
+end
+@goto st28
 @label ctr87
 begin
 Ragel.@anchor!
@@ -1767,12 +1821,12 @@ begin
 end
 elseif ( (data[1+(p )]) == 33 )
 begin
-@goto st28
+@goto ctr46
 
 end
 elseif ( (data[1+(p )]) == 124 )
 begin
-@goto st28
+@goto ctr46
 
 end
 end
@@ -1782,7 +1836,7 @@ if ( (data[1+(p )])< 42  )
 begin
 if ( 36 <= (data[1+(p )])&& (data[1+(p )])<= 37  )
 begin
-@goto st28
+@goto ctr46
 
 end
 
@@ -1794,7 +1848,7 @@ elseif ( (data[1+(p )])> 43  )
 begin
 if ( 45 <= (data[1+(p )])&& (data[1+(p )])<= 46  )
 begin
-@goto st28
+@goto ctr46
 
 end
 
@@ -1804,7 +1858,7 @@ end
 
 else
 begin
-@goto st28
+@goto ctr46
 
 end
 
@@ -1818,7 +1872,7 @@ if ( (data[1+(p )])< 94  )
 begin
 if ( 63 <= (data[1+(p )])&& (data[1+(p )])<= 90  )
 begin
-@goto st28
+@goto ctr46
 
 end
 
@@ -1830,7 +1884,7 @@ elseif ( (data[1+(p )])> 95  )
 begin
 if ( 97 <= (data[1+(p )])&& (data[1+(p )])<= 122  )
 begin
-@goto st28
+@goto ctr46
 
 end
 
@@ -1840,7 +1894,7 @@ end
 
 else
 begin
-@goto st28
+@goto ctr46
 
 end
 
@@ -1850,7 +1904,7 @@ end
 
 else
 begin
-@goto st28
+@goto ctr46
 
 end
 
@@ -1861,6 +1915,9 @@ begin
 end
 @label ctr45
 begin
+input.unescape_needed = input.unescape_needed || data[p] == UInt32('%')
+end
+begin
 input.preceding_directives, input.directives =
 input.directives, input.preceding_directives
 input.preceding_directive_count = input.directive_count
@@ -1869,7 +1926,10 @@ input.directive_count = 0;
 input.entry_seen = true
 empty!(output.metadata.attributes)
 Ragel.@copy_from_anchor!(output.seqname)
-unescape_as_needed!(output.seqname)
+if input.unescape_needed
+unescape!(output.metadata.source)
+input.unescape_needed = false
+end
 end
 @goto st29
 @label st29
@@ -2123,13 +2183,19 @@ Ragel.@anchor!
 end
 begin
 Ragel.@copy_from_anchor!(input.key)
-unescape_as_needed!(input.key)
+if input.unescape_needed
+unescape!(output.metadata.source)
+input.unescape_needed = false
+end
 end
 @goto st35
 @label ctr57
 begin
 Ragel.@copy_from_anchor!(input.key)
-unescape_as_needed!(input.key)
+if input.unescape_needed
+unescape!(output.metadata.source)
+input.unescape_needed = false
+end
 end
 @goto st35
 @label ctr61
@@ -2138,13 +2204,17 @@ Ragel.@anchor!
 end
 begin
 pushindex!(output.metadata.attributes, input.key,
-input.state.stream.buffer, upanchor!(input.state.stream), p)
+input.state.stream.buffer, upanchor!(input.state.stream), p,
+input.unescape_needed)
+input.unescape_needed = false
 end
 @goto st35
 @label ctr66
 begin
 pushindex!(output.metadata.attributes, input.key,
-input.state.stream.buffer, upanchor!(input.state.stream), p)
+input.state.stream.buffer, upanchor!(input.state.stream), p,
+input.unescape_needed)
+input.unescape_needed = false
 end
 @goto st35
 @label st35
@@ -2385,6 +2455,11 @@ begin
 Ragel.@anchor!
 end
 @goto st40
+@label ctr73
+begin
+input.unescape_needed = input.unescape_needed || data[p] == UInt32('%')
+end
+@goto st40
 @label st40
 p+= 1;
 if ( p == pe  )
@@ -2414,13 +2489,13 @@ begin
 end
 elseif ( (data[1+(p )]) == 32 )
 begin
-@goto st40
+@goto ctr73
 
 end
 end
 if ( 33 <= (data[1+(p )])&& (data[1+(p )])<= 126  )
 begin
-@goto st26
+@goto ctr42
 
 end
 

@@ -7,6 +7,7 @@ type GFF3Reader <: Bio.IO.AbstractReader
     save_directives::Bool
     entry_seen::Bool
     fasta_seen::Bool
+    unescape_needed::Bool
 
     directive::StringField
 
@@ -18,7 +19,7 @@ type GFF3Reader <: Bio.IO.AbstractReader
 
     function GFF3Reader(input::BufferedInputStream, save_directives::Bool=false)
         return new(Ragel.State(gff3parser_start, input), VersionNumber(0), [],
-                   StringField(), save_directives, false, false,
+                   StringField(), save_directives, false, false, false,
                    StringField(), StringField[], 0, StringField[], 0)
     end
 end
