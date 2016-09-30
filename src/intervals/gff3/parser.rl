@@ -40,20 +40,28 @@
         input.entry_seen = true
         empty!(output.metadata.attributes)
         Ragel.@copy_from_anchor!(output.seqname)
+        unescape_as_needed!(output.seqname)
     }
     action start   { output.first = Ragel.@int64_from_anchor! }
     action end     { output.last = Ragel.@int64_from_anchor! }
     action strand  { output.strand = convert(Strand, (Ragel.@char)) }
 
     # metadata
-    action source     { Ragel.@copy_from_anchor!(output.metadata.source) }
-    action kind       { Ragel.@copy_from_anchor!(output.metadata.kind) }
+    action source     {
+        Ragel.@copy_from_anchor!(output.metadata.source)
+        unescape_as_needed!(output.metadata.source)
+    }
+    action kind       {
+        Ragel.@copy_from_anchor!(output.metadata.kind)
+        unescape_as_needed!(output.metadata.kind)
+    }
     action score      { output.metadata.score = Nullable(Ragel.@float64_from_anchor!) }
     action nullscore  { output.metadata.score = Nullable{Float64}() }
     action phase      { output.metadata.phase = Nullable(Ragel.@int64_from_anchor!) }
     action nullphase  { output.metadata.phase = Nullable{Int}() }
     action attribute_key {
         Ragel.@copy_from_anchor!(input.key)
+        unescape_as_needed!(input.key)
     }
     action attribute_value {
         pushindex!(output.metadata.attributes, input.key,

@@ -4,6 +4,8 @@
 #
 # https://github.com/The-Sequence-Ontology/Specifications/blob/master/gff3.md
 
+using URIParser: unescape
+
 """
 Map strings to one or more strings avoiding allocation and deallocation as much
 as possible.
@@ -67,6 +69,7 @@ function pushindex!(attrs::GFFAttributes, key::StringField,
         push!(attrs.data[i], StringField())
     end
     copy!(attrs.data[i][j], data, start, stop)
+    unescape_as_needed!(attrs.data[i][j])
 end
 
 function Base.copy(attrs::GFFAttributes)
@@ -133,6 +136,14 @@ function Base.copy(metadata::GFF3Metadata)
         metadata.score,
         metadata.phase,
         copy(metadata.attributes))
+end
+
+function unescape_as_needed!(x::StringField)
+    if '%' in x
+        y = unescape(x)
+        copy!(x, y.data, 1, length(y.data))
+    end
+    return x
 end
 
 "An `Interval` with associated metadata from a GFF3 file"
