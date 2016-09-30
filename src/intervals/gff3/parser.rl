@@ -62,7 +62,7 @@
         empty!(output.metadata.attributes)
         Ragel.@copy_from_anchor!(output.seqname)
         if input.unescape_needed
-            unescape!(output.metadata.source)
+            unescape!(output.seqname)
             input.unescape_needed = false
         end
     }
@@ -86,7 +86,7 @@
     action attribute_key {
         Ragel.@copy_from_anchor!(input.key)
         if input.unescape_needed
-            unescape!(output.metadata.source)
+            unescape!(input.key)
             input.unescape_needed = false
         end
     }

@@ -45,10 +45,14 @@ end
 
 function Base.getindex(attrs::GFFAttributes, key::StringField)
     i = get(attrs.indexes, key, 0)
-    if i == 0 || !attrs.used[i]
+    if i == 0 || attrs.used[i] == 0
         throw(KeyError(key))
     end
-    return attrs.data[i]
+    if length(attrs.data[i]) == 1
+        return attrs.data[i][1]
+    else
+        return attrs.data[i]
+    end
 end
 
 function Base.getindex(attrs::GFFAttributes, key_::String)
@@ -61,7 +65,7 @@ function pushindex!(attrs::GFFAttributes, key::StringField,
                     unescape_needed::Bool)
     i = get(attrs.indexes, key, 0)
     if i == 0
-        i = attrs.indexes[key] = length(attrs.indexes) + 1
+        i = attrs.indexes[copy(key)] = length(attrs.indexes) + 1
         push!(attrs.used, 0)
         push!(attrs.data, StringField[])
     end
