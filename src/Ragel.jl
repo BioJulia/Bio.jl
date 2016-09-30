@@ -217,7 +217,7 @@ macro generate_read!_function(machine_name, input_type, output_type, ragel_body)
 end
 
 function Base.eof(input::AbstractReader)
-    return input.state.finished || eof(stream(input))
+    return eof(stream(input))
 end
 
 function Base.read(input::AbstractReader)

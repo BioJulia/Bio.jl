@@ -13,6 +13,11 @@ type GFF3Reader <: Bio.IO.AbstractReader
     end
 end
 
+# GFF3 can end before the end of the file if there is a FASTA directive
+function Base.eof(reader::GFF3Reader)
+    return reader.state.finished || eof(reader.state.stream)
+end
+
 function Bio.IO.stream(reader::GFF3Reader)
     return reader.state.stream
 end
