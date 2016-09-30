@@ -57,7 +57,8 @@ function Base.getindex(attrs::GFFAttributes, key_::String)
 end
 
 function pushindex!(attrs::GFFAttributes, key::StringField,
-                    data::Vector{UInt8}, start::Int, stop::Int)
+                    data::Vector{UInt8}, start::Int, stop::Int,
+                    unescape_needed::Bool)
     i = get(attrs.indexes, key, 0)
     if i == 0
         i = attrs.indexes[key] = length(attrs.indexes) + 1
@@ -69,7 +70,9 @@ function pushindex!(attrs::GFFAttributes, key::StringField,
         push!(attrs.data[i], StringField())
     end
     copy!(attrs.data[i][j], data, start, stop)
-    unescape_as_needed!(attrs.data[i][j])
+    if unescape_needed
+        unescape!(attrs.data[i][j])
+    end
 end
 
 function Base.copy(attrs::GFFAttributes)
@@ -138,11 +141,9 @@ function Base.copy(metadata::GFF3Metadata)
         copy(metadata.attributes))
 end
 
-function unescape_as_needed!(x::StringField)
-    if '%' in x
-        y = unescape(x)
-        copy!(x, y.data, 1, length(y.data))
-    end
+function unescape!(x::StringField)
+    y = unescape(x)
+    copy!(x, y.data, 1, length(y.data))
     return x
 end
 

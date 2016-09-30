@@ -25,14 +25,14 @@ function State(initstate::Int, input::BufferedInputStream)
     return State(input, initstate, 1, false)
 end
 
-@inline function anchor!(state, p)
-    state.stream.anchor = 1 + p
+@inline function anchor!(stream, p)
+    stream.anchor = 1 + p
 end
 
-@inline function upanchor!(state)
-    @assert state.stream.anchor != 0 "upanchor! called with no anchor set"
-    anchor = state.stream.anchor
-    state.stream.anchor = 0
+@inline function upanchor!(stream)
+    @assert stream.anchor != 0 "upanchor! called with no anchor set"
+    anchor = stream.anchor
+    stream.anchor = 0
     return anchor
 end
 
@@ -62,65 +62,65 @@ end
 
 macro anchor!()
     quote
-        anchor!($(esc(:state)), $(esc(:p)))
+        anchor!($(esc(:stream)), $(esc(:p)))
     end
 end
 
 macro copy_from_anchor!(dest)
     quote
-        firstpos = upanchor!($(esc(:state)))
-        copy!($(esc(dest)), $(esc(:state)).stream.buffer, firstpos, $(esc(:p)))
+        firstpos = upanchor!($(esc(:stream)))
+        copy!($(esc(dest)), $(esc(:stream)).buffer, firstpos, $(esc(:p)))
     end
 end
 
 macro append_from_anchor!(dest)
     quote
-        firstpos = upanchor!($(esc(:state)))
-        append!($(esc(dest)), $(esc(:state)).stream.buffer, firstpos, $(esc(:p)))
+        firstpos = upanchor!($(esc(:stream)))
+        append!($(esc(dest)), $(esc(:stream)).buffer, firstpos, $(esc(:p)))
     end
 end
 
 macro int64_from_anchor!()
     quote
-        firstpos = upanchor!($(esc(:state)))
-        parse_int64($(esc(:state)).stream.buffer, firstpos, $(esc(:p)))
+        firstpos = upanchor!($(esc(:stream)))
+        parse_int64($(esc(:stream)).buffer, firstpos, $(esc(:p)))
     end
 end
 
 macro float64_from_anchor!()
     quote
-        firstpos = upanchor!($(esc(:state))) - 1
+        firstpos = upanchor!($(esc(:stream))) - 1
         get(ccall(
             :jl_try_substrtod,
             Nullable{Float64},
             (Ptr{UInt8}, Csize_t, Csize_t),
-            $(esc(:state)).stream.buffer, firstpos, $(esc(:p)) - firstpos
+            $(esc(:stream)).buffer, firstpos, $(esc(:p)) - firstpos
         ))
     end
 end
 
 macro ascii_from_anchor!()
     quote
-        firstpos = upanchor!($(esc(:state)))
+        firstpos = upanchor!($(esc(:stream)))
         n = $(esc(:p)) - firstpos + 1
         dst = Vector{UInt8}(n)
-        copy!(dst, 1, $(esc(:state)).stream.buffer, firstpos, n)
+        copy!(dst, 1, $(esc(:stream)).buffer, firstpos, n)
         String(dst)
     end
 end
 
 macro load_from_anchor!(T)
     quote
-        firstpos = upanchor!($(esc(:state)))
+        firstpos = upanchor!($(esc(:stream)))
         unsafe_load(convert(Ptr{$(T)},
-            pointer($(esc(:state)).stream.buffer, firstpos)))
+            pointer($(esc(:stream)).buffer, firstpos)))
     end
 end
 
 # return the current character
 macro char()
     quote
-        convert(Char, $(esc(:state)).stream.buffer[$(esc(:p))+1])
+        convert(Char, $(esc(:stream)).buffer[$(esc(:p))+1])
     end
 end
 
@@ -146,7 +146,11 @@ macro generate_read!_function(machine_name, input_type, output_type, ragel_body)
 
     return esc(quote
         function Base.read!(input::$(input_type), output::$(output_type))
-            state = input.state
+            return _read!(input, input.state, output)
+        end
+
+        function _read!(input::$(input_type), state, output::$(output_type))
+            stream = state.stream
 
             if state.finished
                 throw(EOFError())
@@ -154,12 +158,12 @@ macro generate_read!_function(machine_name, input_type, output_type, ragel_body)
 
             # restore state variables used by Ragel (`p` is 0-based)
             cs = state.cs
-            p = state.stream.position - 1
-            pe = state.stream.available
+            p = stream.position - 1
+            pe = stream.available
             eof = -1
-            data = state.stream.buffer
+            data = stream.buffer
 
-            if !isopen(state.stream)
+            if !isopen(stream)
                 error("input stream is already closed")
             end
 
@@ -169,8 +173,8 @@ macro generate_read!_function(machine_name, input_type, output_type, ragel_body)
                     state.finished = true
                     throw(EOFError())
                 end
-                p = state.stream.position - 1
-                pe = state.stream.available
+                p = stream.position - 1
+                pe = stream.available
             end
 
             # run the parser until all input is consumed or a match is found
@@ -178,7 +182,7 @@ macro generate_read!_function(machine_name, input_type, output_type, ragel_body)
                 $(ragel_body)
 
                 state.cs = cs
-                state.stream.position = p + 1
+                stream.position = p + 1
 
                 if cs == $(error_state)
                     error("error parsing ", $(machine_name),
@@ -192,9 +196,9 @@ macro generate_read!_function(machine_name, input_type, output_type, ragel_body)
                     end
                 elseif p == pe  # exhausted filled input data
                     # refill data buffer
-                    hits_eof = BufferedStreams.fillbuffer!(state.stream) == 0
-                    p = state.stream.position - 1
-                    pe = state.stream.available
+                    hits_eof = BufferedStreams.fillbuffer!(stream) == 0
+                    p = stream.position - 1
+                    pe = stream.available
                     if hits_eof
                         eof = pe
                     end
@@ -209,7 +213,7 @@ macro generate_read!_function(machine_name, input_type, output_type, ragel_body)
 
             # save the current state and the reading position
             state.cs = cs
-            state.stream.position = p + 1
+            stream.position = p + 1
 
             return output
         end
