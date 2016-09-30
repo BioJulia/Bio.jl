@@ -12,17 +12,16 @@
     action anchor { Ragel.@anchor! }
 
     action directive {
-        # TODO: Avoid allocation
-        directive = Ragel.@ascii_from_anchor!
-        if startswith(directive, "##gff-version")
+        Ragel.@copy_from_anchor!(input.directive)
+        if startswith(input.directive, "gff-version")
             # ##gff-version 3.2.1
-            input.version = VersionNumber(split(directive, r"\s+")[2])
-        elseif startswith(directive, "##sequence-region")
+            input.version = VersionNumber(split(String(input.directive), r"\s+")[2])
+        elseif startswith(input.directive, "sequence-region")
             # ##sequence-region seqid start end
-            vals = split(directive, r"\s+")
+            vals = split(String(input.directive), r"\s+")
             push!(input.sequence_regions,
-                Interval(vals[2], parse(Int, vals[3]), parse(Int, vals[4])))
-        elseif startswith(directive, "##FASTA")
+                  Interval(vals[2], parse(Int, vals[3]), parse(Int, vals[4])))
+        elseif startswith(input.directive, "FASTA")
             input.fasta_seen = true
             input.state.finished = true
             if input.entry_seen
@@ -30,8 +29,13 @@
             else
                 fbreak;
             end
-        else
-            # TODO: record other directives
+        end
+
+        if input.save_directives
+            if input.directive_count == length(input.directives)
+                push!(input.directives, StringField())
+            end
+            copy!(input.directives[input.directive_count += 1], input.directive)
         end
     }
 
@@ -49,6 +53,11 @@
 
     # interval
     action seqname {
+        input.preceding_directives, input.directives =
+            input.directives, input.preceding_directives
+        input.preceding_directive_count = input.directive_count
+        input.directive_count = 0;
+
         input.entry_seen = true
         empty!(output.metadata.attributes)
         Ragel.@copy_from_anchor!(output.seqname)
@@ -88,7 +97,7 @@
     floating_point = [ -~]* digit [ -~]*;
 
     comment   = '#' (any - newline - '#')* newline;
-    directive = ("##" (any - newline)*) >anchor %directive newline;
+    directive = "##" ((any - newline)* >anchor %directive) newline;
     implicit_fasta = '>' >implicit_fasta;
 
     seqname    = [a-zA-Z0-9.:^*$@!+_?\-|%]* >anchor %seqname;

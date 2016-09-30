@@ -4,12 +4,22 @@ type GFF3Reader <: Bio.IO.AbstractReader
     version::VersionNumber
     sequence_regions::Vector{Interval{Void}}
     key::StringField
+    save_directives::Bool
     entry_seen::Bool
     fasta_seen::Bool
 
-    function GFF3Reader(input::BufferedInputStream)
+    directive::StringField
+
+    preceding_directives::Vector{StringField}
+    preceding_directive_count::Int
+
+    directives::Vector{StringField}
+    directive_count::Int
+
+    function GFF3Reader(input::BufferedInputStream, save_directives::Bool=false)
         return new(Ragel.State(gff3parser_start, input), VersionNumber(0), [],
-                   StringField(), false, false)
+                   StringField(), save_directives, false, false,
+                   StringField(), StringField[], 0, StringField[], 0)
     end
 end
 
@@ -30,13 +40,17 @@ function Base.eltype(::Type{GFF3Reader})
     return GFF3Interval
 end
 
-function GFF3Reader(input::IO)
-    return GFF3Reader(BufferedInputStream(input))
+function GFF3Reader(input::IO, save_directives::Bool=false)
+    return GFF3Reader(BufferedInputStream(input), save_directives)
 end
 
 function IntervalCollection(interval_stream::GFF3Reader)
     intervals = collect(GFF3Interval, interval_stream)
     return IntervalCollection{GFF3Metadata}(intervals, true)
+end
+
+function directives(reader::GFF3Reader)
+    return view(reader.preceding_directives, 1:reader.preceding_directive_count)
 end
 
 function hasfasta(reader::GFF3Reader)

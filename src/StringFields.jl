@@ -86,6 +86,10 @@ function Base.copy!(field::StringField, data::Vector{UInt8},
     return n
 end
 
+function Base.copy!(to::StringField, from::StringField)
+    copy!(to, from.data, from.part.start, from.part.stop)
+end
+
 function Base.empty!(field::StringField)
     field.part = 1:0
     return field
