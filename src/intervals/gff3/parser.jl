@@ -292,6 +292,7 @@ begin
 input.entry_seen = true
 empty!(output.metadata.attributes)
 Ragel.@copy_from_anchor!(output.seqname)
+unescape_as_needed!(output.seqname)
 end
 @goto st1
 @label st1
@@ -344,11 +345,13 @@ Ragel.@anchor!
 end
 begin
 Ragel.@copy_from_anchor!(output.metadata.source)
+unescape_as_needed!(output.metadata.source)
 end
 @goto st2
 @label ctr68
 begin
 Ragel.@copy_from_anchor!(output.metadata.source)
+unescape_as_needed!(output.metadata.source)
 end
 @goto st2
 @label st2
@@ -401,11 +404,13 @@ Ragel.@anchor!
 end
 begin
 Ragel.@copy_from_anchor!(output.metadata.kind)
+unescape_as_needed!(output.metadata.kind)
 end
 @goto st3
 @label ctr66
 begin
 Ragel.@copy_from_anchor!(output.metadata.kind)
+unescape_as_needed!(output.metadata.kind)
 end
 @goto st3
 @label st3
@@ -1115,6 +1120,7 @@ begin
 input.entry_seen = true
 empty!(output.metadata.attributes)
 Ragel.@copy_from_anchor!(output.seqname)
+unescape_as_needed!(output.seqname)
 end
 @goto st17
 @label st17
@@ -1167,11 +1173,13 @@ Ragel.@anchor!
 end
 begin
 Ragel.@copy_from_anchor!(output.metadata.source)
+unescape_as_needed!(output.metadata.source)
 end
 @goto st18
 @label ctr40
 begin
 Ragel.@copy_from_anchor!(output.metadata.source)
+unescape_as_needed!(output.metadata.source)
 end
 @goto st18
 @label st18
@@ -1224,11 +1232,13 @@ Ragel.@anchor!
 end
 begin
 Ragel.@copy_from_anchor!(output.metadata.kind)
+unescape_as_needed!(output.metadata.kind)
 end
 @goto st19
 @label ctr36
 begin
 Ragel.@copy_from_anchor!(output.metadata.kind)
+unescape_as_needed!(output.metadata.kind)
 end
 @goto st19
 @label st19
@@ -1429,11 +1439,13 @@ Ragel.@anchor!
 end
 begin
 Ragel.@copy_from_anchor!(output.metadata.kind)
+unescape_as_needed!(output.metadata.kind)
 end
 @goto st24
 @label ctr39
 begin
 Ragel.@copy_from_anchor!(output.metadata.kind)
+unescape_as_needed!(output.metadata.kind)
 end
 @goto st24
 @label st24
@@ -1539,11 +1551,13 @@ Ragel.@anchor!
 end
 begin
 Ragel.@copy_from_anchor!(output.metadata.source)
+unescape_as_needed!(output.metadata.source)
 end
 @goto st27
 @label ctr43
 begin
 Ragel.@copy_from_anchor!(output.metadata.source)
+unescape_as_needed!(output.metadata.source)
 end
 @goto st27
 @label st27
@@ -1696,6 +1710,7 @@ begin
 input.entry_seen = true
 empty!(output.metadata.attributes)
 Ragel.@copy_from_anchor!(output.seqname)
+unescape_as_needed!(output.seqname)
 end
 @goto st29
 @label st29
@@ -1884,11 +1899,13 @@ Ragel.@anchor!
 end
 begin
 Ragel.@copy_from_anchor!(input.key)
+unescape_as_needed!(input.key)
 end
 @goto st34
 @label ctr53
 begin
 Ragel.@copy_from_anchor!(input.key)
+unescape_as_needed!(input.key)
 end
 @goto st34
 @label ctr57
