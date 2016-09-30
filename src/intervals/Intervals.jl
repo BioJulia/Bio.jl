@@ -33,6 +33,8 @@ export
     GFF3Reader,
     GFF3Metadata,
     GFF3Interval,
+    hasfasta,
+    getfasta,
     Tabix,
     overlapchunks
 

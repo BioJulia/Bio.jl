@@ -12,6 +12,7 @@
     action anchor { Ragel.@anchor! }
 
     action directive {
+        # TODO: Avoid allocation
         directive = Ragel.@ascii_from_anchor!
         if startswith(directive, "##gff-version")
             # ##gff-version 3.2.1
@@ -21,13 +22,25 @@
             vals = split(directive, r"\s+")
             push!(input.sequence_regions,
                 Interval(vals[2], parse(Int, vals[3]), parse(Int, vals[4])))
+        elseif startswith(directive, "##FASTA")
+            input.fasta_seen = true
+            input.state.finished = true
+            if input.entry_seen
+                Ragel.@yield ftargs
+            else
+                fbreak;
+            end
         else
             # TODO: record other directives
         end
     }
 
     # interval
-    action seqname { Ragel.@copy_from_anchor!(output.seqname) }
+    action seqname {
+        input.entry_seen = true
+        empty!(output.metadata.attributes)
+        Ragel.@copy_from_anchor!(output.seqname)
+    }
     action start   { output.first = Ragel.@int64_from_anchor! }
     action end     { output.last = Ragel.@int64_from_anchor! }
     action strand  { output.strand = convert(Strand, (Ragel.@char)) }
@@ -55,7 +68,7 @@
     floating_point = [ -~]* digit [ -~]*;
 
     comment   = '#' (any - newline - '#')* newline;
-    directive = ("##" (any - newline)* newline) >anchor %directive;
+    directive = ("##" (any - newline)*) >anchor %directive newline;
 
     seqname    = [a-zA-Z0-9.:^*$@!+_?\-|%]* >anchor %seqname;
     source     = [ -~]* >anchor %source;
@@ -72,10 +85,13 @@
     attribute = attribute_key '=' attribute_value (',' attribute_value)*;
     attributes = (attribute ';')* attribute?;
 
-    gff3_entry = seqname '\t' source '\t' kind '\t' start '\t' end '\t'
-                 score   '\t' strand '\t' phase '\t' attributes newline;
+    non_entry = blankline | directive | comment;
 
-    main := (blankline | directive | comment | (gff3_entry %finish_match))*;
+    gff3_entry = seqname '\t' source '\t' kind '\t' start '\t' end '\t'
+                 score   '\t' strand '\t' phase '\t' attributes
+                 newline non_entry*;
+
+    main := non_entry* (gff3_entry %finish_match)*;
 }%%
 
 %% write data;

@@ -11,17 +11,18 @@ module Ragel
 export tryread!
 
 using BufferedStreams
-import Bio.IO: FileFormat, AbstractReader
+import Bio.IO: FileFormat, AbstractReader, stream
 
 # A type keeping track of a ragel-based parser's state.
 type State{T<:BufferedInputStream}
-    stream::T     # input stream
-    cs::Int       # current DFA state of Ragel
-    linenum::Int  # line number: parser is responsible for updating this
+    stream::T      # input stream
+    cs::Int        # current DFA state of Ragel
+    linenum::Int   # line number: parser is responsible for updating this
+    finished::Bool # true if finished (regardless of where in the stream we are)
 end
 
 function State(initstate::Int, input::BufferedInputStream)
-    return State(input, initstate, 1)
+    return State(input, initstate, 1, false)
 end
 
 @inline function anchor!(state, p)
@@ -147,6 +148,10 @@ macro generate_read!_function(machine_name, input_type, output_type, ragel_body)
         function Base.read!(input::$(input_type), output::$(output_type))
             state = input.state
 
+            if state.finished
+                throw(EOFError())
+            end
+
             # restore state variables used by Ragel (`p` is 0-based)
             cs = state.cs
             p = state.stream.position - 1
@@ -161,6 +166,7 @@ macro generate_read!_function(machine_name, input_type, output_type, ragel_body)
             if p ≥ pe
                 # fill data buffer
                 if BufferedStreams.fillbuffer!(state.stream) == 0
+                    state.finished = true
                     throw(EOFError())
                 end
                 p = state.stream.position - 1
@@ -177,8 +183,9 @@ macro generate_read!_function(machine_name, input_type, output_type, ragel_body)
                 if cs == $(error_state)
                     error("error parsing ", $(machine_name),
                           " input on line ", state.linenum)
-                elseif p == eof  # exhausted all input data
-                    if cs == $(accept_state)
+                elseif p == eof || state.finished  # exhausted all input data
+                    if cs >= $(accept_state)
+                        state.finished = true
                         throw(EOFError())
                     else
                         error("unexpected end of input while parsing ", $(machine_name))
@@ -207,6 +214,10 @@ macro generate_read!_function(machine_name, input_type, output_type, ragel_body)
             return output
         end
     end)
+end
+
+function Base.eof(input::AbstractReader)
+    return input.state.finished || eof(stream(input))
 end
 
 function Base.read(input::AbstractReader)
