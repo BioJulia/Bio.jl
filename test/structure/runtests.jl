@@ -1472,12 +1472,10 @@ end
     @test sum(map(x -> Int(isnan(x)), psis)) == 243
     @test_throws ArgumentError ramachandranangles(struc_1AKE['A'][10]["CA"])
 
-    println("Checkpoint A")
 
     # Test contactmap
     cas = collectatoms(struc_1AKE, calphaselector)[1:10]
     @test isa(contactmap(cas, 10), BitArray{2})
-    println("Checkpoint B")
     @test contactmap(cas, 10) == [
         true  true  true  false false false false false false false
         true  true  true  true  false false false false false false
@@ -1490,24 +1488,21 @@ end
         false false false false false true  true  true  true  true
         false false false false false false true  true  true  true
     ]
-    println("Checkpoint C")
     @test contactmap(struc_1AKE[1], 1.0) == [
         true  false
         false true
     ]
-    println("Checkpoint D")
     cmap = contactmap(struc_1AKE['A'], 5.0)
-    println("Checkpoint E")
     @test size(cmap) == (456, 456)
     @test cmap[196, 110]
     @test !cmap[15, 89]
-    println("Checkpoint F")
-    #cmap = contactmap(struc_1AKE['A'], struc_1AKE['B'], 5.0)
-    #println("Checkpoint G")
-    #@test size(cmap) == (456, 352)
-    #@test cmap[169, 150]
-    #@test !cmap[5, 11]
-    #println("Checkpoint H")
+
+    @test contactmap(struc_1AKE['A'][10], struc_1AKE['A'][11], 4.0) == [
+        true  false false false false
+        true  true  false false false
+        true  true  true  false true
+        true  true  true  false false
+    ]
 end
 
 end # TestStructure
