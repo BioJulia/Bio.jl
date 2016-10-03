@@ -571,15 +571,21 @@ function orphan!{A}(seq::BioSequence{A}, size::Integer=length(seq), force::Bool=
     j, r = bitindex(seq, 1)
     data = Vector{UInt64}(seq_data_len(A, size))
 
-    if !isempty(seq)
+    if !isempty(seq) && !isempty(data)
         x = seq.data[j] >> r
-        l = min(endof(data), index(bitindex(seq, endof(seq))) - j + 1)
+        m = index(bitindex(seq, endof(seq))) - j + 1
+        l = min(endof(data), m)
         @inbounds @simd for i in 1:l-1
             y = seq.data[j+i]
             data[i] = x | y << (64 - r)
             x = y >> r
         end
-        data[l] = x
+        if m <= l
+            data[l] = x
+        else
+            y = seq.data[j+l]
+            data[l] = x | y << (64 - r)
+        end
     end
 
     seq.data = data

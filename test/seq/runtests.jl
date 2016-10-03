@@ -1295,6 +1295,13 @@ end
             seq = dna"ACGT"
             @test copy!(seq, 3, seq, 1, 2) == dna"ACAC"
         end
+
+        @testset "orphan!" begin
+            seq = repeat(dna"ACGT", 8)
+            subseq = seq[16:17]
+            Seq.orphan!(subseq)
+            @test subseq == dna"TA"
+        end
     end
 
     @testset "Print" begin
