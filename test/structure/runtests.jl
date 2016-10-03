@@ -1460,7 +1460,6 @@ end
     @test_throws ArgumentError phiangle(struc_1AKE['A'][7], Residue("ALA", 6, ' ', false, Chain('A')))
     @test_throws ArgumentError psiangle(struc_1AKE['A'][8], Residue("ALA", 9, ' ', false, Chain('A')))
 
-
     phis, psis = ramachandranangles(struc_1AKE['A'])
     @test size(phis) == (456,)
     @test size(psis) == (456,)
