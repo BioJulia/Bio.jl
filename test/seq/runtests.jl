@@ -880,6 +880,10 @@ end
             test_copy(DNAAlphabet{2}, random_dna(len, probs))
             test_copy(RNAAlphabet{2}, random_rna(len, probs))
         end
+
+        seq = dna"ACGTACGTACGT"
+        subseq = seq[3:6]
+        @test copy(subseq) == dna"GTAC"
     end
 
     @testset "Concatenation" begin
