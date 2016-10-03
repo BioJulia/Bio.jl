@@ -1502,12 +1502,12 @@ end
     @test cmap[196, 110]
     @test !cmap[15, 89]
     println("Checkpoint F")
-    cmap = contactmap(struc_1AKE['A'], struc_1AKE['B'], 5.0)
-    println("Checkpoint G")
-    @test size(cmap) == (456, 352)
-    @test cmap[169, 150]
-    @test !cmap[5, 11]
-    println("Checkpoint H")
+    #cmap = contactmap(struc_1AKE['A'], struc_1AKE['B'], 5.0)
+    #println("Checkpoint G")
+    #@test size(cmap) == (456, 352)
+    #@test cmap[169, 150]
+    #@test !cmap[5, 11]
+    #println("Checkpoint H")
 end
 
 end # TestStructure
