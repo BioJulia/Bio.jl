@@ -1330,8 +1330,6 @@ end
 
 
 @testset "Spatial" begin
-    println("Checkpoint 1")
-
     # Test coordarray
     res = Residue("ALA", 1, ' ', false, Chain('A'))
     at = Atom(100, "CA", ' ', [1.0, 2.0, 3.0], 1.0, 10.0, " C", "  ", res)
@@ -1340,8 +1338,6 @@ end
     @test cs[1] == 1.0
     @test cs[2] == 2.0
     @test cs[3] == 3.0
-
-    println("Checkpoint 2")
 
     struc_1AKE = read(pdbfilepath("1AKE.pdb"), PDB)
     cs = coordarray(struc_1AKE)
@@ -1356,7 +1352,6 @@ end
     @test cs[3,10] == 19.756
     @test coordarray(cs) == cs
 
-    println("Checkpoint 3")
 
     # Test rmsd
     cs_one = [
@@ -1383,14 +1378,11 @@ end
     ]
     @test_throws ArgumentError rmsd(cs_one, cs_two)
 
-    println("Checkpoint 4")
-
     struc_1SSU = read(pdbfilepath("1SSU.pdb"), PDB)
     @test isapprox(rmsd(struc_1SSU[1], struc_1SSU[2], calphaselector), 4.1821925809691889)
     @test isapprox(rmsd(struc_1SSU[5], struc_1SSU[6], backboneselector), 5.2878196391279939)
     @test_throws ArgumentError rmsd(struc_1SSU[1]['A'][8], struc_1SSU[1]['A'][9])
 
-    println("Checkpoint 5")
 
     # Test displacements
     cs_one = [
@@ -1417,8 +1409,6 @@ end
     ]
     @test_throws ArgumentError displacements(cs_one, cs_two)
 
-    println("Checkpoint 6")
-
     disps = displacements(struc_1SSU[5], struc_1SSU[10])
     @test isa(disps, Vector{Float64})
     @test length(disps) == 756
@@ -1426,8 +1416,6 @@ end
     disps = displacements(struc_1SSU[5], struc_1SSU[10], calphaselector)
     @test length(disps) == 51
     @test isapprox(disps[20], sqrt(0.032822))
-
-    println("Checkpoint 7")
 
 
     # Test sqdistance and distance
@@ -1443,7 +1431,6 @@ end
     @test isapprox(distance(struc_1AKE['A'], struc_1AKE['B'], standardselector), sqrt(11.252973))
     @test isapprox(distance(struc_1AKE['A'][50]["CA"], struc_1AKE['B'][50]["CA"]), sqrt(2607.154834))
 
-    println("Checkpoint 8")
 
     # Test bondangle
     at_a = Atom(100, "CA", ' ', [1.0, 0.0, 1.0], 1.0, 10.0, " C", "  ", res)
@@ -1453,8 +1440,6 @@ end
     vec_a = [2.0, 0.0, 0.0]
     vec_b = [2.0, 1.0, 1.0]
     @test isapprox(bondangle(vec_a, vec_b), 0.615479708670387)
-
-    println("Checkpoint 9")
 
 
     # Test dihedral functions
@@ -1475,8 +1460,6 @@ end
     @test_throws ArgumentError phiangle(struc_1AKE['A'][7], Residue("ALA", 6, ' ', false, Chain('A')))
     @test_throws ArgumentError psiangle(struc_1AKE['A'][8], Residue("ALA", 9, ' ', false, Chain('A')))
 
-    println("Checkpoint 10")
-
 
     phis, psis = ramachandranangles(struc_1AKE['A'])
     @test size(phis) == (456,)
@@ -1489,11 +1472,12 @@ end
     @test sum(map(x -> Int(isnan(x)), psis)) == 243
     @test_throws ArgumentError ramachandranangles(struc_1AKE['A'][10]["CA"])
 
-    println("Checkpoint 11")
+    println("Checkpoint A")
 
     # Test contactmap
     cas = collectatoms(struc_1AKE, calphaselector)[1:10]
     @test isa(contactmap(cas, 10), BitArray{2})
+    println("Checkpoint B")
     @test contactmap(cas, 10) == [
         true  true  true  false false false false false false false
         true  true  true  true  false false false false false false
@@ -1506,20 +1490,24 @@ end
         false false false false false true  true  true  true  true
         false false false false false false true  true  true  true
     ]
+    println("Checkpoint C")
     @test contactmap(struc_1AKE[1], 1.0) == [
         true  false
         false true
     ]
+    println("Checkpoint D")
     cmap = contactmap(struc_1AKE['A'], 5.0)
+    println("Checkpoint E")
     @test size(cmap) == (456, 456)
     @test cmap[196, 110]
     @test !cmap[15, 89]
+    println("Checkpoint F")
     cmap = contactmap(struc_1AKE['A'], struc_1AKE['B'], 5.0)
+    println("Checkpoint G")
     @test size(cmap) == (456, 352)
     @test cmap[169, 150]
     @test !cmap[5, 11]
-
-    println("Checkpoint 12")
+    println("Checkpoint H")
 end
 
 end # TestStructure
