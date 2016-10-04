@@ -2,10 +2,10 @@ module TestStructure
 
 using Base.Test
 
-using Bio.Structure,
-    TestFunctions.get_bio_fmt_specimens
-using Bio.Structure: atomid,
-    chainidisless,
+using Bio.Structure
+using TestFunctions.get_bio_fmt_specimens
+using Bio.Structure:
+    fixlists!,
     parsestrict,
     parselenient,
     parsevalue,
@@ -15,535 +15,626 @@ using Bio.Structure: atomid,
 get_bio_fmt_specimens()
 
 # Access a PDB file in BioFmtSpecimens
-pdbfilepath(filename::AbstractString) = Pkg.dir("Bio", "test", "BioFmtSpecimens", "PDB", filename)
+function pdbfilepath(filename::AbstractString)
+    return Pkg.dir("Bio", "test", "BioFmtSpecimens", "PDB", filename)
+end
 
 
 @testset "Model" begin
-    # Test Atom constructor
-    atom = Atom(false, 100, "CA", ' ', "ALA", 'A', 10, ' ', [1.0, 2.0, 3.0], 1.0, 10.0, "C", "")
-
-    # Test Atom getters/setters
-    @test !ishetatom(atom)
-    @test serial(atom) == 100
-    @test atomname(atom) == "CA"
-    @test altlocid(atom) == ' '
-    @test resname(atom) == "ALA"
-    @test chainid(atom) == 'A'
-    @test resnumber(atom) == 10
-    @test inscode(atom) == ' '
-    @test x(atom) == 1.0
-    @test y(atom) == 2.0
-    @test z(atom) == 3.0
-    @test coords(atom) == [1.0, 2.0, 3.0]
-    @test occupancy(atom) == 1.0
-    @test tempfac(atom) == 10.0
-    @test element(atom) == "C"
-    @test charge(atom) == ""
-
-    @test !ishetero(atom)
-    @test !isdisorderedatom(atom)
-    @test atomid(atom) == ("10:A", "ALA", "CA")
-    @test resid(atom) == "10"
-    @test resid(atom, full=true) == "10:A"
-
-    x!(atom, 10.0)
-    @test coords(atom) == [10.0, 2.0, 3.0]
-    y!(atom, 20.0)
-    @test coords(atom) == [10.0, 20.0, 3.0]
-    z!(atom, 30.0)
-    @test coords(atom) == [10.0, 20.0, 30.0]
-    coords!(atom, [40.0, 50.0, 60.0])
-    @test coords(atom) == [40.0, 50.0, 60.0]
-
-    # Test Atom iteration
-    atom_list = collect(atom)
-    @test isa(atom_list, Vector{Atom})
-    @test length(atom_list) == 1
-    @test serial(atom_list[1]) == 100
-
-    # Test DisorderedAtom constructor
-    disordered_atom = DisorderedAtom(Dict(
-        'A' => Atom(false, 100, "CA", 'A', "ALA", 'A', 10, ' ', [1.0, 2.0, 3.0], 0.6, 10.0, "C", ""),
-        'B' => Atom(false, 101, "CA", 'B', "ALA", 'A', 10, ' ', [11.0, 12.0, 13.0], 0.4, 20.0, "C", "")
+    # Test constructors and indexing
+    struc = ProteinStructure("Test structure")
+    struc[1] = Model(1, struc)
+    mod = struc[1]
+    @test isa(mod, Model)
+    struc[3] = Model(3, struc)
+    struc[1]['A'] = Chain('A', mod)
+    ch = struc[1]['A']
+    @test isa(ch, Chain)
+    struc['B'] = Chain('B', mod)
+    struc['A'][10] = Residue("ALA", 10, ' ', false, ch)
+    res = struc['A'][10]
+    @test isa(res, Residue)
+    struc['A']["H_20A"] = DisorderedResidue(Dict(
+        " VA"=> Residue(" VA", 20, 'A', true, ch),
+        "ILE"=> Residue("ILE", 20, 'A', true, ch)
+    ), " VA")
+    dis_res = struc['A']["H_20A"]
+    @test isa(dis_res, DisorderedResidue)
+    struc['A'][10][" CA "] = Atom(
+        100, " CA ", ' ', [1.0, 2.0, 3.0], 1.0, 10.0, " C", "  ", res)
+    at = struc['A'][10]["CA"]
+    @test isa(at, Atom)
+    struc['A'][10][" CB "] = DisorderedAtom(Dict(
+        'A'=> Atom(200, " CB ", 'A', [10.0, 20.0, 30.0], 0.6, 20.0, " C", "1+", res),
+        'B'=> Atom(201, " CB ", 'B', [11.0, 21.0, 31.0], 0.4, 30.0, " C", "1+", res)
     ), 'A')
+    dis_at = struc['A'][10]["CB"]
+    @test isa(dis_at, DisorderedAtom)
+    struc['A']["H_20A"][" CG "] = Atom(
+        300, " CG ", ' ', [1.0, 2.0, 3.0], 1.0, 10.0, " C", "  ", defaultresidue(dis_res))
+    disorderedres(dis_res, "ILE")[" O  "] = Atom(
+        400, " O  ", ' ', [1.0, 2.0, 3.0], 1.0, 10.0, " O", "  ", disorderedres(dis_res, "ILE"))
+    fixlists!(struc)
 
-    # Test DisorderedAtom getters/setters
-    @test defaultaltlocid(disordered_atom) == 'A'
-    @test isa(defaultatom(disordered_atom), Atom)
-    @test serial(defaultatom(disordered_atom)) == 100
-    @test altlocids(disordered_atom) == ['A', 'B']
 
-    @test !ishetatom(disordered_atom)
-    @test serial(disordered_atom) == 100
-    @test atomname(disordered_atom) == "CA"
-    @test altlocid(disordered_atom) == 'A'
-    @test resname(disordered_atom) == "ALA"
-    @test chainid(disordered_atom) == 'A'
-    @test resnumber(disordered_atom) == 10
-    @test inscode(disordered_atom) == ' '
-    @test x(disordered_atom) == 1.0
-    @test y(disordered_atom) == 2.0
-    @test z(disordered_atom) == 3.0
-    @test coords(disordered_atom) == [1.0, 2.0, 3.0]
-    @test occupancy(disordered_atom) == 0.6
-    @test tempfac(disordered_atom) == 10.0
-    @test element(disordered_atom) == "C"
-    @test charge(disordered_atom) == ""
+    # Test alternate constructors
+    ProteinStructure("struc", Dict(1=> Model()))
+    ProteinStructure()
 
-    @test !ishetero(disordered_atom)
-    @test isdisorderedatom(disordered_atom)
-    @test atomid(disordered_atom) == ("10:A", "ALA", "CA")
-    @test resid(disordered_atom) == "10"
-    @test resid(disordered_atom, full=true) == "10:A"
+    Model(1, Dict('A'=> Chain('A')), ProteinStructure())
+    Model(1, ProteinStructure())
+    Model(1)
+    Model()
 
-    disordered_atom_mod = DisorderedAtom(disordered_atom, 'B')
-    @test defaultaltlocid(disordered_atom_mod) == 'B'
-    @test serial(disordered_atom_mod) == 101
-    @test_throws AssertionError DisorderedAtom(disordered_atom, 'C')
+    Chain('A', ["1"], Dict("1"=> Residue("ALA", 1, ' ', false, Chain('A'))), Model())
+    Chain('A', Model())
+    Chain('A')
 
+    Residue("ALA", 1, ' ', false, ["CA"], Dict("CA"=>
+        Atom(1, "CA", ' ', [0.0, 0.0, 0.0], 1.0, 0.0, "  ", "  ",
+        Residue("ALA", 1, ' ', false, Chain('A')))), Chain('A'))
+    Residue("ALA", 1, ' ', false, Chain('A'))
+
+
+    # Test show
+    show(DevNull, at)
+    show(DevNull, dis_at)
+    show(DevNull, res)
+    show(DevNull, dis_res)
+    show(DevNull, ch)
+    show(DevNull, mod)
+    show(DevNull, struc)
+
+
+    # Test getters/setters
+    @test serial(at) == 100
+    @test serial(dis_at) == 200
+
+    @test atomname(at) == "CA"
+    @test atomname(dis_at) == "CB"
+    @test atomname(at, strip=false) == " CA "
+    @test atomname(dis_at, strip=false) == " CB "
+
+    @test altlocid(at) == ' '
+    @test altlocid(dis_at) == 'A'
+
+    @test x(at) == 1.0
+    @test x(dis_at) == 10.0
+
+    x!(at, 5.0)
+    @test coords(at) == [5.0, 2.0, 3.0]
     # Only the coordinates on the default atom are changed
-    x!(disordered_atom, 10.0)
-    @test coords(disordered_atom) == [10.0, 2.0, 3.0]
-    @test coords(disordered_atom['B']) == [11.0, 12.0, 13.0]
-    y!(disordered_atom, 20.0)
-    @test coords(disordered_atom) == [10.0, 20.0, 3.0]
-    @test coords(disordered_atom['B']) == [11.0, 12.0, 13.0]
-    z!(disordered_atom, 30.0)
-    @test coords(disordered_atom) == [10.0, 20.0, 30.0]
-    @test coords(disordered_atom['B']) == [11.0, 12.0, 13.0]
-    coords!(disordered_atom, [40.0, 50.0, 60.0])
-    @test coords(disordered_atom) == [40.0, 50.0, 60.0]
-    @test coords(disordered_atom['B']) == [11.0, 12.0, 13.0]
-    x!(disordered_atom['A'], 100.0)
-    @test coords(disordered_atom) == [100.0, 50.0, 60.0]
-    @test coords(disordered_atom['B']) == [11.0, 12.0, 13.0]
-    x!(disordered_atom['B'], 110.0)
-    @test coords(disordered_atom) == [100.0, 50.0, 60.0]
-    @test coords(disordered_atom['B']) == [110.0, 12.0, 13.0]
+    x!(dis_at, 12.0)
+    @test coords(dis_at) == [12.0, 20.0, 30.0]
+    @test coords(dis_at['B']) == [11.0, 21.0, 31.0]
 
-    # Test DisorderedAtom indices
-    @test isa(disordered_atom['A'], Atom)
-    @test serial(disordered_atom['A']) == 100
-    @test serial(disordered_atom['B']) == 101
-    @test_throws KeyError disordered_atom['C']
-    @test_throws MethodError disordered_atom["A"]
+    @test y(at) == 2.0
+    @test y(dis_at) == 20.0
 
-    # Test DisorderedAtom iteration
-    disordered_atom_list = collect(disordered_atom)
-    @test isa(disordered_atom_list, Vector{Atom})
-    @test length(disordered_atom_list) == 2
-    @test serial(disordered_atom_list[2]) == 101
+    y!(at, 6.0)
+    @test coords(at) == [5.0, 6.0, 3.0]
+    y!(dis_at, 22.0)
+    @test coords(dis_at) == [12.0, 22.0, 30.0]
+    @test coords(dis_at['B']) == [11.0, 21.0, 31.0]
 
+    @test z(at) == 3.0
+    @test z(dis_at) == 30.0
 
-    # Test Residue constructor
-    res = Residue("ALA", 'A', 10, ' ', false, ["CA", "CB", "CG"], Dict(
-        "CA" => disordered_atom,
-        "CB" => Atom(false, 102, "CB", ' ', "ALA", 'A', 10, ' ', [1.0, 2.0, 3.0], 1.0, 0.0, "C", ""),
-        "CG" => Atom(false, 103, "CG", ' ', "ALA", 'A', 10, ' ', [1.0, 2.0, 3.0], 1.0, 0.0, "C", "")
-    ))
-    res_min = Residue("ALA", 'A', 10, ' ', false)
-    res_min = Residue(AbstractAtom[
-        Atom(false, 102, "CG", ' ', "ALA", 'A', 10, ' ', [1.0, 2.0, 3.0], 1.0, 0.0, "C", ""),
-        Atom(false, 100, "CA", ' ', "ALA", 'A', 10, ' ', [1.0, 2.0, 3.0], 1.0, 0.0, "C", ""),
-        Atom(false, 101, "CB", ' ', "ALA", 'A', 10, ' ', [1.0, 2.0, 3.0], 1.0, 0.0, "C", "")
-    ])
+    z!(at, 7.0)
+    @test coords(at) == [5.0, 6.0, 7.0]
+    z!(dis_at, 32.0)
+    @test coords(dis_at) == [12.0, 22.0, 32.0]
+    @test coords(dis_at['B']) == [11.0, 21.0, 31.0]
 
-    # Test Residue getters/setters
-    @test resname(res) == "ALA"
-    @test chainid(res) == 'A'
-    @test resnumber(res) == 10
-    @test inscode(res) == ' '
-    @test !ishetres(res)
-    @test atomnames(res) == ["CA", "CB", "CG"]
-    @test isa(atoms(res), Dict{String, AbstractAtom})
-    @test length(atoms(res)) == 3
-    @test serial(atoms(res)["CA"]) == 100
+    coords!(at, [40.0, 50.0, 60.0])
+    @test coords(at) == [40.0, 50.0, 60.0]
+    coords!(dis_at, [40.0, 50.0, 60.0])
+    @test coords(dis_at) == [40.0, 50.0, 60.0]
+    @test coords(dis_at['B']) == [11.0, 21.0, 31.0]
+    @test_throws ArgumentError coords!(at, [40.0, 50.0, 60.0, 70.0])
+    x!(dis_at['A'], 100.0)
+    @test coords(dis_at) == [100.0, 50.0, 60.0]
+    @test coords(dis_at['B']) == [11.0, 21.0, 31.0]
+    x!(dis_at['B'], 110.0)
+    @test coords(dis_at) == [100.0, 50.0, 60.0]
+    @test coords(dis_at['B']) == [110.0, 21.0, 31.0]
+
+    @test occupancy(at) == 1.0
+    @test occupancy(dis_at) == 0.6
+
+    @test tempfactor(at) == 10.0
+    @test tempfactor(dis_at) == 20.0
+
+    @test element(at) == "C"
+    @test element(dis_at) == "C"
+    @test element(at, strip=false) == " C"
+    @test element(dis_at, strip=false) == " C"
+
+    @test charge(at) == ""
+    @test charge(dis_at) == "1+"
+    @test charge(at, strip=false) == "  "
+    @test charge(dis_at, strip=false) == "1+"
+
+    @test residue(at) == res
+    @test residue(dis_at) == res
+    @test residue(res) == res
+    @test residue(dis_res) == dis_res
 
     @test !ishetero(res)
-    @test !isdisorderedres(res)
+    @test !ishetero(at)
+    @test !ishetero(dis_at)
+    @test ishetero(dis_res)
+
+    @test !isdisorderedatom(at)
+    @test isdisorderedatom(dis_at)
+
+    @test defaultaltlocid(dis_at) == 'A'
+
+    dis_at_mod = DisorderedAtom(dis_at, 'B')
+    @test defaultaltlocid(dis_at_mod) == 'B'
+    @test serial(dis_at_mod) == 201
+    @test_throws ArgumentError DisorderedAtom(dis_at, 'C')
+
+    @test isa(defaultatom(dis_at), Atom)
+    @test serial(defaultatom(dis_at)) == 200
+
+    @test altlocids(at) == [' ']
+    @test altlocids(dis_at) == ['A', 'B']
+
+    @test atomid(at) == ("10:A", "ALA", "CA")
+    @test atomid(dis_at) == ("10:A", "ALA", "CB")
+
+    @test resname(res) == "ALA"
+    @test resname(at) == "ALA"
+    @test resname(dis_at) == "ALA"
+    @test resname(dis_res) == "VA"
+    @test resname(dis_res, strip=false) == " VA"
+
+    @test resnumber(res) == 10
+    @test resnumber(at) == 10
+    @test resnumber(dis_at) == 10
+    @test resnumber(dis_res) == 20
+
+    @test inscode(res) == ' '
+    @test inscode(at) == ' '
+    @test inscode(dis_at) == ' '
+    @test inscode(dis_res) == 'A'
+
+    @test resid(at) == "10"
+    @test resid(dis_at) == "10"
+    @test resid(at, full=true) == "10:A"
+    @test resid(dis_at, full=true) == "10:A"
     @test resid(res) == "10"
     @test resid(res, full=true) == "10:A"
+    @test resid(dis_res) == "H_20A"
+    @test resid(dis_res, full=true) == "H_20A:A"
 
-    @test resname(res_min) == "ALA"
-    @test chainid(res_min) == 'A'
-    @test resnumber(res_min) == 10
-    @test inscode(res_min) == ' '
-    @test !ishetres(res_min)
-    @test atomnames(res_min) == ["CA", "CB", "CG"]
-    @test isa(atoms(res_min), Dict{String, AbstractAtom})
-    @test length(atoms(res_min)) == 3
-    @test serial(atoms(res_min)["CA"]) == 100
+    @test atomnames(res) == ["CA", "CB"]
+    @test atomnames(dis_res) == ["CG"]
+    @test atomnames(res, strip=false) == [" CA ", " CB "]
+    @test atomnames(dis_res, strip=false) == [" CG "]
 
-    @test !ishetero(res_min)
-    @test !isdisorderedres(res_min)
-    @test resid(res_min) == "10"
-    @test resid(res_min, full=true) == "10:A"
-
-    # Test Residue indices
-    @test isa(res["CA"], AbstractAtom)
-    @test serial(res["CA"]) == 100
-    @test serial(res["CB"]) == 102
-    @test_throws KeyError res["N"]
-
-    # Test Residue iteration
-    res_list = collect(res)
-    @test isa(res_list, Vector{AbstractAtom})
-    @test length(res_list) == 3
-    @test serial(res_list[3]) == 103
-
-    # Test DisorderedResidue constructor
-    disordered_res = DisorderedResidue(Dict(
-        "ALA" => res,
-        "VAL" => Residue("VAL", 'A', 10, ' ', false, ["CA"], Dict(
-            "CA" => Atom(false, 110, "CA", ' ', "VAL", 'A', 10, ' ', [1.0, 2.0, 3.0], 1.0, 0.0, "C", "")
-        ))
-    ), "ALA")
-
-    # Test DisorderedResidue getters/setters
-    @test isa(disorderedres(disordered_res, "VAL"), AbstractResidue)
-    @test resname(disorderedres(disordered_res, "VAL")) == "VAL"
-    @test defaultresname(disordered_res) == "ALA"
-    @test isa(defaultresidue(disordered_res), Residue)
-    @test resname(defaultresidue(disordered_res)) == "ALA"
-    @test resnames(disordered_res) == ["ALA", "VAL"]
-
-    @test resname(disordered_res) == "ALA"
-    @test chainid(disordered_res) == 'A'
-    @test resnumber(disordered_res) == 10
-    @test inscode(disordered_res) == ' '
-    @test !ishetres(disordered_res)
-    @test atomnames(disordered_res) == ["CA", "CB", "CG"]
     @test isa(atoms(res), Dict{String, AbstractAtom})
-    @test length(atoms(res)) == 3
-    @test serial(atoms(res)["CA"]) == 100
+    @test length(atoms(res)) == 2
+    @test serial(atoms(res)[" CA "]) == 100
+    @test isa(atoms(dis_res), Dict{String, AbstractAtom})
+    @test length(atoms(dis_res)) == 1
+    @test serial(atoms(dis_res)[" CG "]) == 300
 
-    @test !ishetero(disordered_res)
-    @test isdisorderedres(disordered_res)
-    @test resid(disordered_res) == "10"
-    @test resid(disordered_res, full=true) == "10:A"
+    @test !isdisorderedres(res)
+    @test isdisorderedres(dis_res)
 
-    disordered_res_mod = DisorderedResidue(disordered_res, "VAL")
-    @test defaultresname(disordered_res_mod) == "VAL"
-    @test atomnames(disordered_res_mod) == ["CA"]
-    @test_throws AssertionError DisorderedResidue(disordered_res, "SER")
+    @test isa(disorderedres(dis_res, "ILE"), AbstractResidue)
+    @test resname(disorderedres(dis_res, "ILE")) == "ILE"
 
-    # Test DisorderedResidue indices
-    @test isa(disordered_res["CA"], AbstractAtom)
-    @test serial(disordered_res["CA"]) == 100
-    @test serial(disordered_res["CB"]) == 102
-    @test_throws KeyError res["N"]
+    @test defaultresname(dis_res) == " VA"
 
-    # Test DisorderedResidue iteration
-    disordered_res_list = collect(disordered_res)
-    @test isa(res_list, Vector{AbstractAtom})
-    @test length(disordered_res_list) == 3
-    @test serial(res_list[3]) == 103
+    @test isa(defaultresidue(dis_res), Residue)
+    @test resname(defaultresidue(dis_res)) == "VA"
 
+    @test resnames(res) == ["ALA"]
+    @test resnames(dis_res) == [" VA", "ILE"]
 
-    # Test Chain constructor
-    chain = Chain('A', ["10", "H_11"], Dict(
-        "10" => disordered_res,
-        "H_11" => Residue("ATP", 'A', 11, ' ', true, ["PB"], Dict(
-            "PB" => Atom(true, 120, "PB", ' ', "ATP", 'A', 11, ' ', [1.0, 2.0, 3.0], 1.0, 0.0, "P", "")
-        ))
-    ))
-    chain_min = Chain('A')
+    dis_res_mod = DisorderedResidue(dis_res, "ILE")
+    @test defaultresname(dis_res_mod) == "ILE"
+    @test atomnames(dis_res_mod) == ["O"]
+    @test_throws ArgumentError DisorderedResidue(dis_res, "SER")
 
-    # Test Chain getters/setters
-    @test chainid(chain) == 'A'
-    @test resids(chain) == ["10", "H_11"]
-    @test isa(residues(chain), Dict{String, AbstractResidue})
-    @test length(residues(chain)) == 2
-    @test serial(residues(chain)["10"]["CA"]) == 100
+    @test chain(at) == ch
+    @test chain(dis_at) == ch
+    @test chain(res) == ch
+    @test chain(dis_res) == ch
+    @test chain(ch) == ch
 
-    # Test Chain indices
-    @test isa(chain["10"], AbstractResidue)
-    @test isa(chain[10], AbstractResidue)
-    @test_throws KeyError chain["H_10"]
-    @test serial(chain["10"]["CA"]) == 100
-    @test serial(chain[10]["CA"]) == 100
-    @test resname(chain["H_11"]) == "ATP"
-    @test_throws KeyError chain["11"]
-    @test_throws KeyError chain[11]
+    @test chainid(at) == 'A'
+    @test chainid(dis_at) == 'A'
+    @test chainid(res) == 'A'
+    @test chainid(dis_res) == 'A'
+    @test chainid(ch) == 'A'
 
-    # Test Chain iteration
-    chain_list = collect(chain)
-    @test isa(chain_list, Vector{AbstractResidue})
-    @test length(chain_list) == 2
-    @test resname(chain_list[2]) == "ATP"
+    @test resids(ch) == ["10", "H_20A"]
 
+    @test isa(residues(ch), Dict{String, AbstractResidue})
+    @test length(residues(ch)) == 2
+    @test serial(residues(ch)["10"]["CA"]) == 100
 
-    # Test Model constructor
-    model = Model(5, Dict(
-        'A' => chain,
-        'B' => Chain('B', ["H_20"], Dict(
-            "H_20" => Residue("ATP", 'B', 1, ' ', true, ["PB"], Dict(
-                "PB" => Atom(true, 1000, "PB", ' ', "ATP", 'B', 1, ' ', [1.0, 2.0, 3.0], 1.0, 0.0, "P", "")
-            ))
-        ))
-    ))
-    model_min = Model(1)
-    model_min = Model()
+    @test model(at) == mod
+    @test model(dis_at) == mod
+    @test model(res) == mod
+    @test model(dis_res) == mod
+    @test model(ch) == mod
+    @test model(mod) == mod
 
-    # Test Model getters/setters
-    @test modelnumber(model) == 5
-    @test chainids(model) == ['A', 'B']
-    @test isa(chains(model), Dict{Char, Chain})
-    @test length(chains(model)) == 2
-    @test resname(chains(model)['B']["H_20"]) == "ATP"
+    @test modelnumber(at) == 1
+    @test modelnumber(dis_at) == 1
+    @test modelnumber(res) == 1
+    @test modelnumber(dis_res) == 1
+    @test modelnumber(ch) == 1
+    @test modelnumber(mod) == 1
 
-    # Test Model indices
-    @test isa(model['A'], Chain)
-    @test resname(model['A']["H_11"]) == "ATP"
-    @test_throws KeyError model['C']
-    @test_throws MethodError model["A"]
+    @test chainids(mod) == ['A', 'B']
+    @test chainids(struc) == ['A', 'B']
 
-    # Test Model iteration
-    model_list = collect(model)
-    @test isa(model_list, Vector{Chain})
-    @test length(model_list) == 2
-    @test chainid(model_list[2]) == 'B'
+    @test isa(chains(mod), Dict{Char, Chain})
+    @test length(chains(mod)) == 2
+    @test resname(chains(mod)['A']["H_20A"]) == "VA"
+    @test length(chains(struc)) == 2
 
+    @test structure(at) == struc
+    @test structure(dis_at) == struc
+    @test structure(res) == struc
+    @test structure(dis_res) == struc
+    @test structure(ch) == struc
+    @test structure(mod) == struc
+    @test structure(struc) == struc
 
-    # Test ProteinStructure constructor
-    struc = ProteinStructure("test", Dict(
-        5 => model,
-        3 => Model(3, Dict(
-            'A' => Chain('A', ["10"], Dict(
-                "10" => Residue("ALA", 'A', 10, ' ', false, ["CA"], Dict(
-                    "CA" => Atom(false, 100, "CA", ' ', "ALA", 'A', 10, ' ', [1.0, 2.0, 3.0], 1.0, 0.0, "C", "")
-                ))
-            ))
-        ))
-    ))
-    struc_min = ProteinStructure("test")
-    struc_min = ProteinStructure()
+    @test structurename(at) == "Test structure"
+    @test structurename(dis_at) == "Test structure"
+    @test structurename(res) == "Test structure"
+    @test structurename(dis_res) == "Test structure"
+    @test structurename(ch) == "Test structure"
+    @test structurename(mod) == "Test structure"
+    @test structurename(struc) == "Test structure"
 
-    # Test ProteinStructure getters/setters
-    @test structurename(struc) == "test"
-    @test modelnumbers(struc) == [3, 5]
+    @test modelnumbers(struc) == [1, 3]
+
     @test isa(models(struc), Dict{Int, Model})
     @test length(models(struc)) == 2
-    @test resids(models(struc)[3]['A']) == ["10"]
+    @test resids(models(struc)[1]['A']) == ["10", "H_20A"]
 
     @test isa(defaultmodel(struc), Model)
-    @test modelnumber(defaultmodel(struc)) == 3
-    @test chainids(struc) == ['A']
+    @test modelnumber(defaultmodel(struc)) == 1
 
-    # Test ProteinStructure indices
-    @test isa(struc[5], Model)
+
+    # Test iteration over elements
+    at_col = collect(at)
+    @test isa(at_col, Vector{Atom})
+    @test length(at_col) == 1
+    @test serial(at_col[1]) == 100
+
+    dis_at_col = collect(dis_at)
+    @test isa(dis_at_col, Vector{Atom})
+    @test length(dis_at_col) == 2
+    @test serial(dis_at_col[2]) == 201
+
+    res_col = collect(res)
+    @test isa(res_col, Vector{AbstractAtom})
+    @test length(res_col) == 2
+    @test serial(res_col[2]) == 200
+
+    dis_res_col = collect(dis_res)
+    @test isa(dis_res_col, Vector{AbstractAtom})
+    @test length(dis_res_col) == 1
+    @test serial(dis_res_col[1]) == 300
+
+    ch_col = collect(ch)
+    @test isa(ch_col, Vector{AbstractResidue})
+    @test length(ch_col) == 2
+    @test resname(ch_col[2]) == "VA"
+
+    mod_col = collect(mod)
+    @test isa(mod_col, Vector{Chain})
+    @test length(mod_col) == 2
+    @test chainid(mod_col[2]) == 'B'
+
+    struc_col = collect(struc)
+    @test isa(struc_col, Vector{Model})
+    @test length(struc_col) == 2
+    @test modelnumber(struc_col[2]) == 3
+
+
+    # Test element indices
+    @test isa(dis_at['A'], Atom)
+    @test serial(dis_at['A']) == 200
+    @test serial(dis_at['B']) == 201
+    @test_throws KeyError dis_at['C']
+    @test_throws MethodError dis_at["A"]
+
+    @test isa(res["CA"], AbstractAtom)
+    @test serial(res["CA"]) == 100
+    @test serial(res["CB"]) == 200
+    @test_throws KeyError res["N"]
+
+    @test isa(dis_res["CG"], AbstractAtom)
+    @test serial(dis_res["CG"]) == 300
+    @test_throws KeyError dis_res["N"]
+
+    @test isa(ch["10"], AbstractResidue)
+    @test isa(ch[10], AbstractResidue)
+    @test_throws KeyError ch["H_10"]
+    @test serial(ch["10"]["CA"]) == 100
+    @test serial(ch[10]["CA"]) == 100
+    @test resname(ch["H_20A"]) == "VA"
+    @test_throws KeyError ch["11"]
+    @test_throws KeyError ch[11]
+
+    @test isa(mod['A'], Chain)
+    @test resname(mod['A']["H_20A"]) == "VA"
+    @test_throws KeyError mod['C']
+    @test_throws MethodError mod["A"]
+
+    @test isa(struc[1], Model)
     @test isa(struc[3], Model)
     @test isa(struc['A'], Chain)
     @test_throws KeyError struc[2]
-    @test_throws KeyError struc['B']
+    @test_throws KeyError struc['C']
     @test_throws MethodError struc["A"]
-    @test ishetres(struc[5]['B']["H_20"])
-    @test !ishetres(struc[3]['A']["10"])
-    @test !ishetres(struc['A']["10"])
-
-    # Test ProteinStructure iteration
-    struc_list = collect(struc)
-    @test isa(struc_list, Vector{Model})
-    @test length(struc_list) == 2
-    @test modelnumber(struc_list[2]) == 5
+    @test ishetero(struc[1]['A']["H_20A"])
 
 
     # Test selector functions
-    atom_a = Atom(false, 100, "CA", ' ', "ALA", 'A', 10, ' ', [1.0, 2.0, 3.0], 1.0, 10.0, "C", "")
-    atom_b = Atom(true, 110, "MG", ' ', "MG", 'A', 11, ' ', [1.0, 2.0, 3.0], 1.0, 10.0, "C", "")
-    res_a = Residue("ALA", 'A', 10, ' ', false, [], Dict())
-    res_b = Residue("HOH", 'A', 100, ' ', true, [], Dict())
+    ch_a = Chain('A')
+    ch_a["10"] = Residue("ALA", 10, ' ', false, ch_a)
+    res_a = ch_a["10"]
+    ch_a["H_11"] = Residue("MG", 11, ' ', true, ch_a)
+    res_b = ch_a["H_11"]
+    ch_a["H_100"] = Residue("HOH", 100, ' ', true, ch_a)
+    res_c = ch_a["H_100"]
+    ch_a["10"]["CA"] = Atom(
+        100, " CA ", ' ', [1.0, 2.0, 3.0], 1.0, 10.0, " C", "  ", res_a)
+    at_a = ch_a["10"]["CA"]
+    ch_a["H_11"]["MG"] = Atom(
+        110, "MG", ' ', [1.0, 2.0, 3.0], 1.0, 10.0, " C", "  ", res_b)
+    at_b = ch_a["H_11"]["MG"]
 
-    @test stdatomselector(atom_a)
-    @test !stdatomselector(atom_b)
-    @test !hetatomselector(atom_a)
-    @test hetatomselector(atom_b)
-    @test atomnameselector(atom_a, Set(["CA", "N", "C"]))
-    @test atomnameselector(atom_a, ["CA", "N", "C"])
-    @test !atomnameselector(atom_b, Set(["CA", "N", "C"]))
-    @test calphaselector(atom_a)
-    @test !calphaselector(atom_b)
-    @test !calphaselector(Atom(true, 100, "CA", ' ', "ALA", 'A', 10, ' ', [1.0, 2.0, 3.0], 1.0, 10.0, "C", ""))
-    @test backboneselector(atom_a)
-    @test !backboneselector(atom_b)
-    @test !backboneselector(Atom(true, 100, "CA", ' ', "ALA", 'A', 10, ' ', [1.0, 2.0, 3.0], 1.0, 10.0, "C", ""))
-    @test heavyatomselector(atom_a)
-    @test !heavyatomselector(atom_b)
-    @test !heavyatomselector(Atom(false, 100, "H1", ' ', "ALA", 'A', 10, ' ', [1.0, 2.0, 3.0], 1.0, 10.0, "H", ""))
-    @test resnameselector(atom_a, Set(["ALA"]))
-    @test resnameselector(atom_a, ["ALA"])
-    @test !resnameselector(atom_b, Set(["ALA"]))
+    @test standardselector(at_a)
+    @test !standardselector(at_b)
+    @test standardselector(res_a)
+    @test !standardselector(res_b)
+    @test !heteroselector(at_a)
+    @test heteroselector(at_b)
+    @test !heteroselector(res_a)
+    @test heteroselector(res_b)
+    @test atomnameselector(at_a, Set(["CA", "N", "C"]))
+    @test atomnameselector(at_a, ["CA", "N", "C"])
+    @test !atomnameselector(at_b, Set(["CA", "N", "C"]))
+    @test !atomnameselector(at_a, ["CA", "N", "C"], strip=false)
+    @test calphaselector(at_a)
+    @test !calphaselector(at_b)
+    @test !calphaselector(Atom(
+        100, "CA", ' ', [1.0, 2.0, 3.0], 1.0, 10.0, " C", "  ", res_b))
+    @test !cbetaselector(at_a)
+    @test cbetaselector(Atom(
+        100, "CB", ' ', [1.0, 2.0, 3.0], 1.0, 10.0, " H", "  ", res_a))
+    @test backboneselector(at_a)
+    @test !backboneselector(at_b)
+    @test !backboneselector(Atom(
+        100, "CA", ' ', [1.0, 2.0, 3.0], 1.0, 10.0, " C", "  ", res_b))
+    @test heavyatomselector(at_a)
+    @test !heavyatomselector(at_b)
+    @test !heavyatomselector(Atom(
+        100, "H1", ' ', [1.0, 2.0, 3.0], 1.0, 10.0, " H", "  ", res_a))
+    @test resnameselector(at_a, Set(["ALA"]))
+    @test resnameselector(at_a, ["ALA"])
+    @test !resnameselector(at_b, Set(["ALA"]))
     @test resnameselector(res_a, Set(["ALA"]))
     @test !resnameselector(res_b, Set(["ALA"]))
     @test !waterselector(res_a)
-    @test waterselector(res_b)
-    @test stdresselector(res_a)
-    @test !stdresselector(res_b)
-    @test !hetresselector(res_a)
-    @test hetresselector(res_b)
-    @test !disorderselector(atom_a)
-    @test disorderselector(disordered_atom)
+    @test waterselector(res_c)
+    @test !waterselector(at_a)
+    @test notwaterselector(res_a)
+    @test !notwaterselector(res_c)
+    @test notwaterselector(at_a)
+    @test !disorderselector(at_a)
+    @test disorderselector(dis_at)
     @test !disorderselector(res_a)
-    @test disorderselector(disordered_res)
-    @test hydrogenselector(Atom(false, 100, "H", ' ', "ALA", 'A', 10, ' ', [1.0, 2.0, 3.0], 1.0, 10.0, "H", ""))
-    @test !hydrogenselector(Atom(false, 100, "H", ' ', "ALA", 'A', 10, ' ', [1.0, 2.0, 3.0], 1.0, 10.0, "C", ""))
-    @test hydrogenselector(Atom(false, 100, "H1", ' ', "ALA", 'A', 10, ' ', [1.0, 2.0, 3.0], 1.0, 10.0, "", ""))
-    @test hydrogenselector(Atom(false, 100, "1H", ' ', "ALA", 'A', 10, ' ', [1.0, 2.0, 3.0], 1.0, 10.0, "", ""))
-    @test !hydrogenselector(Atom(false, 100, "NH1", ' ', "ALA", 'A', 10, ' ', [1.0, 2.0, 3.0], 1.0, 10.0, "", ""))
+    @test disorderselector(dis_res)
+    @test hydrogenselector(Atom(
+        100, "H", ' ', [1.0, 2.0, 3.0], 1.0, 10.0, " H", "  ", res_a))
+    @test !hydrogenselector(Atom(
+        100, "H", ' ', [1.0, 2.0, 3.0], 1.0, 10.0, " C", "  ", res_a))
+    @test hydrogenselector(Atom(
+        100, "H1", ' ', [1.0, 2.0, 3.0], 1.0, 10.0, "  ", "  ", res_a))
+    @test hydrogenselector(Atom(
+        100, "1H", ' ', [1.0, 2.0, 3.0], 1.0, 10.0, "  ", "  ", res_a))
+    @test !hydrogenselector(Atom(
+        100, "NH1", ' ', [1.0, 2.0, 3.0], 1.0, 10.0, "  ", "  ", res_a))
 
 
     # Further tests for structural element ordering
     # Order when looping over a DisorderedAtom is the atom serial
-    disordered_atom_ord = DisorderedAtom(Dict(
-        'A' => Atom(false, 102, "CA", 'A', "ALA", 'A', 10, ' ', [1.0, 2.0, 3.0], 0.3, 10.0, "C", ""),
-        'B' => Atom(false, 101, "CA", 'B', "ALA", 'A', 10, ' ', [1.0, 2.0, 3.0], 0.4, 10.0, "C", ""),
-        'C' => Atom(false, 100, "CA", 'C', "ALA", 'A', 10, ' ', [1.0, 2.0, 3.0], 0.3, 10.0, "C", ""),
+    res = Residue("ALA", 1, ' ', false, Chain('A'))
+    dis_at_ord = DisorderedAtom(Dict(
+        'A' => Atom(102, "CA", 'A', [1.0, 2.0, 3.0], 0.3, 10.0, "C", "", res),
+        'B' => Atom(101, "CA", 'B', [1.0, 2.0, 3.0], 0.4, 10.0, "C", "", res),
+        'C' => Atom(100, "CA", 'C', [1.0, 2.0, 3.0], 0.3, 10.0, "C", "", res),
     ), 'B')
-    @test altlocids(disordered_atom_ord) == ['C', 'B', 'A']
+    @test altlocids(dis_at_ord) == ['C', 'B', 'A']
 
     # Order when sorting an atom list is the atom serial
-    atom_list_ord = AbstractAtom[
+    at_list_ord = AbstractAtom[
         DisorderedAtom(Dict(
-            'A' => Atom(false, 100, "CA", 'A', "ALA", 'A', 10, ' ', [1.0, 2.0, 3.0], 0.4, 10.0, "C", ""),
-            'B' => Atom(false, 104, "CA", 'B', "ALA", 'A', 10, ' ', [1.0, 2.0, 3.0], 0.6, 10.0, "C", "")
+            'A' => Atom(100, "CA", 'A', [1.0, 2.0, 3.0], 0.4, 10.0, "C", "", res),
+            'B' => Atom(104, "CA", 'B', [1.0, 2.0, 3.0], 0.6, 10.0, "C", "", res)
         ), 'B'),
-        Atom(false, 102, "CB", ' ', "ALA", 'A', 10, ' ', [1.0, 2.0, 3.0], 1.0, 10.0, "C", ""),
-        Atom(false, 103, "CG", ' ', "ALA", 'A', 10, ' ', [1.0, 2.0, 3.0], 1.0, 10.0, "C", "")
+        Atom(102, "CB", ' ', [1.0, 2.0, 3.0], 1.0, 10.0, "C", "", res),
+        Atom(103, "CG", ' ', [1.0, 2.0, 3.0], 1.0, 10.0, "C", "", res)
     ]
-    @test map(atomname, sort(atom_list_ord)) == ["CB", "CG", "CA"]
-    @test map(atomname, sort(atom_list_ord; rev=true)) == ["CA", "CG", "CB"]
-    sort!(atom_list_ord)
-    @test map(atomname, atom_list_ord) == ["CB", "CG", "CA"]
+    @test map(atomname, sort(at_list_ord)) == ["CB", "CG", "CA"]
+    sort!(at_list_ord)
+    @test map(atomname, at_list_ord) == ["CB", "CG", "CA"]
 
-    # Order when sorting a residue list is chain ID, then stdres/hetres, then residue number, then insertion code
-    residues_ord = AbstractResidue[
-        Residue("ALA", 'A', 201, 'A', false),
-        Residue("ALA", 'A', 203, ' ', false),
-        Residue("ALA", 'A', 200, ' ', true),
-        Residue("ALA", 'A', 201, 'B', false),
-        Residue("ALA", 'A', 202, ' ', false),
-        Residue("ALA", 'B', 300, ' ', false),
-        Residue("ALA", 'A', 201, ' ', true),
-        Residue("ALA", 'A', 201, ' ', false),
-        Residue("ALA", 'A', 201, 'A', true),
-        Residue("ALA", 'B', 100, ' ', false),
-        Residue("ALA", 'A', 203, ' ', true),
-        Residue("ALA", 'A', 200, ' ', false),
+    # Order when sorting a residue list is chain ID, then stdres/hetres,
+    # then residue number, then insertion code
+    res_ord = AbstractResidue[
+        Residue("ALA", 201, 'A', false, Chain('A')),
+        Residue("ALA", 203, ' ', false, Chain('A')),
+        Residue("ALA", 200, ' ', true,  Chain('A')),
+        Residue("ALA", 201, 'B', false, Chain('A')),
+        Residue("ALA", 202, ' ', false, Chain('A')),
+        Residue("ALA", 300, ' ', false, Chain('B')),
+        Residue("ALA", 201, ' ', true,  Chain('A')),
+        Residue("ALA", 201, ' ', false, Chain('A')),
+        Residue("ALA", 201, 'A', true,  Chain('A')),
+        Residue("ALA", 100, ' ', false, Chain('B')),
+        Residue("ALA", 203, ' ', true,  Chain('A')),
+        Residue("ALA", 200, ' ', false, Chain('A')),
     ]
-    # Test resid
-    @test map(resid, residues_ord) == ["201A", "203", "H_200", "201B", "202", "300", "H_201", "201", "H_201A", "100", "H_203", "200"]
-    @test map(res -> resid(res; full=true), residues_ord) == ["201A:A", "203:A", "H_200:A", "201B:A", "202:A", "300:B", "H_201:A", "201:A", "H_201A:A", "100:B", "H_203:A", "200:A"]
-    @test map(res -> resid(res; full=true), sort(residues_ord)) == ["200:A", "201:A", "201A:A", "201B:A", "202:A", "203:A", "H_200:A", "H_201:A", "H_201A:A", "H_203:A", "100:B", "300:B"]
-    @test map(res -> resid(res; full=true), sort(residues_ord; rev=true)) == ["300:B", "100:B", "H_203:A", "H_201A:A", "H_201:A", "H_200:A", "203:A", "202:A", "201B:A", "201A:A", "201:A", "200:A"]
-    sort!(residues_ord)
-    @test map(res -> resid(res; full=true), residues_ord) == ["200:A", "201:A", "201A:A", "201B:A", "202:A", "203:A", "H_200:A", "H_201:A", "H_201A:A", "H_203:A", "100:B", "300:B"]
+
+    # Test sequentialresidues
+    @test sequentialresidues(res_ord[3], res_ord[7])
+    @test !sequentialresidues(res_ord[7], res_ord[3])
+    @test sequentialresidues(res_ord[7], res_ord[9])
+
+    @test map(resid, res_ord) == [
+        "201A", "203", "H_200", "201B", "202", "300", "H_201", "201", "H_201A",
+        "100", "H_203", "200"]
+    @test map(res -> resid(res, full=true), res_ord) == [
+        "201A:A", "203:A", "H_200:A", "201B:A", "202:A", "300:B", "H_201:A",
+        "201:A", "H_201A:A", "100:B", "H_203:A", "200:A"]
+    @test map(res -> resid(res, full=true), sort(res_ord)) == [
+        "200:A", "201:A", "201A:A", "201B:A", "202:A", "203:A", "H_200:A",
+        "H_201:A", "H_201A:A", "H_203:A", "100:B", "300:B"]
+    sort!(res_ord)
+    @test map(res -> resid(res, full=true), res_ord) == [
+        "200:A", "201:A", "201A:A", "201B:A", "202:A", "203:A", "H_200:A",
+        "H_201:A", "H_201A:A", "H_203:A", "100:B", "300:B"]
 
     # Order of listing residue names in a DisorderedResidue is default then alphabetical
-    disordered_res_ord = DisorderedResidue(Dict(
-        "THR" => Residue("THR", 'A', 201, ' ', false),
-        "ALA" => Residue("ALA", 'A', 201, ' ', false),
-        "ILE" => Residue("ILE", 'A', 201, ' ', false),
-        "SER" => Residue("SER", 'A', 201, ' ', false),
-        "VAL" => Residue("VAL", 'A', 201, ' ', false)
+    dis_res_ord = DisorderedResidue(Dict(
+        "THR" => Residue("THR", 201, ' ', false, Chain('A')),
+        "ALA" => Residue("ALA", 201, ' ', false, Chain('A')),
+        "ILE" => Residue("ILE", 201, ' ', false, Chain('A')),
+        "SER" => Residue("SER", 201, ' ', false, Chain('A')),
+        "VAL" => Residue("VAL", 201, ' ', false, Chain('A'))
     ), "SER")
-    @test defaultresname(disordered_res_ord) == "SER"
-    @test resnames(disordered_res_ord) == ["SER", "ALA", "ILE", "THR", "VAL"]
+    @test defaultresname(dis_res_ord) == "SER"
+    @test resnames(dis_res_ord) == ["SER", "ALA", "ILE", "THR", "VAL"]
 
-    # Order when sorting chain IDs is character ordering with the empty chain ID at the end
-    @test chainidisless('A', 'B')
-    @test chainidisless('A', 'a')
-    @test chainidisless('1', 'A')
-    @test chainidisless('A', ' ')
-    @test !chainidisless('B', 'A')
-    @test !chainidisless(' ', 'A')
-    @test !chainidisless(' ', ' ')
-    model_ord = Model(1, Dict(
+    # Order when sorting chain IDs is character ordering with the empty chain ID at the end
+    mod_ord = Model(1, Dict(
         'A' => Chain('A'),
         ' ' => Chain(' '),
         '1' => Chain('1'),
         'a' => Chain('a'),
         'X' => Chain('X'),
-    ))
-    @test chainids(model_ord) == ['1', 'A', 'X', 'a', ' ']
-    @test sortchainids(['A', ' ', '1', 'a', 'X']) == ['1', 'A', 'X', 'a', ' ']
+    ), ProteinStructure())
+    @test chainids(mod_ord) == ['1', 'A', 'X', 'a', ' ']
+
+
+    # Test sequence extraction
+    struc = read(pdbfilepath("1AKE.pdb"), PDB)
+    seq = AminoAcidSequence(struc['B'])
+    @test seq == AminoAcidSequence(
+        "MRIILLGAPGAGKGTQAQFIMEKYGIPQISTGDMLRAAVKSGSELGKQAKDIMDAGKLVTDELVIALVKERIAQEDCRNG" *
+        "FLLDGFPRTIPQADAMKEAGINVDYVLEFDVPDELIVDRIVGRRVHAPSGRVYHVKFNPPKVEGKDDVTGEELTTRKDDQ" *
+        "EETVRKRLVEYHQMTAPLIGYYSKEAEAGNTKYAKVDGTKPVAEVRADLEKILGX-------------------------" *
+        "--------------------------------------------------------------------------------" *
+        "--------------------------------------------------------------------------------" *
+        "--------------------------------------------------------------------------------" *
+        "---------------------------------------------------XX---------------------------" *
+        "----------------------------------------XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX" *
+        "XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX" *
+        "XXXXXXXXXXXXXXX"
+    )
+    seq = AminoAcidSequence(struc['B'], standardselector)
+    @test seq == AminoAcidSequence(
+        "MRIILLGAPGAGKGTQAQFIMEKYGIPQISTGDMLRAAVKSGSELGKQAKDIMDAGKLVTDELVIALVKERIAQEDCRNG" *
+        "FLLDGFPRTIPQADAMKEAGINVDYVLEFDVPDELIVDRIVGRRVHAPSGRVYHVKFNPPKVEGKDDVTGEELTTRKDDQ" *
+        "EETVRKRLVEYHQMTAPLIGYYSKEAEAGNTKYAKVDGTKPVAEVRADLEKILG"
+    )
+    seq = AminoAcidSequence(AbstractResidue[
+        Residue("VAL", 20, 'B', true, Chain('B')),
+        Residue("ALA", 10, 'A', false, Chain('A')),
+    ])
+    @test seq == AminoAcidSequence("VA")
 end
 
 
 @testset "Parsing" begin
     # Test parsevalue
     line = "ATOM     40  CB  LEU A   5      22.088  45.547  29.675  1.00 22.23           C  "
-    @test parsevalue(line, (7,11), Int) == 40
-    @test parsevalue(line, (31,38), Float64) == 22.088
-    @test strip(parsevalue(line, (13,16), String)) == "CB"
-    @test parsevalue(line, (22,22), Char) == 'A'
-    @test_throws ErrorException parsevalue(line, (1,4), Int)
-    @test_throws ErrorException parsevalue(line, (1,4), Bool)
-    @test_throws ErrorException parsevalue(line, (79,100), Int)
+    @test parsevalue(line, 7, 11, Int) == 40
+    @test parsevalue(line, 31, 38, Float64) == 22.088
+    @test parsevalue(line, 13, 16, String) == " CB "
+    @test parsevalue(line, 22, 22, Char) == 'A'
+    @test_throws ErrorException parsevalue(line, 1, 4, Int)
+    @test_throws ErrorException parsevalue(line, 1, 4, Bool)
+    @test_throws ErrorException parsevalue(line, 79, 100, Int)
+
 
     # Test parsestrict
     line =   "ATOM    591  C   GLY A  80      29.876  54.131  35.806  1.00 40.97           C  "
     line_a = "ATOM    591  C   GLY A  80              54.131  35.806  1.00 40.97           C  "
     line_b = "ATOM    591  C   GLY A  80 "
-    @test parsestrict(line, (7,11), Int, "could not read atom serial number", 10) == 591
-    @test strip(parsestrict(line, (13,16), String, "could not read atom name", 20)) == "C"
-    @test_throws PDBParseError parsestrict(line_a, (31,38), Float64, "could not read x coordinate", 10)
-    @test_throws PDBParseError parsestrict(line_b, (31,38), Float64, "could not read x coordinate", 10)
-    @test_throws PDBParseError parsestrict(line, (7,11), Bool, "could not read atom serial number", 10)
+    @test parsestrict(line, 7, 11, Int, "could not read atom serial number", 10) == 591
+    @test parsestrict(line, 13, 16, String, "could not read atom name", 20) == " C  "
+    @test_throws PDBParseError parsestrict(line_a, 31, 38, Float64, "could not read x coordinate", 10)
+    @test_throws PDBParseError parsestrict(line_b, 31, 38, Float64, "could not read x coordinate", 10)
+    @test_throws PDBParseError parsestrict(line, 7, 11, Bool, "could not read atom serial number", 10)
 
-    # Test parselenient
+
+    # Test parselenient
     line =   "ATOM     40  CB  LEU A   5      22.088  45.547  29.675  1.00 22.23           C  "
     line_a = "ATOM     40  CB  LEU A   5      22.088  45.547  29.675  1.00 22.23              "
     line_b = "ATOM     40  CB  LEU A   5      22.088  45.547  29.675  1.00 22.23  "
     line_c = "ATOM     40  CB  LEU A   5      22.088  45.547  29.675       22.23           C  "
-    @test strip(parselenient(line, (77,78), String, "")) == "C"
-    @test parselenient(line_a, (77,78), String, "") == "  "
-    @test parselenient(line_b, (77,78), String, "") == ""
-    @test parselenient(line_b, (77,78), String, "C") == "C"
-    @test parselenient(line_c, (55,60), Float64, 1.0) == 1.0
-    @test parselenient(line, (77,78), Bool, "N") == "N"
+    @test parselenient(line, 77, 78, String, "  ") == " C"
+    @test parselenient(line_a, 77, 78, String, "  ") == "  "
+    @test parselenient(line_b, 77, 78, String, "  ") == "  "
+    @test parselenient(line_b, 77, 78, String, " C") == " C"
+    @test parselenient(line_c, 55, 60, Float64, 1.0) == 1.0
+    @test parselenient(line, 77, 78, Bool, " N") == " N"
 
-    # Test parseatomrecord
+
+    # Test AtomRecord constructor
     line_a = "ATOM    669  CA  ILE A  90      31.743  33.110  31.221  1.00 25.76           C  "
     line_b = "HETATM 3474  O  B XX A 334A      8.802  62.000   8.672  1.00 39.15           O1-"
     line_c = "ATOM    669  CA  ILE A  90      xxxxxx  33.110  31.221  1.00 25.76           C  "
     line_d = "ATOM    669  CA  ILE A  90      31.743   "
     line_e = "REMARK   1 REFERENCE 1                                                          "
-    atom = parseatomrecord(line_a, 10)
-    @test !ishetatom(atom)
-    @test serial(atom) == 669
-    @test atomname(atom) == "CA"
-    @test altlocid(atom) == ' '
-    @test resname(atom) == "ILE"
-    @test chainid(atom) == 'A'
-    @test resnumber(atom) == 90
-    @test inscode(atom) == ' '
-    @test x(atom) == 31.743
-    @test y(atom) == 33.110
-    @test z(atom) == 31.221
-    @test coords(atom) == [31.743, 33.110, 31.221]
-    @test occupancy(atom) == 1.00
-    @test tempfac(atom) == 25.76
-    @test element(atom) == "C"
-    @test charge(atom) == ""
-    atom = parseatomrecord(line_b)
-    @test ishetatom(atom)
-    @test serial(atom) == 3474
-    @test atomname(atom) == "O"
-    @test altlocid(atom) == 'B'
-    @test resname(atom) == "XX"
-    @test chainid(atom) == 'A'
-    @test resnumber(atom) == 334
-    @test inscode(atom) == 'A'
-    @test x(atom) == 8.802
-    @test y(atom) == 62.0
-    @test z(atom) == 8.672
-    @test occupancy(atom) == 1.00
-    @test tempfac(atom) == 39.15
-    @test element(atom) == "O"
-    @test charge(atom) == "1-"
-    @test_throws PDBParseError parseatomrecord(line_c)
-    @test_throws PDBParseError parseatomrecord(line_d)
-    @test_throws AssertionError parseatomrecord(line_e)
+    at_rec = AtomRecord(line_a, 10)
+    show(DevNull, at_rec)
+    @test !at_rec.het_atom
+    @test at_rec.serial == 669
+    @test at_rec.atom_name == " CA "
+    @test at_rec.alt_loc_id == ' '
+    @test at_rec.res_name == "ILE"
+    @test at_rec.chain_id == 'A'
+    @test at_rec.res_number == 90
+    @test at_rec.ins_code == ' '
+    @test at_rec.coords == [31.743, 33.110, 31.221]
+    @test at_rec.occupancy == 1.00
+    @test at_rec.temp_factor == 25.76
+    @test at_rec.element == " C"
+    @test at_rec.charge == "  "
+    at_rec = AtomRecord(line_b)
+    @test at_rec.het_atom
+    @test at_rec.serial == 3474
+    @test at_rec.atom_name == " O  "
+    @test at_rec.alt_loc_id == 'B'
+    @test at_rec.res_name == " XX"
+    @test at_rec.chain_id == 'A'
+    @test at_rec.res_number == 334
+    @test at_rec.ins_code == 'A'
+    @test at_rec.coords == [8.802, 62.0, 8.672]
+    @test at_rec.occupancy == 1.00
+    @test at_rec.temp_factor == 39.15
+    @test at_rec.element == " O"
+    @test at_rec.charge == "1-"
+    @test_throws PDBParseError AtomRecord(line_c)
+    @test_throws PDBParseError AtomRecord(line_d)
+
 
     # Test parsing 1AKE (multiple chains, disordered atoms)
     struc = read(pdbfilepath("1AKE.pdb"), PDB)
@@ -563,298 +654,101 @@ end
     @test x(struc['A'][167]["CD"]) == 24.502
     @test x(struc['A'][167]["CD"]['A']) == 24.502
     @test x(struc['A'][167]["CD"]['B']) == 24.69
-
-    # Test collectatoms
-    atoms = collectatoms(struc)
-    @test length(atoms) == 3804
-    @test isa(atoms, Vector{AbstractAtom})
-    @test isa(atoms[70], Atom)
-    @test isa(atoms[1290], DisorderedAtom)
-    @test serial(atoms[1660]) == 3323
-    atoms = collectatoms(struc, hetatomselector)
-    @test length(atoms) == 492
-    @test serial(atoms[60]) == 3443
-    atoms = collectatoms(struc, disorderselector)
-    @test length(atoms) == 12
-    @test serial(atoms[10]) == 3338
-    atoms = collectatoms(struc, stdatomselector, disorderselector)
-    @test length(atoms) == 5
-    @test serial(atoms[4]) == 1294
-    atoms = collectatoms(struc[1])
-    @test length(atoms) == 3804
-    @test serial(atoms[1660]) == 3323
-    atoms = collectatoms(struc['A'])
-    @test length(atoms) == 1954
-    @test serial(atoms[240]) == 240
-    atoms = collectatoms(struc['A'][50])
-    @test length(atoms) == 9
-    @test serial(atoms[4]) == 358
-    atoms = collectatoms(struc['A'][50]["CA"])
-    @test length(atoms) == 1
-    @test isa(atoms, Vector{AbstractAtom})
-    @test serial(atoms[1]) == 356
-    atoms = collectatoms(struc['A'][167]["CZ"])
-    @test length(atoms) == 1
-    @test isa(atoms, Vector{AbstractAtom})
-    @test isa(atoms[1], DisorderedAtom)
-    @test serial(atoms[1]) == 1292
-    atoms = collectatoms(Chain[struc['B'], struc['A']])
-    @test length(atoms) == 3804
-    @test serial(atoms[5]) == 1667
-    atoms = collectatoms(Residue[struc['A'][51], struc['A'][50]])
-    @test length(atoms) == 17
-    @test serial(atoms[10]) == 356
-    atoms = collectatoms(AbstractResidue[struc['A'][51], struc['A'][50]])
-    @test length(atoms) == 17
-    @test serial(atoms[10]) == 356
-    atoms = collectatoms(Atom[struc['A'][51]["CA"], struc['A'][50]["CA"]])
-    @test length(atoms) == 2
-    @test isa(atoms, Vector{Atom})
-    @test serial(atoms[1]) == 356
-    atoms = collectatoms(DisorderedAtom[struc['A'][167]["CZ"], struc['A'][167]["CD"]])
-    @test length(atoms) == 2
-    @test isa(atoms, Vector{DisorderedAtom})
-    @test serial(atoms[2]) == 1292
-    atoms = collectatoms(AbstractAtom[struc['A'][50]["CA"], struc['A'][167]["CZ"]])
-    @test length(atoms) == 2
-    @test isa(atoms, Vector{AbstractAtom})
-    @test serial(atoms[2]) == 1292
-
-
-    # Test countatoms
-    @test countatoms(struc) == 3804
-    @test countatoms(struc[1]) == 3804
-    @test countatoms(struc['A']) == 1954
-    @test countatoms(struc['A'][50]) == 9
-    @test countatoms(struc['A'][50]["CA"]) == 1
-    @test countatoms([struc['A'], struc['B']]) == 3804
-    @test countatoms(AbstractResidue[struc['A'][50], struc['A'][51]]) == 17
-    @test countatoms(Residue[struc['A'][50], struc['A'][51]]) == 17
-    @test countatoms(collectatoms(struc['A'])) == 1954
-    @test countatoms(DisorderedAtom[struc['A'][167]["CZ"], struc['A'][167]["CD"]]) == 2
-    @test countatoms(Atom[struc['A'][51]["CA"], struc['A'][50]["CA"]]) == 2
-
-    @test countatoms(struc['A'], stdatomselector) == 1656
-    @test countatoms(struc['A'], hetatomselector) == 298
-    @test countatoms(struc['A'], stdatomselector, disorderselector) == 5
-
-    @test countatoms(ProteinStructure()) == 0
-    @test countatoms(Model()) == 0
-    @test countatoms(Chain('X')) == 0
-    @test countatoms(Residue("ALA", 'A', 100, ' ', false)) == 0
-
-
-    # Test collectresidues
-    residues = collectresidues(struc)
-    @test length(residues) == 808
-    @test isa(residues, Vector{AbstractResidue})
-    @test isa(residues[50], Residue)
-    @test resnumber(residues[220]) == 305
-    residues = collectresidues(struc, hetresselector)
-    @test length(residues) == 380
-    @test resnumber(residues[370]) == 725
-    residues = collectresidues(struc, stdresselector, res -> chainid(res) == 'A')
-    @test length(residues) == 214
-    @test resnumber(residues[200]) == 200
-    residues = collectresidues(struc[1])
-    @test length(residues) == 808
-    @test resnumber(residues[220]) == 305
-    residues = collectresidues(struc['A'])
-    @test length(residues) == 456
-    @test resnumber(residues[220]) == 305
-    residues = collectresidues(struc['A'][50])
-    @test length(residues) == 1
-    @test isa(residues, Vector{AbstractResidue})
-    @test resnumber(residues[1]) == 50
-    residues = collectresidues(struc['A'][50]["CA"])
-    @test length(residues) == 1
-    @test isa(residues, Vector{AbstractResidue})
-    @test isa(residues[1], Residue)
-    @test resnumber(residues[1]) == 50
-    residues = collectresidues(struc['A'][167]["CZ"])
-    @test length(residues) == 1
-    @test isa(residues, Vector{AbstractResidue})
-    @test isa(residues[1], Residue)
-    @test resnumber(residues[1]) == 167
-    residues = collectresidues(Chain[struc['B'], struc['A']])
-    @test length(residues) == 808
-    @test resid(residues[5]; full=true) == "5:B"
-    residues = collectresidues(Residue[struc['A'][51], struc['A'][50]])
-    @test length(residues) == 2
-    @test isa(residues, Vector{Residue})
-    @test resnumber(residues[1]) == 50
-    residues = collectresidues(AbstractResidue[struc['A'][51], struc['A'][50]])
-    @test length(residues) == 2
-    @test isa(residues, Vector{AbstractResidue})
-    @test resnumber(residues[1]) == 50
-    residues = collectresidues(Atom[struc['A'][51]["CA"], struc['A'][50]["CA"]])
-    @test length(residues) == 2
-    @test isa(residues, Vector{AbstractResidue})
-    @test resnumber(residues[2]) == 51
-    residues = collectresidues(DisorderedAtom[struc['A'][167]["CZ"], struc['A'][167]["CD"]])
-    @test length(residues) == 1
-    @test isa(residues, Vector{AbstractResidue})
-    @test atomnames(residues[1]) == ["CD", "CZ"]
-    residues = collectresidues(AbstractAtom[struc['A'][50]["CA"], struc['A'][167]["CZ"]])
-    @test length(residues) == 2
-    @test isa(residues, Vector{AbstractResidue})
-    @test atomnames(residues[1]) == ["CA"]
-
-
-    # Test countresidues
-    @test countresidues(struc) == 808
-    @test countresidues(struc[1]) == 808
-    @test countresidues(struc['A']) == 456
-    @test countresidues(struc['A'][50]) == 1
-    @test countresidues(struc['A'][50]["CA"]) == 1
-    @test countresidues([struc['A'], struc['B']]) == 808
-    @test countresidues(AbstractResidue[struc['A'][50], struc['A'][51]]) == 2
-    @test countresidues(Residue[struc['A'][50], struc['A'][51]]) == 2
-    @test countresidues(collectatoms(struc['A'])) == 456
-    @test countresidues(DisorderedAtom[struc['A'][167]["CZ"], struc['A'][167]["CD"]]) == 1
-    @test countresidues(Atom[struc['A'][51]["CA"], struc['A'][50]["CA"]]) == 2
-
-    @test countresidues(struc['A'], stdresselector) == 214
-    @test countresidues(struc['A'], hetresselector) == 242
-    @test countresidues(struc, stdresselector, res -> chainid(res) == 'A') == 214
-
-    @test countresidues(ProteinStructure()) == 0
-    @test countresidues(Model()) == 0
-    @test countresidues(Chain('X')) == 0
-    @test countresidues(Residue("ALA", 'A', 100, ' ', false)) == 1
-
-
-    # Test formatomlist
-    atom_a = Atom(false, 103, "N", ' ', "ALA", 'A', 10, ' ', [1.0, 2.0, 3.0], 1.0, 10.0, "N", "")
-    atom_b = Atom(false, 100, "CA", 'A', "ALA", 'A', 10, ' ', [1.0, 2.0, 3.0], 0.4, 10.0, "C", "")
-    atom_c = Atom(false, 102, "C", ' ', "ALA", 'A', 10, ' ', [1.0, 2.0, 3.0], 1.0, 10.0, "C", "")
-    atom_d = Atom(false, 101, "CA", 'B', "ALA", 'A', 10, ' ', [1.0, 2.0, 3.0], 0.6, 10.0, "C", "")
-    atom_list = formatomlist([atom_a, atom_b, atom_c, atom_d])
-    @test length(atom_list) == 3
-    @test isa(atom_list[1], DisorderedAtom)
-    @test isa(atom_list[2], Atom)
-    @test isa(atom_list[3], Atom)
-    @test map(length, atom_list) == [2, 1, 1]
-    @test map(serial, atom_list) == [101, 102, 103]
-    @test defaultaltlocid(atom_list[1]) == 'B'
-    atom_list = formatomlist([atom_a, atom_b, atom_c, atom_d]; remove_disorder=true)
-    @test length(atom_list) == 3
-    @test map(x -> isa(x, Atom), atom_list) == [true, true, true]
-    @test map(length, atom_list) == [1, 1, 1]
-    @test map(serial, atom_list) == [101, 102, 103]
-    atom_a = Atom(false, 100, "CA", ' ', "ALA", 'A', 10, ' ', [1.0, 2.0, 3.0], 1.0, 10.0, "C", "")
-    atom_b = Atom(false, 101, "CA", ' ', "ALA", 'A', 10, ' ', [1.0, 2.0, 3.0], 1.0, 10.0, "C", "")
-    @test_throws ErrorException formatomlist([atom_a, atom_b])
-
-    # Test by unfolding 1AKE atoms and re-forming them
-    atoms_unfold = Atom[]
-    for atom in collectatoms(struc['A'])
-        append!(atoms_unfold, collect(atom))
-    end
-    atom_list = formatomlist(atoms_unfold)
-    @test length(atom_list) == 1954
-    @test sum(map(x -> isa(x, Atom), atom_list)) == 1942
-    @test isa(atom_list[1289], DisorderedAtom)
-    @test length(atom_list[1289]) == 2
-    @test serial(atom_list[1934]) == 3661
-    atom_list = formatomlist(atoms_unfold; remove_disorder=true)
-    @test length(atom_list) == 1954
-    @test sum(map(x -> isa(x, Atom), atom_list)) == 1954
-    @test serial(atom_list[1934]) == 3661
+    mods = collect(struc)
+    @test modelnumber(mods[1]) == 1
+    chs = collect(mods[1])
+    @test map(chainid, chs) == ['A', 'B']
+    res = collect(chs[1])
+    @test length(res) == 456
+    @test resid(res[20]) == "20"
+    ats = collect(res[20])
+    @test length(ats) == 8
+    @test map(atomname, ats) == ["N", "CA", "C", "O", "CB", "CG1", "CG2", "CD1"]
 
 
     # Test choosedefaultaltlocid
-    atom_a = Atom(false, 100, "CA", 'A', "ALA", 'A', 10, ' ', [1.0, 2.0, 3.0], 0.4, 10.0, "C", "")
-    atom_b = Atom(false, 101, "CA", 'B', "ALA", 'A', 10, ' ', [1.0, 2.0, 3.0], 0.6, 10.0, "C", "")
-    @test choosedefaultaltlocid(atom_a, atom_b) == 'B'
-    @test choosedefaultaltlocid(atom_b, atom_a) == 'B'
-    atom_a = Atom(false, 100, "CA", 'A', "ALA", 'A', 10, ' ', [1.0, 2.0, 3.0], 0.5, 10.0, "C", "")
-    atom_b = Atom(false, 101, "CA", 'B', "ALA", 'A', 10, ' ', [1.0, 2.0, 3.0], 0.5, 10.0, "C", "")
-    @test choosedefaultaltlocid(atom_a, atom_b) == 'A'
-    @test choosedefaultaltlocid(atom_b, atom_a) == 'A'
+    res = Residue("ALA", 1, ' ', false, Chain('A'))
+    at_a = Atom(100, "CA", 'A', [1.0, 2.0, 3.0], 0.4, 10.0, "C", "", res)
+    at_b = Atom(101, "CA", 'B', [1.0, 2.0, 3.0], 0.6, 10.0, "C", "", res)
+    @test choosedefaultaltlocid(at_a, at_b) == 'B'
+    @test choosedefaultaltlocid(at_b, at_a) == 'B'
+    at_a = Atom(100, "CA", 'A', [1.0, 2.0, 3.0], 0.5, 10.0, "C", "", res)
+    at_b = Atom(101, "CA", 'B', [1.0, 2.0, 3.0], 0.5, 10.0, "C", "", res)
+    @test choosedefaultaltlocid(at_a, at_b) == 'A'
+    @test choosedefaultaltlocid(at_b, at_a) == 'A'
 
 
     # Test applyselectors
-    atoms = collectatoms(struc)
+    ats = collectatoms(struc)
     # Not providing any selector functions just returns the input list
-    atoms_min = applyselectors(atoms)
-    @test length(atoms_min) == length(atoms)
-    @test map(serial, atoms_min) == map(serial, atoms)
-    applyselectors!(atoms_min)
-    @test length(atoms_min) == length(atoms)
-    @test map(serial, atoms_min) == map(serial, atoms)
-    atoms_min = applyselectors(atoms, stdatomselector)
-    @test length(atoms_min) == 3312
-    @test serial(atoms_min[2000]) == 2006
-    applyselectors!(atoms, stdatomselector)
-    @test length(atoms) == 3312
-    @test serial(atoms[2000]) == 2006
-    atoms = collectatoms(struc)
-    atoms_min = applyselectors(atoms, stdatomselector, disorderselector)
-    @test length(atoms_min) == 5
-    @test serial(atoms_min[4]) == 1294
-    applyselectors!(atoms, stdatomselector, disorderselector)
-    @test length(atoms) == 5
-    @test serial(atoms[4]) == 1294
+    ats_min = applyselectors(ats)
+    @test length(ats_min) == length(ats)
+    @test map(serial, ats_min) == map(serial, ats)
+    applyselectors!(ats_min)
+    @test length(ats_min) == length(ats)
+    @test map(serial, ats_min) == map(serial, ats)
+    ats_min = applyselectors(ats, standardselector)
+    @test length(ats_min) == 3312
+    @test serial(ats_min[2000]) == 2006
+    applyselectors!(ats, standardselector)
+    @test length(ats) == 3312
+    @test serial(ats[2000]) == 2006
+    ats = collectatoms(struc)
+    ats_min = applyselectors(ats, standardselector, disorderselector)
+    @test length(ats_min) == 5
+    @test serial(ats_min[4]) == 1294
+    applyselectors!(ats, standardselector, disorderselector)
+    @test length(ats) == 5
+    @test serial(ats[4]) == 1294
 
-    residues = collectresidues(struc)
-    residues_min = applyselectors(residues)
-    @test length(residues_min) == length(residues)
-    @test map(res -> resid(res; full=true), residues_min) == map(res -> resid(res; full=true), residues)
-    applyselectors!(residues_min)
-    @test length(residues_min) == length(residues)
-    @test map(res -> resid(res; full=true), residues_min) == map(res -> resid(res; full=true), residues)
-    residues_min = applyselectors(residues, waterselector)
-    @test length(residues_min) == 378
-    @test resid(residues_min[300]; full=true) == "H_657:B"
-    applyselectors!(residues, waterselector)
-    @test length(residues) == 378
-    @test resid(residues[300]; full=true) == "H_657:B"
-    residues = collectresidues(struc)
+    res = collectresidues(struc)
+    res_min = applyselectors(res)
+    @test length(res_min) == length(res)
+    @test map(res -> resid(res, full=true), res_min) == map(res -> resid(res, full=true), res)
+    applyselectors!(res_min)
+    @test length(res_min) == length(res)
+    @test map(res -> resid(res, full=true), res_min) == map(res -> resid(res, full=true), res)
+    res_min = applyselectors(res, waterselector)
+    @test length(res_min) == 378
+    @test resid(res_min[300], full=true) == "H_657:B"
+    applyselectors!(res, waterselector)
+    @test length(res) == 378
+    @test resid(res[300], full=true) == "H_657:B"
+    res = collectresidues(struc)
     # Test anonymous selector function
-    residues_min = applyselectors(residues, stdresselector, res -> chainid(res) == 'A')
-    @test length(residues_min) == 214
-    @test resid(residues_min[200]; full=true) == "200:A"
-    applyselectors!(residues, stdresselector, res -> chainid(res) == 'A')
-    @test length(residues) == 214
-    @test resid(residues[200]; full=true) == "200:A"
+    res_min = applyselectors(res, standardselector, res -> chainid(res) == 'A')
+    @test length(res_min) == 214
+    @test resid(res_min[200], full=true) == "200:A"
+    applyselectors!(res, standardselector, res -> chainid(res) == 'A')
+    @test length(res) == 214
+    @test resid(res[200], full=true) == "200:A"
 
 
     # Test parsing options
-    struc = read(pdbfilepath("1AKE.pdb"), PDB; structure_name="New name")
+    struc = read(pdbfilepath("1AKE.pdb"), PDB, structure_name="New name")
     @test structurename(struc) == "New name"
     @test countatoms(struc) == 3804
 
-    struc = read(pdbfilepath("1AKE.pdb"), PDB; read_het_atoms=false)
+    struc = read(pdbfilepath("1AKE.pdb"), PDB, read_het_atoms=false)
     @test countatoms(struc) == 3312
     @test serial(collectatoms(struc)[2000]) == 2006
-    @test sum(map(ishetatom, collectatoms(struc))) == 0
+    @test sum(map(ishetero, collectatoms(struc))) == 0
 
-    struc = read(pdbfilepath("1AKE.pdb"), PDB; read_std_atoms=false)
+    struc = read(pdbfilepath("1AKE.pdb"), PDB, read_std_atoms=false)
     @test countatoms(struc) == 492
     @test serial(collectatoms(struc)[400]) == 3726
-    @test sum(map(ishetatom, collectatoms(struc))) == 492
+    @test sum(map(ishetero, collectatoms(struc))) == 492
 
-    struc = read(pdbfilepath("1AKE.pdb"), PDB; read_het_atoms=false, read_std_atoms=false)
+    struc = read(pdbfilepath("1AKE.pdb"), PDB, read_het_atoms=false, read_std_atoms=false)
     @test countatoms(struc) == 0
     @test countresidues(struc) == 0
+    @test countchains(struc) == 0
+    @test countmodels(struc) == 0
 
-    struc = read(pdbfilepath("1AKE.pdb"), PDB; remove_disorder=true)
+    struc = read(pdbfilepath("1AKE.pdb"), PDB, remove_disorder=true)
     @test countatoms(struc) == 3804
     @test sum(map(isdisorderedatom, collectatoms(struc))) == 0
-    @test tempfac(struc['A'][167]["NE"]) == 23.32
-
-    struc = read(pdbfilepath("1AKE.pdb"), PDB, backboneselector)
-    @test countatoms(struc) == 1284
-    @test countatoms(struc, backboneselector) == 1284
-    @test serial(collectatoms(struc)[1000]) == 2566
-
-    struc = read(pdbfilepath("1AKE.pdb"), PDB, stdatomselector, disorderselector)
-    @test countatoms(struc) == 5
-    @test sum(map(isdisorderedatom, collectatoms(struc))) == 5
-    @test sum(map(ishetatom, collectatoms(struc))) == 0
-    @test serial(struc['A'][167]["CZ"]) == 1292
-
+    @test tempfactor(struc['A'][167]["NE"]) == 23.32
 
     # Test parsing from stream
     open(pdbfilepath("1AKE.pdb"), "r") do file
@@ -863,13 +757,13 @@ end
         @test countresidues(struc) == 808
     end
 
+
     # Test parsing 1EN2 (disordered residue)
     struc = read(pdbfilepath("1EN2.pdb"), PDB)
     @test modelnumbers(struc) == [1]
     @test chainids(struc[1]) == ['A']
     @test serial(struc['A'][48]["CA"]) == 394
     @test isdisorderedres(struc['A'][10])
-    # Note default is first added, not highest occupancy
     @test defaultresname(struc['A'][10]) == "SER"
     @test resname(disorderedres(struc['A'][10], "SER")) == "SER"
     @test resname(disorderedres(struc['A'][10], "GLY")) == "GLY"
@@ -886,20 +780,20 @@ end
     @test altlocids(struc['A'][16]["CA"]) == ['A', 'B']
     @test defaultaltlocid(struc['A'][16]["CA"]) == 'A'
     @test occupancy(struc['A'][16]["CA"]) == 0.22
-    atoms = collectatoms(DisorderedResidue[struc['A'][10], struc['A'][16]])
-    @test length(atoms) == 17
-    @test isa(atoms, Vector{AbstractAtom})
-    @test serial(atoms[10]) == 113
-    @test isa(atoms[10], DisorderedAtom)
+    ats = collectatoms(DisorderedResidue[struc['A'][10], struc['A'][16]])
+    @test length(ats) == 17
+    @test isa(ats, Vector{AbstractAtom})
+    @test serial(ats[10]) == 113
+    @test isa(ats[10], DisorderedAtom)
     @test countatoms(DisorderedResidue[struc['A'][10], struc['A'][16]]) == 17
-    residues = collectresidues(DisorderedResidue[struc['A'][16], struc['A'][10]])
-    @test length(residues) == 2
-    @test isa(residues, Vector{DisorderedResidue})
-    @test resnumber(residues[1]) == 10
+    res = collectresidues(DisorderedResidue[struc['A'][16], struc['A'][10]])
+    @test length(res) == 2
+    @test isa(res, Vector{DisorderedResidue})
+    @test resnumber(res[1]) == 10
     @test countresidues(DisorderedResidue[struc['A'][16], struc['A'][10]]) == 2
 
 
-    # Test parsing 1SSU (multiple models)
+    # Test parsing 1SSU (multiple models)
     struc = read(pdbfilepath("1SSU.pdb"), PDB)
     # Test countmodels
     @test countmodels(struc) == 20
@@ -909,199 +803,319 @@ end
     @test chainids(struc) == ['A']
     @test chainids(struc[5]) == ['A']
     @test serial(struc[10]['A'][40]["HB2"]) == 574
-    # Note counting and collecting on model 1 by default
     @test countatoms(struc) == 756
     @test map(countatoms, [struc[i] for i in modelnumbers(struc)]) == 756 * ones(Int, 20)
     @test countatoms(struc, hydrogenselector) == 357
-    atoms = collectatoms(Model[struc[5], struc[10]])
-    @test length(atoms) == 1512
-    @test z(atoms[20]) == -14.782
-    @test z(atoms[1000]) == -3.367
+    ats = collectatoms(Model[struc[5], struc[10]])
+    @test length(ats) == 1512
+    @test z(ats[20]) == -16.522
+    @test z(ats[1000]) == -0.394
     @test countatoms(Model[struc[5], struc[10]]) == 1512
-    atoms_raw = Atom[atom for atom in atoms]
-    @test_throws ErrorException formatomlist(atoms_raw)
-    residues = collectresidues(Model[struc[5], struc[10]])
-    @test length(residues) == 102
-    @test y(residues[10]["O"]) == -1.612
-    @test y(residues[100]["O"]) == -13.184
+    res = collectresidues(Model[struc[5], struc[10]])
+    @test length(res) == 102
+    @test y(res[10]["O"]) == -6.421
+    @test y(res[100]["O"]) == -15.66
     @test countresidues(Model[struc[5], struc[10]]) == 102
+    chs = collectchains(Model[struc[5], struc[10]])
+    @test length(chs) == 2
+    @test map(chainid, chs) == ['A', 'A']
+    @test z(chs[2][5]["CA"]) == -5.667
+    @test countchains(Model[struc[5], struc[10]]) == 2
+    mods = collectmodels(Model[struc[10], struc[5]])
+    @test length(mods) == 2
+    @test map(modelnumber, mods) == [5, 10]
+    @test z(mods[2]['A'][5]["CA"]) == -5.667
+    @test countmodels(Model[struc[10], struc[5]]) == 2
 
 
-    # Test organise
-    struc_new = organise(Model[struc[5], struc[3]])
-    @test isa(struc_new, ProteinStructure)
-    @test structurename(struc_new) == ""
-    @test modelnumbers(struc_new) == [3, 5]
-    @test countatoms(struc_new[3]) == 756
-    @test countatoms(struc_new[5]) == 756
-    @test_throws KeyError struc_new[1]
-    struc_new = organise(Model[struc[5], struc[3]]; structure_name="new struc")
-    @test structurename(struc_new) == "new struc"
-    struc_new = organise(struc[5])
-    @test isa(struc_new, ProteinStructure)
-    @test modelnumbers(struc_new) == [5]
-    @test countatoms(struc_new[5]) == 756
-
+    # Test collectatoms
     struc = read(pdbfilepath("1AKE.pdb"), PDB)
-    model_new = organise(Chain[struc['B'], struc['A']])
-    @test isa(model_new, Model)
-    @test modelnumber(model_new) == 1
-    @test chainids(model_new) == ['A', 'B']
-    @test countatoms(model_new['A']) == 1954
-    @test countatoms(model_new['B']) == 1850
-    @test_throws KeyError model_new[' ']
-    model_new = organise(Chain[struc['B'], struc['A']]; model_number=100)
-    @test modelnumber(model_new) == 100
-    model_new = organise(struc['B'])
-    @test isa(model_new, Model)
-    @test chainids(model_new) == ['B']
-    @test countatoms(model_new['B']) == 1850
-
-    chains_new = organise(shuffle(collectresidues(struc)))
-    @test isa(chains_new, Vector{Chain})
-    @test length(chains_new) == 2
-    @test chainid(chains_new[1]) == 'A'
-    @test map(chainid, chains_new[2]) == ['B' for i in 1:352]
-    @test x(chains_new[2]["H_725"]["O"]) == 34.939
-    chains_new = organise(Residue[struc['A'][10], struc['A'][11], struc['B'][10]])
-    @test isa(chains_new, Vector{Chain})
-    @test length(chains_new) == 2
-    @test chainid(chains_new[2]) == 'B'
-    @test x(chains_new[2][10]["C"]) == 23.612
-    struc = read(pdbfilepath("1EN2.pdb"), PDB)
-    chains_new = organise(DisorderedResidue[struc['A'][10], struc['A'][16]])
-    @test isa(chains_new, Vector{Chain})
-    @test length(chains_new) == 1
-    @test chainid(chains_new[1]) == 'A'
-    @test x(chains_new[1][10]["C"]) == -5.157
-    struc = read(pdbfilepath("1AKE.pdb"), PDB)
-    chains_new = organise(struc['A'][50])
-    @test isa(chains_new, Vector{Chain})
-    @test length(chains_new) == 1
-    @test chainid(chains_new[1]) == 'A'
-    @test x(chains_new[1]["50"]["NZ"]) == 36.415
-
-    residues_new = organise(shuffle(collectatoms(struc)))
-    @test isa(residues_new, Vector{AbstractResidue})
-    @test length(residues_new) == 808
-    @test map(chainid, residues_new) == [['A' for i in 1:456]; ['B' for i in 1:352]]
-    @test tempfac(residues_new[10]["C"]) == 19.36
-    @test tempfac(residues_new[215]["PB"]) == 16.65
-    residues_new = organise(Atom[struc['A'][50]["NZ"], struc['A'][51]["OD2"]])
-    @test isa(residues_new, Vector{AbstractResidue})
-    @test length(residues_new) == 2
-    @test resid(residues_new[2]) == "51"
-    @test countatoms(residues_new[1]) == 1
-    residues_new = organise(DisorderedAtom[struc['A'][167]["NH1"], struc['A'][167]["NH2"]])
-    @test isa(residues_new, Vector{AbstractResidue})
-    @test length(residues_new) == 1
-    @test resid(residues_new[1]) == "167"
-    @test countatoms(residues_new[1]) == 2
-    residues_new = organise(struc['A'][50]["NZ"])
-    @test isa(residues_new, Vector{AbstractResidue})
-    @test length(residues_new) == 1
-    @test resid(residues_new[1]) == "50"
-    @test countatoms(residues_new[1]) == 1
-
-    struc = read(pdbfilepath("1EN2.pdb"), PDB)
-    atoms = [
-        collect(struc['A'][9]);
-        collect(disorderedres(struc['A'][10], "SER"));
-        collect(disorderedres(struc['A'][10], "GLY"))
-    ]
-    residues_new = organise(atoms)
-    @test isa(residues_new, Vector{AbstractResidue})
-    @test length(residues_new) == 2
-    @test isa(residues_new[2], DisorderedResidue)
-    @test isa(residues_new[1], Residue)
-    @test defaultresname(residues_new[2]) == "SER"
-    @test countatoms(disorderedres(residues_new[2], "SER")) == 6
-    @test countatoms(disorderedres(residues_new[2], "GLY")) == 4
-    @test !isdisorderedatom(residues_new[2]["CB"])
+    ats = collectatoms(struc)
+    @test length(ats) == 3804
+    @test isa(ats, Vector{AbstractAtom})
+    @test isa(ats[70], Atom)
+    @test isa(ats[1290], DisorderedAtom)
+    @test serial(ats[1660]) == 1666
+    ats = collectatoms(struc, heteroselector)
+    @test length(ats) == 492
+    @test serial(ats[80]) == 3406
+    ats = collectatoms(struc, disorderselector)
+    @test length(ats) == 12
+    @test serial(ats[10]) == 3338
+    ats = collectatoms(struc, standardselector, disorderselector)
+    @test length(ats) == 5
+    @test serial(ats[4]) == 1294
+    ats = collectatoms(struc[1])
+    @test length(ats) == 3804
+    @test serial(ats[1660]) == 1666
+    ats = collectatoms(struc['A'])
+    @test length(ats) == 1954
+    @test serial(ats[240]) == 240
+    ats = collectatoms(struc['A'][50])
+    @test length(ats) == 9
+    @test serial(ats[4]) == 358
+    ats = collectatoms(struc['A'][50]["CA"])
+    @test length(ats) == 1
+    @test isa(ats, Vector{AbstractAtom})
+    @test serial(ats[1]) == 356
+    ats = collectatoms(struc['A'][167]["CZ"])
+    @test length(ats) == 1
+    @test isa(ats, Vector{AbstractAtom})
+    @test isa(ats[1], DisorderedAtom)
+    @test serial(ats[1]) == 1292
+    ats = collectatoms(Chain[struc['B'], struc['A']])
+    @test length(ats) == 3804
+    @test serial(ats[5]) == 5
+    ats = collectatoms(Residue[struc['A'][51], struc['A'][50]])
+    @test length(ats) == 17
+    @test serial(ats[5]) == 359
+    ats = collectatoms(AbstractResidue[struc['A'][51], struc['A'][50]])
+    @test length(ats) == 17
+    @test serial(ats[5]) == 359
+    ats = collectatoms(Atom[struc['A'][51]["CA"], struc['A'][50]["CA"]])
+    @test length(ats) == 2
+    @test isa(ats, Vector{Atom})
+    @test serial(ats[2]) == 365
+    ats = collectatoms(DisorderedAtom[struc['A'][167]["CZ"], struc['A'][167]["CD"]])
+    @test length(ats) == 2
+    @test isa(ats, Vector{DisorderedAtom})
+    @test serial(ats[2]) == 1292
+    ats = collectatoms(AbstractAtom[struc['A'][50]["CA"], struc['A'][167]["CZ"]])
+    @test length(ats) == 2
+    @test isa(ats, Vector{AbstractAtom})
+    @test serial(ats[2]) == 1292
 
 
-    # Test organisemodel
-    struc = read(pdbfilepath("1AKE.pdb"), PDB)
-    model_new = organisemodel(Chain[struc['B'], struc['A']])
-    @test isa(model_new, Model)
-    @test modelnumber(model_new) == 1
-    @test chainids(model_new) == ['A', 'B']
-    @test countatoms(model_new['A']) == 1954
-    model_new = organisemodel(Chain[struc['B'], struc['A']]; model_number=5)
-    @test modelnumber(model_new) == 5
-    model_new = organisemodel(struc['B'])
-    @test isa(model_new, Model)
-    @test chainids(model_new) == ['B']
-    @test countatoms(model_new['B']) == 1850
+    # Test countatoms
+    @test countatoms(struc) == 3804
+    @test countatoms(struc[1]) == 3804
+    @test countatoms(struc['A']) == 1954
+    @test countatoms(struc['A'][50]) == 9
+    @test countatoms(struc['A'][50]["CA"]) == 1
+    @test countatoms([struc['A'], struc['B']]) == 3804
+    @test countatoms(AbstractResidue[struc['A'][50], struc['A'][51]]) == 17
+    @test countatoms(Residue[struc['A'][50], struc['A'][51]]) == 17
+    @test countatoms(collectatoms(struc['A'])) == 1954
+    @test countatoms(DisorderedAtom[struc['A'][167]["CZ"], struc['A'][167]["CD"]]) == 2
+    @test countatoms(Atom[struc['A'][51]["CA"], struc['A'][50]["CA"]]) == 2
 
-    model_new = organisemodel(shuffle(collectresidues(struc)))
-    @test isa(model_new, Model)
-    @test chainids(model_new) == ['A', 'B']
-    @test countatoms(model_new['A']) == 1954
-    model_new = organisemodel(struc['A'][50])
-    @test isa(model_new, Model)
-    @test chainids(model_new) == ['A']
-    @test countatoms(model_new) == 9
+    @test countatoms(struc['A'], standardselector) == 1656
+    @test countatoms(struc['A'], heteroselector) == 298
+    @test countatoms(struc['A'], standardselector, disorderselector) == 5
 
-    model_new = organisemodel(shuffle(collectatoms(struc)))
-    @test isa(model_new, Model)
-    @test chainids(model_new) == ['A', 'B']
-    @test countatoms(model_new['A']) == 1954
-    model_new = organisemodel(struc['A'][50]["NZ"])
-    @test isa(model_new, Model)
-    @test chainids(model_new) == ['A']
-    @test countatoms(model_new) == 1
+    @test countatoms(ProteinStructure()) == 0
+    @test countatoms(Model()) == 0
+    @test countatoms(Chain('X')) == 0
+    @test countatoms(Residue("ALA", 100, ' ', false, Chain('A'))) == 0
 
 
-    # Test organisestructure
-    struc = read(pdbfilepath("1SSU.pdb"), PDB)
-    struc_new = organisestructure(Model[struc[5], struc[3]])
-    @test isa(struc_new, ProteinStructure)
-    @test structurename(struc_new) == ""
-    @test modelnumbers(struc_new) == [3, 5]
-    @test countatoms(struc_new[3]) == 756
-    struc_new = organisestructure(Model[struc[5], struc[3]]; structure_name="new struc")
-    @test structurename(struc_new) == "new struc"
-    struc_new = organisestructure(struc[5])
-    @test isa(struc_new, ProteinStructure)
-    @test modelnumbers(struc_new) == [5]
-    @test countatoms(struc_new[5]) == 756
+    # Test collectresidues
+    res = collectresidues(struc)
+    @test length(res) == 808
+    @test isa(res, Vector{AbstractResidue})
+    @test isa(res[50], Residue)
+    @test resnumber(res[220]) == 305
+    res = collectresidues(struc, heteroselector)
+    @test length(res) == 380
+    @test resnumber(res[370]) == 725
+    res = collectresidues(struc, standardselector, res -> chainid(res) == 'A')
+    @test length(res) == 214
+    @test resnumber(res[200]) == 200
+    res = collectresidues(struc[1])
+    @test length(res) == 808
+    @test resnumber(res[220]) == 305
+    res = collectresidues(struc['A'])
+    @test length(res) == 456
+    @test resnumber(res[220]) == 305
+    res = collectresidues(struc['A'][50])
+    @test length(res) == 1
+    @test isa(res, Vector{AbstractResidue})
+    @test resnumber(res[1]) == 50
+    res = collectresidues(struc['A'][50]["CA"])
+    @test length(res) == 1
+    @test isa(res, Vector{AbstractResidue})
+    @test isa(res[1], Residue)
+    @test resnumber(res[1]) == 50
+    res = collectresidues(struc['A'][167]["CZ"])
+    @test length(res) == 1
+    @test isa(res, Vector{AbstractResidue})
+    @test isa(res[1], Residue)
+    @test resnumber(res[1]) == 167
+    res = collectresidues(Chain[struc['B'], struc['A']])
+    @test length(res) == 808
+    @test resid(res[5], full=true) == "5:A"
+    res = collectresidues(Residue[struc['A'][51], struc['A'][50]])
+    @test length(res) == 2
+    @test isa(res, Vector{Residue})
+    @test resnumber(res[1]) == 50
+    res = collectresidues(AbstractResidue[struc['A'][51], struc['A'][50]])
+    @test length(res) == 2
+    @test isa(res, Vector{AbstractResidue})
+    @test resnumber(res[1]) == 50
+    res = collectresidues(Atom[struc['A'][51]["CA"], struc['A'][50]["CA"]])
+    @test length(res) == 2
+    @test isa(res, Vector{AbstractResidue})
+    @test resnumber(res[2]) == 51
+    res = collectresidues(DisorderedAtom[struc['A'][167]["CZ"], struc['A'][167]["CD"]])
+    @test length(res) == 1
+    @test isa(res, Vector{AbstractResidue})
+    @test atomnames(res[1]) == ["N", "CA", "C", "O", "CB", "CG", "CD", "NE", "CZ", "NH1", "NH2"]
+    res = collectresidues(AbstractAtom[struc['A'][50]["CA"], struc['A'][167]["CZ"]])
+    @test length(res) == 2
+    @test isa(res, Vector{AbstractResidue})
+    @test atomnames(res[1]) == ["N", "CA", "C", "O", "CB", "CG", "CD", "CE", "NZ"]
 
-    struc = read(pdbfilepath("1AKE.pdb"), PDB)
-    struc_new = organisestructure(Chain[struc['B'], struc['A']])
-    @test isa(struc_new, ProteinStructure)
-    @test modelnumbers(struc_new) == [1]
-    @test modelnumber(defaultmodel(struc_new)) == 1
-    @test countatoms(struc_new) == 3804
-    struc_new = organisestructure(Chain[struc['B'], struc['A']]; model_number=7)
-    @test modelnumbers(struc_new) == [7]
-    @test modelnumber(defaultmodel(struc_new)) == 7
-    struc_new = organisestructure(struc['B'])
-    @test isa(struc_new, ProteinStructure)
-    @test modelnumbers(struc_new) == [1]
-    @test countatoms(struc_new) == 1850
 
-    struc_new = organisestructure(shuffle(collectresidues(struc)))
-    @test isa(struc_new, ProteinStructure)
-    @test modelnumbers(struc_new) == [1]
-    @test countatoms(struc_new) == 3804
-    struc_new = organisestructure(struc['A'][50])
-    @test isa(struc_new, ProteinStructure)
-    @test modelnumbers(struc_new) == [1]
-    @test countatoms(struc_new) == 9
+    # Test countresidues
+    @test countresidues(struc) == 808
+    @test countresidues(struc[1]) == 808
+    @test countresidues(struc['A']) == 456
+    @test countresidues(struc['A'][50]) == 1
+    @test countresidues(struc['A'][50]["CA"]) == 1
+    @test countresidues([struc['A'], struc['B']]) == 808
+    @test countresidues(AbstractResidue[struc['A'][50], struc['A'][51]]) == 2
+    @test countresidues(Residue[struc['A'][50], struc['A'][51]]) == 2
+    @test countresidues(collectatoms(struc['A'])) == 456
+    @test countresidues(DisorderedAtom[struc['A'][167]["CZ"], struc['A'][167]["CD"]]) == 1
+    @test countresidues(Atom[struc['A'][51]["CA"], struc['A'][50]["CA"]]) == 2
 
-    struc_new = organisestructure(shuffle(collectatoms(struc)))
-    @test isa(struc_new, ProteinStructure)
-    @test modelnumbers(struc_new) == [1]
-    @test countatoms(struc_new) == 3804
-    struc_new = organisestructure(struc['A'][50]["NZ"])
-    @test isa(struc_new, ProteinStructure)
-    @test modelnumbers(struc_new) == [1]
-    @test countatoms(struc_new) == 1
+    @test countresidues(struc['A'], standardselector) == 214
+    @test countresidues(struc['A'], heteroselector) == 242
+    @test countresidues(struc, standardselector, res -> chainid(res) == 'A') == 214
+
+    @test countresidues(ProteinStructure()) == 0
+    @test countresidues(Model()) == 0
+    @test countresidues(Chain('X')) == 0
+    @test countresidues(Residue("ALA", 100, ' ', false, Chain('A'))) == 1
+
+
+    # Test collectchains
+    chs = collectchains(struc)
+    @test length(chs) == 2
+    @test isa(chs, Vector{Chain})
+    @test chainid(chs[2]) == 'B'
+    chs = collectchains(struc, ch -> chainid(ch) == 'B')
+    @test length(chs) == 1
+    @test chainid(chs[1]) == 'B'
+    chs = collectchains(struc[1])
+    @test length(chs) == 2
+    @test chainid(chs[2]) == 'B'
+    chs = collectchains(struc['A'])
+    @test length(chs) == 1
+    @test chainid(chs[1]) == 'A'
+    chs = collectchains(struc['A'][50])
+    @test length(chs) == 1
+    @test chainid(chs[1]) == 'A'
+    chs = collectchains(struc['A'][50]["CA"])
+    @test length(chs) == 1
+    @test chainid(chs[1]) == 'A'
+    chs = collectchains(Chain[struc['B'], struc['A']])
+    @test length(chs) == 2
+    @test chainid(chs[2]) == 'B'
+    chs = collectchains(Residue[struc['A'][51], struc['B'][50]])
+    @test length(chs) == 2
+    @test chainid(chs[2]) == 'B'
+    chs = collectchains(AbstractResidue[struc['A'][51], struc['B'][50]])
+    @test length(chs) == 2
+    @test chainid(chs[2]) == 'B'
+    chs = collectchains(Atom[struc['B'][51]["CA"], struc['A'][50]["CA"]])
+    @test length(chs) == 2
+    @test chainid(chs[2]) == 'B'
+    chs = collectchains(DisorderedAtom[struc['A'][167]["CZ"], struc['A'][167]["CD"]])
+    @test length(chs) == 1
+    @test chainid(chs[1]) == 'A'
+    chs = collectchains(AbstractAtom[struc['A'][50]["CA"], struc['A'][167]["CZ"]])
+    @test length(chs) == 1
+    @test chainid(chs[1]) == 'A'
+
+
+    # Test countchains
+    @test countchains(struc) == 2
+    @test countchains(struc[1]) == 2
+    @test countchains(struc['A']) == 1
+    @test countchains(struc['A'][50]) == 1
+    @test countchains(struc['A'][50]["CA"]) == 1
+    @test countchains([struc['A'], struc['B']]) == 2
+    @test countchains(AbstractResidue[struc['A'][50], struc['B'][51]]) == 2
+    @test countchains(Residue[struc['A'][50], struc['B'][51]]) == 2
+    @test countchains(collectatoms(struc['A'])) == 1
+    @test countchains(DisorderedAtom[struc['A'][167]["CZ"], struc['A'][167]["CD"]]) == 1
+    @test countchains(Atom[struc['A'][51]["CA"], struc['B'][50]["CA"]]) == 2
+
+    @test countchains(struc, ch -> chainid(ch) == 'B') == 1
+
+    @test countchains(ProteinStructure()) == 0
+    @test countchains(Model()) == 0
+    @test countchains(Chain('X')) == 1
+    @test countchains(Residue("ALA", 100, ' ', false, Chain('A'))) == 1
+
+
+    # Test collectmodels
+    struc_1SSU = read(pdbfilepath("1SSU.pdb"), PDB)
+    mods = collectmodels(struc_1SSU)
+    @test length(mods) == 20
+    @test isa(mods, Vector{Model})
+    @test map(modelnumber, mods) == collect(1:20)
+    mods = collectmodels(struc_1SSU, mod -> modelnumber(mod) < 4)
+    @test length(mods) == 3
+    @test modelnumber(mods[2]) == 2
+    mods = collectmodels(struc_1SSU[10])
+    @test length(mods) == 1
+    @test modelnumber(mods[1]) == 10
+    mods = collectmodels(struc_1SSU['A'])
+    @test length(mods) == 1
+    @test modelnumber(mods[1]) == 1
+    mods = collectmodels(struc_1SSU[7]['A'][50])
+    @test length(mods) == 1
+    @test modelnumber(mods[1]) == 7
+    mods = collectmodels(struc_1SSU['A'][50]["CA"])
+    @test length(mods) == 1
+    @test modelnumber(mods[1]) == 1
+    mods = collectmodels(Chain[struc['B'], struc['A']])
+    @test length(mods) == 1
+    @test modelnumber(mods[1]) == 1
+    mods = collectmodels(Residue[struc['A'][51], struc['B'][50]])
+    @test length(mods) == 1
+    @test modelnumber(mods[1]) == 1
+    mods = collectmodels(AbstractResidue[struc_1SSU[12]['A'][51], struc_1SSU['A'][50]])
+    @test length(mods) == 2
+    @test modelnumber(mods[2]) == 12
+    mods = collectmodels(Atom[struc_1SSU['A'][51]["CA"], struc_1SSU['A'][50]["CA"]])
+    @test length(mods) == 1
+    @test modelnumber(mods[1]) == 1
+    mods = collectmodels(DisorderedAtom[struc['A'][167]["CZ"], struc['A'][167]["CD"]])
+    @test length(mods) == 1
+    @test modelnumber(mods[1]) == 1
+    mods = collectmodels(AbstractAtom[struc['A'][50]["CA"], struc['A'][167]["CZ"]])
+    @test length(mods) == 1
+    @test modelnumber(mods[1]) == 1
+
+
+    # Test countmodels
+    @test countmodels(struc_1SSU) == 20
+    @test countmodels(struc_1SSU[10]) == 1
+    @test countmodels(struc_1SSU['A']) == 1
+    @test countmodels(struc_1SSU['A'][50]) == 1
+    @test countmodels(struc_1SSU[10]['A'][50]["CA"]) == 1
+    @test countmodels([struc['A'], struc['B']]) == 1
+    @test countmodels(AbstractResidue[struc_1SSU[1]['A'][50], struc_1SSU[2]['A'][51]]) == 2
+    @test countmodels(Residue[struc['A'][50], struc['B'][51]]) == 1
+    @test countmodels(collectatoms(struc_1SSU)) == 1
+    @test countmodels(collectatoms(collect(struc_1SSU))) == 20
+    @test countmodels(DisorderedAtom[struc['A'][167]["CZ"], struc['A'][167]["CD"]]) == 1
+    @test countmodels(Atom[struc_1SSU[7]['A'][51]["CA"], struc_1SSU['A'][50]["CA"]]) == 2
+
+    @test countmodels(struc_1SSU, mod -> modelnumber(mod) < 4) == 3
+
+    @test countmodels(ProteinStructure()) == 0
+    @test countmodels(Model()) == 1
+    @test countmodels(Chain('X')) == 1
+    @test countmodels(Residue("ALA", 100, ' ', false, Chain('A'))) == 1
 
 
     # Test parser error handling
     error = PDBParseError("message", 10, "line")
+    showerror(DevNull, error)
     # Missing coordinate (blank string)
     @test_throws PDBParseError read(pdbfilepath("1AKE_err_a.pdb"), PDB)
     # Missing chain ID (line ends early)
@@ -1120,50 +1134,50 @@ end
     @test spacestring(1.5, 5) == "  1.5"
     @test spacestring("A", 3) == "  A"
     @test spacestring('A', 3) == "  A"
-    @test_throws AssertionError spacestring(1.456789, 5)
-    @test_throws AssertionError spacestring("ABCDEF", 3)
+    @test_throws ArgumentError spacestring(1.456789, 5)
+    @test_throws ArgumentError spacestring("ABCDEF", 3)
 
 
     # Test spaceatomname
-    @test spaceatomname(Atom(false, 1, "N", ' ', "ALA", 'A', 1, ' ', [0.0, 0.0, 0.0], 1.0, 0.0, "N", "")) == " N  "
-    @test spaceatomname(Atom(false, 1, "N", ' ', "ALA", 'A', 1, ' ', [0.0, 0.0, 0.0], 1.0, 0.0, "", "")) == " N  "
-    @test spaceatomname(Atom(false, 1, "CA", ' ', "ALA", 'A', 1, ' ', [0.0, 0.0, 0.0], 1.0, 0.0, "C", "")) == " CA "
-    @test spaceatomname(Atom(false, 1, "NE1", ' ', "ALA", 'A', 1, ' ', [0.0, 0.0, 0.0], 1.0, 0.0, "N", "")) == " NE1"
-    @test spaceatomname(Atom(false, 1, "2HD1", ' ', "ALA", 'A', 1, ' ', [0.0, 0.0, 0.0], 1.0, 0.0, "H", "")) == "2HD1"
-    @test spaceatomname(Atom(false, 1, "HH11", ' ', "ALA", 'A', 1, ' ', [0.0, 0.0, 0.0], 1.0, 0.0, "H", "")) == "HH11"
-    @test spaceatomname(Atom(false, 1, "1H", ' ', "ALA", 'A', 1, ' ', [0.0, 0.0, 0.0], 1.0, 0.0, "H", "")) == "1H  "
-    @test spaceatomname(Atom(false, 1, "MG", ' ', "ALA", 'A', 1, ' ', [0.0, 0.0, 0.0], 1.0, 0.0, "MG", "")) == "MG  "
-    @test spaceatomname(Atom(false, 1, "MG", ' ', "ALA", 'A', 1, ' ', [0.0, 0.0, 0.0], 1.0, 0.0, "", "")) == " MG "
-    @test_throws AssertionError spaceatomname(Atom(false, 1, "11H", ' ', "ALA", 'A', 1, ' ', [0.0, 0.0, 0.0], 1.0, 0.0, "H", ""))
-    @test_throws AssertionError spaceatomname(Atom(false, 1, "11H11", ' ', "ALA", 'A', 1, ' ', [0.0, 0.0, 0.0], 1.0, 0.0, "H", ""))
-    @test_throws AssertionError spaceatomname(Atom(false, 1, "1MG", ' ', "ALA", 'A', 1, ' ', [0.0, 0.0, 0.0], 1.0, 0.0, "MG", ""))
+    res = Residue("ALA", 1, ' ', false, Chain('A'))
+    @test spaceatomname(Atom(1, " CA ", ' ', [0.0, 0.0, 0.0], 1.0, 0.0, " C", "  ", res)) == " CA "
+    @test spaceatomname(Atom(1, "N",    ' ', [0.0, 0.0, 0.0], 1.0, 0.0, " N", "  ", res)) == " N  "
+    @test spaceatomname(Atom(1, "N",    ' ', [0.0, 0.0, 0.0], 1.0, 0.0, "  ", "  ", res)) == " N  "
+    @test spaceatomname(Atom(1, "CA",   ' ', [0.0, 0.0, 0.0], 1.0, 0.0, " C", "  ", res)) == " CA "
+    @test spaceatomname(Atom(1, "NE1",  ' ', [0.0, 0.0, 0.0], 1.0, 0.0, " N", "  ", res)) == " NE1"
+    @test spaceatomname(Atom(1, "2HD1", ' ', [0.0, 0.0, 0.0], 1.0, 0.0, " H", "  ", res)) == "2HD1"
+    @test spaceatomname(Atom(1, "HH11", ' ', [0.0, 0.0, 0.0], 1.0, 0.0, " H", "  ", res)) == "HH11"
+    @test spaceatomname(Atom(1, "1H",   ' ', [0.0, 0.0, 0.0], 1.0, 0.0, " H", "  ", res)) == "1H  "
+    @test spaceatomname(Atom(1, "MG",   ' ', [0.0, 0.0, 0.0], 1.0, 0.0, "MG", "  ", res)) == "MG  "
+    @test spaceatomname(Atom(1, "MG",   ' ', [0.0, 0.0, 0.0], 1.0, 0.0, "  ", "  ", res)) == " MG "
+    @test_throws ArgumentError spaceatomname(Atom(1, "11H",   ' ', [0.0, 0.0, 0.0], 1.0, 0.0, " H", "  ", res))
+    @test_throws ArgumentError spaceatomname(Atom(1, "11H11", ' ', [0.0, 0.0, 0.0], 1.0, 0.0, " H", "  ", res))
+    @test_throws ArgumentError spaceatomname(Atom(1, "1MG",   ' ', [0.0, 0.0, 0.0], 1.0, 0.0, "MG", "  ", res))
 
 
     # Test pdbline
-    # These tests should be changed long term to require the conventional decimal formatting, e.g. 0.50 not 0.5 for occupancy
-    atom = Atom(false, 10, "N", ' ', "ALA", 'A', 1, ' ', [0.0, 0.0, 0.0], 1.0, 0.0, "N", "")
-    @test join(pdbline(atom)) == "ATOM     10  N   ALA A   1         0.0     0.0     0.0   1.0   0.0           N  "
-    atom = Atom(true, 101, "C", 'A', "LEU", 'B', 20, ' ', [10.5, 20.12345, -5.1227], 0.50, 50.126, "C", "1+")
-    line = join(pdbline(atom))
-    @test line == "HETATM  101  C  ALEU B  20        10.5  20.123  -5.123   0.5 50.13           C1+"
-    atom = parseatomrecord(line)
-    @test ishetatom(atom)
-    @test serial(atom) == 101
-    @test atomname(atom) == "C"
-    @test altlocid(atom) == 'A'
-    @test resname(atom) == "LEU"
-    @test chainid(atom) == 'B'
-    @test resnumber(atom) == 20
-    @test inscode(atom) == ' '
-    @test coords(atom) == [10.5, 20.123, -5.123]
-    @test occupancy(atom) == 0.5
-    @test tempfac(atom) == 50.13
-    @test element(atom) == "C"
-    @test charge(atom) == "1+"
-    @test_throws AssertionError pdbline(Atom(false, 1, "11H11", ' ', "ALA", 'A', 1, ' ', [0.0, 0.0, 0.0], 1.0, 0.0, "H", ""))
+    ch_a = Chain('A')
+    ch_a["1"] = Residue("ALA", 1, ' ', false, ch_a)
+    ch_a["1"][" N  "] = Atom(10, " N  ", ' ', [0.0, 0.0, 0.0], 1.0, 0.0, " N", "  ", ch_a["1"])
+    line = pdbline(ch_a["1"][" N  "])
+    @test line == "ATOM     10  N   ALA A   1         0.0     0.0     0.0   1.0   0.0           N  "
+    ch_b = Chain('B')
+    ch_b["H_20"] = Residue("X", 20, ' ', true, ch_b)
+    ch_b["H_20"]["C"] = Atom(101, "C", 'A', [10.5, 20.12345, -5.1227], 0.50, 50.126, "C", "1+", ch_b["H_20"])
+    line = pdbline(ch_b["H_20"]["C"])
+    @test line == "HETATM  101  C  A  X B  20        10.5  20.123  -5.123   0.5 50.13           C1+"
+    ch_b["H_20"]["11H11"] = Atom(1, "11H11", ' ', [0.0, 0.0, 0.0], 1.0, 0.0, " H", "  ", ch_b["H_20"])
+    @test_throws ArgumentError pdbline(ch_b["H_20"]["11H11"])
+
+    line_a = "ATOM    669  CA  ILE A  90      31.743  33.110  31.221  1.00 25.76           C  "
+    line_b = "HETATM 3474  O  B XX A 334A      8.802  62.000   8.672  1.00 39.15           O1-"
+    at_rec = AtomRecord(line_a)
+    @test pdbline(at_rec) == "ATOM    669  CA  ILE A  90      31.743   33.11  31.221   1.0 25.76           C  "
+    at_rec = AtomRecord(line_b)
+    @test pdbline(at_rec) == "HETATM 3474  O  B XX A 334A      8.802    62.0   8.672   1.0 39.15           O1-"
 
 
-    # Test writepdb and writepdblines
+    # Test writepdb
     # Counts lines in a file
     function countlines(filename::AbstractString)
         counter = 0
@@ -1185,7 +1199,9 @@ end
     @test modelnumbers(struc_written) == collect(1:20)
     @test countatoms(struc_written) == 756
     @test z(struc_written[4]['A']["30"]["OG"]) == -2.177
-    @test atomnames(struc_written[15]['A']["39"]) == ["N", "CA", "C", "O", "CB", "SG", "H", "HA", "HB2", "HB3"]
+    @test atomnames(struc_written[15]['A']["39"]) == [
+        "N", "CA", "C", "O", "CB", "SG", "H", "HA", "HB2", "HB3"]
+
 
     # Test writing to stream
     open(temp_filename, "w") do file
@@ -1196,32 +1212,26 @@ end
     @test modelnumbers(struc_written) == collect(1:20)
     @test countatoms(struc_written) == 756
     @test z(struc_written[4]['A']["30"]["OG"]) == -2.177
-    @test atomnames(struc_written[15]['A']["39"]) == ["N", "CA", "C", "O", "CB", "SG", "H", "HA", "HB2", "HB3"]
+    @test atomnames(struc_written[15]['A']["39"]) == [
+        "N", "CA", "C", "O", "CB", "SG", "H", "HA", "HB2", "HB3"]
 
-    open(temp_filename, "w") do file
-        writepdblines(file, struc)
-    end
-    @test countlines(temp_filename) == 756
-    struc_written = read(temp_filename, PDB)
-    @test modelnumbers(struc_written) == [1]
-    @test countatoms(struc_written) == 756
-    @test resname(struc_written['A'][13]["CE1"]) == "PHE"
 
     # Test selectors
     struc = read(pdbfilepath("1AKE.pdb"), PDB)
-    writepdb(temp_filename, struc, hetatomselector)
+    writepdb(temp_filename, struc, heteroselector)
     @test countlines(temp_filename) == 499
     struc_written = read(temp_filename, PDB)
     @test modelnumbers(struc_written) == [1]
     @test countatoms(struc_written) == 492
     @test chainids(struc_written) == ['A', 'B']
-    @test tempfac(struc_written['B']["H_705"]["O"]) == 64.17
-    writepdb(temp_filename, struc, stdatomselector, disorderselector)
+    @test tempfactor(struc_written['B']["H_705"]["O"]) == 64.17
+    writepdb(temp_filename, struc, standardselector, disorderselector)
     @test countlines(temp_filename) == 10
     struc_written = read(temp_filename, PDB)
     @test countatoms(struc_written) == 5
     @test sum(map(isdisorderedatom, collectatoms(struc_written))) == 5
     @test defaultaltlocid(struc_written['A'][167]["NH1"]) == 'A'
+
 
     # Test writing different element types
     writepdb(temp_filename, struc[1])
@@ -1238,7 +1248,8 @@ end
     struc_written = read(temp_filename, PDB)
     @test chainids(struc_written) == ['A']
     @test countresidues(struc_written) == 1
-    @test atomnames(struc_written['A'][50]) == ["N", "CA", "C", "O", "CB", "CG", "CD", "CE", "NZ"]
+    @test atomnames(struc_written['A'][50]) == [
+        "N", "CA", "C", "O", "CB", "CG", "CD", "CE", "NZ"]
     writepdb(temp_filename, struc['A'][50]["CA"])
     @test countlines(temp_filename) == 1
     struc_written = read(temp_filename, PDB)
@@ -1251,7 +1262,7 @@ end
     @test countatoms(struc_written) == 1
     @test isdisorderedatom(collectatoms(struc_written)[1])
     @test length(collectatoms(struc_written)[1]) == 2
-    @test tempfac(collectatoms(struc_written)[1]) == 16.77
+    @test tempfactor(collectatoms(struc_written)[1]) == 16.77
     writepdb(temp_filename, Chain[struc['A'], struc['B']])
     @test countlines(temp_filename) == 3816
     struc_written = read(temp_filename, PDB)
@@ -1269,7 +1280,8 @@ end
     @test countlines(temp_filename) == 2
     struc_written = read(temp_filename, PDB)
     @test countatoms(struc_written) == 2
-    @test !ishetatom(struc_written['A'][51]["CA"])
+    @test !ishetero(struc_written['A'][51]["CA"])
+
 
     # Test multiple model writing
     struc = read(pdbfilepath("1SSU.pdb"), PDB)
@@ -1281,6 +1293,7 @@ end
     @test countatoms(struc_written[5]) == 756
     @test countatoms(struc_written[10]) == 756
     @test_throws KeyError struc_written[1]
+
 
     # Test disordered residue writing
     struc = read(pdbfilepath("1EN2.pdb"), PDB)
@@ -1308,88 +1321,93 @@ end
     @test countatoms(struc_written['A'][10]) == 6
     @test countatoms(struc_written['A'][16]) == 11
 
-    @test_throws AssertionError writepdb(temp_filename, Atom(false, 1, "11H11", ' ', "ALA", 'A', 1, ' ', [0.0, 0.0, 0.0], 1.0, 0.0, "H", ""))
+    @test_throws ArgumentError writepdb(temp_filename, Atom(
+        1, "11H11", ' ', [0.0, 0.0, 0.0], 1.0, 0.0, " H", "  ", res))
 
+    # Delete temporary file
     rm(temp_filename)
 end
 
 
 @testset "Spatial" begin
     # Test coordarray
-    atom = Atom(false, 100, "CA", ' ', "ALA", 'A', 10, ' ', [1.0, 2.0, 3.0], 1.0, 10.0, "C", "")
-    coords = coordarray(atom)
-    @test size(coords) == (3,1)
-    @test coords[1] == 1.0
-    @test coords[2] == 2.0
-    @test coords[3] == 3.0
+    res = Residue("ALA", 1, ' ', false, Chain('A'))
+    at = Atom(100, "CA", ' ', [1.0, 2.0, 3.0], 1.0, 10.0, " C", "  ", res)
+    cs = coordarray(at)
+    @test size(cs) == (3,1)
+    @test cs[1] == 1.0
+    @test cs[2] == 2.0
+    @test cs[3] == 3.0
 
     struc_1AKE = read(pdbfilepath("1AKE.pdb"), PDB)
-    coords = coordarray(struc_1AKE)
-    @test size(coords) == (3,3804)
-    @test coords[1,3787] == 20.135
-    @test coords[2,3787] == -10.789
-    @test coords[3,3787] == -1.732
-    coords = coordarray(struc_1AKE['A'], calphaselector)
-    @test size(coords) == (3,214)
-    @test coords[1,10] == 17.487
-    @test coords[2,10] == 42.426
-    @test coords[3,10] == 19.756
-    @test coordarray(coords) == coords
+    cs = coordarray(struc_1AKE)
+    @test size(cs) == (3,3804)
+    @test cs[1,3787] == 20.135
+    @test cs[2,3787] == -10.789
+    @test cs[3,3787] == -1.732
+    cs = coordarray(struc_1AKE['A'], calphaselector)
+    @test size(cs) == (3,214)
+    @test cs[1,10] == 17.487
+    @test cs[2,10] == 42.426
+    @test cs[3,10] == 19.756
+    @test coordarray(cs) == cs
 
 
     # Test rmsd
-    coords_one = [
-        0.0 0.0;
-        1.0 0.0;
-        1.0 3.0;
+    cs_one = [
+        0.0 0.0
+        1.0 0.0
+        1.0 3.0
     ]
-    coords_two = [
-        0.0 2.0;
-        2.0 0.0;
-        1.0 3.0;
+    cs_two = [
+        0.0 2.0
+        2.0 0.0
+        1.0 3.0
     ]
-    @test isapprox(rmsd(coords_one, coords_two), sqrt(5/2))
-    coords_one = [
-        0.0 0.0 1.0;
-        1.0 0.0 2.0;
-        1.0 3.0 3.0;
+    # This line gives a @simd warning when --inline=no
+    @test isapprox(rmsd(cs_one, cs_two), sqrt(5/2))
+    cs_one = [
+        0.0 0.0 1.0
+        1.0 0.0 2.0
+        1.0 3.0 3.0
     ]
-    coords_two = [
-        0.0 2.0;
-        2.0 0.0;
-        1.0 3.0;
+    cs_two = [
+        0.0 2.0
+        2.0 0.0
+        1.0 3.0
     ]
-    @test_throws AssertionError rmsd(coords_one, coords_two)
+    @test_throws ArgumentError rmsd(cs_one, cs_two)
 
     struc_1SSU = read(pdbfilepath("1SSU.pdb"), PDB)
     @test isapprox(rmsd(struc_1SSU[1], struc_1SSU[2], calphaselector), 4.1821925809691889)
     @test isapprox(rmsd(struc_1SSU[5], struc_1SSU[6], backboneselector), 5.2878196391279939)
-    @test_throws AssertionError rmsd(struc_1SSU[1]['A'][8], struc_1SSU[1]['A'][9])
+    @test_throws ArgumentError rmsd(struc_1SSU[1]['A'][8], struc_1SSU[1]['A'][9])
 
 
     # Test displacements
-    coords_one = [
-        0.0 0.0;
-        1.0 0.0;
-        1.0 3.0;
+    cs_one = [
+        0.0 0.0
+        1.0 0.0
+        1.0 3.0
     ]
-    coords_two = [
-        0.0 2.0;
-        2.0 0.0;
-        1.0 4.0;
+    cs_two = [
+        0.0 2.0
+        2.0 0.0
+        1.0 4.0
     ]
-    @test isapprox(displacements(coords_one, coords_two), [1.0, sqrt(5)])
-    coords_one = [
-        0.0 0.0 1.0;
-        1.0 0.0 2.0;
-        1.0 3.0 3.0;
+    # This line gives a @simd warning when --inline=no
+    @test isapprox(displacements(cs_one, cs_two), [1.0, sqrt(5)])
+    cs_one = [
+        0.0 0.0 1.0
+        1.0 0.0 2.0
+        1.0 3.0 3.0
     ]
-    coords_two = [
-        0.0 2.0;
-        2.0 0.0;
-        1.0 4.0;
+    cs_two = [
+        0.0 2.0
+        2.0 0.0
+        1.0 4.0
     ]
-    @test_throws AssertionError displacements(coords_one, coords_two)
+    @test_throws ArgumentError displacements(cs_one, cs_two)
 
     disps = displacements(struc_1SSU[5], struc_1SSU[10])
     @test isa(disps, Vector{Float64})
@@ -1400,17 +1418,90 @@ end
     @test isapprox(disps[20], sqrt(0.032822))
 
 
-    # Test distance
-    atom_a = Atom(false, 100, "CA", ' ', "ALA", 'A', 10, ' ', [1.0, 2.0, 3.0], 1.0, 10.0, "C", "")
-    atom_b = Atom(false, 110, "CA", ' ', "ALA", 'A', 11, ' ', [0.0, -1.0, 3.0], 1.0, 10.0, "C", "")
-    @test isapprox(distance(atom_a, atom_b), sqrt(10))
+    # Test sqdistance and distance
+    at_a = Atom(100, "CA", ' ', [1.0, 2.0, 3.0], 1.0, 10.0, " C", "  ", res)
+    at_b = Atom(110, "CA", ' ', [0.0, -1.0, 3.0], 1.0, 10.0, " C", "  ", res)
+    @test sqdistance(at_a, at_b) == 10.0
+    @test isapprox(distance(at_a, at_b), sqrt(10))
 
     @test isapprox(distance(struc_1AKE['A'], struc_1AKE['B']), sqrt(6.852947))
     @test isapprox(distance(struc_1AKE['A'], struc_1AKE['B'][50]), sqrt(530.645746))
     @test isapprox(distance(struc_1AKE['A'], struc_1AKE['B'][50]["CA"]), sqrt(574.699125))
     @test isapprox(distance(struc_1AKE['A'], struc_1AKE['B'], backboneselector), sqrt(17.350083))
-    @test isapprox(distance(struc_1AKE['A'], struc_1AKE['B'], stdatomselector), sqrt(11.252973))
+    @test isapprox(distance(struc_1AKE['A'], struc_1AKE['B'], standardselector), sqrt(11.252973))
     @test isapprox(distance(struc_1AKE['A'][50]["CA"], struc_1AKE['B'][50]["CA"]), sqrt(2607.154834))
+
+
+    # Test bondangle
+    at_a = Atom(100, "CA", ' ', [1.0, 0.0, 1.0], 1.0, 10.0, " C", "  ", res)
+    at_b = Atom(100, "CA", ' ', [0.0, 0.0, 0.0], 1.0, 10.0, " C", "  ", res)
+    at_c = Atom(100, "CA", ' ', [3.0, 2.0, 1.0], 1.0, 10.0, " C", "  ", res)
+    @test isapprox(bondangle(at_a, at_b, at_c), 0.713724378944765)
+    vec_a = [2.0, 0.0, 0.0]
+    vec_b = [2.0, 1.0, 1.0]
+    @test isapprox(bondangle(vec_a, vec_b), 0.615479708670387)
+
+
+    # Test dihedral functions
+    at_a = Atom(100, "CA", ' ', [-1.0, -1.0, 0.0], 1.0, 10.0, " C", "  ", res)
+    at_b = Atom(100, "CA", ' ', [0.0, 0.0, 0.0], 1.0, 10.0, " C", "  ", res)
+    at_c = Atom(100, "CA", ' ', [1.0, 0.0, 0.0], 1.0, 10.0, " C", "  ", res)
+    at_d = Atom(100, "CA", ' ', [2.0, 1.0, -1.0], 1.0, 10.0, " C", "  ", res)
+    @test isapprox(dihedralangle(at_a, at_b, at_c, at_d), 2.356194490192345)
+    vec_a = [1.0, 1.0, 0.0]
+    vec_b = [1.0, 0.0, 0.0]
+    vec_c = [1.0, -1.0, 1.0]
+    @test isapprox(dihedralangle(vec_a, vec_b, vec_c), -0.785398163397448)
+
+    @test isapprox(omegaangle(struc_1AKE['A'][20], struc_1AKE['A'][19]), -3.091913621551854, atol=1e-5)
+    @test isapprox(phiangle(struc_1AKE['A'][7], struc_1AKE['A'][6]), 2.851151641716221, atol=1e-5)
+    @test isapprox(psiangle(struc_1AKE['A'][8], struc_1AKE['A'][9]), 2.838265381719911, atol=1e-5)
+    @test_throws ArgumentError omegaangle(struc_1AKE['A'][20], Residue("ALA", 19, ' ', false, Chain('A')))
+    @test_throws ArgumentError phiangle(struc_1AKE['A'][7], Residue("ALA", 6, ' ', false, Chain('A')))
+    @test_throws ArgumentError psiangle(struc_1AKE['A'][8], Residue("ALA", 9, ' ', false, Chain('A')))
+
+    phis, psis = ramachandranangles(struc_1AKE['A'])
+    @test size(phis) == (456,)
+    @test size(psis) == (456,)
+    @test isapprox(phis[5], -1.764512005880236, atol=1e-5)
+    @test isapprox(psis[10], 0.4425094841355222, atol=1e-5)
+    @test isnan(phis[1])
+    @test isnan(psis[214])
+    @test sum(map(x -> Int(isnan(x)), phis)) == 243
+    @test sum(map(x -> Int(isnan(x)), psis)) == 243
+    @test_throws ArgumentError ramachandranangles(struc_1AKE['A'][10]["CA"])
+
+
+    # Test contactmap
+    cas = collectatoms(struc_1AKE, calphaselector)[1:10]
+    @test isa(contactmap(cas, 10), BitArray{2})
+    @test contactmap(cas, 10) == [
+        true  true  true  false false false false false false false
+        true  true  true  true  false false false false false false
+        true  true  true  true  true  true  false false false false
+        false true  true  true  true  true  false false false false
+        false false true  true  true  true  true  false false false
+        false false true  true  true  true  true  true  true  false
+        false false false false true  true  true  true  true  true
+        false false false false false true  true  true  true  true
+        false false false false false true  true  true  true  true
+        false false false false false false true  true  true  true
+    ]
+    @test contactmap(struc_1AKE[1], 1.0) == [
+        true  false
+        false true
+    ]
+    cmap = contactmap(struc_1AKE['A'], 5.0)
+    @test size(cmap) == (456, 456)
+    @test cmap[196, 110]
+    @test !cmap[15, 89]
+
+    @test contactmap(struc_1AKE['A'][10], struc_1AKE['A'][11], 4.0) == [
+        true  false false false false
+        true  true  false false false
+        true  true  true  false true
+        true  true  true  false false
+    ]
 end
 
 end # TestStructure
