@@ -552,8 +552,6 @@ end
 
 # actually, users don't need to create a copy of a sequence.
 function Base.copy{A}(seq::BioSequence{A})
-    # NOTE: no need to set `seq.shared = true` here
-    # since `newseq` will be `orphan!`ed soon.
     newseq = BioSequence{A}(seq, 1:endof(seq))
     orphan!(newseq, length(seq), true)  # force orphan!
     @assert newseq.data !== seq.data
