@@ -65,25 +65,25 @@ remove_newlines(s) = replace(s, r"\r|\n", "")
 
 macro dna_str(seq, flags...)
     quote
-        return DNASequence($(remove_newlines(seq)))
+        DNASequence($(remove_newlines(seq)))
     end
 end
 
 macro rna_str(seq, flags...)
     quote
-        return RNASequence($(remove_newlines(seq)))
+        RNASequence($(remove_newlines(seq)))
     end
 end
 
 macro aa_str(seq, flags...)
     quote
-        return AminoAcidSequence($(remove_newlines(seq)))
+        AminoAcidSequence($(remove_newlines(seq)))
     end
 end
 
 macro char_str(seq, flags...)
     quote
-        return CharSequence($(remove_newlines(seq)))
+        CharSequence($(remove_newlines(seq)))
     end
 end
 
