@@ -64,19 +64,27 @@ typealias CharSequence      BioSequence{CharAlphabet}
 remove_newlines(s) = replace(s, r"\r|\n", "")
 
 macro dna_str(seq, flags...)
-    return DNASequence(remove_newlines(seq))
+    quote
+        return DNASequence($(remove_newlines(seq)))
+    end
 end
 
 macro rna_str(seq, flags...)
-    return RNASequence(remove_newlines(seq))
+    quote
+        return RNASequence($(remove_newlines(seq)))
+    end
 end
 
 macro aa_str(seq, flags...)
-    return AminoAcidSequence(remove_newlines(seq))
+    quote
+        return AminoAcidSequence($(remove_newlines(seq)))
+    end
 end
 
 macro char_str(seq, flags...)
-    return CharSequence(remove_newlines(seq))
+    quote
+        return CharSequence($(remove_newlines(seq)))
+    end
 end
 
 
