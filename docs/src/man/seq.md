@@ -297,9 +297,9 @@ julia> char"αβγδϵ"
 
 ```
 
-However it should be noted that by default these non-standard string literals
+However it should be noted that by default these sequence literals
 allocate the BioSequence object before runtime.
-This means there may be occasions where you program does not behave as you
+This means there may be occasions where your program does not behave as you
 first expect, even though it is the intended behaviour.
 For example consider the following code:
 
@@ -349,18 +349,18 @@ julia> foo()
 CTTAAA
 ```
 
-The reason is because the non-standard string literals allocate the BioSequence
-variable `s` before runtime, and so `s` in `foo` is always a reference to that one
-DNA sequence variable that was allocated before the runtime of your program.
-So one DNA sequence is created, and then constantly pushed to every time `foo` is
-called.
+The reason is because the sequence literal is allocated before runtime, `s` in
+`foo` is always a reference to that one sequence that was allocated before the
+runtime of your program.
+So one sequence is created, and then pushed to every time `foo` is called. Thus
+that one allocated sequence grows with every call of `foo`.
 
-If you wanted `foo` to create a new BioSequence variable each time it is called,
-the you can add a flag to the end of the non-standard string literals: a flag of 's'
-means the sequence will be allocated before runtime as is the default behaviour with
-no flags. However providing 'd' as the flag will make sure the Biological sequence is
-allocated at runtime. So to change `foo` so as it creates a new sequence variable
-each time it is as simple as adding the 'd' flag:
+If you wanted `foo` to create a new sequence each time it is called,
+the you can add a flag to the end of the sequence literal: a flag of 's'
+means the sequence will be allocated before runtime as is the default behaviour.
+However providing 'd' as the flag will make sure that the sequence is
+allocated at runtime. So to change `foo` so as it creates a new sequence
+each time it is called, simply add the 'd' flag to the sequence literal:
 
 ```jlcon
 julia> using Bio.Seq
@@ -372,7 +372,7 @@ julia> function foo()
 foo (generic function with 1 method)
 ```
 
-Now every time `foo` is called, a new DNA sequence `CTT` is created, and an `A`
+Now every time `foo` is called, a new sequence `CTT` is created, and an `A`
 nucleotide is pushed to it:
 
 ```jlcon
