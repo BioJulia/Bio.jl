@@ -297,7 +297,99 @@ julia> char"αβγδϵ"
 
 ```
 
-Sequence can also be constructed from strings or arrays of nucleotide or amino
+However it should be noted that by default these non-standard string literals
+allocate the BioSequence object before runtime.
+This means there may be occasions where you program does not behave as you
+first expect, even though it is the intended behaviour.
+For example consider the following code:
+
+```jlcon
+julia> using Bio.Seq
+
+julia> function foo()
+           s = dna"CTT"
+           push!(s, DNA_A)
+       end
+foo (generic function with 1 method)
+```
+
+You might expect that every time you call `foo`, that a DNA sequence `CTTA` would
+be returned. You might expect that this is because every time `foo` is called,
+a new DNA sequence variable `CTT` is created, and and `A` nucleotide is pushed
+to it, and the result, `CTTA` is returned.
+In other words you might expect the following output:
+
+```jlcon
+julia> foo()
+1nt DNA Sequence:
+CTTA
+
+julia> foo()
+2nt DNA Sequence:
+CTTA
+
+julia> foo()
+3nt DNA Sequence:
+CTTA
+```
+
+However, this is not what happens, instead the following happens:
+
+```jlcon
+julia> foo()
+1nt DNA Sequence:
+CTTA
+
+julia> foo()
+2nt DNA Sequence:
+CTTAA
+
+julia> foo()
+3nt DNA Sequence:
+CTTAAA
+```
+
+The reason is because the non-standard string literals allocate the BioSequence
+variable `s` before runtime, and so `s` in `foo` is always a reference to that one
+DNA sequence variable that was allocated before the runtime of your program.
+So one DNA sequence is created, and then constantly pushed to every time `foo` is
+called.
+
+If you wanted `foo` to create a new BioSequence variable each time it is called,
+the you can add a flag to the end of the non-standard string literals: a flag of 's'
+means the sequence will be allocated before runtime as is the default behaviour with
+no flags. However providing 'd' as the flag will make sure the Biological sequence is
+allocated at runtime. So to change `foo` so as it creates a new sequence variable
+each time it is as simple as adding the 'd' flag:
+
+```jlcon
+julia> using Bio.Seq
+
+julia> function foo()
+           s = dna"CTT"d     # 'd' flag appended to the string literal.
+           push!(s, DNA_A)
+       end
+foo (generic function with 1 method)
+```
+
+Now every time `foo` is called, a new DNA sequence `CTT` is created, and an `A`
+nucleotide is pushed to it:
+
+```jlcon
+julia> foo()
+1nt DNA Sequence:
+CTTA
+
+julia> foo()
+2nt DNA Sequence:
+CTTA
+
+julia> foo()
+3nt DNA Sequence:
+CTTA
+```
+
+Sequences can also be constructed from strings or arrays of nucleotide or amino
 acid symbols using constructors or the `convert` function:
 ```jlcon
 julia> DNASequence("TTANC")
