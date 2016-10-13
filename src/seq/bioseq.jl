@@ -63,28 +63,48 @@ typealias CharSequence      BioSequence{CharAlphabet}
 
 remove_newlines(s) = replace(s, r"\r|\n", "")
 
-macro dna_str(seq, flags...)
-    quote
-        DNASequence($(remove_newlines(seq)))
+macro dna_str(seq, flag)
+    if flag == "s"
+        return DNASequence(remove_newlines(seq))
+    elseif flag == "d"
+        return quote
+            DNASequence($(remove_newlines(seq)))
+        end
     end
+    error("Invalid DNA flag: '$(flag)'")
 end
 
-macro rna_str(seq, flags...)
-    quote
-        RNASequence($(remove_newlines(seq)))
+macro rna_str(seq, flag)
+    if flag == "s"
+        return RNASequence(remove_newlines(seq))
+    elseif flag == "d"
+        return quote
+            RNASequence($(remove_newlines(seq)))
+        end
     end
+    error("Invalid RNA flag: '$(flag)'")
 end
 
-macro aa_str(seq, flags...)
-    quote
-        AminoAcidSequence($(remove_newlines(seq)))
+macro aa_str(seq, flag)
+    if flag == "s"
+        return AminoAcidSequence(remove_newlines(seq))
+    elseif flag == "d"
+        return quote
+            AminoAcidSequence($(remove_newlines(seq)))
+        end
     end
+    error("Invalid Amino Acid flag: '$(flag)'")
 end
 
-macro char_str(seq, flags...)
-    quote
-        CharSequence($(remove_newlines(seq)))
+macro char_str(seq, flag)
+    if flag == "s"
+        return CharSequence(remove_newlines(seq))
+    elseif flag == "d"
+        return quote
+            CharSequence($(remove_newlines(seq)))
+        end
     end
+    error("Invalid Char flag: '$(flag)'")
 end
 
 
