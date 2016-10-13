@@ -74,6 +74,10 @@ macro dna_str(seq, flag)
     error("Invalid DNA flag: '$(flag)'")
 end
 
+macro dna_str(seq)
+    return DNASequence(remove_newlines(seq))
+end
+
 macro rna_str(seq, flag)
     if flag == "s"
         return RNASequence(remove_newlines(seq))
@@ -83,6 +87,10 @@ macro rna_str(seq, flag)
         end
     end
     error("Invalid RNA flag: '$(flag)'")
+end
+
+macro rna_str(seq)
+    return RNASequence(remove_newlines(seq))
 end
 
 macro aa_str(seq, flag)
@@ -96,6 +104,10 @@ macro aa_str(seq, flag)
     error("Invalid Amino Acid flag: '$(flag)'")
 end
 
+macro aa_str(seq)
+    return AminoAcidSequence(remove_newlines(seq))
+end
+
 macro char_str(seq, flag)
     if flag == "s"
         return CharSequence(remove_newlines(seq))
@@ -105,6 +117,10 @@ macro char_str(seq, flag)
         end
     end
     error("Invalid Char flag: '$(flag)'")
+end
+
+macro char_str(seq)
+    return CharSequence(remove_newlines(seq))
 end
 
 
