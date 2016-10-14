@@ -298,14 +298,13 @@ julia> char"αβγδϵ"
 ```
 
 However it should be noted that by default these sequence literals
-allocate the BioSequence object before runtime.
+allocate the `BioSequence` object before the code containing the sequence
+literal is run.
 This means there may be occasions where your program does not behave as you
 first expect, even though it is the intended behaviour.
 For example consider the following code:
 
 ```jlcon
-julia> using Bio.Seq
-
 julia> function foo()
            s = dna"CTT"
            push!(s, DNA_A)
@@ -321,15 +320,15 @@ In other words you might expect the following output:
 
 ```jlcon
 julia> foo()
-1nt DNA Sequence:
+4nt DNA Sequence:
 CTTA
 
 julia> foo()
-2nt DNA Sequence:
+4nt DNA Sequence:
 CTTA
 
 julia> foo()
-3nt DNA Sequence:
+4nt DNA Sequence:
 CTTA
 ```
 
@@ -337,34 +336,35 @@ However, this is not what happens, instead the following happens:
 
 ```jlcon
 julia> foo()
-1nt DNA Sequence:
+4nt DNA Sequence:
 CTTA
 
 julia> foo()
-2nt DNA Sequence:
+5nt DNA Sequence:
 CTTAA
 
 julia> foo()
-3nt DNA Sequence:
+6nt DNA Sequence:
 CTTAAA
 ```
 
-The reason is because the sequence literal is allocated before runtime, `s` in
-`foo` is always a reference to that one sequence that was allocated before the
-runtime of your program.
-So one sequence is created, and then pushed to every time `foo` is called. Thus
-that one allocated sequence grows with every call of `foo`.
+The reason for this is because the sequence literal is allocated only once
+before the first time the function `foo` is called and run. Therefore, `s` in
+`foo` is always a reference to that one sequence that was allocated.
+So one sequence is created before `foo` is called, and then it is pushed to
+every time `foo` is called. Thus, that one allocated sequence grows with every
+call of `foo`.
 
 If you wanted `foo` to create a new sequence each time it is called,
-the you can add a flag to the end of the sequence literal: a flag of 's'
-means the sequence will be allocated before runtime as is the default behaviour.
-However providing 'd' as the flag will make sure that the sequence is
-allocated at runtime. So to change `foo` so as it creates a new sequence
+then you can add a flag to the end of the sequence literal to dictate behaviour:
+A flag of 's' means 'static': the sequence will be allocated before code is run,
+as is the default behaviour described above.
+However providing 'd' flag changes the behaviour: 'd' means 'dynamic':
+the sequence will be allocated at whilst the code is running, and not before.
+So to change `foo` so as it creates a new sequence
 each time it is called, simply add the 'd' flag to the sequence literal:
 
 ```jlcon
-julia> using Bio.Seq
-
 julia> function foo()
            s = dna"CTT"d     # 'd' flag appended to the string literal.
            push!(s, DNA_A)
@@ -377,17 +377,22 @@ nucleotide is pushed to it:
 
 ```jlcon
 julia> foo()
-1nt DNA Sequence:
+4nt DNA Sequence:
 CTTA
 
 julia> foo()
-2nt DNA Sequence:
+4nt DNA Sequence:
 CTTA
 
 julia> foo()
-3nt DNA Sequence:
+4nt DNA Sequence:
 CTTA
 ```
+
+So the take come message of sequence literals is: Be careful when you are using
+sequence literals inside of functions, and inside the bodies of things like for
+loops. And if you use them and are unsure, use the 's' and 'd' flags to ensure
+the behaviour you get is the behaviour you intend.
 
 Sequences can also be constructed from strings or arrays of nucleotide or amino
 acid symbols using constructors or the `convert` function:
