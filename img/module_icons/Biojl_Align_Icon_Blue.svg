@@ -1,0 +1,18 @@
+<svg id="Bio_Align_Blue" xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#" xmlns="http://www.w3.org/2000/svg" height="12.944mm" width="12.944mm" version="1.1" xmlns:cc="http://creativecommons.org/ns#" xmlns:dc="http://purl.org/dc/elements/1.1/" viewBox="0 0 45.862882 45.862881">
+ <defs>
+  <clipPath id="clipPath4598" clipPathUnits="userSpaceOnUse">
+   <circle stroke-width="5.593" stroke="#c93d39" cy="447.62" cx="615.89" r="20.135" fill="#d66661"/>
+  </clipPath>
+ </defs>
+ <g transform="translate(-425.64 -575.15)">
+  <g transform="translate(-169.11 202.24)">
+   <circle stroke-width="5.593" stroke="#4266d5" cy="395.83" cx="617.68" r="20.135" fill="#6b85dd"/>
+   <g clip-path="url(#clipPath4598)" transform="translate(1.7857 -51.786)" stroke="#252525" stroke-width="5" fill="none">
+    <path d="m572.35 439.29h55"/>
+    <path d="m605.93 445.29h55"/>
+    <path d="m584.22 451.29h55"/>
+    <path d="m557.7 457.29h55"/>
+   </g>
+  </g>
+ </g>
+</svg>

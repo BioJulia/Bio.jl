@@ -1,0 +1,31 @@
+<svg id="Bio_Struct_Blue" xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#" xmlns="http://www.w3.org/2000/svg" height="12.944mm" width="12.944mm" version="1.1" xmlns:cc="http://creativecommons.org/ns#" xmlns:dc="http://purl.org/dc/elements/1.1/" viewBox="0 0 45.862882 45.862881">
+ <defs>
+  <clipPath id="clipPath4820" clipPathUnits="userSpaceOnUse">
+   <g transform="matrix(1.1531 -2.4082 2.4082 1.1531 -1274.6 2682.2)">
+    <g transform="translate(115.43 -32.116)">
+     <circle r="20.135" stroke="#4266d5" cy="428.69" cx="1021.8" stroke-width="5.593" fill="#6b85dd"/>
+    </g>
+   </g>
+  </clipPath>
+ </defs>
+ <g transform="translate(-171.35 -320.86)">
+  <g transform="translate(-903.89 -57.783)">
+   <g transform="translate(-39.046 4.9997)">
+    <g transform="translate(115.43 -32.116)">
+     <circle r="20.135" stroke="#4266d5" cy="428.69" cx="1021.8" stroke-width="5.593" fill="#6b85dd"/>
+    </g>
+   </g>
+   <g transform="matrix(.16175 .33780 -.33780 .16175 1073.2 1.7007)" clip-path="url(#clipPath4820)">
+    <g transform="translate(-117.5 -32.143)">
+     <g fill="#252525" fill-rule="evenodd">
+      <path d="m1145.6 416.08-16.73 14.836 9.6593-2.5882 6.4705 24.148 19.318-5.1763-6.4705-24.148 9.6593-2.5882z"/>
+      <path d="m1105.6 444.81 21.907-4.4829-9.6593-2.5882 6.4705-24.148-19.318-5.1764-6.4706 24.148-9.6593-2.5882z"/>
+      <path d="m1066.2 414.35-16.172 15.442 9.5573-2.9424 7.3559 23.893 19.115-5.8848-7.3559-23.893 9.5573-2.9424z"/>
+     </g>
+     <path d="m1148.6-427c0.3165 19.658-27.22 18.553-38.551 11.395" transform="scale(1,-1)" stroke="#252525" stroke-width="2.847px" fill="none"/>
+     <path d="m1109.3 433.02c0.3166 19.658-27.22 18.553-38.551 11.395" stroke="#252525" stroke-width="2.847px" fill="none"/>
+    </g>
+   </g>
+  </g>
+ </g>
+</svg>

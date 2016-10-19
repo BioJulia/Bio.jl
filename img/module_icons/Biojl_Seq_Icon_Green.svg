@@ -1,0 +1,14 @@
+<svg id="Bio_Seq_Green" xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#" xmlns="http://www.w3.org/2000/svg" height="12.944mm" width="12.944mm" version="1.1" xmlns:cc="http://creativecommons.org/ns#" xmlns:dc="http://purl.org/dc/elements/1.1/" viewBox="0 0 45.863 45.863">
+ <g transform="translate(-214.21 -429.43)">
+  <g transform="translate(214.21 51.502)">
+   <g transform="translate(-725.71 -448.18)">
+    <circle stroke-width="5.593" stroke="#3b972e" cy="849.04" cx="748.65" r="20.135" fill="#6bab5b"/>
+   </g>
+   <g transform="translate(2.7779 35.86)" fill="#252525">
+    <circle cx="5" cy="364.84" r="5"/>
+    <circle cy="364.84" cx="20" r="5"/>
+    <circle cx="35" cy="364.84" r="5"/>
+   </g>
+  </g>
+ </g>
+</svg>

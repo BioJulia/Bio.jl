@@ -4,63 +4,117 @@
         {% include stdhead.html %}
     </head>
     <body>
-        {% include navheader.html %}
-        <div id="pkgpanel">
-            <div id="logopanel">
-                <a href="https://github.com/BioJulia/{{ site.pkgname }}">
-                    <img src="{{ page.logo }}" />
-                </a>
+
+        <div class="container">
+            <div class="row">
+                <div class="jumbotron">
+
+                    <div class="row">
+                        <center>
+                            <a href="https://github.com/BioJulia/{{ site.pkgname }}">
+                                <img src="{{ page.logo }}" width="35%"/>
+                            </a>
+                            <h1>{{ page.subtitle }}</h1>
+                        </center>
+                    </div>
+
+                    <hr>
+
+                    <div class="row">
+                        <div class="col-md-4 col-md-offset-4">
+                            <div class="col-xs-4" style="font-size: 2em">
+                                <center>
+                                    <a id="ghlink" href="https://github.com/BioJulia/{{ site.pkgname }}" class="pkglink">
+                                        <img id="ghbutton" src="img/github_icons/Blue_GitHub.svg" width="100%" />
+                                        <strong>GitHub</strong>
+                                    </a>
+                                </center>
+                            </div>
+                            <div class="col-xs-4" style="font-size: 2em">
+                                <center>
+                                    <a id="docslink" href="{{ site.url }}/latest/" class="pkglink">
+                                        <img id="docbutton" src="img/book_icons/Green_Book.svg" width="100%" />
+                                        <strong>Docs</strong>
+                                    </a>
+                                </center>
+                            </div>
+                            <div class="col-xs-4" style="font-size: 2em">
+                                <center>
+                                    <a id="gttlink" href="https://gitter.im/BioJulia/{{ site.pkgname }}" class="pkglink">
+                                        <img id="gttbutton" src="img/gitter_icons/Red_Gitter.svg" width="100%" />
+                                        <strong>Chat</strong>
+                                    </a>
+                                </center>
+                            </div>
+                        </div>
+                    </div>
+
+                    <hr>
+
+                    <div class="row">
+                        <div class="col-sm-2 col-sm-offset-3">
+                            <center>
+                                <h3>Builds</h3>
+                                <a href="https://travis-ci.org/BioJulia/{{ site.pkgname }}">
+                                    <img src="https://travis-ci.org/BioJulia/{{ site.pkgname }}.svg?branch=master" alt="Build Status" />
+                                </a>
+                                <a href="https://ci.appveyor.com/project/Ward9250/{{ site.avname }}/branch/master">
+                                    <img src="https://ci.appveyor.com/api/projects/status/nq4w264346py8esp/branch/master?svg=true" alt="Build status" />
+                                </a>
+                            </center>
+                        </div>
+
+                        <div class="col-sm-2">
+                            <center>
+                                <h3>Test Coverage</h3>
+                                <a href="https://coveralls.io/r/BioJulia/Bio.jl">
+                                    <img src="https://img.shields.io/coveralls/BioJulia/Bio.jl.svg" alt="Coverage Status" />
+                                </a>
+                                <a href="https://codecov.io/github/BioJulia/{{ site.pkgname }}?branch=master">
+                                    <img src="https://codecov.io/github/BioJulia/{{ site.pkgname }}/coverage.svg?branch=master" alt="codecov.io" />
+                                </a>
+                            </center>
+                        </div>
+
+                        <div class="col-sm-2">
+                            <center>
+                                <h3>Repo activity</h3>
+                                <a href="http://waffle.io/BioJulia/{{ site.pkgname }}">
+                                    <img src="https://badge.waffle.io/BioJulia/{{ site.pkgname }}.svg?label=stage:%20planning&amp;title=Planned" alt="Issues Planned" />
+                                </a>
+                                <a href="http://waffle.io/BioJulia/{{ site.pkgname }}">
+                                    <img src="https://badge.waffle.io/BioJulia/{{ site.pkgname }}.svg?label=stage:%20WIP&amp;title=In%20Progress" alt="In Progress" />
+                                </a>
+                            </center>
+                        </div>
+                    </div>
+
+                </div>
             </div>
-            {% include codepanel.html %}
-            <div id="activitypanel">
-                <center><strong>Repo activity</strong></center>
-                <a href="http://waffle.io/BioJulia/{{ site.pkgname }}">
-                    <img src="https://badge.waffle.io/BioJulia/{{ site.pkgname }}.svg?label=stage:%20planning&amp;title=Planned" alt="Issues Planned" />
-                </a>
-                <a href="http://waffle.io/BioJulia/{{ site.pkgname }}">
-                    <img src="https://badge.waffle.io/BioJulia/{{ site.pkgname }}.svg?label=stage:%20WIP&amp;title=In%20Progress" alt="In Progress" />
-                </a>
-            </div>
-            <div id="buttonpanel">
-                <a href="https://github.com/BioJulia/{{ site.pkgname }}">
-                    <img id="ghbutton" class="iconbutton svglink" src="img/github_icons/Blue_GitHub.svg" />
-                </a>
-                <a href="{{ site.url }}/latest/">
-                    <img id="docbutton" class="iconbutton svglink" src="img/book_icons/Green_Book.svg" />
-                </a>
-                <a href="https://gitter.im/BioJulia/{{ site.pkgname }}">
-                    <img id="gtbutton" class="iconbutton svglink" src="img/gitter_icons/Red_Gitter.svg" />
-                </a>
+
+            <div id="mainbody" class="row">
+
+                {{ content }}
+
+                <hr>
+
+                <center>
+                    <h1><strong>Created and maintained by the BioJulia team</strong></h1>
+                    <a href="biojulia.github.io">
+                        <img src="img/BioJulia_Brand.svg" width="35%"/>
+                    </a>
+                    <p>
+                        If you would like to contribute to any BioJulia module, please
+                        refer to the <a href="https://biojulia.github.io/Contributing/latest/">contributing guidelines</a>.
+                    </p>
+                </center>
+
             </div>
         </div>
-        <div id="descpanel">
-            <h1>{{ page.subtitle }}</h1>
-            <hr />
-            {{ content }}
-            <hr />
-            <strong>Contributing</strong>
-            <p>
-                If you would like to contribute to any BioJulia module, please
-                refer to the
-                <a href="https://biojulia.github.io/Contributing/latest/">
-                    contributing guidelines</a>.
-            </p>
-        </div>
-        <script type='text/javascript' src='http://ajax.googleapis.com/ajax/libs/jquery/1.8/jquery.min.js'></script>
-        <script>
-            function getRandomIndex() {
-                var randomIndex = Math.floor(Math.random() * bucket.length);
-                return bucket.splice(randomIndex, 1)[0];
-            }
 
-            var bucket = [0, 1, 2, 3];
-            var ghIcons = ['Blue_GitHub.svg', 'Green_GitHub.svg', 'Purple_GitHub.svg', 'Red_GitHub.svg'];
-            var bkIcons = ['Blue_Book.svg', 'Green_Book.svg', 'Purple_Book.svg', 'Red_Book.svg'];
-            var gtIcons = ['Blue_Gitter.svg', 'Green_Gitter.svg', 'Purple_Gitter.svg', 'Red_Gitter.svg'];
+        <!-- Javascript includes -->
 
-            $("#ghbutton").attr('src', 'img/github_icons/' + ghIcons[getRandomIndex()]);
-            $("#docbutton").attr('src', 'img/book_icons/' + bkIcons[getRandomIndex()]);
-            $("#gtbutton").attr('src', 'img/gitter_icons/' + gtIcons[getRandomIndex()]);
-        </script>
+        <script src="js/biojulia.js"></script>
+
     </body>
 </html>

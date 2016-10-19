@@ -1,0 +1,18 @@
+<svg id="Bio_Align_Purple" xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#" xmlns="http://www.w3.org/2000/svg" height="12.944mm" width="12.944mm" version="1.1" xmlns:cc="http://creativecommons.org/ns#" xmlns:dc="http://purl.org/dc/elements/1.1/" viewBox="0 0 45.862882 45.862881">
+ <defs>
+  <clipPath id="clipPath4598" clipPathUnits="userSpaceOnUse">
+   <circle stroke-width="5.593" stroke="#c93d39" cy="447.62" cx="615.89" r="20.135" fill="#d66661"/>
+  </clipPath>
+ </defs>
+ <g transform="translate(-299.93 -518)">
+  <g transform="translate(-293.03 93.315)">
+   <circle r="20.135" stroke="#945bb0" cy="447.62" cx="615.89" stroke-width="5.593" fill="#aa7dc0"/>
+   <g clip-path="url(#clipPath4598)" stroke="#252525" stroke-width="5" fill="none">
+    <path d="m572.35 439.29h55"/>
+    <path d="m605.93 445.29h55"/>
+    <path d="m584.22 451.29h55"/>
+    <path d="m557.7 457.29h55"/>
+   </g>
+  </g>
+ </g>
+</svg>
