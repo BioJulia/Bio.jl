@@ -5,15 +5,70 @@
 # License is MIT: https://github.com/BioJulia/Bio.jl/blob/master/LICENSE.md
 
 abstract SiteCase
-immutable Conserved <: SiteCase end
-immutable Mutated <: SiteCase end
-immutable Transition <: SiteCase end
-immutable Transversion <: SiteCase end
-immutable Gap <: SiteCase end
-immutable Ambiguous <: SiteCase end
-immutable Pairdel <: SiteCase end
 
-include("bitwise_ops.jl")
+"""
+A `Match` site describes a site where two aligned nucleotides are the
+same biological symbol.
+"""
+immutable Match <: SiteCase end
+
+"""
+A `Mismatch` site describes a site where two aligned nucleotides are not the
+same biological symbol.
+"""
+immutable Mismatch <: SiteCase end
+
+"""
+A `Mismatch` site describes a site where two aligned nucleotides are definately
+conserved. By definately conserved this means that the symbols of the site are
+non-ambiguity symbols, and they are the same symbol.
+"""
+immutable Conserved <: SiteCase end
+
+"""
+A `Mutated` site describes a site where two aligned nucleotides are definately
+mutated. By definately mutated this means that the symbols of the site are
+non-ambiguity symbols, and they are not the same symbol.
+"""
+immutable Mutated <: SiteCase end
+
+"""
+A `Transition` site describes a site where two aligned nucleotides are definately
+mutated, and the type of mutation is a transition mutation.
+In other words, the symbols must not be ambiguity symbols, and they must
+be different such that they constitute a transition mutation: i.e. A<->G, or C<->T.
+"""
+immutable Transition <: SiteCase end
+
+"""
+A `Transversion` site describes a site where two aligned nucleotides are definately
+mutated, and the type of mutation is a transversion mutation.
+In other words, the symbols must not be ambiguity symbols, and they must
+be different such that they constitute a transversion mutation: i.e. A<->C,
+A<->T, G<->T, G<->C.
+"""
+immutable Transversion <: SiteCase end
+
+"""
+An `Indel` site describes a site where either of two aligned sites are a
+gap symbol '-'.
+"""
+immutable Indel <: SiteCase end
+
+"""
+An `Ambiguous` site describes a site where either of two aligned sites are an
+ambiguity symbol.
+"""
+immutable Ambiguous <: SiteCase end
+
+"""
+A `Certain` site describes a site where both of two aligned sites are not an
+ambiguity symbol.
+"""
+immutable Certain <: SiteCase end
+
+include("nibble_operations.jl")
+include("nibble_counting.jl")
 include("aligned_data_iterator.jl")
 
 typealias FourBitAlphs Union{DNAAlphabet{4},RNAAlphabet{4}}

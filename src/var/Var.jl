@@ -16,13 +16,15 @@ export
     # Site Counting
     ## Site types
     SiteCase,
+    Certain,
+    Ambiguous,
+    Indel,
+    Match,
+    Mismatch,
     Conserved,
     Mutated,
     Transition,
-    Transversion,
-    Gap,
-    Ambiguous,
-    Pairdel
+    Transversion
 
 
 
