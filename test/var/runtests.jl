@@ -425,10 +425,12 @@ end
                     end
 
                     @testset "Vefifying count_sites4 methods for multiple integers" begin
-                        @testset "Full sequences" begin
+
+                        @testset "No shifting" begin
                             # Set cases we've reasoned about to test certain
                             # behaviours and properties.
                             @test Var.count_sites4(Ambiguous, seq1.data, seq2.data) == 200
+                            @test Var.count_sites4(Certain, seq1.data, seq2.data) == 1600
                             @test Var.count_sites4(Conserved, seq1.data, seq2.data) == 400
                             @test Var.count_sites4(Mutated, seq1.data, seq2.data) == 1200
                             @test Var.count_sites4(Transition, seq1.data, seq2.data) == 400
@@ -443,29 +445,27 @@ end
                                 expected_amb = count_sites_naieve(Ambiguous, s, s2)
                                 expected_ctn = count_sites_naieve(Certain, s, s2)
                                 expected_cns = count_sites_naieve(Conserved, s, s2)
+                                expected_mm = count_sites_naieve(Mismatch, s, s2)
                                 expected_mut = count_sites_naieve(Mutated, s, s2)
                                 expected_trs = count_sites_naieve(Transition, s, s2)
                                 expected_trv = count_sites_naieve(Transversion, s, s2)
 
                                 @test Var.count_sites4(Ambiguous, s.data, s2.data) == expected_amb
+                                @test Var.count_sites4(Certain, s.data, s2.data) == expected_ctn
                                 @test Var.count_sites4(Conserved, s.data, s2.data) == expected_cns
+                                @test Var.count_sites4(Mismatch, s.data, s2.data) == expected_mm
                                 @test Var.count_sites4(Mutated, s.data, s2.data) == expected_mut
                                 @test Var.count_sites4(Transition, s.data, s2.data) == expected_trs
                                 @test Var.count_sites4(Transversion, s.data, s2.data) == expected_trv
-
                             end
-
                         end
+
+
 
                     end
 
 
 
-
-                    #@test Var.count_sites4(Ambiguous, seq1.data, seq2.data) == 200
-                    #@test Var.count_sites4(Conserved, seq1.data, seq2.data) == 400
-                    #@test Var.count_sites4(Mutated, seq1.data, seq2.data) == 1200
-                    #@test Var.count_sites4(Transition, seq1.data, seq2.data) == 400
                 end
             end
         end
