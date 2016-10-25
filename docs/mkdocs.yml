@@ -46,6 +46,7 @@ pages:
   - Intervals: man/intervals.md
   - Biological Variation: man/var.md
   - Structure: man/structure.md
+  - Services: man/services.md
   - Util: man/util.md
   - Tools: man/tools.md
 - Reference:
