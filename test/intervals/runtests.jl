@@ -3,6 +3,7 @@ module TestIntervals
 using Base.Test
 
 using Bio.Intervals,
+    Bio.Seq,
     Distributions,
     YAML,
     TestFunctions
@@ -539,6 +540,72 @@ end
                 @test_throws Exception check_gff3_parse(joinpath(path, specimen["filename"]))
             end
         end
+
+        # no fasta
+        test_input = """
+1	havana	exon	870086	870201	.	-	.	Parent=transcript:ENST00000432963;Name=ENSE00001791782;constitutive=0;ensembl_end_phase=-1;ensembl_phase=-1;exon_id=ENSE00001791782;rank=1;version=1
+1	havana	lincRNA	868403	876802	.	-	.	ID=transcript:ENST00000427857;Parent=gene:ENSG00000230368;Name=FAM41C-002;biotype=lincRNA;havana_transcript=OTTHUMT00000007022;havana_version=1;transcript_id=ENST00000427857;transcript_support_level=3;version=1
+"""
+        stream = GFF3Reader(IOBuffer(test_input))
+        collect(stream)
+        @test !hasfasta(stream)
+        @test_throws Exception getfasta(stream)
+
+
+        # implicit fasta
+        test_input2 = string(test_input, """
+>seq1
+ACGTACGT
+>seq2
+TGCATGCA
+""")
+        stream = GFF3Reader(IOBuffer(test_input2))
+        collect(stream)
+        @test hasfasta(stream)
+        @test collect(getfasta(stream)) ==
+            [FASTASeqRecord{BioSequence}("seq1", dna"ACGTACGT", Seq.FASTAMetadata())
+             FASTASeqRecord{BioSequence}("seq2", dna"TGCATGCA", Seq.FASTAMetadata())]
+
+        # explicit fasta
+        test_input3 = string(test_input, """
+##FASTA
+>seq1
+ACGTACGT
+>seq2
+TGCATGCA
+""")
+        stream = GFF3Reader(IOBuffer(test_input3))
+        collect(stream)
+        @test hasfasta(stream)
+        @test collect(getfasta(stream)) ==
+            [FASTASeqRecord{BioSequence}("seq1", dna"ACGTACGT", Seq.FASTAMetadata())
+             FASTASeqRecord{BioSequence}("seq2", dna"TGCATGCA", Seq.FASTAMetadata())]
+
+
+        test_input4 = """
+##directive1
+#comment1
+##directive2
+1	havana	exon	869528	869575	.	-	.	Parent=transcript:ENST00000432963;Name=ENSE00001605362;constitutive=0;ensembl_end_phase=-1;ensembl_phase=-1;exon_id=ENSE00001605362;rank=2;version=1
+1	havana	exon	870086	870201	.	-	.	Parent=transcript:ENST00000432963;Name=ENSE00001791782;constitutive=0;ensembl_end_phase=-1;ensembl_phase=-1;exon_id=ENSE00001791782;rank=1;version=1
+##directive3
+#comment2
+##directive4
+1	havana	lincRNA	868403	876802	.	-	.	ID=transcript:ENST00000427857;Parent=gene:ENSG00000230368;Name=FAM41C-002;biotype=lincRNA;havana_transcript=OTTHUMT00000007022;havana_version=1;transcript_id=ENST00000427857;transcript_support_level=3;version=1
+##directive5
+#comment3
+##directive6
+"""
+        stream = GFF3Reader(IOBuffer(test_input4), save_directives=true)
+        read(stream)
+        @test directives(stream) == ["directive1", "directive2"]
+        read(stream)
+        @test isempty(directives(stream))
+        read(stream)
+        @test directives(stream) == ["directive3", "directive4"]
+        @test eof(stream)
+        close(stream)
+        @test directives(stream) == ["directive5", "directive6"]
     end
 end
 
