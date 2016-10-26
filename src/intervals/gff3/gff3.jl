@@ -4,13 +4,13 @@
 #
 # https://github.com/The-Sequence-Ontology/Specifications/blob/master/gff3.md
 
-using URIParser: unescape
+import URIParser: unescape
 
 """
 Map strings to one or more strings avoiding allocation and deallocation as much
 as possible.
 """
-type GFFAttributes <:
+type GFF3Attributes <:
         Associative{StringField, Union{StringField, Vector{StringField}}}
     # map key to corresponding index in data and used
     indexes::Dict{StringField, Int}
@@ -20,30 +20,30 @@ type GFFAttributes <:
     # how many fields in data[i] are used
     used::Vector{Int}
 
-    function GFFAttributes()
+    function GFF3Attributes()
         return new(Dict{StringField, Int}(), Vector{StringField}[], Int[])
     end
 end
 
-function Base.length(attrs::GFFAttributes)
+function Base.length(attrs::GFF3Attributes)
     return sum(attrs.used)
 end
 
-function Base.empty!(attrs::GFFAttributes)
+function Base.empty!(attrs::GFF3Attributes)
     fill!(attrs.used, 0)
 end
 
-function Base.haskey(attrs::GFFAttributes, key::StringField)
+function Base.haskey(attrs::GFF3Attributes, key::StringField)
     i = get(attrs.indexes, key, 0)
     return i != 0 && attrs.used[i] > 0
 end
 
-function Base.haskey(attrs::GFFAttributes, key_::String)
+function Base.haskey(attrs::GFF3Attributes, key_::String)
     key = StringField(key_.data, 1:length(key_.data))
     return haskey(attrs, key)
 end
 
-function Base.getindex(attrs::GFFAttributes, key::StringField)
+function Base.getindex(attrs::GFF3Attributes, key::StringField)
     i = get(attrs.indexes, key, 0)
     if i == 0 || attrs.used[i] == 0
         throw(KeyError(key))
@@ -55,12 +55,12 @@ function Base.getindex(attrs::GFFAttributes, key::StringField)
     end
 end
 
-function Base.getindex(attrs::GFFAttributes, key_::String)
+function Base.getindex(attrs::GFF3Attributes, key_::String)
     key = StringField(key_.data, 1:length(key_.data))
     return getindex(attrs, key)
 end
 
-function pushindex!(attrs::GFFAttributes, key::StringField,
+function pushindex!(attrs::GFF3Attributes, key::StringField,
                     data::Vector{UInt8}, start::Int, stop::Int,
                     unescape_needed::Bool)
     i = get(attrs.indexes, key, 0)
@@ -79,8 +79,8 @@ function pushindex!(attrs::GFFAttributes, key::StringField,
     end
 end
 
-function Base.copy(attrs::GFFAttributes)
-    attrs2 = GFFAttributes()
+function Base.copy(attrs::GFF3Attributes)
+    attrs2 = GFF3Attributes()
     for (key, value) in attrs
         i = get(attrs2.indexes, key, 0)
         if i == 0
@@ -88,13 +88,12 @@ function Base.copy(attrs::GFFAttributes)
             push!(attrs2.used, 0)
             push!(attrs2.data, StringField[])
         end
-        j = (attrs2.used[i] += 1)
         push!(attrs2.data[i], copy(value))
     end
     return attrs2
 end
 
-function Base.start(attrs::GFFAttributes)
+function Base.start(attrs::GFF3Attributes)
     index_iter_state = start(attrs.indexes)
     i, j, key = 1, 1, StringField()
     while !done(attrs.indexes, index_iter_state) && (i == 0 || j > attrs.used[i])
@@ -105,7 +104,7 @@ function Base.start(attrs::GFFAttributes)
     return (index_iter_state, key, i, j)
 end
 
-function Base.next(attrs::GFFAttributes, state)
+function Base.next(attrs::GFF3Attributes, state)
     index_iter_state, key, i, j = state
     value = attrs.data[i][j]
     j += 1
@@ -117,7 +116,7 @@ function Base.next(attrs::GFFAttributes, state)
     return Pair{StringField, StringField}(key, value), (index_iter_state, key, i, j)
 end
 
-function Base.done(attrs::GFFAttributes, state)
+function Base.done(attrs::GFF3Attributes, state)
     index_iter_state, key, i, j = state
     return i > length(attrs.used) ||
         (j > attrs.used[i] && done(attrs.indexes, index_iter_state))
@@ -129,11 +128,11 @@ type GFF3Metadata
     kind::StringField
     score::Nullable{Float64}
     phase::Nullable{Int}
-    attributes::GFFAttributes
+    attributes::GFF3Attributes
 end
 
 function GFF3Metadata()
-    return GFF3Metadata("", "", NaN, 0, GFFAttributes())
+    return GFF3Metadata("", "", NaN, 0, GFF3Attributes())
 end
 
 function Base.copy(metadata::GFF3Metadata)

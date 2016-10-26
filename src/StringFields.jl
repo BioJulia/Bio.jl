@@ -32,7 +32,7 @@ end
 
 function StringField(data::SubString)
     part = data.string.data[1+data.offset:data.offset+nextind(data, data.endof)-1]
-    StringField(part, 1:length(data))
+    return StringField(part, 1:length(data))
 end
 
 # From base unicode/utf8.jl
@@ -87,7 +87,7 @@ function Base.copy!(field::StringField, data::Vector{UInt8},
 end
 
 function Base.copy!(to::StringField, from::StringField)
-    copy!(to, from.data, from.part.start, from.part.stop)
+    return copy!(to, from.data, from.part.start, from.part.stop)
 end
 
 function Base.empty!(field::StringField)
