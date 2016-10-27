@@ -1,4 +1,3 @@
-
 # Generic Feature Format Version 3 (GFF3)
 # =======================================
 #
