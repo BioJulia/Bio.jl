@@ -106,6 +106,7 @@ The following table summarizes supported file formats.
 | FASTQ       | `FASTQ`  | `Bio.Seq`       | <https://en.wikipedia.org/wiki/FASTQ_format>                                |
 | .2bit       | `TwoBit` | `Bio.Seq`       | <http://genome.ucsc.edu/FAQ/FAQformat.html#format7>                         |
 | BED         | `BED`    | `Bio.Intervals` | <https://genome.ucsc.edu/FAQ/FAQformat.html#format1>                        |
+| GFF3        | `GFF3`   | `Bio.Intervals` | <https://github.com/The-Sequence-Ontology/Specifications/blob/master/gff3.md> |
 | bigBed      | `BigBed` | `Bio.Intervals` | <https://doi.org/10.1093/bioinformatics/btq351>                             |
 | PDB         | `PDB`    | `Bio.Structure` | <http://www.wwpdb.org/documentation/file-format-content/format33/v3.3.html> |
 | SAM         | `SAM`    | `Bio.Align`     | <https://samtools.github.io/hts-specs/SAMv1.pdf>                            |
@@ -242,6 +243,20 @@ chr9	68456943	68486659	NM_001206	0	-
 ```@docs
 Bio.Intervals.BEDReader
 Bio.Intervals.BEDWriter
+```
+
+
+### GFF3
+
+* Reader type: `GFF3Reader`
+* Element type: `Interval{GFF3Metadata}` (alias: `GFF3Interval`)
+
+GFF3 is a text-based file format for representing genomic annotations. The major
+difference from BED is that is GFF3 is more structured and can include sequences
+in the FASTA file format.
+
+```@docs
+Bio.Intervals.GFF3Reader
 ```
 
 
