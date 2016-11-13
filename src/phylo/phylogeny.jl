@@ -89,7 +89,7 @@ Phylogeny([:Human, :Chimp, :Dog, :Cat])
 ```
 """
 function Phylogeny(taxa::Vector{Symbol})
-    return Phylogeny(Float64, Float64, taxa)
+    return Phylogeny(Float64, BasicBranch, taxa)
 end
 
 """

@@ -13,20 +13,28 @@
 
 # Any type used as branch metadata should have the following methods defined.
 
-# branchlength, branchlength!
+# An empty constructor.
+# A constructor that takes a BranchLength type as a
 
+abstract BranchMetaData
 
-"""
-    empty_branch_data{T}(::Type{T})
-
-Create a default (empty) instance of any type of branch metadata.
-
-By default this just calls a zero-argument constructor of a type.
-But this may be overloaded in some cases.
-"""
-function empty_branch_data{T}(::Type{T})
-    return T()
+immutable BasicBranch <: BranchMetaData
+    len::Nullable{Float64}
+    conf::Nullable{Float64}
 end
+
+@inline function BasicBranch()
+    return BasicBranch(Nullable{Float64}(), Nullable{Float64}())
+end
+
+@inline function BasicBranch{T}(x::BasicBranch, len::BranchLength{T})
+    return BasicBranch(convert(Nullable{Float64}, len), x.conf)
+end
+
+function branchlength(x::BasicBranch)
+    return x.len
+end
+
 
 """
     branchdata{C,B}(tree::Phylogeny{C,B}, edge::Edge)
@@ -34,7 +42,7 @@ end
 Getter for metadata associated with branch represented by `edge`.
 """
 function branchdata{C,B}(tree::Phylogeny{C,B}, edge::Edge)
-    return get(tree.edgedata, edge, empty_branch_data(B))
+    return get(tree.edgedata, edge, B())
 end
 
 """
@@ -50,7 +58,6 @@ function branchdata!{C,B}(tree::Phylogeny{C,B}, edge::Edge, data::B)
     end
     return tree
 end
-
 
 """
     create_branch!{C,B}(tree::Phylogeny{C,B}, branch::Edge, branchdata::B)
@@ -70,7 +77,7 @@ end
 Create a branch between two nodes in a phylogenetic tree.
 """
 function create_branch!{C,B}(tree::Phylogeny{C,B}, branch::Edge)
-    return add_branch!(tree, branch, empty_branch_data(B))
+    return add_branch!(tree, branch, B())
 end
 
 """
@@ -97,6 +104,12 @@ end
 
 # Get and set branchlength mechanism for phylogeneies.
 
+# Lightweight immutable type required to wrap values and distinguish
+# them from other values for the purposes of dispatch.
+immutable BranchLength{T}
+    val::T
+end
+
 """
     branchlength(tree::Phylogeny, edge::Edge)
 
@@ -114,20 +127,7 @@ Set the branchlength of branch defined by `edge` in a phylogeny.
 The assumption is metadata values on branches are immutables or value types,
 hence the reassignment using the branchdata! method.
 """
-function branchlength!{C,B,T<:AbstractFloat}(tree::Phylogeny{C,B}, edge::Edge, value::T)
-    branchdata!(tree, edge, branchlength!(branchdata(tree, edge), value))
+function branchlength!{C,B,T}(tree::Phylogeny{C,B}, edge::Edge, value::T)
+    branchdata!(tree, edge, B(branchdata(tree, edge), BranchLength(value)))
     return tree
 end
-
-
-
-# To allow branchlength! to work with your metadata type, the type needs the
-# following methods defined:
-#
-# branchlength - which gets the branchlength from the metadata type.
-# branchlength!
-# optional empty_branch_data - by default this is a no-arg constructor.
-
-empty_branch_data{T<:AbstractFloat}(::Type{T}) = convert(T, -1.0)
-branchlength{T<:AbstractFloat}(metadata::T) = metadata
-branchlength!{A<:AbstractFloat,B<:AbstractFloat}(metadata::A, bl::B) = convert(A, bl)
