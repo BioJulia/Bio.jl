@@ -11,8 +11,6 @@ immutable BLWrapper{T<:AbstractFloat}
     x::Nullable{T}
 end
 
-typealias BranchLength{T<:AbstractFloat} Nullable{T}
-
 """
     branchdata{C,B}(tree::Phylogeny{C,B}, edge::Edge)
 
@@ -98,6 +96,6 @@ hence the reassignment using the branchdata! method.
 function branchlength!{C,B,T<:AbstractFloat}(tree::Phylogeny{C,B},
                                              edge::Edge,
                                              value::Nullable{T})
-    branchdata!(tree, edge, B(branchdata(tree, edge), BLWrapper(value)))
+    branchdata!(tree, edge, new_branchlength(branchdata(tree, edge), value))
     return tree
 end
