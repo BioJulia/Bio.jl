@@ -13,7 +13,7 @@
 immutable BranchLength{T}
     val::T
 end
-Base.convert{T}(T, x::BranchLength{T}) = x.val
+Base.convert{T}(::Type{T}, x::BranchLength{T}) = x.val
 
 """
     branchdata{C,B}(tree::Phylogeny{C,B}, edge::Edge)
