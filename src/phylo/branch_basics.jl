@@ -90,10 +90,10 @@ The assumption is metadata values on branches are immutables or value types,
 hence the reassignment using the branchdata! method.
 """
 @generated function branchlength!{C,B}(tree::Phylogeny{C,B}, edge::Edge, value::Nullable{Float64})
-    if isimmutable(B)
+    if !B.mutable
         setting = :(branchdata!(tree, edge, new_branchlength(branchdata(tree, edge), value)))
     else
-        setting = :(branchlength!(branchdata(tree, edge)))
+        setting = :(branchlength!(branchdata(tree, edge), value))
     end
 
     quote
