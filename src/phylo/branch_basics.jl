@@ -101,3 +101,8 @@ hence the reassignment using the branchdata! method.
         return tree
     end
 end
+
+function branchlength!(tree::Phylogeny, edge::Edge, value::Float64)
+    bl = ifelse(value <= 0.0, Nullable(value), Nullable{Float64}())
+    return branchlength!(tree, edge, bl)
+end
