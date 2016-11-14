@@ -7,13 +7,7 @@
 #
 # This file is a part of BioJulia. License is MIT: https://github.com/BioJulia/Bio.jl/blob/master/LICENSE.md
 
-
-# Lightweight immutable type required to wrap values and distinguish
-# them from other values for the purposes of dispatch.
-immutable BranchLength{T}
-    val::T
-end
-Base.convert{T}(::Type{T}, x::BranchLength{T}) = x.val
+typealias BranchLength{T<:AbstractFloat} Nullable{T}
 
 """
     branchdata{C,B}(tree::Phylogeny{C,B}, edge::Edge)
@@ -97,7 +91,7 @@ Set the branchlength of branch defined by `edge` in a phylogeny.
 The assumption is metadata values on branches are immutables or value types,
 hence the reassignment using the branchdata! method.
 """
-function branchlength!{C,B,T}(tree::Phylogeny{C,B}, edge::Edge, value::T)
-    branchdata!(tree, edge, B(branchdata(tree, edge), BranchLength(value)))
+function branchlength!{C,B,T}(tree::Phylogeny{C,B}, edge::Edge, value::BranchLength)
+    branchdata!(tree, edge, B(branchdata(tree, edge), value))
     return tree
 end

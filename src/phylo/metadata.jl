@@ -14,17 +14,17 @@
 
 abstract BranchMetaData
 
-immutable BasicBranch <: BranchMetaData
-    len::Nullable{Float64}
-    conf::Nullable{Float64}
+immutable BasicBranch{T<:AbstractFloat} <: BranchMetaData
+    len::Nullable{T}
+    conf::Nullable{T}
 end
 
-@inline function BasicBranch()
-    return BasicBranch(Nullable{Float64}(), Nullable{Float64}())
+@inline function BasicBranch{T<:AbstractFloat}()
+    return BasicBranch(Nullable{T}(), Nullable{T}())
 end
 
-@inline function BasicBranch{T}(x::BasicBranch, len::BranchLength{T})
-    return BasicBranch(convert(Nullable{Float64}, len), x.conf)
+@inline function BasicBranch{T<:AbstractFloat}(x::BasicBranch{T}, len::BranchLength)
+    return BasicBranch{B}(convert(Nullable{T}, len), x.conf)
 end
 
 function branchlength(x::BasicBranch)
