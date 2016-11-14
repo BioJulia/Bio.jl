@@ -1,40 +1,18 @@
 # phylo/branch_basics.jl
 # ======================
 #
-# Types and methods for phylogenetic trees.
+# Types and methods for manipulating the branches of phylogenies and networks.
 #
 # Part of the Bio.Phylo module.
-#
-# This file contains methods for querying and setting attributes on branches,
-# as well as adding and removing branches.
 #
 # This file is a part of BioJulia. License is MIT: https://github.com/BioJulia/Bio.jl/blob/master/LICENSE.md
 
 
-# Any type used as branch metadata should have the following methods defined.
-
-# An empty constructor.
-# A constructor that takes a BranchLength type as a
-
-abstract BranchMetaData
-
-immutable BasicBranch <: BranchMetaData
-    len::Nullable{Float64}
-    conf::Nullable{Float64}
+# Lightweight immutable type required to wrap values and distinguish
+# them from other values for the purposes of dispatch.
+immutable BranchLength{T}
+    val::T
 end
-
-@inline function BasicBranch()
-    return BasicBranch(Nullable{Float64}(), Nullable{Float64}())
-end
-
-@inline function BasicBranch{T}(x::BasicBranch, len::BranchLength{T})
-    return BasicBranch(convert(Nullable{Float64}, len), x.conf)
-end
-
-function branchlength(x::BasicBranch)
-    return x.len
-end
-
 
 """
     branchdata{C,B}(tree::Phylogeny{C,B}, edge::Edge)
@@ -99,15 +77,6 @@ end
 
 function child_branches(tree::Phylogeny, vertex::Int)
     return out_edges(tree.graph, vertex)
-end
-
-
-# Get and set branchlength mechanism for phylogeneies.
-
-# Lightweight immutable type required to wrap values and distinguish
-# them from other values for the purposes of dispatch.
-immutable BranchLength{T}
-    val::T
 end
 
 """

@@ -64,10 +64,10 @@ export
     n_possible_unrooted
 
 
-
 include("phylogeny.jl")
 include("node_basics.jl")
 include("branch_basics.jl")
+include("metadata.jl")
 include("manipulation.jl")
 include("dating.jl")
 
