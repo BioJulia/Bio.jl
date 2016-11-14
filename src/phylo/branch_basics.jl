@@ -7,6 +7,10 @@
 #
 # This file is a part of BioJulia. License is MIT: https://github.com/BioJulia/Bio.jl/blob/master/LICENSE.md
 
+immutable BLWrapper{T<:AbstractFloat}
+    x::Nullable{T}
+end
+
 typealias BranchLength{T<:AbstractFloat} Nullable{T}
 
 """
@@ -91,7 +95,9 @@ Set the branchlength of branch defined by `edge` in a phylogeny.
 The assumption is metadata values on branches are immutables or value types,
 hence the reassignment using the branchdata! method.
 """
-function branchlength!{C,B,T}(tree::Phylogeny{C,B}, edge::Edge, value::BranchLength)
-    branchdata!(tree, edge, B(branchdata(tree, edge), value))
+function branchlength!{C,B,T<:AbstractFloat}(tree::Phylogeny{C,B},
+                                             edge::Edge,
+                                             value::Nullable{T})
+    branchdata!(tree, edge, B(branchdata(tree, edge), BLWrapper(value)))
     return tree
 end

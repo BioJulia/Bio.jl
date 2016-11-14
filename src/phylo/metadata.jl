@@ -23,8 +23,8 @@ end
     return BasicBranch(Nullable{T}(), Nullable{T}())
 end
 
-@inline function BasicBranch{T<:AbstractFloat}(x::BasicBranch{T}, len::BranchLength)
-    return BasicBranch{B}(convert(Nullable{T}, len), x.conf)
+@inline function BasicBranch{T<:AbstractFloat}(x::BasicBranch{T}, len::BLWrapper)
+    return BasicBranch{B}(convert(Nullable{T}, len.x), x.conf)
 end
 
 function branchlength(x::BasicBranch)
