@@ -1,6 +1,9 @@
 # ABIF Reader
 # ===========
 
+
+export tags, elements
+
 immutable ABIFDirEntry
     name::String
     number::Int32
@@ -47,15 +50,31 @@ function Base.getindex(a::AbifReader, t::AbstractString)
         throw(KeyError(t))
     end
 
-    return parse_data_tag(a, first(tag))
+    if length(tag) > 1
+        return Dict([parse_data_tag(a, b) for b in tag])
+     end
+
+    return Dict([parse_data_tag(a, first(tag))])
 end
 
 function Base.getindex(a::AbifReader, t::ABIFDirEntry)
-    return parse_data_tag(a, t)
+    return Dict([parse_data_tag(a, t)])
 end
 
 function Base.getindex(a::AbifReader, t::Array{ABIFDirEntry})
-    return [parse_data_tag(a, k) for k in t]
+    return Dict([parse_data_tag(a, k) for k in t])
+end
+
+function tags(a::AbifReader)
+    return [tag for tag in a.dirs]
+end
+
+function tags(a::AbifReader, t::AbstractString)
+    return [tag for tag in a.dirs if isequal(tag.name, t)]
+end
+
+function elements(a::AbifReader, t::AbstractString)
+    return length(tags(a, t))
 end
 
 function read_abif_header(input::IO)
@@ -103,41 +122,65 @@ function parse_data_tag(a::AbifReader, tag::ABIFDirEntry)
 
         if tag.element_type == 2
             data = String(read(a.input, tag.data_size))
-            return data
+
+            return format_data!(data, tag, elements(a, tag.name))
         elseif tag.element_type == 4
             data = read(a.input, Int16, tag.num_elements)
             data = convert_to_int!(data)
-            return data
+
+            return format_data!(data, tag, elements(a, tag.name))
         elseif tag.element_type == 5
             data = read(a.input, Int32, tag.num_elements)
             data = convert_to_int!(data)
-            return data
+
+            return format_data!(data, tag, elements(a, tag.name))
         elseif tag.element_type == 7
             data = read(a.input, Float32, tag.num_elements)
             data = convert_to_float!(data)
-            return data
+
+            return format_data!(data, tag, elements(a, tag.name))
         elseif tag.element_type == 10
             year   = Int(ntoh(first(read(a.input, Int16, 1))))
             month  = Int(first(read(a.input, UInt8, 1)))
             day    = Int(first(read(a.input, UInt8, 1)))
-            return "$year-$month-$day"
+            data   = "$year-$month-$day"
+
+            return format_data!(data, tag, elements(a, tag.name))
         elseif tag.element_type == 11
             hour    = Int(ntoh(first(read(a.input, 1))))
             minute  = Int(ntoh(first(read(a.input, 1))))
             second  = Int(ntoh(first(read(a.input, 1))))
             hsecond = Int(ntoh(first(read(a.input, 1))))
-            return "$hour:$minute:$second:$hsecond"
+            data    = "$hour:$minute:$second:$hsecond"
+
+            return format_data!(data, tag, elements(a, tag.name))
         elseif tag.element_type == 13
             data = Bool(first(read(a.input, tag.data_size)))
-            return data
+
+            return format_data!(data, tag, elements(a, tag.name))
         elseif tag.element_type == 18
-            data = read(a.input, tag.data_size)
-            return String(data[2:end])
+            data = String(read(a.input, tag.data_size)[2:end])
+
+            return format_data!(data, tag, elements(a, tag.name))
         elseif tag.element_type == 19
+            data = String(read(a.input, tag.data_size)[1:end-1])
+
+            return format_data!(data, tag, elements(a, tag.name))
+        else
             data = read(a.input, tag.data_size)
-            return String(data[1:end-1])
+            return format_data!(data, tag, elements(a, tag.name))
         end
     end
+end
+
+# if TAG has more than one element, concatenate element number on name
+function format_data!(data::Any, tag::ABIFDirEntry, elements::Int)
+
+    if elements > 1
+        return ("$(tag.name)$(tag.number)", data)
+    end
+
+    return ("$(tag.name)", data)
 end
 
 function convert_to_int!(data::AbstractArray)
