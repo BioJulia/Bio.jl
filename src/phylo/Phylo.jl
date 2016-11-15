@@ -53,20 +53,21 @@ export
     ## Branches
     branchlength,
     branchlength!,
-    parent_branch,
     child_branches,
-    rem_branch!,
-    add_branch!,
+    create_branch!,
+    destroy_branch!,
+    empty_branch_data,
+    parent_branch,
 
     ## Misc
     n_possible_rooted,
     n_possible_unrooted
 
 
-
 include("phylogeny.jl")
 include("node_basics.jl")
 include("branch_basics.jl")
+include("metadata.jl")
 include("manipulation.jl")
 include("dating.jl")
 
