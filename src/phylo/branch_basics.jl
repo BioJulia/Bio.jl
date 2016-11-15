@@ -103,6 +103,6 @@ hence the reassignment using the branchdata! method.
 end
 
 function branchlength!(tree::Phylogeny, edge::Edge, value::Float64)
-    bl = ifelse(value <= 0.0, Nullable(value), Nullable{Float64}())
+    bl = ifelse(value <= 0.0, Nullable{Float64}(), Nullable(value))
     return branchlength!(tree, edge, bl)
 end
