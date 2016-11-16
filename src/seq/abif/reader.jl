@@ -4,7 +4,7 @@
 
 export tags, elements
 
-immutable ABIFDirEntry
+immutable AbifDirEntry
     name::String
     number::Int32
     element_type::Int32
@@ -25,7 +25,7 @@ type AbifReader{T<:IO} <: Bio.IO.AbstractReader
     input::T
 
     # Tags
-    dirs::Vector{ABIFDirEntry}
+    dirs::Vector{AbifDirEntry}
 end
 
 function AbifReader(input::IO)
@@ -57,26 +57,30 @@ function Base.getindex(a::AbifReader, t::AbstractString)
     return Dict([parse_data_tag(a, first(tag))])
 end
 
-function Base.getindex(a::AbifReader, t::ABIFDirEntry)
+function Base.getindex(a::AbifReader, t::AbifDirEntry)
     return Dict([parse_data_tag(a, t)])
 end
 
-function Base.getindex(a::AbifReader, t::Array{ABIFDirEntry})
+function Base.getindex(a::AbifReader, t::Array{AbifDirEntry})
     return Dict([parse_data_tag(a, k) for k in t])
 end
 
+# Returns all existing tags
 function tags(a::AbifReader)
     return [tag for tag in a.dirs]
 end
 
+# Returns all existing tags by name
 function tags(a::AbifReader, t::AbstractString)
     return [tag for tag in a.dirs if isequal(tag.name, t)]
 end
 
+# Returns the number of Tags by name
 function elements(a::AbifReader, t::AbstractString)
     return length(tags(a, t))
 end
 
+# extract the header
 function read_abif_header(input::IO)
     seekstart(input)
     signature = read(input, 4)
@@ -87,8 +91,9 @@ function read_abif_header(input::IO)
     end
 end
 
-function read_abif_tags(input::IO, header::ABIFDirEntry)
-    tags = ABIFDirEntry[]
+# extract all tags in file
+function read_abif_tags(input::IO, header::AbifDirEntry)
+    tags = AbifDirEntry[]
     for index in collect(1:header.num_elements)
         start = header.data_offset + index * header.element_size
         tag = parse_directory(input, start)
@@ -97,6 +102,7 @@ function read_abif_tags(input::IO, header::ABIFDirEntry)
     return tags
 end
 
+# extract DirEtry
 function parse_directory(input::IO, pos::Int64)
     seek(input, pos)
 
@@ -113,10 +119,11 @@ function parse_directory(input::IO, pos::Int64)
         data_offset = ntoh(first(read(input, Int32, 1)))
     end
 
-    ABIFDirEntry(name, number, element_type, element_size, num_elements, data_size, data_offset)
+    AbifDirEntry(name, number, element_type, element_size, num_elements, data_size, data_offset)
 end
 
-function parse_data_tag(a::AbifReader, tag::ABIFDirEntry)
+# read bytes according to the element type, other values are unsupported or legacy.
+function parse_data_tag(a::AbifReader, tag::AbifDirEntry)
     if tag.data_offset > 0
         seek(a.input, tag.data_offset)
 
@@ -174,7 +181,7 @@ function parse_data_tag(a::AbifReader, tag::ABIFDirEntry)
 end
 
 # if TAG has more than one element, concatenate element number on name
-function format_data!(data::Any, tag::ABIFDirEntry, elements::Int)
+function format_data!(data::Any, tag::AbifDirEntry, elements::Int)
 
     if elements > 1
         return ("$(tag.name)$(tag.number)", data)
@@ -183,6 +190,7 @@ function format_data!(data::Any, tag::ABIFDirEntry, elements::Int)
     return ("$(tag.name)", data)
 end
 
+# convert a array of big-endian values
 function convert_to_int!(data::AbstractArray)
     result = Int[]
 
@@ -198,6 +206,7 @@ function convert_to_int!(data::AbstractArray)
     return result
 end
 
+# convert a array of big-endian values
 function convert_to_float!(data::AbstractArray)
     result = Float32[]
     for d in data
@@ -212,6 +221,7 @@ function convert_to_float!(data::AbstractArray)
     return result
 end
 
+# Check if the file has a valid Signature
 function issupported(signature::Array{UInt8})
     if signature != b"ABIF"
         error("Invalid File Signature")
