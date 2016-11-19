@@ -3334,6 +3334,34 @@ end
             end
         end
     end
+
+    @testset "ABIF Reader" begin
+        function check_abif_parse(filename)
+            stream = open(AbifReader, filename)
+
+            for record in stream end
+            @test typeof(stream) == AbifReader{IOStream}
+            @test tags(stream)[1].name == "AEPt"
+            @test tags(stream, "DATA")[1].name == "DATA"
+
+            @test length(getindex(stream, "DATA")) == 12
+            @test typeof(getindex(stream, "DATA")) == Dict{String, Array{Int64,1}}
+            @test typeof(getindex(stream, tags(stream))) == Dict{String,Any}
+            @test elements(stream, "DATA") == 12
+        end
+
+        get_bio_fmt_specimens()
+        path = Pkg.dir("Bio", "test", "BioFmtSpecimens", "ABI")
+        for specimen in YAML.load_file(joinpath(path, "index.yml"))
+            valid = get(specimen, "valid", true)
+            filepath = joinpath(path, specimen["filename"])
+            if valid
+                check_abif_parse(filepath)
+            else
+                @test_throws Exception check_abif_parse(filepath)
+            end
+        end
+    end
 end
 
 @testset "Quality scores" begin
