@@ -39,6 +39,18 @@ function Bio.IO.stream(reader::AbifReader)
     return reader.input
 end
 
+function Base.start(p::AbifReader)
+    return 1
+end
+
+function Base.done(p::AbifReader, k)
+    return k > length(p)
+end
+
+function Base.next(p::AbifReader, k)
+    return p.dirs[k], k + 1
+end
+
 function Base.length(a::AbifReader)
     return length(a.dirs)
 end
