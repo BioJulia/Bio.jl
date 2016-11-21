@@ -29,10 +29,10 @@ Returns Vector{BLASTResult} with the sequence of the hit, the Alignment with que
 function readblastXML(blastrun::String; seqtype="nucl")
     dc = parsexml(blastrun)
     rt = root(dc)
-    results = Vector{BLASTResult}([])
-    for iteration in find(rt, "//BlastOutput_iterations/Iteration")
-        queryname = content(findfirst(iteration, ".//Iteration_query-def"))
-        for hit in find(iteration, ".//Iteration_hits")
+    results = BLASTResult[]
+    for iteration in find(rt, "/BlastOutput/BlastOutput_iterations/Iteration")
+        queryname = content(findfirst(iteration, "Iteration_query-def"))
+        for hit in find(iteration, "Iteration_hits")
             if countelements(hit) > 0
                 hitname = content(findfirst(hit, ".//Hit_def"))
                 hsps = findfirst(hit, ".//Hit_hsps")
@@ -78,7 +78,7 @@ Runs blastn on `query` against `subject`.
     Array of DNASequence.
     May include optional `flag`s such as `["-perc_identity", 95,]`. Do not use `-outfmt`.
 """
-function blastn(query::String, subject::String, flags=[]; db::Bool=false)
+function blastn(query::AbstractString, subject::AbstractString, flags=[]; db::Bool=false)
     if db
         results = readblastXML(`blastn -query $query -db $subject $flags -outfmt 5`)
     else
@@ -97,7 +97,7 @@ function blastn(query::DNASequence, subject::Vector{DNASequence}, flags=[])
     blastn(querypath, subjectpath, flags)
 end
 
-function blastn(query::DNASequence, subject::String, flags=[]; db::Bool=false)
+function blastn(query::DNASequence, subject::AbstractString, flags=[]; db::Bool=false)
     querypath = makefasta(query)
     if db
         return blastn(querypath, subject, flags, db=true)
@@ -118,7 +118,7 @@ Runs blastn on `query` against `subject`.
     Array of `BioSequence{AminoAcidSequence}`.
     May include optional `flag`s such as `["-perc_identity", 95,]`. Do not use `-outfmt`.
 """
-function blastp(query::String, subject::String, flags=[]; db::Bool=false)
+function blastp(query::AbstractString, subject::AbstractString, flags=[]; db::Bool=false)
     if db
         results = readblastXML(`blastp -query $query -db $subject $flags -outfmt 5`, seqtype = "prot")
     else
@@ -137,7 +137,7 @@ function blastp(query::AminoAcidSequence, subject::Vector{AminoAcidSequence}, fl
     return blastp(querypath, subjectpath, flags)
 end
 
-function blastp(query::AminoAcidSequence, subject::String, flags=[]; db::Bool=false)
+function blastp(query::AminoAcidSequence, subject::AbstractString, flags=[]; db::Bool=false)
     querypath = makefasta(query)
     if db
         return blastp(querypath, subject, flags, db=true)
