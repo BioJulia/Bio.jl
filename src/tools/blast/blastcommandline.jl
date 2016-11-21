@@ -26,7 +26,7 @@ readblastXML(results)
 
 Returns Vector{BLASTResult} with the sequence of the hit, the Alignment with query sequence, bitscore and expect value
 """
-function readblastXML(blastrun::String; seqtype="nucl")
+function readblastXML(blastrun::AbstractString; seqtype="nucl")
     dc = parsexml(blastrun)
     rt = root(dc)
     results = BLASTResult[]
