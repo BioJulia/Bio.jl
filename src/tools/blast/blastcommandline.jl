@@ -16,11 +16,11 @@ immutable BLASTResult
 end
 
 """
-    readblastXML(blastrun::String)
+    readblastXML(blastrun::AbstractString)
 
 Parse XML output of a blast run. Input is an XML string eg:
 ```julia
-results = readstring(open("blast_results.xml")) # need to use `readstring` instead of `readall` for v0.5
+results = readstring(open("blast_results.xml"))
 readblastXML(results)
 ```
 
