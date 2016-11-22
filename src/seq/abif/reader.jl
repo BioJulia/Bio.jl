@@ -48,11 +48,23 @@ function Base.done(p::AbifReader, k)
 end
 
 function Base.next(p::AbifReader, k)
-    return p.dirs[k], k + 1
+    return getindex(p, p.dirs[k]), k + 1
 end
 
 function Base.length(a::AbifReader)
     return length(a.dirs)
+end
+
+function Base.checkbounds(p::AbifReader, k::Integer)
+    if 1 ≤ k ≤ length(p)
+        return true
+    end
+    throw(BoundsError(p, k))
+end
+
+function Base.getindex(a::AbifReader, k::Integer)
+    checkbounds(a, k)
+    return Dict([parse_data_tag(a, a.dirs[k])])
 end
 
 function Base.getindex(a::AbifReader, t::AbstractString)

@@ -3340,12 +3340,14 @@ end
             stream = open(AbifReader, filename)
 
             for record in stream end
+            for (a,b) in collect(stream[1]) end
+            for (a,b) in getindex(stream, tags(stream)) end
             @test typeof(stream) == AbifReader{IOStream}
             @test tags(stream)[1].name == "AEPt"
             @test tags(stream, "DATA")[1].name == "DATA"
+            @test length(stream["DATA"]) == 12
+            @test length(stream[1]) == 1
 
-            @test length(getindex(stream, "DATA")) == 12
-            @test typeof(getindex(stream, "DATA")) == Dict{String, Array{Int64,1}}
             @test typeof(getindex(stream, tags(stream))) == Dict{String,Any}
             @test elements(stream, "DATA") == 12
         end
