@@ -188,9 +188,9 @@ function set_context!(ctx, res)
         ctx[:WebEnv] = EzXML.content(findfirst(doc, "//WebEnv"))
         ctx[:query_key] = EzXML.content(findfirst(doc, "//QueryKey"))
     elseif startswith(contenttype, "application/json")
-        d = JSON.parse(data)
-        ctx[:WebEnv] = d["esearchresult"]["webenv"]
-        ctx[:query_key] = d["esearchresult"]["querykey"]
+        dict = JSON.parse(data)
+        ctx[:WebEnv] = dict["esearchresult"]["webenv"]
+        ctx[:query_key] = dict["esearchresult"]["querykey"]
     end
 
     return ctx
@@ -198,18 +198,19 @@ end
 
 # Process query parameters.
 function process_parameters(params, ctx)
-    # Merge context `ctx` into `params`.
+    # merge context `ctx` into `params`
     params = merge(ctx, Dict(params))
 
-    # Flatten a set of IDs into a comma-separated string.
+    # flatten a set of IDs into a comma-separated string
     if haskey(params, :id)
-        id = params[:id]
-        if isa(id, AbstractVector) || isa(id, Set) || isa(id, Tuple)
-            params[:id] = join([string(id) for id in params[:id]], ',')
+        ids = params[:id]
+        if isa(ids, AbstractString)
+            ids = [ids]
         end
+        params[:id] = join([string(id) for id in ids], ',')
     end
 
-    # Normalize the usehistory parameter.
+    # normalize the usehistory parameter
     if haskey(params, :usehistory) && isa(params[:usehistory], Bool)
         if params[:usehistory]
             params[:usehistory] = "y"
@@ -218,7 +219,7 @@ function process_parameters(params, ctx)
         end
     end
 
-    # Stringify all values.
+    # stringify all values
     for (key, val) in params
         params[key] = string(val)
     end

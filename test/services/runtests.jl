@@ -36,9 +36,21 @@ using Base.Test
         @test startswith(res.headers["Content-Type"], "text/xml")
         @test isa(parsexml(res.data), EzXML.Document)
 
+        res = esummary(db="protein", id=["15718680", "157427902", "119703751"])
+        @test res.status == 200
+        @test startswith(res.headers["Content-Type"], "text/xml")
+        @test isa(parsexml(res.data), EzXML.Document)
+
         # esearch then esummary
+        query = "asthma[mesh] AND leukotrienes[mesh] AND 2009[pdat]"
         ctx = Dict()
-        res = esearch(ctx, db="pubmed", term="asthma[mesh] AND leukotrienes[mesh] AND 2009[pdat]", usehistory=true)
+        res = esearch(ctx, db="pubmed", term=query, usehistory=true, retmode="xml")
+        @test res.status == 200
+        res = esummary(ctx, db="pubmed")
+        @test res.status == 200
+
+        ctx = Dict()
+        res = esearch(ctx, db="pubmed", term=query, usehistory=true, retmode="json")
         @test res.status == 200
         res = esummary(ctx, db="pubmed")
         @test res.status == 200
