@@ -2354,6 +2354,9 @@ end
                 test_reverse(DNANucleotide, random_dna_kmer(len))
                 test_reverse(RNANucleotide, random_rna_kmer(len))
             end
+
+            seq = Bio.Seq.DNASequence("AAAAAAAAAAAAAAAAAAAAAAAAAAAAGATAC")
+            @test reverse(seq[(length(seq)-9):length(seq)]) == dna"CATAGAAAAA"
         end
 
         @testset "Complement" begin
