@@ -640,7 +640,12 @@ Base.reverse(seq::BioSequence) = reverse!(copy(seq))
                 next -= 64
             end
             if next - stop > 0
-                data[i] = $nucrev(seq.data[index(next)] << (64 - r))
+                j = index(next)
+                x = seq.data[j] << (64 - r)
+                if r < next - stop
+                    x |= seq.data[j-1] >> r
+                end
+                data[i] = $nucrev(x)
             end
         end
         return BioSequence{A}(data, 1:length(seq), false)
