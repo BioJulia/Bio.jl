@@ -39,6 +39,7 @@ export
     Tabix,
     overlapchunks,
     LiftOverChain,
+    ChainBlock,
     liftover
 
 import ..Ragel: tryread!
