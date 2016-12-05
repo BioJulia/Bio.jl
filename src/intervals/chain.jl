@@ -60,13 +60,13 @@ function LiftOverChain(io)
             # chain block
             blocksize  = parse(Int, spl[1])
             tinc, qinc = parse(Int, spl[2]), parse(Int, spl[3])             
-            blocks[(tcur,tcur+blocksize)] = qcur
+            blocks[(tcur,tcur+blocksize-1)] = qcur
             tcur += blocksize + tinc
             qcur += blocksize + qinc
         elseif length(spl) == 1
             # last block
             blocksize = parse(Int, spl[1])
-            blocks[(tcur,tcur+blocksize)] = qcur
+            blocks[(tcur,tcur+blocksize-1)] = qcur
             block = ChainBlock(score, tsize, String(qname), qsize, qstart, qend, 
                                Strand(Char(qstrand)), id, blocks)
             targ  = Interval(String(tname), tstart, tend, Char(tstrand), block)
