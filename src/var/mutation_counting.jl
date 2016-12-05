@@ -196,8 +196,9 @@ function flagmutations{M<:MutationType,N<:Nucleotide}(::Type{M}, seqs::Matrix{N}
     return ismutant, isambiguous
 end
 
-
-
+function flagmutations{M<:MutationType,A<:NucleotideAlphabet}(::Type{M}, seqs::Vector{BioSequence{A}})
+    return flagmutations(M, seqmatrix(seqs, :seq))
+end
 
 """
     count_mutations{T<:MutationType,N<:Nucleotide}(::Type{T}, seqs::Matrix{N})
@@ -262,6 +263,40 @@ function count_mutations{T<:MutationType,A<:NucleotideAlphabet}(::Type{T}, seque
     seqs = seqmatrix(sequences, :seq)
     return count_mutations(T, seqs)
 end
+
+
+function flagmutations{N<:Nucleotide}(::Type{TransitionMutation}, ::Type{TransversionMutation}, seqs::Matrix{N})
+    seqsize, nseqs = size(seqs)
+    istransition = Matrix{Bool}(seqsize, binomial(nseqs, 2))
+    istransversion = Matrix{Bool}(seqsize, binomial(nseqs, 2))
+    isambiguous = Matrix{Bool}(seqsize, binomial(nseqs, 2))
+    col = 1
+    @inbounds for i1 in 1:nseqs
+        s1offset = (i1 - 1) * seqsize
+        for i2 in i1+1:nseqs
+            s2offset = (i2 - 1) * seqsize
+            resoffset = (col - 1) * seqsize
+            for s in 1:seqsize
+                s1 = seqs[s1offset + s]
+                s2 = seqs[s2offset + s]
+                isamb = is_ambiguous_strict(s1, s2)
+                isdiff = s1 != s2
+                ists = is_mutation(TransitionMutation, s1, s2)
+                isambiguous[resoffset + s] = isamb
+                istransition[resoffset + s] = !isamb & isdiff & ists
+                istransversion[resoffset + s] = !isamb & isdiff & !ists
+            end
+            col += 1
+        end
+    end
+    return istransition, istransversion, isambiguous
+end
+
+function flagmutations{A<:NucleotideAlphabet}(::Type{TransitionMutation}, ::Type{TransversionMutation}, seqs::Vector{BioSequence{A}})
+    return flagmutations(TransitionMutation, TransversionMutation, seqmatrix(seqs, :seq))
+end
+
+
 
 """
     count_mutations{N<:Nucleotide}(::Type{TransitionMutation}, ::Type{TransversionMutation}, sequences::Matrix{N})

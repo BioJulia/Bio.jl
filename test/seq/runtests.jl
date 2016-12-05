@@ -334,19 +334,19 @@ end
     end
 
     @testset "complement" begin
-        @test Seq.complement(DNA_A) === DNA_T
-        @test Seq.complement(DNA_C) === DNA_G
-        @test Seq.complement(DNA_G) === DNA_C
-        @test Seq.complement(DNA_T) === DNA_A
-        @test Seq.complement(DNA_Gap) === DNA_Gap
-        @test Seq.complement(DNA_N) === DNA_N
+        @test complement(DNA_A) === DNA_T
+        @test complement(DNA_C) === DNA_G
+        @test complement(DNA_G) === DNA_C
+        @test complement(DNA_T) === DNA_A
+        @test complement(DNA_Gap) === DNA_Gap
+        @test complement(DNA_N) === DNA_N
 
-        @test Seq.complement(RNA_A) === RNA_U
-        @test Seq.complement(RNA_C) === RNA_G
-        @test Seq.complement(RNA_G) === RNA_C
-        @test Seq.complement(RNA_U) === RNA_A
-        @test Seq.complement(RNA_Gap) === RNA_Gap
-        @test Seq.complement(RNA_N) === RNA_N
+        @test complement(RNA_A) === RNA_U
+        @test complement(RNA_C) === RNA_G
+        @test complement(RNA_G) === RNA_C
+        @test complement(RNA_U) === RNA_A
+        @test complement(RNA_Gap) === RNA_Gap
+        @test complement(RNA_N) === RNA_N
     end
 
     @testset "Encoder" begin
@@ -880,6 +880,10 @@ end
             test_copy(DNAAlphabet{2}, random_dna(len, probs))
             test_copy(RNAAlphabet{2}, random_rna(len, probs))
         end
+
+        seq = dna"ACGTACGTACGT"
+        subseq = seq[3:6]
+        @test copy(subseq) == dna"GTAC"
     end
 
     @testset "Concatenation" begin
@@ -1291,6 +1295,31 @@ end
             seq = dna"ACGT"
             @test copy!(seq, 3, seq, 1, 2) == dna"ACAC"
         end
+
+        @testset "orphan!" begin
+            seq = repeat(dna"ACGT", 8)
+            subseq = seq[16:17]
+            Seq.orphan!(subseq)
+            @test subseq == dna"TA"
+        end
+    end
+
+    @testset "Print" begin
+        buf = IOBuffer()
+        print(buf, dna"")
+        @test takebuf_string(buf) == ""
+
+        buf = IOBuffer()
+        print(buf, dna"ACGTN")
+        @test takebuf_string(buf) == "ACGTN"
+
+        buf = IOBuffer()
+        print(buf, rna"ACGUN")
+        @test takebuf_string(buf) == "ACGUN"
+
+        buf = IOBuffer()
+        print(buf, dna"A"^100)
+        @test takebuf_string(buf) == "A"^70 * "\n" * "A"^30
     end
 
     @testset "Transformations" begin
@@ -1300,12 +1329,12 @@ end
         end
 
         function test_dna_complement(A, seq)
-            comp = Seq.complement(BioSequence{A}(seq))
+            comp = complement(BioSequence{A}(seq))
             @test convert(AbstractString, comp) == dna_complement(seq)
         end
 
         function test_rna_complement(A, seq)
-            comp = Seq.complement(BioSequence{A}(seq))
+            comp = complement(BioSequence{A}(seq))
             @test convert(AbstractString, comp) == rna_complement(seq)
         end
 
@@ -1775,6 +1804,20 @@ end
         @test ReferenceSequence(str) == DNASequence(str)
         str = ("N"^300 * random_dna(1000))^5 * "N"^300
         @test ReferenceSequence(str) == DNASequence(str)
+    end
+
+    @testset "Print" begin
+        buf = IOBuffer()
+        print(buf, ReferenceSequence(dna""))
+        @test takebuf_string(buf) == ""
+
+        buf = IOBuffer()
+        print(buf, ReferenceSequence(dna"ACGTN"))
+        @test takebuf_string(buf) == "ACGTN"
+
+        buf = IOBuffer()
+        print(buf, ReferenceSequence(dna"A"^100))
+        @test takebuf_string(buf) == "A"^70 * "\n" * "A"^30
     end
 
     @testset "Random sequence" begin
@@ -2266,6 +2309,20 @@ end
         @test findlast(kmer, DNA_G) == 5
     end
 
+    @testset "Print" begin
+        buf = IOBuffer()
+        print(buf, DNAKmer(""))
+        @test takebuf_string(buf) == ""
+
+        buf = IOBuffer()
+        print(buf, DNAKmer("ACGT"))
+        @test takebuf_string(buf) == "ACGT"
+
+        buf = IOBuffer()
+        print(buf, RNAKmer("ACGU"))
+        @test takebuf_string(buf) == "ACGU"
+    end
+
     @testset "Transformations" begin
         function test_reverse(T, seq)
             revseq = reverse(Kmer{T,length(seq)}(seq))
@@ -2273,12 +2330,12 @@ end
         end
 
         function test_dna_complement(seq)
-            comp = Seq.complement(DNAKmer{length(seq)}(seq))
+            comp = complement(DNAKmer{length(seq)}(seq))
             @test convert(AbstractString, comp) == dna_complement(seq)
         end
 
         function test_rna_complement(seq)
-            comp = Seq.complement(RNAKmer{length(seq)}(seq))
+            comp = complement(RNAKmer{length(seq)}(seq))
             @test convert(AbstractString, comp) == rna_complement(seq)
         end
 
@@ -2297,6 +2354,9 @@ end
                 test_reverse(DNANucleotide, random_dna_kmer(len))
                 test_reverse(RNANucleotide, random_rna_kmer(len))
             end
+
+            seq = dna"AAAAAAAAAAAAAAAAAAAAAAAAAAAAGATAC"
+            @test reverse(seq[(length(seq)-9):length(seq)]) == dna"CATAGAAAAA"
         end
 
         @testset "Complement" begin
@@ -2852,6 +2912,10 @@ end
     @test sequence(rec) == dna"ACGTN"
     @test metadata(rec) == nothing
 
+    buf = IOBuffer()
+    show(buf, rec)
+    @test startswith(takebuf_string(buf), "Bio.Seq.SeqRecord")
+
     rec1 = SeqRecord("seq1", dna"ACGTN")
     rec2 = SeqRecord("seq2", dna"ACGTN")
     rec3 = SeqRecord("seq1", dna"GGAGT")
@@ -2879,6 +2943,7 @@ end
         function test_fasta_parse(filename, valid)
             # Reading from a stream
             stream = open(FASTAReader, filename)
+            @test eltype(stream) == FASTASeqRecord{BioSequence}
             if valid
                 for seqrec in stream end
                 @test true  # no error
@@ -3015,6 +3080,9 @@ end
                     @test_throws Exception reader["chr5"]
                 end
             end
+
+            # invalid index
+            @test_throws ErrorException FASTAReader(IOBuffer(fastastr), index=π)
         end
 
         @testset "append" begin
@@ -3033,6 +3101,10 @@ end
     end
 
     @testset "FASTQ" begin
+        @test isa(FASTQSeqRecord("1", dna"AA", Int8[10, 11]), FASTQSeqRecord{DNASequence})
+        @test isa(FASTQSeqRecord("1", dna"AA", Int8[10, 11], "desc."), FASTQSeqRecord{DNASequence})
+        @test_throws ArgumentError FASTQSeqRecord("1", dna"AA", Int8[10])
+
         output = IOBuffer()
         writer = FASTQWriter(output)
         write(writer, FASTQSeqRecord("1", dna"AN", Int8[11, 25]))
@@ -3049,9 +3121,26 @@ end
         IJN
         """
 
+        output = IOBuffer()
+        writer = FASTQWriter(output, quality_header=true)
+        write(writer, FASTQSeqRecord("1", dna"AN", Int8[11, 25]))
+        write(writer, FASTQSeqRecord("2", dna"TGA", Int8[40, 41, 45], "high quality"))
+        flush(writer)
+        @test takebuf_string(output) == """
+        @1
+        AN
+        +1
+        ,:
+        @2 high quality
+        TGA
+        +2 high quality
+        IJN
+        """
+
         function test_fastq_parse(filename, valid, encoding)
             # Reading from a stream
             stream = open(FASTQReader, filename, quality_encoding=encoding)
+            @test eltype(stream) == FASTQSeqRecord{DNASequence}
             if valid
                 for seqrec in stream end
                 @test true  # no error
@@ -3106,6 +3195,9 @@ end
                 contains(filename, "_illumina") ? :illumina13 : :sanger)
             test_fastq_parse(joinpath(path, filename), valid, qualenc)
         end
+
+        # invalid quality encoding
+        @test_throws ArgumentError FASTQReader(IOBuffer(""), quality_encoding=:julia)
 
         @testset "invalid quality encoding" begin
             # Sanger full range (note escape characters before '$' and '\')
@@ -3182,11 +3274,16 @@ end
         @test reader["chr1"].name == "chr1"
         @test reader["chr1"].seq == chr1
         @test_throws KeyError reader["chr10"]
+        @test reader[1].name == "chr1"
+        @test reader[2].name == "chr2"
+        @test_throws BoundsError reader[3]
 
         function check_2bit_parse(filename)
+            stream = open(TwoBitReader, filename)
+            @test eltype(stream) == SeqRecord{ReferenceSequence,Vector{UnitRange{Int}}}
             # read from a stream
-            for record in open(TwoBitReader, filename)
-            end
+            for record in stream end
+            close(stream)
 
             # round trip
             buffer = IOBuffer()

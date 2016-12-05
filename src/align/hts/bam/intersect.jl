@@ -1,54 +1,83 @@
 # Intersect
 # =========
 
-type BAMIntersectionIterator
-    reader::BAMReader
-    chunks::Vector{Chunk}
-    refindex::Int
+immutable BAMIntersectionIterator{T}
+    # data reader
+    reader::BAMReader{T}
+
+    # query interval
+    refname::AbstractString
     interval::UnitRange{Int}
 end
 
-Base.iteratorsize(::BAMIntersectionIterator) = Base.SizeUnknown()
+function Base.iteratorsize(::BAMIntersectionIterator)
+    return Base.SizeUnknown()
+end
+
+function Base.eltype{T}(::Type{BAMIntersectionIterator{T}})
+    return BAMRecord
+end
+
+function Base.show(io::IO, iter::BAMIntersectionIterator)
+    print(
+        io,
+        summary(iter),
+        "(<$(iter.refname):$(first(iter.interval))-$(last(iter.interval))>)")
+end
+
+type BAMIntersectionIteratorState
+    # reference index
+    refindex::Int
+
+    # possibly overlapping chunks
+    chunks::Vector{Chunk}
+
+    # current chunk index
+    chunkid::Int
+
+    # pre-allocated record
+    record::BAMRecord
+end
 
 function Base.start(iter::BAMIntersectionIterator)
-    if !isempty(iter.chunks)
-        seek(iter.reader, first(iter.chunks).start)
+    refindex = findfirst(iter.reader.refseqnames, iter.refname)
+    if refindex == 0
+        throw(ArgumentError("sequence name $(iter.refname) is not found in the header"))
     end
-    rec = BAMRecord()
-    return advance!(iter, rec, 1)
+    @assert !isnull(iter.reader.index)
+    chunks = overlapchunks(get(iter.reader.index).index, refindex, iter.interval)
+    if !isempty(chunks)
+        seek(iter.reader, first(chunks).start)
+    end
+    return BAMIntersectionIteratorState(refindex, chunks, 1, BAMRecord())
 end
 
-function Base.done(iter::BAMIntersectionIterator, i_rec)
-    i, _ = i_rec
-    return i > endof(iter.chunks)
-end
-
-function Base.next(iter::BAMIntersectionIterator, i_rec)
-    i, rec = i_rec
-    ret = copy(rec)
-    return ret, advance!(iter, rec, i)
-end
-
-function advance!(iter, rec, i)
-    while i ≤ endof(iter.chunks)
-        chunk = iter.chunks[i]
+function Base.done(iter::BAMIntersectionIterator, state)
+    while state.chunkid ≤ endof(state.chunks)
+        chunk = state.chunks[state.chunkid]
         while virtualoffset(iter.reader.stream) < chunk.stop
-            read!(iter.reader, rec)
-            if isoverlapping(rec, iter.refindex, iter.interval)
-                return i, rec
+            read!(iter.reader, state.record)
+            if isoverlapping(state.record, state.refindex, iter.interval)
+                return false
             end
         end
-        i += 1
-        if i ≤ endof(iter.chunks)
-            seek(iter.reader, iter.chunks[i].start)
+        state.chunkid += 1
+        if state.chunkid ≤ endof(state.chunks)
+            seek(iter.reader, state.chunks[state.chunkid].start)
         end
     end
-    return i, rec
+    return true
 end
 
-function Bio.Intervals.isoverlapping(rec, refindex_, interval)
-    return ismapped(rec) &&
-        refindex(rec) == refindex_ &&
+function Base.next(iter::BAMIntersectionIterator, state)
+    return copy(state.record), state
+end
+
+function Bio.Intervals.isoverlapping(
+        rec::BAMRecord,
+        refindex_::Integer,
+        interval::UnitRange)
+    return refindex(rec) == refindex_ &&
         leftposition(rec) ≤ last(interval) &&
         rightposition(rec) ≥ first(interval)
 end
@@ -57,18 +86,9 @@ function Base.intersect(reader::BAMReader, interval::Interval)
     return intersect(reader, interval.seqname, interval.first:interval.last)
 end
 
-function Base.intersect(reader::BAMReader, refname::AbstractString, interval::UnitRange)
-    i = findfirst(reader.refseqnames, refname)
-    if i == 0
-        error("sequence name $refname is not in the header")
-    end
-    return intersect(reader, i, interval)
-end
-
-function Base.intersect(reader::BAMReader, refindex::Integer, interval::UnitRange)
-    if isnull(reader.index)
-        error("no index")
-    end
-    chunks = overlapchunks(get(reader.index).index, refindex, interval)
-    return BAMIntersectionIterator(reader, chunks, refindex, interval)
+function Base.intersect(
+        reader::BAMReader,
+        refname::AbstractString,
+        interval::UnitRange)
+    return BAMIntersectionIterator(reader, refname, interval)
 end

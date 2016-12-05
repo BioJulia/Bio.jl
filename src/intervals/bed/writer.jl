@@ -1,6 +1,14 @@
 # BED Writer
 # ==========
 
+"""
+    BEDWriter(output::IO)
+
+Create a data writer of the BED file format.
+
+# Arguments
+* `output`: data sink
+"""
 type BEDWriter{T<:IO} <: Bio.IO.AbstractWriter
     output::T
 

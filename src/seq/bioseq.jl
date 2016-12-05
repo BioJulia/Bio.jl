@@ -63,19 +63,63 @@ typealias CharSequence      BioSequence{CharAlphabet}
 
 remove_newlines(s) = replace(s, r"\r|\n", "")
 
-macro dna_str(seq, flags...)
+macro dna_str(seq, flag)
+    if flag == "s"
+        return DNASequence(remove_newlines(seq))
+    elseif flag == "d"
+        return quote
+            DNASequence($(remove_newlines(seq)))
+        end
+    end
+    error("Invalid DNA flag: '$(flag)'")
+end
+
+macro dna_str(seq)
     return DNASequence(remove_newlines(seq))
 end
 
-macro rna_str(seq, flags...)
+macro rna_str(seq, flag)
+    if flag == "s"
+        return RNASequence(remove_newlines(seq))
+    elseif flag == "d"
+        return quote
+            RNASequence($(remove_newlines(seq)))
+        end
+    end
+    error("Invalid RNA flag: '$(flag)'")
+end
+
+macro rna_str(seq)
     return RNASequence(remove_newlines(seq))
 end
 
-macro aa_str(seq, flags...)
+macro aa_str(seq, flag)
+    if flag == "s"
+        return AminoAcidSequence(remove_newlines(seq))
+    elseif flag == "d"
+        return quote
+            AminoAcidSequence($(remove_newlines(seq)))
+        end
+    end
+    error("Invalid Amino Acid flag: '$(flag)'")
+end
+
+macro aa_str(seq)
     return AminoAcidSequence(remove_newlines(seq))
 end
 
-macro char_str(seq, flags...)
+macro char_str(seq, flag)
+    if flag == "s"
+        return CharSequence(remove_newlines(seq))
+    elseif flag == "d"
+        return quote
+            CharSequence($(remove_newlines(seq)))
+        end
+    end
+    error("Invalid Char flag: '$(flag)'")
+end
+
+macro char_str(seq)
     return CharSequence(remove_newlines(seq))
 end
 
@@ -552,9 +596,7 @@ end
 
 # actually, users don't need to create a copy of a sequence.
 function Base.copy{A}(seq::BioSequence{A})
-    # NOTE: no need to set `seq.shared = true` here
-    # since `newseq` will be `orphan!`ed soon.
-    newseq = BioSequence{A}(seq.data, 1:endof(seq), true)
+    newseq = BioSequence{A}(seq, 1:endof(seq))
     orphan!(newseq, length(seq), true)  # force orphan!
     @assert newseq.data !== seq.data
     return newseq
@@ -571,15 +613,21 @@ function orphan!{A}(seq::BioSequence{A}, size::Integer=length(seq), force::Bool=
     j, r = bitindex(seq, 1)
     data = Vector{UInt64}(seq_data_len(A, size))
 
-    if !isempty(seq)
+    if !isempty(seq) && !isempty(data)
         x = seq.data[j] >> r
-        l = min(endof(data), index(bitindex(seq, endof(seq))) - j + 1)
+        m = index(bitindex(seq, endof(seq))) - j + 1
+        l = min(endof(data), m)
         @inbounds @simd for i in 1:l-1
             y = seq.data[j+i]
             data[i] = x | y << (64 - r)
             x = y >> r
         end
-        data[l] = x
+        if m <= l
+            data[l] = x
+        else
+            y = seq.data[j+l]
+            data[l] = x | y << (64 - r)
+        end
     end
 
     seq.data = data
@@ -636,7 +684,12 @@ Base.reverse(seq::BioSequence) = reverse!(copy(seq))
                 next -= 64
             end
             if next - stop > 0
-                data[i] = $nucrev(seq.data[index(next)] << (64 - r))
+                j = index(next)
+                x = seq.data[j] << (64 - r)
+                if r < next - stop
+                    x |= seq.data[j-1] >> r
+                end
+                data[i] = $nucrev(x)
             end
         end
         return BioSequence{A}(data, 1:length(seq), false)
@@ -664,45 +717,36 @@ end
     complement!(seq)
 
 Make a complement sequence of `seq` in place.
-
-Ambiguous nucleotides are left as-is.
 """
-@generated function complement!{A<:Union{DNAAlphabet,RNAAlphabet}}(seq::BioSequence{A})
-    n = bitsof(A)
-    if n == 2
-        nuccomp = :nuccomp2
-    elseif n == 4
-        nuccomp = :nuccomp4
-    else
-        error("n (= $n) ∉ (2, 4)")
+function complement!{A<:Union{DNAAlphabet{2},RNAAlphabet{2}}}(seq::BioSequence{A})
+    orphan!(seq)
+    next = bitindex(seq, 1)
+    stop = bitindex(seq, endof(seq) + 1)
+    @inbounds while next < stop
+        seq.data[index(next)] = ~seq.data[index(next)]
+        next += 64
     end
-
-    quote
-        orphan!(seq)
-        next = bitindex(seq, 1)
-        stop = bitindex(seq, endof(seq) + 1)
-        @inbounds while next < stop
-            seq.data[index(next)] = $nuccomp(seq.data[index(next)])
-            next += 64
-        end
-        return seq
-    end
+    return seq
 end
 
-nuccomp2(x::UInt64) = ~x
-
-@inline function nuccomp4(x::UInt64)
-    return (
-        ((x & 0x1111111111111111) << 3) | ((x & 0x8888888888888888) >> 3) |
-        ((x & 0x2222222222222222) << 1) | ((x & 0x4444444444444444) >> 1))
+function complement!{A<:Union{DNAAlphabet{4},RNAAlphabet{4}}}(seq::BioSequence{A})
+    orphan!(seq)
+    next = bitindex(seq, 1)
+    stop = bitindex(seq, endof(seq) + 1)
+    @inbounds while next < stop
+        x = seq.data[index(next)]
+        seq.data[index(next)] = (
+            ((x & 0x1111111111111111) << 3) | ((x & 0x8888888888888888) >> 3) |
+            ((x & 0x2222222222222222) << 1) | ((x & 0x4444444444444444) >> 1))
+        next += 64
+    end
+    return seq
 end
 
 """
     complement(seq)
 
 Make a complement sequence of `seq`.
-
-Ambiguous nucleotides are left as-is.
 """
 function complement{A<:Union{DNAAlphabet,RNAAlphabet}}(seq::BioSequence{A})
     return complement!(copy(seq))

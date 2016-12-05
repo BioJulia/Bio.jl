@@ -48,8 +48,8 @@ eachkmer(seq::ReferenceSequence, K::Integer, step::Integer=1) = each(DNAKmer{Int
 
 Base.eltype{T,k,S}(::Type{EachKmerIterator{T,k,S}}) = Tuple{Int,Kmer{T,k}}
 
-if VERSION > v"0.5-"
-    Base.iteratorsize(::EachKmerIterator) = Base.SizeUnknown()
+function Base.iteratorsize{T,k,S}(::Type{EachKmerIterator{T,k,S}})
+    return Base.SizeUnknown()
 end
 
 @inline function Base.start{T,K}(it::EachKmerIterator{T,K})

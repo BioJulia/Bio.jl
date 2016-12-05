@@ -93,6 +93,7 @@ export
     seqname,
     cigar,
     sequence,
+    seqlength,
     qualities,
     header,
     isoverlapping,  # re-export from Bio.Intervals
@@ -126,5 +127,7 @@ include("submat.jl")
 include("models.jl")
 include("pairwise/pairalign.jl")
 include("hts/hts.jl")
+
+include("deprecated.jl")
 
 end

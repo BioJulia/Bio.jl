@@ -20,38 +20,35 @@ end
 
 Parse XML output of a blast run. Input is an XML string eg:
 ```julia
-results = readstring(open("blast_results.xml")) # need to use `readstring` instead of `readall` for v0.5
+results = readstring(open("blast_results.xml"))
 readblastXML(results)
 ```
 
 Returns Vector{BLASTResult} with the sequence of the hit, the Alignment with query sequence, bitscore and expect value
 """
 function readblastXML(blastrun::AbstractString; seqtype="nucl")
-    xdoc = parse_string(blastrun)
-    xroot = root(xdoc)
-    params = get_elements_by_tagname(xroot, "BlastOutput_param")
-    iterations = get_elements_by_tagname(xroot, "BlastOutput_iterations")
+    dc = parsexml(blastrun)
+    rt = root(dc)
     results = BLASTResult[]
-    for iteration in collect(child_elements(iterations[1]))
-        queryname = content(find_element(iteration, "Iteration_query-def"))
-        hits = get_elements_by_tagname(iteration, "Iteration_hits")
-        for hit in collect(child_elements(hits[1]))
-            hitname = content(find_element(hit, "Hit_def"))
-            hsps = get_elements_by_tagname(hit, "Hit_hsps")
-            for hsp in collect(child_elements(hsps[1]))
+    for iteration in find(rt, "/BlastOutput/BlastOutput_iterations/Iteration")
+        queryname = content(findfirst(iteration, "Iteration_query-def"))
+        for hit in find(iteration, "Iteration_hits")
+            if countelements(hit) > 0
+                hitname = content(findfirst(hit, "./Hit/Hit_def"))
+                hsps = findfirst(hit, "./Hit/Hit_hsps")
                 if seqtype == "nucl"
-                    qseq = DNASequence(content(find_element(hsp, "Hsp_qseq")))
-                    hseq = DNASequence(content(find_element(hsp, "Hsp_hseq")))
+                    qseq = DNASequence(content(findfirst(hsps, "./Hsp/Hsp_qseq")))
+                    hseq = DNASequence(content(findfirst(hsps, "./Hsp/Hsp_hseq")))
                 elseif seqtype == "prot"
-                    qseq = AminoAcidSequence(content(find_element(hsp, "Hsp_qseq")))
-                    hseq = AminoAcidSequence(content(find_element(hsp, "Hsp_hseq")))
+                    qseq = AminoAcidSequence(content(findfirst(hsps, "./Hsp/Hsp_qseq")))
+                    hseq = AminoAcidSequence(content(findfirst(hsps, "./Hsp/Hsp_hseq")))
                 else
                     throw(error("Please use \"nucl\" or \"prot\" for seqtype"))
                 end
 
                 aln = AlignedSequence(qseq, hseq)
-                bitscore = float(content(find_element(hsp, "Hsp_bit-score")))
-                expect = float(content(find_element(hsp, "Hsp_evalue")))
+                bitscore = float(content(findfirst(hsps, "./Hsp/Hsp_bit-score")))
+                expect = float(content(findfirst(hsps, "./Hsp/Hsp_evalue")))
                 push!(results, BLASTResult(bitscore, expect, queryname, hitname, hseq, aln))
             end
         end
@@ -157,7 +154,7 @@ end
 # Create temporary fasta-formated file for blasting.
 function makefasta(sequence::BioSequence)
     path, io = mktemp()
-    write(io, ">$path\n$(convert(AbstractString, sequence))\n")
+    write(io, ">$path\n$(convert(String, sequence))\n")
     close(io)
     return path
 end
@@ -167,7 +164,7 @@ function makefasta{T <: BioSequence}(sequences::Vector{T})
     path, io = mktemp()
     counter = 1
     for sequence in sequences
-        write(io, ">$path$counter\n$(convert(AbstractString, sequence))\n")
+        write(io, ">$path$counter\n$(convert(String, sequence))\n")
         counter += 1
     end
     close(io)

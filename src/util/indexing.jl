@@ -170,7 +170,7 @@ end
 """
     make_unique(names::Vector{Symbol})
 
-Make sure all vectors in a symbol are unique.
+Make sure all symbols in a vector are unique.
 
 # Examples
 ```julia

@@ -67,5 +67,5 @@ function sym2qualenc(name::Symbol)
     elseif name == :illumina18
         return ILLUMINA18_QUAL_ENCODING
     end
-    error("quality encoding ':$(name)' is not supported")
+    throw(ArgumentError("quality encoding ':$(name)' is not supported"))
 end

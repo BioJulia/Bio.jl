@@ -1,9 +1,9 @@
 # BAM Record
 # ==========
 
-# NOTE: The order and size of fields are important; the data will be loaded
-# using memory copy. See specs for the details.
 type BAMRecord
+    # fixed-length fields (see BMA specs for the details)
+    block_size::Int32
     refid::Int32
     pos::Int32
     bin_mq_nl::UInt32
@@ -16,20 +16,22 @@ type BAMRecord
     # variable length data
     data::Vector{UInt8}
 
-    # filled bytes of data (≤ length(.data))
-    datasize::Int
-
-    # reference sequence names (shared)
+    # pointer to reference sequence names (shared)
     refseqnames::Vector{String}
 end
 
+# the data size of fixed-length fields (.block_size-.tlen)
+const BAM_FIXED_FIELDS_BYTES = 36
+
 function BAMRecord()
-    return BAMRecord(-1, -1, 0, 0, 0, -1, -1, 0, UInt8[], 0, String[])
+    flag_nc = UInt32(SAM_FLAG_UNMAP) << 16
+    return BAMRecord(0, -1, -1, 0, flag_nc, 0, -1, -1, 0, UInt8[], String[])
 end
 
 # NOTE: this does not copy `refseqnames`.
 function Base.copy(rec::BAMRecord)
     return BAMRecord(
+        rec.block_size,
         rec.refid,
         rec.pos,
         rec.bin_mq_nl,
@@ -39,7 +41,6 @@ function Base.copy(rec::BAMRecord)
         rec.next_pos,
         rec.tlen,
         copy(rec.data),
-        rec.datasize,
         rec.refseqnames)
 end
 
@@ -64,32 +65,13 @@ function Base.:(==)(rec1::BAMRecord, rec2::BAMRecord)
         rec1.tlen       == rec2.tlen)  # TODO: check data
 end
 
-function Base.show(io::IO, rec::BAMRecord)
-    println(io, summary(rec), ':')
-    println(io, "  reference name: ", refname(rec))
-    println(io, "  leftmost position: ", leftposition(rec))
-    println(io, "  next reference name: ", nextrefname(rec))
-    println(io, "  next leftmost position: ", nextleftposition(rec))
-    println(io, "  mapping quality: ", mappingquality(rec))
-    println(io, "  flag: ", flag(rec))
-    println(io, "  template length: ", templatelength(rec))
-    println(io, "  sequence name: ", seqname(rec))
-    println(io, "  CIGAR string: ", cigar(rec))
-    println(io, "  sequence: ", String(sequence(rec)))
-    println(io, "  base qualities: ", qualities(rec))
-      print(io, "  optional fields: ", optinal_fields(rec))
-end
-
-# the data size of fixed-length fields (.refid-.tlen)
-const BAM_FIXED_FIELDS_BYTES = 32
-
 """
     ismapped(rec::BAMRecord)
 
 Return `true` if and only if `rec` is mapped to a reference sequence.
 """
 function ismapped(rec::BAMRecord)
-    return rec.pos != -1
+    return flag(rec) & SAM_FLAG_UNMAP == 0
 end
 
 """
@@ -250,7 +232,7 @@ function alignment(rec::BAMRecord)
 end
 
 function Bio.Seq.sequence(rec::BAMRecord)
-    seqlen = sequence_length(rec)
+    seqlen = seqlength(rec)
     data = Vector{UInt64}(cld(seqlen, 16))
     src::Ptr{UInt64} = pointer(rec.data, seqname_length(rec) + n_cigar_op(rec) * 4 + 1)
     for i in 1:endof(data)
@@ -261,13 +243,23 @@ function Bio.Seq.sequence(rec::BAMRecord)
     return Bio.Seq.DNASequence(data, 1:seqlen, false)
 end
 
+
+"""
+    seqlength(rec::BAMRecord)
+
+Return the length of the DNA sequence.
+"""
+function seqlength(rec)
+    return rec.l_seq
+end
+
 """
     qualities(rec::BAMRecord)
 
 Return base qualities of the alignment `rec`.
 """
 function qualities(rec::BAMRecord)
-    seqlen = sequence_length(rec)
+    seqlen = seqlength(rec)
     offset = seqname_length(rec) + n_cigar_op(rec) * 4 + cld(seqlen, 2)
     return [reinterpret(Int8, rec.data[i+offset]) for i in 1:seqlen]
 end
@@ -294,13 +286,18 @@ function Base.haskey(rec::BAMRecord, tag::AbstractString)
     return findtag(rec.data, auxdata_position(rec), UInt8(tag[1]), UInt8(tag[2])) > 0
 end
 
-function optinal_fields(rec::BAMRecord)
-    return AuxDataDict(rec.data[auxdata_position(rec):rec.datasize])
+function optional_fields(rec::BAMRecord)
+    return AuxDataDict(rec.data[auxdata_position(rec):data_size(rec)])
 end
 
 function auxdata_position(rec)
-    seqlen = sequence_length(rec)
+    seqlen = seqlength(rec)
     return seqname_length(rec) + n_cigar_op(rec) * 4 + cld(seqlen, 2) + seqlen + 1
+end
+
+# Return the size of the `.data` field.
+function data_size(rec::BAMRecord)
+    return rec.block_size - BAM_FIXED_FIELDS_BYTES + sizeof(rec.block_size)
 end
 
 # Return the length of alignment.
@@ -325,9 +322,4 @@ end
 # Return the number of CIGAR operations.
 function n_cigar_op(rec)
     return rec.flag_nc & 0xffff
-end
-
-# Return the length of the DNA sequence.
-function sequence_length(rec)
-    return rec.l_seq
 end

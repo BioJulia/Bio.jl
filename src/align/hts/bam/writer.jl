@@ -1,6 +1,15 @@
 # BAM Writer
 # ==========
 
+"""
+    BAMWriter(output::BGZFStream, header::SAMHeader)
+
+Create a data writer of the BAM file format.
+
+# Arguments
+* `output`: data sink
+* `header`: SAM header object
+"""
 type BAMWriter <: Bio.IO.AbstractWriter
     stream::BGZFStream
 end
@@ -52,8 +61,7 @@ end
 
 function Base.write(writer::BAMWriter, record::BAMRecord)
     n = 0
-    n += write(writer.stream, Int32(BAM_FIXED_FIELDS_BYTES + record.datasize))
     n += unsafe_write(writer.stream, pointer_from_objref(record), BAM_FIXED_FIELDS_BYTES)
-    n += unsafe_write(writer.stream, pointer(record.data), record.datasize)
+    n += unsafe_write(writer.stream, pointer(record.data), data_size(record))
     return n
 end

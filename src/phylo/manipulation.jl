@@ -52,7 +52,7 @@ Unconnects the root vertex from all of its children.
 function disconnect_root!(tree::Phylogeny)
     r = root(tree)
     for i in children(tree, r)
-        rem_branch!(tree, Edge(r, i))
+        destroy_branch!(tree, Edge(r, i))
     end
     return tree
 end
@@ -68,11 +68,11 @@ function Base.delete!(tree::Phylogeny, vertex::Int, preserve_bl::Bool = false)
     # deleted branch.
     parentedge = Edge(p, vertex)
     lentoparent = preserve_bl ? branchlength(tree, parentedge) : 0.0
-    rem_branch!(tree, parentedge)
+    destroy_branch!(tree, parentedge)
     for branch in child_branches(tree, vertex)
         newbl = branchlength(tree, branch) + lentoparent
         add_branch!(tree, Edge(parent, dst(branch)), newbl)
-        rem_branch!(tree, Edge(vertex, dst(branch)))
+        destroy_branch!(tree, Edge(vertex, dst(branch)))
     end
     return tree
 end

@@ -17,7 +17,7 @@ type SAMRecord
 end
 
 function SAMRecord()
-    return SAMRecord("*", 0x0000, "*", 0, 0, "*", "*", 0, 0, "*", "*", Dict())
+    return SAMRecord("*", SAM_FLAG_UNMAP, "*", 0, 0, "*", "*", 0, 0, "*", "*", Dict())
 end
 
 function Base.isless(rec1::SAMRecord, rec2::SAMRecord)
@@ -45,22 +45,6 @@ function Base.:(==)(rec1::SAMRecord, rec2::SAMRecord)
         rec1.optional_fields == rec2.optional_fields)
 end
 
-function Base.show(io::IO, rec::SAMRecord)
-    println(io, summary(rec), ':')
-    println(io, "  reference name: ", refname(rec))
-    println(io, "  leftmost position: ", leftposition(rec))
-    println(io, "  next reference name: ", nextrefname(rec))
-    println(io, "  next leftmost position: ", nextleftposition(rec))
-    println(io, "  mapping quality: ", mappingquality(rec))
-    println(io, "  flag: ", flag(rec))
-    println(io, "  template length: ", templatelength(rec))
-    println(io, "  sequence name: ", seqname(rec))
-    println(io, "  CIGAR string: ", cigar(rec))
-    println(io, "  sequence: ", sequence(rec))
-    println(io, "  base qualities: ", qualities(rec))
-      print(io, "  optional fields: ", rec.optional_fields)
-end
-
 function Base.copy(rec::SAMRecord)
     return SAMRecord(
         copy(rec.name),
@@ -78,7 +62,7 @@ function Base.copy(rec::SAMRecord)
 end
 
 function ismapped(rec::SAMRecord)
-    return rec.pos != 0
+    return flag(rec) & SAM_FLAG_UNMAP == 0
 end
 
 function Bio.Seq.seqname(rec::SAMRecord)
@@ -133,6 +117,13 @@ function Bio.Seq.sequence(rec::SAMRecord)
     return rec.seq
 end
 
+function seqlength(rec::SAMRecord)
+    if rec.seq == "*"
+        throw(ArgumentError("no sequence available"))
+    end
+    return length(rec.seq)
+end
+
 function qualities(rec::SAMRecord)
     return rec.qual
 end
@@ -157,6 +148,10 @@ end
 function Base.haskey(rec::SAMRecord, tag::AbstractString)
     checkkeytag(tag)
     return haskey(rec.optional_fields, tag)
+end
+
+function optional_fields(rec::SAMRecord)
+    return rec.optional_fields
 end
 
 # Return the length of alignment.

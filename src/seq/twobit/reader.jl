@@ -34,7 +34,7 @@ function Bio.IO.stream(reader::TwoBitReader)
     return reader.input
 end
 
-function Base.eltype(::Type{TwoBitReader})
+function Base.eltype{S}(::Type{TwoBitReader{S}})
     return SeqRecord{ReferenceSequence,Vector{UnitRange{Int}}}
 end
 

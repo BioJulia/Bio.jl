@@ -30,6 +30,12 @@ export
     BEDInterval,
     BigBedReader,
     BigBedWriter,
+    GFF3Reader,
+    GFF3Metadata,
+    GFF3Interval,
+    hasfasta,
+    getfasta,
+    directives,
     Tabix,
     overlapchunks
     LiftOverChain
@@ -64,6 +70,7 @@ include("index/index.jl")
 # Parsing file types
 include("bed/bed.jl")
 include("bbi/bbi.jl")
+include("gff3/gff3.jl")
 include("chain.jl")
 
 include("deprecated.jl")

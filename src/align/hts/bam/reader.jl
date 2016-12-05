@@ -1,8 +1,17 @@
 # BAM Reader
 # ==========
 
-type BAMReader <: Bio.IO.AbstractReader
-    stream::BGZFStream
+"""
+    BAMReader(input::IO; index=nothing)
+
+Create a data reader of the BAM file format.
+
+# Arguments
+* `input`: data source
+* `index=nothing`: filepath to a random access index (currently *bai* is Supported)
+"""
+type BAMReader{T} <: Bio.IO.AbstractReader
+    stream::BGZFStream{T}
     header::SAMHeader
     start_offset::VirtualOffset
     refseqnames::Vector{String}
@@ -23,7 +32,7 @@ function BAMReader(input::IO; index=nothing)
     return reader
 end
 
-function Base.eltype(::Type{BAMReader})
+function Base.eltype{T}(::Type{BAMReader{T}})
     return BAMRecord
 end
 
@@ -33,12 +42,8 @@ end
 
 function Base.show(io::IO, reader::BAMReader)
     println(io, summary(reader), ":")
-    println("  header: ", reader.header)
-      print("  reference sequences:")
-    for (i, (name, len)) in enumerate(zip(reader.refseqnames, reader.refseqlens))
-        println(io)
-        print("    [", lpad(i, 2), "]: ", name, " (length: ", len, ")")
-    end
+    println(io, "  header keys: ", join(keys(reader.header), ", "))
+      print(io, "  number of contigs: ", length(reader.refseqnames))
 end
 
 function header(reader::BAMReader, fillSQ::Bool=false)
@@ -97,22 +102,24 @@ function init_bam_reader(input::IO)
     reader = BAMReader(
         stream,
         samheader,
-        virtualoffset(stream),
+        isa(input, Pipe) ? VirtualOffset(0, 0) : virtualoffset(stream),
         refseqnames,
         refseqlens,
-        Nullable())
+        Nullable{BAI}())
 
     return reader
 end
 
 function Base.read!(reader::BAMReader, record::BAMRecord)
-    datasize = read(reader.stream, Int32) - BAM_FIXED_FIELDS_BYTES
-    unsafe_read(reader.stream, pointer_from_objref(record), BAM_FIXED_FIELDS_BYTES)
-    if length(record.data) < datasize
-        resize!(record.data, datasize)
+    unsafe_read(
+        reader.stream,
+        pointer_from_objref(record),
+        BAM_FIXED_FIELDS_BYTES)
+    dsize = data_size(record)
+    if length(record.data) < dsize
+        resize!(record.data, dsize)
     end
-    unsafe_read(reader.stream, pointer(record.data), datasize)
-    record.datasize = datasize
+    unsafe_read(reader.stream, pointer(record.data), dsize)
     record.refseqnames = reader.refseqnames
     return record
 end

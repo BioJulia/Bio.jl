@@ -1,4 +1,4 @@
-<p align="center"><img src="https://raw.githubusercontent.com/BioJulia/assets/master/branding/bio/BioJl_Design_1.png" width="50%" alt="Bio.jl" /></p>
+<p align="center"><img src="https://raw.githubusercontent.com/BioJulia/assets/master/branding/bio/optimised/BioJl_Design_1.png" width="50%" alt="Bio.jl" /></p>
 
 As the flagship package of the BioJulia organisation, Bio.jl provides core
 modules containing efficient data types and algorithms, that most

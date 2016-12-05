@@ -106,8 +106,11 @@ The following table summarizes supported file formats.
 | FASTQ       | `FASTQ`  | `Bio.Seq`       | <https://en.wikipedia.org/wiki/FASTQ_format>                                |
 | .2bit       | `TwoBit` | `Bio.Seq`       | <http://genome.ucsc.edu/FAQ/FAQformat.html#format7>                         |
 | BED         | `BED`    | `Bio.Intervals` | <https://genome.ucsc.edu/FAQ/FAQformat.html#format1>                        |
+| GFF3        | `GFF3`   | `Bio.Intervals` | <https://github.com/The-Sequence-Ontology/Specifications/blob/master/gff3.md> |
 | bigBed      | `BigBed` | `Bio.Intervals` | <https://doi.org/10.1093/bioinformatics/btq351>                             |
 | PDB         | `PDB`    | `Bio.Structure` | <http://www.wwpdb.org/documentation/file-format-content/format33/v3.3.html> |
+| SAM         | `SAM`    | `Bio.Align`     | <https://samtools.github.io/hts-specs/SAMv1.pdf>                            |
+| BAM         | `BAM`    | `Bio.Align`     | <https://samtools.github.io/hts-specs/SAMv1.pdf>                            |
 
 
 ### FASTA
@@ -237,6 +240,25 @@ chr9	68331023	68424451	NM_015110	0	+
 chr9	68456943	68486659	NM_001206	0	-
 ```
 
+```@docs
+Bio.Intervals.BEDReader
+Bio.Intervals.BEDWriter
+```
+
+
+### GFF3
+
+* Reader type: `GFF3Reader`
+* Element type: `Interval{GFF3Metadata}` (alias: `GFF3Interval`)
+
+GFF3 is a text-based file format for representing genomic annotations. The major
+difference from BED is that is GFF3 is more structured and can include sequences
+in the FASTA file format.
+
+```@docs
+Bio.Intervals.GFF3Reader
+```
+
 
 ### bigBed
 
@@ -259,3 +281,36 @@ Bio.Intervals.BigBedWriter
 PDB is a text-based file format for representing 3D macromolecular structures.
 This has different reader interfaces from other file formats. Please consult the
 [Bio.Structure](structure/) chapter for details.
+
+
+### SAM
+
+* Reader type: `SAMReader`
+* Writer type: `SAMWriter{T<:IO}`
+* Element type: `SAMRecord`
+
+SAM is a text-based file format for representing sequence alignments.
+
+```@docs
+Bio.Align.SAMReader
+Bio.Align.SAMWriter
+```
+
+
+### BAM
+
+* Reader type: `BAMReader`
+* Writer type: `BAMWriter`
+* Element type: `BAMRecord`
+
+BAM is a binary counterpart of the SAM file format.
+
+When writing data in the BAM file format, the underlying output stream needs to
+be wrapped with a `BGZFStream` object provided from
+[BGZFStreams.jl](https://github.com/BioJulia/BGZFStreams.jl).
+
+```@docs
+Bio.Align.BAMReader
+Bio.Align.BAMWriter
+```
+

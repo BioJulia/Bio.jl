@@ -193,16 +193,16 @@ end
         @test Bio.Align.last(alnseq)  == 27
         # OP_MATCH
         for (seqpos, refpos) in [(1, 5), (2, 6), (4, 8), (13, 18), (19, 27)]
-            @test seq2ref(seqpos, alnseq) == (refpos, OP_MATCH)
-            @test ref2seq(refpos, alnseq) == (seqpos, OP_MATCH)
+            @test seq2ref(alnseq, seqpos) == (refpos, OP_MATCH)
+            @test ref2seq(alnseq, refpos) == (seqpos, OP_MATCH)
         end
         # OP_INSERT
-        @test seq2ref(10, alnseq) == (17, OP_INSERT)
-        @test seq2ref(11, alnseq) == (17, OP_INSERT)
+        @test seq2ref(alnseq, 10) == (17, OP_INSERT)
+        @test seq2ref(alnseq, 11) == (17, OP_INSERT)
         # OP_DELETE
-        @test ref2seq( 9, alnseq) == ( 4, OP_DELETE)
-        @test ref2seq(10, alnseq) == ( 4, OP_DELETE)
-        @test ref2seq(23, alnseq) == (15, OP_DELETE)
+        @test ref2seq(alnseq,  9) == ( 4, OP_DELETE)
+        @test ref2seq(alnseq, 10) == ( 4, OP_DELETE)
+        @test ref2seq(alnseq, 23) == (15, OP_DELETE)
 
         seq = dna"ACGG--TGAAAGGT"
         ref = dna"-CGGGGA----TTT"
@@ -479,12 +479,12 @@ end
         @test isa(result, PairwiseAlignmentResult)
         aln = alignment(result)
         @test isa(aln, PairwiseAlignment)
-        @test seq2ref(1, aln) == (1, OP_SEQ_MATCH)
-        @test seq2ref(2, aln) == (3, OP_SEQ_MATCH)
-        @test seq2ref(3, aln) == (4, OP_SEQ_MATCH)
-        @test ref2seq(1, aln) == (1, OP_SEQ_MATCH)
-        @test ref2seq(2, aln) == (1, OP_DELETE)
-        @test ref2seq(3, aln) == (2, OP_SEQ_MATCH)
+        @test seq2ref(aln, 1) == (1, OP_SEQ_MATCH)
+        @test seq2ref(aln, 2) == (3, OP_SEQ_MATCH)
+        @test seq2ref(aln, 3) == (4, OP_SEQ_MATCH)
+        @test ref2seq(aln, 1) == (1, OP_SEQ_MATCH)
+        @test ref2seq(aln, 2) == (1, OP_DELETE)
+        @test ref2seq(aln, 3) == (2, OP_SEQ_MATCH)
     end
 
     @testset "GlobalAlignment" begin
@@ -1023,9 +1023,10 @@ end
         @testset "Record" begin
             rec = SAMRecord()
             @test !ismapped(rec)
+
             # default values
             @test seqname(rec) == "*"
-            @test flag(rec) == 0x0000
+            @test flag(rec) == SAM_FLAG_UNMAP
             @test refname(rec) == "*"
             @test leftposition(rec) == 0
             @test rightposition(rec) == -1
@@ -1035,8 +1036,17 @@ end
             @test cigar(rec) == "*"
             @test alignment(rec) == Alignment(AlignmentAnchor[])
             @test sequence(rec) == "*"
+            @test_throws ArgumentError seqlength(rec)
             @test qualities(rec) == "*"
             @test Align.alignment_length(rec) === 0
+
+            buf = IOBuffer()
+            show(buf, rec)
+            @test startswith(takebuf_string(buf), "Bio.Align.SAMRecord:")
+
+            buf = IOBuffer()
+            showcompact(buf, rec)
+            @test takebuf_string(buf) == "*\tunmapped"
 
             # set & delete tags
             rec = SAMRecord()
@@ -1056,6 +1066,7 @@ end
             reader = open(SAMReader, joinpath(samdir, "ce#1.sam"))
             @test isa(reader, SAMReader)
             @test eltype(reader) === SAMRecord
+            @test startswith(repr(reader), "Bio.Align.SAMReader:")
 
             # header
             h = header(reader)
@@ -1064,11 +1075,13 @@ end
             # first record
             rec = SAMRecord()
             read!(reader, rec)
+            @test ismapped(rec)
             @test refname(rec) == "CHROMOSOME_I"
             @test leftposition(rec) == 2
             @test rightposition(rec) == 102
             @test seqname(rec) == "SRR065390.14978392"
             @test sequence(rec)  == "CCTAGCCCTAACCCTAACCCTAACCCTAGCCTAAGCCTAAGCCTAAGCCTAAGCCTAAGCCTAAGCCTAAGCCTAAGCCTAAGCCTAAGCCTAAGCCTAA"
+            @test seqlength(rec) == 100
             @test qualities(rec) == "#############################@B?8B?BA@@DDBCDDCBC@CDCDCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCC"
             @test flag(rec) == 16
             @test cigar(rec) == "27M1D73M"
@@ -1102,8 +1115,7 @@ end
                 mktemp() do path, io
                     # copy
                     reader = open(SAMReader, filepath)
-                    writer = SAMWriter(io)
-                    write(writer, header(reader))
+                    writer = SAMWriter(io, header(reader))
                     records = SAMRecord[]
                     for rec in reader
                         push!(records, rec)
@@ -1134,7 +1146,7 @@ end
             @test leftposition(rec) == 0
             @test rightposition(rec) == -1
             @test mappingquality(rec) == 0
-            @test flag(rec) == 0
+            @test flag(rec) == SAM_FLAG_UNMAP
             @test nextrefname(rec) == "*"
             @test nextrefindex(rec) == 0
             @test nextleftposition(rec) == 0
@@ -1142,9 +1154,18 @@ end
             @test seqname(rec) == ""
             @test cigar(rec) == ""
             @test sequence(rec) == dna""
+            @test seqlength(rec) == 0
             @test alignment(rec) == Alignment(AlignmentAnchor[])
             @test qualities(rec) == UInt8[]
             @test Align.alignment_length(rec) === 0
+
+            buf = IOBuffer()
+            show(buf, rec)
+            @test startswith(takebuf_string(buf), "Bio.Align.BAMRecord:")
+
+            buf = IOBuffer()
+            showcompact(buf, rec)
+            @test takebuf_string(buf) == "(empty name)\tunmapped"
 
             # set & delete tags
             rec = BAMRecord()
@@ -1164,6 +1185,7 @@ end
             reader = open(BAMReader, joinpath(bamdir, "ce#1.bam"))
             @test isa(reader, BAMReader)
             @test eltype(reader) === BAMRecord
+            @test startswith(repr(reader), "Bio.Align.BAMReader{IOStream}:")
 
             # header
             h = header(reader)
@@ -1172,6 +1194,7 @@ end
             # first record
             rec = BAMRecord()
             read!(reader, rec)
+            @test ismapped(rec)
             @test refname(rec) == "CHROMOSOME_I"
             @test refindex(rec) == 1
             @test leftposition(rec) == 2
@@ -1181,6 +1204,7 @@ end
             CCTAGCCCTAACCCTAACCCTAACCCTAGCCTAAGCCTAAGCCTAAGCCT
             AAGCCTAAGCCTAAGCCTAAGCCTAAGCCTAAGCCTAAGCCTAAGCCTAA
             """
+            @test seqlength(rec) == 100
             @test eltype(qualities(rec)) == Int8
             @test qualities(rec) == [Int(x) - 33 for x in "#############################@B?8B?BA@@DDBCDDCBC@CDCDCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCC"]
             @test flag(rec) == 16
@@ -1245,11 +1269,11 @@ end
                     ("chr1", 766_000:800_000, 142),
                     ("chr1", 786_000:800_000, 1),
                     ("chr1", 796_000:800_000, 0)]
-                n = 0
-                for rec in intersect(reader, refname, interval)
-                    n += 1
-                end
-                @test n == expected
+                intsect = intersect(reader, refname, interval)
+                @test eltype(intsect) == BAMRecord
+                @test count(_ -> true, intsect) == expected
+                # check that the intersection iterator is stateless
+                @test count(_ -> true, intsect) == expected
             end
 
             # randomized tests

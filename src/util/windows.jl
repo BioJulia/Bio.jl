@@ -40,6 +40,17 @@ immutable EachWindowIterator{T <: ArrayOrStringOrSeq}
 end
 
 
+immutable EachWindow
+    to::Int
+    width::Int
+    step::Int
+end
+
+function Base.size(winitr::EachWindow)
+    return length(StepRange(winitr.width+1, winitr.step, length(winitr.data)))
+end
+
+
 """
 Calculate the number of windows that will result from iterating across the container.
 

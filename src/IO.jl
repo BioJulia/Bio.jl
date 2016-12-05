@@ -52,7 +52,7 @@ See `subtypes(AbstractReader)` for all available data readers.
 """
 abstract AbstractReader <: AbstractFormattedIO
 
-Base.iteratorsize(::AbstractReader) = Base.SizeUnknown()
+Base.iteratorsize{T<:AbstractReader}(::Type{T}) = Base.SizeUnknown()
 
 function Base.open{T<:AbstractReader}(::Type{T}, filepath::AbstractString, args...; kwargs...)
     return T(open(filepath), args...; kwargs...)
