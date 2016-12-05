@@ -172,6 +172,13 @@ function liftover{T}( chain::LiftOverChain, istream::IntervalStreamOrArray{T}; m
         end
 
     end # end while
+
+    # finish off the rest of the istream iterator
+    while !done(istream, istream_state)
+       push!( lifted, Nullable{Interval{T}}() )
+       istream_el, istream_state = next(istream, istream_state)
+    end
+
     return lifted
 end
 
