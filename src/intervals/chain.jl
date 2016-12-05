@@ -101,7 +101,7 @@ function liftover{T}( chain::LiftOverChain, istream::IntervalStreamOrArray{T}; m
        return lifted
     end
 
-    while # loop until we hit end of either istream or chain
+    while true # loop until we hit end of either istream or chain
 
         if chain_state == start(chain) && istream_state == start(istream)
             chain_el, chain_state     = next(chain, chain_state)
