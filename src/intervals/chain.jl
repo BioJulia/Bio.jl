@@ -78,7 +78,7 @@ function LiftOverChain(io)
     chain
 end
 
-# TODO: add min-identity handling. & clean up iterators.
+# TODO: add min-identity handling. & clean up iterators --> infinite while loop is not pretty
 # strand operations
 function liftover{T}( chain::LiftOverChain, istream::IntervalStreamOrArray{T}; minidentity=0.95 )
     lifted  = Vector{Nullable{Interval{T}}}()
@@ -97,9 +97,11 @@ function liftover{T}( chain::LiftOverChain, istream::IntervalStreamOrArray{T}; m
     if !done(chain, chain_state) && !done(istream, istream_state)
         chain_el   = next(chain, chain_state)
         istream_el = next(istream, istream_state)
+    else
+       return lifted
     end
 
-    while !done(chain, chain_state)
+    while # loop until we hit end of either istream or chain
 
         if chain_state == start(chain) && istream_state == start(istream)
             chain_el, chain_state     = next(chain, chain_state)
@@ -159,7 +161,7 @@ function liftover{T}( chain::LiftOverChain, istream::IntervalStreamOrArray{T}; m
                     end
                     clast    = liftsecond( block, block_el, block_state, istream_el )
                     rstrand  = istream_el.strand == chain_el.strand ? cstrand : flip(cstrand)
-                    interval = Interval(cname, cfirst, clast, cstrand, istream_el.metadata)
+                    interval = Interval(cname, cfirst, clast, rstrand, istream_el.metadata)
                     push!( lifted, Nullable(interval) )
                     done(istream, istream_state) && return lifted
                     istream_el, istream_state = next(istream, istream_state)
