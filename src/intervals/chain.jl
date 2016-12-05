@@ -97,6 +97,8 @@ function liftover{T}( chain::LiftOverChain, istream::IntervalStreamOrArray{T}; m
     if !done(chain, chain_state) && !done(istream, istream_state)
         chain_el   = next(chain, chain_state)
         istream_el = next(istream, istream_state)
+        cname   = chain_el.metadata.qname
+        cstrand = chain_el.metadata.qstrand
     end
 
     while !done(chain, chain_state)

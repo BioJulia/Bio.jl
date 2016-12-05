@@ -680,7 +680,7 @@ end
         chain = LiftOverChain( chainfile )
         @test typeof(chain) == IntervalCollection{ChainBlock}
         @test length(chain) == 1
-        println(liftover( chain, [Interval("chrFrom", 20, 30, '+'),Interval("chrFrom", 35, 45, '+')] ))  
+        println(liftover( chain, [Interval("chrFrom", 20, 30, '+', "TEST_A"),Interval("chrFrom", 35, 45, '+', "TEST_B")] ))  
     end
 end
 
