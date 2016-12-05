@@ -37,8 +37,8 @@ export
     getfasta,
     directives,
     Tabix,
-    overlapchunks
-    LiftOverChain
+    overlapchunks,
+    LiftOverChain,
     liftover
 
 import ..Ragel: tryread!

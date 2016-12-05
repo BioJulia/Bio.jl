@@ -609,7 +609,6 @@ TGCATGCA
     end
 end
 
-
 @testset "BigBed" begin
     @testset "BED → BigBed → BED round-trip" begin
         path = Pkg.dir("Bio", "test", "BioFmtSpecimens", "BED")
@@ -659,15 +658,30 @@ end
     # TODO: test summary information against output from kent's bigBedSummary
 
     @testset "LiftOverChain Building" begin
-       chainfile = IOBuffer("")
-       for i in 0:10
-          write(chainfile, "$i\t$i\t$i\n")
-       end
-       seek(chainfile, 0)
-       chain = LiftOverChain( chainfile )
-       @test typeof(chain) == IntervalCollection{ChainBlock}
-       @test length(chain) == 1
+      #=score -- chain score
+        tName -- chromosome (reference sequence)
+        tSize -- chromosome size (reference sequence)
+        tStrand -- strand (reference sequence)
+        tStart -- alignment start position (reference sequence)
+        tEnd -- alignment end position (reference sequence)
+        qName -- chromosome (query sequence)
+        qSize -- chromosome size (query sequence)
+        qStrand -- strand (query sequence)
+        qStart -- alignment start position (query sequence)
+        qEnd -- alignment end position (query sequence)
+        id -- chain ID=#
+        chainfile = IOBuffer()
+        write(chainfile, "chain 1 chrFrom 100 + 1 100 chrTo 100 - 201 310 1\n")
+        for i in 1:9
+            write(chainfile, "10\t0\t1\n")
+        end
+        write(chainfile, "10\n")
+        seek(chainfile, 0)
+        chain = LiftOverChain( chainfile )
+        @test typeof(chain) == IntervalCollection{ChainBlock}
+        @test length(chain) == 1
+        println(liftover( chain, [Interval("chrFrom", 20, 30, '+'),Interval("chrFrom", 35, 45, '+')] ))  
     end
- end
+end
 
 end # module TestIntervals
