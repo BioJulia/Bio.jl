@@ -224,3 +224,9 @@ function Base.collect( chain::LiftOverChain )
     # form of `from->to`
 end
 
+function invert( chain::LiftOverChain )
+   # LiftOverChain types allow one way lift--> query->target
+   # this function could return the inverse of the input chain
+   # for target->query
+end
+
