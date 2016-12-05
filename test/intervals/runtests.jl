@@ -680,10 +680,22 @@ end
         chain = LiftOverChain( chainfile )
         @test typeof(chain) == IntervalCollection{ChainBlock}
         @test length(chain) == 1
-        ictest = IntervalCollection{String}()
-        push!( ictest, Interval("chrFrom", 20, 30, '+', "TEST_A") )
-        push!( ictest, Interval("chrFrom", 35, 45, '+', "TEST_B") )
-        liftover( chain, ictest )
+        ictest = [Interval("chrA", 10, 100, '+', "NULL"),
+                  Interval("chrFrom", 1, 10, '+', "TEST_B"),
+                  Interval("chrFrom", 11, 21, '-', "TEST_C"),
+                  Interval("chrFrom", 101, 200, '-', "NULL"),
+                  Interval("chrZ", 10, 100, '+', "NULL")]
+        res = liftover( chain, ictest )
+        @test length(res) == length(ictest)
+        for i in 1:length(ictest)
+           if ictest[i].metadata == "NULL"
+              @test isnull(res[i])
+           else
+              @test !isnull(res[i])
+           end
+        end
+        @test get(res[2]) == Interval("chrTo", 201, 210, '-', "TEST_B")
+        @test get(res[3]) == Interval("chrTo", 212, 223, '+', "TEST_C")
     end
 end
 
