@@ -48,13 +48,16 @@ function overlapchunks(index::BGZFIndex, seqid::Integer, interval::UnitRange)
 
     binindex, linindex, pbin = index.data[seqid]
     bins = reg2bins(first(interval), last(interval))
-    offset = linindex[cld(first(interval), LinearWindowSize)]
     ret = Chunk[]
-    for bin in bins
-        if haskey(binindex, bin)
-            for chunk in binindex[bin]
-                if chunk.stop > offset
-                    push!(ret, chunk)
+    if !isempty(linindex)
+        # `linindex` may be empty for contigs with no records
+        offset = linindex[cld(first(interval), LinearWindowSize)]
+        for bin in bins
+            if haskey(binindex, bin)
+                for chunk in binindex[bin]
+                    if chunk.stop > offset
+                        push!(ret, chunk)
+                    end
                 end
             end
         end
