@@ -47,7 +47,7 @@ end
 # -----------------------
 
 """
-    Phylogeny{C, B}(tips::Vector{Symbol}, ::Type{C}, ::Type{B})
+    Phylogeny{C, B}(::Type{C}, ::Type{B}, tips::Vector{Symbol})
 
 Construct a completely unresolved phylogeny, with no annotated data.
 

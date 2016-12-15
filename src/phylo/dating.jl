@@ -7,8 +7,6 @@
 #
 # This file is a part of BioJulia. License is MIT: https://github.com/BioJulia/Bio.jl/blob/master/LICENSE.md
 
-
-
 module Dating
 
 using Distributions, Roots
@@ -33,45 +31,89 @@ Base.print(io::IO, de::DatingEstimate) = println(io, "$(lower(de)) ... $(upper(d
 Base.show(io::IO, de::DatingEstimate) = println(io, "Coalesence time estimate between two sequences:\nt lies between $(lower(de)) and $(upper(de))")
 Base.in(val::Float64, de::DatingEstimate) = val <= upper(de) && val >= lower(de)
 
-# Different coalescence time estimation algorithms.
-# method coaltime is dispatched according to arguments or type of
-immutable SimpleEstimate <: DatingMethod end
-restype(::Type{SimpleEstimate}) = Float64
+"""
+A very simple expected divergence time estimate.
+Assumes a strict molecult clock and that the divergence time is equal to
+
+\$ t = d / (2\\mu) \$
+
+Where \$d\$ is the evolutionary distance computed for two aligned sequences,
+and $\\mu$ is the substitution rate.
+"""
+immutable SimpleEstimate end
 
 """
-    coaltime(len::Int, nmut::Int, mu::Float64, ::Type{SimpleEstimate})
+    coaltime(N::Int, K::Int, µ::Float64, ::Type{SimpleEstimate})
 
-Compute the coalescence time between two sequences by assuming a mutation rate,
-and then assuming the divergence between two sequences is 2 * mu * t
+Compute the coalescence time between two sequences by the `SimpleEstimate`
+method.
+
+`N` is the length of the two aligned sequences, `K` is the number of mutations
+and `µ` is the assumed mutation rate.
 
 # Examples
 ```julia
 coaltime(50, 17, 10e-9, SimpleEstimate)
 ```
 """
-@inline function coaltime(len::Int, nmut::Int, mu::Float64, ::Type{SimpleEstimate})
-    @assert len >= nmut >= 0 error("Number of mutations must be less or equal to sequence length, and greater or equal to zero.")
-    return (nmut / len) / (2 * mu)
+@inline function coaltime(N::Int, K::Int, µ::Float64, ::Type{SimpleEstimate})
+    @assert N >= K >= 0 error("Condition: N >= K >= 0, not met.")
+    return (K / N) / (2 * µ)
 end
 
 """
-    coaltime(len::Int, nmut::Float64, mu::Float64, ::Type{SimpleEstimate})
+    coaltime(N::Int, K::Int, µ::Float64, ::Type{SimpleEstimate})
 
-Compute the coalescence time between two sequences by assuming a mutation rate,
-and then assuming the divergence between two sequences is 2 * mu * t
+Compute the coalescence time between two sequences by the `SimpleEstimate`
+method.
+
+`N` is the length of the two aligned sequences, `d` is the evolutionary distance
+and `µ` is the assumed mutation rate.
 
 # Examples
 ```julia
 coaltime(50, 0.12, 10e-9, SimpleEstimate)
 ```
 """
-@inline function coaltime(len::Int, dist::Float64, mu::Float64, ::Type{SimpleEstimate})
-    @assert 1 >= dist >= 0 error("Genetic distance `dist` must be a value between 1 and 0.")
-    return dist / (2 * mu)
+@inline function coaltime(N::Int, d::Int, µ::Float64, ::Type{SimpleEstimate})
+    @assert N >= K >= 0 error("Genetic distance `d` must be a value between 1 and 0.")
+    return d / (2 * µ)
 end
 
-immutable SpeedDating <:DatingMethod end
-restype(::Type{SpeedDating}) = SDResult
+"""
+`SpeedDate` is the name given to a method of estimating a divergence time between
+two DNA sequence regions that was first implemented in the R package
+HybridCheck in order to date regions of introgression in large sequence
+contigs.
+
+The coalescence time is estimated using the number of mutations that have
+occurred between two aligned sequences. The calculation uses a strict molecular
+clock which assumes a constant substitution rate, both through time and across
+taxa.
+Modelling the mutation accumulation process as a Bernoulli trial, the
+probability of observing  \$k\$  or fewer mutations between two sequences of
+length \$n\$ can be given as:
+
+\$ Pr(X \\le k) = \\sum_{i=0}^{\\lfloor k \\rfloor} \\binom{n}{i} p^i (1 - p)^{n-i} \$
+
+Where \$p\$ is the probability of observing a single mutation between the two
+aligned sequences.
+The value of \$p\$ depends on two key factors: the substitution rate and the
+coalescence time.
+If you assume a molecular clock, whereby two DNA sequences are both accumulating
+mutations at a rate \$\\mu\$ for \$t\$ generations, then you may define
+\$p = 2\\mu t\$.
+
+Using these assumptions, the SpeedDate method finds the root of the following
+formula for \$Pr(X \\le k) = 0.05\$, \$0.5\$, and \$0.95\$, and then divides the
+three answers by twice the assumed substitution rate.
+
+\$ f(n, k, 2\\mu t, Pr(X \\le k) = \\left( \\sum_{i=0}^{\\lfloor k \\rfloor} \\binom{n}{i} {2\\mu t}^i (1 - 2\\mu t)^{n-i}   \\right) - Pr(X \\le k) \$
+
+This results in an upper, middle, and lower estimate of the coalescence time
+\$t\$ of the two sequences (expressed as the number of generations).
+"""
+immutable SpeedDating end
 
 """
 SDResult is a simple datatype to store the results of the coaltime
@@ -105,7 +147,7 @@ end
 end
 
 """
-    coaltime(len::Int, nmut::Int, mu::Float64, ::Type{SpeedDating})
+    coaltime(N::Int, K::Int, µ::Float64, ::Type{SpeedDating})
 
 Compute the coalescence time between two sequences by modelling the process of
 mutation accumulation between two sequences as a bernoulli process.
@@ -113,48 +155,50 @@ mutation accumulation between two sequences as a bernoulli process.
 This method was first described in the paper:
 Ward, B. J., & van Oosterhout, C. (2016). Hybridcheck: Software for the rapid detection, visualization and dating of recombinant regions in genome sequence data. Molecular Ecology Resources, 16(2), 534–539.
 
-len is the length of the two aligned sequences, nmut is the number of mutations
-and mu is the assumed mutation rate.
+`N` is the length of the two aligned sequences, `K` is the number of mutations
+and `µ` is the assumed mutation rate.
 
 # Examples
 ```julia
 coaltime(50, 17, 10e-9, SpeedDating)
 ```
 """
-@inline function coaltime(len::Int, nmut::Int, mu::Float64, ::Type{SpeedDating})
-    @assert len >= nmut >= 0 error("Number of mutations must be less or equal to sequence length, and greater or equal to zero.")
-    div = 2mu
-    ninetyfive = ceil(binomzero(0.05, len, nmut) / div)
-    fifty = ceil(binomzero(0.5, len, nmut) / div)
-    five = ceil(binomzero(0.95, len, nmut) / div)
+@inline function coaltime(N::Int, K::Int, µ::Float64, ::Type{SpeedDating})
+    @assert N >= K >= 0 error("Condition: N >= K >= 0, not met.")
+    div = 2 * µ
+    ninetyfive = ceil(binomzero(0.05, N, K) / div)
+    fifty = ceil(binomzero(0.5, N, K) / div)
+    five = ceil(binomzero(0.95, N, K) / div)
     return SDResult(five, fifty, ninetyfive)
 end
 
 """
-    coaltime(len::Int, nmut::Int, mu::Float64, ::Type{SpeedDating})
+    coaltime(N::Int, p::Int, µ::Float64, ::Type{SpeedDating})
 
 Compute the coalescence time between two sequences by modelling the process of
 mutation accumulation between two sequences as a bernoulli process.
 
 This method was first described in the paper:
-Ward, B. J., & van Oosterhout, C. (2016). Hybridcheck: Software for the rapid detection, visualization and dating of recombinant regions in genome sequence data. Molecular Ecology Resources, 16(2), 534–539.
+Ward, B. J., & van Oosterhout, C. (2016). Hybridcheck: Software for the rapid
+detection, visualization and dating of recombinant regions in genome sequence
+data. Molecular Ecology Resources, 16(2), 534–539.
 
-len is the length of the two aligned sequences, `dist` is the evolutionary distance
-and mu is the assumed mutation rate.
+`N` is the length of the two aligned sequences, `d` is the evolutionary distance
+and `µ` is the assumed mutation rate.
 
 # Examples
 ```julia
 coaltime(50, 17, 10e-9, SpeedDating)
 ```
 """
-@inline function coaltime(len::Int, dist::Float64, mu::Float64, ::Type{SpeedDating})
-    @assert 1 >= dist >= 0 error("Genetic distance `dist` must be a value between 1 and 0.")
-    nmut = convert(Int, ceil(dist * len))
-    return coaltime(len, nmut, mu, SpeedDating)
+@inline function coaltime(N::Int, d::Float64, µ::Float64, ::Type{SpeedDating})
+    @assert 1 >= p >= 0 error("Genetic distance `d` must be a value between 1 and 0.")
+    K = convert(Int, ceil(d * N))
+    return coaltime(N, K, µ, SpeedDating)
 end
 
 """
-    coaltime{M<:DatingMethod}(len::Int, nmut::AbstractArray{Int}, mu::Float64, ::Type{M})
+    coaltime{M<:DatingMethod}(N::Int, K::AbstractArray{Int}, µ::Float64, ::Type{M})
 
 Compute the coalescence time between two sequences by modelling the process of
 mutation accumulation between two sequences as a bernoulli process.
@@ -162,24 +206,23 @@ mutation accumulation between two sequences as a bernoulli process.
 This method was first described in the paper:
 Ward, B. J., & van Oosterhout, C. (2016). Hybridcheck: Software for the rapid detection, visualization and dating of recombinant regions in genome sequence data. Molecular Ecology Resources, 16(2), 534–539.
 
-In this specific method, `len` is the length of the aligned sequences,
-`nmut` is an array of many mutation counts, `mu` is the assumed mutation rate.
+In this specific method, `N` is the length of the aligned sequences,
+`K` is an array of many mutation counts, `µ` is the assumed mutation rate.
 
 # Examples
 ```julia
 coaltime(50, [17, 20, 10, 7], 10e-9, SpeedDating)
 ```
 """
-@inline function coaltime{M<:DatingMethod,N<:Real}(len::Int,
-                                           nmut::AbstractArray{N},
-                                           mu::Float64,
+@inline function coaltime{M<:DatingMethod,N<:Real}(N::Int,
+                                           K::AbstractArray{N},
+                                           µ::Float64,
                                            ::Type{M})
-    Ts = similar(nmut, restype(M))
-    @inbounds for i in eachindex(nmut)
-        Ts[i] = coaltime(len, nmut[i], mu, M)
+    Ts = similar(K, restype(M))
+    @inbounds for i in eachindex(K)
+        Ts[i] = coaltime(N, K[i], µ, M)
     end
     return Ts
 end
-
 
 end
