@@ -152,10 +152,16 @@ end
     for i in 1:10
         size = rand(10:100)
         mutations = rand(1:(size - 1))
+        multimutations = [rand(1:(size - 1)) for _ in 1:13]
         rate = rand(10e-9:10e-10:10e-6)
         expected = coaltime(size, mutations, rate, SimpleEstimate)
         estimated = coaltime(size, mutations, rate, SpeedDating)
+        multiexpected = coaltime(size, multimutations, rate, SimpleEstimate)
+        multiestimated = coaltime(size, multimutations, rate, SpeedDating)
+
         @test expected in estimated
+        @test all([multiexpected[i] in multiestimated[i] for i in eachindex(multiexpected)])
+
     end
 end
 
