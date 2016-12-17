@@ -62,7 +62,7 @@ coaltime(50, 17, 10e-9, SimpleEstimate)
 end
 
 """
-    coaltime(N::Int, K::Int, µ::Float64, ::Type{SimpleEstimate})
+    coaltime(N::Int, d::Float64, µ::Float64, ::Type{SimpleEstimate})
 
 Compute the coalescence time between two sequences by the `SimpleEstimate`
 method.
@@ -75,7 +75,7 @@ and `µ` is the assumed mutation rate.
 coaltime(50, 0.12, 10e-9, SimpleEstimate)
 ```
 """
-@inline function coaltime(N::Int, d::Int, µ::Float64, ::Type{SimpleEstimate})
+@inline function coaltime(N::Int, d::Float64, µ::Float64, ::Type{SimpleEstimate})
     @assert N >= K >= 0 error("Genetic distance `d` must be a value between 1 and 0.")
     return d / (2 * µ)
 end
@@ -173,7 +173,7 @@ coaltime(50, 17, 10e-9, SpeedDating)
 end
 
 """
-    coaltime(N::Int, p::Int, µ::Float64, ::Type{SpeedDating})
+    coaltime(N::Int, p::Float64, µ::Float64, ::Type{SpeedDating})
 
 Compute the coalescence time between two sequences by modelling the process of
 mutation accumulation between two sequences as a bernoulli process.
@@ -198,7 +198,7 @@ coaltime(50, 17, 10e-9, SpeedDating)
 end
 
 """
-    coaltime{M<:DatingMethod}(N::Int, K::AbstractArray{Int}, µ::Float64, ::Type{M})
+    coaltime{M<:DatingMethod,R<:Real}(N::Int, arr::AbstractArray{R}, µ::Float64, ::Type{M})
 
 Compute the coalescence time between two sequences by modelling the process of
 mutation accumulation between two sequences as a bernoulli process.
@@ -207,20 +207,22 @@ This method was first described in the paper:
 Ward, B. J., & van Oosterhout, C. (2016). Hybridcheck: Software for the rapid detection, visualization and dating of recombinant regions in genome sequence data. Molecular Ecology Resources, 16(2), 534–539.
 
 In this specific method, `N` is the length of the aligned sequences,
-`K` is an array of many mutation counts, `µ` is the assumed mutation rate.
+`arr` is an array of either mutation counts (Integers) or genetic distances
+(Floats), `µ` is the assumed mutation rate.
 
 # Examples
 ```julia
 coaltime(50, [17, 20, 10, 7], 10e-9, SpeedDating)
+coaltime(50, [0.01, 0.09, 0.12, 0.20], 10e-9, SpeedDating)
 ```
 """
-@inline function coaltime{M<:DatingMethod,N<:Real}(N::Int,
-                                           K::AbstractArray{N},
+@inline function coaltime{M<:DatingMethod,R<:Real}(N::Int,
+                                           arr::AbstractArray{R},
                                            µ::Float64,
                                            ::Type{M})
-    Ts = similar(K, restype(M))
-    @inbounds for i in eachindex(K)
-        Ts[i] = coaltime(N, K[i], µ, M)
+    Ts = similar(arr, restype(M))
+    @inbounds for i in eachindex(arr)
+        Ts[i] = coaltime(N, arr[i], µ, M)
     end
     return Ts
 end
