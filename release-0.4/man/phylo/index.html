@@ -1,0 +1,396 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0"> 
+    <meta name="author" content="The BioJulia Organisation"> 
+    <link rel="canonical" href="https://biojulia.github.io/Bio.jl/man/phylo/"> 
+    <link rel="shortcut icon" href="../../img/favicon.ico">
+
+    <title>Phylogenetic Trees - Bio.jl</title>
+
+    <link href="../../css/bootstrap-custom.min.css" rel="stylesheet">
+    <link href="//maxcdn.bootstrapcdn.com/font-awesome/4.4.0/css/font-awesome.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="//cdn.jsdelivr.net/font-hack/2.018/css/hack.min.css">
+    <link href='//fonts.googleapis.com/css?family=PT+Sans:400,400italic,700,700italic&subset=latin-ext,latin' rel='stylesheet' type='text/css'>
+    <link href='//fonts.googleapis.com/css?family=Open+Sans:300italic,400italic,700italic,400,300,600,700&subset=latin-ext,latin' rel='stylesheet' type='text/css'>
+    <link href="../../css/base.css" rel="stylesheet">
+    <link href="../../css/biojulia.css" rel="stylesheet">
+    <link rel="stylesheet" href="../../css/highlight.css">
+    <link rel="stylesheet" href="../../css/friendly.css" type="text/css">
+    <link href="../../assets/Documenter.css" rel="stylesheet">
+
+    <!-- HTML5 shim and Respond.js IE8 support of HTML5 elements and media queries -->
+    <!--[if lt IE 9]>
+            <script src="https://oss.maxcdn.com/libs/html5shiv/3.7.0/html5shiv.js"></script>
+            <script src="https://oss.maxcdn.com/libs/respond.js/1.3.0/respond.min.js"></script>
+        <![endif]-->
+
+    <script src="https://ajax.googleapis.com/ajax/libs/webfont/1.5.18/webfont.js"></script>
+    <script>
+    WebFont.load({
+        google: {
+            families: ['Open Sans', 'PT Sans']
+        }
+    });
+    </script>
+
+    
+</head>
+
+<body>
+
+    <div class="navbar navbar-default navbar-fixed-top" role="navigation">
+    <div class="container">
+
+        <!-- Collapsed navigation -->
+        <div class="navbar-header">
+            
+            <!-- Expander button -->
+            <button type="button" class="navbar-toggle" data-toggle="collapse" data-target=".navbar-collapse">
+                <span class="sr-only">Toggle navigation</span>
+                <span class="icon-bar"></span>
+                <span class="icon-bar"></span>
+                <span class="icon-bar"></span>
+            </button>
+            
+
+            <!-- Main title -->
+            <a class="navbar-brand" href="../..">Bio.jl</a>
+        </div>
+
+        <!-- Expanded navigation -->
+        <div class="navbar-collapse collapse">
+            
+                <!-- Main navigation -->
+                <ul class="nav navbar-nav">
+                
+                
+                    <li >
+                        <a href="../..">Home</a>
+                    </li>
+                
+                
+                
+                    <li class="dropdown active">
+                        <a href="#" class="dropdown-toggle" data-toggle="dropdown">Manual <b class="caret"></b></a>
+                        <ul class="dropdown-menu">
+                        
+                            
+<li >
+    <a href="../install/">Installation</a>
+</li>
+
+                        
+                            
+<li >
+    <a href="../reading/">IO API</a>
+</li>
+
+                        
+                            
+<li >
+    <a href="../seq/">Biological Sequences</a>
+</li>
+
+                        
+                            
+<li >
+    <a href="../alignments/">Alignments</a>
+</li>
+
+                        
+                            
+<li >
+    <a href="../intervals/">Intervals</a>
+</li>
+
+                        
+                            
+<li >
+    <a href="../var/">Biological Variation</a>
+</li>
+
+                        
+                            
+<li class="active">
+    <a href="./">Phylogenetic Trees</a>
+</li>
+
+                        
+                            
+<li >
+    <a href="../structure/">Structure</a>
+</li>
+
+                        
+                            
+<li >
+    <a href="../util/">Util</a>
+</li>
+
+                        
+                            
+<li >
+    <a href="../tools/">Tools</a>
+</li>
+
+                        
+                        </ul>
+                    </li>
+                
+                
+                
+                    <li class="dropdown">
+                        <a href="#" class="dropdown-toggle" data-toggle="dropdown">Reference <b class="caret"></b></a>
+                        <ul class="dropdown-menu">
+                        
+                            
+<li >
+    <a href="../../lib/seq/">Seq</a>
+</li>
+
+                        
+                        </ul>
+                    </li>
+                
+                
+                
+                    <li >
+                        <a href="../contributing/">Contributing</a>
+                    </li>
+                
+                
+                </ul>
+            
+
+            <ul class="nav navbar-nav navbar-right">
+                <li>
+                    <a href="#" data-toggle="modal" data-target="#mkdocs_search_modal">
+                        <i class="fa fa-search"></i> Search
+                    </a>
+                </li>
+                
+                    <li >
+                        <a rel="next" href="../var/">
+                            <i class="fa fa-arrow-left"></i> Previous
+                        </a>
+                    </li>
+                    <li >
+                        <a rel="prev" href="../structure/">
+                            Next <i class="fa fa-arrow-right"></i>
+                        </a>
+                    </li>
+                
+                
+                    <li>
+                        <a href="https://github.com/BioJulia/Bio.jl">
+                            
+                                <i class="fa fa-github"></i>
+                            
+                            GitHub
+                        </a>
+                    </li>
+                
+            </ul>
+        </div>
+    </div>
+</div>
+
+    <div class="container">
+        
+        <div class="col-md-3"><div class="bs-sidebar hidden-print affix well" role="complementary">
+    <ul class="nav bs-sidenav">
+    
+        <li class="first-level active"><a href="#biophylo-phylogenetic-trees-and-networks">Bio.Phylo: Phylogenetic trees and networks</a></li>
+        
+            <li class="second-level"><a href="#phylogenies">Phylogenies</a></li>
+            
+                <li class="third-level"><a href="#constructors">Constructors</a></li>
+            
+                <li class="third-level"><a href="#roots">Roots</a></li>
+            
+        
+            <li class="second-level"><a href="#divergence-time-estimation">Divergence time estimation</a></li>
+            
+                <li class="third-level"><a href="#dating-methods">Dating methods</a></li>
+            
+        
+    
+    </ul>
+</div></div>
+        <div class="col-md-9" role="main">
+
+<p><a id='Bio.Phylo:-Phylogenetic-trees-and-networks-1'></a></p>
+<h1 id="biophylo-phylogenetic-trees-and-networks">Bio.Phylo: Phylogenetic trees and networks</h1>
+<p>The <code>Bio.Phylo</code> module is for data types and methods for handling phylogenetic trees and networks.</p>
+<p><a id='Phylogenies-1'></a></p>
+<h2 id="phylogenies">Phylogenies</h2>
+<p><a id='Bio.Phylo.Phylogeny' href='#Bio.Phylo.Phylogeny'>#</a>
+<strong><code>Bio.Phylo.Phylogeny</code></strong> &mdash; <em>Type</em>.</p>
+<p>Phylogeny represents a phylogenetic tree.</p>
+<p>The type is parametric with two parameters <code>C</code> and <code>B</code>.</p>
+<p>This is because it is common to want to annotate tips, clades, and branches in a phylogeny with data to create a richer model of evolution of do other things like dictate aesthetic values when plotting.</p>
+<p>Type parameter <code>C</code> dictates what datatype can be stored in the phylogeny to annotate clades and tips. Type parameter <code>B</code> dictates what datatype can be stored in the phylogeny to annotate branches. Think <code>C</code> for clades and <code>B</code> for branches.</p>
+<p><a target='_blank' href='https://github.com/BioJulia/Bio.jl/tree/159b3d92dd6ac2001a5831f5cb0758a89ecb533c/src/phylo/phylogeny.jl#L23-L35' class='documenter-source'>source</a><br></p>
+<p><a id='Constructors-1'></a></p>
+<h3 id="constructors">Constructors</h3>
+<p>You can create a very simple unresolved phylogeny (a star phylogeny) by providing the tips as a vector of strings or a vector of symbols.</p>
+<div class="codehilite"><pre><span></span><span class="n">tips</span> <span class="o">=</span> <span class="p">[:</span><span class="n">A</span><span class="p">,</span> <span class="p">:</span><span class="n">B</span><span class="p">,</span> <span class="p">:</span><span class="n">C</span><span class="p">]</span>
+<span class="n">tree</span> <span class="o">=</span> <span class="n">Phylogeny</span><span class="p">(</span><span class="n">tips</span><span class="p">)</span>
+</pre></div>
+
+
+<div class="codehilite"><pre><span></span>Bio.Phylo.Phylogeny{Float64,Bio.Phylo.BasicBranch}({5, 3} directed graph,Bio.Indexers.Indexer{Int64}(Dict(:C=&gt;3,:B=&gt;2,:A=&gt;1,:Root=&gt;4),Symbol[:A,:B,:C,:Root]),Float64[],Dict{Pair{Int64,Int64},Bio.Phylo.BasicBranch}(),3,false,true)
+</pre></div>
+
+
+<div class="codehilite"><pre><span></span><span class="n">tips</span> <span class="o">=</span> <span class="p">[</span><span class="s">&quot;A&quot;</span><span class="p">,</span> <span class="s">&quot;B&quot;</span><span class="p">,</span> <span class="s">&quot;C&quot;</span><span class="p">]</span>
+<span class="n">tree</span> <span class="o">=</span> <span class="n">Phylogeny</span><span class="p">(</span><span class="n">tips</span><span class="p">)</span>
+</pre></div>
+
+
+<div class="codehilite"><pre><span></span>Bio.Phylo.Phylogeny{Float64,Bio.Phylo.BasicBranch}({5, 3} directed graph,Bio.Indexers.Indexer{Int64}(Dict(:C=&gt;3,:B=&gt;2,:A=&gt;1,:Root=&gt;4),Symbol[:A,:B,:C,:Root]),Float64[],Dict{Pair{Int64,Int64},Bio.Phylo.BasicBranch}(),3,false,true)
+</pre></div>
+
+
+<p><a id='Roots-1'></a></p>
+<h3 id="roots">Roots</h3>
+<p>You can test whether such a phylogeny is rooted, is re-rootable, and get the root vertex of a phylogeny. You can also test if a vertex of a phylogeny is a root.</p>
+<p><a id='Bio.Phylo.isrooted' href='#Bio.Phylo.isrooted'>#</a>
+<strong><code>Bio.Phylo.isrooted</code></strong> &mdash; <em>Function</em>.</p>
+<div class="codehilite"><pre><span></span>isrooted(x::Phylogeny)
+</pre></div>
+
+
+<p>Test whether a Phylogeny is rooted.</p>
+<p><strong>Examples</strong></p>
+<div class="codehilite"><pre><span></span><span class="n">isrooted</span><span class="p">(</span><span class="n">my_phylogeny</span><span class="p">)</span>
+</pre></div>
+
+
+<p><a target='_blank' href='https://github.com/BioJulia/Bio.jl/tree/159b3d92dd6ac2001a5831f5cb0758a89ecb533c/src/phylo/phylogeny.jl#L159-L168' class='documenter-source'>source</a><br></p>
+<p><a id='Bio.Phylo.isrerootable' href='#Bio.Phylo.isrerootable'>#</a>
+<strong><code>Bio.Phylo.isrerootable</code></strong> &mdash; <em>Function</em>.</p>
+<div class="codehilite"><pre><span></span>isrerootable(x::Phylogeny)
+</pre></div>
+
+
+<p>Test whether a Phylogeny is re-rootable.</p>
+<p><strong>Examples</strong></p>
+<div class="codehilite"><pre><span></span><span class="n">isrerootable</span><span class="p">(</span><span class="n">my_phylogeny</span><span class="p">)</span>
+</pre></div>
+
+
+<p><a target='_blank' href='https://github.com/BioJulia/Bio.jl/tree/159b3d92dd6ac2001a5831f5cb0758a89ecb533c/src/phylo/phylogeny.jl#L173-L182' class='documenter-source'>source</a><br></p>
+<p><a id='Bio.Phylo.root' href='#Bio.Phylo.root'>#</a>
+<strong><code>Bio.Phylo.root</code></strong> &mdash; <em>Function</em>.</p>
+<p>Get the vertex of the tree which represents the root of the tree.</p>
+<p><a target='_blank' href='https://github.com/BioJulia/Bio.jl/tree/159b3d92dd6ac2001a5831f5cb0758a89ecb533c/src/phylo/phylogeny.jl#L187' class='documenter-source'>source</a><br></p>
+<div class="codehilite"><pre><span></span><span class="n">isrooted</span><span class="p">(</span><span class="n">tree</span><span class="p">)</span>
+</pre></div>
+
+
+<div class="codehilite"><pre><span></span>false
+</pre></div>
+
+
+<div class="codehilite"><pre><span></span><span class="n">isrerootable</span><span class="p">(</span><span class="n">tree</span><span class="p">)</span>
+</pre></div>
+
+
+<div class="codehilite"><pre><span></span>true
+</pre></div>
+
+
+<div class="codehilite"><pre><span></span><span class="n">root</span><span class="p">(</span><span class="n">tree</span><span class="p">)</span>
+</pre></div>
+
+
+<div class="codehilite"><pre><span></span>4
+</pre></div>
+
+
+<p><a id='Divergence-time-estimation-1'></a></p>
+<h2 id="divergence-time-estimation">Divergence time estimation</h2>
+<p><code>Phylo</code> has a submodule called <code>Dating</code> which contains methods for divergence time estimation between sequences.</p>
+<p><a id='Dating-methods-1'></a></p>
+<h3 id="dating-methods">Dating methods</h3>
+<p>Currently <code>Phylo.Dating</code> has two types which are used as function arguments to dictate how to compute coalescence times. They all inherit from the abstract data type <code>DatingMethod</code>.</p>
+<p><a id='Bio.Phylo.Dating.SimpleEstimate' href='#Bio.Phylo.Dating.SimpleEstimate'>#</a>
+<strong><code>Bio.Phylo.Dating.SimpleEstimate</code></strong> &mdash; <em>Type</em>.</p>
+<p>A very simple expected divergence time estimate. Assumes a strict molecult clock and that the divergence time is equal to</p>
+<p>$ t = d / (2\mu) $</p>
+<p>Where $d$ is the evolutionary distance computed for two aligned sequences, and $\mu$ is the substitution rate.</p>
+<p><a target='_blank' href='https://github.com/BioJulia/Bio.jl/tree/159b3d92dd6ac2001a5831f5cb0758a89ecb533c/src/phylo/dating.jl#L34-L42' class='documenter-source'>source</a><br></p>
+<p><a id='Bio.Phylo.Dating.SpeedDating' href='#Bio.Phylo.Dating.SpeedDating'>#</a>
+<strong><code>Bio.Phylo.Dating.SpeedDating</code></strong> &mdash; <em>Type</em>.</p>
+<p><code>SpeedDate</code> is the name given to a method of estimating a divergence time between two DNA sequence regions that was first implemented in the R package HybridCheck in order to date regions of introgression in large sequence contigs.</p>
+<p>The coalescence time is estimated using the number of mutations that have occurred between two aligned sequences. The calculation uses a strict molecular clock which assumes a constant substitution rate, both through time and across taxa. Modelling the mutation accumulation process as a Bernoulli trial, the probability of observing  $k$  or fewer mutations between two sequences of length $n$ can be given as:</p>
+<p>$ Pr(X \le k) = \sum_{i=0}^{\lfloor k \rfloor} \binom{n}{i} p^i (1 - p)^{n-i} $</p>
+<p>Where $p$ is the probability of observing a single mutation between the two aligned sequences. The value of $p$ depends on two key factors: the substitution rate and the coalescence time. If you assume a molecular clock, whereby two DNA sequences are both accumulating mutations at a rate $\mu$ for $t$ generations, then you may define $p = 2\mu t$.</p>
+<p>Using these assumptions, the SpeedDate method finds the root of the following formula for $Pr(X \le k) = 0.05$, $0.5$, and $0.95$, and then divides the three answers by twice the assumed substitution rate.</p>
+<p>$ f(n, k, 2\mu t, Pr(X \le k) = \left( \sum_{i=0}^{\lfloor k \rfloor} \binom{n}{i} {2\mu t}^i (1 - 2\mu t)^{n-i}   \right) - Pr(X \le k) $</p>
+<p>This results in an upper, middle, and lower estimate of the coalescence time $t$ of the two sequences (expressed as the number of generations).</p>
+<p><a target='_blank' href='https://github.com/BioJulia/Bio.jl/tree/159b3d92dd6ac2001a5831f5cb0758a89ecb533c/src/phylo/dating.jl#L84-L116' class='documenter-source'>source</a><br></p></div>
+        
+    </div>
+
+    <footer class="col-md-12 text-center">
+        <hr>
+        <p>
+        <small>Copyright (c) 2016 The BioJulia Organisation<br></small>
+        
+        <small>Documentation built with <a href="http://www.mkdocs.org/">MkDocs</a>.</p></small>
+    </footer>
+
+    <script src="../../js/jquery-1.10.2.min.js"></script>
+    <script src="../../js/bootstrap-3.0.3.min.js"></script>
+    <script src="../../js/highlight.pack.js"></script>
+    <script>hljs.initHighlightingOnLoad();</script>
+    <script>
+    var base_url = '../..';
+    </script>
+    <script data-main="../../mkdocs/js/search.js" src="../../mkdocs/js/require.js"></script>
+    <script src="../../js/base.js"></script>
+    <script>
+        ((window.gitter = {}).chat = {}).options = {
+            room: 'BioJulia/Bio.jl'
+        };
+    </script>
+    <script src="https://sidecar.gitter.im/dist/sidecar.v1.js" async defer></script>
+    <script src="https://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS_HTML"></script>
+    <script src="../../assets/mathjaxhelper.js"></script>
+
+    <div class="modal" id="mkdocs_search_modal" tabindex="-1" role="dialog" aria-labelledby="Search Modal" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <button type="button" class="close" data-dismiss="modal">
+                        <span aria-hidden="true">&times;</span>
+                        <span class="sr-only">Close</span>
+                    </button>
+                    <h4 class="modal-title" id="exampleModalLabel">Search</h4>
+                </div>
+                <div class="modal-body">
+                    <p>
+                        From here you can search these documents. Enter your search terms below.
+                    </p>
+                    <form role="form">
+                        <div class="form-group">
+                            <input type="text" class="form-control" placeholder="Search..." id="mkdocs-search-query">
+                        </div>
+                    </form>
+                    <div id="mkdocs-search-results"></div>
+                </div>
+                <div class="modal-footer">
+                </div>
+            </div>
+        </div>
+    </div>
+
+    </body>
+
+</html>
