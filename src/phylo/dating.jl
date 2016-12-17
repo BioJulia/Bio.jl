@@ -40,7 +40,8 @@ Assumes a strict molecult clock and that the divergence time is equal to
 Where \$d\$ is the evolutionary distance computed for two aligned sequences,
 and \$\\mu\$ is the substitution rate.
 """
-immutable SimpleEstimate end
+immutable SimpleEstimate <: DatingMethod end
+restype(::Type{SimpleEstimate}) = Int
 
 """
     coaltime(N::Int, K::Int, µ::Float64, ::Type{SimpleEstimate})
@@ -113,7 +114,8 @@ three answers by twice the assumed substitution rate.
 This results in an upper, middle, and lower estimate of the coalescence time
 \$t\$ of the two sequences (expressed as the number of generations).
 """
-immutable SpeedDating end
+immutable SpeedDating <: DatingMethod end
+restype(::Type{SpeedDating}) = SDResult
 
 """
 SDResult is a simple datatype to store the results of the coaltime
