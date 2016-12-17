@@ -1,5 +1,14 @@
 <p align="center"><img src="https://raw.githubusercontent.com/BioJulia/assets/master/branding/bio/BioJl_Design_1.png" width="50%" alt="Bio.jl" /></p>
 
+_The Bioinformatics and Computation Biology infrastructure for the julia language._
+
+| **Chat** | **Documentation** | **Build Status** |
+|:--------:|:-----------------:|:----------------:|
+| [![][gitter-img]][gitter-url] | [![][docs-stable-img]][docs-stable-url] [![][docs-latest-img]][docs-latest-url] | [![][travis-img]][travis-url] [![][appveyor-img]][appveyor-url] [![][codecov-img]][codecov-url] [![][coveralls-img]][coveralls-url] |
+
+
+## Description
+
 As the flagship package of the BioJulia organisation, Bio.jl provides core
 modules containing efficient data types and algorithms, that most
 bioinformaticians and biologists would want to use for analyses or for building
@@ -34,26 +43,7 @@ developed as submodules:
     * Phylogenetic trees
 
 
-## Badges
-
-Get Help: [![Join the chat at Gitter!](https://badges.gitter.im/BioJulia.png)](https://gitter.im/BioJulia/Bio.jl)
-[![reference docs](https://img.shields.io/badge/docs-reference-blue.svg)](http://biojulia.github.io/Bio.jl/latest/)
-
-Activity: [![Planned Work](https://badge.waffle.io/BioJulia/Bio.jl.svg?label=stage:%20planning&title=Planned)](http://waffle.io/BioJulia/Bio.jl)
-[![Work In Progress](https://badge.waffle.io/BioJulia/Bio.jl.svg?label=stage:%20WIP&title=In%20Progress)](http://waffle.io/BioJulia/Bio.jl)
-
-Code Quality: [![Build Status](https://travis-ci.org/BioJulia/Bio.jl.svg?branch=master)](https://travis-ci.org/BioJulia/Bio.jl)
-[![Build status](https://ci.appveyor.com/api/projects/status/nq4w264346py8esp/branch/master?svg=true)](https://ci.appveyor.com/project/Ward9250/bio-jl/branch/master)
-[![Coverage Status](https://img.shields.io/coveralls/BioJulia/Bio.jl.svg)](https://coveralls.io/r/BioJulia/Bio.jl)
-[![codecov.io](http://codecov.io/github/BioJulia/Bio.jl/coverage.svg?branch=master)](http://codecov.io/github/BioJulia/Bio.jl?branch=master)
-
-
-## Documentation
-
-Read the reference manual here: <http://biojulia.github.io/Bio.jl/latest>.
-
-
-## Install
+## Installation
 
 Bio.jl is a registered package in the official package management system and can
 be installed with a command:
@@ -66,14 +56,48 @@ If you are interested in the cutting edge of the development, please check out
 the master branch to try new features before release.
 
 
-## Contributing
+## Documentation
+
+- [**STABLE**][docs-stable-url] &mdash; **Documentation of the most recent stable release of Bio.jl.**
+- [**LATEST**][docs-latest-url] &mdash; *Documentation of the in-development state of Bio.jl.*
+
+
+## Contributing and Questions
 
 We appreciate contributions from users including reporting bugs, fixing issues,
-improving performance and adding new features. If you have a question about
-contributing, our [Gitter chat room](https://gitter.im/BioJulia/Bio.jl) would be
-the best place to communicate with other users and developers.
+improving performance and adding new features.
+
+If you have a question about
+contributing or using this package, our [Gitter chat room][gitter-url] would be
+the best starting place to communicate with other users and developers.
+You may also finding visiting the [Bio category of the julia discourse site](https://discourse.julialang.org/c/domain/bio)
+helpful.
 
 
 ## Roadmap
 
 Our roadmap is on the wiki: <https://github.com/BioJulia/Bio.jl/wiki/roadmap>.
+
+[docs-latest-img]: https://img.shields.io/badge/docs-latest-blue.svg
+[docs-latest-url]: https://biojulia.github.io/Bio.jl/latest
+[docs-stable-img]: https://img.shields.io/badge/docs-stable-blue.svg
+[docs-stable-url]: https://biojulia.github.io/Bio.jl/stable
+
+[pkg-0.4-img]: http://pkg.julialang.org/badges/Bio_0.4.svg
+[pkg-0.4-url]: http://pkg.julialang.org/?pkg=Bio
+[pkg-0.5-img]: http://pkg.julialang.org/badges/Bio_0.5.svg
+[pkg-0.5-url]: http://pkg.julialang.org/?pkg=Bio
+[pkg-0.6-img]: http://pkg.julialang.org/badges/Bio_0.6.svg
+[pkg-0.6-url]: http://pkg.julialang.org/?pkg=Bio
+
+[codecov-img]: https://codecov.io/gh/BioJulia/Bio.jl/branch/master/graph/badge.svg
+[codecov-url]: https://codecov.io/gh/BioJulia/Bio.jl
+[coveralls-img]:  https://img.shields.io/coveralls/BioJulia/Bio.jl.svg
+[coveralls-url]: https://coveralls.io/r/BioJulia/Bio.jl
+[travis-img]: https://travis-ci.org/BioJulia/Bio.jl.svg?branch=master
+[travis-url]: https://travis-ci.org/BioJulia/Bio.jl
+[appveyor-img]: https://ci.appveyor.com/api/projects/status/nq4w264346py8esp/branch/master?svg=true
+[appveyor-url]: https://ci.appveyor.com/project/Ward9250/bio-jl/branch/master
+
+[gitter-img]: https://badges.gitter.im/BioJulia.png
+[gitter-url]: https://gitter.im/BioJulia/Bio.jl
