@@ -18,7 +18,7 @@ The types of mutations that can currently be counted are `DifferentMutation`,s
 `TransitionMutation`s, and `TransversionMutation`s.
 
 ```@docs
-DifferentMutation
+AnyMutation
 TransitionMutation
 TransversionMutation
 ```
@@ -52,7 +52,7 @@ count_mutations(TransitionMutation, TransversionMutation, [rna"AUCGAUCG", rna"AC
 ### The `is_mutation` method
 
 ```@docs
-is_mutation{M<:MutationType,N<:Nucleotide}(::Type{M}, seqs::Matrix{N})
+is_mutation
 ```
 
 ## Computing evolutionary and genetic distances
