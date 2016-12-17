@@ -41,7 +41,7 @@ Where \$d\$ is the evolutionary distance computed for two aligned sequences,
 and \$\\mu\$ is the substitution rate.
 """
 immutable SimpleEstimate <: DatingMethod end
-restype(::Type{SimpleEstimate}) = Int
+restype(::Type{SimpleEstimate}) = Float64
 
 """
     coaltime(N::Int, K::Int, µ::Float64, ::Type{SimpleEstimate})
