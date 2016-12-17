@@ -38,7 +38,7 @@ Assumes a strict molecult clock and that the divergence time is equal to
 \$ t = d / (2\\mu) \$
 
 Where \$d\$ is the evolutionary distance computed for two aligned sequences,
-and $\\mu$ is the substitution rate.
+and \$\\mu\$ is the substitution rate.
 """
 immutable SimpleEstimate end
 
