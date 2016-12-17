@@ -88,6 +88,7 @@ function Base.copy(attrs::GFF3Attributes)
             push!(attrs2.data, StringField[])
         end
         push!(attrs2.data[i], copy(value))
+        attrs2.used[i] += 1
     end
     return attrs2
 end
