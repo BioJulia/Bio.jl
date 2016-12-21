@@ -1194,20 +1194,20 @@ function unsafe_addatomtomodel!(mod::Model,
     elseif isa(ch[res_id], Residue)
         # Residue exists in the chain and the residue names match
         # Add to that Residue
-        if resname(ch[res_id]) == atom_rec.res_name
+        if fullresname(ch[res_id]) == atom_rec.res_name
             res = ch[res_id]
         # Residue exists in the chain but the residue names do not match
         # Create a DisorderedResidue
         else
             ch[res_id] = DisorderedResidue(Dict(
-                resname(ch[res_id]) => ch[res_id],
+                fullresname(ch[res_id]) => ch[res_id],
                 atom_rec.res_name => Residue(
                     atom_rec.res_name,
                     atom_rec.res_number,
                     atom_rec.ins_code,
                     atom_rec.het_atom,
                     ch)
-            ), resname(ch[res_id]))
+            ), fullresname(ch[res_id]))
             res = disorderedres(ch[res_id], atom_rec.res_name)
         end
     else
@@ -1271,6 +1271,8 @@ function unsafe_addatomtomodel!(mod::Model,
     end
 end
 
+fullresname(res::Residue) = res.name
+
 
 # Internal function to form ordered sub-element lists after parsing
 function fixlists!(struc::ProteinStructure)
@@ -1294,7 +1296,8 @@ function fixlists!(res::Residue)
     append!(res.atom_list, map(fullatomname, sort(collect(values(atoms(res))))))
 end
 
-fullatomname(at::AbstractAtom) = atomname(at, strip=false)
+fullatomname(at::Atom) = at.name
+fullatomname(dis_at::DisorderedAtom) = defaultatom(dis_at).name
 
 
 """
