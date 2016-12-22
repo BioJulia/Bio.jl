@@ -670,7 +670,7 @@ sequences](@ref) section.
 ### Defining a new alphabet
 
 The alphabet type parameter `A` of `BioSequence{A}` enables a user to extend
-functionality of `BioSequence` with mimimum effort. As an example, definition of
+functionality of `BioSequence` with minimum effort. As an example, definition of
 a new alphabet type representing a sequence of boolean values is shown below:
 ```julia
 using Bio.Seq
@@ -730,7 +730,7 @@ neighbors
 ## Reference sequences
 
 `DNASequence` (alias of `BioSequence{DNAAlphabet{4}}`) is a flexible data
-sturcture but always consumes 4 bits per base, which will waste a large part of
+structure but always consumes 4 bits per base, which will waste a large part of
 the memory space when storing reference genome sequences.  In such a case,
 `ReferenceSequence` is helpful because it compresses positions of 'N' symbols so
 that long DNA sequences are stored with almost 2 bits per base. An important
@@ -1070,7 +1070,7 @@ metadata
 
 ## Sequence demultiplexing
 
-Multiplex sequencing is a technology to sequence mutliple samples at the same
+Multiplex sequencing is a technology to sequence multiple samples at the same
 time on a high-throughput DNA sequencer. Samples are distinguished by the short
 prefix of a DNA sequence called DNA barcode. The `Bio.Seq` offers the
 `Demultiplexer` type and the `demultiplex` function to identify the DNA barcode
