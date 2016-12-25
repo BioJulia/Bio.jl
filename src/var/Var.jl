@@ -24,11 +24,12 @@ export
     Conserved,
     Mutated,
     Transition,
-    Transversion
+    Transversion,
 
 
 
     # Identifying and counting mutations
+    count_sites_naieve
     #count_mutations,
     #is_mutation,
     #flagmutations,

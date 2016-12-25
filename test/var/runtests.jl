@@ -5,73 +5,6 @@ using Base.Test
 using Bio: Seq, Var
 using TestFunctions
 
-
-# A naieve site counting function which will also compute the answers to make
-# sure the clever bit parallel methods are giving the right answers...
-
-@inline function iscase{T<:Nucleotide}(::Type{Ambiguous}, a::T)
-    return isambiguous(a)
-end
-
-@inline function iscase{T<:Nucleotide}(::Type{Ambiguous}, a::T, b::T)
-    return isambiguous(a) | isambiguous(b)
-end
-
-@inline function iscase{T<:Nucleotide}(::Type{Indel}, a::T)
-    return reinterpret(UInt8, a) == 0
-end
-
-@inline function iscase{T<:Nucleotide}(::Type{Indel}, a::T, b::T)
-    return (reinterpret(UInt8, a) == 0) | (reinterpret(UInt8, b) == 0)
-end
-
-@inline function iscase{T<:Nucleotide}(::Type{Certain}, a::T, b::T)
-    return !iscase(Ambiguous, a, b) & !iscase(Indel, a, b)
-end
-
-@inline function iscase{T<:Nucleotide}(::Type{Match}, a::T, b::T)
-    return a == b
-end
-
-@inline function iscase{T<:Nucleotide}(::Type{Mismatch}, a::T, b::T)
-    return a != b
-end
-
-@inline function iscase{T<:Nucleotide}(::Type{Mutated}, a::T, b::T)
-    return iscase(Certain, a, b) & (a != b)
-end
-
-@inline function iscase{T<:Nucleotide}(::Type{Conserved}, a::T, b::T)
-    return iscase(Certain, a, b) & (a == b)
-end
-
-@inline function iscase{T<:Nucleotide}(::Type{Transition}, a::T, b::T)
-    return iscase(Mutated, a, b) & ((ispurine(a) & ispurine(b)) | (ispyrimidine(a) & ispyrimidine(b)))
-end
-
-@inline function iscase{T<:Nucleotide}(::Type{Transversion}, a::T, b::T)
-    return iscase(Mutated, a, b) & ((ispurine(a) & ispyrimidine(b)) | (ispyrimidine(a) & ispurine(b)))
-end
-
-function count_sites_naieve{T<:SiteCase,A<:Alphabet}(::Type{T}, a::BioSequence{A}, b::BioSequence{A})
-    if length(a) != length(b)
-        error("`a` and `b` must be the same length.")
-    end
-    n = 0
-    @inbounds for (i, j) in zip(a, b)
-        n += ifelse(iscase(T, i, j), 1, 0)
-    end
-    return n
-end
-
-function count_sites_naieve{T<:Union{Indel,Ambiguous}}(::Type{T}, a::BioSequence{DNAAlphabet{4}})
-    n = 0
-    @inbounds for i in a
-        n += ifelse(iscase(T, i), 1, 0)
-    end
-    return n
-end
-
 function generate_testcase{A<:Union{DNAAlphabet{4}, DNAAlphabet{2}, RNAAlphabet{4}, RNAAlphabet{2}}}(::Type{A}, len::Int)
     a = [convert(Char, i)  for i in alphabet(A)]
     probs = Vector{Float64}(length(a))
@@ -79,7 +12,7 @@ function generate_testcase{A<:Union{DNAAlphabet{4}, DNAAlphabet{2}, RNAAlphabet{
     return BioSequence{A}(random_seq(len, a, probs))
 end
 
-function generate_masking_tester{A<:Union{DNAAlphabet{4}, DNAAlphabet{2}, RNAAlphabet{4}, RNAAlphabet{2}}}(::Type{A})
+function generate_possibilities_tester{A<:Union{DNAAlphabet{4}, DNAAlphabet{2}, RNAAlphabet{4}, RNAAlphabet{2}}}(::Type{A})
     symbols = alphabet(A)
     arra = Vector{eltype(A)}()
     arrb = Vector{eltype(A)}()
@@ -94,6 +27,17 @@ end
 @testset "Var" begin
 
     @testset "Site counting and identification" begin
+
+        @testset "Naieve methods" begin
+            for alph in (DNAAlphabet{4}, DNAAlphabet{2}, RNAAlphabet{4}, RNAAlphabet{2})
+                seqA, seqB = generate_possibilities_tester(alph)
+
+            end
+
+
+        end
+
+#=
 
         @testset "Internals" begin
 
@@ -471,7 +415,7 @@ end
         end
 
 
-#=
+
         @testset "Counting sites" begin
             @testset "One sequence" begin
                 testseq1 = dna"AAAAATTTTTRM--YGGGGG"

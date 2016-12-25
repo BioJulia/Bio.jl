@@ -7,20 +7,25 @@ DocTestSetup = quote
 end
 ```
 
-## Identifying and counting mutations
+## Identifying and counting sequence sites
 
-You can count the numbers of different types of mutations in a pairwise manner
-for a set of nucleotide sequences.
+You can identify and count the number of various types of site in a nucleotide
+sequence, or pair/set of aligned nucleotide sequences.
 
-### Different types of mutation
+### Different types of site
 
-The types of mutations that can currently be counted are `DifferentMutation`,s
-`TransitionMutation`s, and `TransversionMutation`s.
+The types of mutations that can currently be counted are summarized below:
 
 ```@docs
-AnyMutation
-TransitionMutation
-TransversionMutation
+Indel
+Ambiguous
+Certain
+Match
+Mismatch
+Conserved
+Mutated
+Transition
+Transversion
 ```
 
 ### The `count_mutations` method
@@ -49,11 +54,7 @@ count_mutations(TransversionMutation, [rna"AUCGAUCG", rna"ACCGAUCG"])
 count_mutations(TransitionMutation, TransversionMutation, [rna"AUCGAUCG", rna"ACCGAUCG"])
 ```
 
-### The `is_mutation` method
 
-```@docs
-is_mutation
-```
 
 ## Computing evolutionary and genetic distances
 
