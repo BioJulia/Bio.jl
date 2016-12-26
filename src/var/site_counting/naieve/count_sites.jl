@@ -7,14 +7,14 @@
 # Methods for a single sequence.
 
 """
-    count_sites_naieve{T<:SiteCase,A<:FourBitAlphs}(::Type{T}, a::BioSequence{A})
+    count_sites_naieve{T<:SiteCase{false},A<:FourBitAlphs}(::Type{T}, a::BioSequence{A})
 
 
 """
-function count_sites_naieve{T<:SiteCase,A<:FourBitAlphs}(::Type{T}, a::BioSequence{A})
+function count_sites_naieve{T<:SiteCase{false},A<:FourBitAlphs}(::Type{T}, a::BioSequence{A})
     k = 0
     @inbounds for idx in eachindex(a)
-        k += ifelse(issite(T, a[idx]), 1, 0)
+        k += issite(T, a[idx])
     end
     return k
 end
@@ -23,23 +23,23 @@ count_sites_naieve{T<:Union{Indel,Ambiguous},A<:TwoBitAlphs}(::Type{T}, a::BioSe
 count_sites_naieve{A<:TwoBitAlphs}(::Type{Certain}, a::BioSequence{A}) = length(a)
 
 """
-    count_sites_naieve{T<:SiteCase,A<:Alphabet,B<:Alphabet}(::Type{T}, a::BioSequence{A}, b::BioSequence{B})
+    count_sites_naieve{T<:SiteCase{false},A<:DNA_OR_RNA}(::Type{T}, a::BioSequence{A}, b::BioSequence{A})
 
 This method counts the number of sites between a pair of aligned sequences of
 type `T`.
 """
-function count_sites_naieve{T<:SiteCase,A<:Alphabet,B<:Alphabet}(::Type{T},
-                                                                 a::BioSequence{A},
-                                                                 b::BioSequence{B})
+function count_sites_naieve{T<:SiteCase{false},A<:Alphabet,B<:Alphabet}(::Type{T},
+                                                       a::BioSequence{A},
+                                                       b::BioSequence{B})
     k = 0
     @inbounds for idx in 1:min(endof(a), endof(b))
-        k += ifelse(issite(T, a[idx], b[idx]), 1, 0)
+        k += issite(T, a[idx], b[idx])
     end
     return k
 end
 
 """
-    count_sites_naieve{T<:PairSiteCase,A<:Alphabet,B<:Alphabet}(::Type{T}, a::BioSequence{A}, b::BioSequence{B})
+    count_sites_naieve{T<:SiteCase{true},A<:DNA_OR_RNA}(::Type{T}, a::BioSequence{A}, b::BioSequence{A})
 
 This method counts the number of sites between a pair of aligned sequences of
 SiteCase `T`.
@@ -52,9 +52,9 @@ This second count is important for some downstream purposes, for example
 evolutionary/genetic distance computations in which pairwise deletion of
 ambiguous sites is nessecery.
 """
-function count_sites_naieve{T<:PairSiteCase,A<:Alphabet,B<:Alphabet}(::Type{T},
-                                                                     a::BioSequence{A},
-                                                                     b::BioSequence{B})
+function count_sites_naieve{T<:SiteCase{true},A<:Alphabet,B<:Alphabet}(::Type{T},
+                                                             a::BioSequence{A},
+                                                             b::BioSequence{B})
     k = 0
     j = 0
     @inbounds for idx in 1:min(endof(a), endof(b))

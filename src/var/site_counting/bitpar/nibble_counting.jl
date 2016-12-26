@@ -22,7 +22,7 @@
 ## Indel sites
 
 """
-    count_sites4(::Type{Indel}, x::UInt64)
+    count_nibbles(::Type{Indel}, x::UInt64)
 
 Count the number of gap sites in a chunk of BioSequence{(DNA|RNA)Nucleotide{4}}
 data.
@@ -33,12 +33,12 @@ functions.
 
 **This is an internal method and should not be exported.**
 """
-@inline function count_sites4(::Type{Indel}, x::UInt64)
+@inline function count_nibbles(::Type{Indel}, x::UInt64)
     return count_zero_nibbles(x)
 end
 
 """
-    count_sites4(::Type{Indel}, a::UInt64, b::UInt64)
+    count_nibbles(::Type{Indel}, a::UInt64, b::UInt64)
 
 Count the number of sites in two aligned chunks of
 BioSequence{(DNA|RNA)Nucleotide{4}} data which contain gap characters.
@@ -49,16 +49,16 @@ functions.
 
 **This is an internal method and should not be exported.**
 """
-@inline function count_sites4(::Type{Indel}, a::UInt64, b::UInt64)
+@inline function count_nibbles(::Type{Indel}, a::UInt64, b::UInt64)
     # Count the gaps in a, count the gaps in b, subtract the number of shared gaps.
-    return count_sites4(Indel, a) + count_sites4(Indel, b) - count_sites4(Indel, a | b)
+    return count_nibbles(Indel, a) + count_nibbles(Indel, b) - count_nibbles(Indel, a | b)
 end
 
 
 ## Certain sites
 
 """
-    count_sites4(::Type{Certain}, x::UInt64)
+    count_nibbles(::Type{Certain}, x::UInt64)
 
 An _internal_ function _not for export_, which will count the number of sites in
 a chunk of BioSequence{(DNA|RNA)Nucleotide{4}} data that would be ignored in
@@ -67,12 +67,12 @@ Such sites are defined as those with gaps or ambiguous characters in them.
 
 **This is an internal method and should not be exported.**
 """
-@inline function count_sites4(::Type{Certain}, x::UInt64)
+@inline function count_nibbles(::Type{Certain}, x::UInt64)
     return count_one_nibbles(create_nibble_mask(Certain, x))
 end
 
 """
-    count_sites4(::Type{Certain}, x::UInt64)
+    count_nibbles(::Type{Certain}, x::UInt64)
 
 An _internal_ function _not for export_, which will count the number of sites in
 aligned chunks of BioSequence{(DNA|RNA)Nucleotide{4}} data that would be ignored
@@ -81,7 +81,7 @@ Such sites are defined as those with gaps or ambiguous characters in them.
 
 **This is an internal method and should not be exported.**
 """
-@inline function count_sites4(::Type{Certain}, a::UInt64, b::UInt64)
+@inline function count_nibbles(::Type{Certain}, a::UInt64, b::UInt64)
     return count_one_nibbles(create_nibble_mask(Certain, a, b))
 end
 
@@ -89,7 +89,7 @@ end
 ## Ambiguous sites
 
 """
-    count_sites4(::Type{Ambiguous}, x::UInt64)
+    count_nibbles(::Type{Ambiguous}, x::UInt64)
 
 Count the number of
 ambiguous sites in a chunk of BioSequence{(DNA|RNA)Nucleotide{4}} data.
@@ -99,12 +99,12 @@ pairwise deletion.
 
 **This is an internal method and should not be exported.**
 """
-@inline function count_sites4(::Type{Ambiguous}, x::UInt64)
+@inline function count_nibbles(::Type{Ambiguous}, x::UInt64)
     return 16 - count_zero_nibbles(enumerate_nibbles(x) & 0xEEEEEEEEEEEEEEEE)
 end
 
 """
-    count_sites4(::Type{Ambiguous}, a::UInt64, b::UInt64)
+    count_nibbles(::Type{Ambiguous}, a::UInt64, b::UInt64)
 
 Count the number of sites in two aligned chunks of
 BioSequence{(DNA|RNA)Nucleotide{4}} data which contain ambiguous characters.
@@ -114,7 +114,7 @@ pairwise deletion.
 
 **This is an internal method and should not be exported.**
 """
-@inline function count_sites4(::Type{Ambiguous}, a::UInt64, b::UInt64)
+@inline function count_nibbles(::Type{Ambiguous}, a::UInt64, b::UInt64)
     return 16 - count_zero_nibbles((enumerate_nibbles(a) | enumerate_nibbles(b)) & 0xEEEEEEEEEEEEEEEE)
 end
 
@@ -122,7 +122,7 @@ end
 ## Matching sites
 
 """
-    count_sites4(::Type{Match}, a::UInt64, b::UInt64)
+    count_nibbles(::Type{Match}, a::UInt64, b::UInt64)
 
 An _internal_ function, _not for export_, which will count the number of
 matching symbols between two chunks of BioSequence{(DNA|RNA)Nucleotide{4}} data.
@@ -133,7 +133,7 @@ account by calling functions.
 
 **This is an internal method and should not be exported.**
 """
-@inline function count_sites4(::Type{Match}, a::UInt64, b::UInt64)
+@inline function count_nibbles(::Type{Match}, a::UInt64, b::UInt64)
     return count_zero_nibbles(a $ b)
 end
 
@@ -141,7 +141,7 @@ end
 ## Mismatching sites
 
 """
-    count_sites4(::Type{Mismatch}, a::UInt64, b::UInt64)
+    count_nibbles(::Type{Mismatch}, a::UInt64, b::UInt64)
 
 An _internal_ function, _not for export_, which will count the number of
 matching symbols between two chunks of BioSequence{(DNA|RNA)Nucleotide{4}} data.
@@ -152,15 +152,15 @@ account by calling functions.
 
 **This is an internal method and should not be exported.**
 """
-@inline function count_sites4(::Type{Mismatch}, a::UInt64, b::UInt64)
-    return 16 - count_sites4(Match, a, b)
+@inline function count_nibbles(::Type{Mismatch}, a::UInt64, b::UInt64)
+    return 16 - count_nibbles(Match, a, b)
 end
 
 
 ## Conserved sites
 
 """
-    count_sites4(::Type{Conserved}, a::UInt64, b::UInt64)
+    count_nibbles(::Type{Conserved}, a::UInt64, b::UInt64)
 
 An _internal_ function, _not for export_, which will count the number of
 Conserved between two chunks of BioSequence{(DNA|RNA)Nucleotide{4}} data.
@@ -170,7 +170,7 @@ Conserved. For example, 'A' and 'R', or 'A' and '-' will not be counted.
 
 **This is an internal method and should not be exported.**
 """
-@inline function count_sites4(::Type{Conserved}, a::UInt64, b::UInt64)
+@inline function count_nibbles(::Type{Conserved}, a::UInt64, b::UInt64)
     return count_one_nibbles(create_nibble_mask(Conserved, a, b))
 end
 
@@ -178,7 +178,7 @@ end
 ## Mutated sites
 
 """
-    count_sites4(::Type{Mutated}, a::UInt64, b::UInt64)
+    count_nibbles(::Type{Mutated}, a::UInt64, b::UInt64)
 
 An _internal_ function, _not for export_, which will count the number of
 any mutations between two chunks of BioSequence{(DNA|RNA)Nucleotide{4}} data.
@@ -188,12 +188,12 @@ mutated. For example, 'A' and 'R', or 'A' and '-' will not be counted.
 
 **This is an internal method and should not be exported.**
 """
-@inline function count_sites4(::Type{Mutated}, a::UInt64, b::UInt64)
+@inline function count_nibbles(::Type{Mutated}, a::UInt64, b::UInt64)
     return count_one_nibbles(create_nibble_mask(Mutated, a, b))
 end
 
 """
-    count_sites4(::Type{Transition}, a::UInt64, b::UInt64)
+    count_nibbles(::Type{Transition}, a::UInt64, b::UInt64)
 
 An _internal_ function, _not for export_, which will count the number of
 transition mutations between two chunks of BioSequence{(DNA|RNA)Nucleotide{4}}
@@ -204,7 +204,7 @@ mutated. For example, 'A' and 'R', or 'A' and '-' will not be counted.
 
 **This is an internal method and should not be exported.**
 """
-@inline function count_sites4(::Type{Transition}, a::UInt64, b::UInt64)
+@inline function count_nibbles(::Type{Transition}, a::UInt64, b::UInt64)
     pairdelmask = create_nibble_mask(Certain, a, b)
     a &= pairdelmask
     b &= pairdelmask
@@ -214,7 +214,7 @@ mutated. For example, 'A' and 'R', or 'A' and '-' will not be counted.
 end
 
 """
-    count_sites4(::Type{Transversion}, a::UInt64, b::UInt64)
+    count_nibbles(::Type{Transversion}, a::UInt64, b::UInt64)
 
 An _internal_ function, _not for export_, which will count the number of
 transversion mutations between two chunks of BioSequence{(DNA|RNA)Nucleotide{4}}
@@ -225,7 +225,7 @@ mutated. For example, 'A' and 'R', or 'A' and '-' will not be counted.
 
 **This is an internal method and should not be exported.**
 """
-@inline function count_sites4(::Type{Transversion}, a::UInt64, b::UInt64)
+@inline function count_nibbles(::Type{Transversion}, a::UInt64, b::UInt64)
     pairdelmask = create_nibble_mask(Certain, a, b)
     a &= pairdelmask
     b &= pairdelmask

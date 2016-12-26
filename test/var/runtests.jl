@@ -23,255 +23,316 @@ function generate_possibilities_tester{A<:Union{DNAAlphabet{4}, DNAAlphabet{2}, 
     return BioSequence{A}(arra), BioSequence{A}(arrb)
 end
 
+for alph in (:DNAAlphabet, :RNAAlphabet)
+    @eval function generate_possibilities_tester(::Type{$alph{2}}, ::Type{$alph{4}})
+        arra = Vector{eltype($alph)}()
+        arrb = Vector{eltype($alph)}()
+        for i in alphabet($alph{2}), j in alphabet($alph{4})
+            push!(arra, i)
+            push!(arrb, j)
+        end
+        return BioSequence{$alph{2}}(arra), BioSequence{$alph{4}}(arrb)
+    end
+end
+
 
 @testset "Var" begin
 
     @testset "Site counting and identification" begin
 
         @testset "Naieve methods" begin
+
+            # Test when sequences are of the same bitencoding.
             for alph in (DNAAlphabet{4}, DNAAlphabet{2}, RNAAlphabet{4}, RNAAlphabet{2})
+                istwobit = Seq.bitsof(alph) == 2
                 seqA, seqB = generate_possibilities_tester(alph)
 
+                # Answers to these tests were worked out manually to verify count_sites_naieve was working.
+                # seqA and seqB contain all possible observations of sites.
+
+                @test count_sites_naieve(Certain, seqA, seqB) == count_sites_naieve(Certain, seqB, seqA) == 10
+                @test count_sites_naieve(Indel, seqA, seqB) == count_sites_naieve(Indel, seqB, seqA) == ifelse(istwobit, 0, 16)
+                @test count_sites_naieve(Ambiguous, seqA, seqB) == count_sites_naieve(Ambiguous, seqB, seqA) == ifelse(istwobit, 0, 121)
+                @test count_sites_naieve(Match, seqA, seqB) == count_sites_naieve(Match, seqB, seqA) == length(alphabet(alph))
+                @test count_sites_naieve(Mismatch, seqA, seqB) == count_sites_naieve(Mismatch, seqB, seqA) == (length(seqA) - length(alphabet(alph)))
+
+                @test count_sites_naieve(Mutated, seqA, seqB) == count_sites_naieve(Mutated, seqB, seqA) == (6, ifelse(istwobit, 0, 126))
+                @test count_sites_naieve(Conserved, seqA, seqB) == count_sites_naieve(Conserved, seqB, seqA) == (4, ifelse(istwobit, 0, 126))
+                @test count_sites_naieve(Transition, seqA, seqB) == count_sites_naieve(Transition, seqB, seqA) == (2, ifelse(istwobit, 0, 126))
+                @test count_sites_naieve(Transversion, seqA, seqB) == count_sites_naieve(Transversion, seqB, seqA) == (4, ifelse(istwobit, 0, 126))
             end
 
+            # Test for when sequences are of different bitencodings.
+            for alphs in [(DNAAlphabet{2}, DNAAlphabet{4}),
+                          (RNAAlphabet{2}, RNAAlphabet{4})]
+                seqA, seqB = generate_possibilities_tester(alphs...)
+                @test count_sites_naieve(Certain, seqA, seqB) == count_sites_naieve(Certain, seqB, seqA) == 16
+                @test count_sites_naieve(Indel, seqA, seqB) == count_sites_naieve(Indel, seqB, seqA) == 4
+                @test count_sites_naieve(Ambiguous, seqA, seqB) == count_sites_naieve(Ambiguous, seqB, seqA) == 44
+                @test count_sites_naieve(Match, seqA, seqB) == count_sites_naieve(Match, seqB, seqA) == 4
+                @test count_sites_naieve(Mismatch, seqA, seqB) == count_sites_naieve(Mismatch, seqB, seqA) == 60
 
+                @test count_sites_naieve(Mutated, seqA, seqB) == count_sites_naieve(Mutated, seqB, seqA) == (12, 48)
+                @test count_sites_naieve(Conserved, seqA, seqB) == count_sites_naieve(Conserved, seqB, seqA) == (4, 48)
+                @test count_sites_naieve(Transition, seqA, seqB) == count_sites_naieve(Transition, seqB, seqA) == (4, 48)
+                @test count_sites_naieve(Transversion, seqA, seqB) == count_sites_naieve(Transversion, seqB, seqA) == (8, 48)
+            end
         end
+
+        @testset "Optimised methods" begin
+
+            @testset "Internals" begin
+
+                @testset "Nibble operations" begin
+
+                    @testset "Counting zeros" begin
+                        @test Var.count_zero_nibbles(0x0000000000000000) == 16
+                        @test Var.count_zero_nibbles(0xF004020000403010) == 10
+                        @test Var.count_zero_nibbles(0xFFFFFFFFFFFFFFFF) == 0
+                    end
+
+                    @testset "Counting ones" begin
+                        @test Var.count_one_nibbles(0x01011C1111F11011) == 1
+                        @test Var.count_one_nibbles(0xF4011C1111F1101F) == 3
+                        @test Var.count_one_nibbles(0x0000000000000000) == 0
+                        @test Var.count_one_nibbles(0xFFFFFFFFFFFFFFFF) == 16
+                    end
+
+                    @testset "Enumerating nibbles" begin
+                        @test Var.enumerate_nibbles(0x0000000000000000) == 0x0000000000000000
+                        @test Var.enumerate_nibbles(0xF004020000403010) == 0x4001010000102010
+                    end
+
+                    @testset "Masking nibbles" begin
+
+                        tester_a, tester_b = generate_possibilities_tester(DNAAlphabet{4})
+                        a = tester_a.data
+                        b = tester_b.data
+
+                        gap_a_answers = [0xFFFFFFFFFFFFFFFF, 0x0000000000000000, 0xFFFFFFFF00000000]
+                        gap_b_answers = [0x000000000000000F, 0x0000000000000000, 0xFFFFFFFF00000000]
+                        gap_ab_answers = [0xFFFFFFFFFFFFFFFF, 0x0000000000000000, 0xFFFFFFFF00000000]
+
+                        for i in 1:endof(a)
+                            if i > 1
+                                ans = i == endof(a) ? 3 : 2
+                            else
+                                ans = 1
+                            end
+                            @test Var.create_nibble_mask(Indel, a[i]) == gap_a_answers[ans]
+                            @test Var.create_nibble_mask(Indel, b[i]) == gap_b_answers[ans]
+                            @test Var.create_nibble_mask(Indel, a[i], b[i]) == gap_ab_answers[ans]
+                        end
+
+                        ambig_a_answers = [0x0000000000000000, 0x0000000000000000,
+                                           0xFFF0000000000000, 0x000000FFFFFFFFFF,
+                                           0xFFFFFFFFFF000000, 0xFFFFFFFFFFFFFFFF,
+                                           0xFFFF00000000FFFF, 0xFFFFFFFFFFFFFFFF,
+                                           0x00000000FFFFFFFF]
+
+                        ambig_b_answers = [0xFFFFFFF0FFF0F000, 0x0FFFFFFF0FFF0F00,
+                                           0xF0FFFFFFFF0FFF0F, 0xF0FFF0FFFFFFF0FF,
+                                           0xFFFFFF0FFFFFFFFF, 0xFFF0FFFFFFFF0FFF,
+                                           0xFFFFFFFFFFF0FFFF, 0xFFFFFFFFFFFFFFFF,
+                                           0x00000000FFFFFFFF]
+
+                        for i in 1:endof(a)
+                            @test Var.create_nibble_mask(Ambiguous, a[i]) == ambig_a_answers[i]
+                            @test Var.create_nibble_mask(Ambiguous, b[i]) == ambig_b_answers[i]
+                            @test Var.create_nibble_mask(Ambiguous, a[i], b[i]) == (ambig_a_answers[i] | ambig_b_answers[i])
+                        end
+
+                        certain_a_answers = [0x0000000000000000, 0xFFFFFFFFFFFFFFFF,
+                                             0x000FFFFFFFFFFFFF, 0xFFFFFF0000000000,
+                                             0x0000000000FFFFFF, 0x0000000000000000,
+                                             0x0000FFFFFFFF0000, 0x0000000000000000,
+                                             0x0000000000000000]
+
+                        certain_b_answers = [0x0000000F000F0FF0, 0xF0000000F000F0FF,
+                                             0x0F00000000F000F0, 0x0F000F0000000F00,
+                                             0x000000F000000000, 0x000F00000000F000,
+                                             0x00000000000F0000, 0x0000000000000000,
+                                             0x0000000000000000]
+
+                        for i in 1:endof(a)
+                            @test Var.create_nibble_mask(Certain, a[i]) == certain_a_answers[i]
+                            @test Var.create_nibble_mask(Certain, b[i]) == certain_b_answers[i]
+                            @test Var.create_nibble_mask(Certain, a[i], b[i]) == (certain_a_answers[i] & certain_b_answers[i])
+                        end
+
+                        match_answers = [0x000000000000000F, 0xF00000000000000F,
+                                         0x00F0000000000000, 0x00000F0000000000,
+                                         0x000000000F000000, 0x0000F000000000F0,
+                                         0x000F0000000F0000, 0x0F0000F00000F000,
+                                         0xFFFFFFFFF0F00F00]
+
+                        for i in 1:endof(a)
+                            @test Var.create_nibble_mask(Match, a[i], b[i]) == match_answers[i]
+                        end
+
+                        mismatch_answers = [~i for i in match_answers]
+
+                        for i in 1:endof(a)
+                            @test Var.create_nibble_mask(Mismatch, a[i], b[i]) == mismatch_answers[i]
+                        end
+
+                        conserved_answers = [0x0000000000000000, 0xF00000000000000F,
+                                             0x0000000000000000, 0x00000F0000000000,
+                                             0x0000000000000000, 0x0000000000000000,
+                                             0x00000000000F0000, 0x0000000000000000,
+                                             0x0000000000000000]
+
+                        for i in 1:endof(a)
+                            @test Var.create_nibble_mask(Conserved, a[i], b[i]) == conserved_answers[i]
+                        end
+
+                        mutated_answers = [0x0000000000000000, 0x00000000F000F0F0,
+                                           0x0000000000F000F0, 0x0F00000000000000,
+                                           0x0000000000000000, 0x0000000000000000,
+                                           0x0000000000000000, 0x0000000000000000,
+                                           0x0000000000000000]
+
+                        for i in 1:endof(a)
+                            @test Var.create_nibble_mask(Mutated, a[i], b[i]) == mutated_answers[i]
+                        end
+
+                        transition_answers = [0x0000000000000000, 0x000000000000F000,
+                                              0x0000000000F00000, 0x0000000000000000,
+                                              0x0000000000000000, 0x0000000000000000,
+                                              0x0000000000000000, 0x0000000000000000,
+                                              0x0000000000000000]
+
+                        for i in 1:endof(a)
+                            @test Var.create_nibble_mask(Transition, a[i], b[i]) == transition_answers[i]
+                        end
+
+                        transversion_answers = [0x0000000000000000, 0x00000000F00000F0,
+                                                0x00000000000000F0, 0x0F00000000000000,
+                                                0x0000000000000000, 0x0000000000000000,
+                                                0x0000000000000000, 0x0000000000000000,
+                                                0x0000000000000000]
+
+                        for i in 1:endof(a)
+                            @test Var.create_nibble_mask(Transversion, a[i], b[i]) == transversion_answers[i]
+                        end
+                    end # End "Optimised Methods/Internals/Nibble Operations/Masking nibbles"
+
+                    @testset "Nibble counting" begin
+
+                        # Count the nibbles for sites which are <: SiteCase{false}
+                        @testset "Indels" begin
+                            for i in 1:500
+                                n = rand(1:16)
+                                s = generate_testcase(DNAAlphabet{4}, n)
+                                expected = count_sites_naieve(Indel, s)
+                                off = 16 - n
+                                @test (Var.count_nibbles(Indel, s.data[1]) - off) == expected
+                            end
+                        end
+
+                        @testset "Ambiguities" begin
+                            for i in 1:500
+                                n = rand(1:16)
+                                s = generate_testcase(DNAAlphabet{4}, n)
+                                s2 = generate_testcase(DNAAlphabet{4}, n)
+                                expected_a = count_sites_naieve(Ambiguous, s)
+                                expected_b = count_sites_naieve(Ambiguous, s, s2)
+                                @test Var.count_nibbles(Ambiguous, s.data[1]) == expected_a
+                                @test Var.count_nibbles(Ambiguous, s.data[1], s2.data[1]) == expected_b
+                            end
+                        end
+
+                        @testset "Certain" begin
+                            for i in 1:500
+                                n = rand(1:16)
+                                s = generate_testcase(DNAAlphabet{4}, n)
+                                s2 = generate_testcase(DNAAlphabet{4}, n)
+                                expected = count_sites_naieve(Certain, s, s2)
+                                @test Var.count_nibbles(Certain, s.data[1], s2.data[1]) == expected
+                            end
+                        end
+
+                        @testset "Match" begin
+                            for i in 1:500
+                                n = rand(1:16)
+                                s = generate_testcase(DNAAlphabet{4}, n)
+                                s2 = generate_testcase(DNAAlphabet{4}, n)
+                                expected = count_sites_naieve(Match, s, s2)
+                                out = 16 - n
+                                @test (Var.count_nibbles(Match, s.data[1], s2.data[1]) - out) == expected
+                            end
+                        end
+
+                        @testset "Mismatch" begin
+                            for i in 1:500
+                                n = rand(1:16)
+                                s = generate_testcase(DNAAlphabet{4}, n)
+                                s2 = generate_testcase(DNAAlphabet{4}, n)
+                                expected = count_sites_naieve(Mismatch, s, s2)
+                                @test Var.count_nibbles(Mismatch, s.data[1], s2.data[1]) == expected
+                            end
+                        end
+
+                        # Count the nibbles for sites which are <: SiteCase{true}
+                        #=
+                        @testset "Conserved" begin
+                            for i in 1:500
+                                n = rand(1:16)
+                                s = generate_testcase(DNAAlphabet{4}, n)
+                                s2 = generate_testcase(DNAAlphabet{4}, n)
+                                expected = count_sites_naieve(Conserved, s, s2)
+                                @test Var.count_nibbles(Conserved, s.data[1], s2.data[1]) == expected
+                            end
+                        end
+
+                        @testset "Mutated" begin
+                            for i in 1:500
+                                n = rand(1:16)
+                                s = generate_testcase(DNAAlphabet{4}, n)
+                                s2 = generate_testcase(DNAAlphabet{4}, n)
+                                expected = count_sites_naieve(Mutated, s, s2)
+                                @test Var.count_nibbles(Mutated, s.data[1], s2.data[1]) == expected
+                            end
+                        end
+
+                        @testset "Transition" begin
+                            for i in 1:500
+                                n = rand(1:16)
+                                s = generate_testcase(DNAAlphabet{4}, n)
+                                s2 = generate_testcase(DNAAlphabet{4}, n)
+                                expected = count_sites_naieve(Transition, s, s2)
+                                @test Var.count_nibbles(Transition, s.data[1], s2.data[1]) == expected
+                            end
+                        end
+
+                        @testset "Transversion" begin
+                            for i in 1:500
+                                n = rand(1:16)
+                                s = generate_testcase(DNAAlphabet{4}, n)
+                                s2 = generate_testcase(DNAAlphabet{4}, n)
+                                expected = count_sites_naieve(Transversion, s, s2)
+                                @test Var.count_nibbles(Transversion, s.data[1], s2.data[1]) == expected
+                            end
+                        end
+                        =#
+
+                    end # End "Optimised Methods/Internals/Nibble Operations/Counting nibbles"
+
+                end # End "Optimised Methods/Internals/Nibble Operations"
+
+            end # End "Optimised Methods/Internals"
+
+        end # End "Opimised Methods"
+
+    end # End "Site counting and identification"
+
+end # End "Var" testset.
+
+end # End "module TestVar"
 
 #=
 
-        @testset "Internals" begin
 
-            @testset "Nibble operations" begin
-
-                @testset "Counting zeros" begin
-                    @test Var.count_zero_nibbles(0x0000000000000000) == 16
-                    @test Var.count_zero_nibbles(0xF004020000403010) == 10
-                    @test Var.count_zero_nibbles(0xFFFFFFFFFFFFFFFF) == 0
-                end
-
-                @testset "Counting ones" begin
-                    @test Var.count_one_nibbles(0x01011C1111F11011) == 1
-                    @test Var.count_one_nibbles(0xF4011C1111F1101F) == 3
-                    @test Var.count_one_nibbles(0x0000000000000000) == 0
-                    @test Var.count_one_nibbles(0xFFFFFFFFFFFFFFFF) == 16
-                end
-
-                @testset "Enumerating nibbles" begin
-                    @test Var.enumerate_nibbles(0x0000000000000000) == 0x0000000000000000
-                    @test Var.enumerate_nibbles(0xF004020000403010) == 0x4001010000102010
-                end
-
-
-                @testset "Masking nibbles" begin
-
-                    tester_a, tester_b = generate_masking_tester(DNAAlphabet{4})
-                    a = tester_a.data
-                    b = tester_b.data
-
-                    gap_a_answers = [0xFFFFFFFFFFFFFFFF, 0x0000000000000000, 0xFFFFFFFF00000000]
-                    gap_b_answers = [0x000000000000000F, 0x0000000000000000, 0xFFFFFFFF00000000]
-                    gap_ab_answers = [0xFFFFFFFFFFFFFFFF, 0x0000000000000000, 0xFFFFFFFF00000000]
-
-                    for i in 1:endof(a)
-                        if i > 1
-                            ans = i == endof(a) ? 3 : 2
-                        else
-                            ans = 1
-                        end
-                        @test Var.create_nibble_mask(Indel, a[i]) == gap_a_answers[ans]
-                        @test Var.create_nibble_mask(Indel, b[i]) == gap_b_answers[ans]
-                        @test Var.create_nibble_mask(Indel, a[i], b[i]) == gap_ab_answers[ans]
-                    end
-
-                    ambig_a_answers = [0x0000000000000000, 0x0000000000000000,
-                                       0xFFF0000000000000, 0x000000FFFFFFFFFF,
-                                       0xFFFFFFFFFF000000, 0xFFFFFFFFFFFFFFFF,
-                                       0xFFFF00000000FFFF, 0xFFFFFFFFFFFFFFFF,
-                                       0x00000000FFFFFFFF]
-
-                    ambig_b_answers = [0xFFFFFFF0FFF0F000, 0x0FFFFFFF0FFF0F00,
-                                       0xF0FFFFFFFF0FFF0F, 0xF0FFF0FFFFFFF0FF,
-                                       0xFFFFFF0FFFFFFFFF, 0xFFF0FFFFFFFF0FFF,
-                                       0xFFFFFFFFFFF0FFFF, 0xFFFFFFFFFFFFFFFF,
-                                       0x00000000FFFFFFFF]
-
-                    for i in 1:endof(a)
-                        @test Var.create_nibble_mask(Ambiguous, a[i]) == ambig_a_answers[i]
-                        @test Var.create_nibble_mask(Ambiguous, b[i]) == ambig_b_answers[i]
-                        @test Var.create_nibble_mask(Ambiguous, a[i], b[i]) == (ambig_a_answers[i] | ambig_b_answers[i])
-                    end
-
-                    certain_a_answers = [0x0000000000000000, 0xFFFFFFFFFFFFFFFF,
-                                         0x000FFFFFFFFFFFFF, 0xFFFFFF0000000000,
-                                         0x0000000000FFFFFF, 0x0000000000000000,
-                                         0x0000FFFFFFFF0000, 0x0000000000000000,
-                                         0x0000000000000000]
-
-                    certain_b_answers = [0x0000000F000F0FF0, 0xF0000000F000F0FF,
-                                         0x0F00000000F000F0, 0x0F000F0000000F00,
-                                         0x000000F000000000, 0x000F00000000F000,
-                                         0x00000000000F0000, 0x0000000000000000,
-                                         0x0000000000000000]
-
-                    for i in 1:endof(a)
-                        @test Var.create_nibble_mask(Certain, a[i]) == certain_a_answers[i]
-                        @test Var.create_nibble_mask(Certain, b[i]) == certain_b_answers[i]
-                        @test Var.create_nibble_mask(Certain, a[i], b[i]) == (certain_a_answers[i] & certain_b_answers[i])
-                    end
-
-                    match_answers = [0x000000000000000F, 0xF00000000000000F,
-                                     0x00F0000000000000, 0x00000F0000000000,
-                                     0x000000000F000000, 0x0000F000000000F0,
-                                     0x000F0000000F0000, 0x0F0000F00000F000,
-                                     0xFFFFFFFFF0F00F00]
-
-                    for i in 1:endof(a)
-                        @test Var.create_nibble_mask(Match, a[i], b[i]) == match_answers[i]
-                    end
-
-                    mismatch_answers = [~i for i in match_answers]
-
-                    for i in 1:endof(a)
-                        @test Var.create_nibble_mask(Mismatch, a[i], b[i]) == mismatch_answers[i]
-                    end
-
-                    conserved_answers = [0x0000000000000000, 0xF00000000000000F,
-                                         0x0000000000000000, 0x00000F0000000000,
-                                         0x0000000000000000, 0x0000000000000000,
-                                         0x00000000000F0000, 0x0000000000000000,
-                                         0x0000000000000000]
-
-                    for i in 1:endof(a)
-                        @test Var.create_nibble_mask(Conserved, a[i], b[i]) == conserved_answers[i]
-                    end
-
-                    mutated_answers = [0x0000000000000000, 0x00000000F000F0F0,
-                                       0x0000000000F000F0, 0x0F00000000000000,
-                                       0x0000000000000000, 0x0000000000000000,
-                                       0x0000000000000000, 0x0000000000000000,
-                                       0x0000000000000000]
-
-                    for i in 1:endof(a)
-                        @test Var.create_nibble_mask(Mutated, a[i], b[i]) == mutated_answers[i]
-                    end
-
-                    transition_answers = [0x0000000000000000, 0x000000000000F000,
-                                          0x0000000000F00000, 0x0000000000000000,
-                                          0x0000000000000000, 0x0000000000000000,
-                                          0x0000000000000000, 0x0000000000000000,
-                                          0x0000000000000000]
-
-                    for i in 1:endof(a)
-                        @test Var.create_nibble_mask(Transition, a[i], b[i]) == transition_answers[i]
-                    end
-
-                    transversion_answers = [0x0000000000000000, 0x00000000F00000F0,
-                                            0x00000000000000F0, 0x0F00000000000000,
-                                            0x0000000000000000, 0x0000000000000000,
-                                            0x0000000000000000, 0x0000000000000000,
-                                            0x0000000000000000]
-
-                    for i in 1:endof(a)
-                        @test Var.create_nibble_mask(Transversion, a[i], b[i]) == transversion_answers[i]
-                    end
-                end
-
-                @testset "Nibble counting" begin
-
-                    @testset "Indels" begin
-                        for i in 1:500
-                            n = rand(1:16)
-                            s = generate_testcase(DNAAlphabet{4}, n)
-                            expected = count_sites_naieve(Indel, s)
-                            off = 16 - n
-                            @test (Var.count_sites4(Indel, s.data[1]) - off) == expected
-                        end
-                    end
-
-                    @testset "Ambiguities" begin
-                        for i in 1:500
-                            n = rand(1:16)
-                            s = generate_testcase(DNAAlphabet{4}, n)
-                            s2 = generate_testcase(DNAAlphabet{4}, n)
-                            expected_a = count_sites_naieve(Ambiguous, s)
-                            expected_b = count_sites_naieve(Ambiguous, s, s2)
-                            @test Var.count_sites4(Ambiguous, s.data[1]) == expected_a
-                            @test Var.count_sites4(Ambiguous, s.data[1], s2.data[1]) == expected_b
-                        end
-                    end
-
-                    @testset "Certain" begin
-                        for i in 1:500
-                            n = rand(1:16)
-                            s = generate_testcase(DNAAlphabet{4}, n)
-                            s2 = generate_testcase(DNAAlphabet{4}, n)
-                            expected = count_sites_naieve(Certain, s, s2)
-                            @test Var.count_sites4(Certain, s.data[1], s2.data[1]) == expected
-                        end
-                    end
-
-                    @testset "Match" begin
-                        for i in 1:500
-                            n = rand(1:16)
-                            s = generate_testcase(DNAAlphabet{4}, n)
-                            s2 = generate_testcase(DNAAlphabet{4}, n)
-                            expected = count_sites_naieve(Match, s, s2)
-                            out = 16 - n
-                            @test (Var.count_sites4(Match, s.data[1], s2.data[1]) - out) == expected
-                        end
-                    end
-
-                    @testset "Mismatch" begin
-                        for i in 1:500
-                            n = rand(1:16)
-                            s = generate_testcase(DNAAlphabet{4}, n)
-                            s2 = generate_testcase(DNAAlphabet{4}, n)
-                            expected = count_sites_naieve(Mismatch, s, s2)
-                            @test Var.count_sites4(Mismatch, s.data[1], s2.data[1]) == expected
-                        end
-                    end
-
-                    @testset "Conserved" begin
-                        for i in 1:500
-                            n = rand(1:16)
-                            s = generate_testcase(DNAAlphabet{4}, n)
-                            s2 = generate_testcase(DNAAlphabet{4}, n)
-                            expected = count_sites_naieve(Conserved, s, s2)
-                            @test Var.count_sites4(Conserved, s.data[1], s2.data[1]) == expected
-                        end
-                    end
-
-                    @testset "Mutated" begin
-                        for i in 1:500
-                            n = rand(1:16)
-                            s = generate_testcase(DNAAlphabet{4}, n)
-                            s2 = generate_testcase(DNAAlphabet{4}, n)
-                            expected = count_sites_naieve(Mutated, s, s2)
-                            @test Var.count_sites4(Mutated, s.data[1], s2.data[1]) == expected
-                        end
-                    end
-
-                    @testset "Transition" begin
-                        for i in 1:500
-                            n = rand(1:16)
-                            s = generate_testcase(DNAAlphabet{4}, n)
-                            s2 = generate_testcase(DNAAlphabet{4}, n)
-                            expected = count_sites_naieve(Transition, s, s2)
-                            @test Var.count_sites4(Transition, s.data[1], s2.data[1]) == expected
-                        end
-                    end
-
-                    @testset "Transversion" begin
-                        for i in 1:500
-                            n = rand(1:16)
-                            s = generate_testcase(DNAAlphabet{4}, n)
-                            s2 = generate_testcase(DNAAlphabet{4}, n)
-                            expected = count_sites_naieve(Transversion, s, s2)
-                            @test Var.count_sites4(Transversion, s.data[1], s2.data[1]) == expected
-                        end
-                    end
-                end
-            end
 
             @testset "ShiftedIntsItr" begin
                 @testset "4 bit biological sequences" begin
@@ -368,17 +429,17 @@ end
                         @test count_sites_naieve(Transversion, seq1, seq2) == 800
                     end
 
-                    @testset "Vefifying count_sites4 methods for multiple integers" begin
+                    @testset "Vefifying count_nibbles methods for multiple integers" begin
 
                         @testset "No shifting" begin
                             # Set cases we've reasoned about to test certain
                             # behaviours and properties.
-                            @test Var.count_sites4(Ambiguous, seq1.data, seq2.data) == 200
-                            @test Var.count_sites4(Certain, seq1.data, seq2.data) == 1600
-                            @test Var.count_sites4(Conserved, seq1.data, seq2.data) == 400
-                            @test Var.count_sites4(Mutated, seq1.data, seq2.data) == 1200
-                            @test Var.count_sites4(Transition, seq1.data, seq2.data) == 400
-                            @test Var.count_sites4(Transversion, seq1.data, seq2.data) == 800
+                            @test Var.count_nibbles(Ambiguous, seq1.data, seq2.data) == 200
+                            @test Var.count_nibbles(Certain, seq1.data, seq2.data) == 1600
+                            @test Var.count_nibbles(Conserved, seq1.data, seq2.data) == 400
+                            @test Var.count_nibbles(Mutated, seq1.data, seq2.data) == 1200
+                            @test Var.count_nibbles(Transition, seq1.data, seq2.data) == 400
+                            @test Var.count_nibbles(Transversion, seq1.data, seq2.data) == 800
                             # Randomly generated testcases.
                             for i in 1:100
                                 n = rand(1:5000)
@@ -394,13 +455,13 @@ end
                                 expected_trs = count_sites_naieve(Transition, s, s2)
                                 expected_trv = count_sites_naieve(Transversion, s, s2)
 
-                                @test Var.count_sites4(Ambiguous, s.data, s2.data) == expected_amb
-                                @test Var.count_sites4(Certain, s.data, s2.data) == expected_ctn
-                                @test Var.count_sites4(Conserved, s.data, s2.data) == expected_cns
-                                @test Var.count_sites4(Mismatch, s.data, s2.data) == expected_mm
-                                @test Var.count_sites4(Mutated, s.data, s2.data) == expected_mut
-                                @test Var.count_sites4(Transition, s.data, s2.data) == expected_trs
-                                @test Var.count_sites4(Transversion, s.data, s2.data) == expected_trv
+                                @test Var.count_nibbles(Ambiguous, s.data, s2.data) == expected_amb
+                                @test Var.count_nibbles(Certain, s.data, s2.data) == expected_ctn
+                                @test Var.count_nibbles(Conserved, s.data, s2.data) == expected_cns
+                                @test Var.count_nibbles(Mismatch, s.data, s2.data) == expected_mm
+                                @test Var.count_nibbles(Mutated, s.data, s2.data) == expected_mut
+                                @test Var.count_nibbles(Transition, s.data, s2.data) == expected_trs
+                                @test Var.count_nibbles(Transversion, s.data, s2.data) == expected_trv
                             end
                         end
 
@@ -438,9 +499,6 @@ end
 
         end
 =#
-    end
-
-
 
 #=
     @testset "Distance Computation" begin
@@ -536,9 +594,3 @@ end
 
     end
     =#
-
-end
-
-
-
-end # module TestVar
