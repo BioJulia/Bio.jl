@@ -194,7 +194,7 @@ coaltime(50, 17, 10e-9, SpeedDating)
 ```
 """
 @inline function coaltime(N::Int, d::Float64, µ::Float64, ::Type{SpeedDating})
-    @assert 1 >= p >= 0 error("Genetic distance `d` must be a value between 1 and 0.")
+    @assert 1 >= d >= 0 error("Genetic distance `d` must be a value between 1 and 0.")
     K = convert(Int, ceil(d * N))
     return coaltime(N, K, µ, SpeedDating)
 end
