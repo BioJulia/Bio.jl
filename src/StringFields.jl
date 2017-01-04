@@ -31,9 +31,13 @@ function StringField(data::Vector{UInt8})
 end
 
 function StringField(data::SubString)
-    stringvec = Vector{UInt8}(data)
-    idx = (1 + data.offset):(data.offset + nextind(data, data.endof) - 1)
+    stringvec = Vector{UInt8}(data.string)
+    idx = 1+data.offset:data.offset+nextind(data, data.endof)-1
     return StringField(stringvec[idx], 1:endof(data))
+end
+
+function StringField(data::String)
+    return StringField(Vector{UInt8}(data), 1:endof(data))
 end
 
 # From base unicode/utf8.jl

@@ -37,9 +37,8 @@ function Base.haskey(attrs::GFF3Attributes, key::StringField)
     return i != 0 && attrs.used[i] > 0
 end
 
-function Base.haskey(attrs::GFF3Attributes, key_::String)
-    key = StringField(key_.data, 1:length(key_.data))
-    return haskey(attrs, key)
+function Base.haskey(attrs::GFF3Attributes, key::String)
+    return haskey(attrs, StringField(key))
 end
 
 function Base.getindex(attrs::GFF3Attributes, key::StringField)
@@ -54,9 +53,8 @@ function Base.getindex(attrs::GFF3Attributes, key::StringField)
     end
 end
 
-function Base.getindex(attrs::GFF3Attributes, key_::String)
-    key = StringField(key_.data, 1:length(key_.data))
-    return getindex(attrs, key)
+function Base.getindex(attrs::GFF3Attributes, key::String)
+    return getindex(attrs, StringField(key))
 end
 
 function pushindex!(attrs::GFF3Attributes, key::StringField,
