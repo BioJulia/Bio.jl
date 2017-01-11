@@ -4,7 +4,7 @@ BufferedStreams 0.2
 Colors
 Distributions
 IndexableBitVectors 0.1.1
-IntervalTrees 0.1
+IntervalTrees 0.1 0.1.1
 Iterators
 Libz 0.2
 LightGraphs
