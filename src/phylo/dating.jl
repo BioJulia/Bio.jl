@@ -77,7 +77,7 @@ coaltime(50, 0.12, 10e-9, SimpleEstimate)
 ```
 """
 @inline function coaltime(N::Int, d::Float64, µ::Float64, ::Type{SimpleEstimate})
-    @assert N >= K >= 0 error("Genetic distance `d` must be a value between 1 and 0.")
+    @assert N >= d >= 0 error("Genetic distance `d` must be a value between 1 and 0.")
     return d / (2 * µ)
 end
 
