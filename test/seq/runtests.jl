@@ -308,10 +308,10 @@ end
 
     @testset "isambiguous" begin
         for nt in alphabet(DNANucleotide)
-            @test isambiguous(nt) == (nt ∉ (DNA_A, DNA_C, DNA_G, DNA_T))
+            @test isambiguous(nt) == (nt ∉ (DNA_A, DNA_C, DNA_G, DNA_T, DNA_Gap))
         end
         for nt in alphabet(RNANucleotide)
-            @test isambiguous(nt) == (nt ∉ (RNA_A, RNA_C, RNA_G, RNA_U))
+            @test isambiguous(nt) == (nt ∉ (RNA_A, RNA_C, RNA_G, RNA_U, RNA_Gap))
         end
     end
 

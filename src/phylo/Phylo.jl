@@ -14,11 +14,6 @@ module Phylo
 using LightGraphs
 using Bio: Tokenize, Indexers
 using Bio.Seq: Nucleotide, BioSequence, isambiguous
-using Bio.Var: MutationType,
-    AnyMutation,
-    TransitionMutation,
-    TransversionMutation,
-    count_mutations
 
 export
 

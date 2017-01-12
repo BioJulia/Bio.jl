@@ -6,7 +6,6 @@ using Bio.Phylo
 using LightGraphs
 using Bio.Phylo.Dating
 using Bio.Seq
-using Bio.Var: AnyMutation, TransitionMutation, TransversionMutation
 
 @testset "Phylogenies" begin
 
