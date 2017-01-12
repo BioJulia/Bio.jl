@@ -3,6 +3,7 @@
 ```@meta
 CurrentModule = Bio.Var
 DocTestSetup = quote
+    using Bio.Seq
     using Bio.Var
 end
 ```
@@ -31,22 +32,30 @@ The second value is the number of sites examined. Sites which have gaps and
 uncertain nucleotides are not examined and so this second value will be less
 than the length of the two biological sequences.
 
-```julia
-count_mutations(AnyMutation, [dna"ATCGATCG", dna"ACCGATCG"])
+```jldoctest
+julia> count_mutations(AnyMutation, [dna"ATCGATCG", dna"ACCGATCG"])
+([1],[8])
 
-count_mutations(TransitionMutation, [dna"ATCGATCG", dna"ACCGATCG"])
+julia> count_mutations(TransitionMutation, [dna"ATCGATCG", dna"ACCGATCG"])
+([1],[8])
 
-count_mutations(TransversionMutation, [dna"ATCGATCG", dna"ACCGATCG"])
+julia> count_mutations(TransversionMutation, [dna"ATCGATCG", dna"ACCGATCG"])
+([0],[8])
 
-count_mutations(TransitionMutation, TransversionMutation, [dna"ATCGATCG", dna"ACCGATCG"])
+julia> count_mutations(TransitionMutation, TransversionMutation, [dna"ATCGATCG", dna"ACCGATCG"])
+([1],[0],[8])
 
-count_mutations(AnyMutation, [rna"AUCGAUCG", rna"ACCGAUCG"])
+julia> count_mutations(AnyMutation, [rna"AUCGAUCG", rna"ACCGAUCG"])
+([1],[8])
 
-count_mutations(TransitionMutation, [rna"AUCGAUCG", rna"ACCGAUCG"])
+julia> count_mutations(TransitionMutation, [rna"AUCGAUCG", rna"ACCGAUCG"])
+([1],[8])
 
-count_mutations(TransversionMutation, [rna"AUCGAUCG", rna"ACCGAUCG"])
+julia> count_mutations(TransversionMutation, [rna"AUCGAUCG", rna"ACCGAUCG"])
+([0],[8])
 
-count_mutations(TransitionMutation, TransversionMutation, [rna"AUCGAUCG", rna"ACCGAUCG"])
+julia> count_mutations(TransitionMutation, TransversionMutation, [rna"AUCGAUCG", rna"ACCGAUCG"])
+([1],[0],[8])
 ```
 
 ### The `is_mutation` method
