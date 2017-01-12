@@ -14,7 +14,7 @@ for a set of nucleotide sequences.
 
 ### Different types of mutation
 
-The types of mutations that can currently be counted are `DifferentMutation`,s
+The types of mutations that can currently be counted are `AnyMutation`,s
 `TransitionMutation`s, and `TransversionMutation`s.
 
 ```@docs
@@ -32,7 +32,7 @@ uncertain nucleotides are not examined and so this second value will be less
 than the length of the two biological sequences.
 
 ```julia
-count_mutations(DifferentMutation, [dna"ATCGATCG", dna"ACCGATCG"])
+count_mutations(AnyMutation, [dna"ATCGATCG", dna"ACCGATCG"])
 
 count_mutations(TransitionMutation, [dna"ATCGATCG", dna"ACCGATCG"])
 
@@ -40,7 +40,7 @@ count_mutations(TransversionMutation, [dna"ATCGATCG", dna"ACCGATCG"])
 
 count_mutations(TransitionMutation, TransversionMutation, [dna"ATCGATCG", dna"ACCGATCG"])
 
-count_mutations(DifferentMutation, [rna"AUCGAUCG", rna"ACCGAUCG"])
+count_mutations(AnyMutation, [rna"AUCGAUCG", rna"ACCGAUCG"])
 
 count_mutations(TransitionMutation, [rna"AUCGAUCG", rna"ACCGAUCG"])
 
