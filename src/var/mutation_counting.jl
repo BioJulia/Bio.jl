@@ -208,7 +208,7 @@ Count the number of mutations between DNA sequences in a pairwise manner.
 Different types of mutation can be counted:
 `AnyMutation`, `TransitionMutation`, `TransversionMutation`.
 
-Returns a tuple of: 1. A vector containing the number of mutations between each,
+Returns a tuple of: 1. A vector containing the number of mutations between each
 possible pair of sequences, and 2. a vector containing the number of sites
 considered (sites with any ambiguity characters are not considered) for each
 possible pair of sequences.
