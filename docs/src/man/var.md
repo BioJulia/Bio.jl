@@ -15,7 +15,7 @@ for a set of nucleotide sequences.
 
 ### Different types of mutation
 
-The types of mutations that can currently be counted are `AnyMutation`,s
+The types of mutations that can currently be counted are `AnyMutation`s,
 `TransitionMutation`s, and `TransversionMutation`s.
 
 ```@docs
