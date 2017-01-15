@@ -41,6 +41,8 @@ developed as submodules:
     * Genetic and evolutionary distances
 * `Bio.Phylo`: Phylogenetics
     * Phylogenetic trees
+* `Bio.Services`: APIs to other services
+    * Entrez utilities (E-utilities)
 
 
 ## Installation

@@ -47,6 +47,7 @@ pages:
   - Biological Variation: man/var.md
   - Phylogenetic Trees: man/phylo.md
   - Structure: man/structure.md
+  - Services: man/services.md
   - Util: man/util.md
   - Tools: man/tools.md
 - Reference:

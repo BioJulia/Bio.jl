@@ -8,6 +8,7 @@ Pages = [
     "man/intervals.md",
     "man/var.md",
     "man/structure.md",
+    "man/services.md",
     "man/util.md",
     "man/tools.md"
 ]
