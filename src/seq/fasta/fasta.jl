@@ -38,5 +38,4 @@ end
 
 include("fai.jl")
 include("reader.jl")
-include("parser.jl")
 include("writer.jl")

@@ -21,7 +21,7 @@ type FASTAReader{S<:Sequence} <: Bio.IO.AbstractReader
     index::Nullable{FASTAIndex}
 
     function FASTAReader(input::BufferedInputStream, index)
-        return new(Ragel.State(fastaparser_start, input),
+        return new(Ragel.State(fasta_machine.start_state, input),
                    BufferedOutputStream(), index)
     end
 end
@@ -55,7 +55,7 @@ function Base.getindex(reader::FASTAReader, name::AbstractString)
         error("no index")
     end
     seekrecord(reader.state.stream, get(reader.index), name)
-    reader.state.cs = fastaparser_start
+    reader.state.cs = fasta_machine.start_state
     return read(reader)
 end
 
@@ -97,4 +97,115 @@ function predict(seq::Vector{UInt8}, start, stop)
     else
         return AminoAcidSequence
     end
+end
+
+import Automa
+import Automa.RegExp: @re_str
+const re = Automa.RegExp
+
+info("compiling FASTA")
+const fasta_machine = (function ()
+    nl          = re"\n"
+    newline     = re"\r?" * nl
+    hspace      = re"[ \t\v]"
+    whitespace  = re.space() | newline
+    identifier  = re.rep1(re.any() \ re.space())
+    description = (re.any() \ hspace) * re"[^\r\n]*"
+    letters     = re.rep1(re.any() \ re.space() \ re">")
+    sequence    = re.cat(re.rep(whitespace), re.opt(letters), re.rep(re.rep1(whitespace) * letters))
+    record      = re.cat('>', identifier, re.opt(re.rep1(hspace) * description), newline, sequence, re.rep(whitespace))
+    fasta       = re.rep(whitespace) * re.rep(record)
+
+    nl.actions[:enter]          = [:count_line]
+    identifier.actions[:enter]  = [:mark]
+    identifier.actions[:exit]   = [:identifier]
+    description.actions[:enter] = [:mark]
+    description.actions[:exit]  = [:description]
+    letters.actions[:enter]     = [:mark]
+    letters.actions[:exit]      = [:letters]
+    record.actions[:exit]       = [:record]
+
+    return Automa.compile(fasta)
+end)()
+info("finished compiling FASTA")
+
+@inline function anchor!(stream, p)
+    stream.anchor = p
+end
+
+@inline function upanchor!(stream)
+    @assert stream.anchor != 0 "upanchor! called with no anchor set"
+    anchor = stream.anchor
+    stream.anchor = 0
+    return anchor
+end
+
+fasta_actions = Dict(
+    :count_line  => :(linenum += 1),
+    :mark        => :(anchor!(stream, p)),
+    :identifier  => :(copy!(output.name, stream.buffer, upanchor!(stream), p - 1)),
+    :description => :(copy!(output.metadata.description, stream.buffer, upanchor!(stream), p - 1)),
+    :letters     => :(append!(reader.seqbuf, stream.buffer, upanchor!(stream), p - 1)),
+    :record      => :(found_record = true; @escape),
+)
+
+function Base.read!(reader::FASTAReader, output::FASTASeqRecord)
+    return _read!(reader, reader.state, output)
+end
+
+# Can this be merged into `Base.read!` above?
+@eval function _read!(reader::FASTAReader, state::Ragel.State, output::FASTASeqRecord)
+    stream = state.stream
+    cs = state.cs
+    linenum = state.linenum
+    p = stream.position
+    p_end = stream.available
+    p_eof = -1
+    data = stream.buffer
+
+    while true
+        found_record = false
+        $(Automa.generate_exec_code(fasta_machine, actions=fasta_actions, code=:goto))
+
+        state.cs = cs
+        stream.position = p
+
+        if cs < 0
+            error("FASTA file format error on line ", linenum)
+        elseif cs == 0
+            state.finished = true
+        else
+            if p > p_end
+                hits_eof = BufferedStreams.fillbuffer!(stream) == 0
+                p = stream.position
+                p_end = stream.available
+                if hits_eof
+                    p_eof = p_end
+                end
+            end
+        end
+
+        if found_record
+            if seqtype(typeof(output)) == ReferenceSequence
+                output.seq = ReferenceSequence(reader.seqbuf.buffer, 1, length(reader.seqbuf))
+            elseif seqtype(typeof(output)) == BioSequence
+                ET = predict(reader.seqbuf.buffer, 1, length(reader.seqbuf))
+                if ET == typeof(output.seq)
+                    resize!(output.seq, length(reader.seqbuf))
+                    encode_copy!(output.seq, 1, reader.seqbuf.buffer, 1, length(reader.seqbuf))
+                else
+                    output.seq = ET(reader.seqbuf.buffer, 1, length(reader.seqbuf))
+                end
+            else
+                resize!(output.seq, length(reader.seqbuf))
+                encode_copy!(output.seq, 1, reader.seqbuf.buffer, 1, length(reader.seqbuf))
+            end
+            empty!(reader.seqbuf)
+            break
+        elseif cs == 0
+            throw(EOFError())
+        end
+    end
+
+    return output
 end
