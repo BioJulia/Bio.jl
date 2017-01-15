@@ -1,0 +1,407 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0"> 
+    <meta name="author" content="The BioJulia Organisation"> 
+    <link rel="canonical" href="https://biojulia.github.io/Bio.jl/man/services/"> 
+    <link rel="shortcut icon" href="../../img/favicon.ico">
+
+    <title>Services - Bio.jl</title>
+
+    <link href="../../css/bootstrap-custom.min.css" rel="stylesheet">
+    <link href="//maxcdn.bootstrapcdn.com/font-awesome/4.4.0/css/font-awesome.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="//cdn.jsdelivr.net/font-hack/2.018/css/hack.min.css">
+    <link href='//fonts.googleapis.com/css?family=PT+Sans:400,400italic,700,700italic&subset=latin-ext,latin' rel='stylesheet' type='text/css'>
+    <link href='//fonts.googleapis.com/css?family=Open+Sans:300italic,400italic,700italic,400,300,600,700&subset=latin-ext,latin' rel='stylesheet' type='text/css'>
+    <link href="../../css/base.css" rel="stylesheet">
+    <link href="../../css/biojulia.css" rel="stylesheet">
+    <link rel="stylesheet" href="../../css/highlight.css">
+    <link rel="stylesheet" href="../../css/friendly.css" type="text/css">
+    <link href="../../assets/Documenter.css" rel="stylesheet">
+
+    <!-- HTML5 shim and Respond.js IE8 support of HTML5 elements and media queries -->
+    <!--[if lt IE 9]>
+            <script src="https://oss.maxcdn.com/libs/html5shiv/3.7.0/html5shiv.js"></script>
+            <script src="https://oss.maxcdn.com/libs/respond.js/1.3.0/respond.min.js"></script>
+        <![endif]-->
+
+    <script src="https://ajax.googleapis.com/ajax/libs/webfont/1.5.18/webfont.js"></script>
+    <script>
+    WebFont.load({
+        google: {
+            families: ['Open Sans', 'PT Sans']
+        }
+    });
+    </script>
+
+    
+</head>
+
+<body>
+
+    <div class="navbar navbar-default navbar-fixed-top" role="navigation">
+    <div class="container">
+
+        <!-- Collapsed navigation -->
+        <div class="navbar-header">
+            
+            <!-- Expander button -->
+            <button type="button" class="navbar-toggle" data-toggle="collapse" data-target=".navbar-collapse">
+                <span class="sr-only">Toggle navigation</span>
+                <span class="icon-bar"></span>
+                <span class="icon-bar"></span>
+                <span class="icon-bar"></span>
+            </button>
+            
+
+            <!-- Main title -->
+            <a class="navbar-brand" href="../..">Bio.jl</a>
+        </div>
+
+        <!-- Expanded navigation -->
+        <div class="navbar-collapse collapse">
+            
+                <!-- Main navigation -->
+                <ul class="nav navbar-nav">
+                
+                
+                    <li >
+                        <a href="../..">Home</a>
+                    </li>
+                
+                
+                
+                    <li class="dropdown active">
+                        <a href="#" class="dropdown-toggle" data-toggle="dropdown">Manual <b class="caret"></b></a>
+                        <ul class="dropdown-menu">
+                        
+                            
+<li >
+    <a href="../install/">Installation</a>
+</li>
+
+                        
+                            
+<li >
+    <a href="../reading/">IO API</a>
+</li>
+
+                        
+                            
+<li >
+    <a href="../seq/">Biological Sequences</a>
+</li>
+
+                        
+                            
+<li >
+    <a href="../alignments/">Alignments</a>
+</li>
+
+                        
+                            
+<li >
+    <a href="../intervals/">Intervals</a>
+</li>
+
+                        
+                            
+<li >
+    <a href="../var/">Biological Variation</a>
+</li>
+
+                        
+                            
+<li >
+    <a href="../phylo/">Phylogenetic Trees</a>
+</li>
+
+                        
+                            
+<li >
+    <a href="../structure/">Structure</a>
+</li>
+
+                        
+                            
+<li class="active">
+    <a href="./">Services</a>
+</li>
+
+                        
+                            
+<li >
+    <a href="../util/">Util</a>
+</li>
+
+                        
+                            
+<li >
+    <a href="../tools/">Tools</a>
+</li>
+
+                        
+                        </ul>
+                    </li>
+                
+                
+                
+                    <li class="dropdown">
+                        <a href="#" class="dropdown-toggle" data-toggle="dropdown">Reference <b class="caret"></b></a>
+                        <ul class="dropdown-menu">
+                        
+                            
+<li >
+    <a href="../../lib/seq/">Seq</a>
+</li>
+
+                        
+                        </ul>
+                    </li>
+                
+                
+                
+                    <li >
+                        <a href="../contributing/">Contributing</a>
+                    </li>
+                
+                
+                </ul>
+            
+
+            <ul class="nav navbar-nav navbar-right">
+                <li>
+                    <a href="#" data-toggle="modal" data-target="#mkdocs_search_modal">
+                        <i class="fa fa-search"></i> Search
+                    </a>
+                </li>
+                
+                    <li >
+                        <a rel="next" href="../structure/">
+                            <i class="fa fa-arrow-left"></i> Previous
+                        </a>
+                    </li>
+                    <li >
+                        <a rel="prev" href="../util/">
+                            Next <i class="fa fa-arrow-right"></i>
+                        </a>
+                    </li>
+                
+                
+                    <li>
+                        <a href="https://github.com/BioJulia/Bio.jl">
+                            
+                                <i class="fa fa-github"></i>
+                            
+                            GitHub
+                        </a>
+                    </li>
+                
+            </ul>
+        </div>
+    </div>
+</div>
+
+    <div class="container">
+        
+        <div class="col-md-3"><div class="bs-sidebar hidden-print affix well" role="complementary">
+    <ul class="nav bs-sidenav">
+    
+        <li class="first-level active"><a href="#bioservices-apis-for-web-services">Bio.Services: APIs for Web Services</a></li>
+        
+            <li class="second-level"><a href="#e-utilities">E-Utilities</a></li>
+            
+        
+    
+    </ul>
+</div></div>
+        <div class="col-md-9" role="main">
+
+<p><a id='Bio.Services:-APIs-for-Web-Services-1'></a></p>
+<h1 id="bioservices-apis-for-web-services">Bio.Services: APIs for Web Services</h1>
+<p>The <code>Bio.Services</code> module provides APIs for various web services.</p>
+<p><a id='E-Utilities-1'></a></p>
+<h2 id="e-utilities">E-Utilities</h2>
+<p>E-Utilities provide a interface to Entrez databases at <a href="https://www.ncbi.nlm.nih.gov/">NCBI</a>.  The APIs are defined in the <code>Bio.Services.EUtils</code> module, which exports nine functions to access its databases:</p>
+<table>
+<thead>
+<tr>
+<th align="left">Function</th>
+<th align="left">Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td align="left"><code>einfo</code></td>
+<td align="left">Retrieve a list of databases or statistics for a database.</td>
+</tr>
+<tr>
+<td align="left"><code>esearch</code></td>
+<td align="left">Retrieve a list of UIDs matching a text query.</td>
+</tr>
+<tr>
+<td align="left"><code>epost</code></td>
+<td align="left">Upload or append a list of UIDs to the Entrez History server.</td>
+</tr>
+<tr>
+<td align="left"><code>esummary</code></td>
+<td align="left">Retrieve document summaries for a list of UIDs.</td>
+</tr>
+<tr>
+<td align="left"><code>efetch</code></td>
+<td align="left">Retrieve formatted data records for a list of UIDs.</td>
+</tr>
+<tr>
+<td align="left"><code>elink</code></td>
+<td align="left">Retrieve UIDs linked to an input set of UIDs.</td>
+</tr>
+<tr>
+<td align="left"><code>egquery</code></td>
+<td align="left">Retrieve the number of available records in all databases by a text query.</td>
+</tr>
+<tr>
+<td align="left"><code>espell</code></td>
+<td align="left">Retrieve spelling suggestions.</td>
+</tr>
+<tr>
+<td align="left"><code>ecitmatch</code></td>
+<td align="left">Retrieve PubMed IDs that correspond to a set of input citation strings.</td>
+</tr>
+</tbody>
+</table>
+<p><a href="https://www.ncbi.nlm.nih.gov/books/NBK25497/#_chapter2_The_Nine_Eutilities_in_Brief_">"The Nine E-utilities in Brief"</a> summarizes all of the server-side programs corresponding to each function.</p>
+<p>In this package, queries for databases are controlled by keyword parameters. For example, some functions take <code>db</code> parameter to specify the target database. Functions listed above take these parameters as keyword arguments and return a <code>Response</code> object as follows:</p>
+<div class="codehilite"><pre><span></span><span class="gp">julia&gt;</span> <span class="k">using</span> <span class="n">Bio</span><span class="o">.</span><span class="n">Services</span><span class="o">.</span><span class="n">EUtils</span>      <span class="c"># import the nine functions above</span>
+
+<span class="gp">julia&gt;</span> <span class="n">res</span> <span class="o">=</span> <span class="n">einfo</span><span class="p">(</span><span class="n">db</span><span class="o">=</span><span class="s">&quot;pubmed&quot;</span><span class="p">)</span>       <span class="c"># retrieve statistics of the PubMed database</span>
+<span class="go">Response(200 OK, 18 headers, 27360 bytes in body)</span>
+
+<span class="gp">julia&gt;</span> <span class="n">write</span><span class="p">(</span><span class="s">&quot;pubmed.xml&quot;</span><span class="p">,</span> <span class="n">res</span><span class="o">.</span><span class="n">data</span><span class="p">)</span>  <span class="c"># save retrieved data into a file</span>
+<span class="go">27360</span>
+
+<span class="go">shell&gt; head result.xml</span>
+<span class="go">&lt;?xml version=&quot;1.0&quot; encoding=&quot;UTF-8&quot; ?&gt;</span>
+<span class="go">&lt;!DOCTYPE eInfoResult PUBLIC &quot;-//NLM//DTD einfo 20130322//EN&quot; &quot;https://eutils.ncbi.nlm.nih.gov/eutils/dtd/20130322/einfo.dtd&quot;&gt;</span>
+<span class="go">&lt;eInfoResult&gt;</span>
+</pre></div>
+
+
+<p>Let's see a few more examples of parameters.  The <code>term</code> parameter specifies a search string (e.g. <code>esearch(db="gene", term="tumor AND human[ORGN]")</code>).  The <code>id</code> parameter specifies a UID (or accession number) or a list of UIDs (e.g. <code>efetch(db="protein", id="NP_000537.3", rettype="fasta")</code>, <code>efetch(db="snp", id=["rs55863639", "rs587780067"])</code>). The complete list of parameters can be found at <a href="https://www.ncbi.nlm.nih.gov/books/NBK25499/">"The E-utilities In-Depth: Parameters, Syntax and More"</a>.</p>
+<p>When a request succeeds the response object has a <code>data</code> field containing formatted data, which can be saved to a file as demonstrated above. However, users are often interested in a part of the response data and may want to extract some fields in it. In such a case, <a href="https://github.com/bicycle1885/EzXML.jl">EzXML.jl</a> is helpful because it offers lots of tools to handle XML documents. The first thing you need to do is converting the response data into an XML document by <code>parsexml</code>:</p>
+<div class="codehilite"><pre><span></span><span class="gp">julia&gt;</span> <span class="n">res</span> <span class="o">=</span> <span class="n">efetch</span><span class="p">(</span><span class="n">db</span><span class="o">=</span><span class="s">&quot;nuccore&quot;</span><span class="p">,</span> <span class="n">id</span><span class="o">=</span><span class="s">&quot;NM_001126.3&quot;</span><span class="p">,</span> <span class="n">retmode</span><span class="o">=</span><span class="s">&quot;xml&quot;</span><span class="p">)</span>
+<span class="go">Response(200 OK, 19 headers, 41536 bytes in body)</span>
+
+<span class="gp">julia&gt;</span> <span class="k">using</span> <span class="n">EzXML</span>
+
+<span class="gp">julia&gt;</span> <span class="n">doc</span> <span class="o">=</span> <span class="n">parsexml</span><span class="p">(</span><span class="n">res</span><span class="o">.</span><span class="n">data</span><span class="p">)</span>
+<span class="go">EzXML.Document(EzXML.Node(&lt;DOCUMENT_NODE@0x00007fdd4cc43770&gt;))</span>
+</pre></div>
+
+
+<p>After that, you can query fields you want using <a href="https://en.wikipedia.org/wiki/XPath">XPath</a>:</p>
+<div class="codehilite"><pre><span></span><span class="gp">julia&gt;</span> <span class="n">seq</span> <span class="o">=</span> <span class="n">findfirst</span><span class="p">(</span><span class="n">doc</span><span class="p">,</span> <span class="s">&quot;/GBSet/GBSeq&quot;</span><span class="p">)</span>
+<span class="go">EzXML.Node(&lt;ELEMENT_NODE@0x00007fdd49f34b10&gt;)</span>
+
+<span class="gp">julia&gt;</span> <span class="n">content</span><span class="p">(</span><span class="n">findfirst</span><span class="p">(</span><span class="n">seq</span><span class="p">,</span> <span class="s">&quot;GBSeq_definition&quot;</span><span class="p">))</span>
+<span class="go">&quot;Homo sapiens adenylosuccinate synthase (ADSS), mRNA&quot;</span>
+
+<span class="gp">julia&gt;</span> <span class="n">content</span><span class="p">(</span><span class="n">findfirst</span><span class="p">(</span><span class="n">seq</span><span class="p">,</span> <span class="s">&quot;GBSeq_accession-version&quot;</span><span class="p">))</span>
+<span class="go">&quot;NM_001126.3&quot;</span>
+
+<span class="gp">julia&gt;</span> <span class="n">length</span><span class="p">(</span><span class="n">find</span><span class="p">(</span><span class="n">seq</span><span class="p">,</span> <span class="s">&quot;//GBReference&quot;</span><span class="p">))</span>
+<span class="go">10</span>
+
+<span class="gp">julia&gt;</span> <span class="k">using</span> <span class="n">Bio</span><span class="o">.</span><span class="n">Seq</span>
+
+<span class="gp">julia&gt;</span> <span class="n">DNASequence</span><span class="p">(</span><span class="n">content</span><span class="p">(</span><span class="n">findfirst</span><span class="p">(</span><span class="n">seq</span><span class="p">,</span> <span class="s">&quot;GBSeq_sequence&quot;</span><span class="p">)))</span>
+<span class="go">2791nt DNA Sequence:</span>
+<span class="go">ACGGGAGTGGCGCGCCAGGCCGCGGAAGGGGCGTGGCCT…TGATTAAAAGAACCAAATATTTCTAGTATGAAAAAAAAA</span>
+</pre></div>
+
+
+<p>Every function can take a context dictionary as its first argument to set parameters into a query. Key-value pairs in a context are appended to a query in addition to other parameters passed by keyword arguments.  The default context is an empty dictionary that sets no parameters. This context dictionary is especially useful when temporarily caching query UIDs into the Entrez History server. A request to the Entrez system can be associated with cached data using "WebEnv" and "query_key" parameters. In the following example, the search results of <code>esearch</code> is saved in the Entrez History server (note <code>usehistory=true</code>, which makes the server cache its search results) and then their summaries are retrieved in the next call of <code>esummary</code>:</p>
+<div class="codehilite"><pre><span></span><span class="gp">julia&gt;</span> <span class="n">context</span> <span class="o">=</span> <span class="n">Dict</span><span class="p">()</span>  <span class="c"># create an empty context</span>
+<span class="go">Dict{Any,Any} with 0 entries</span>
+
+<span class="gp">julia&gt;</span> <span class="n">res</span> <span class="o">=</span> <span class="n">esearch</span><span class="p">(</span><span class="n">context</span><span class="p">,</span> <span class="n">db</span><span class="o">=</span><span class="s">&quot;pubmed&quot;</span><span class="p">,</span> <span class="n">term</span><span class="o">=</span><span class="s">&quot;asthma[mesh] AND leukotrienes[mesh] AND 2009[pdat]&quot;</span><span class="p">,</span> <span class="n">usehistory</span><span class="o">=</span><span class="n">true</span><span class="p">)</span>
+<span class="go">Response(200 OK, 18 headers, 1574 bytes in body)</span>
+
+<span class="gp">julia&gt;</span> <span class="n">context</span>  <span class="c"># the context dictionary has been updated</span>
+<span class="go">Dict{Any,Any} with 2 entries:</span>
+<span class="go">  :query_key =&gt; &quot;1&quot;</span>
+<span class="go">  :WebEnv    =&gt; &quot;NCID_1_9251987_130.14.22.215_9001_1477389145_1960133…</span>
+
+<span class="gp">julia&gt;</span> <span class="n">res</span> <span class="o">=</span> <span class="n">esummary</span><span class="p">(</span><span class="n">context</span><span class="p">,</span> <span class="n">db</span><span class="o">=</span><span class="s">&quot;pubmed&quot;</span><span class="p">)</span>  <span class="c"># retrieve summaries in context</span>
+<span class="go">Response(200 OK, 18 headers, 135463 bytes in body)</span>
+
+<span class="gp">julia&gt;</span> <span class="n">write</span><span class="p">(</span><span class="s">&quot;asthma_leukotrienes_2009.xml&quot;</span><span class="p">,</span> <span class="n">res</span><span class="o">.</span><span class="n">data</span><span class="p">)</span>  <span class="c"># save data into a file</span>
+<span class="go">135463</span>
+
+<span class="go">shell&gt; head asthma_leukotrienes_2009.xml</span>
+<span class="go">&lt;?xml version=&quot;1.0&quot; encoding=&quot;UTF-8&quot; ?&gt;</span>
+<span class="go">&lt;!DOCTYPE eSummaryResult PUBLIC &quot;-//NLM//DTD esummary v1 20041029//EN&quot; &quot;https://eutils.ncbi.nlm.nih.gov/eutils/dtd/20041029/esummary-v1.dtd&quot;&gt;</span>
+<span class="go">&lt;eSummaryResult&gt;</span>
+<span class="go">&lt;DocSum&gt;</span>
+</pre></div></div>
+        
+    </div>
+
+    <footer class="col-md-12 text-center">
+        <hr>
+        <p>
+        <small>Copyright (c) 2016 The BioJulia Organisation<br></small>
+        
+        <small>Documentation built with <a href="http://www.mkdocs.org/">MkDocs</a>.</p></small>
+    </footer>
+
+    <script src="../../js/jquery-1.10.2.min.js"></script>
+    <script src="../../js/bootstrap-3.0.3.min.js"></script>
+    <script src="../../js/highlight.pack.js"></script>
+    <script>hljs.initHighlightingOnLoad();</script>
+    <script>
+    var base_url = '../..';
+    </script>
+    <script data-main="../../mkdocs/js/search.js" src="../../mkdocs/js/require.js"></script>
+    <script src="../../js/base.js"></script>
+    <script>
+        ((window.gitter = {}).chat = {}).options = {
+            room: 'BioJulia/Bio.jl'
+        };
+    </script>
+    <script src="https://sidecar.gitter.im/dist/sidecar.v1.js" async defer></script>
+    <script src="https://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS_HTML"></script>
+    <script src="../../assets/mathjaxhelper.js"></script>
+
+    <div class="modal" id="mkdocs_search_modal" tabindex="-1" role="dialog" aria-labelledby="Search Modal" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <button type="button" class="close" data-dismiss="modal">
+                        <span aria-hidden="true">&times;</span>
+                        <span class="sr-only">Close</span>
+                    </button>
+                    <h4 class="modal-title" id="exampleModalLabel">Search</h4>
+                </div>
+                <div class="modal-body">
+                    <p>
+                        From here you can search these documents. Enter your search terms below.
+                    </p>
+                    <form role="form">
+                        <div class="form-group">
+                            <input type="text" class="form-control" placeholder="Search..." id="mkdocs-search-query">
+                        </div>
+                    </form>
+                    <div id="mkdocs-search-results"></div>
+                </div>
+                <div class="modal-footer">
+                </div>
+            </div>
+        </div>
+    </div>
+
+    </body>
+
+</html>
