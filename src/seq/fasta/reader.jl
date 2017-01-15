@@ -162,9 +162,9 @@ end
     p_end = stream.available
     p_eof = -1
     data = stream.buffer
+    found_record = false
 
     while true
-        found_record = false
         $(Automa.generate_exec_code(fasta_machine, actions=fasta_actions, code=:goto))
 
         state.cs = cs
