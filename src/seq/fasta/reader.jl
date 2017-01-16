@@ -168,6 +168,7 @@ end
         $(Automa.generate_exec_code(fasta_machine, actions=fasta_actions, code=:goto))
 
         state.cs = cs
+        state.linenum = linenum
         stream.position = p
 
         if cs < 0
