@@ -105,8 +105,8 @@ const re = Automa.RegExp
 
 info("compiling FASTA")
 const fasta_machine = (function ()
-    nl          = re"\n"
-    newline     = re"\r?" * nl
+    lf          = re"\n"
+    newline     = re"\r?" * lf
     hspace      = re"[ \t\v]"
     whitespace  = re.space() | newline
     identifier  = re.rep1(re.any() \ re.space())
@@ -116,7 +116,7 @@ const fasta_machine = (function ()
     record      = re.cat('>', identifier, re.opt(re.rep1(hspace) * description), newline, sequence, re.rep(whitespace))
     fasta       = re.rep(whitespace) * re.rep(record)
 
-    nl.actions[:enter]          = [:count_line]
+    lf.actions[:enter]          = [:count_line]
     identifier.actions[:enter]  = [:mark]
     identifier.actions[:exit]   = [:identifier]
     description.actions[:enter] = [:mark]
