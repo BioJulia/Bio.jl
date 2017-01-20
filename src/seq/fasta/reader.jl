@@ -99,10 +99,6 @@ function predict(seq::Vector{UInt8}, start, stop)
     end
 end
 
-import Automa
-import Automa.RegExp: @re_str
-const re = Automa.RegExp
-
 info("compiling FASTA")
 const fasta_machine = (function ()
     lf          = re"\n"
@@ -127,7 +123,6 @@ const fasta_machine = (function ()
 
     return Automa.compile(fasta)
 end)()
-info("finished compiling FASTA")
 
 @inline function anchor!(stream, p)
     stream.anchor = p
@@ -140,53 +135,39 @@ end
     return anchor
 end
 
-fasta_actions = Dict(
+const fasta_actions = Dict(
     :count_line  => :(linenum += 1),
     :mark        => :(anchor!(stream, p)),
     :identifier  => :(copy!(output.name, stream.buffer, upanchor!(stream), p - 1)),
     :description => :(copy!(output.metadata.description, stream.buffer, upanchor!(stream), p - 1)),
     :letters     => :(append!(reader.seqbuf, stream.buffer, upanchor!(stream), p - 1)),
-    :record      => :(found_record = true; @escape),
-)
+    :record      => :(found_record = true; @escape))
 
 function Base.read!(reader::FASTAReader, output::FASTASeqRecord)
     return _read!(reader, reader.state, output)
 end
 
-# Can this be merged into `Base.read!` above?
 @eval function _read!(reader::FASTAReader, state::Ragel.State, output::FASTASeqRecord)
-    stream = state.stream
     cs = state.cs
     linenum = state.linenum
+    stream = state.stream
+    data = stream.buffer
     p = stream.position
     p_end = stream.available
     p_eof = -1
-    data = stream.buffer
     found_record = false
 
     while true
-        $(Automa.generate_exec_code(fasta_machine, actions=fasta_actions, code=:goto))
+        $(Automa.generate_exec_code(fasta_machine, actions=fasta_actions, code=:goto, check=false))
 
         state.cs = cs
+        state.finished = cs == 0
         state.linenum = linenum
         stream.position = p
 
         if cs < 0
             error("FASTA file format error on line ", linenum)
-        elseif cs == 0
-            state.finished = true
-        else
-            if p > p_end
-                hits_eof = BufferedStreams.fillbuffer!(stream) == 0
-                p = stream.position
-                p_end = stream.available
-                if hits_eof
-                    p_eof = p_end
-                end
-            end
-        end
-
-        if found_record
+        elseif found_record
             if seqtype(typeof(output)) == ReferenceSequence
                 output.seq = ReferenceSequence(reader.seqbuf.buffer, 1, length(reader.seqbuf))
             elseif seqtype(typeof(output)) == BioSequence
@@ -205,6 +186,15 @@ end
             break
         elseif cs == 0
             throw(EOFError())
+        elseif p > p_eof ≥ 0
+            error("incomplete FASTA input on line ", linenum)
+        else
+            hits_eof = BufferedStreams.fillbuffer!(stream) == 0
+            p = stream.position
+            p_end = stream.available
+            if hits_eof
+                p_eof = p_end
+            end
         end
     end
 

@@ -156,6 +156,9 @@ export
     majorityvote
 
 import Bio
+import Automa
+import Automa.RegExp: @re_str
+const re = Automa.RegExp
 using
     BufferedStreams,
     Iterators,
