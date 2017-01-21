@@ -1238,7 +1238,11 @@ end
                 filepath = joinpath(bamdir, specimen["filename"])
                 mktemp() do path, _
                     # copy
-                    reader = open(BAMReader, filepath)
+                    if contains(get(specimen, "tags", ""), "bai")
+                        reader = open(BAMReader, filepath, index=filepath * ".bai")
+                    else
+                        reader = open(BAMReader, filepath)
+                    end
                     writer = BAMWriter(
                         BGZFStream(path, "w"),
                         header(reader, true))
@@ -1290,7 +1294,11 @@ end
                 actual = collect(intersect(reader, refname, range))
                 @test actual == expected
             end
+            close(reader)
 
+            filepath = joinpath(bamdir, "R_12h_D06.uniq.q40.bam")
+            reader = open(BAMReader, filepath, index=filepath * ".bai")
+            @test isempty(collect(intersect(reader, "chr19", 5823708:5846478)))
             close(reader)
         end
     end
