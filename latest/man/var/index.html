@@ -245,17 +245,17 @@
 <strong><code>Bio.Var.AnyMutation</code></strong> &mdash; <em>Type</em>.</p>
 <p><code>AnyMutation</code> describes a site where two aligned nucleotides are not the same.</p>
 <p>Every kind of difference is counted.</p>
-<p><a target='_blank' href='https://github.com/BioJulia/Bio.jl/tree/3c6cccac1a7d886b163d431be9c5a00ced55a6d3/src/var/mutation_counting.jl#L19-L24' class='documenter-source'>source</a><br></p>
+<p><a target='_blank' href='https://github.com/BioJulia/Bio.jl/tree/f80c74414d7d79df7d07cad9efeb43fa438a0f4d/src/var/mutation_counting.jl#L19-L24' class='documenter-source'>source</a><br></p>
 <p><a id='Bio.Var.TransitionMutation' href='#Bio.Var.TransitionMutation'>#</a>
 <strong><code>Bio.Var.TransitionMutation</code></strong> &mdash; <em>Type</em>.</p>
 <p><code>TransitionMutation</code> describes a situation with two aligned nucleotides, where a purine has mutated into another purine, or a pyrimadine has mutated into another pyrimadine.</p>
 <p>Possible transition mutations are: A &lt;-&gt; G C &lt;-&gt; T</p>
-<p><a target='_blank' href='https://github.com/BioJulia/Bio.jl/tree/3c6cccac1a7d886b163d431be9c5a00ced55a6d3/src/var/mutation_counting.jl#L27-L35' class='documenter-source'>source</a><br></p>
+<p><a target='_blank' href='https://github.com/BioJulia/Bio.jl/tree/f80c74414d7d79df7d07cad9efeb43fa438a0f4d/src/var/mutation_counting.jl#L27-L35' class='documenter-source'>source</a><br></p>
 <p><a id='Bio.Var.TransversionMutation' href='#Bio.Var.TransversionMutation'>#</a>
 <strong><code>Bio.Var.TransversionMutation</code></strong> &mdash; <em>Type</em>.</p>
 <p><code>TransversionMutation</code> describes a situation with two aligned nucleotides, where a purine has mutated into a pyrimadine or vice versa.</p>
 <p>Possible transversion mutations are: A &lt;-&gt; T C &lt;-&gt; G A &lt;-&gt; C T &lt;-&gt; G</p>
-<p><a target='_blank' href='https://github.com/BioJulia/Bio.jl/tree/3c6cccac1a7d886b163d431be9c5a00ced55a6d3/src/var/mutation_counting.jl#L38-L47' class='documenter-source'>source</a><br></p>
+<p><a target='_blank' href='https://github.com/BioJulia/Bio.jl/tree/f80c74414d7d79df7d07cad9efeb43fa438a0f4d/src/var/mutation_counting.jl#L38-L47' class='documenter-source'>source</a><br></p>
 <p><a id='The-count_mutations-method-1'></a></p>
 <h3 id="the-count_mutations-method">The <code>count_mutations</code> method</h3>
 <p>Mutations are counted using the <code>count_mutations</code> method. The method outputs a tuple. The first value is the number of mutations counted. The second value is the number of sites examined. Sites which have gaps and uncertain nucleotides are not examined and so this second value will be less than the length of the two biological sequences.</p>
@@ -294,19 +294,19 @@
 
 
 <p>Test if two nucleotides constitute a <code>AnyMutation</code>.</p>
-<p><a target='_blank' href='https://github.com/BioJulia/Bio.jl/tree/3c6cccac1a7d886b163d431be9c5a00ced55a6d3/src/var/mutation_counting.jl#L60-L64' class='documenter-source'>source</a><br></p>
+<p><a target='_blank' href='https://github.com/BioJulia/Bio.jl/tree/f80c74414d7d79df7d07cad9efeb43fa438a0f4d/src/var/mutation_counting.jl#L60-L64' class='documenter-source'>source</a><br></p>
 <div class="codehilite"><pre><span></span>is_mutation{T&lt;:Nucleotide}(::Type{TransitionMutation}, a::T, b::T)
 </pre></div>
 
 
 <p>Test if two nucleotides constitute a <code>TransitionMutation</code>.</p>
-<p><a target='_blank' href='https://github.com/BioJulia/Bio.jl/tree/3c6cccac1a7d886b163d431be9c5a00ced55a6d3/src/var/mutation_counting.jl#L69-L73' class='documenter-source'>source</a><br></p>
+<p><a target='_blank' href='https://github.com/BioJulia/Bio.jl/tree/f80c74414d7d79df7d07cad9efeb43fa438a0f4d/src/var/mutation_counting.jl#L69-L73' class='documenter-source'>source</a><br></p>
 <div class="codehilite"><pre><span></span>is_mutation{T&lt;:Nucleotide}(::Type{TransversionMutation}, a::T, b::T)
 </pre></div>
 
 
 <p>Test if two nucleotides constitute a <code>TransversionMutation</code>.</p>
-<p><a target='_blank' href='https://github.com/BioJulia/Bio.jl/tree/3c6cccac1a7d886b163d431be9c5a00ced55a6d3/src/var/mutation_counting.jl#L78-L82' class='documenter-source'>source</a><br></p>
+<p><a target='_blank' href='https://github.com/BioJulia/Bio.jl/tree/f80c74414d7d79df7d07cad9efeb43fa438a0f4d/src/var/mutation_counting.jl#L78-L82' class='documenter-source'>source</a><br></p>
 <p><a id='Computing-evolutionary-and-genetic-distances-1'></a></p>
 <h2 id="computing-evolutionary-and-genetic-distances">Computing evolutionary and genetic distances</h2>
 <p>Just as you can count the number of mutations between two nucleotide sequences, you can compute the evolutionary distance between two nucleotide sequences.</p>
@@ -316,29 +316,29 @@
 <p><a id='Bio.Var.Count' href='#Bio.Var.Count'>#</a>
 <strong><code>Bio.Var.Count</code></strong> &mdash; <em>Type</em>.</p>
 <p>A distance which is the count of the mutations of type T that exist between the two sequences.</p>
-<p><a target='_blank' href='https://github.com/BioJulia/Bio.jl/tree/3c6cccac1a7d886b163d431be9c5a00ced55a6d3/src/var/distances.jl#L18-L21' class='documenter-source'>source</a><br></p>
+<p><a target='_blank' href='https://github.com/BioJulia/Bio.jl/tree/f80c74414d7d79df7d07cad9efeb43fa438a0f4d/src/var/distances.jl#L18-L21' class='documenter-source'>source</a><br></p>
 <p><a id='Bio.Var.Proportion' href='#Bio.Var.Proportion'>#</a>
 <strong><code>Bio.Var.Proportion</code></strong> &mdash; <em>Type</em>.</p>
 <p>Proportion{T} is a distance which is the count of the mutations of type T that exist between the two biological sequences, divided by the number of valid sites examined (sites which don't have gap or ambiguous symbols).</p>
 <p>In other words this so called p-distance is simply the proportion of sites between each pair of sequences, that are mutated (again where T determines what kind of mutation).</p>
-<p><a target='_blank' href='https://github.com/BioJulia/Bio.jl/tree/3c6cccac1a7d886b163d431be9c5a00ced55a6d3/src/var/distances.jl#L24-L32' class='documenter-source'>source</a><br></p>
+<p><a target='_blank' href='https://github.com/BioJulia/Bio.jl/tree/f80c74414d7d79df7d07cad9efeb43fa438a0f4d/src/var/distances.jl#L24-L32' class='documenter-source'>source</a><br></p>
 <p><a id='Bio.Var.JukesCantor69' href='#Bio.Var.JukesCantor69'>#</a>
 <strong><code>Bio.Var.JukesCantor69</code></strong> &mdash; <em>Type</em>.</p>
 <p>The JukesCantor69 distance is a p-distance adjusted/corrected by the substitution model developed by Jukes and Cantor in 1969.</p>
 <p>The Jukes and Cantor model assumes that all substitutions (i.e. a change of a base by another one) have the same probability. This probability is the same for all sites along the DNA sequence.</p>
-<p><a target='_blank' href='https://github.com/BioJulia/Bio.jl/tree/3c6cccac1a7d886b163d431be9c5a00ced55a6d3/src/var/distances.jl#L35-L42' class='documenter-source'>source</a><br></p>
+<p><a target='_blank' href='https://github.com/BioJulia/Bio.jl/tree/f80c74414d7d79df7d07cad9efeb43fa438a0f4d/src/var/distances.jl#L35-L42' class='documenter-source'>source</a><br></p>
 <p><a id='Bio.Var.Kimura80' href='#Bio.Var.Kimura80'>#</a>
 <strong><code>Bio.Var.Kimura80</code></strong> &mdash; <em>Type</em>.</p>
 <p>The Kimura80 distance uses a substitution model developed by Kimura in 1980. It is somtimes called Kimura's 2 parameter distance.</p>
 <p>The model makes the same assumptions as Jukes and Cantor's model, but with a crucial difference: two-kinds of mutation are considered called Transitions and Transversions. Transitions and transversions can occur with different probabilities in this model, however, both transition and transversion rates/probabilities are the same for all sites along the DNA sequence.</p>
-<p><a target='_blank' href='https://github.com/BioJulia/Bio.jl/tree/3c6cccac1a7d886b163d431be9c5a00ced55a6d3/src/var/distances.jl#L45-L55' class='documenter-source'>source</a><br></p>
+<p><a target='_blank' href='https://github.com/BioJulia/Bio.jl/tree/f80c74414d7d79df7d07cad9efeb43fa438a0f4d/src/var/distances.jl#L45-L55' class='documenter-source'>source</a><br></p>
 <p><a id='The-distance-method-1'></a></p>
 <h3 id="the-distance-method">The distance method</h3>
 <p><a id='Bio.Var.distance' href='#Bio.Var.distance'>#</a>
 <strong><code>Bio.Var.distance</code></strong> &mdash; <em>Function</em>.</p>
 <p>Compute the pairwise genetic distances for a set of aligned nucleotide sequences.</p>
 <p>The distance measure to compute is determined by the type provided as the first parameter. The second parameter provides the set of nucleotide sequences.</p>
-<p><a target='_blank' href='https://github.com/BioJulia/Bio.jl/tree/3c6cccac1a7d886b163d431be9c5a00ced55a6d3/src/var/distances.jl#L114-L119' class='documenter-source'>source</a><br></p>
+<p><a target='_blank' href='https://github.com/BioJulia/Bio.jl/tree/f80c74414d7d79df7d07cad9efeb43fa438a0f4d/src/var/distances.jl#L114-L119' class='documenter-source'>source</a><br></p>
 <p><a id='Bio.Var.distance-Tuple{Type{Bio.Var.Count{T<:Bio.Var.MutationType}},Array{Bio.Seq.BioSequence{A<:Union{Bio.Seq.DNAAlphabet,Bio.Seq.RNAAlphabet}},1}}' href='#Bio.Var.distance-Tuple{Type{Bio.Var.Count{T<:Bio.Var.MutationType}},Array{Bio.Seq.BioSequence{A<:Union{Bio.Seq.DNAAlphabet,Bio.Seq.RNAAlphabet}},1}}'>#</a>
 <strong><code>Bio.Var.distance</code></strong> &mdash; <em>Method</em>.</p>
 <div class="codehilite"><pre><span></span>distance{T&lt;:MutationType,A&lt;:NucleotideAlphabet}(::Type{Count{T}}, seqs::Vector{BioSequence{A}})
@@ -347,7 +347,7 @@
 
 <p>Compute the number of mutations of type <code>T</code> between a set of sequences in a pairwise manner.</p>
 <p>This method of distance returns a tuple of the number of mutations of type <code>T</code> between sequences and the number of valid (i.e. non-ambiguous sites) counted by the function.</p>
-<p><a target='_blank' href='https://github.com/BioJulia/Bio.jl/tree/3c6cccac1a7d886b163d431be9c5a00ced55a6d3/src/var/distances.jl#L122-L131' class='documenter-source'>source</a><br></p>
+<p><a target='_blank' href='https://github.com/BioJulia/Bio.jl/tree/f80c74414d7d79df7d07cad9efeb43fa438a0f4d/src/var/distances.jl#L122-L131' class='documenter-source'>source</a><br></p>
 <p><a id='Bio.Var.distance-Tuple{Type{Bio.Var.Proportion{T<:Bio.Var.MutationType}},Array{Bio.Seq.BioSequence{A<:Union{Bio.Seq.DNAAlphabet,Bio.Seq.RNAAlphabet}},1}}' href='#Bio.Var.distance-Tuple{Type{Bio.Var.Proportion{T<:Bio.Var.MutationType}},Array{Bio.Seq.BioSequence{A<:Union{Bio.Seq.DNAAlphabet,Bio.Seq.RNAAlphabet}},1}}'>#</a>
 <strong><code>Bio.Var.distance</code></strong> &mdash; <em>Method</em>.</p>
 <div class="codehilite"><pre><span></span>distance{T&lt;:MutationType,A&lt;:NucleotideAlphabet}(::Type{Proportion{T}}, seqs::Vector{BioSequence{A}})
@@ -355,7 +355,7 @@
 
 
 <p>This method of distance returns a tuple of a vector of the p-distances, and a vector of the number of valid (i.e. non-ambiguous sites) counted by the function.</p>
-<p><a target='_blank' href='https://github.com/BioJulia/Bio.jl/tree/3c6cccac1a7d886b163d431be9c5a00ced55a6d3/src/var/distances.jl#L260-L265' class='documenter-source'>source</a><br></p>
+<p><a target='_blank' href='https://github.com/BioJulia/Bio.jl/tree/f80c74414d7d79df7d07cad9efeb43fa438a0f4d/src/var/distances.jl#L260-L265' class='documenter-source'>source</a><br></p>
 <p><a id='Bio.Var.distance-Tuple{Type{Bio.Var.JukesCantor69},Array{Bio.Seq.BioSequence{A<:Union{Bio.Seq.DNAAlphabet,Bio.Seq.RNAAlphabet}},1}}' href='#Bio.Var.distance-Tuple{Type{Bio.Var.JukesCantor69},Array{Bio.Seq.BioSequence{A<:Union{Bio.Seq.DNAAlphabet,Bio.Seq.RNAAlphabet}},1}}'>#</a>
 <strong><code>Bio.Var.distance</code></strong> &mdash; <em>Method</em>.</p>
 <div class="codehilite"><pre><span></span>distance{A&lt;:NucleotideAlphabet}(::Type{JukesCantor69}, seqs::Vector{BioSequence{A}})
@@ -363,7 +363,7 @@
 
 
 <p>This method of distance returns a tuple of the expected JukesCantor69 distance estimate, and the computed variance.</p>
-<p><a target='_blank' href='https://github.com/BioJulia/Bio.jl/tree/3c6cccac1a7d886b163d431be9c5a00ced55a6d3/src/var/distances.jl#L315-L320' class='documenter-source'>source</a><br></p>
+<p><a target='_blank' href='https://github.com/BioJulia/Bio.jl/tree/f80c74414d7d79df7d07cad9efeb43fa438a0f4d/src/var/distances.jl#L315-L320' class='documenter-source'>source</a><br></p>
 <p><a id='Bio.Var.distance-Tuple{Type{Bio.Var.Kimura80},Array{Bio.Seq.BioSequence{A<:Union{Bio.Seq.DNAAlphabet,Bio.Seq.RNAAlphabet}},1}}' href='#Bio.Var.distance-Tuple{Type{Bio.Var.Kimura80},Array{Bio.Seq.BioSequence{A<:Union{Bio.Seq.DNAAlphabet,Bio.Seq.RNAAlphabet}},1}}'>#</a>
 <strong><code>Bio.Var.distance</code></strong> &mdash; <em>Method</em>.</p>
 <div class="codehilite"><pre><span></span>distance{A&lt;:NucleotideAlphabet}(::Type{Kimura80}, seqs::Vector{BioSequence{A}})
@@ -371,7 +371,7 @@
 
 
 <p>This method of distance returns a tuple of the expected Kimura80 distance estimate, and the computed variance.</p>
-<p><a target='_blank' href='https://github.com/BioJulia/Bio.jl/tree/3c6cccac1a7d886b163d431be9c5a00ced55a6d3/src/var/distances.jl#L380-L385' class='documenter-source'>source</a><br></p></div>
+<p><a target='_blank' href='https://github.com/BioJulia/Bio.jl/tree/f80c74414d7d79df7d07cad9efeb43fa438a0f4d/src/var/distances.jl#L380-L385' class='documenter-source'>source</a><br></p></div>
         
     </div>
 
