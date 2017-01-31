@@ -29,7 +29,7 @@ end
 
 Return the sequence name of `record`.
 """
-function seqname(rec::SeqRecord)
+function Bio.seqname(rec::SeqRecord)
     return rec.name
 end
 
@@ -38,7 +38,7 @@ end
 
 Return the sequence of `record`.
 """
-function sequence(rec::SeqRecord)
+function Bio.sequence(rec::SeqRecord)
     return rec.seq
 end
 
@@ -47,7 +47,7 @@ end
 
 Return the metadata of `record`.
 """
-function metadata(rec::SeqRecord)
+function Bio.metadata(rec::SeqRecord)
     return rec.metadata
 end
 

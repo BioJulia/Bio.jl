@@ -8,8 +8,7 @@
 
 module Structure
 
-import Bio
-import Bio: distance
+importall Bio
 
 include("model.jl")
 include("pdb.jl")

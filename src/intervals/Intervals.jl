@@ -42,7 +42,7 @@ export
 import ..Ragel: tryread!
 export tryread!
 
-import Bio
+importall Bio
 using
     BufferedStreams,
     Colors,
