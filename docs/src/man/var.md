@@ -3,65 +3,58 @@
 ```@meta
 CurrentModule = Bio.Var
 DocTestSetup = quote
-    using Bio.Seq
     using Bio.Var
 end
 ```
 
-## Identifying and counting mutations
+## Identifying and counting sequence sites
 
-You can count the numbers of different types of mutations in a pairwise manner
-for a set of nucleotide sequences.
+You can identify and count the number of various types of site in a nucleotide
+sequence, or pair/set of aligned nucleotide sequences.
 
-### Different types of mutation
+### Different types of site
 
-The types of mutations that can currently be counted are `AnyMutation`s,
-`TransitionMutation`s, and `TransversionMutation`s.
-
-```@docs
-AnyMutation
-TransitionMutation
-TransversionMutation
-```
-
-### The `count_mutations` method
-
-Mutations are counted using the `count_mutations` method.
-The method outputs a tuple. The first value is the number of mutations counted.
-The second value is the number of sites examined. Sites which have gaps and
-uncertain nucleotides are not examined and so this second value will be less
-than the length of the two biological sequences.
-
-```jldoctest
-julia> count_mutations(AnyMutation, [dna"ATCGATCG", dna"ACCGATCG"])
-([1],[8])
-
-julia> count_mutations(TransitionMutation, [dna"ATCGATCG", dna"ACCGATCG"])
-([1],[8])
-
-julia> count_mutations(TransversionMutation, [dna"ATCGATCG", dna"ACCGATCG"])
-([0],[8])
-
-julia> count_mutations(TransitionMutation, TransversionMutation, [dna"ATCGATCG", dna"ACCGATCG"])
-([1],[0],[8])
-
-julia> count_mutations(AnyMutation, [rna"AUCGAUCG", rna"ACCGAUCG"])
-([1],[8])
-
-julia> count_mutations(TransitionMutation, [rna"AUCGAUCG", rna"ACCGAUCG"])
-([1],[8])
-
-julia> count_mutations(TransversionMutation, [rna"AUCGAUCG", rna"ACCGAUCG"])
-([0],[8])
-
-julia> count_mutations(TransitionMutation, TransversionMutation, [rna"AUCGAUCG", rna"ACCGAUCG"])
-([1],[0],[8])
-```
-
-### The `is_mutation` method
+#### The abstract SiteCase{p} type
 
 ```@docs
-is_mutation
+SiteCase
+```
+
+#### The concrete types of site case
+
+The types of mutations that can currently be counted are summarized below:
+
+```@docs
+Indel
+Ambiguous
+Certain
+Match
+Mismatch
+Conserved
+Mutated
+Transition
+Transversion
+```
+
+
+### The `count_sites` method
+
+```@docs
+count_sites
+```
+
+```julia
+count_sites(Match, [dna"ATCGATCG", dna"ACCGATCG"])
+
+count_sites(Mismatch, [dna"ATCGATCG", dna"ACCGATCG"])
+
+count_sites(Conserved, [dna"ATCGATCG", dna"ACCGATCG"])
+
+count_sites(Mutated, [dna"ATCGATCG", dna"ACCGATCG"])
+
+count_sites(Transition, [rna"AUCGAUCG", rna"ACCGAUCG"])
+
+count_sites(Transversion, [rna"AUCGAUCG", rna"ACCGAUCG"])
 ```
 
 ## Computing evolutionary and genetic distances

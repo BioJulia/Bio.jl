@@ -2,8 +2,9 @@ module TestSeq
 
 using Base.Test
 
-using Bio.Seq,
-    BufferedStreams,
+using Bio: Seq, Var
+
+using BufferedStreams,
     StatsBase,
     YAML,
     TestFunctions
@@ -308,10 +309,10 @@ end
 
     @testset "isambiguous" begin
         for nt in alphabet(DNA)
-            @test isambiguous(nt) == (nt ∉ (DNA_A, DNA_C, DNA_G, DNA_T))
+            @test isambiguous(nt) == (nt ∉ (DNA_A, DNA_C, DNA_G, DNA_T, DNA_Gap))
         end
         for nt in alphabet(RNA)
-            @test isambiguous(nt) == (nt ∉ (RNA_A, RNA_C, RNA_G, RNA_U))
+            @test isambiguous(nt) == (nt ∉ (RNA_A, RNA_C, RNA_G, RNA_U, RNA_Gap))
         end
     end
 

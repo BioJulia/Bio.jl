@@ -2,41 +2,83 @@ module TestVar
 
 using Base.Test
 
-using Bio.Seq
-using Bio.Var
-import Bio
-import YAML
-import BufferedStreams: BufferedInputStream
+using Bio: Seq, Var
+using TestFunctions
 
-@testset "Counting mutations" begin
-
-    # Create a 20bp test DNA sequence pair containing every possible transition (4),
-    # every possible transversion (8), and 2 gapped sites and 2 ambiguous sites.
-    # This leaves 4 sites non-mutated/conserved.
-    dnas = [dna"ATTG-ACCTGGNTTTCCGAA", dna"A-ACAGAGTATACRGTCGTC"]
-    m1 = seqmatrix(dnas, :seq)
-
-    rnas = [rna"AUUG-ACCUGGNUUUCCGAA", rna"A-ACAGAGUAUACRGUCGUC"]
-    m2 = seqmatrix(rnas, :seq)
-
-    @test count_mutations(AnyMutation, dnas) == count_mutations(AnyMutation, rnas) == ([12], [16])
-    @test count_mutations(AnyMutation, m1) == count_mutations(AnyMutation, m2) == ([12], [16])
-    @test count_mutations(TransitionMutation, dnas) == count_mutations(TransitionMutation, rnas) == ([4], [16])
-    @test count_mutations(TransitionMutation, m1) == count_mutations(TransitionMutation, m2) == ([4], [16])
-    @test count_mutations(TransversionMutation, dnas) == count_mutations(TransversionMutation, rnas) == ([8], [16])
-    @test count_mutations(TransversionMutation, m1) == count_mutations(TransversionMutation, m2) == ([8], [16])
-    @test count_mutations(TransitionMutation, TransversionMutation, dnas) == count_mutations(TransitionMutation, TransversionMutation, rnas) == ([4], [8], [16])
-    @test count_mutations(TransitionMutation, TransversionMutation, m1) == count_mutations(TransitionMutation, TransversionMutation, m2) == ([4], [8], [16])
-    @test count_mutations(TransversionMutation, TransitionMutation, dnas) == count_mutations(TransversionMutation, TransitionMutation, rnas) == ([4], [8], [16])
-    @test count_mutations(TransversionMutation, TransitionMutation, m1) == count_mutations(TransversionMutation, TransitionMutation, m2) == ([4], [8], [16])
-
-    ans = Bool[false, false, true, true, false, true, true, true, false, true, true, false, true, false, true, true, false, false, true, true]
-    @test flagmutations(AnyMutation, m1)[1][:,1] == ans
-    @test flagmutations(AnyMutation, m2)[1][:,1] == ans
-
-
+function generate_testcase{A<:Union{DNAAlphabet{4}, DNAAlphabet{2}, RNAAlphabet{4}, RNAAlphabet{2}}}(::Type{A}, len::Int)
+    a = [convert(Char, i)  for i in alphabet(A)]
+    probs = Vector{Float64}(length(a))
+    fill!(probs, 1 / length(a))
+    return BioSequence{A}(random_seq(len, a, probs))
 end
 
+function generate_possibilities_tester{A<:Union{DNAAlphabet{4}, DNAAlphabet{2}, RNAAlphabet{4}, RNAAlphabet{2}}}(::Type{A})
+    symbols = alphabet(A)
+    arra = Vector{eltype(A)}()
+    arrb = Vector{eltype(A)}()
+    for i in 1:length(symbols), j in i:length(symbols)
+        push!(arra, symbols[i])
+        push!(arrb, symbols[j])
+    end
+    return BioSequence{A}(arra), BioSequence{A}(arrb)
+end
+
+for alph in (:DNAAlphabet, :RNAAlphabet)
+    @eval function generate_possibilities_tester(::Type{$alph{2}}, ::Type{$alph{4}})
+        arra = Vector{eltype($alph)}()
+        arrb = Vector{eltype($alph)}()
+        for i in alphabet($alph{2}), j in alphabet($alph{4})
+            push!(arra, i)
+            push!(arrb, j)
+        end
+        return BioSequence{$alph{2}}(arra), BioSequence{$alph{4}}(arrb)
+    end
+end
+
+@testset "Var" begin
+    @testset "Site counting and identification" begin
+        @testset "Naive methods" begin
+            # Test when sequences are of the same bitencoding.
+            for alph in (DNAAlphabet{4}, DNAAlphabet{2}, RNAAlphabet{4}, RNAAlphabet{2})
+                istwobit = Seq.bitsof(alph) == 2
+                seqA, seqB = generate_possibilities_tester(alph)
+
+                # Answers to these tests were worked out manually to verify count_sites_naive was working.
+                # seqA and seqB contain all possible observations of sites.
+
+                @test count_sites_naive(Certain, seqA, seqB) == count_sites_naive(Certain, seqB, seqA) == 10
+                @test count_sites_naive(Indel, seqA, seqB) == count_sites_naive(Indel, seqB, seqA) == ifelse(istwobit, 0, 16)
+                @test count_sites_naive(Ambiguous, seqA, seqB) == count_sites_naive(Ambiguous, seqB, seqA) == ifelse(istwobit, 0, 121)
+                @test count_sites_naive(Match, seqA, seqB) == count_sites_naive(Match, seqB, seqA) == length(alphabet(alph))
+                @test count_sites_naive(Mismatch, seqA, seqB) == count_sites_naive(Mismatch, seqB, seqA) == (length(seqA) - length(alphabet(alph)))
+
+                @test count_sites_naive(Mutated, seqA, seqB) == count_sites_naive(Mutated, seqB, seqA) == (6, ifelse(istwobit, 0, 126))
+                @test count_sites_naive(Conserved, seqA, seqB) == count_sites_naive(Conserved, seqB, seqA) == (4, ifelse(istwobit, 0, 126))
+                @test count_sites_naive(Transition, seqA, seqB) == count_sites_naive(Transition, seqB, seqA) == (2, ifelse(istwobit, 0, 126))
+                @test count_sites_naive(Transversion, seqA, seqB) == count_sites_naive(Transversion, seqB, seqA) == (4, ifelse(istwobit, 0, 126))
+            end
+
+            # Test for when sequences are of different bitencodings.
+            for alphs in [(DNAAlphabet{2}, DNAAlphabet{4}),
+                          (RNAAlphabet{2}, RNAAlphabet{4})]
+                seqA, seqB = generate_possibilities_tester(alphs...)
+                @test count_sites_naive(Certain, seqA, seqB) == count_sites_naive(Certain, seqB, seqA) == 16
+                @test count_sites_naive(Indel, seqA, seqB) == count_sites_naive(Indel, seqB, seqA) == 4
+                @test count_sites_naive(Ambiguous, seqA, seqB) == count_sites_naive(Ambiguous, seqB, seqA) == 44
+                @test count_sites_naive(Match, seqA, seqB) == count_sites_naive(Match, seqB, seqA) == 4
+                @test count_sites_naive(Mismatch, seqA, seqB) == count_sites_naive(Mismatch, seqB, seqA) == 60
+
+                @test count_sites_naive(Mutated, seqA, seqB) == count_sites_naive(Mutated, seqB, seqA) == (12, 48)
+                @test count_sites_naive(Conserved, seqA, seqB) == count_sites_naive(Conserved, seqB, seqA) == (4, 48)
+                @test count_sites_naive(Transition, seqA, seqB) == count_sites_naive(Transition, seqB, seqA) == (4, 48)
+                @test count_sites_naive(Transversion, seqA, seqB) == count_sites_naive(Transversion, seqB, seqA) == (8, 48)
+            end
+        end
+    end
+end
+
+
+#=
 @testset "Distance Computation" begin
 
     dnas1 = [dna"ATTG-ACCTGGNTTTCCGAA", dna"A-ACAGAGTATACRGTCGTC"]
@@ -129,6 +171,7 @@ end
     @test round(distance(Kimura80, m2)[2][1], 3) == 1
 
 end
+<<<<<<< HEAD
 
 @testset "VCF" begin
     metainfo = VCFMetaInfo()
@@ -494,4 +537,7 @@ end
     end
 end
 
+=======
+=#
+>>>>>>> Refreshed the mutation counting API to include more site types.
 end # module TestVar

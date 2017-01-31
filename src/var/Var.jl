@@ -20,25 +20,20 @@ importall Bio
 
 export
 
-    # Mutation types
-    MutationType,
-    AnyMutation,
-    TransitionMutation,
-    TransversionMutation,
+    # Site types
+    Certain,
+    Ambiguous,
+    Indel,
+    Match,
+    Mismatch,
+    Conserved,
+    Mutated,
+    Transition,
+    Transversion,
 
-    # Identifying and counting mutations
-    count_mutations,
-    is_mutation,
-    flagmutations,
-
-    # Genetic and Evolutionary distances
-    EvolutionaryDistance,
-    Count,
-    Proportion,
-    JukesCantor69,
-    Kimura80,
-
-    distance,
+    #Site counting methods
+    count_sites_naive,
+    count_sites
 
     # VCF and BCF
     VCFMetaInfo,
@@ -78,8 +73,8 @@ export
 
 # Bio.@reexport import Bio: isfilled, leftposition
 
-include("mutation_counting.jl")
-include("distances.jl")
+include("site_counting/site_counting.jl")
+#include("distances.jl")
 include("vcf/vcf.jl")
 include("bcf/bcf.jl")
 
