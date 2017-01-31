@@ -4,7 +4,7 @@ _The Bioinformatics and Computation Biology infrastructure for the julia languag
 
 | **Chat** | **Documentation** | **Build Status** |
 |:--------:|:-----------------:|:----------------:|
-| [![][gitter-img]][gitter-url] | [![][docs-stable-img]][docs-stable-url] [![][docs-latest-img]][docs-latest-url] | [![][travis-img]][travis-url] [![][appveyor-img]][appveyor-url] [![][codecov-img]][codecov-url] [![][coveralls-img]][coveralls-url] |
+| [![][gitter-img]][gitter-url] | [![][docs-stable-img]][docs-stable-url] [![][docs-latest-img]][docs-latest-url] | [![][travis-img]][travis-url] [![][appveyor-img]][appveyor-url] [![][codecov-img]][codecov-url] |
 
 
 ## Description
@@ -94,8 +94,6 @@ Our roadmap is on the wiki: <https://github.com/BioJulia/Bio.jl/wiki/roadmap>.
 
 [codecov-img]: https://codecov.io/gh/BioJulia/Bio.jl/branch/master/graph/badge.svg
 [codecov-url]: https://codecov.io/gh/BioJulia/Bio.jl
-[coveralls-img]:  https://img.shields.io/coveralls/BioJulia/Bio.jl.svg
-[coveralls-url]: https://coveralls.io/r/BioJulia/Bio.jl
 [travis-img]: https://travis-ci.org/BioJulia/Bio.jl.svg?branch=master
 [travis-url]: https://travis-ci.org/BioJulia/Bio.jl
 [appveyor-img]: https://ci.appveyor.com/api/projects/status/nq4w264346py8esp/branch/master?svg=true
