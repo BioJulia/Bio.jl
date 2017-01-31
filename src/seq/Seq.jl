@@ -155,7 +155,7 @@ export
     seqmatrix,
     majorityvote
 
-import Bio
+importall Bio
 import Automa
 import Automa.RegExp: @re_str
 const re = Automa.RegExp

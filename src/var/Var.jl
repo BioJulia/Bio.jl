@@ -9,8 +9,7 @@
 
 module Var
 
-import Bio
-import Bio: distance
+importall Bio
 using Bio.Seq
 
 export

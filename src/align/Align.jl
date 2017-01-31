@@ -111,8 +111,7 @@ export
     SAM_FLAG_DUP,
     SAM_FLAG_SUPPLEMENTARY
 
-import Bio
-import Bio: distance
+importall Bio
 using Bio.Seq
 using Bio.Intervals
 import Bio.StringFields: StringField

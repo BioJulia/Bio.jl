@@ -121,7 +121,7 @@ Return the leftmost mapping position of `rec`.
 
 The index is 1-based and will be 0 for an alignment without mapping position.
 """
-function Bio.Intervals.leftposition(rec::BAMRecord)
+function Bio.leftposition(rec::BAMRecord)
     return rec.pos + 1
 end
 
@@ -130,7 +130,7 @@ end
 
 Return the rightmost mapping position of `rec`.
 """
-function Bio.Intervals.rightposition(rec::BAMRecord)
+function Bio.rightposition(rec::BAMRecord)
     return Int32(leftposition(rec) + alignment_length(rec) - 1)
 end
 
@@ -166,7 +166,7 @@ function templatelength(rec::BAMRecord)
     return rec.tlen
 end
 
-function Bio.Seq.seqname(rec::BAMRecord)
+function Bio.seqname(rec::BAMRecord)
     # drop the last NUL character
     return unsafe_string(pointer(rec.data), max(seqname_length(rec) - 1, 0))
 end
@@ -231,7 +231,7 @@ function alignment(rec::BAMRecord)
     return Alignment(anchors)
 end
 
-function Bio.Seq.sequence(rec::BAMRecord)
+function Bio.sequence(rec::BAMRecord)
     seqlen = seqlength(rec)
     data = Vector{UInt64}(cld(seqlen, 16))
     src::Ptr{UInt64} = pointer(rec.data, seqname_length(rec) + n_cigar_op(rec) * 4 + 1)

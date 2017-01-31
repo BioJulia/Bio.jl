@@ -39,11 +39,11 @@ function Base.copy{T}(interval::Interval{T})
                        interval.strand, copy(interval.metadata))
 end
 
-function Bio.Seq.seqname(i::Interval)
+function Bio.seqname(i::Interval)
     return i.seqname
 end
 
-function Bio.Seq.metadata(i::Interval)
+function Bio.metadata(i::Interval)
     return i.metadata
 end
 
@@ -56,7 +56,7 @@ end
 
 Return the leftmost position of `i`.
 """
-function leftposition(i::Interval)
+function Bio.leftposition(i::Interval)
     return i.first
 end
 
@@ -65,7 +65,7 @@ end
 
 Return the rightmost position of `i`.
 """
-function rightposition(i::Interval)
+function Bio.rightposition(i::Interval)
     return i.last
 end
 

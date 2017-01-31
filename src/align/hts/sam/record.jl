@@ -65,7 +65,7 @@ function ismapped(rec::SAMRecord)
     return flag(rec) & SAM_FLAG_UNMAP == 0
 end
 
-function Bio.Seq.seqname(rec::SAMRecord)
+function Bio.seqname(rec::SAMRecord)
     return rec.name
 end
 
@@ -81,11 +81,11 @@ function nextrefname(rec::SAMRecord)
     return rec.next_refname
 end
 
-function Bio.Intervals.leftposition(rec::SAMRecord)
+function Bio.leftposition(rec::SAMRecord)
     return rec.pos
 end
 
-function Bio.Intervals.rightposition(rec::SAMRecord)
+function Bio.rightposition(rec::SAMRecord)
     return leftposition(rec) + alignment_length(rec) - 1
 end
 
@@ -113,7 +113,7 @@ function alignment(rec::SAMRecord)
     end
 end
 
-function Bio.Seq.sequence(rec::SAMRecord)
+function Bio.sequence(rec::SAMRecord)
     return rec.seq
 end
 
