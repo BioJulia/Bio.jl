@@ -26,6 +26,7 @@ script:
   - if [[ -a .git/shallow ]]; then git fetch --unshallow; fi
   - julia --check-bounds=yes -e 'Pkg.clone(pwd()); Pkg.build("Bio"); Pkg.test("Bio"; coverage=true)'
 after_success:
-  - julia -e 'cd(Pkg.dir("Bio")); Pkg.add("Coverage"); using Coverage; Coveralls.submit(Coveralls.process_folder())'
+  # Deactivate Coveralls for a while; we'll remove it when we find it unnecessary.
+  # - julia -e 'cd(Pkg.dir("Bio")); Pkg.add("Coverage"); using Coverage; Coveralls.submit(Coveralls.process_folder())'
   - julia -e 'cd(Pkg.dir("Bio")); Pkg.add("Coverage"); using Coverage; Codecov.submit(process_folder())'
   - julia -e 'cd(Pkg.dir("Bio")); Pkg.add("Documenter"); include(joinpath("docs", "make.jl"))'
