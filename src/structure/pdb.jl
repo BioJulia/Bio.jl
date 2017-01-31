@@ -8,7 +8,7 @@ export
 
 
 "Protein Data Bank (PDB) file format."
-immutable PDB <: FileFormat end
+immutable PDB <: Bio.IO.FileFormat end
 
 
 "Error arising from parsing a Protein Data Bank (PDB) file."

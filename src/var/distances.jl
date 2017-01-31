@@ -111,13 +111,15 @@ end
 # Distance computation methods
 # ----------------------------
 
+#=
 """
 Compute the pairwise genetic distances for a set of aligned nucleotide sequences.
 
 The distance measure to compute is determined by the type provided as the first
 parameter. The second parameter provides the set of nucleotide sequences.
 """
-function distance end
+function Bio.distance end
+=#
 
 """
     distance{T<:MutationType,A<:NucleotideAlphabet}(::Type{Count{T}}, seqs::Vector{BioSequence{A}})
@@ -129,7 +131,7 @@ This method of distance returns a tuple of the number of mutations of type `T`
 between sequences and the number of valid (i.e. non-ambiguous sites) counted by
 the function.
 """
-function distance{T<:MutationType,A<:NucleotideAlphabet}(::Type{Count{T}}, seqs::Vector{BioSequence{A}})
+function Bio.distance{T<:MutationType,A<:NucleotideAlphabet}(::Type{Count{T}}, seqs::Vector{BioSequence{A}})
     return count_mutations(T, seqs)
 end
 
@@ -145,7 +147,7 @@ This method computes mutation counts for every window, and returns a tuple of th
 matrix of p-distances for every window, a matrix of the number of valid sites
 counted by the function for each window.
 """
-function distance{T<:MutationType,A<:NucleotideAlphabet}(::Type{Count{T}}, seqs::Vector{BioSequence{A}}, width::Int, step::Int)
+function Bio.distance{T<:MutationType,A<:NucleotideAlphabet}(::Type{Count{T}}, seqs::Vector{BioSequence{A}}, width::Int, step::Int)
     mutation_flags, ambiguous_flags = flagmutations(T, seqs)
     nbases, npairs = size(mutation_flags)
     if width < 1
@@ -186,7 +188,7 @@ function distance{T<:MutationType,A<:NucleotideAlphabet}(::Type{Count{T}}, seqs:
 end
 
 
-function distance{T<:TsTv,A<:NucleotideAlphabet}(::Type{Count{T}}, seqs::Vector{BioSequence{A}}, width::Int, step::Int)
+function Bio.distance{T<:TsTv,A<:NucleotideAlphabet}(::Type{Count{T}}, seqs::Vector{BioSequence{A}}, width::Int, step::Int)
     transitionFlags, transversionFlags, ambiguous_flags = flagmutations(TransitionMutation, TransversionMutation, seqs)
     nbases, npairs = size(transitionFlags)
     if width < 1
@@ -245,15 +247,15 @@ the function.
 provided as `seqs` in sequence major order i.e. each column of the matrix is one
 complete nucleotide sequence.**
 """
-function distance{T<:MutationType,N<:Nucleotide}(::Type{Count{T}}, seqs::Matrix{N})
+function Bio.distance{T<:MutationType,N<:Nucleotide}(::Type{Count{T}}, seqs::Matrix{N})
     return count_mutations(T, seqs)
 end
 
-function distance{T<:TsTv,A<:NucleotideAlphabet}(::Type{Count{T}}, seqs::Vector{BioSequence{A}})
+function Bio.distance{T<:TsTv,A<:NucleotideAlphabet}(::Type{Count{T}}, seqs::Vector{BioSequence{A}})
     return count_mutations(TransitionMutation, TransversionMutation, seqs)
 end
 
-function distance{T<:TsTv,N<:Nucleotide}(::Type{Count{T}}, seqs::Matrix{N})
+function Bio.distance{T<:TsTv,N<:Nucleotide}(::Type{Count{T}}, seqs::Matrix{N})
     return count_mutations(TransitionMutation, TransversionMutation, seqs)
 end
 
@@ -263,7 +265,7 @@ end
 This method of distance returns a tuple of a vector of the p-distances, and a
 vector of the number of valid (i.e. non-ambiguous sites) counted by the function.
 """
-function distance{T<:MutationType,A<:NucleotideAlphabet}(::Type{Proportion{T}}, seqs::Vector{BioSequence{A}})
+function Bio.distance{T<:MutationType,A<:NucleotideAlphabet}(::Type{Proportion{T}}, seqs::Vector{BioSequence{A}})
     d, l = distance(Count{T}, seqs)
     D = Vector{Float64}(length(d))
     @inbounds @simd for i in 1:length(D)
@@ -282,7 +284,7 @@ vector of the number of valid (i.e. non-ambiguous) sites counted by the function
 provided as `seqs` in sequence major order i.e. each column of the matrix is one
 complete nucleotide sequence.**
 """
-function distance{T<:MutationType,N<:Nucleotide}(::Type{Proportion{T}}, seqs::Matrix{N})
+function Bio.distance{T<:MutationType,N<:Nucleotide}(::Type{Proportion{T}}, seqs::Matrix{N})
     d, l = distance(Count{T}, seqs)
     D = Vector{Float64}(length(d))
     @inbounds for i in 1:length(D)
@@ -303,7 +305,7 @@ This method computes p-distances for every window, and returns a tuple of the
 matrix of p-distances for every window, a matrix of the number of valid sites
 counted by the function for each window.
 """
-function distance{T<:MutationType,A<:NucleotideAlphabet}(::Type{Proportion{T}}, seqs::Vector{BioSequence{A}}, width::Int, step::Int)
+function Bio.distance{T<:MutationType,A<:NucleotideAlphabet}(::Type{Proportion{T}}, seqs::Vector{BioSequence{A}}, width::Int, step::Int)
     counts, wsizes, ranges = distance(Count{T}, seqs, width, step)
     res = Matrix{Float64}(size(counts))
     @inbounds for i in 1:endof(counts)
@@ -318,7 +320,7 @@ end
 This method of distance returns a tuple of the expected JukesCantor69 distance
 estimate, and the computed variance.
 """
-function distance{A<:NucleotideAlphabet}(::Type{JukesCantor69}, seqs::Vector{BioSequence{A}})
+function Bio.distance{A<:NucleotideAlphabet}(::Type{JukesCantor69}, seqs::Vector{BioSequence{A}})
     p, l = distance(Proportion{AnyMutation}, seqs)
     D = Vector{Float64}(length(p))
     V = Vector{Float64}(length(p))
@@ -341,7 +343,7 @@ This method computes the JukesCantor69 distance for every window, and returns a 
 matrix of p-distances for every window, a matrix of the number of valid sites
 counted by the function for each window.
 """
-function distance{A<:NucleotideAlphabet}(::Type{JukesCantor69}, seqs::Vector{BioSequence{A}}, width::Int, step::Int)
+function Bio.distance{A<:NucleotideAlphabet}(::Type{JukesCantor69}, seqs::Vector{BioSequence{A}}, width::Int, step::Int)
     ps, wsizes, ranges = distance(Proportion{AnyMutation}, seqs, width, step)
     a, b = size(ps)
     est = Matrix{Float64}(a, b)
@@ -365,7 +367,7 @@ estimate, and the computed variance.
 provided as `seqs` in sequence major order i.e. each column of the matrix is one
 complete nucleotide sequence.**
 """
-function distance{N<:Nucleotide}(::Type{JukesCantor69}, seqs::Matrix{N})
+function Bio.distance{N<:Nucleotide}(::Type{JukesCantor69}, seqs::Matrix{N})
     p, l = distance(Proportion{AnyMutation}, seqs)
     D = Vector{Float64}(length(p))
     V = Vector{Float64}(length(p))
@@ -383,7 +385,7 @@ end
 This method of distance returns a tuple of the expected Kimura80 distance
 estimate, and the computed variance.
 """
-function distance{A<:NucleotideAlphabet}(::Type{Kimura80}, seqs::Vector{BioSequence{A}})
+function Bio.distance{A<:NucleotideAlphabet}(::Type{Kimura80}, seqs::Vector{BioSequence{A}})
     ns, nv, l = distance(Count{Kimura80}, seqs)
     D = Vector{Float64}(length(ns))
     V = Vector{Float64}(length(ns))
@@ -411,7 +413,7 @@ This method computes the Kimura80 distance for every window, and returns a tuple
 matrix of p-distances for every window, a matrix of the number of valid sites
 counted by the function for each window.
 """
-function distance{A<:NucleotideAlphabet}(::Type{Kimura80}, seqs::Vector{BioSequence{A}}, width::Int, step::Int)
+function Bio.distance{A<:NucleotideAlphabet}(::Type{Kimura80}, seqs::Vector{BioSequence{A}}, width::Int, step::Int)
     tss, tvs, wsizes, ranges = distance(Count{Kimura80}, seqs, width, step)
     a, b = size(tss)
     est = Matrix{Float64}(a, b)
@@ -440,7 +442,7 @@ estimate, and the computed variance.
 provided as `seqs` in sequence major order i.e. each column of the matrix is one
 complete nucleotide sequence.**
 """
-function distance{N<:Nucleotide}(::Type{Kimura80}, seqs::Matrix{N})
+function Bio.distance{N<:Nucleotide}(::Type{Kimura80}, seqs::Matrix{N})
     ns, nv, l = distance(Count{Kimura80}, seqs)
     D = Vector{Float64}(length(ns))
     V = Vector{Float64}(length(ns))

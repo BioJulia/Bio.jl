@@ -116,13 +116,13 @@ Get the minimum distance between two `StructuralElementOrList`s.
 Additional arguments are atom selector functions - only atoms that return
 `true` from the functions are retained.
 """
-function distance(el_one::StructuralElementOrList,
-                el_two::StructuralElementOrList,
-                atom_selectors::Function...)
+function Bio.distance(el_one::StructuralElementOrList,
+                      el_two::StructuralElementOrList,
+                      atom_selectors::Function...)
     return sqrt(sqdistance(el_one, el_two, atom_selectors...))
 end
 
-function distance(at_one::AbstractAtom, at_two::AbstractAtom)
+function Bio.distance(at_one::AbstractAtom, at_two::AbstractAtom)
     return sqrt(sqdistance(at_one, at_two))
 end
 

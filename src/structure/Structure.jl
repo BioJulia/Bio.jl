@@ -8,7 +8,8 @@
 
 module Structure
 
-import Bio.IO.FileFormat
+import Bio
+import Bio: distance
 
 include("model.jl")
 include("pdb.jl")

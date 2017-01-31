@@ -42,7 +42,7 @@ score(aln::PairwiseAlignmentResult) = aln.value
 
 Retrun distance of alignment.
 """
-distance(aln::PairwiseAlignmentResult) = aln.value
+Bio.distance(aln::PairwiseAlignmentResult) = aln.value
 
 
 """
