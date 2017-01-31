@@ -2,6 +2,7 @@ __precompile__()
 
 module Bio
 
+include("declare.jl")
 include("IO.jl")
 include("Ragel.jl")
 include("StringFields.jl")
