@@ -236,12 +236,12 @@
 <h2 id="interval-types">Interval types</h2>
 <p>Intervals in Bio.jl are consistent with ranges in Julia: <em>1-based and end-inclusive</em>. When data is read from formats with different representations (i.e. 0-based and/or end-exclusive) they are always converted automatically. Similarly when writing data. You should not have to reason about off-by-one errors due to format differences while using functionality provided in Bio.jl.</p>
 <p>The <code>Interval</code> type is defined as</p>
-<div class="codehilite"><pre><span></span><span class="k">type</span><span class="nc"> Interval</span><span class="p">{</span><span class="n">T</span><span class="p">}</span> <span class="o">&lt;:</span> <span class="n">AbstractInterval</span><span class="p">{</span><span class="kt">Int64</span><span class="p">}</span>
-    <span class="n">seqname</span><span class="p">::</span><span class="n">StringField</span>
-    <span class="n">first</span><span class="p">::</span><span class="kt">Int64</span>
-    <span class="n">last</span><span class="p">::</span><span class="kt">Int64</span>
-    <span class="n">strand</span><span class="p">::</span><span class="n">Strand</span>
-    <span class="n">metadata</span><span class="p">::</span><span class="n">T</span>
+<div class="codehilite"><pre><span></span><span class="k">type</span> <span class="n">Interval</span><span class="p">{</span><span class="n">T</span><span class="p">}</span> <span class="o">&lt;:</span> <span class="n">AbstractInterval</span><span class="p">{</span><span class="kt">Int64</span><span class="p">}</span>
+    <span class="n">seqname</span><span class="o">::</span><span class="n">StringField</span>
+    <span class="n">first</span><span class="o">::</span><span class="kt">Int64</span>
+    <span class="n">last</span><span class="o">::</span><span class="kt">Int64</span>
+    <span class="n">strand</span><span class="o">::</span><span class="n">Strand</span>
+    <span class="n">metadata</span><span class="o">::</span><span class="n">T</span>
 <span class="k">end</span>
 </pre></div>
 
@@ -330,16 +330,16 @@
 <p>Collections of intervals are represented using the <code>IntervalCollection</code> type, which is a general purpose indexed container for intervals. It supports fast intersection operations as well as insertion, deletion, and sorted iteration.</p>
 <p>Interval collections can be initialized by inserting elements one by one using <code>push!</code>.</p>
 <div class="codehilite"><pre><span></span><span class="c"># The type parameter (Void here) indicates the interval metadata type.</span>
-<span class="n">incol</span> <span class="o">=</span> <span class="n">IntervalCollection</span><span class="p">{</span><span class="n">Void</span><span class="p">}()</span>
+<span class="n">incol</span> <span class="o">=</span> <span class="n">IntervalCollection</span><span class="p">{</span><span class="kt">Void</span><span class="p">}()</span>
 
-<span class="k">for</span> <span class="n">i</span> <span class="k">in</span> <span class="mi">1</span><span class="p">:</span><span class="mi">100</span><span class="p">:</span><span class="mi">10000</span>
+<span class="k">for</span> <span class="n">i</span> <span class="kp">in</span> <span class="mi">1</span><span class="o">:</span><span class="mi">100</span><span class="o">:</span><span class="mi">10000</span>
     <span class="n">push!</span><span class="p">(</span><span class="n">incol</span><span class="p">,</span> <span class="n">Interval</span><span class="p">(</span><span class="s">&quot;chr1&quot;</span><span class="p">,</span> <span class="n">i</span><span class="p">,</span> <span class="n">i</span> <span class="o">+</span> <span class="mi">99</span><span class="p">))</span>
 <span class="k">end</span>
 </pre></div>
 
 
 <p>Incrementally building an interval collection like this works, but <code>IntervalCollection</code> also has a bulk insertion constructor that is able to build the indexed data structure extremely efficiently from an array of intervals.</p>
-<div class="codehilite"><pre><span></span><span class="n">incol</span> <span class="o">=</span> <span class="n">IntervalCollection</span><span class="p">([</span><span class="n">Interval</span><span class="p">(</span><span class="s">&quot;chr1&quot;</span><span class="p">,</span> <span class="n">i</span><span class="p">,</span> <span class="n">i</span> <span class="o">+</span> <span class="mi">99</span><span class="p">)</span> <span class="k">for</span> <span class="n">i</span> <span class="k">in</span> <span class="mi">1</span><span class="p">:</span><span class="mi">100</span><span class="p">:</span><span class="mi">10000</span><span class="p">])</span>
+<div class="codehilite"><pre><span></span><span class="n">incol</span> <span class="o">=</span> <span class="n">IntervalCollection</span><span class="p">([</span><span class="n">Interval</span><span class="p">(</span><span class="s">&quot;chr1&quot;</span><span class="p">,</span> <span class="n">i</span><span class="p">,</span> <span class="n">i</span> <span class="o">+</span> <span class="mi">99</span><span class="p">)</span> <span class="k">for</span> <span class="n">i</span> <span class="kp">in</span> <span class="mi">1</span><span class="o">:</span><span class="mi">100</span><span class="o">:</span><span class="mi">10000</span><span class="p">])</span>
 </pre></div>
 
 
@@ -360,7 +360,7 @@
 <h2 id="interval-streams">Interval streams</h2>
 <p>Intervals need not necessarily stored in an indexed data structure for efficient intersection to be practical. Two collections of intervals need only be both sorted to compute all intersecting pairs. This is particularly useful in genomics where datasets are sometimes so large that loading them entirely into memory is not practical.</p>
 <p>The Intervals module is able to intersect any two iterators that yield intervals in sorted order, which we refer to as "interval streams". An <code>IntervalCollection</code> is also a interval stream, but so is a sorted array of intervals, and parsers over interval file formats. This allows for a very general notion of intersection.</p>
-<div class="codehilite"><pre><span></span><span class="k">for</span> <span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">)</span> <span class="k">in</span> <span class="n">intersect</span><span class="p">(</span><span class="n">open</span><span class="p">(</span><span class="n">BEDReader</span><span class="p">,</span> <span class="s">&quot;x_features.bed&quot;</span><span class="p">),</span> <span class="n">open</span><span class="p">(</span><span class="n">BEDReader</span><span class="p">,</span> <span class="s">&quot;y_features.bed&quot;</span><span class="p">))</span>
+<div class="codehilite"><pre><span></span><span class="k">for</span> <span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">)</span> <span class="kp">in</span> <span class="n">intersect</span><span class="p">(</span><span class="n">open</span><span class="p">(</span><span class="n">BEDReader</span><span class="p">,</span> <span class="s">&quot;x_features.bed&quot;</span><span class="p">),</span> <span class="n">open</span><span class="p">(</span><span class="n">BEDReader</span><span class="p">,</span> <span class="s">&quot;y_features.bed&quot;</span><span class="p">))</span>
     <span class="n">println</span><span class="p">(</span><span class="s">&quot;Intersection found between &quot;</span><span class="p">,</span> <span class="n">x</span><span class="p">,</span> <span class="s">&quot; and &quot;</span><span class="p">,</span> <span class="n">y</span><span class="p">)</span>
 <span class="k">end</span>
 </pre></div>
@@ -369,7 +369,7 @@
 <p>An exception will be thrown if an interval in encountered out of order while processing an interval stream. Ordering of intervals has one complication: there is not necessarily a standardized way to order sequence names. By default in Bio.jl intervals are sorted using a special <code>alphanum_isless</code> comparison function that compares numbers numerically if they exist in string, so that names like <code>chr1, chr2, chr10</code> end up in their natural order.</p>
 <p>The <code>intersect</code> function takes as an optional parameter an <code>isless</code> function to use to compare sequence names to account for arbitrary sequence name orderings.</p>
 <div class="codehilite"><pre><span></span><span class="c"># assume lexigraphic ordering for sequence names</span>
-<span class="k">for</span> <span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">)</span> <span class="k">in</span> <span class="n">intersect</span><span class="p">(</span><span class="n">xs</span><span class="p">,</span> <span class="n">ys</span><span class="p">,</span> <span class="n">isless</span><span class="p">)</span>
+<span class="k">for</span> <span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">)</span> <span class="kp">in</span> <span class="n">intersect</span><span class="p">(</span><span class="n">xs</span><span class="p">,</span> <span class="n">ys</span><span class="p">,</span> <span class="n">isless</span><span class="p">)</span>
     <span class="n">println</span><span class="p">(</span><span class="s">&quot;Intersection found between &quot;</span><span class="p">,</span> <span class="n">a</span><span class="p">,</span> <span class="s">&quot; and &quot;</span><span class="p">,</span> <span class="n">b</span><span class="p">)</span>
 <span class="k">end</span>
 </pre></div>
@@ -394,7 +394,7 @@
 </pre></div>
 
 
-<p><a target='_blank' href='https://github.com/BioJulia/Bio.jl/tree/61d1a20ab5885ce0fefd2e7de58a3a3e67774018/src/intervals/intervalstream.jl#L207-L222' class='documenter-source'>source</a><br></p></div>
+<p><a target='_blank' href='https://github.com/BioJulia/Bio.jl/tree/ebf7e6c5b82b965bdb09147162ed6ec92c9aa7e1/src/intervals/intervalstream.jl#L207-L222' class='documenter-source'>source</a><br></p></div>
         
     </div>
 

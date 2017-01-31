@@ -408,19 +408,19 @@
 <span class="gp">julia&gt;</span> <span class="n">DNA_Gap</span>
 <span class="go">DNA_Gap</span>
 
-<span class="gp">julia&gt;</span> <span class="nb">typeof</span><span class="p">(</span><span class="n">DNA_A</span><span class="p">)</span>
+<span class="gp">julia&gt;</span> <span class="n">typeof</span><span class="p">(</span><span class="n">DNA_A</span><span class="p">)</span>
 <span class="go">Bio.Seq.DNANucleotide</span>
 
-<span class="gp">julia&gt;</span> <span class="nb">typeof</span><span class="p">(</span><span class="n">RNA_A</span><span class="p">)</span>
+<span class="gp">julia&gt;</span> <span class="n">typeof</span><span class="p">(</span><span class="n">RNA_A</span><span class="p">)</span>
 <span class="go">Bio.Seq.RNANucleotide</span>
 </pre></div>
 
 
 <p>Symbols can be constructed by converting regular characters:</p>
-<div class="codehilite"><pre><span></span><span class="gp">julia&gt;</span> <span class="nb">convert</span><span class="p">(</span><span class="n">DNANucleotide</span><span class="p">,</span> <span class="sc">&#39;C&#39;</span><span class="p">)</span>
+<div class="codehilite"><pre><span></span><span class="gp">julia&gt;</span> <span class="n">convert</span><span class="p">(</span><span class="n">DNANucleotide</span><span class="p">,</span> <span class="sc">&#39;C&#39;</span><span class="p">)</span>
 <span class="go">DNA_C</span>
 
-<span class="gp">julia&gt;</span> <span class="nb">convert</span><span class="p">(</span><span class="n">DNANucleotide</span><span class="p">,</span> <span class="sc">&#39;C&#39;</span><span class="p">)</span> <span class="o">===</span> <span class="n">DNA_C</span>
+<span class="gp">julia&gt;</span> <span class="n">convert</span><span class="p">(</span><span class="n">DNANucleotide</span><span class="p">,</span> <span class="sc">&#39;C&#39;</span><span class="p">)</span> <span class="o">===</span> <span class="n">DNA_C</span>
 <span class="go">true</span>
 </pre></div>
 
@@ -453,16 +453,16 @@
 </tbody>
 </table>
 <p>The next examples demonstrate bit operations of DNA:</p>
-<div class="codehilite"><pre><span></span><span class="gp">julia&gt;</span> <span class="n">bits</span><span class="p">(</span><span class="n">reinterpret</span><span class="p">(</span><span class="n">UInt8</span><span class="p">,</span> <span class="n">DNA_A</span><span class="p">))</span>
+<div class="codehilite"><pre><span></span><span class="gp">julia&gt;</span> <span class="n">bits</span><span class="p">(</span><span class="n">reinterpret</span><span class="p">(</span><span class="kt">UInt8</span><span class="p">,</span> <span class="n">DNA_A</span><span class="p">))</span>
 <span class="go">&quot;00000001&quot;</span>
 
-<span class="gp">julia&gt;</span> <span class="n">bits</span><span class="p">(</span><span class="n">reinterpret</span><span class="p">(</span><span class="n">UInt8</span><span class="p">,</span> <span class="n">DNA_G</span><span class="p">))</span>
+<span class="gp">julia&gt;</span> <span class="n">bits</span><span class="p">(</span><span class="n">reinterpret</span><span class="p">(</span><span class="kt">UInt8</span><span class="p">,</span> <span class="n">DNA_G</span><span class="p">))</span>
 <span class="go">&quot;00000100&quot;</span>
 
-<span class="gp">julia&gt;</span> <span class="n">bits</span><span class="p">(</span><span class="n">reinterpret</span><span class="p">(</span><span class="n">UInt8</span><span class="p">,</span> <span class="n">DNA_R</span><span class="p">))</span>
+<span class="gp">julia&gt;</span> <span class="n">bits</span><span class="p">(</span><span class="n">reinterpret</span><span class="p">(</span><span class="kt">UInt8</span><span class="p">,</span> <span class="n">DNA_R</span><span class="p">))</span>
 <span class="go">&quot;00000101&quot;</span>
 
-<span class="gp">julia&gt;</span> <span class="n">bits</span><span class="p">(</span><span class="n">reinterpret</span><span class="p">(</span><span class="n">UInt8</span><span class="p">,</span> <span class="n">DNA_B</span><span class="p">))</span>
+<span class="gp">julia&gt;</span> <span class="n">bits</span><span class="p">(</span><span class="n">reinterpret</span><span class="p">(</span><span class="kt">UInt8</span><span class="p">,</span> <span class="n">DNA_B</span><span class="p">))</span>
 <span class="go">&quot;00001110&quot;</span>
 
 <span class="gp">julia&gt;</span> <span class="o">~</span><span class="n">DNA_A</span>
@@ -641,16 +641,16 @@
 <span class="gp">julia&gt;</span> <span class="n">AA_Term</span>
 <span class="go">AA_Term</span>
 
-<span class="gp">julia&gt;</span> <span class="nb">typeof</span><span class="p">(</span><span class="n">AA_A</span><span class="p">)</span>
+<span class="gp">julia&gt;</span> <span class="n">typeof</span><span class="p">(</span><span class="n">AA_A</span><span class="p">)</span>
 <span class="go">Bio.Seq.AminoAcid</span>
 </pre></div>
 
 
 <p>Symbols can be constructed by converting regular characters:</p>
-<div class="codehilite"><pre><span></span><span class="gp">julia&gt;</span> <span class="nb">convert</span><span class="p">(</span><span class="n">AminoAcid</span><span class="p">,</span> <span class="sc">&#39;A&#39;</span><span class="p">)</span>
+<div class="codehilite"><pre><span></span><span class="gp">julia&gt;</span> <span class="n">convert</span><span class="p">(</span><span class="n">AminoAcid</span><span class="p">,</span> <span class="sc">&#39;A&#39;</span><span class="p">)</span>
 <span class="go">AA_A</span>
 
-<span class="gp">julia&gt;</span> <span class="nb">convert</span><span class="p">(</span><span class="n">AminoAcid</span><span class="p">,</span> <span class="sc">&#39;P&#39;</span><span class="p">)</span> <span class="o">===</span> <span class="n">AA_P</span>
+<span class="gp">julia&gt;</span> <span class="n">convert</span><span class="p">(</span><span class="n">AminoAcid</span><span class="p">,</span> <span class="sc">&#39;P&#39;</span><span class="p">)</span> <span class="o">===</span> <span class="n">AA_P</span>
 <span class="go">true</span>
 </pre></div>
 
@@ -665,7 +665,7 @@
 
 <p>Return an iterator of symbols of <code>typ</code>.</p>
 <p><code>typ</code> is one of <code>DNANucleotide</code>, <code>RNANucleotide</code>, or <code>AminoAcid</code>.</p>
-<p><a target='_blank' href='https://github.com/BioJulia/Bio.jl/tree/61d1a20ab5885ce0fefd2e7de58a3a3e67774018/src/seq/Seq.jl#L173-L179' class='documenter-source'>source</a><br></p>
+<p><a target='_blank' href='https://github.com/BioJulia/Bio.jl/tree/ebf7e6c5b82b965bdb09147162ed6ec92c9aa7e1/src/seq/Seq.jl#L173-L179' class='documenter-source'>source</a><br></p>
 <p><a id='Bio.Seq.gap' href='#Bio.Seq.gap'>#</a>
 <strong><code>Bio.Seq.gap</code></strong> &mdash; <em>Function</em>.</p>
 <div class="codehilite"><pre><span></span>gap(typ)
@@ -674,7 +674,7 @@
 
 <p>Return the gap symbol of <code>typ</code>.</p>
 <p><code>typ</code> is one of <code>DNANucleotide</code>, <code>RNANucleotide</code>, <code>AminoAcid</code>, or <code>Char</code>.</p>
-<p><a target='_blank' href='https://github.com/BioJulia/Bio.jl/tree/61d1a20ab5885ce0fefd2e7de58a3a3e67774018/src/seq/Seq.jl#L182-L188' class='documenter-source'>source</a><br></p>
+<p><a target='_blank' href='https://github.com/BioJulia/Bio.jl/tree/ebf7e6c5b82b965bdb09147162ed6ec92c9aa7e1/src/seq/Seq.jl#L182-L188' class='documenter-source'>source</a><br></p>
 <p><a id='Bio.Seq.iscompatible' href='#Bio.Seq.iscompatible'>#</a>
 <strong><code>Bio.Seq.iscompatible</code></strong> &mdash; <em>Function</em>.</p>
 <div class="codehilite"><pre><span></span>iscompatible(x, y)
@@ -685,20 +685,20 @@
 <p><code>x</code> and <code>y</code> must be the same type (<code>DNANucleotide</code>, <code>RNANucleotide</code> or <code>AminoAcid</code>).</p>
 <p><strong>Examples</strong></p>
 <div class="codehilite"><pre><span></span><span class="n">julia</span><span class="o">&gt;</span> <span class="n">iscompatible</span><span class="p">(</span><span class="n">DNA_A</span><span class="p">,</span> <span class="n">DNA_A</span><span class="p">)</span>
-<span class="n">true</span>
+<span class="kc">true</span>
 
 <span class="n">julia</span><span class="o">&gt;</span> <span class="n">iscompatible</span><span class="p">(</span><span class="n">DNA_C</span><span class="p">,</span> <span class="n">DNA_N</span><span class="p">)</span>  <span class="c"># DNA_N can be DNA_C</span>
-<span class="n">true</span>
+<span class="kc">true</span>
 
 <span class="n">julia</span><span class="o">&gt;</span> <span class="n">iscompatible</span><span class="p">(</span><span class="n">DNA_C</span><span class="p">,</span> <span class="n">DNA_R</span><span class="p">)</span>  <span class="c"># DNA_R (A or G) cannot be DNA_C</span>
-<span class="n">false</span>
+<span class="kc">false</span>
 
 <span class="n">julia</span><span class="o">&gt;</span> <span class="n">iscompatible</span><span class="p">(</span><span class="n">AA_A</span><span class="p">,</span> <span class="n">AA_X</span><span class="p">)</span>    <span class="c"># AA_X can be AA_A</span>
-<span class="n">true</span>
+<span class="kc">true</span>
 </pre></div>
 
 
-<p><a target='_blank' href='https://github.com/BioJulia/Bio.jl/tree/61d1a20ab5885ce0fefd2e7de58a3a3e67774018/src/seq/nucleotide.jl#L145-L169' class='documenter-source'>source</a><br></p>
+<p><a target='_blank' href='https://github.com/BioJulia/Bio.jl/tree/ebf7e6c5b82b965bdb09147162ed6ec92c9aa7e1/src/seq/nucleotide.jl#L145-L169' class='documenter-source'>source</a><br></p>
 <p><a id='Bio.Seq.isambiguous' href='#Bio.Seq.isambiguous'>#</a>
 <strong><code>Bio.Seq.isambiguous</code></strong> &mdash; <em>Function</em>.</p>
 <div class="codehilite"><pre><span></span>isambiguous(nt::Nucleotide)
@@ -706,7 +706,7 @@
 
 
 <p>Test if <code>nt</code> is ambiguous nucleotide.</p>
-<p><a target='_blank' href='https://github.com/BioJulia/Bio.jl/tree/61d1a20ab5885ce0fefd2e7de58a3a3e67774018/src/seq/nucleotide.jl#L115-L119' class='documenter-source'>source</a><br></p>
+<p><a target='_blank' href='https://github.com/BioJulia/Bio.jl/tree/ebf7e6c5b82b965bdb09147162ed6ec92c9aa7e1/src/seq/nucleotide.jl#L115-L119' class='documenter-source'>source</a><br></p>
 <p><a id='Overview-of-sequences-types-1'></a></p>
 <h2 id="overview-of-sequences-types">Overview of sequences types</h2>
 <p>The <code>Bio.Seq</code> module provides representations and tools for manipulating nucleotide and amino acid sequences. Sequences in Bio.jl are more strictly typed than in many other libraries; elements in a sequence are typed as biological symbol instead of character or byte.  They are special purpose types rather than simply strings and hence offer additional functionality that naive string types don't have. Though this strictness sacrifices some convenience, it also means you can always rely on a DNA sequence type to store DNA and nothing but DNA, without having to check, or deal with lowercase versus uppercase and so on. Strict separation of sequence types also means we are free to choose the most efficient representation. DNA and RNA sequences are encoded using four bits per base by default making them memory efficient, and also allowing us to speed up many common operations like nucleotide composition, reverse complement, and <em>k</em>-mer enumeration.</p>
@@ -810,13 +810,10 @@
 
 
 <p>However it should be noted that by default these sequence literals allocate the <code>BioSequence</code> object before the code containing the sequence literal is run. This means there may be occasions where your program does not behave as you first expect, even though it is the intended behaviour. For example consider the following code:</p>
-<div class="codehilite"><pre><span></span><span class="gp">julia&gt;</span> <span class="k">function</span><span class="nf"> foo</span><span class="p">()</span>
-
-<span class="gt">           s = dna&quot;CTT&quot;</span>
-
-<span class="gt">           push!(s, DNA_A)</span>
-
-<span class="gt">       end</span>
+<div class="codehilite"><pre><span></span><span class="gp">julia&gt;</span> <span class="k">function</span> <span class="n">foo</span><span class="p">()</span>
+           <span class="n">s</span> <span class="o">=</span> <span class="n">dna</span><span class="s">&quot;CTT&quot;</span>
+           <span class="n">push!</span><span class="p">(</span><span class="n">s</span><span class="p">,</span> <span class="n">DNA_A</span><span class="p">)</span>
+       <span class="k">end</span>
 <span class="go">foo (generic function with 1 method)</span>
 </pre></div>
 
@@ -853,13 +850,10 @@
 
 <p>The reason for this is because the sequence literal is allocated only once before the first time the function <code>foo</code> is called and run. Therefore, <code>s</code> in <code>foo</code> is always a reference to that one sequence that was allocated. So one sequence is created before <code>foo</code> is called, and then it is pushed to every time <code>foo</code> is called. Thus, that one allocated sequence grows with every call of <code>foo</code>.</p>
 <p>If you wanted <code>foo</code> to create a new sequence each time it is called, then you can add a flag to the end of the sequence literal to dictate behaviour: A flag of 's' means 'static': the sequence will be allocated before code is run, as is the default behaviour described above. However providing 'd' flag changes the behaviour: 'd' means 'dynamic': the sequence will be allocated at whilst the code is running, and not before. So to change <code>foo</code> so as it creates a new sequence each time it is called, simply add the 'd' flag to the sequence literal:</p>
-<div class="codehilite"><pre><span></span><span class="gp">julia&gt;</span> <span class="k">function</span><span class="nf"> foo</span><span class="p">()</span>
-
-<span class="gt">           s = dna&quot;CTT&quot;d     # &#39;d&#39; flag appended to the string literal.</span>
-
-<span class="gt">           push!(s, DNA_A)</span>
-
-<span class="gt">       end</span>
+<div class="codehilite"><pre><span></span><span class="gp">julia&gt;</span> <span class="k">function</span> <span class="n">foo</span><span class="p">()</span>
+           <span class="n">s</span> <span class="o">=</span> <span class="n">dna</span><span class="s">&quot;CTT&quot;</span><span class="n">d</span>     <span class="c"># &#39;d&#39; flag appended to the string literal.</span>
+           <span class="n">push!</span><span class="p">(</span><span class="n">s</span><span class="p">,</span> <span class="n">DNA_A</span><span class="p">)</span>
+       <span class="k">end</span>
 <span class="go">foo (generic function with 1 method)</span>
 </pre></div>
 
@@ -889,17 +883,17 @@
 <span class="go">5nt DNA Sequence:</span>
 <span class="go">TTANC</span>
 
-<span class="gp">julia&gt;</span> <span class="nb">convert</span><span class="p">(</span><span class="n">DNASequence</span><span class="p">,</span> <span class="p">[</span><span class="n">DNA_T</span><span class="p">,</span> <span class="n">DNA_T</span><span class="p">,</span> <span class="n">DNA_A</span><span class="p">,</span> <span class="n">DNA_N</span><span class="p">,</span> <span class="n">DNA_C</span><span class="p">])</span>
+<span class="gp">julia&gt;</span> <span class="n">convert</span><span class="p">(</span><span class="n">DNASequence</span><span class="p">,</span> <span class="p">[</span><span class="n">DNA_T</span><span class="p">,</span> <span class="n">DNA_T</span><span class="p">,</span> <span class="n">DNA_A</span><span class="p">,</span> <span class="n">DNA_N</span><span class="p">,</span> <span class="n">DNA_C</span><span class="p">])</span>
 <span class="go">5nt DNA Sequence:</span>
 <span class="go">TTANC</span>
 </pre></div>
 
 
 <p>Using <code>convert</code>, these operations are reversible: sequences can be converted to strings or arrays:</p>
-<div class="codehilite"><pre><span></span><span class="gp">julia&gt;</span> <span class="nb">convert</span><span class="p">(</span><span class="n">String</span><span class="p">,</span> <span class="n">dna</span><span class="s">&quot;TTANGTA&quot;</span><span class="p">)</span>
+<div class="codehilite"><pre><span></span><span class="gp">julia&gt;</span> <span class="n">convert</span><span class="p">(</span><span class="n">String</span><span class="p">,</span> <span class="n">dna</span><span class="s">&quot;TTANGTA&quot;</span><span class="p">)</span>
 <span class="go">&quot;TTANGTA&quot;</span>
 
-<span class="gp">julia&gt;</span> <span class="nb">convert</span><span class="p">(</span><span class="n">Vector</span><span class="p">{</span><span class="n">DNANucleotide</span><span class="p">},</span> <span class="n">dna</span><span class="s">&quot;TTANGTA&quot;</span><span class="p">)</span>
+<span class="gp">julia&gt;</span> <span class="n">convert</span><span class="p">(</span><span class="kt">Vector</span><span class="p">{</span><span class="n">DNANucleotide</span><span class="p">},</span> <span class="n">dna</span><span class="s">&quot;TTANGTA&quot;</span><span class="p">)</span>
 <span class="go">7-element Array{Bio.Seq.DNANucleotide,1}:</span>
 <span class="go"> DNA_T</span>
 <span class="go"> DNA_T</span>
@@ -935,7 +929,7 @@
 <span class="go">12nt DNA Sequence:</span>
 <span class="go">TTANGTAGACCG</span>
 
-<span class="gp">julia&gt;</span> <span class="n">rna</span> <span class="o">=</span> <span class="nb">convert</span><span class="p">(</span><span class="n">RNASequence</span><span class="p">,</span> <span class="n">dna</span><span class="p">)</span>
+<span class="gp">julia&gt;</span> <span class="n">rna</span> <span class="o">=</span> <span class="n">convert</span><span class="p">(</span><span class="n">RNASequence</span><span class="p">,</span> <span class="n">dna</span><span class="p">)</span>
 <span class="go">12nt RNA Sequence:</span>
 <span class="go">UUANGUAGACCG</span>
 
@@ -956,7 +950,7 @@
 <span class="gp">julia&gt;</span> <span class="n">seq</span><span class="p">[</span><span class="mi">5</span><span class="p">]</span>
 <span class="go">DNA_T</span>
 
-<span class="gp">julia&gt;</span> <span class="n">seq</span><span class="p">[</span><span class="mi">6</span><span class="p">:</span><span class="k">end</span><span class="p">]</span>
+<span class="gp">julia&gt;</span> <span class="n">seq</span><span class="p">[</span><span class="mi">6</span><span class="o">:</span><span class="k">end</span><span class="p">]</span>
 <span class="go">14nt DNA Sequence:</span>
 <span class="go">TANAGTNNAGTACC</span>
 </pre></div>
@@ -967,7 +961,7 @@
 <span class="go">4nt DNA Sequence:</span>
 <span class="go">AAAA</span>
 
-<span class="gp">julia&gt;</span> <span class="n">subseq</span> <span class="o">=</span> <span class="n">seq</span><span class="p">[</span><span class="mi">1</span><span class="p">:</span><span class="mi">2</span><span class="p">]</span>  <span class="c"># create a subsequence from `seq`</span>
+<span class="gp">julia&gt;</span> <span class="n">subseq</span> <span class="o">=</span> <span class="n">seq</span><span class="p">[</span><span class="mi">1</span><span class="o">:</span><span class="mi">2</span><span class="p">]</span>  <span class="c"># create a subsequence from `seq`</span>
 <span class="go">2nt DNA Sequence:</span>
 <span class="go">AA</span>
 
@@ -1035,15 +1029,11 @@
 <div class="codehilite"><pre><span></span><span class="gp">julia&gt;</span> <span class="n">n</span> <span class="o">=</span> <span class="mi">0</span>
 <span class="go">0</span>
 
-<span class="gp">julia&gt;</span> <span class="k">for</span> <span class="n">nt</span> <span class="k">in</span> <span class="n">dna</span><span class="s">&quot;ATNGNNT&quot;</span>
-
-<span class="gt">           if nt == DNA_N</span>
-
-<span class="gt">               n += 1</span>
-
-<span class="gt">           end</span>
-
-<span class="gt">       end</span>
+<span class="gp">julia&gt;</span> <span class="k">for</span> <span class="n">nt</span> <span class="kp">in</span> <span class="n">dna</span><span class="s">&quot;ATNGNNT&quot;</span>
+           <span class="k">if</span> <span class="n">nt</span> <span class="o">==</span> <span class="n">DNA_N</span>
+               <span class="n">n</span> <span class="o">+=</span> <span class="mi">1</span>
+           <span class="k">end</span>
+       <span class="k">end</span>
 
 <span class="gp">julia&gt;</span> <span class="n">n</span>
 <span class="go">3</span>
@@ -1060,19 +1050,19 @@
 
 
 <p>Return the complementary nucleotide of <code>nt</code>.</p>
-<p><a target='_blank' href='https://github.com/BioJulia/Bio.jl/tree/61d1a20ab5885ce0fefd2e7de58a3a3e67774018/src/seq/nucleotide.jl#L124-L128' class='documenter-source'>source</a><br></p>
+<p><a target='_blank' href='https://github.com/BioJulia/Bio.jl/tree/ebf7e6c5b82b965bdb09147162ed6ec92c9aa7e1/src/seq/nucleotide.jl#L124-L128' class='documenter-source'>source</a><br></p>
 <div class="codehilite"><pre><span></span>complement(seq)
 </pre></div>
 
 
 <p>Make a complement sequence of <code>seq</code>.</p>
-<p><a target='_blank' href='https://github.com/BioJulia/Bio.jl/tree/61d1a20ab5885ce0fefd2e7de58a3a3e67774018/src/seq/bioseq.jl#L746-L750' class='documenter-source'>source</a><br></p>
+<p><a target='_blank' href='https://github.com/BioJulia/Bio.jl/tree/ebf7e6c5b82b965bdb09147162ed6ec92c9aa7e1/src/seq/bioseq.jl#L746-L750' class='documenter-source'>source</a><br></p>
 <div class="codehilite"><pre><span></span>complement(kmer::Kmer)
 </pre></div>
 
 
 <p>Return the complement of <code>kmer</code>.</p>
-<p><a target='_blank' href='https://github.com/BioJulia/Bio.jl/tree/61d1a20ab5885ce0fefd2e7de58a3a3e67774018/src/seq/kmer.jl#L144-L148' class='documenter-source'>source</a><br></p>
+<p><a target='_blank' href='https://github.com/BioJulia/Bio.jl/tree/ebf7e6c5b82b965bdb09147162ed6ec92c9aa7e1/src/seq/kmer.jl#L144-L148' class='documenter-source'>source</a><br></p>
 <p><a id='Bio.Seq.reverse_complement' href='#Bio.Seq.reverse_complement'>#</a>
 <strong><code>Bio.Seq.reverse_complement</code></strong> &mdash; <em>Function</em>.</p>
 <div class="codehilite"><pre><span></span>reverse_complement(seq)
@@ -1081,13 +1071,13 @@
 
 <p>Make a reversed complement sequence of <code>seq</code>.</p>
 <p>Ambiguous nucleotides are left as-is.</p>
-<p><a target='_blank' href='https://github.com/BioJulia/Bio.jl/tree/61d1a20ab5885ce0fefd2e7de58a3a3e67774018/src/seq/bioseq.jl#L766-L772' class='documenter-source'>source</a><br></p>
+<p><a target='_blank' href='https://github.com/BioJulia/Bio.jl/tree/ebf7e6c5b82b965bdb09147162ed6ec92c9aa7e1/src/seq/bioseq.jl#L766-L772' class='documenter-source'>source</a><br></p>
 <div class="codehilite"><pre><span></span>reverse_complement(kmer::Kmer)
 </pre></div>
 
 
 <p>Return the reverse complement of <code>kmer</code></p>
-<p><a target='_blank' href='https://github.com/BioJulia/Bio.jl/tree/61d1a20ab5885ce0fefd2e7de58a3a3e67774018/src/seq/kmer.jl#L158-L162' class='documenter-source'>source</a><br></p>
+<p><a target='_blank' href='https://github.com/BioJulia/Bio.jl/tree/ebf7e6c5b82b965bdb09147162ed6ec92c9aa7e1/src/seq/kmer.jl#L158-L162' class='documenter-source'>source</a><br></p>
 <p><a id='Bio.Seq.mismatches' href='#Bio.Seq.mismatches'>#</a>
 <strong><code>Bio.Seq.mismatches</code></strong> &mdash; <em>Function</em>.</p>
 <div class="codehilite"><pre><span></span>mismatches(seq1::BioSequence, seq2::BioSequence[, compatible=false])
@@ -1096,13 +1086,13 @@
 
 <p>Return the number of mismatches between <code>seq1</code> and <code>seq2</code>.</p>
 <p>If <code>seq1</code> and <code>seq2</code> are of differing lengths, only the first <code>min(length(seq1), length(seq2))</code> nucleotides are compared.  When <code>compatible</code> is <code>true</code>, sequence symbols are comapred using <code>iscompatible</code>; otherwise using <code>==</code>.</p>
-<p><a target='_blank' href='https://github.com/BioJulia/Bio.jl/tree/61d1a20ab5885ce0fefd2e7de58a3a3e67774018/src/seq/bioseq.jl#L817-L825' class='documenter-source'>source</a><br></p>
+<p><a target='_blank' href='https://github.com/BioJulia/Bio.jl/tree/ebf7e6c5b82b965bdb09147162ed6ec92c9aa7e1/src/seq/bioseq.jl#L817-L825' class='documenter-source'>source</a><br></p>
 <div class="codehilite"><pre><span></span>mismatches(a::Kmer, b::Kmer)
 </pre></div>
 
 
 <p>Return the number of mismatches between <code>a</code> and <code>b</code>.</p>
-<p><a target='_blank' href='https://github.com/BioJulia/Bio.jl/tree/61d1a20ab5885ce0fefd2e7de58a3a3e67774018/src/seq/kmer.jl#L165-L169' class='documenter-source'>source</a><br></p>
+<p><a target='_blank' href='https://github.com/BioJulia/Bio.jl/tree/ebf7e6c5b82b965bdb09147162ed6ec92c9aa7e1/src/seq/kmer.jl#L165-L169' class='documenter-source'>source</a><br></p>
 <p><a id='Bio.Seq.composition' href='#Bio.Seq.composition'>#</a>
 <strong><code>Bio.Seq.composition</code></strong> &mdash; <em>Function</em>.</p>
 <div class="codehilite"><pre><span></span>composition(seq | kmer_iter)
@@ -1110,7 +1100,7 @@
 
 
 <p>Calculate composition of biological symbols in <code>seq</code> or k-mers in <code>kmer_iter</code>.</p>
-<p><a target='_blank' href='https://github.com/BioJulia/Bio.jl/tree/61d1a20ab5885ce0fefd2e7de58a3a3e67774018/src/seq/composition.jl#L56-L60' class='documenter-source'>source</a><br></p>
+<p><a target='_blank' href='https://github.com/BioJulia/Bio.jl/tree/ebf7e6c5b82b965bdb09147162ed6ec92c9aa7e1/src/seq/composition.jl#L56-L60' class='documenter-source'>source</a><br></p>
 <p><a id='Bio.Seq.seqmatrix' href='#Bio.Seq.seqmatrix'>#</a>
 <strong><code>Bio.Seq.seqmatrix</code></strong> &mdash; <em>Function</em>.</p>
 <div class="codehilite"><pre><span></span>seqmatrix{A&lt;:Alphabet}(vseq::Vector{BioSequence{A}}, major::Symbol)
@@ -1122,32 +1112,32 @@
 <p>If the parameter <code>major</code> is set to <code>:seq</code>, the matrix is created such that each sequence is placed in one column i.e. the matrix is laid out in sequence-major order. This means that iteration across each sequence in turn is efficient, as julia arrays are laid out in column major order.</p>
 <p><strong>Examples</strong></p>
 <div class="codehilite"><pre><span></span><span class="n">julia</span><span class="o">&gt;</span> <span class="n">seqs</span> <span class="o">=</span> <span class="p">[</span><span class="n">dna</span><span class="s">&quot;AAA&quot;</span><span class="p">,</span> <span class="n">dna</span><span class="s">&quot;TTT&quot;</span><span class="p">,</span> <span class="n">dna</span><span class="s">&quot;CCC&quot;</span><span class="p">,</span> <span class="n">dna</span><span class="s">&quot;GGG&quot;</span><span class="p">]</span>
-<span class="mi">4</span><span class="o">-</span><span class="n">element</span> <span class="n">Array</span><span class="p">{</span><span class="n">Bio</span><span class="o">.</span><span class="n">Seq</span><span class="o">.</span><span class="n">BioSequence</span><span class="p">{</span><span class="n">Bio</span><span class="o">.</span><span class="n">Seq</span><span class="o">.</span><span class="n">DNAAlphabet</span><span class="p">{</span><span class="mi">4</span><span class="p">}},</span><span class="mi">1</span><span class="p">}:</span>
- <span class="mi">3</span><span class="n">nt</span> <span class="n">DNA</span> <span class="n">Sequence</span><span class="p">:</span>
+<span class="mi">4</span><span class="o">-</span><span class="n">element</span> <span class="kt">Array</span><span class="p">{</span><span class="n">Bio</span><span class="o">.</span><span class="n">Seq</span><span class="o">.</span><span class="n">BioSequence</span><span class="p">{</span><span class="n">Bio</span><span class="o">.</span><span class="n">Seq</span><span class="o">.</span><span class="n">DNAAlphabet</span><span class="p">{</span><span class="mi">4</span><span class="p">}},</span><span class="mi">1</span><span class="p">}</span><span class="o">:</span>
+ <span class="mi">3</span><span class="n">nt</span> <span class="n">DNA</span> <span class="n">Sequence</span><span class="o">:</span>
 <span class="n">AAA</span>
- <span class="mi">3</span><span class="n">nt</span> <span class="n">DNA</span> <span class="n">Sequence</span><span class="p">:</span>
+ <span class="mi">3</span><span class="n">nt</span> <span class="n">DNA</span> <span class="n">Sequence</span><span class="o">:</span>
 <span class="n">TTT</span>
- <span class="mi">3</span><span class="n">nt</span> <span class="n">DNA</span> <span class="n">Sequence</span><span class="p">:</span>
+ <span class="mi">3</span><span class="n">nt</span> <span class="n">DNA</span> <span class="n">Sequence</span><span class="o">:</span>
 <span class="n">CCC</span>
- <span class="mi">3</span><span class="n">nt</span> <span class="n">DNA</span> <span class="n">Sequence</span><span class="p">:</span>
+ <span class="mi">3</span><span class="n">nt</span> <span class="n">DNA</span> <span class="n">Sequence</span><span class="o">:</span>
 <span class="n">GGG</span>
 
-<span class="n">julia</span><span class="o">&gt;</span> <span class="n">seqmatrix</span><span class="p">(</span><span class="n">seqs</span><span class="p">,</span> <span class="p">:</span><span class="n">site</span><span class="p">)</span>
-<span class="mi">4</span><span class="n">x3</span> <span class="n">Array</span><span class="p">{</span><span class="n">Bio</span><span class="o">.</span><span class="n">Seq</span><span class="o">.</span><span class="n">DNANucleotide</span><span class="p">,</span><span class="mi">2</span><span class="p">}:</span>
+<span class="n">julia</span><span class="o">&gt;</span> <span class="n">seqmatrix</span><span class="p">(</span><span class="n">seqs</span><span class="p">,</span> <span class="o">:</span><span class="n">site</span><span class="p">)</span>
+<span class="mi">4</span><span class="n">x3</span> <span class="kt">Array</span><span class="p">{</span><span class="n">Bio</span><span class="o">.</span><span class="n">Seq</span><span class="o">.</span><span class="n">DNANucleotide</span><span class="p">,</span><span class="mi">2</span><span class="p">}</span><span class="o">:</span>
  <span class="n">DNA_A</span>  <span class="n">DNA_A</span>  <span class="n">DNA_A</span>
  <span class="n">DNA_T</span>  <span class="n">DNA_T</span>  <span class="n">DNA_T</span>
  <span class="n">DNA_C</span>  <span class="n">DNA_C</span>  <span class="n">DNA_C</span>
  <span class="n">DNA_G</span>  <span class="n">DNA_G</span>  <span class="n">DNA_G</span>
 
- <span class="n">julia</span><span class="o">&gt;</span> <span class="n">seqmatrix</span><span class="p">(</span><span class="n">seqs</span><span class="p">,</span> <span class="p">:</span><span class="n">seq</span><span class="p">)</span>
- <span class="mi">3</span><span class="n">x4</span> <span class="n">Array</span><span class="p">{</span><span class="n">Bio</span><span class="o">.</span><span class="n">Seq</span><span class="o">.</span><span class="n">DNANucleotide</span><span class="p">,</span><span class="mi">2</span><span class="p">}:</span>
+ <span class="n">julia</span><span class="o">&gt;</span> <span class="n">seqmatrix</span><span class="p">(</span><span class="n">seqs</span><span class="p">,</span> <span class="o">:</span><span class="n">seq</span><span class="p">)</span>
+ <span class="mi">3</span><span class="n">x4</span> <span class="kt">Array</span><span class="p">{</span><span class="n">Bio</span><span class="o">.</span><span class="n">Seq</span><span class="o">.</span><span class="n">DNANucleotide</span><span class="p">,</span><span class="mi">2</span><span class="p">}</span><span class="o">:</span>
   <span class="n">DNA_A</span>  <span class="n">DNA_T</span>  <span class="n">DNA_C</span>  <span class="n">DNA_G</span>
   <span class="n">DNA_A</span>  <span class="n">DNA_T</span>  <span class="n">DNA_C</span>  <span class="n">DNA_G</span>
   <span class="n">DNA_A</span>  <span class="n">DNA_T</span>  <span class="n">DNA_C</span>  <span class="n">DNA_G</span>
 </pre></div>
 
 
-<p><a target='_blank' href='https://github.com/BioJulia/Bio.jl/tree/61d1a20ab5885ce0fefd2e7de58a3a3e67774018/src/seq/bioseq.jl#L1079-L1122' class='documenter-source'>source</a><br></p>
+<p><a target='_blank' href='https://github.com/BioJulia/Bio.jl/tree/ebf7e6c5b82b965bdb09147162ed6ec92c9aa7e1/src/seq/bioseq.jl#L1079-L1122' class='documenter-source'>source</a><br></p>
 <div class="codehilite"><pre><span></span>seqmatrix{A&lt;:Alphabet,T}(::Type{T}, vseq::Vector{BioSequence{A}}, major::Symbol)
 </pre></div>
 
@@ -1157,32 +1147,32 @@
 <p>If the parameter <code>major</code> is set to <code>:seq</code>, the matrix is created such that each sequence is placed in one column i.e. the matrix is laid out in sequence-major order. This means that iteration across each sequence in turn is efficient, as julia arrays are laid out in column major order.</p>
 <p><strong>Examples</strong></p>
 <div class="codehilite"><pre><span></span><span class="n">julia</span><span class="o">&gt;</span> <span class="n">seqs</span> <span class="o">=</span> <span class="p">[</span><span class="n">dna</span><span class="s">&quot;AAA&quot;</span><span class="p">,</span> <span class="n">dna</span><span class="s">&quot;TTT&quot;</span><span class="p">,</span> <span class="n">dna</span><span class="s">&quot;CCC&quot;</span><span class="p">,</span> <span class="n">dna</span><span class="s">&quot;GGG&quot;</span><span class="p">]</span>
-<span class="mi">4</span><span class="o">-</span><span class="n">element</span> <span class="n">Array</span><span class="p">{</span><span class="n">Bio</span><span class="o">.</span><span class="n">Seq</span><span class="o">.</span><span class="n">BioSequence</span><span class="p">{</span><span class="n">Bio</span><span class="o">.</span><span class="n">Seq</span><span class="o">.</span><span class="n">DNAAlphabet</span><span class="p">{</span><span class="mi">4</span><span class="p">}},</span><span class="mi">1</span><span class="p">}:</span>
- <span class="mi">3</span><span class="n">nt</span> <span class="n">DNA</span> <span class="n">Sequence</span><span class="p">:</span>
+<span class="mi">4</span><span class="o">-</span><span class="n">element</span> <span class="kt">Array</span><span class="p">{</span><span class="n">Bio</span><span class="o">.</span><span class="n">Seq</span><span class="o">.</span><span class="n">BioSequence</span><span class="p">{</span><span class="n">Bio</span><span class="o">.</span><span class="n">Seq</span><span class="o">.</span><span class="n">DNAAlphabet</span><span class="p">{</span><span class="mi">4</span><span class="p">}},</span><span class="mi">1</span><span class="p">}</span><span class="o">:</span>
+ <span class="mi">3</span><span class="n">nt</span> <span class="n">DNA</span> <span class="n">Sequence</span><span class="o">:</span>
 <span class="n">AAA</span>
- <span class="mi">3</span><span class="n">nt</span> <span class="n">DNA</span> <span class="n">Sequence</span><span class="p">:</span>
+ <span class="mi">3</span><span class="n">nt</span> <span class="n">DNA</span> <span class="n">Sequence</span><span class="o">:</span>
 <span class="n">TTT</span>
- <span class="mi">3</span><span class="n">nt</span> <span class="n">DNA</span> <span class="n">Sequence</span><span class="p">:</span>
+ <span class="mi">3</span><span class="n">nt</span> <span class="n">DNA</span> <span class="n">Sequence</span><span class="o">:</span>
 <span class="n">CCC</span>
- <span class="mi">3</span><span class="n">nt</span> <span class="n">DNA</span> <span class="n">Sequence</span><span class="p">:</span>
+ <span class="mi">3</span><span class="n">nt</span> <span class="n">DNA</span> <span class="n">Sequence</span><span class="o">:</span>
 <span class="n">GGG</span>
 
-<span class="n">julia</span><span class="o">&gt;</span> <span class="n">seqmatrix</span><span class="p">(</span><span class="n">seqs</span><span class="p">,</span> <span class="p">:</span><span class="n">site</span><span class="p">,</span> <span class="n">UInt8</span><span class="p">)</span>
-<span class="mi">4</span><span class="n">×3</span> <span class="n">Array</span><span class="p">{</span><span class="n">UInt8</span><span class="p">,</span><span class="mi">2</span><span class="p">}:</span>
+<span class="n">julia</span><span class="o">&gt;</span> <span class="n">seqmatrix</span><span class="p">(</span><span class="n">seqs</span><span class="p">,</span> <span class="o">:</span><span class="n">site</span><span class="p">,</span> <span class="kt">UInt8</span><span class="p">)</span>
+<span class="mi">4</span><span class="n">×3</span> <span class="kt">Array</span><span class="p">{</span><span class="kt">UInt8</span><span class="p">,</span><span class="mi">2</span><span class="p">}</span><span class="o">:</span>
  <span class="mh">0x01</span>  <span class="mh">0x01</span>  <span class="mh">0x01</span>
  <span class="mh">0x08</span>  <span class="mh">0x08</span>  <span class="mh">0x08</span>
  <span class="mh">0x02</span>  <span class="mh">0x02</span>  <span class="mh">0x02</span>
  <span class="mh">0x04</span>  <span class="mh">0x04</span>  <span class="mh">0x04</span>
 
-<span class="n">julia</span><span class="o">&gt;</span> <span class="n">seqmatrix</span><span class="p">(</span><span class="n">seqs</span><span class="p">,</span> <span class="p">:</span><span class="n">seq</span><span class="p">,</span> <span class="n">UInt8</span><span class="p">)</span>
-<span class="mi">3</span><span class="n">×4</span> <span class="n">Array</span><span class="p">{</span><span class="n">UInt8</span><span class="p">,</span><span class="mi">2</span><span class="p">}:</span>
+<span class="n">julia</span><span class="o">&gt;</span> <span class="n">seqmatrix</span><span class="p">(</span><span class="n">seqs</span><span class="p">,</span> <span class="o">:</span><span class="n">seq</span><span class="p">,</span> <span class="kt">UInt8</span><span class="p">)</span>
+<span class="mi">3</span><span class="n">×4</span> <span class="kt">Array</span><span class="p">{</span><span class="kt">UInt8</span><span class="p">,</span><span class="mi">2</span><span class="p">}</span><span class="o">:</span>
  <span class="mh">0x01</span>  <span class="mh">0x08</span>  <span class="mh">0x02</span>  <span class="mh">0x04</span>
  <span class="mh">0x01</span>  <span class="mh">0x08</span>  <span class="mh">0x02</span>  <span class="mh">0x04</span>
  <span class="mh">0x01</span>  <span class="mh">0x08</span>  <span class="mh">0x02</span>  <span class="mh">0x04</span>
 </pre></div>
 
 
-<p><a target='_blank' href='https://github.com/BioJulia/Bio.jl/tree/61d1a20ab5885ce0fefd2e7de58a3a3e67774018/src/seq/bioseq.jl#L1147-L1190' class='documenter-source'>source</a><br></p>
+<p><a target='_blank' href='https://github.com/BioJulia/Bio.jl/tree/ebf7e6c5b82b965bdb09147162ed6ec92c9aa7e1/src/seq/bioseq.jl#L1147-L1190' class='documenter-source'>source</a><br></p>
 <p><a id='Translation-1'></a></p>
 <h4 id="translation">Translation</h4>
 <p>The <a href="./#Bio.Seq.translate"><code>translate</code></a> funtion translates a sequence of codons in a RNA sequence to a amino acid sequence besed on a genetic code mapping.  The <code>Bio.Seq</code> module contains all NCBI defined genetic codes and they are registered in <a href="./#Bio.Seq.ncbi_trans_table"><code>ncbi_trans_table</code></a>.</p>
@@ -1194,12 +1184,12 @@
 
 <p>Translate an <code>RNASequence</code> to an <code>AminoAcidSequence</code>.</p>
 <p>Translation uses genetic code <code>code</code> to map codons to amino acids. See <code>ncbi_trans_table</code> for available genetic codes. If codons in the given RNA sequence cannot determine a unique amino acid, they will be translated to <code>AA_X</code> if <code>allow_ambiguous_codons</code> is <code>true</code> and otherwise result in an error.</p>
-<p><a target='_blank' href='https://github.com/BioJulia/Bio.jl/tree/61d1a20ab5885ce0fefd2e7de58a3a3e67774018/src/seq/geneticcode.jl#L311-L321' class='documenter-source'>source</a><br></p>
+<p><a target='_blank' href='https://github.com/BioJulia/Bio.jl/tree/ebf7e6c5b82b965bdb09147162ed6ec92c9aa7e1/src/seq/geneticcode.jl#L311-L321' class='documenter-source'>source</a><br></p>
 <p><a id='Bio.Seq.ncbi_trans_table' href='#Bio.Seq.ncbi_trans_table'>#</a>
 <strong><code>Bio.Seq.ncbi_trans_table</code></strong> &mdash; <em>Constant</em>.</p>
 <p>Genetic code list of NCBI.</p>
 <p>The standard genetic code is <code>ncbi_trans_table[1]</code> and others can be shown by <code>show(ncbi_trans_table)</code>. For more details, consult the next link: http://www.ncbi.nlm.nih.gov/Taxonomy/taxonomyhome.html/index.cgi?chapter=cgencodes.</p>
-<p><a target='_blank' href='https://github.com/BioJulia/Bio.jl/tree/61d1a20ab5885ce0fefd2e7de58a3a3e67774018/src/seq/geneticcode.jl#L90-L97' class='documenter-source'>source</a><br></p>
+<p><a target='_blank' href='https://github.com/BioJulia/Bio.jl/tree/ebf7e6c5b82b965bdb09147162ed6ec92c9aa7e1/src/seq/geneticcode.jl#L90-L97' class='documenter-source'>source</a><br></p>
 <div class="codehilite"><pre><span></span><span class="gp">julia&gt;</span> <span class="n">ncbi_trans_table</span>
 <span class="go">Translation Tables:</span>
 <span class="go">  1. The Standard Code (standard_genetic_code)</span>
@@ -1241,19 +1231,19 @@
 
 <span class="k">immutable</span> <span class="n">BoolAlphabet</span> <span class="o">&lt;:</span> <span class="n">Alphabet</span> <span class="k">end</span>
 
-<span class="n">Seq</span><span class="o">.</span><span class="n">bitsof</span><span class="p">(::</span><span class="n">Type</span><span class="p">{</span><span class="n">BoolAlphabet</span><span class="p">})</span> <span class="o">=</span> <span class="mi">1</span>
-<span class="n">Seq</span><span class="o">.</span><span class="n">eltype</span><span class="p">(::</span><span class="n">Type</span><span class="p">{</span><span class="n">BoolAlphabet</span><span class="p">})</span> <span class="o">=</span> <span class="kt">Bool</span>
-<span class="n">Seq</span><span class="o">.</span><span class="n">alphabet</span><span class="p">(::</span><span class="n">Type</span><span class="p">{</span><span class="n">BoolAlphabet</span><span class="p">})</span> <span class="o">=</span> <span class="n">false</span><span class="p">:</span><span class="n">true</span>
+<span class="n">Seq</span><span class="o">.</span><span class="n">bitsof</span><span class="p">(</span><span class="o">::</span><span class="kt">Type</span><span class="p">{</span><span class="n">BoolAlphabet</span><span class="p">})</span> <span class="o">=</span> <span class="mi">1</span>
+<span class="n">Seq</span><span class="o">.</span><span class="n">eltype</span><span class="p">(</span><span class="o">::</span><span class="kt">Type</span><span class="p">{</span><span class="n">BoolAlphabet</span><span class="p">})</span> <span class="o">=</span> <span class="kt">Bool</span>
+<span class="n">Seq</span><span class="o">.</span><span class="n">alphabet</span><span class="p">(</span><span class="o">::</span><span class="kt">Type</span><span class="p">{</span><span class="n">BoolAlphabet</span><span class="p">})</span> <span class="o">=</span> <span class="kc">false</span><span class="o">:</span><span class="kc">true</span>
 
-<span class="k">function</span><span class="nf"> Seq</span><span class="o">.</span><span class="n">encode</span><span class="p">(::</span><span class="n">Type</span><span class="p">{</span><span class="n">BoolAlphabet</span><span class="p">},</span> <span class="n">x</span><span class="p">::</span><span class="kt">Bool</span><span class="p">)</span>
-    <span class="k">return</span> <span class="n">UInt64</span><span class="p">(</span><span class="n">ifelse</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="mh">0x01</span><span class="p">,</span> <span class="mh">0x00</span><span class="p">))</span>
+<span class="k">function</span> <span class="n">Seq</span><span class="o">.</span><span class="n">encode</span><span class="p">(</span><span class="o">::</span><span class="kt">Type</span><span class="p">{</span><span class="n">BoolAlphabet</span><span class="p">},</span> <span class="n">x</span><span class="o">::</span><span class="kt">Bool</span><span class="p">)</span>
+    <span class="k">return</span> <span class="kt">UInt64</span><span class="p">(</span><span class="n">ifelse</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="mh">0x01</span><span class="p">,</span> <span class="mh">0x00</span><span class="p">))</span>
 <span class="k">end</span>
 
-<span class="k">function</span><span class="nf"> Seq</span><span class="o">.</span><span class="n">decode</span><span class="p">(::</span><span class="n">Type</span><span class="p">{</span><span class="n">BoolAlphabet</span><span class="p">},</span> <span class="n">x</span><span class="p">::</span><span class="n">UInt64</span><span class="p">)</span>
+<span class="k">function</span> <span class="n">Seq</span><span class="o">.</span><span class="n">decode</span><span class="p">(</span><span class="o">::</span><span class="kt">Type</span><span class="p">{</span><span class="n">BoolAlphabet</span><span class="p">},</span> <span class="n">x</span><span class="o">::</span><span class="kt">UInt64</span><span class="p">)</span>
     <span class="k">if</span> <span class="n">x</span> <span class="o">&gt;</span> <span class="mh">0x01</span>
-        <span class="nb">throw</span><span class="p">(</span><span class="n">Seq</span><span class="o">.</span><span class="n">DecodeError</span><span class="p">(</span><span class="n">BoolAlphabet</span><span class="p">,</span> <span class="n">x</span><span class="p">))</span>
+        <span class="n">throw</span><span class="p">(</span><span class="n">Seq</span><span class="o">.</span><span class="n">DecodeError</span><span class="p">(</span><span class="n">BoolAlphabet</span><span class="p">,</span> <span class="n">x</span><span class="p">))</span>
     <span class="k">end</span>
-    <span class="k">return</span> <span class="n">ifelse</span><span class="p">(</span><span class="n">x</span> <span class="o">==</span> <span class="mh">0x00</span><span class="p">,</span> <span class="n">false</span><span class="p">,</span> <span class="n">true</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">ifelse</span><span class="p">(</span><span class="n">x</span> <span class="o">==</span> <span class="mh">0x00</span><span class="p">,</span> <span class="kc">false</span><span class="p">,</span> <span class="kc">true</span><span class="p">)</span>
 <span class="k">end</span>
 </pre></div>
 
@@ -1270,7 +1260,7 @@
 <span class="go">RNA 4-mer:</span>
 <span class="go">ACGU</span>
 
-<span class="gp">julia&gt;</span> <span class="nb">typeof</span><span class="p">(</span><span class="n">DNAKmer</span><span class="p">(</span><span class="s">&quot;ACGT&quot;</span><span class="p">))</span>
+<span class="gp">julia&gt;</span> <span class="n">typeof</span><span class="p">(</span><span class="n">DNAKmer</span><span class="p">(</span><span class="s">&quot;ACGT&quot;</span><span class="p">))</span>
 <span class="go">Bio.Seq.Kmer{Bio.Seq.DNANucleotide,4}</span>
 </pre></div>
 
@@ -1296,7 +1286,7 @@ end
 </pre></div>
 
 
-<p><a target='_blank' href='https://github.com/BioJulia/Bio.jl/tree/61d1a20ab5885ce0fefd2e7de58a3a3e67774018/src/seq/eachkmer.jl#L15-L33' class='documenter-source'>source</a><br></p>
+<p><a target='_blank' href='https://github.com/BioJulia/Bio.jl/tree/ebf7e6c5b82b965bdb09147162ed6ec92c9aa7e1/src/seq/eachkmer.jl#L15-L33' class='documenter-source'>source</a><br></p>
 <p><a id='Bio.Seq.canonical' href='#Bio.Seq.canonical'>#</a>
 <strong><code>Bio.Seq.canonical</code></strong> &mdash; <em>Function</em>.</p>
 <div class="codehilite"><pre><span></span>canonical(kmer::Kmer)
@@ -1305,7 +1295,7 @@ end
 
 <p>Return the canonical k-mer of <code>x</code>.</p>
 <p>A canonical k-mer is the numerical lesser of a k-mer and its reverse complement. This is useful in hashing/counting k-mers in data that is not strand specific, and thus observing k-mer is equivalent to observing its reverse complement.</p>
-<p><a target='_blank' href='https://github.com/BioJulia/Bio.jl/tree/61d1a20ab5885ce0fefd2e7de58a3a3e67774018/src/seq/kmer.jl#L172-L180' class='documenter-source'>source</a><br></p>
+<p><a target='_blank' href='https://github.com/BioJulia/Bio.jl/tree/ebf7e6c5b82b965bdb09147162ed6ec92c9aa7e1/src/seq/kmer.jl#L172-L180' class='documenter-source'>source</a><br></p>
 <p><a id='Bio.Seq.neighbors' href='#Bio.Seq.neighbors'>#</a>
 <strong><code>Bio.Seq.neighbors</code></strong> &mdash; <em>Function</em>.</p>
 <div class="codehilite"><pre><span></span>neighbors(kmer::Kmer)
@@ -1313,7 +1303,7 @@ end
 
 
 <p>Return an iterator through k-mers neighboring <code>kmer</code> on a de Bruijn graph.</p>
-<p><a target='_blank' href='https://github.com/BioJulia/Bio.jl/tree/61d1a20ab5885ce0fefd2e7de58a3a3e67774018/src/seq/kmer.jl#L203-L207' class='documenter-source'>source</a><br></p>
+<p><a target='_blank' href='https://github.com/BioJulia/Bio.jl/tree/ebf7e6c5b82b965bdb09147162ed6ec92c9aa7e1/src/seq/kmer.jl#L203-L207' class='documenter-source'>source</a><br></p>
 <p><a id='Reference-sequences-1'></a></p>
 <h2 id="reference-sequences">Reference sequences</h2>
 <p><code>DNASequence</code> (alias of <code>BioSequence{DNAAlphabet{4}}</code>) is a flexible data structure but always consumes 4 bits per base, which will waste a large part of the memory space when storing reference genome sequences.  In such a case, <code>ReferenceSequence</code> is helpful because it compresses positions of 'N' symbols so that long DNA sequences are stored with almost 2 bits per base. An important limitation is that the <code>ReferenceSequence</code> type is immutable due to the compression. Other sequence-like operations are supported:</p>
@@ -1327,19 +1317,19 @@ end
 <span class="gp">julia&gt;</span> <span class="n">seq</span><span class="p">[</span><span class="mi">5</span><span class="p">]</span>
 <span class="go">DNA_T</span>
 
-<span class="gp">julia&gt;</span> <span class="n">seq</span><span class="p">[</span><span class="mi">2</span><span class="p">:</span><span class="mi">6</span><span class="p">]</span>
+<span class="gp">julia&gt;</span> <span class="n">seq</span><span class="p">[</span><span class="mi">2</span><span class="o">:</span><span class="mi">6</span><span class="p">]</span>
 <span class="go">5nt Reference Sequence:</span>
 <span class="go">NCGTA</span>
 
 <span class="gp">julia&gt;</span> <span class="n">ReferenceSequence</span><span class="p">(</span><span class="n">dna</span><span class="s">&quot;ATGM&quot;</span><span class="p">)</span>  <span class="c"># DNA_M is not accepted</span>
-<span class="go">ERROR: ArgumentError: invalid symbol M ∉ {A,C,G,T,N} at 4</span>
-<span class="go"> in convert at /Users/kenta/.julia/v0.4/Bio/src/seq/refseq.jl:58</span>
-<span class="go"> in call at essentials.jl:56</span>
+<span class="gr">ERROR: ArgumentError: invalid symbol M ∉ {A,C,G,T,N} at 4</span>
+<span class="gr"> in convert at /Users/kenta/.julia/v0.4/Bio/src/seq/refseq.jl:58</span>
+<span class="gr"> in call at essentials.jl:56</span>
 </pre></div>
 
 
 <p>When reading reference sequences from a FASTA file, the following snippet will avoid allocating temporary sequences and conversion:</p>
-<div class="codehilite"><pre><span></span><span class="k">for</span> <span class="n">record</span> <span class="k">in</span> <span class="n">open</span><span class="p">(</span><span class="n">FASTAReader</span><span class="p">{</span><span class="n">ReferenceSequence</span><span class="p">},</span> <span class="s">&quot;hg38.fa&quot;</span><span class="p">)</span>
+<div class="codehilite"><pre><span></span><span class="k">for</span> <span class="n">record</span> <span class="kp">in</span> <span class="n">open</span><span class="p">(</span><span class="n">FASTAReader</span><span class="p">{</span><span class="n">ReferenceSequence</span><span class="p">},</span> <span class="s">&quot;hg38.fa&quot;</span><span class="p">)</span>
     <span class="c"># do something</span>
 <span class="k">end</span>
 </pre></div>
@@ -1539,7 +1529,7 @@ end
 <span class="go"> 5nt DNA Sequence:</span>
 <span class="go">TATAA</span>
 
-<span class="gp">julia&gt;</span> <span class="n">matchall</span><span class="p">(</span><span class="n">biore</span><span class="s">&quot;TATA*&quot;</span><span class="n">d</span><span class="p">,</span> <span class="n">dna</span><span class="s">&quot;TATTATAATTA&quot;</span><span class="p">,</span> <span class="n">false</span><span class="p">)</span>  <span class="c"># no overlap</span>
+<span class="gp">julia&gt;</span> <span class="n">matchall</span><span class="p">(</span><span class="n">biore</span><span class="s">&quot;TATA*&quot;</span><span class="n">d</span><span class="p">,</span> <span class="n">dna</span><span class="s">&quot;TATTATAATTA&quot;</span><span class="p">,</span> <span class="kc">false</span><span class="p">)</span>  <span class="c"># no overlap</span>
 <span class="go">2-element Array{Bio.Seq.BioSequence{Bio.Seq.DNAAlphabet{4}},1}:</span>
 <span class="go"> 3nt DNA Sequence:</span>
 <span class="go">TAT</span>
@@ -1603,7 +1593,7 @@ end
 <span class="n">comp</span> <span class="o">=</span> <span class="n">composition</span><span class="p">(</span><span class="n">dna</span><span class="s">&quot;&quot;</span><span class="p">)</span>
 
 <span class="c"># iterate over sequences and accumulate composition statistics into `comp`</span>
-<span class="k">for</span> <span class="n">seq</span> <span class="k">in</span> <span class="n">seqs</span>
+<span class="k">for</span> <span class="n">seq</span> <span class="kp">in</span> <span class="n">seqs</span>
     <span class="n">merge!</span><span class="p">(</span><span class="n">comp</span><span class="p">,</span> <span class="n">composition</span><span class="p">(</span><span class="n">seq</span><span class="p">))</span>
 <span class="k">end</span>
 
@@ -1626,10 +1616,10 @@ end
 <p><a id='Sequence-records-1'></a></p>
 <h2 id="sequence-records">Sequence records</h2>
 <p>The <code>SeqRecord</code> type is used to represent a named sequence, optionally with accompanying metadata. It is defined as: sequence. It is as:</p>
-<div class="codehilite"><pre><span></span><span class="k">type</span><span class="nc"> SeqRecord</span><span class="p">{</span><span class="n">S</span><span class="p">,</span> <span class="n">T</span><span class="p">}</span>
-    <span class="n">name</span><span class="p">::</span><span class="n">String</span>
-    <span class="n">seq</span><span class="p">::</span><span class="n">S</span>
-    <span class="n">metadata</span><span class="p">::</span><span class="n">T</span>
+<div class="codehilite"><pre><span></span><span class="k">type</span> <span class="n">SeqRecord</span><span class="p">{</span><span class="n">S</span><span class="p">,</span> <span class="n">T</span><span class="p">}</span>
+    <span class="n">name</span><span class="o">::</span><span class="n">String</span>
+    <span class="n">seq</span><span class="o">::</span><span class="n">S</span>
+    <span class="n">metadata</span><span class="o">::</span><span class="n">T</span>
 <span class="k">end</span>
 </pre></div>
 
@@ -1643,7 +1633,7 @@ end
 
 
 <p>Return the sequence name of <code>record</code>.</p>
-<p><a target='_blank' href='https://github.com/BioJulia/Bio.jl/tree/61d1a20ab5885ce0fefd2e7de58a3a3e67774018/src/seq/seqrecord.jl#L27-L31' class='documenter-source'>source</a><br></p>
+<p><a target='_blank' href='https://github.com/BioJulia/Bio.jl/tree/ebf7e6c5b82b965bdb09147162ed6ec92c9aa7e1/src/seq/seqrecord.jl#L27-L31' class='documenter-source'>source</a><br></p>
 <p><a id='Bio.Seq.sequence' href='#Bio.Seq.sequence'>#</a>
 <strong><code>Bio.Seq.sequence</code></strong> &mdash; <em>Function</em>.</p>
 <div class="codehilite"><pre><span></span>sequence(record)
@@ -1651,7 +1641,7 @@ end
 
 
 <p>Return the sequence of <code>record</code>.</p>
-<p><a target='_blank' href='https://github.com/BioJulia/Bio.jl/tree/61d1a20ab5885ce0fefd2e7de58a3a3e67774018/src/seq/seqrecord.jl#L36-L40' class='documenter-source'>source</a><br></p>
+<p><a target='_blank' href='https://github.com/BioJulia/Bio.jl/tree/ebf7e6c5b82b965bdb09147162ed6ec92c9aa7e1/src/seq/seqrecord.jl#L36-L40' class='documenter-source'>source</a><br></p>
 <p><a id='Bio.Seq.metadata' href='#Bio.Seq.metadata'>#</a>
 <strong><code>Bio.Seq.metadata</code></strong> &mdash; <em>Function</em>.</p>
 <div class="codehilite"><pre><span></span>metadata(record)
@@ -1659,14 +1649,14 @@ end
 
 
 <p>Return the metadata of <code>record</code>.</p>
-<p><a target='_blank' href='https://github.com/BioJulia/Bio.jl/tree/61d1a20ab5885ce0fefd2e7de58a3a3e67774018/src/seq/seqrecord.jl#L45-L49' class='documenter-source'>source</a><br></p>
+<p><a target='_blank' href='https://github.com/BioJulia/Bio.jl/tree/ebf7e6c5b82b965bdb09147162ed6ec92c9aa7e1/src/seq/seqrecord.jl#L45-L49' class='documenter-source'>source</a><br></p>
 <p><a id='Sequence-demultiplexing-1'></a></p>
 <h2 id="sequence-demultiplexing">Sequence demultiplexing</h2>
 <p>Multiplex sequencing is a technology to sequence multiple samples at the same time on a high-throughput DNA sequencer. Samples are distinguished by the short prefix of a DNA sequence called DNA barcode. The <code>Bio.Seq</code> offers the <code>Demultiplexer</code> type and the <code>demultiplex</code> function to identify the DNA barcode of a longer DNA sequence allowing small errors.</p>
 <p>In the following example, four kinds of DNA sequences of length 4 are used as DNA barcodes. <code>Demultiplexer</code> takes these barcodes as its first argument with a few options:</p>
 <div class="codehilite"><pre><span></span><span class="gp">julia&gt;</span> <span class="n">barcodes</span> <span class="o">=</span> <span class="n">DNASequence</span><span class="p">[</span><span class="s">&quot;ATGG&quot;</span><span class="p">,</span> <span class="s">&quot;CAGA&quot;</span><span class="p">,</span> <span class="s">&quot;GGAA&quot;</span><span class="p">,</span> <span class="s">&quot;TACG&quot;</span><span class="p">];</span>
 
-<span class="gp">julia&gt;</span> <span class="n">dplxr</span> <span class="o">=</span> <span class="n">Demultiplexer</span><span class="p">(</span><span class="n">barcodes</span><span class="p">,</span> <span class="n">n_max_errors</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">distance</span><span class="o">=</span><span class="p">:</span><span class="n">hamming</span><span class="p">)</span>
+<span class="gp">julia&gt;</span> <span class="n">dplxr</span> <span class="o">=</span> <span class="n">Demultiplexer</span><span class="p">(</span><span class="n">barcodes</span><span class="p">,</span> <span class="n">n_max_errors</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">distance</span><span class="o">=:</span><span class="n">hamming</span><span class="p">)</span>
 <span class="go">Bio.Seq.Demultiplexer{Bio.Seq.BioSequence{Bio.Seq.DNAAlphabet{4}}}:</span>
 <span class="go">  distance: hamming</span>
 <span class="go">  number of barcodes: 4</span>
@@ -1691,10 +1681,10 @@ end
 
 
 <p>The optional third argument controls the search strategy. <code>demultiplex</code> uses an index to search the closest barcode within <code>n_max_errors</code> in the barcode set and returns it if any by default. If the third argument is <code>true</code> it falls back to a linear search after the index search and returns one of the closest barcodes at random. The next example shows the difference of these two strategies:</p>
-<div class="codehilite"><pre><span></span><span class="gp">julia&gt;</span> <span class="n">demultiplex</span><span class="p">(</span><span class="n">dplxr</span><span class="p">,</span> <span class="n">dna</span><span class="s">&quot;TGACCGNT&quot;</span><span class="p">,</span> <span class="n">false</span><span class="p">)</span>  <span class="c"># linear search off (default)</span>
+<div class="codehilite"><pre><span></span><span class="gp">julia&gt;</span> <span class="n">demultiplex</span><span class="p">(</span><span class="n">dplxr</span><span class="p">,</span> <span class="n">dna</span><span class="s">&quot;TGACCGNT&quot;</span><span class="p">,</span> <span class="kc">false</span><span class="p">)</span>  <span class="c"># linear search off (default)</span>
 <span class="go">(0,-1)</span>
 
-<span class="gp">julia&gt;</span> <span class="n">demultiplex</span><span class="p">(</span><span class="n">dplxr</span><span class="p">,</span> <span class="n">dna</span><span class="s">&quot;TGACCGNT&quot;</span><span class="p">,</span> <span class="n">true</span><span class="p">)</span>   <span class="c"># linear search on</span>
+<span class="gp">julia&gt;</span> <span class="n">demultiplex</span><span class="p">(</span><span class="n">dplxr</span><span class="p">,</span> <span class="n">dna</span><span class="s">&quot;TGACCGNT&quot;</span><span class="p">,</span> <span class="kc">true</span><span class="p">)</span>   <span class="c"># linear search on</span>
 <span class="go">(3,2)</span>
 </pre></div></div>
         

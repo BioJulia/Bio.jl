@@ -246,15 +246,15 @@
 <div class="codehilite"><pre><span></span><span class="n">julia</span><span class="o">&gt;</span> <span class="n">struc</span> <span class="o">=</span> <span class="n">read</span><span class="p">(</span><span class="n">filepath_1EN2</span><span class="p">,</span> <span class="n">PDB</span><span class="p">)</span>
 <span class="n">Bio</span><span class="o">.</span><span class="n">Structure</span><span class="o">.</span><span class="n">ProteinStructure</span>
 <span class="n">Name</span>                        <span class="o">-</span>  <span class="mi">1</span><span class="n">EN2</span><span class="o">.</span><span class="n">pdb</span>
-<span class="n">Number</span> <span class="n">of</span> <span class="n">models</span>            <span class="o">-</span>  <span class="mi">1</span>
+<span class="kt">Number</span> <span class="n">of</span> <span class="n">models</span>            <span class="o">-</span>  <span class="mi">1</span>
 <span class="n">Chain</span><span class="p">(</span><span class="n">s</span><span class="p">)</span>                    <span class="o">-</span>  <span class="n">A</span>
-<span class="n">Number</span> <span class="n">of</span> <span class="n">residues</span>          <span class="o">-</span>  <span class="mi">85</span>
-<span class="n">Number</span> <span class="n">of</span> <span class="n">point</span> <span class="n">mutations</span>   <span class="o">-</span>  <span class="mi">5</span>
-<span class="n">Number</span> <span class="n">of</span> <span class="n">other</span> <span class="n">molecules</span>   <span class="o">-</span>  <span class="mi">5</span>
-<span class="n">Number</span> <span class="n">of</span> <span class="n">water</span> <span class="n">molecules</span>   <span class="o">-</span>  <span class="mi">76</span>
-<span class="n">Number</span> <span class="n">of</span> <span class="n">atoms</span>             <span class="o">-</span>  <span class="mi">614</span>
-<span class="n">Number</span> <span class="n">of</span> <span class="n">hydrogens</span>         <span class="o">-</span>  <span class="mi">0</span>
-<span class="n">Number</span> <span class="n">of</span> <span class="n">disordered</span> <span class="n">atoms</span>  <span class="o">-</span>  <span class="mi">27</span>
+<span class="kt">Number</span> <span class="n">of</span> <span class="n">residues</span>          <span class="o">-</span>  <span class="mi">85</span>
+<span class="kt">Number</span> <span class="n">of</span> <span class="n">point</span> <span class="n">mutations</span>   <span class="o">-</span>  <span class="mi">5</span>
+<span class="kt">Number</span> <span class="n">of</span> <span class="n">other</span> <span class="n">molecules</span>   <span class="o">-</span>  <span class="mi">5</span>
+<span class="kt">Number</span> <span class="n">of</span> <span class="n">water</span> <span class="n">molecules</span>   <span class="o">-</span>  <span class="mi">76</span>
+<span class="kt">Number</span> <span class="n">of</span> <span class="n">atoms</span>             <span class="o">-</span>  <span class="mi">614</span>
+<span class="kt">Number</span> <span class="n">of</span> <span class="n">hydrogens</span>         <span class="o">-</span>  <span class="mi">0</span>
+<span class="kt">Number</span> <span class="n">of</span> <span class="n">disordered</span> <span class="n">atoms</span>  <span class="o">-</span>  <span class="mi">27</span>
 </pre></div>
 
 
@@ -505,10 +505,10 @@
 <p><a id='Manipulating-structures-1'></a></p>
 <h2 id="manipulating-structures">Manipulating structures</h2>
 <p>Elements can be looped over to reveal the sub-elements in the correct order:</p>
-<div class="codehilite"><pre><span></span><span class="k">for</span> <span class="n">mod</span> <span class="k">in</span> <span class="n">struc</span>
-    <span class="k">for</span> <span class="n">ch</span> <span class="k">in</span> <span class="n">mod</span>
-        <span class="k">for</span> <span class="n">res</span> <span class="k">in</span> <span class="n">ch</span>
-            <span class="k">for</span> <span class="n">at</span> <span class="k">in</span> <span class="n">res</span>
+<div class="codehilite"><pre><span></span><span class="k">for</span> <span class="n">mod</span> <span class="kp">in</span> <span class="n">struc</span>
+    <span class="k">for</span> <span class="n">ch</span> <span class="kp">in</span> <span class="n">mod</span>
+        <span class="k">for</span> <span class="n">res</span> <span class="kp">in</span> <span class="n">ch</span>
+            <span class="k">for</span> <span class="n">at</span> <span class="kp">in</span> <span class="n">res</span>
                 <span class="c"># Do something</span>
             <span class="k">end</span>
         <span class="k">end</span>
@@ -557,7 +557,7 @@
 </tbody>
 </table>
 <p>It is easy to define your own atom, residue, chain or model selectors. The below will collect all atoms with x coordinate less than 0:</p>
-<div class="codehilite"><pre><span></span><span class="n">xselector</span><span class="p">(</span><span class="n">at</span><span class="p">::</span><span class="n">AbstractAtom</span><span class="p">)</span> <span class="o">=</span> <span class="n">x</span><span class="p">(</span><span class="n">at</span><span class="p">)</span> <span class="o">&lt;</span> <span class="mi">0</span>
+<div class="codehilite"><pre><span></span><span class="n">xselector</span><span class="p">(</span><span class="n">at</span><span class="o">::</span><span class="n">AbstractAtom</span><span class="p">)</span> <span class="o">=</span> <span class="n">x</span><span class="p">(</span><span class="n">at</span><span class="p">)</span> <span class="o">&lt;</span> <span class="mi">0</span>
 <span class="n">collectatoms</span><span class="p">(</span><span class="n">struc</span><span class="p">,</span> <span class="n">xselector</span><span class="p">)</span>
 </pre></div>
 
@@ -581,7 +581,7 @@
 
 <p>The sequence of a protein can be retrieved by passing a <code>Chain</code> or array of residues to <code>AminoAcidSequence</code>:</p>
 <div class="codehilite"><pre><span></span><span class="n">julia</span><span class="o">&gt;</span> <span class="n">AminoAcidSequence</span><span class="p">(</span><span class="n">struc</span><span class="p">[</span><span class="sc">&#39;A&#39;</span><span class="p">],</span> <span class="n">standardselector</span><span class="p">)</span>
-<span class="mi">85</span><span class="n">aa</span> <span class="n">Amino</span> <span class="n">Acid</span> <span class="n">Sequence</span><span class="p">:</span>
+<span class="mi">85</span><span class="n">aa</span> <span class="n">Amino</span> <span class="n">Acid</span> <span class="n">Sequence</span><span class="o">:</span>
 <span class="n">RCGSQGGGSTCPGLRCCSIWGWCGDSEPYCGRTCENKCWSGERSDHRCGAAVGNPPCGQDRCCSVHGWCGGGNDYCSGGNCQYRC</span>
 </pre></div>
 
@@ -685,7 +685,7 @@
 
 
 <p><strong>B)</strong> To print the PDB records for all C-alpha atoms within 5 Angstroms of residue 38:</p>
-<div class="codehilite"><pre><span></span><span class="k">for</span> <span class="n">at</span> <span class="k">in</span> <span class="n">calphas</span>
+<div class="codehilite"><pre><span></span><span class="k">for</span> <span class="n">at</span> <span class="kp">in</span> <span class="n">calphas</span>
     <span class="k">if</span> <span class="n">distance</span><span class="p">(</span><span class="n">struc</span><span class="p">[</span><span class="sc">&#39;A&#39;</span><span class="p">][</span><span class="mi">38</span><span class="p">],</span> <span class="n">at</span><span class="p">)</span> <span class="o">&lt;</span> <span class="mf">5.0</span> <span class="o">&amp;&amp;</span> <span class="n">resnumber</span><span class="p">(</span><span class="n">at</span><span class="p">)</span> <span class="o">!=</span> <span class="mi">38</span>
         <span class="n">println</span><span class="p">(</span><span class="n">pdbline</span><span class="p">(</span><span class="n">at</span><span class="p">))</span>
     <span class="k">end</span>
@@ -696,8 +696,8 @@
 <p><strong>D)</strong> To view the contact map of a structure:</p>
 <div class="codehilite"><pre><span></span><span class="n">cbetas</span> <span class="o">=</span> <span class="n">collectatoms</span><span class="p">(</span><span class="n">struc</span><span class="p">,</span> <span class="n">cbetaselector</span><span class="p">)</span>
 <span class="n">contacts</span> <span class="o">=</span> <span class="n">contactmap</span><span class="p">(</span><span class="n">cbetas</span><span class="p">,</span> <span class="mf">7.0</span><span class="p">)</span>
-<span class="k">for</span> <span class="n">i</span> <span class="k">in</span> <span class="mi">1</span><span class="p">:</span><span class="n">length</span><span class="p">(</span><span class="n">cbetas</span><span class="p">)</span>
-    <span class="k">for</span> <span class="n">j</span> <span class="k">in</span> <span class="mi">1</span><span class="p">:</span><span class="n">length</span><span class="p">(</span><span class="n">cbetas</span><span class="p">)</span>
+<span class="k">for</span> <span class="n">i</span> <span class="kp">in</span> <span class="mi">1</span><span class="o">:</span><span class="n">length</span><span class="p">(</span><span class="n">cbetas</span><span class="p">)</span>
+    <span class="k">for</span> <span class="n">j</span> <span class="kp">in</span> <span class="mi">1</span><span class="o">:</span><span class="n">length</span><span class="p">(</span><span class="n">cbetas</span><span class="p">)</span>
         <span class="k">if</span> <span class="n">contacts</span><span class="p">[</span><span class="n">i</span><span class="p">,</span><span class="n">j</span><span class="p">]</span>
             <span class="n">print</span><span class="p">(</span><span class="s">&quot;█&quot;</span><span class="p">)</span>
         <span class="k">else</span>

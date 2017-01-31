@@ -282,10 +282,17 @@
 <span class="gp">julia&gt;</span> <span class="n">write</span><span class="p">(</span><span class="s">&quot;pubmed.xml&quot;</span><span class="p">,</span> <span class="n">res</span><span class="o">.</span><span class="n">data</span><span class="p">)</span>  <span class="c"># save retrieved data into a file</span>
 <span class="go">27360</span>
 
-<span class="go">shell&gt; head result.xml</span>
+<span class="gp">shell&gt;</span> head result.xml
 <span class="go">&lt;?xml version=&quot;1.0&quot; encoding=&quot;UTF-8&quot; ?&gt;</span>
 <span class="go">&lt;!DOCTYPE eInfoResult PUBLIC &quot;-//NLM//DTD einfo 20130322//EN&quot; &quot;https://eutils.ncbi.nlm.nih.gov/eutils/dtd/20130322/einfo.dtd&quot;&gt;</span>
 <span class="go">&lt;eInfoResult&gt;</span>
+<span class="go">        &lt;DbInfo&gt;</span>
+<span class="go">        &lt;DbName&gt;pubmed&lt;/DbName&gt;</span>
+<span class="go">        &lt;MenuName&gt;PubMed&lt;/MenuName&gt;</span>
+<span class="go">        &lt;Description&gt;PubMed bibliographic record&lt;/Description&gt;</span>
+<span class="go">        &lt;DbBuild&gt;Build161024-2207m.1&lt;/DbBuild&gt;</span>
+<span class="go">        &lt;Count&gt;26590895&lt;/Count&gt;</span>
+<span class="go">        &lt;LastUpdate&gt;2016/10/25 02:06&lt;/LastUpdate&gt;</span>
 </pre></div>
 
 
@@ -323,10 +330,10 @@
 
 
 <p>Every function can take a context dictionary as its first argument to set parameters into a query. Key-value pairs in a context are appended to a query in addition to other parameters passed by keyword arguments.  The default context is an empty dictionary that sets no parameters. This context dictionary is especially useful when temporarily caching query UIDs into the Entrez History server. A request to the Entrez system can be associated with cached data using "WebEnv" and "query_key" parameters. In the following example, the search results of <code>esearch</code> is saved in the Entrez History server (note <code>usehistory=true</code>, which makes the server cache its search results) and then their summaries are retrieved in the next call of <code>esummary</code>:</p>
-<div class="codehilite"><pre><span></span><span class="gp">julia&gt;</span> <span class="n">context</span> <span class="o">=</span> <span class="n">Dict</span><span class="p">()</span>  <span class="c"># create an empty context</span>
+<div class="codehilite"><pre><span></span><span class="gp">julia&gt;</span> <span class="n">context</span> <span class="o">=</span> <span class="kt">Dict</span><span class="p">()</span>  <span class="c"># create an empty context</span>
 <span class="go">Dict{Any,Any} with 0 entries</span>
 
-<span class="gp">julia&gt;</span> <span class="n">res</span> <span class="o">=</span> <span class="n">esearch</span><span class="p">(</span><span class="n">context</span><span class="p">,</span> <span class="n">db</span><span class="o">=</span><span class="s">&quot;pubmed&quot;</span><span class="p">,</span> <span class="n">term</span><span class="o">=</span><span class="s">&quot;asthma[mesh] AND leukotrienes[mesh] AND 2009[pdat]&quot;</span><span class="p">,</span> <span class="n">usehistory</span><span class="o">=</span><span class="n">true</span><span class="p">)</span>
+<span class="gp">julia&gt;</span> <span class="n">res</span> <span class="o">=</span> <span class="n">esearch</span><span class="p">(</span><span class="n">context</span><span class="p">,</span> <span class="n">db</span><span class="o">=</span><span class="s">&quot;pubmed&quot;</span><span class="p">,</span> <span class="n">term</span><span class="o">=</span><span class="s">&quot;asthma[mesh] AND leukotrienes[mesh] AND 2009[pdat]&quot;</span><span class="p">,</span> <span class="n">usehistory</span><span class="o">=</span><span class="kc">true</span><span class="p">)</span>
 <span class="go">Response(200 OK, 18 headers, 1574 bytes in body)</span>
 
 <span class="gp">julia&gt;</span> <span class="n">context</span>  <span class="c"># the context dictionary has been updated</span>
@@ -340,11 +347,17 @@
 <span class="gp">julia&gt;</span> <span class="n">write</span><span class="p">(</span><span class="s">&quot;asthma_leukotrienes_2009.xml&quot;</span><span class="p">,</span> <span class="n">res</span><span class="o">.</span><span class="n">data</span><span class="p">)</span>  <span class="c"># save data into a file</span>
 <span class="go">135463</span>
 
-<span class="go">shell&gt; head asthma_leukotrienes_2009.xml</span>
+<span class="gp">shell&gt;</span> head asthma_leukotrienes_2009.xml
 <span class="go">&lt;?xml version=&quot;1.0&quot; encoding=&quot;UTF-8&quot; ?&gt;</span>
 <span class="go">&lt;!DOCTYPE eSummaryResult PUBLIC &quot;-//NLM//DTD esummary v1 20041029//EN&quot; &quot;https://eutils.ncbi.nlm.nih.gov/eutils/dtd/20041029/esummary-v1.dtd&quot;&gt;</span>
 <span class="go">&lt;eSummaryResult&gt;</span>
 <span class="go">&lt;DocSum&gt;</span>
+<span class="go">        &lt;Id&gt;20113659&lt;/Id&gt;</span>
+<span class="go">        &lt;Item Name=&quot;PubDate&quot; Type=&quot;Date&quot;&gt;2009 Nov&lt;/Item&gt;</span>
+<span class="go">        &lt;Item Name=&quot;EPubDate&quot; Type=&quot;Date&quot;&gt;&lt;/Item&gt;</span>
+<span class="go">        &lt;Item Name=&quot;Source&quot; Type=&quot;String&quot;&gt;Zhongguo Dang Dai Er Ke Za Zhi&lt;/Item&gt;</span>
+<span class="go">        &lt;Item Name=&quot;AuthorList&quot; Type=&quot;List&quot;&gt;</span>
+<span class="go">                &lt;Item Name=&quot;Author&quot; Type=&quot;String&quot;&gt;He MJ&lt;/Item&gt;</span>
 </pre></div></div>
         
     </div>

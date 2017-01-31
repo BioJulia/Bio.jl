@@ -253,12 +253,12 @@
 
 <p>These functions return a <code>Vector{BLASTResult}</code>. Each element is a hit which includes the sequence of the hit, an <a href="http://biojulia.github.io/Bio.jl/latest/man/alignments/"><code>AlignedSequence</code></a> using the original query as a reference and some additional information (expect vaue, bitscore) for the hit.</p>
 <div class="codehilite"><pre><span></span><span class="k">immutable</span> <span class="n">BLASTResult</span>
-    <span class="n">bitscore</span><span class="p">::</span><span class="kt">Float64</span>
-    <span class="n">expect</span><span class="p">::</span><span class="kt">Float64</span>
-    <span class="n">queryname</span><span class="p">::</span><span class="n">String</span>
-    <span class="n">hitname</span><span class="p">::</span><span class="n">String</span>
-    <span class="n">hit</span><span class="p">::</span><span class="n">BioSequence</span>
-    <span class="n">alignment</span><span class="p">::</span><span class="n">AlignedSequence</span>
+    <span class="n">bitscore</span><span class="o">::</span><span class="kt">Float64</span>
+    <span class="n">expect</span><span class="o">::</span><span class="kt">Float64</span>
+    <span class="n">queryname</span><span class="o">::</span><span class="n">String</span>
+    <span class="n">hitname</span><span class="o">::</span><span class="n">String</span>
+    <span class="n">hit</span><span class="o">::</span><span class="n">BioSequence</span>
+    <span class="n">alignment</span><span class="o">::</span><span class="n">AlignedSequence</span>
 <span class="k">end</span>
 </pre></div>
 
@@ -280,7 +280,7 @@
 
 
 <p>If you have a local blast database (eg through the use of <code>$ makeblastdb</code>), you can use this database as the <code>subject</code></p>
-<div class="codehilite"><pre><span></span><span class="n">blastn</span><span class="p">(</span><span class="n">seq1</span><span class="p">,</span> <span class="s">&quot;path/to/blast_db&quot;</span><span class="p">,</span> <span class="n">db</span><span class="o">=</span><span class="n">true</span><span class="p">)</span>
+<div class="codehilite"><pre><span></span><span class="n">blastn</span><span class="p">(</span><span class="n">seq1</span><span class="p">,</span> <span class="s">&quot;path/to/blast_db&quot;</span><span class="p">,</span> <span class="n">db</span><span class="o">=</span><span class="kc">true</span><span class="p">)</span>
 </pre></div>
 
 

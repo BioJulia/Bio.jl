@@ -240,11 +240,11 @@
 <p>The type is parametric with two parameters <code>C</code> and <code>B</code>.</p>
 <p>This is because it is common to want to annotate tips, clades, and branches in a phylogeny with data to create a richer model of evolution of do other things like dictate aesthetic values when plotting.</p>
 <p>Type parameter <code>C</code> dictates what datatype can be stored in the phylogeny to annotate clades and tips. Type parameter <code>B</code> dictates what datatype can be stored in the phylogeny to annotate branches. Think <code>C</code> for clades and <code>B</code> for branches.</p>
-<p><a target='_blank' href='https://github.com/BioJulia/Bio.jl/tree/61d1a20ab5885ce0fefd2e7de58a3a3e67774018/src/phylo/phylogeny.jl#L23-L35' class='documenter-source'>source</a><br></p>
+<p><a target='_blank' href='https://github.com/BioJulia/Bio.jl/tree/ebf7e6c5b82b965bdb09147162ed6ec92c9aa7e1/src/phylo/phylogeny.jl#L23-L35' class='documenter-source'>source</a><br></p>
 <p><a id='Constructors-1'></a></p>
 <h3 id="constructors">Constructors</h3>
 <p>You can create a very simple unresolved phylogeny (a star phylogeny) by providing the tips as a vector of strings or a vector of symbols.</p>
-<div class="codehilite"><pre><span></span><span class="n">tips</span> <span class="o">=</span> <span class="p">[:</span><span class="n">A</span><span class="p">,</span> <span class="p">:</span><span class="n">B</span><span class="p">,</span> <span class="p">:</span><span class="n">C</span><span class="p">]</span>
+<div class="codehilite"><pre><span></span><span class="n">tips</span> <span class="o">=</span> <span class="p">[</span><span class="o">:</span><span class="n">A</span><span class="p">,</span> <span class="o">:</span><span class="n">B</span><span class="p">,</span> <span class="o">:</span><span class="n">C</span><span class="p">]</span>
 <span class="n">tree</span> <span class="o">=</span> <span class="n">Phylogeny</span><span class="p">(</span><span class="n">tips</span><span class="p">)</span>
 </pre></div>
 
@@ -277,7 +277,7 @@
 </pre></div>
 
 
-<p><a target='_blank' href='https://github.com/BioJulia/Bio.jl/tree/61d1a20ab5885ce0fefd2e7de58a3a3e67774018/src/phylo/phylogeny.jl#L159-L168' class='documenter-source'>source</a><br></p>
+<p><a target='_blank' href='https://github.com/BioJulia/Bio.jl/tree/ebf7e6c5b82b965bdb09147162ed6ec92c9aa7e1/src/phylo/phylogeny.jl#L159-L168' class='documenter-source'>source</a><br></p>
 <p><a id='Bio.Phylo.isrerootable' href='#Bio.Phylo.isrerootable'>#</a>
 <strong><code>Bio.Phylo.isrerootable</code></strong> &mdash; <em>Function</em>.</p>
 <div class="codehilite"><pre><span></span>isrerootable(x::Phylogeny)
@@ -290,11 +290,11 @@
 </pre></div>
 
 
-<p><a target='_blank' href='https://github.com/BioJulia/Bio.jl/tree/61d1a20ab5885ce0fefd2e7de58a3a3e67774018/src/phylo/phylogeny.jl#L173-L182' class='documenter-source'>source</a><br></p>
+<p><a target='_blank' href='https://github.com/BioJulia/Bio.jl/tree/ebf7e6c5b82b965bdb09147162ed6ec92c9aa7e1/src/phylo/phylogeny.jl#L173-L182' class='documenter-source'>source</a><br></p>
 <p><a id='Bio.Phylo.root' href='#Bio.Phylo.root'>#</a>
 <strong><code>Bio.Phylo.root</code></strong> &mdash; <em>Function</em>.</p>
 <p>Get the vertex of the tree which represents the root of the tree.</p>
-<p><a target='_blank' href='https://github.com/BioJulia/Bio.jl/tree/61d1a20ab5885ce0fefd2e7de58a3a3e67774018/src/phylo/phylogeny.jl#L187' class='documenter-source'>source</a><br></p>
+<p><a target='_blank' href='https://github.com/BioJulia/Bio.jl/tree/ebf7e6c5b82b965bdb09147162ed6ec92c9aa7e1/src/phylo/phylogeny.jl#L187' class='documenter-source'>source</a><br></p>
 <div class="codehilite"><pre><span></span><span class="n">isrooted</span><span class="p">(</span><span class="n">tree</span><span class="p">)</span>
 </pre></div>
 
@@ -330,7 +330,7 @@
 <p>A very simple expected divergence time estimate. Assumes a strict molecult clock and that the divergence time is equal to</p>
 <p>$ t = d / (2\mu) $</p>
 <p>Where $d$ is the evolutionary distance computed for two aligned sequences, and $\mu$ is the substitution rate.</p>
-<p><a target='_blank' href='https://github.com/BioJulia/Bio.jl/tree/61d1a20ab5885ce0fefd2e7de58a3a3e67774018/src/phylo/dating.jl#L34-L42' class='documenter-source'>source</a><br></p>
+<p><a target='_blank' href='https://github.com/BioJulia/Bio.jl/tree/ebf7e6c5b82b965bdb09147162ed6ec92c9aa7e1/src/phylo/dating.jl#L34-L42' class='documenter-source'>source</a><br></p>
 <p><a id='Bio.Phylo.Dating.SpeedDating' href='#Bio.Phylo.Dating.SpeedDating'>#</a>
 <strong><code>Bio.Phylo.Dating.SpeedDating</code></strong> &mdash; <em>Type</em>.</p>
 <p><code>SpeedDate</code> is the name given to a method of estimating a divergence time between two DNA sequence regions that was first implemented in the R package HybridCheck in order to date regions of introgression in large sequence contigs.</p>
@@ -340,7 +340,7 @@
 <p>Using these assumptions, the SpeedDate method finds the root of the following formula for $Pr(X \le k) = 0.05$, $0.5$, and $0.95$, and then divides the three answers by twice the assumed substitution rate.</p>
 <p>$ f(n, k, 2\mu t, Pr(X \le k) = \left( \sum_{i=0}^{\lfloor k \rfloor} \binom{n}{i} {2\mu t}^i (1 - 2\mu t)^{n-i}   \right) - Pr(X \le k) $</p>
 <p>This results in an upper, middle, and lower estimate of the coalescence time $t$ of the two sequences (expressed as the number of generations).</p>
-<p><a target='_blank' href='https://github.com/BioJulia/Bio.jl/tree/61d1a20ab5885ce0fefd2e7de58a3a3e67774018/src/phylo/dating.jl#L84-L116' class='documenter-source'>source</a><br></p></div>
+<p><a target='_blank' href='https://github.com/BioJulia/Bio.jl/tree/ebf7e6c5b82b965bdb09147162ed6ec92c9aa7e1/src/phylo/dating.jl#L84-L116' class='documenter-source'>source</a><br></p></div>
         
     </div>
 
