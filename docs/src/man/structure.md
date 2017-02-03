@@ -12,7 +12,7 @@ DocTestSetup = quote
 end
 ```
 
-The `Bio.Structure` module provides functionality to manipulate macromolecular structures, and in particular to read and write [Protein Data Bank](http://www.rcsb.org/pdb/home/home.do) (PDB) files. It is designed to be used for standard structural analysis tasks, as well as acting as a platform on which others can build to create more specific tools.
+The `Bio.Structure` module provides functionality to manipulate macromolecular structures, and in particular to read and write [Protein Data Bank](http://www.rcsb.org/pdb/home/home.do) (PDB) files. It is designed to be used for standard structural analysis tasks, as well as acting as a platform on which others can build to create more specific tools. It compares favourably in terms of performance to other PDB parsers - see some [benchmarks](https://github.com/jgreener64/pdb-benchmarks).
 
 
 ## Parsing PDB files
@@ -124,7 +124,7 @@ Models are ordered numerically; chains are ordered by character, except the empt
 
 `collect` can be used to get arrays of sub-elements. `collectatoms`, `collectresidues`, `collectchains` and `collectmodels` return arrays of a particular type from a structural element or element array.
 
-Selectors are functions passed as additional arguments to these functions. Only elements that return `true` when passed to the selector are retained.
+Selectors are functions passed as additional arguments to these functions. Only elements that return `true` when passed to the selector are retained. For example:
 
 | Command                                                 | Action                                                            | Return type                |
 | :------------------------------------------------------ | :---------------------------------------------------------------- | :------------------------- |
@@ -133,6 +133,23 @@ Selectors are functions passed as additional arguments to these functions. Only 
 | `collectatoms(struc) `                                  | Collect the atoms of an element                                   | `Array{AbstractAtom,1}`    |
 | `collectatoms(struc, calphaselector)`                   | Collect the C-alpha atoms of an element                           | `Array{AbstractAtom,1}`    |
 | `collectatoms(struc, calphaselector, disorderselector)` | Collect the disordered C-alpha atoms of an element                | `Array{AbstractAtom,1}`    |
+
+The selectors available are:
+
+| Function          | Acts on                             | Selects for                                         |
+| :---------------- | :---------------------------------- | :-------------------------------------------------- |
+| standardselector  | `AbstractAtom` or `AbstractResidue` | Atoms/residues arising from standard (ATOM) records |
+| heteroselector    | `AbstractAtom` or `AbstractResidue` | Atoms/residues arising from hetero (HETATM) records |
+| atomnameselector  | `AbstractAtom`                      | Atoms with atom name in a given list                |
+| calphaselector    | `AbstractAtom`                      | C-alpha atoms                                       |
+| cbetaselector     | `AbstractAtom`                      | C-beta atoms, or C-alpha atoms for glycine residues |
+| backboneselector  | `AbstractAtom`                      | Atoms in the protein backbone (CA, N and C)         |
+| heavyatomselector | `AbstractAtom`                      | Non-hydrogen atoms                                  |
+| hydrogenselector  | `AbstractAtom`                      | Hydrogen atoms                                      |
+| resnameselector   | `AbstractAtom` or `AbstractResidue` | Atoms/residues with residue name in a given list    |
+| waterselector     | `AbstractAtom` or `AbstractResidue` | Atoms/residues with residue name HOH                |
+| notwaterselector  | `AbstractAtom` or `AbstractResidue` | Atoms/residues with residue name not HOH            |
+| disorderselector  | `AbstractAtom` or `AbstractResidue` | Atoms/residues with alternative locations           |
 
 It is easy to define your own atom, residue, chain or model selectors. The below will collect all atoms with x coordinate less than 0:
 
@@ -206,7 +223,7 @@ Various functions are provided to calculate spatial quantities for proteins:
 | `phiangle`           | Phi angle between a residue and the previous residue                                            |
 | `psiangle`           | Psi angle between a residue and the next residue                                                |
 | `ramachandranangles` | `Vector`s of phi and psi angles of an element                                                   |
-| `contactmap`         | Contact map of two element, or one element with itself                                          |
+| `contactmap`         | Contact map of two elements, or one element with itself                                         |
 | `rmsd`               | RMSD between two elements of the same size - assumes they are superimposed                      |
 | `displacements`      | `Vector` of displacements between two elements of the same size - assumes they are superimposed |
 
@@ -270,7 +287,7 @@ for i in 1:length(cbetas)
 end
 ```
 
-`cbetaselector` selects C-beta atoms, or C-alpha atoms for glycine residues. `contactmap` can also be given two structural elements as arguments, in which case a non-symmetrical 2D array is returned showing contacts between the elements.
+`contactmap` can also be given two structural elements as arguments, in which case a non-symmetrical 2D array is returned showing contacts between the elements.
 
 **E)** To show the Ramachandran phi/psi angle plot of a structure, if you have Gadfly installed:
 
