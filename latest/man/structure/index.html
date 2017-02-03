@@ -234,7 +234,7 @@
 
 <p><a id='Bio.Structure:-Macromolecular-Structures-1'></a></p>
 <h1 id="biostructure-macromolecular-structures">Bio.Structure: Macromolecular Structures</h1>
-<p>The <code>Bio.Structure</code> module provides functionality to manipulate macromolecular structures, and in particular to read and write <a href="http://www.rcsb.org/pdb/home/home.do">Protein Data Bank</a> (PDB) files. It is designed to be used for standard structural analysis tasks, as well as acting as a platform on which others can build to create more specific tools.</p>
+<p>The <code>Bio.Structure</code> module provides functionality to manipulate macromolecular structures, and in particular to read and write <a href="http://www.rcsb.org/pdb/home/home.do">Protein Data Bank</a> (PDB) files. It is designed to be used for standard structural analysis tasks, as well as acting as a platform on which others can build to create more specific tools. It compares favourably in terms of performance to other PDB parsers - see some <a href="https://github.com/jgreener64/pdb-benchmarks">benchmarks</a>.</p>
 <p><a id='Parsing-PDB-files-1'></a></p>
 <h2 id="parsing-pdb-files">Parsing PDB files</h2>
 <p>To download a PDB file:</p>
@@ -519,7 +519,7 @@
 
 <p>Models are ordered numerically; chains are ordered by character, except the empty chain is last; residues are ordered by residue number and insertion code with hetero residues after standard residues; atoms are ordered by atom serial.</p>
 <p><code>collect</code> can be used to get arrays of sub-elements. <code>collectatoms</code>, <code>collectresidues</code>, <code>collectchains</code> and <code>collectmodels</code> return arrays of a particular type from a structural element or element array.</p>
-<p>Selectors are functions passed as additional arguments to these functions. Only elements that return <code>true</code> when passed to the selector are retained.</p>
+<p>Selectors are functions passed as additional arguments to these functions. Only elements that return <code>true</code> when passed to the selector are retained. For example:</p>
 <table>
 <thead>
 <tr>
@@ -553,6 +553,78 @@
 <td align="left"><code>collectatoms(struc, calphaselector, disorderselector)</code></td>
 <td align="left">Collect the disordered C-alpha atoms of an element</td>
 <td align="left"><code>Array{AbstractAtom,1}</code></td>
+</tr>
+</tbody>
+</table>
+<p>The selectors available are:</p>
+<table>
+<thead>
+<tr>
+<th align="left">Function</th>
+<th align="left">Acts on</th>
+<th align="left">Selects for</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td align="left">standardselector</td>
+<td align="left"><code>AbstractAtom</code> or <code>AbstractResidue</code></td>
+<td align="left">Atoms/residues arising from standard (ATOM) records</td>
+</tr>
+<tr>
+<td align="left">heteroselector</td>
+<td align="left"><code>AbstractAtom</code> or <code>AbstractResidue</code></td>
+<td align="left">Atoms/residues arising from hetero (HETATM) records</td>
+</tr>
+<tr>
+<td align="left">atomnameselector</td>
+<td align="left"><code>AbstractAtom</code></td>
+<td align="left">Atoms with atom name in a given list</td>
+</tr>
+<tr>
+<td align="left">calphaselector</td>
+<td align="left"><code>AbstractAtom</code></td>
+<td align="left">C-alpha atoms</td>
+</tr>
+<tr>
+<td align="left">cbetaselector</td>
+<td align="left"><code>AbstractAtom</code></td>
+<td align="left">C-beta atoms, or C-alpha atoms for glycine residues</td>
+</tr>
+<tr>
+<td align="left">backboneselector</td>
+<td align="left"><code>AbstractAtom</code></td>
+<td align="left">Atoms in the protein backbone (CA, N and C)</td>
+</tr>
+<tr>
+<td align="left">heavyatomselector</td>
+<td align="left"><code>AbstractAtom</code></td>
+<td align="left">Non-hydrogen atoms</td>
+</tr>
+<tr>
+<td align="left">hydrogenselector</td>
+<td align="left"><code>AbstractAtom</code></td>
+<td align="left">Hydrogen atoms</td>
+</tr>
+<tr>
+<td align="left">resnameselector</td>
+<td align="left"><code>AbstractAtom</code> or <code>AbstractResidue</code></td>
+<td align="left">Atoms/residues with residue name in a given list</td>
+</tr>
+<tr>
+<td align="left">waterselector</td>
+<td align="left"><code>AbstractAtom</code> or <code>AbstractResidue</code></td>
+<td align="left">Atoms/residues with residue name HOH</td>
+</tr>
+<tr>
+<td align="left">notwaterselector</td>
+<td align="left"><code>AbstractAtom</code> or <code>AbstractResidue</code></td>
+<td align="left">Atoms/residues with residue name not HOH</td>
+</tr>
+<tr>
+<td align="left">disorderselector</td>
+<td align="left"><code>AbstractAtom</code> or <code>AbstractResidue</code></td>
+<td align="left">Atoms/residues with alternative locations</td>
 </tr>
 </tbody>
 </table>
@@ -643,7 +715,7 @@
 </tr>
 <tr>
 <td align="left"><code>contactmap</code></td>
-<td align="left">Contact map of two element, or one element with itself</td>
+<td align="left">Contact map of two elements, or one element with itself</td>
 </tr>
 <tr>
 <td align="left"><code>rmsd</code></td>
@@ -709,7 +781,7 @@
 </pre></div>
 
 
-<p><code>cbetaselector</code> selects C-beta atoms, or C-alpha atoms for glycine residues. <code>contactmap</code> can also be given two structural elements as arguments, in which case a non-symmetrical 2D array is returned showing contacts between the elements.</p>
+<p><code>contactmap</code> can also be given two structural elements as arguments, in which case a non-symmetrical 2D array is returned showing contacts between the elements.</p>
 <p><strong>E)</strong> To show the Ramachandran phi/psi angle plot of a structure, if you have Gadfly installed:</p>
 <div class="codehilite"><pre><span></span><span class="k">using</span> <span class="n">Gadfly</span>
 <span class="n">phi_angles</span><span class="p">,</span> <span class="n">psi_angles</span> <span class="o">=</span> <span class="n">ramachandranangles</span><span class="p">(</span><span class="n">struc</span><span class="p">,</span> <span class="n">standardselector</span><span class="p">)</span>
