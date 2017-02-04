@@ -43,9 +43,9 @@ import ..Ragel: tryread!
 export tryread!
 
 importall Bio
+import ColorTypes: RGB
 using
     BufferedStreams,
-    Colors,
     IntervalTrees,
     Libz,
     Bio.Ragel,
