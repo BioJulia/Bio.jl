@@ -53,6 +53,14 @@ function Base.convert(::Type{Char}, strand::Strand)
     end
 end
 
+function flip( strand::Strand )
+    if strand == STRAND_NA || strand == STRAND_BOTH
+        return strand
+    else
+        return convert(Strand, convert(UInt8, strand) $ 0b11 )
+    end
+end
+
 function Base.show(io::IO, strand::Strand)
     if strand == STRAND_NA
         print(io, "STRAND_NA")
@@ -80,3 +88,4 @@ function Base.print(io::IO, strand::Strand)
         error("try to print an invalid strand")
     end
 end
+

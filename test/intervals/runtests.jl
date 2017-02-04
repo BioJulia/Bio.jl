@@ -609,7 +609,6 @@ TGCATGCA
     end
 end
 
-
 @testset "BigBed" begin
     @testset "BED → BigBed → BED round-trip" begin
         path = Pkg.dir("Bio", "test", "BioFmtSpecimens", "BED")
@@ -657,6 +656,47 @@ end
     end
 
     # TODO: test summary information against output from kent's bigBedSummary
+
+    @testset "LiftOverChain Building" begin
+      #=score -- chain score
+        tName -- chromosome (reference sequence)
+        tSize -- chromosome size (reference sequence)
+        tStrand -- strand (reference sequence)
+        tStart -- alignment start position (reference sequence)
+        tEnd -- alignment end position (reference sequence)
+        qName -- chromosome (query sequence)
+        qSize -- chromosome size (query sequence)
+        qStrand -- strand (query sequence)
+        qStart -- alignment start position (query sequence)
+        qEnd -- alignment end position (query sequence)
+        id -- chain ID=#
+        chainfile = IOBuffer()
+        write(chainfile, "chain 1 chrFrom 100 + 1 100 chrTo 100 - 201 310 1\n")
+        for i in 1:9
+            write(chainfile, "10\t0\t1\n")
+        end
+        write(chainfile, "10\n")
+        seek(chainfile, 0)
+        chain = LiftOverChain( chainfile )
+        @test typeof(chain) == IntervalCollection{ChainBlock}
+        @test length(chain) == 1
+        ictest = [Interval("chrA", 10, 100, '+', "NULL"),
+                  Interval("chrFrom", 1, 10, '+', "TEST_B"),
+                  Interval("chrFrom", 11, 21, '-', "TEST_C"),
+                  Interval("chrFrom", 101, 200, '-', "NULL"),
+                  Interval("chrZ", 10, 100, '+', "NULL")]
+        res = liftover( chain, ictest )
+        @test length(res) == length(ictest)
+        for i in 1:length(ictest)
+           if ictest[i].metadata == "NULL"
+              @test isnull(res[i])
+           else
+              @test !isnull(res[i])
+           end
+        end
+        @test get(res[2]) == Interval("chrTo", 201, 210, '-', "TEST_B")
+        @test get(res[3]) == Interval("chrTo", 212, 223, '+', "TEST_C")
+    end
 end
 
 end # module TestIntervals

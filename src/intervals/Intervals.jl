@@ -37,7 +37,10 @@ export
     getfasta,
     directives,
     Tabix,
-    overlapchunks
+    overlapchunks,
+    LiftOverChain,
+    ChainBlock,
+    liftover
 
 import ..Ragel: tryread!
 export tryread!
@@ -69,6 +72,7 @@ include("index/index.jl")
 include("bed/bed.jl")
 include("bbi/bbi.jl")
 include("gff3/gff3.jl")
+include("chain.jl")
 
 include("deprecated.jl")
 

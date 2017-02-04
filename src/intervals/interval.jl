@@ -34,6 +34,24 @@ function Interval(seqname::AbstractString, first::Integer, last::Integer,
     return Interval{Void}(seqname, first, last, strand, nothing)
 end
 
+# "chrX:32049-32077"
+function Interval(genome_coord::AbstractString, strand::Union{Strand,Char}=STRAND_BOTH)
+    spl_a = split( genome_coord, ':' )
+    if length(spl_a) != 2
+        error("Invalid genome coord to build Interval!")
+    else
+        spl_b = split( spl_a[2], '-' )
+        if length(spl_b) != 2
+           error("Invalid genome coord to build Interval!")
+        else
+           return Interval(String(spl_a[1]),
+                           parse(Int, spl_b[1]),
+                           parse(Int, spl_b[2]),
+                           strand)
+        end
+    end      
+end
+
 function Base.copy{T}(interval::Interval{T})
     return Interval{T}(copy(interval.seqname), interval.first, interval.last,
                        interval.strand, copy(interval.metadata))
@@ -72,7 +90,7 @@ end
 IntervalTrees.first(i::Interval) = i.first
 IntervalTrees.last(i::Interval) = i.last
 
-function Base.isless{T}(a::Interval{T}, b::Interval{T},
+function Base.isless{S, T}(a::Interval{S}, b::Interval{T},
                         seqname_isless::Function=alphanum_isless)
     if a.seqname != b.seqname
         return seqname_isless(a.seqname, b.seqname)::Bool
@@ -93,7 +111,7 @@ Check if two intervals are well ordered.
 Intervals are considered well ordered if a.seqname <= b.seqnamend and
 a.first <= b.first.
 """
-function isordered{T}(a::Interval{T}, b::Interval{T},
+function isordered{S, T}(a::Interval{S}, b::Interval{T},
                       seqname_isless::Function=alphanum_isless)
     if a.seqname != b.seqname
         return seqname_isless(a.seqname, b.seqname)::Bool
@@ -107,7 +125,7 @@ end
 """
 Return true if interval `a` entirely precedes `b`.
 """
-function precedes{T}(a::Interval{T}, b::Interval{T},
+function precedes{S, T}(a::Interval{S}, b::Interval{T},
                      seqname_isless::Function=alphanum_isless)
     return (a.last < b.first && a.seqname == b.seqname) ||
         seqname_isless(a.seqname, b.seqname)::Bool
