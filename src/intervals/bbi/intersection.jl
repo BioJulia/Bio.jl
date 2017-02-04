@@ -153,7 +153,7 @@ function find_next_intersection!(it::BigBedIntersectIterator)
 
             seek(it.bb.stream, block_offset)
             @assert block_size <= length(it.bb.uncompressed_data)
-            unc_block_size = readbytes!(ZlibInflateInputStream(it.bb.stream, reset_on_end=false),
+            unc_block_size = readbytes!(Libz.ZlibInflateInputStream(it.bb.stream, reset_on_end=false),
                                         it.bb.uncompressed_data,
                                         length(it.bb.uncompressed_data))
             it.reader = BigBedDataReader(

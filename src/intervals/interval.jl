@@ -8,7 +8,7 @@
 
 # Note, just to be clear: this shadows IntervalTrees.Interval
 "A genomic interval specifies interval with some associated metadata"
-type Interval{T} <: AbstractInterval{Int64}
+type Interval{T} <: IntervalTrees.AbstractInterval{Int64}
     seqname::StringField
     first::Int64
     last::Int64

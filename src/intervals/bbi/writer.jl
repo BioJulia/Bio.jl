@@ -289,7 +289,7 @@ function bigbed_write_blocks(out::IO, intervals::IntervalCollection,
             max_block_size = max(max_block_size, length(block))
 
             if compressed
-                writer = ZlibDeflateOutputStream(out)
+                writer = Libz.ZlibDeflateOutputStream(out)
                 write(writer, block)
                 flush(writer)
             else
@@ -357,7 +357,7 @@ function bigwig_write_blocks{T<:Number}(out::IO, intervals::IntervalCollection{T
                                          0, 0, BIGWIG_DATATYPE_BEDGRAPH, 0, item_ix - 1)
 
             if compressed
-                writer = ZlibDeflateOutputStream(out)
+                writer = Libz.ZlibDeflateOutputStream(out)
                 write(writer, header)
                 for i in 1:item_ix-1
                     write(writer, items[i])
@@ -895,7 +895,7 @@ function bigbed_write_summary_and_index_comp(
     i = 1
     while items_left > 0
         items_in_slot = min(items_per_slot, items_left)
-        writer = ZlibDeflateOutputStream(out)
+        writer = Libz.ZlibDeflateOutputStream(out)
         file_pos = position(out)
         for _ in 1:items_in_slot
             summary = summary_list[sum_ix]
