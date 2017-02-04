@@ -101,6 +101,8 @@ end
 
 info("compiling FASTA")
 const fasta_machine = (function ()
+    re = Automa.RegExp
+
     lf          = re"\n"
     newline     = re"\r?" * lf
     hspace      = re"[ \t\v]"
