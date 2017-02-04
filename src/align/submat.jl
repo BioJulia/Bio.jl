@@ -26,7 +26,7 @@ immutable SubstitutionMatrix{T,S} <: AbstractSubstitutionMatrix{S}
 
     function SubstitutionMatrix(data::Matrix{S}, defined::BitMatrix)
         @assert size(data) == size(defined)
-        @assert size(data, 1) == size(data, 2) == length(alphabet(T)) - 1
+        @assert size(data, 1) == size(data, 2) == length(Bio.Seq.alphabet(T)) - 1
         return new(data, defined)
     end
 
@@ -62,7 +62,7 @@ end
 
 function SubstitutionMatrix{T,S}(scores::Associative{Tuple{T,T},S};
                                  default_match=S(0), default_mismatch=S(0))
-    n = length(alphabet(T)) - 1
+    n = length(Bio.Seq.alphabet(T)) - 1
     submat = Matrix{S}(n, n)
     defined = falses(n, n)
     for ((x, y), score) in scores
@@ -131,16 +131,16 @@ underline(s) = join([string(c, '\U0332') for c in s])
 
 # Return a vector of all symbols of `T` except the gap symbol.
 function alphabet_without_gap{T}(::Type{T})
-    return filter!(x -> x != gap(T), collect(alphabet(T)))
+    return filter!(x -> x != Bio.Seq.gap(T), collect(Bio.Seq.alphabet(T)))
 end
 
 # Return the row/column index of `nt`.
-function index(nt::Nucleotide)
+function index(nt::Bio.Seq.Nucleotide)
     return convert(Int, nt)
 end
 
 # Return the row/column index of `aa`.
-function index(aa::AminoAcid)
+function index(aa::Bio.Seq.AminoAcid)
     return convert(Int, aa) + 1
 end
 
@@ -160,7 +160,7 @@ end
 
 function Base.convert{T,S}(::Type{SubstitutionMatrix{T,S}},
                            submat::DichotomousSubstitutionMatrix)
-    n = length(alphabet(T)) - 1
+    n = length(Bio.Seq.alphabet(T)) - 1
     data = Matrix{S}(n, n)
     fill!(data, submat.mismatch)
     data[diagind(data)] = submat.match
@@ -217,12 +217,12 @@ function parse_ncbi_submat{T}(::Type{T}, filepath)
     return SubstitutionMatrix(scores, default_match=0, default_mismatch=0)
 end
 
-const EDNAFULL = load_submat(DNANucleotide, "NUC.4.4")
-const PAM30    = load_submat(AminoAcid, "PAM30")
-const PAM70    = load_submat(AminoAcid, "PAM70")
-const PAM250   = load_submat(AminoAcid, "PAM250")
-const BLOSUM45 = load_submat(AminoAcid, "BLOSUM45")
-const BLOSUM50 = load_submat(AminoAcid, "BLOSUM50")
-const BLOSUM62 = load_submat(AminoAcid, "BLOSUM62")
-const BLOSUM80 = load_submat(AminoAcid, "BLOSUM80")
-const BLOSUM90 = load_submat(AminoAcid, "BLOSUM90")
+const EDNAFULL = load_submat(Bio.Seq.DNANucleotide, "NUC.4.4")
+const PAM30    = load_submat(Bio.Seq.AminoAcid, "PAM30")
+const PAM70    = load_submat(Bio.Seq.AminoAcid, "PAM70")
+const PAM250   = load_submat(Bio.Seq.AminoAcid, "PAM250")
+const BLOSUM45 = load_submat(Bio.Seq.AminoAcid, "BLOSUM45")
+const BLOSUM50 = load_submat(Bio.Seq.AminoAcid, "BLOSUM50")
+const BLOSUM62 = load_submat(Bio.Seq.AminoAcid, "BLOSUM62")
+const BLOSUM80 = load_submat(Bio.Seq.AminoAcid, "BLOSUM80")
+const BLOSUM90 = load_submat(Bio.Seq.AminoAcid, "BLOSUM90")

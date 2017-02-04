@@ -11,10 +11,10 @@ Create a data writer of the BAM file format.
 * `header`: SAM header object
 """
 type BAMWriter <: Bio.IO.AbstractWriter
-    stream::BGZFStream
+    stream::BGZFStreams.BGZFStream
 end
 
-function BAMWriter(stream::BGZFStream, header::SAMHeader)
+function BAMWriter(stream::BGZFStreams.BGZFStream, header::SAMHeader)
     refseqnames = String[]
     refseqlens = Int[]
     for rec in header["SQ"]
