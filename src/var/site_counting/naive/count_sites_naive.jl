@@ -17,7 +17,7 @@ function count_sites_naive{T<:SiteCase{false},A<:FourBitAlphs}(::Type{T}, a::Bio
     return k
 end
 
-count_sites_naive{T<:Union{Indel,Ambiguous},A<:TwoBitAlphs}(::Type{T}, a::BioSequence{A}) = 0
+count_sites_naive{T<:Union{Gap,Ambiguous},A<:TwoBitAlphs}(::Type{T}, a::BioSequence{A}) = 0
 count_sites_naive{A<:TwoBitAlphs}(::Type{Certain}, a::BioSequence{A}) = length(a)
 
 """
@@ -55,10 +55,10 @@ function count_sites_naive{T<:SiteCase{true},A<:Alphabet,B<:Alphabet}(::Type{T},
         an = a[idx]
         bn = b[idx]
         k += issite(T, an, bn)
-        j += (issite(Ambiguous, an, bn) | issite(Indel, an, bn))
+        j += !issite(Certain, an, bn)
     end
     return k, j
 end
 
-count_sites_naive{T<:Union{Indel,Ambiguous},A<:TwoBitAlphs}(::Type{T}, a::BioSequence{A}, b::BioSequence{A}) = 0
+count_sites_naive{T<:Union{Gap,Ambiguous},A<:TwoBitAlphs}(::Type{T}, a::BioSequence{A}, b::BioSequence{A}) = 0
 count_sites_naive{A<:TwoBitAlphs}(::Type{Certain}, a::BioSequence{A}, b::BioSequence{A}) = min(length(a), length(b))

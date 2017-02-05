@@ -9,20 +9,23 @@ issite{T<:Nucleotide}(::Type{Ambiguous}, a::T) = isambiguous(a)
 
 "Test whether a nucleotide site of two aligned sequences has ambiguities."
 @inline function issite{T<:Nucleotide}(::Type{Ambiguous}, a::T, b::T)
-    return isambiguous(a) | isambiguous(b)
+    return issite(Ambiguous, a) | issite(Ambiguous, b)
 end
 
 "Test whether a nucleotide site in a sequence is a gap character."
-issite{T<:Nucleotide}(::Type{Indel}, a::T) = reinterpret(UInt8, a) == 0
+issite{T<:Nucleotide}(::Type{Gap}, a::T) = count_ones(a) == 0
 
 "Test whether a nucleotide site of two aligned sequences has gap characters."
-@inline function issite{T<:Nucleotide}(::Type{Indel}, a::T, b::T)
-    return (reinterpret(UInt8, a) == 0) | (reinterpret(UInt8, b) == 0)
+@inline function issite{T<:Nucleotide}(::Type{Gap}, a::T, b::T)
+    return issite(Gap, a) | issite(Gap, b)
 end
+
+"Test whether a nucleotide site in a sequence is certain."
+issite{T<:Nucleotide}(::Type{Certain}, a::T) = count_ones(a) == 1
 
 "Test whether a nucleotide site of two aligned sequences has two certain nucleotides."
 @inline function issite{T<:Nucleotide}(::Type{Certain}, a::T, b::T)
-    return !issite(Ambiguous, a, b) & !issite(Indel, a, b)
+    return issite(Certain, a) & issite(Certain, b)
 end
 
 "Test whether a nucleotide site of two aligned sequences, constitutes a match."

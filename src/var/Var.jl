@@ -10,7 +10,9 @@
 module Var
 
 using Bio.Seq
+import PairwiseListMatrices: PairwiseListMatrix
 import Bio.Exceptions: MissingFieldException, missingerror
+import Bio.Windows: eachwindow, EachWindowIterator, SeqWinItr
 import Automa
 import Automa.RegExp: @re_str
 import BGZFStreams: BGZFStream
@@ -19,21 +21,19 @@ import BufferedStreams: BufferedStreams, BufferedInputStream
 importall Bio
 
 export
-
     # Site types
     Certain,
     Ambiguous,
-    Indel,
+    Gap,
     Match,
     Mismatch,
     Conserved,
     Mutated,
     Transition,
     Transversion,
-
-    #Site counting methods
+    # Site counting methods
     count_sites_naive,
-    count_sites
+    count_sites,
 
     # VCF and BCF
     VCFMetaInfo,

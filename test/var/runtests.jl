@@ -4,6 +4,9 @@ using Base.Test
 
 using Bio: Seq, Var
 using TestFunctions
+using PairwiseListMatrices
+
+typealias PWM PairwiseListMatrix
 
 function generate_testcase{A<:Union{DNAAlphabet{4}, DNAAlphabet{2}, RNAAlphabet{4}, RNAAlphabet{2}}}(::Type{A}, len::Int)
     a = [convert(Char, i)  for i in alphabet(A)]
@@ -38,16 +41,31 @@ end
 @testset "Var" begin
     @testset "Site counting and identification" begin
         @testset "Naive methods" begin
-            # Test when sequences are of the same bitencoding.
-            for alph in (DNAAlphabet{4}, DNAAlphabet{2}, RNAAlphabet{4}, RNAAlphabet{2})
-                istwobit = Seq.bitsof(alph) == 2
-                seqA, seqB = generate_possibilities_tester(alph)
+
+            alphabets = (DNAAlphabet{4}, DNAAlphabet{2}, RNAAlphabet{4}, RNAAlphabet{2})
+
+            for alph in alphabets
 
                 # Answers to these tests were worked out manually to verify count_sites_naive was working.
                 # seqA and seqB contain all possible observations of sites.
 
+                istwobit = Seq.bitsof(alph) == 2
+
+                seqA, seqB = generate_possibilities_tester(alph)
+
+                # Test methods which work on single sequences.
+                @test count_sites_naive(Certain, seqA) == ifelse(istwobit, length(seqA), 49)
+                @test count_sites_naive(Certain, seqB) == ifelse(istwobit, length(seqB), 19)
+                @test count_sites_naive(Gap, seqA) == ifelse(istwobit, 0, 16)
+                @test count_sites_naive(Gap, seqB) == ifelse(istwobit, 0, 1)
+                @test count_sites_naive(Ambiguous, seqA) == ifelse(istwobit, 0, length(seqA) - 65)
+                @test count_sites_naive(Ambiguous, seqB) == ifelse(istwobit, 0, length(seqB) - 20)
+
+                # Test methods which work on two sequences.
+                # Test when sequences are of the same bitencoding.
+
                 @test count_sites_naive(Certain, seqA, seqB) == count_sites_naive(Certain, seqB, seqA) == 10
-                @test count_sites_naive(Indel, seqA, seqB) == count_sites_naive(Indel, seqB, seqA) == ifelse(istwobit, 0, 16)
+                @test count_sites_naive(Gap, seqA, seqB) == count_sites_naive(Gap, seqB, seqA) == ifelse(istwobit, 0, 16)
                 @test count_sites_naive(Ambiguous, seqA, seqB) == count_sites_naive(Ambiguous, seqB, seqA) == ifelse(istwobit, 0, 121)
                 @test count_sites_naive(Match, seqA, seqB) == count_sites_naive(Match, seqB, seqA) == length(alphabet(alph))
                 @test count_sites_naive(Mismatch, seqA, seqB) == count_sites_naive(Mismatch, seqB, seqA) == (length(seqA) - length(alphabet(alph)))
@@ -63,7 +81,7 @@ end
                           (RNAAlphabet{2}, RNAAlphabet{4})]
                 seqA, seqB = generate_possibilities_tester(alphs...)
                 @test count_sites_naive(Certain, seqA, seqB) == count_sites_naive(Certain, seqB, seqA) == 16
-                @test count_sites_naive(Indel, seqA, seqB) == count_sites_naive(Indel, seqB, seqA) == 4
+                @test count_sites_naive(Gap, seqA, seqB) == count_sites_naive(Gap, seqB, seqA) == 4
                 @test count_sites_naive(Ambiguous, seqA, seqB) == count_sites_naive(Ambiguous, seqB, seqA) == 44
                 @test count_sites_naive(Match, seqA, seqB) == count_sites_naive(Match, seqB, seqA) == 4
                 @test count_sites_naive(Mismatch, seqA, seqB) == count_sites_naive(Mismatch, seqB, seqA) == 60
@@ -73,6 +91,24 @@ end
                 @test count_sites_naive(Transition, seqA, seqB) == count_sites_naive(Transition, seqB, seqA) == (4, 48)
                 @test count_sites_naive(Transversion, seqA, seqB) == count_sites_naive(Transversion, seqB, seqA) == (8, 48)
             end
+        end
+
+        @testset "Pairwise methods" begin
+            dnas = [dna"ATCGCCA-", dna"ATCGCCTA", dna"ATCGCCT-", dna"GTCGCCTA"]
+            rnas = [rna"AUCGCCA-", rna"AUCGCCUA", rna"AUCGCCU-", rna"GUCGCCUA"]
+            answer_mismatch = PWM{Int, false}([0 2 1 3; 2 0 1 1; 1 1 0 2; 3 1 2 0])
+            answer_match = PWM{Int, false}([0 6 7 5; 6 0 7 7; 7 7 0 6; 5 7 6 0])
+            for i in (dnas, rnas)
+                @test count_sites(Mismatch, i) == answer_mismatch
+                @test count_sites(Match, i) == answer_match
+                @test count_sites(Certain, i) == PWM{Int, false}([0 7 7 7; 7 0 7 8; 7 7 0 7; 7 8 7 0])
+                @test count_sites(Ambiguous, i) == PWM{Int, false}([0 0 0 0; 0 0 0 0; 0 0 0 0; 0 0 0 0])
+                @test count_sites(Gap, i) == PWM{Int, false}([0 1 1 1; 1 0 1 0; 1 1 0 1; 1 0 1 0])
+                ambigs = PWM{Int, false}([0 1 1 1; 1 0 1 0; 1 1 0 1; 1 0 1 0])
+                @test count_sites(Conserved, i) == (PWM{Int, false}([0 6 6 5; 6 0 7 7; 6 7 0 6; 5 7 6 0]), ambigs)
+                @test count_sites(Mutated, i) == (PWM{Int, false}([0 1 1 2; 1 0 0 1; 1 0 0 1; 2 1 1 0]), ambigs)
+            end
+
         end
     end
 end

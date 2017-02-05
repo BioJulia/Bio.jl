@@ -27,7 +27,7 @@ abstract SiteCase{p}
 
 """
 A `Certain` site describes a site where both of two aligned sites are not an
-ambiguity symbol.
+ambiguity symbol or a gap.
 """
 immutable Certain <: SiteCase{false} end
 
@@ -38,10 +38,10 @@ ambiguity symbol.
 immutable Ambiguous <: SiteCase{false} end
 
 """
-An `Indel` site describes a site where either of two aligned sites are a
+An `Gap` site describes a site where either of two aligned sites are a
 gap symbol '-'.
 """
-immutable Indel <: SiteCase{false} end
+immutable Gap <: SiteCase{false} end
 
 """
 A `Match` site describes a site where two aligned nucleotides are the
@@ -88,6 +88,7 @@ immutable Transversion <: SiteCase{true} end
 
 typealias FourBitAlphs Union{DNAAlphabet{4},RNAAlphabet{4}}
 typealias TwoBitAlphs Union{DNAAlphabet{2},RNAAlphabet{2}}
+typealias NucAlphs Union{DNAAlphabet, RNAAlphabet}
 
 # Includes for naieve site counting.
 include("naive/is_site.jl")
@@ -115,3 +116,41 @@ end
 function count_sites{T<:SiteCase}(::Type{T}, seq::BioSequence)
     return count_sites_naive(T, seq)
 end
+
+"""
+Count the number of mutations between DNA sequences in a pairwise manner.
+"""
+function count_sites{T<:SiteCase{false},A<:NucAlphs}(::Type{T}, sequences::Array{BioSequence{A}})
+    len = length(sequences)
+    counts = PairwiseListMatrix(Int, len, false)
+    @inbounds for i in 1:len, j in (i + 1):len
+        counts[i, j] = count_sites(T, sequences[i], sequences[j])
+    end
+    return counts
+end
+
+"""
+Count the number of mutations between DNA sequences in a pairwise manner.
+"""
+function count_sites{T<:SiteCase{true},A<:NucAlphs}(::Type{T}, sequences::Array{BioSequence{A}})
+    len = length(sequences)
+    counts = PairwiseListMatrix(Int, len, false)
+    undetermined = PairwiseListMatrix(Int, len, false)
+    @inbounds for i in 1:len, j in (i + 1):len
+        counts[i, j], undetermined[i, j] = count_sites(T, sequences[i], sequences[j])
+    end
+    return counts, undetermined
+end
+
+#=
+function count_sites{T<:SiteCase}(::Type{T}, a::SeqWinItr, b::SeqWinItr)
+    itr = zip(a, b)
+    results = Vector{Tuple{UnitRange{Int}, resulttype(T)}}(length(itr)) # Not sure if this is better handled by making a generated function.
+    i = 1
+    for (wina, winb) in itr
+        results[i] = (wina[1], count_sites)
+
+    end
+    return results
+end
+=#
