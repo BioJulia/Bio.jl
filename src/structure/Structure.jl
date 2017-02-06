@@ -8,6 +8,7 @@
 
 module Structure
 
+import Bio.Seq: AminoAcidSequence
 importall Bio
 
 include("model.jl")
