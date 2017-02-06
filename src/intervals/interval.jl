@@ -8,7 +8,7 @@
 
 # Note, just to be clear: this shadows IntervalTrees.Interval
 "A genomic interval specifies interval with some associated metadata"
-type Interval{T} <: AbstractInterval{Int64}
+type Interval{T} <: IntervalTrees.AbstractInterval{Int64}
     seqname::StringField
     first::Int64
     last::Int64
@@ -122,7 +122,7 @@ function Base.:(==){T}(a::Interval{T}, b::Interval{T})
 end
 
 "Return true if interval `a` overlaps interval `b`, with no consideration to strand"
-function isoverlapping{S, T}(a::Interval{S}, b::Interval{T})
+function Bio.isoverlapping{S, T}(a::Interval{S}, b::Interval{T})
     return a.first <= b.last && b.first <= a.last && a.seqname == b.seqname
 end
 

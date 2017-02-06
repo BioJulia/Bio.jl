@@ -32,7 +32,7 @@
 #       ordered iteration.             ...
 #
 
-typealias IntervalCollectionTree{T} IntervalTree{Int64,Interval{T}}
+typealias IntervalCollectionTree{T} IntervalTrees.IntervalTree{Int64,Interval{T}}
 
 type IntervalCollection{T} <: IntervalStream{T}
     # Sequence name mapped to IntervalTree, which in turn maps intervals to

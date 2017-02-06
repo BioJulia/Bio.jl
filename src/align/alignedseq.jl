@@ -16,12 +16,12 @@ function AlignedSequence{S}(seq::S, anchors::Vector{AlignmentAnchor},
     return AlignedSequence(seq, Alignment(anchors, check))
 end
 
-function AlignedSequence(seq::Sequence, ref::Sequence)
+function AlignedSequence(seq::Bio.Seq.Sequence, ref::Bio.Seq.Sequence)
     return AlignedSequence(seq, 1, ref, 1)
 end
 
-function AlignedSequence(seq::Sequence, seqpos::Integer,
-                         ref::Sequence, refpos::Integer)
+function AlignedSequence(seq::Bio.Seq.Sequence, seqpos::Integer,
+                         ref::Bio.Seq.Sequence, refpos::Integer)
     if length(seq) != length(ref)
         throw(ArgumentError("two sequences must be the same length"))
     end
@@ -31,11 +31,11 @@ function AlignedSequence(seq::Sequence, seqpos::Integer,
     newseq = similar(seq, 0)  # sequence without gap symbols
     anchors = AlignmentAnchor[]
     for (x, y) in zip(seq, ref)
-        if x == gap(eltype(seq)) && y == gap(eltype(ref))
+        if x == Bio.Seq.gap(eltype(seq)) && y == Bio.Seq.gap(eltype(ref))
             throw(ArgumentError("two sequences must not have gaps at the same position"))
-        elseif x == gap(eltype(seq))
+        elseif x == Bio.Seq.gap(eltype(seq))
             op′ = OP_DELETE
-        elseif y == gap(eltype(ref))
+        elseif y == Bio.Seq.gap(eltype(ref))
             op′ = OP_INSERT
         elseif x == y
             op′ = OP_SEQ_MATCH
@@ -48,11 +48,11 @@ function AlignedSequence(seq::Sequence, seqpos::Integer,
             op = op′
         end
 
-        if x != gap(eltype(seq))
+        if x != Bio.Seq.gap(eltype(seq))
             seqpos += 1
             push!(newseq, x)
         end
-        if y != gap(eltype(ref))
+        if y != Bio.Seq.gap(eltype(ref))
             refpos += 1
         end
     end

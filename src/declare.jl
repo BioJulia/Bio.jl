@@ -24,4 +24,5 @@ end
     metadata,
     leftposition,
     rightposition,
+    isoverlapping,
 )

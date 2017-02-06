@@ -9,7 +9,7 @@
 # An index type for the BAM file format.
 type BAI
     # BGZF file index
-    index::BGZFIndex
+    index::Bio.Intervals.BGZFIndex
 
     # number of unmapped reads
     n_no_coors::Nullable{Int}

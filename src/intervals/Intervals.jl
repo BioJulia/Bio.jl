@@ -37,26 +37,17 @@ export
     getfasta,
     directives,
     Tabix,
-    overlapchunks
+    overlapchunks,
+    tryread!
 
-import ..Ragel: tryread!
-export tryread!
-
-importall Bio
+import Base.Collections: heappush!, heappop!
+import Bio.Ragel: Ragel, tryread!
+import Bio.StringFields: StringField
+import BufferedStreams: BufferedStreams, BufferedInputStream, upanchor!
 import ColorTypes: RGB
-using
-    BufferedStreams,
-    IntervalTrees,
-    Libz,
-    Bio.Ragel,
-    Bio.StringFields,
-    Bio.Seq
-
-using Base.Collections:
-    heappush!,
-    heappop!
-
-import Iterators
+import IntervalTrees
+import Libz
+importall Bio
 
 include("strand.jl")
 include("interval.jl")

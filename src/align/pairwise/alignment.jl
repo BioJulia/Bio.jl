@@ -30,9 +30,9 @@ function Base.next(aln::PairwiseAlignment, ij)
         y = ref[refpos + j]
     elseif isinsertop(anchor.op)
         x = seq[seqpos + j]
-        y = gap(eltype(ref))
+        y = Bio.Seq.gap(eltype(ref))
     elseif isdeleteop(anchor.op)
-        x = gap(eltype(seq))
+        x = Bio.Seq.gap(eltype(seq))
         y = ref[refpos + j]
     else
         @assert false
@@ -163,10 +163,10 @@ function Base.print(io::IO, aln::PairwiseAlignment, width::Integer=60)
         (x, y), s = next(aln, s)
 
         i += 1
-        if x != gap(eltype(seq))
+        if x != Bio.Seq.gap(eltype(seq))
             seqpos += 1
         end
-        if y != gap(eltype(ref))
+        if y != Bio.Seq.gap(eltype(ref))
             refpos += 1
         end
 

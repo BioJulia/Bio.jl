@@ -231,8 +231,8 @@ function hamming_circle(seq, m)
         return [seq]
     end
     ret = DNASequence[]
-    for ps in combinations(1:endof(seq), m)
-        for rs in product(repeated(1:4, m)...)
+    for ps in Combinatorics.combinations(1:endof(seq), m)
+        for rs in Iterators.product(repeated(1:4, m)...)
             seq′ = copy(seq)
             for (p, r) in zip(ps, rs)
                 if findfirst(ACGT, seq[p]) ≤ r

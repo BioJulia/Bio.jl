@@ -153,22 +153,18 @@ export
     Demultiplexer,
     demultiplex,
     seqmatrix,
-    majorityvote
+    majorityvote,
+    tryread!
 
-importall Bio
 import Automa
 import Automa.RegExp: @re_str
-const re = Automa.RegExp
-using
-    BufferedStreams,
-    Iterators,
-    IndexableBitVectors,
-    Bio.Ragel,
-    Bio.StringFields,
-    Combinatorics
-
-import ..Ragel: tryread!
-export tryread!
+import Bio.Ragel: Ragel, tryread!
+import Bio.StringFields: StringField
+import BufferedStreams: BufferedStreams, BufferedInputStream, BufferedOutputStream
+import Combinatorics
+import IndexableBitVectors
+import Iterators
+importall Bio
 
 """
     alphabet(typ)

@@ -206,7 +206,7 @@ function Base.start(bb::BigBedReader)
     # read the first data block
     seek(bb.stream, bb.header.full_data_offset)
     data_count = read(bb.stream, UInt64)
-    zlib_stream = ZlibInflateInputStream(bb.stream, reset_on_end=false)
+    zlib_stream = Libz.ZlibInflateInputStream(bb.stream, reset_on_end=false)
     unc_block_size = readbytes!(zlib_stream, bb.uncompressed_data,
                                length(bb.uncompressed_data))
 
@@ -234,7 +234,7 @@ function Base.next(bb::BigBedReader, state::BigBedIteratorState)
 
     if state.reader_isdone
         seek(bb.stream, bb.header.full_data_offset + state.data_offset + sizeof(UInt64))
-        zlib_stream = ZlibInflateInputStream(bb.stream, reset_on_end=false)
+        zlib_stream = Libz.ZlibInflateInputStream(bb.stream, reset_on_end=false)
 
         unc_block_size = readbytes!(zlib_stream, bb.uncompressed_data,
                                     length(bb.uncompressed_data))

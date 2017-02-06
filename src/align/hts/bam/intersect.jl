@@ -30,7 +30,7 @@ type BAMIntersectionIteratorState
     refindex::Int
 
     # possibly overlapping chunks
-    chunks::Vector{Chunk}
+    chunks::Vector{Bio.Intervals.Chunk}
 
     # current chunk index
     chunkid::Int
@@ -45,7 +45,7 @@ function Base.start(iter::BAMIntersectionIterator)
         throw(ArgumentError("sequence name $(iter.refname) is not found in the header"))
     end
     @assert !isnull(iter.reader.index)
-    chunks = overlapchunks(get(iter.reader.index).index, refindex, iter.interval)
+    chunks = Bio.Intervals.overlapchunks(get(iter.reader.index).index, refindex, iter.interval)
     if !isempty(chunks)
         seek(iter.reader, first(chunks).start)
     end
@@ -55,7 +55,7 @@ end
 function Base.done(iter::BAMIntersectionIterator, state)
     while state.chunkid ≤ endof(state.chunks)
         chunk = state.chunks[state.chunkid]
-        while virtualoffset(iter.reader.stream) < chunk.stop
+        while BGZFStreams.virtualoffset(iter.reader.stream) < chunk.stop
             read!(iter.reader, state.record)
             if isoverlapping(state.record, state.refindex, iter.interval)
                 return false
@@ -73,7 +73,7 @@ function Base.next(iter::BAMIntersectionIterator, state)
     return copy(state.record), state
 end
 
-function Bio.Intervals.isoverlapping(
+function Bio.isoverlapping(
         rec::BAMRecord,
         refindex_::Integer,
         interval::UnitRange)
@@ -82,7 +82,7 @@ function Bio.Intervals.isoverlapping(
         rightposition(rec) ≥ first(interval)
 end
 
-function Base.intersect(reader::BAMReader, interval::Interval)
+function Base.intersect(reader::BAMReader, interval::Bio.Intervals.Interval)
     return intersect(reader, interval.seqname, interval.first:interval.last)
 end
 

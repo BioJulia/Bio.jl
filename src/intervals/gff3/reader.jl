@@ -99,5 +99,5 @@ function getfasta(reader::GFF3Reader)
     if !hasfasta(reader)
         error("GFF3 file has no FASTA data ")
     end
-    return FASTAReader(reader.state.stream)
+    return Bio.Seq.FASTAReader(reader.state.stream)
 end

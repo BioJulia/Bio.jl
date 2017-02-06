@@ -1,13 +1,14 @@
 module BLAST
 
-export blastn,
-       blastp,
-       readblastXML,
-       BLASTResult
+export
+    blastn,
+    blastp,
+    readblastXML,
+    BLASTResult
 
-using Bio.Seq,
-      Bio.Align,
-      EzXML
+import Bio.Align: AlignedSequence
+import Bio.Seq: BioSequence, DNASequence, AminoAcidSequence
+import EzXML
 
 include("blastcommandline.jl")
 

@@ -7,13 +7,13 @@
 # License is MIT: https://github.com/BioJulia/Bio.jl/blob/master/LICENSE.md
 
 immutable NMask
-    blockmask::SucVector
+    blockmask::IndexableBitVectors.SucVector
     blocks::Vector{UInt64}
     len::Int
 end
 
 function NMask()
-    return NMask(SucVector(), UInt64[], 0)
+    return NMask(IndexableBitVectors.SucVector(), UInt64[], 0)
 end
 
 Base.copy(nmask::NMask) = NMask(copy(nmask.blockmask), copy(nmask.blocks), nmask.len)
@@ -62,7 +62,7 @@ end
     if !IndexableBitVectors.unsafe_getindex(nmask.blockmask, blockid)
         return false
     end
-    block = nmask.blocks[rank1(nmask.blockmask, blockid)]
+    block = nmask.blocks[IndexableBitVectors.rank1(nmask.blockmask, blockid)]
     return ((block >> (bitid - 1)) & 1) == 1
 end
 
@@ -73,7 +73,7 @@ function findnextn(nmask::NMask, i::Integer)
     blockid, bitid = block_bit(i)
     if nmask.blockmask[blockid]
         # try to find in the current block
-        block = nmask.blocks[rank1(nmask.blockmask, blockid)]
+        block = nmask.blocks[IndexableBitVectors.rank1(nmask.blockmask, blockid)]
         d = findnext_in_block(block, bitid)
         if d > 0
             # found in the block
@@ -81,11 +81,11 @@ function findnextn(nmask::NMask, i::Integer)
         end
     end
     # search in the following blocks
-    blockid = search1(nmask.blockmask, blockid + 1)
+    blockid = IndexableBitVectors.search1(nmask.blockmask, blockid + 1)
     if blockid == 0
         return 0
     end
-    block = nmask.blocks[rank1(nmask.blockmask, blockid)]
+    block = nmask.blocks[IndexableBitVectors.rank1(nmask.blockmask, blockid)]
     d = findnext_in_block(block, 1)
     @assert d > 0
     return 64 * (blockid - 1) + d
@@ -103,7 +103,7 @@ function findprevn(nmask::NMask, i::Integer)
     blockid, bitid = block_bit(i)
     if nmask.blockmask[blockid]
         # try to find in the current block
-        block = nmask.blocks[rank1(nmask.blockmask, blockid)]
+        block = nmask.blocks[IndexableBitVectors.rank1(nmask.blockmask, blockid)]
         d = findprev_in_block(block, bitid)
         if d > 0
             # found in the block
@@ -111,11 +111,11 @@ function findprevn(nmask::NMask, i::Integer)
         end
     end
     # search in the following blocks
-    blockid = rsearch1(nmask.blockmask, blockid - 1)
+    blockid = IndexableBitVectors.rsearch1(nmask.blockmask, blockid - 1)
     if blockid == 0
         return 0
     end
-    block = nmask.blocks[rank1(nmask.blockmask, blockid)]
+    block = nmask.blocks[IndexableBitVectors.rank1(nmask.blockmask, blockid)]
     d = findprev_in_block(block, 64)
     @assert d > 0
     return 64 * (blockid - 1) + d

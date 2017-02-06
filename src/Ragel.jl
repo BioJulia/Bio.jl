@@ -10,8 +10,8 @@ module Ragel
 
 export tryread!
 
-using BufferedStreams
 import Bio.IO: FileFormat, AbstractReader, stream
+import BufferedStreams: BufferedStreams, BufferedInputStream
 
 # A type keeping track of a ragel-based parser's state.
 type State{T<:BufferedInputStream}

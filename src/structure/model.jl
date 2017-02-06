@@ -88,11 +88,6 @@ export
     AminoAcidSequence
 
 
-using Bio.Seq
-import Bio.Seq.AminoAcidSequence
-import Bio.Seq.threeletter_to_aa
-
-
 "A macromolecular structural element."
 abstract StructuralElement
 
@@ -1465,24 +1460,24 @@ end
 
 # Residues are ordered in a chain with all hetero residues at the end
 # For obtaining sequence we will re-order them numerically
-function AminoAcidSequence(ch::Chain, residue_selectors::Function...)
-    return AminoAcidSequence(
+function Bio.Seq.AminoAcidSequence(ch::Chain, residue_selectors::Function...)
+    return Bio.Seq.AminoAcidSequence(
         sort(collectresidues(ch, residue_selectors...), by=resnumber))
 end
 
-function AminoAcidSequence{T <: AbstractResidue}(res::Vector{T})
-    seq = AminoAcid[]
+function Bio.Seq.AminoAcidSequence{T <: AbstractResidue}(res::Vector{T})
+    seq = Bio.Seq.AminoAcid[]
     for i in 1:length(res)
-        if haskey(threeletter_to_aa, resname(res[i]))
-            push!(seq, threeletter_to_aa[resname(res[i])])
+        if haskey(Bio.Seq.threeletter_to_aa, resname(res[i]))
+            push!(seq, Bio.Seq.threeletter_to_aa[resname(res[i])])
         else
-            push!(seq, AA_X)
+            push!(seq, Bio.Seq.AA_X)
         end
         if i+1 <= length(res) && resnumber(res[i+1]) - resnumber(res[i]) > 1
-            append!(seq, [AA_Gap for _ in 1:(resnumber(res[i+1]) - resnumber(res[i]) - 1)])
+            append!(seq, [Bio.Seq.AA_Gap for _ in 1:(resnumber(res[i+1]) - resnumber(res[i]) - 1)])
         end
     end
-    return AminoAcidSequence(seq)
+    return Bio.Seq.AminoAcidSequence(seq)
 end
 
 

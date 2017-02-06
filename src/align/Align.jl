@@ -96,7 +96,7 @@ export
     seqlength,
     qualities,
     header,
-    isoverlapping,  # re-export from Bio.Intervals
+    isoverlapping,
     # SAM flags
     SAM_FLAG_PAIRED,
     SAM_FLAG_PROPER_PAIR,
@@ -111,11 +111,12 @@ export
     SAM_FLAG_DUP,
     SAM_FLAG_SUPPLEMENTARY
 
-importall Bio
-using Bio.Seq
-using Bio.Intervals
+import BGZFStreams
+import Bio.Ragel: Ragel
 import Bio.StringFields: StringField
+import BufferedStreams
 import IntervalTrees
+importall Bio
 
 include("operations.jl")
 include("anchors.jl")

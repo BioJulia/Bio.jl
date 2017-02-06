@@ -34,7 +34,7 @@ end
 
 module RE
 
-using ..Seq
+import Bio
 
 # Syntax tree
 # -----------
@@ -65,9 +65,9 @@ end
 
 # list of symbols available for each symbol type
 const symbols = ObjectIdDict(
-    DNANucleotide => charset("ACGTMRWSYKVHDBN"),
-    RNANucleotide => charset("ACGUMRWSYKVHDBN"),
-    AminoAcid     => charset("ARNDCQEGHILKMFPSTWYVOUBJZX"))
+    Bio.Seq.DNANucleotide => charset("ACGTMRWSYKVHDBN"),
+    Bio.Seq.RNANucleotide => charset("ACGUMRWSYKVHDBN"),
+    Bio.Seq.AminoAcid     => charset("ARNDCQEGHILKMFPSTWYVOUBJZX"))
 
 macro check(ex, err)
     quote
@@ -242,13 +242,13 @@ function parse_prosite(pat)
             # concat
             continue
         elseif c == 'x'
-            push!(args, expr(:sym, [AA_X]))
+            push!(args, expr(:sym, [Bio.Seq.AA_X]))
         elseif c == '<'
             push!(args, expr(:head, []))
         elseif c == '>'
             push!(args, expr(:last, []))
-        elseif c ∈ symbols[AminoAcid]
-            push!(args, expr(:sym, [convert(AminoAcid, c)]))
+        elseif c ∈ symbols[Bio.Seq.AminoAcid]
+            push!(args, expr(:sym, [convert(Bio.Seq.AminoAcid, c)]))
         else
             throw(ArgumentError("unexpected input: '$c'"))
         end
@@ -296,11 +296,11 @@ function parserange_prosite(pat, s)
 end
 
 function parseset_prosite(pat, s, close)
-    set = AminoAcid[]
+    set = Bio.Seq.AminoAcid[]
     while !done(pat, s)
         c, s = next(pat, s)
-        if c ∈ symbols[AminoAcid]
-            push!(set, convert(AminoAcid, c))
+        if c ∈ symbols[Bio.Seq.AminoAcid]
+            push!(set, convert(Bio.Seq.AminoAcid, c))
         elseif c == close
             if close == ']'
                 return expr(:set, set), s
@@ -315,17 +315,17 @@ function parseset_prosite(pat, s, close)
 end
 
 function bits2sym{T}(::Type{T}, bits::UInt32)
-    for x in alphabet(T)
-        if Seq.compatbits(x) == bits
+    for x in Bio.Seq.alphabet(T)
+        if Bio.Seq.compatbits(x) == bits
             return x
         end
     end
     error("bits are not found")
 end
 
-mask{T<:Nucleotide}(::Type{T}) = (UInt32(1) << 4) - one(UInt32)
-@assert Int(AA_U) + 1 == 22  # check there are 22 unambiguous amino acids
-mask(::Type{AminoAcid}) = (UInt32(1) << 22) - one(UInt32)
+mask{T<:Bio.Seq.Nucleotide}(::Type{T}) = (UInt32(1) << 4) - one(UInt32)
+@assert Int(Bio.Seq.AA_U) + 1 == 22  # check there are 22 unambiguous amino acids
+mask(::Type{Bio.Seq.AminoAcid}) = (UInt32(1) << 22) - one(UInt32)
 
 function desugar{T}(::Type{T}, tree::SyntaxTree)
     head = tree.head
@@ -348,18 +348,18 @@ function desugar{T}(::Type{T}, tree::SyntaxTree)
         args = [expr(:concat, []), args[1]]
     elseif head == :sym
         head = :bits
-        args = [Seq.compatbits(args[1])]
+        args = [Bio.Seq.compatbits(args[1])]
     elseif head == :set
         bits = UInt32(0)
         for arg in args
-            bits |= Seq.compatbits(arg)
+            bits |= Bio.Seq.compatbits(arg)
         end
         head = :bits
         args = [bits]
     elseif head == :compset
         bits = UInt32(0)
         for arg in args
-            bits |= Seq.compatbits(arg)
+            bits |= Bio.Seq.compatbits(arg)
         end
         head = :bits
         args = [~bits & mask(T)]
@@ -574,10 +574,10 @@ immutable Regex{T}
         if syntax == :pcre
             ast = desugar(T, parse(T, pat))
         elseif syntax == :prosite
-            if T != AminoAcid
+            if T != Bio.Seq.AminoAcid
                 throw(ArgumentError("alphabet must be AminoAcid for PROSITE syntax"))
             end
-            ast = desugar(AminoAcid, parse_prosite(pat))
+            ast = desugar(Bio.Seq.AminoAcid, parse_prosite(pat))
         else
             throw(ArgumentError("invalid syntax: $syntax"))
         end
@@ -592,11 +592,11 @@ immutable Regex{T}
 end
 
 function Base.show{T}(io::IO, re::Regex{T})
-    if T == DNANucleotide
+    if T == Bio.Seq.DNANucleotide
         opt = "dna"
-    elseif T == RNANucleotide
+    elseif T == Bio.Seq.RNANucleotide
         opt = "rna"
-    elseif T == AminoAcid
+    elseif T == Bio.Seq.AminoAcid
         opt = "aa"
     else
         assert(false)
@@ -652,13 +652,13 @@ function captured{S}(m::Nullable{RegexMatch{S}})
     return captured(get(m))
 end
 
-function checkeltype{T}(re::Regex{T}, seq::BioSequence)
+function checkeltype{T}(re::Regex{T}, seq::Bio.Seq.BioSequence)
     if eltype(seq) != T
         throw(ArgumentError("element type of sequence doesn't match with regex"))
     end
 end
 
-function Base.match{T}(re::Regex{T}, seq::BioSequence, start::Integer=1)
+function Base.match{T}(re::Regex{T}, seq::Bio.Seq.BioSequence, start::Integer=1)
     checkeltype(re, seq)
 
     # use the first unambiguous symbol in the regular expression to find the
@@ -666,7 +666,7 @@ function Base.match{T}(re::Regex{T}, seq::BioSequence, start::Integer=1)
     if length(re.code) ≥ 2 && tag(re.code[2]) == BitsTag && count_ones(operand(re.code[2])) == 1
         firstsym = bits2sym(T, operand(re.code[2]))
     else
-        firstsym = gap(T)
+        firstsym = Bio.Seq.gap(T)
     end
 
     # a thread is `(<program counter>, <sequence's iterator state>)`
@@ -674,7 +674,7 @@ function Base.match{T}(re::Regex{T}, seq::BioSequence, start::Integer=1)
     captured = Vector{Int}(re.nsaves)
     s = start
     while true
-        if firstsym != gap(T)
+        if firstsym != Bio.Seq.gap(T)
             s = findnext(seq, firstsym, s)
             if s == 0
                 break
@@ -694,7 +694,7 @@ function Base.match{T}(re::Regex{T}, seq::BioSequence, start::Integer=1)
     return Nullable{RegexMatch{typeof(seq)}}()
 end
 
-function Base.search{T}(seq::BioSequence, re::Regex{T}, start::Integer=1)
+function Base.search{T}(seq::Bio.Seq.BioSequence, re::Regex{T}, start::Integer=1)
     checkeltype(re, seq)
     m = Base.match(re, seq, start)
     if isnull(m)
@@ -766,12 +766,12 @@ function advance!(threads, captured, s, re, seq, overlap)
     return Nullable{typeof(seq)}(), threads, captured, s
 end
 
-function Base.eachmatch{T}(re::Regex{T}, seq::BioSequence, overlap::Bool=true)
+function Base.eachmatch{T}(re::Regex{T}, seq::Bio.Seq.BioSequence, overlap::Bool=true)
     checkeltype(re, seq)
     return RegexMatchIterator{T,typeof(seq)}(re, seq, overlap)
 end
 
-function Base.matchall{T}(re::Regex{T}, seq::BioSequence, overlap::Bool=true)
+function Base.matchall{T}(re::Regex{T}, seq::Bio.Seq.BioSequence, overlap::Bool=true)
     # this will work on v0.5
     #   return map(matched, eachmatch(re, seq))
     ret = Vector{typeof(seq)}()
@@ -781,7 +781,7 @@ function Base.matchall{T}(re::Regex{T}, seq::BioSequence, overlap::Bool=true)
     return ret
 end
 
-function Base.ismatch{T}(re::Regex{T}, seq::BioSequence)
+function Base.ismatch{T}(re::Regex{T}, seq::Bio.Seq.BioSequence)
     return !isnull(Base.match(re, seq))
 end
 
@@ -823,7 +823,7 @@ end
 # immediately; otherwise returns `false`.
 function runmatch!(threads::Stack{Tuple{Int,Int}},
                    captured::Vector{Int},
-                   re::Regex, seq::BioSequence)
+                   re::Regex, seq::Bio.Seq.BioSequence)
     while !isempty(threads)
         pc::Int, s = pop!(threads)
         while true
@@ -834,7 +834,7 @@ function runmatch!(threads::Stack{Tuple{Int,Int}},
                     break
                 end
                 sym, s = next(seq, s)
-                if Seq.compatbits(sym) & operand(op) != 0
+                if Bio.Seq.compatbits(sym) & operand(op) != 0
                     pc += 1
                 else
                     break
