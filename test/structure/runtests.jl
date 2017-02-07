@@ -16,7 +16,7 @@ get_bio_fmt_specimens()
 
 # Access a PDB file in BioFmtSpecimens
 function pdbfilepath(filename::AbstractString)
-    return Pkg.dir("Bio", "test", "BioFmtSpecimens", "PDB", filename)
+    return joinpath(dirname(@__FILE__, "..", "BioFmtSpecimens", "PDB", filename))
 end
 
 

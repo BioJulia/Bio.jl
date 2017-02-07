@@ -1004,7 +1004,7 @@ end
     end
 
     @testset "SAM" begin
-        samdir = Pkg.dir("Bio", "test", "BioFmtSpecimens", "SAM")
+        samdir = joinpath(dirname(@__FILE__), "..", "BioFmtSpecimens", "SAM")
 
         @testset "SAMHeader" begin
             h = SAMHeader()
@@ -1134,7 +1134,7 @@ end
     end
 
     @testset "BAM" begin
-        bamdir = Pkg.dir("Bio", "test", "BioFmtSpecimens", "BAM")
+        bamdir = joinpath(dirname(@__FILE__), "..", "BioFmtSpecimens", "BAM")
 
         @testset "Record" begin
             rec = BAMRecord()

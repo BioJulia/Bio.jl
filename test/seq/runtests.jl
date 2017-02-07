@@ -2982,7 +2982,7 @@ end
         end
 
         get_bio_fmt_specimens()
-        path = Pkg.dir("Bio", "test", "BioFmtSpecimens", "FASTA")
+        path = joinpath(dirname(@__FILE__), "..", "BioFmtSpecimens", "FASTA")
         for specimen in YAML.load_file(joinpath(path, "index.yml"))
             tags = specimen["tags"]
             valid = get(specimen, "valid", true)
@@ -3019,8 +3019,7 @@ end
         end
 
         @testset "genomic sequence" begin
-            path = Pkg.dir("Bio", "test", "BioFmtSpecimens",
-                           "FASTA", "genomic-seq.fasta")
+            path = joinpath(dirname(@__FILE__), "..", "BioFmtSpecimens", "FASTA", "genomic-seq.fasta")
             dnaseq = open(first, FASTAReader{DNASequence}, path).seq
             refseq = open(first, FASTAReader{ReferenceSequence}, path).seq
             @test dnaseq == refseq
@@ -3179,7 +3178,7 @@ end
         end
 
         get_bio_fmt_specimens()
-        path = Pkg.dir("Bio", "test", "BioFmtSpecimens", "FASTQ")
+        path = joinpath(dirname(@__FILE__), "..", "BioFmtSpecimens", "FASTQ")
         for specimen in YAML.load_file(joinpath(path, "index.yml"))
             tags = get(specimen, "tags", "")
             valid = get(specimen, "valid", true)
@@ -3305,7 +3304,7 @@ end
         end
 
         get_bio_fmt_specimens()
-        path = Pkg.dir("Bio", "test", "BioFmtSpecimens", "2bit")
+        path = joinpath(dirname(@__FILE__), "..", "BioFmtSpecimens", "2bit")
         for specimen in YAML.load_file(joinpath(path, "index.yml"))
             valid = get(specimen, "valid", true)
             filepath = joinpath(path, specimen["filename"])

@@ -431,7 +431,7 @@ end
             return expected_entries == read_entries
         end
 
-        path = Pkg.dir("Bio", "test", "BioFmtSpecimens", "BED")
+        path = joinpath(dirname(@__FILE__), "..", "BioFmtSpecimens", "BED")
         for specimen in YAML.load_file(joinpath(path, "index.yml"))
             valid = get(specimen, "valid", true)
             if valid
@@ -531,7 +531,7 @@ end
             return true
         end
 
-        path = Pkg.dir("Bio", "test", "BioFmtSpecimens", "GFF3")
+        path = joinpath(dirname(@__FILE__), "..", "BioFmtSpecimens", "GFF3")
         for specimen in YAML.load_file(joinpath(path, "index.yml"))
             valid = get(specimen, "valid", true)
             if valid
@@ -612,7 +612,7 @@ end
 
 @testset "BigBed" begin
     @testset "BED → BigBed → BED round-trip" begin
-        path = Pkg.dir("Bio", "test", "BioFmtSpecimens", "BED")
+        path = joinpath(dirname(@__FILE__), "..", "BioFmtSpecimens", "BED")
         for specimen in YAML.load_file(joinpath(path, "index.yml"))
             if !get(specimen, "valid", true)
                 continue
