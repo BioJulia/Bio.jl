@@ -4,87 +4,7 @@
 # This file is a part of BioJulia.
 # License is MIT: https://github.com/BioJulia/Bio.jl/blob/master/LICENSE.md
 
-"""
-The type `SiteCase` is a parametric abstract type that is used to organise the
-different types of site that are available for counting in the Var site counting
-framework.
-Each type in the Var site counting framework inhertis from either
-`SiteCase{true}` or `SiteCase{false}`.
-If the type inhertis from `SiteCase{true}`, this means that it is not always
-possible to unambiguously determine if a site is or isn't of the given type.
-As an example, consider a site where one sequence has an an `A` nucleotide and
-the other sequence has an `M` ambiguity code: the site could be a site of type
-`Mutation`, but also could be a site of type `Conserved`, depending on what `M`
-actually is in reality.
-As a result, counting methods for such types that inherit from `SiteCase{true}`
-also count and return the number of sites which could not be unambiguously
-determined.
-This second count is important for some downstream purposes, for example
-evolutionary/genetic distance computations in which pairwise deletion of
-ambiguous sites is necessary.
-"""
-abstract SiteCase{p}
-
-"""
-A `Certain` site describes a site where both of two aligned sites are not an
-ambiguity symbol or a gap.
-"""
-immutable Certain <: SiteCase{false} end
-
-"""
-An `Ambiguous` site describes a site where either of two aligned sites are an
-ambiguity symbol.
-"""
-immutable Ambiguous <: SiteCase{false} end
-
-"""
-An `Gap` site describes a site where either of two aligned sites are a
-gap symbol '-'.
-"""
-immutable Gap <: SiteCase{false} end
-
-"""
-A `Match` site describes a site where two aligned nucleotides are the
-same biological symbol.
-"""
-immutable Match <: SiteCase{false} end
-
-"""
-A `Mismatch` site describes a site where two aligned nucleotides are not the
-same biological symbol.
-"""
-immutable Mismatch <: SiteCase{false} end
-
-"""
-A `Mismatch` site describes a site where two aligned nucleotides are definately
-conserved. By definately conserved this means that the symbols of the site are
-non-ambiguity symbols, and they are the same symbol.
-"""
-immutable Conserved <: SiteCase{true} end
-
-"""
-A `Mutated` site describes a site where two aligned nucleotides are definately
-mutated. By definately mutated this means that the symbols of the site are
-non-ambiguity symbols, and they are not the same symbol.
-"""
-immutable Mutated <: SiteCase{true} end
-
-"""
-A `Transition` site describes a site where two aligned nucleotides are definately
-mutated, and the type of mutation is a transition mutation.
-In other words, the symbols must not be ambiguity symbols, and they must
-be different such that they constitute a transition mutation: i.e. A<->G, or C<->T.
-"""
-immutable Transition <: SiteCase{true} end
-
-"""
-A `Transversion` site describes a site where two aligned nucleotides are definately
-mutated, and the type of mutation is a transversion mutation.
-In other words, the symbols must not be ambiguity symbols, and they must
-be different such that they constitute a transversion mutation: i.e. A<->C,
-A<->T, G<->T, G<->C.
-"""
-immutable Transversion <: SiteCase{true} end
+include("site_types.jl")
 
 typealias FourBitAlphs Union{DNAAlphabet{4},RNAAlphabet{4}}
 typealias TwoBitAlphs Union{DNAAlphabet{2},RNAAlphabet{2}}
@@ -95,32 +15,77 @@ include("naive/is_site.jl")
 include("naive/count_sites_naive.jl")
 
 """
-    count_sites{T<:SiteCase}(::Type{T}, a::BioSequence, b::BioSequence)
+    count_sites{T<:Site}(::Type{T}, a::BioSequence, b::BioSequence)
 
 Mutations are counted using the `count_sites` method.
 
-If the concrete site case type inherits from SiteCase{false}, then the result will
+If the concrete site case type inherits from NoPairDel, then the result will
 be a simple integer value of the number of counts of site.
 
-If the concrete site case type inherits from SiteCase{true}, then the result
+If the concrete site case type inherits from PairDel, then the result
 will be a tuple. As a result, counting methods for such types also count and
 return the number of sites which could not be unambiguously determined.
 This second count is important for some downstream purposes, for example
 evolutionary/genetic distance computations in which pairwise deletion of
 ambiguous sites is necessary.
 """
-function count_sites{T<:SiteCase}(::Type{T}, a::BioSequence, b::BioSequence)
+function count_sites{T<:Site}(::Type{T}, a::BioSequence, b::BioSequence)
     return count_sites_naive(T, a, b)
 end
 
-function count_sites{T<:SiteCase}(::Type{T}, seq::BioSequence)
-    return count_sites_naive(T, seq)
+"""
+    count_sites{T<:NoPairDel}(::Type{T}, a::EachWindowIterator, b::EachWindowIterator)
+
+A method of the count_sites function for counting sites of SiteType `T` between two aligned
+sequences.
+
+Crucially, this method accepts two EachWindowIterators as parameters `a` and `b`
+instead of two `BioSequence`s. As a result, the two sequences are iterated over
+with a sliding window, and a site count computed for each window.
+
+This function returns two vectors, one with the ranges
+"""
+function count_sites{T<:Site}(::Type{T}, a::EachWindowIterator, b::EachWindowIterator)
+    itr = zip(a, b)
+    results = Vector{IntervalValue{Int, Int}}(length(itr))
+    i = 1
+    for (wina, winb) in itr
+        range = wina[1]
+        results[i] = IntervalValue(first(range), last(range), count_sites(T, wina[2], winb[2]))
+        i += 1
+    end
+    return results
 end
 
 """
-Count the number of mutations between DNA sequences in a pairwise manner.
+    count_sites{T<:Mutation}(::Type{T}, a::EachWindowIterator, b::EachWindowIterator)
 """
-function count_sites{T<:SiteCase{false},A<:NucAlphs}(::Type{T}, sequences::Array{BioSequence{A}})
+function count_sites{T<:Mutation}(::Type{T}, a::EachWindowIterator, b::EachWindowIterator)
+    itr = zip(a, b)
+    len = length(itr)
+    results = Vector{IntervalValue{Int}}(len)
+    undetermined = Vector{IntervalValue{Int}}(len)
+    i = 1
+    for (wina, winb) in itr
+        range = wina[1]
+        counts = count_sites(T, wina[2], winb[2])
+        results[i] = IntervalValue(first(range), last(range), counts[1])
+        undetermined[i] = IntervalValue(first(range), last(range), counts[2])
+        i += 1
+    end
+    return results, undetermined
+end
+
+function count_sites{T<:Site}(::Type{T}, a::BioSequence, b::BioSequence, width::Int, step::Int)
+    awindows = eachwindow(a, width, step)
+    bwindows = eachwindow(b, width, step)
+    return count_sites(T, awindows, bwindows)
+end
+
+"""
+Count the number of mutations between nucleotide sequences in a pairwise manner.
+"""
+function count_sites{T<:Site,A<:NucAlphs}(::Type{T}, sequences::Array{BioSequence{A}})
     len = length(sequences)
     counts = PairwiseListMatrix(Int, len, false)
     @inbounds for i in 1:len, j in (i + 1):len
@@ -129,10 +94,19 @@ function count_sites{T<:SiteCase{false},A<:NucAlphs}(::Type{T}, sequences::Array
     return counts
 end
 
+function count_sites{T<:Site,A<:NucAlphs}(::Type{T}, sequences::Array{BioSequence{A}}, width::Int, step::Int)
+    len = length(sequences)
+    counts = PairwiseListMatrix(Int, len, false)
+    @inbounds for i in 1:len, j in (i + 1):len
+        counts[i, j] = count_sites(T, sequences[i], sequences[j], width, step)
+    end
+    return counts
+end
+
 """
-Count the number of mutations between DNA sequences in a pairwise manner.
+Count the number of mutations between nucleotide sequences in a pairwise manner.
 """
-function count_sites{T<:SiteCase{true},A<:NucAlphs}(::Type{T}, sequences::Array{BioSequence{A}})
+function count_sites{T<:Mutation,A<:NucAlphs}(::Type{T}, sequences::Array{BioSequence{A}})
     len = length(sequences)
     counts = PairwiseListMatrix(Int, len, false)
     undetermined = PairwiseListMatrix(Int, len, false)
@@ -142,15 +116,7 @@ function count_sites{T<:SiteCase{true},A<:NucAlphs}(::Type{T}, sequences::Array{
     return counts, undetermined
 end
 
-#=
-function count_sites{T<:SiteCase}(::Type{T}, a::SeqWinItr, b::SeqWinItr)
-    itr = zip(a, b)
-    results = Vector{Tuple{UnitRange{Int}, resulttype(T)}}(length(itr)) # Not sure if this is better handled by making a generated function.
-    i = 1
-    for (wina, winb) in itr
-        results[i] = (wina[1], count_sites)
-
-    end
-    return results
+"Count the number of sites of a given SiteType `T` in a biological sequence."
+function count_sites{T<:Site}(::Type{T}, seq::BioSequence)
+    return count_sites_naive(T, seq)
 end
-=#

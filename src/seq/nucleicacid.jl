@@ -122,6 +122,23 @@ Test if `nt` is ambiguous nucleotide.
 end
 
 """
+    iscertain(nt::NucleicAcid)
+
+Test if `nt` is a non-ambiguous nucleotide e.g. ATCG.
+"""
+@inline function iscertain(nt::NucleicAcid)
+    return count_ones(nt) == 1
+end
+
+"""
+    isgap(nt::NucleicAcid)
+Test if `nt` is a gap.
+"""
+@inline function isgap(nt::NucleicAcid)
+    return count_ones(nt) == 0
+end
+
+"""
     complement(nt::NucleicAcid)
 
 Return the complementary nucleotide of `nt`.

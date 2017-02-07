@@ -18,6 +18,7 @@ import Automa.RegExp: @re_str
 import BGZFStreams: BGZFStream
 # TODO: Needs this branch: https://github.com/BioJulia/BufferedStreams.jl/pull/33
 import BufferedStreams: BufferedStreams, BufferedInputStream
+import IntervalTrees: Interval, IntervalValue
 importall Bio
 
 export

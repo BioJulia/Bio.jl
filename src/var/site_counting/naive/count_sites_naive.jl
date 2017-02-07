@@ -7,9 +7,9 @@
 # Methods for a single sequence.
 
 """
-    count_sites_naive{T<:SiteCase{false},A<:FourBitAlphs}(::Type{T}, a::BioSequence{A})
+    count_sites_naive{T<:Site,A<:FourBitAlphs}(::Type{T}, a::BioSequence{A})
 """
-function count_sites_naive{T<:SiteCase{false},A<:FourBitAlphs}(::Type{T}, a::BioSequence{A})
+function count_sites_naive{T<:Site,A<:FourBitAlphs}(::Type{T}, a::BioSequence{A})
     k = 0
     @inbounds for idx in eachindex(a)
         k += issite(T, a[idx])
@@ -21,11 +21,11 @@ count_sites_naive{T<:Union{Gap,Ambiguous},A<:TwoBitAlphs}(::Type{T}, a::BioSeque
 count_sites_naive{A<:TwoBitAlphs}(::Type{Certain}, a::BioSequence{A}) = length(a)
 
 """
-    count_sites_naive{T<:SiteCase{false},A<:DNA_OR_RNA}(::Type{T}, a::BioSequence{A}, b::BioSequence{A})
+    count_sites_naive{T<:Site,A<:DNA_OR_RNA}(::Type{T}, a::BioSequence{A}, b::BioSequence{A})
 This method counts the number of sites between a pair of aligned sequences of
 type `T`.
 """
-function count_sites_naive{T<:SiteCase{false},A<:Alphabet,B<:Alphabet}(::Type{T},
+function count_sites_naive{T<:Site,A<:Alphabet,B<:Alphabet}(::Type{T},
                                                        a::BioSequence{A},
                                                        b::BioSequence{B})
     k = 0
@@ -36,7 +36,7 @@ function count_sites_naive{T<:SiteCase{false},A<:Alphabet,B<:Alphabet}(::Type{T}
 end
 
 """
-    count_sites_naive{T<:SiteCase{true},A<:DNA_OR_RNA}(::Type{T}, a::BioSequence{A}, b::BioSequence{A})
+    count_sites_naive{T<:Mutation,A<:DNA_OR_RNA}(::Type{T}, a::BioSequence{A}, b::BioSequence{A})
 This method counts the number of sites between a pair of aligned sequences of
 SiteCase `T`.
 Since the types of SiteCase counted by this function may not always be
@@ -46,7 +46,7 @@ This second count is important for some downstream purposes, for example
 evolutionary/genetic distance computations in which pairwise deletion of
 ambiguous sites is nessecery.
 """
-function count_sites_naive{T<:SiteCase{true},A<:Alphabet,B<:Alphabet}(::Type{T},
+function count_sites_naive{T<:Mutation,A<:Alphabet,B<:Alphabet}(::Type{T},
                                                              a::BioSequence{A},
                                                              b::BioSequence{B})
     k = 0

@@ -82,17 +82,17 @@ function eachwindow{T <: ArrayOrStringOrSeq}(data::T, width::Int, step::Int = 1)
     EachWindowIterator{T}(data, width, step)
 end
 
-endpoint(state::Int, it::EachWindowIterator) = state + it.width - 1
-winrange(state::Int, it::EachWindowIterator) = state:endpoint(state, it)
-nextstate(state::Int, it::EachWindowIterator) = state + it.step
+endpoint(state::Int, width::Int) = state + width - 1
+winrange(state::Int, width::Int) = state:endpoint(state, width)
+nextstate(state::Int, step::Int) = state + step
 
 @inline function Base.start(it::EachWindowIterator)
     return 1
 end
 
 @inline function Base.next(it::EachWindowIterator, state::Integer)
-    rng = winrange(state, it)
-    return (rng, view(it.data, rng)), nextstate(state, it)
+    rng = winrange(state, it.width)
+    return (rng, view(it.data, rng)), nextstate(state, it.step)
 end
 
 # Extra next method to account for fact than strings don't have sub method
@@ -100,12 +100,12 @@ end
 # The operation is an indexing operation, rather than a "proper"
 # substring or subarray operation.
 @inline function Base.next{T <: AbstractString}(it::EachWindowIterator{T}, state::Integer)
-    rng = winrange(state, it)
-    return (rng, it.data[rng]), nextstate(state, it)
+    rng = winrange(state, it.width)
+    return (rng, it.data[rng]), nextstate(state, it.step)
 end
 
 @inline function Base.done(it::EachWindowIterator, state::Integer)
-    return endpoint(state, it) > length(it.data)
+    return endpoint(state, it.width) > length(it.data)
 end
 
 function Base.show(io::IO, it::EachWindowIterator)
