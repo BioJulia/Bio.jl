@@ -72,8 +72,8 @@ improving performance and adding new features.
 If you have a question about
 contributing or using this package, our [Gitter chat room][gitter-url] would be
 the best starting place to communicate with other users and developers.
-You may also finding visiting the [Bio category of the julia discourse site](https://discourse.julialang.org/c/domain/bio)
-helpful.
+You are encouraged to use the [Bio category of the Julia discourse
+site](https://discourse.julialang.org/c/domain/bio) for technical questions.
 
 
 ## Roadmap
