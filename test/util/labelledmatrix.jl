@@ -102,14 +102,14 @@ using Bio.Util
     end
 
     @testset "files" for (fname, expected) in file_matricies
-        fname = Pkg.dir("Bio", "test", "BioFmtSpecimens", "LSM", fname)
+        fname = joinpath(dirname(@__FILE__), "..", "BioFmtSpecimens", "LSM", fname)
         m, l = readlsm(fname)
         @test m == expected
         @test l == ["A", "B", "C"]
     end
 
     @testset "subst_matrices" for (fname, labels) in subst_matricies
-        fname = Pkg.dir("Bio", "test", "BioFmtSpecimens", "LSM", fname)
+        fname = joinpath(dirname(@__FILE__), "..", "BioFmtSpecimens", "LSM", fname)
         N = length(labels)
         m, l = readlsm(Int64, fname)
         @test size(m) == (N, N)
@@ -118,7 +118,7 @@ using Bio.Util
 
     @testset "all_subst_matrices" for fname in all_subst_matrices
         # Check that we can parse all matrices under the alignm module
-        fname = Pkg.dir("Bio", "src", "align", "data", "submat", fname)
+        fname = joinpath(dirname(@__FILE__), "..", "..", "src", "align", "data", "submat", fname)
         m, l = readlsm(Int64, fname)
         @test eltype(m) === Int64
     end

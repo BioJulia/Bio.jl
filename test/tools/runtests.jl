@@ -7,7 +7,7 @@ using Bio.Seq,
       TestFunctions
 
 get_bio_fmt_specimens()
-path = Pkg.dir("Bio", "test", "BioFmtSpecimens")
+path = joinpath(dirname(@__FILE__), "..", "BioFmtSpecimens")
 
 if !is_windows()  # temporarily disable the BLAST tests on Windows (issue: #197)
 

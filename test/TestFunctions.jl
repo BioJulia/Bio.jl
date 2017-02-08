@@ -12,7 +12,7 @@ export get_bio_fmt_specimens,
 
 
 function get_bio_fmt_specimens()
-    path = Pkg.dir("Bio", "test", "BioFmtSpecimens")
+    path = joinpath(dirname(@__FILE__), "BioFmtSpecimens")
     if !isdir(path)
         run(`git clone --depth 1 https://github.com/BioJulia/BioFmtSpecimens.git $(path)`)
     end

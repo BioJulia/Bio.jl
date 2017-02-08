@@ -186,8 +186,7 @@ end
 # --------------------------------
 
 function load_submat{T}(::Type{T}, name)
-    submatfile = Pkg.dir("Bio", "src", "align", "data", "submat", name)
-    return parse_ncbi_submat(T, submatfile)
+    return parse_ncbi_submat(T, joinpath(dirname(@__FILE__), "data", "submat", name))
 end
 
 function parse_ncbi_submat{T}(::Type{T}, filepath)
