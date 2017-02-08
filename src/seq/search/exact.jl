@@ -178,10 +178,10 @@ function quicksearch(query, seq, start, stop)
     end
 
     while s ≤ stop′
-        if iscompatible(pat[m], seq[s+m])
+        if iscompatible(pat[m], seq[s+m]) && !ismasked(seq, s+m)
             i = m - 1
             while i > 0
-                if !iscompatible(pat[i], seq[s+i])
+                if !(iscompatible(pat[i], seq[s+i]) && !ismasked(seq, s+i))
                     break
                 end
                 i -= 1
@@ -284,10 +284,10 @@ function quickrsearch(seq, query, start, stop)
     end
 
     while s ≥ stop′
-        if iscompatible(pat[1], seq[s+1])
+        if iscompatible(pat[1], seq[s+1]) && !ismasked(seq, s+1)
             i = 2
             while i < m + 1
-                if !iscompatible(pat[i], seq[s+i])
+                if !(iscompatible(pat[i], seq[s+i]) && !ismasked(seq, s+i))
                     break
                 end
                 i += 1

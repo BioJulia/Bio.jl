@@ -41,6 +41,11 @@ end
     return inbounds_getindex(seq, i)
 end
 
+# A sequences is not masked by default.
+function ismasked(seq::Bio.Seq.Sequence, i::Integer)
+    return false
+end
+
 @inline function Base.start(seq::Sequence)
     return 1
 end
