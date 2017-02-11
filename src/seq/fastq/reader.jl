@@ -27,7 +27,7 @@ type FASTQReader{S<:Sequence} <: Bio.IO.AbstractReader
     desc2buf::StringField
     qualcount::Int
     quality_encoding::QualityEncoding
-    fill_ambiguous::Nullable{DNANucleotide}
+    fill_ambiguous::Nullable{DNA}
 
     function FASTQReader(input::BufferedInputStream, quality_encoding, fill_ambiguous)
         return new(Ragel.State(fastqparser_start, input),

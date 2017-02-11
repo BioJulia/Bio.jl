@@ -48,39 +48,39 @@ T <-> G
 immutable TransversionMutation <: MutationType end
 
 """
-    is_ambiguous_strict{T<:Nucleotide}(a::T, b::T)
+    is_ambiguous_strict{T<:NucleicAcid}(a::T, b::T)
 
 The strictest test of ambiguity, if either nucleotide is not
 A, T, G, or C, then this function returns true.
 """
-@inline function is_ambiguous_strict{T<:Nucleotide}(a::T, b::T)
+@inline function is_ambiguous_strict{T<:NucleicAcid}(a::T, b::T)
     return isambiguous(a) | isambiguous(b)
 end
 
 """
-    is_mutation{T<:Nucleotide}(::Type{AnyMutation}, a::T, b::T)
+    is_mutation{T<:NucleicAcid}(::Type{AnyMutation}, a::T, b::T)
 
 Test if two nucleotides constitute a `AnyMutation`.
 """
-@inline function is_mutation{T<:Nucleotide}(::Type{AnyMutation}, a::T, b::T)
+@inline function is_mutation{T<:NucleicAcid}(::Type{AnyMutation}, a::T, b::T)
     return a != b
 end
 
 """
-    is_mutation{T<:Nucleotide}(::Type{TransitionMutation}, a::T, b::T)
+    is_mutation{T<:NucleicAcid}(::Type{TransitionMutation}, a::T, b::T)
 
 Test if two nucleotides constitute a `TransitionMutation`.
 """
-@inline function is_mutation{T<:Nucleotide}(::Type{TransitionMutation}, a::T, b::T)
+@inline function is_mutation{T<:NucleicAcid}(::Type{TransitionMutation}, a::T, b::T)
     return (a != b) & ((ispurine(a) & ispurine(b)) | (ispyrimidine(a) & ispyrimidine(b)))
 end
 
 """
-    is_mutation{T<:Nucleotide}(::Type{TransversionMutation}, a::T, b::T)
+    is_mutation{T<:NucleicAcid}(::Type{TransversionMutation}, a::T, b::T)
 
 Test if two nucleotides constitute a `TransversionMutation`.
 """
-@inline function is_mutation{T<:Nucleotide}(::Type{TransversionMutation}, a::T, b::T)
+@inline function is_mutation{T<:NucleicAcid}(::Type{TransversionMutation}, a::T, b::T)
     return (a != b) & ((ispurine(a) & ispyrimidine(b)) | (ispyrimidine(a) & ispurine(b)))
 end
 
@@ -89,7 +89,7 @@ end
 
 
 """
-    flagmutations{M<:MutationType,N<:Nucleotide}(::Type{M}, seqs::Matrix{N})
+    flagmutations{M<:MutationType,N<:NucleicAcid}(::Type{M}, seqs::Matrix{N})
 
 For every pair of sequences, flag which base positions are mutations of type `T`.
 
@@ -119,7 +119,7 @@ dnas = [dna"ATTG-ACCTGGNTTTCCGAA", dna"A-ACAGAGTATACRGTCGTC"]
  A-ACAGAGTATACRGTCGTC
 
 julia> m = seqmatrix(dnas, :seq)
-20×2 Array{Bio.Seq.DNANucleotide,2}:
+20×2 Array{Bio.Seq.DNA,2}:
   DNA_A    DNA_A
   DNA_T    DNA_Gap
   DNA_T    DNA_A
@@ -175,7 +175,7 @@ In the above example of two sequences, positions 3:4, 7:8 are mutations and
 positions 1:2, 5, 19:20 are not mutations.
 
 """
-function flagmutations{M<:MutationType,N<:Nucleotide}(::Type{M}, seqs::Matrix{N})
+function flagmutations{M<:MutationType,N<:NucleicAcid}(::Type{M}, seqs::Matrix{N})
     seqsize, nseqs = size(seqs)
     ismutant = Matrix{Bool}(seqsize, binomial(nseqs, 2))
     isambiguous = Matrix{Bool}(seqsize, binomial(nseqs, 2))
@@ -196,12 +196,12 @@ function flagmutations{M<:MutationType,N<:Nucleotide}(::Type{M}, seqs::Matrix{N}
     return ismutant, isambiguous
 end
 
-function flagmutations{M<:MutationType,A<:NucleotideAlphabet}(::Type{M}, seqs::Vector{BioSequence{A}})
+function flagmutations{M<:MutationType,A<:NucleicAcidAlphabet}(::Type{M}, seqs::Vector{BioSequence{A}})
     return flagmutations(M, seqmatrix(seqs, :seq))
 end
 
 """
-    count_mutations{T<:MutationType,N<:Nucleotide}(::Type{T}, seqs::Matrix{N})
+    count_mutations{T<:MutationType,N<:NucleicAcid}(::Type{T}, seqs::Matrix{N})
 
 Count the number of mutations between DNA sequences in a pairwise manner.
 
@@ -217,7 +217,7 @@ possible pair of sequences.
 provided as `seqs` in sequence major order i.e. each column of the matrix is one
 complete nucleotide sequence.**
 """
-function count_mutations{T<:MutationType,N<:Nucleotide}(::Type{T}, seqs::Matrix{N})
+function count_mutations{T<:MutationType,N<:NucleicAcid}(::Type{T}, seqs::Matrix{N})
     # This method has been written with the aim of improving performance by taking
     # advantage of the memory layout of matrices of nucleotides, as well as
     # getting julia to emit simd code for the innermost loop.
@@ -247,7 +247,7 @@ function count_mutations{T<:MutationType,N<:Nucleotide}(::Type{T}, seqs::Matrix{
 end
 
 """
-    count_mutations{T<:MutationType,A<:NucleotideAlphabet}(::Type{T}, sequences::Vector{BioSequence{A}})
+    count_mutations{T<:MutationType,A<:NucleicAcidAlphabet}(::Type{T}, sequences::Vector{BioSequence{A}})
 
 Count the number of mutations between DNA sequences in a pairwise manner.
 
@@ -259,13 +259,13 @@ possible pair of sequences, and 2. a vector containing the number of sites
 considered (sites with any ambiguity characters are not considered) for each
 possible pair of sequences.
 """
-function count_mutations{T<:MutationType,A<:NucleotideAlphabet}(::Type{T}, sequences::Vector{BioSequence{A}})
+function count_mutations{T<:MutationType,A<:NucleicAcidAlphabet}(::Type{T}, sequences::Vector{BioSequence{A}})
     seqs = seqmatrix(sequences, :seq)
     return count_mutations(T, seqs)
 end
 
 
-function flagmutations{N<:Nucleotide}(::Type{TransitionMutation}, ::Type{TransversionMutation}, seqs::Matrix{N})
+function flagmutations{N<:NucleicAcid}(::Type{TransitionMutation}, ::Type{TransversionMutation}, seqs::Matrix{N})
     seqsize, nseqs = size(seqs)
     istransition = Matrix{Bool}(seqsize, binomial(nseqs, 2))
     istransversion = Matrix{Bool}(seqsize, binomial(nseqs, 2))
@@ -292,14 +292,14 @@ function flagmutations{N<:Nucleotide}(::Type{TransitionMutation}, ::Type{Transve
     return istransition, istransversion, isambiguous
 end
 
-function flagmutations{A<:NucleotideAlphabet}(::Type{TransitionMutation}, ::Type{TransversionMutation}, seqs::Vector{BioSequence{A}})
+function flagmutations{A<:NucleicAcidAlphabet}(::Type{TransitionMutation}, ::Type{TransversionMutation}, seqs::Vector{BioSequence{A}})
     return flagmutations(TransitionMutation, TransversionMutation, seqmatrix(seqs, :seq))
 end
 
 
 
 """
-    count_mutations{N<:Nucleotide}(::Type{TransitionMutation}, ::Type{TransversionMutation}, sequences::Matrix{N})
+    count_mutations{N<:NucleicAcid}(::Type{TransitionMutation}, ::Type{TransversionMutation}, sequences::Matrix{N})
 
 Count the number of `TransitionMutation`s and `TransversionMutation`s in a
 pairwise manner, between each possible pair of sequences.
@@ -314,7 +314,7 @@ are not considered) for each possible pair of sequences.
 provided as `seqs` in sequence major order i.e. each column of the matrix is one
 complete nucleotide sequence.**
 """
-function count_mutations{A<:Nucleotide}(::Type{TransitionMutation}, ::Type{TransversionMutation}, seqs::Matrix{A})
+function count_mutations{A<:NucleicAcid}(::Type{TransitionMutation}, ::Type{TransversionMutation}, seqs::Matrix{A})
     # This method has been written with the aim of improving performance by taking
     # advantage of the memory layout of matrices of nucleotides, as well as
     # getting julia to emit simd code for the innermost loop.
@@ -348,12 +348,12 @@ function count_mutations{A<:Nucleotide}(::Type{TransitionMutation}, ::Type{Trans
     return ntransition, ntransversion, lengths
 end
 
-function count_mutations{A<:Nucleotide}(::Type{TransversionMutation}, ::Type{TransitionMutation}, seqs::Matrix{A})
+function count_mutations{A<:NucleicAcid}(::Type{TransversionMutation}, ::Type{TransitionMutation}, seqs::Matrix{A})
     return count_mutations(TransitionMutation, TransversionMutation, seqs)
 end
 
 """
-    count_mutations{A<:NucleotideAlphabet}(::Type{TransitionMutation}, ::Type{TransversionMutation}, sequences::Vector{BioSequence{A}})
+    count_mutations{A<:NucleicAcidAlphabet}(::Type{TransitionMutation}, ::Type{TransversionMutation}, sequences::Vector{BioSequence{A}})
 
 Count the number of `TransitionMutation`s and `TransversionMutation`s in a
 pairwise manner, between each possible pair of sequences.
@@ -364,11 +364,11 @@ transversions between each, possible pair of sequences, and 3. a vector
 containing the number of sites considered (sites with any ambiguity characters
 are not considered) for each possible pair of sequences.
 """
-function count_mutations{A<:NucleotideAlphabet}(::Type{TransitionMutation}, ::Type{TransversionMutation}, sequences::Vector{BioSequence{A}})
+function count_mutations{A<:NucleicAcidAlphabet}(::Type{TransitionMutation}, ::Type{TransversionMutation}, sequences::Vector{BioSequence{A}})
     seqs = seqmatrix(sequences, :seq)
     return count_mutations(TransitionMutation, TransversionMutation, seqs)
 end
 
-function count_mutations{A<:NucleotideAlphabet}(::Type{TransversionMutation}, ::Type{TransitionMutation}, sequences::Vector{BioSequence{A}})
+function count_mutations{A<:NucleicAcidAlphabet}(::Type{TransversionMutation}, ::Type{TransitionMutation}, sequences::Vector{BioSequence{A}})
     return count_mutations(TransitionMutation, TransversionMutation, sequences)
 end

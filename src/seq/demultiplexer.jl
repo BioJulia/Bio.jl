@@ -183,7 +183,7 @@ function tries to find the best matching barcodes using linear search and
 returns one of them at random.
 """
 function demultiplex(demultiplexer::Demultiplexer, seq::Sequence, linear_search_fallback::Bool=false)
-    if eltype(seq) != DNANucleotide
+    if eltype(seq) != DNA
         error("sequence must be a DNA sequence")
     end
     for (k, trie) in enumerate(demultiplexer.tries)

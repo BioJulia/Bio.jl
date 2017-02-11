@@ -100,7 +100,7 @@ end
 end
 
 # Extra next method to account for fact than strings don't have sub method
-# like arrays and Nucleotide sequences do.
+# like arrays and NucleicAcid sequences do.
 # The operation is an indexing operation, rather than a "proper"
 # substring or subarray operation.
 @inline function Base.next{T <: AbstractString}(it::EachWindowIterator{T}, state::Integer)

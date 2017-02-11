@@ -84,8 +84,8 @@ Kimura80
 
 ```@docs
 distance
-distance{T<:MutationType,A<:NucleotideAlphabet}(::Type{Count{T}}, seqs::Vector{BioSequence{A}})
-distance{T<:MutationType,A<:NucleotideAlphabet}(::Type{Proportion{T}}, seqs::Vector{BioSequence{A}})
-distance{A<:NucleotideAlphabet}(::Type{JukesCantor69}, seqs::Vector{BioSequence{A}})
-distance{A<:NucleotideAlphabet}(::Type{Kimura80}, seqs::Vector{BioSequence{A}})
+distance{T<:MutationType,A<:NucleicAcidAlphabet}(::Type{Count{T}}, seqs::Vector{BioSequence{A}})
+distance{T<:MutationType,A<:NucleicAcidAlphabet}(::Type{Proportion{T}}, seqs::Vector{BioSequence{A}})
+distance{A<:NucleicAcidAlphabet}(::Type{JukesCantor69}, seqs::Vector{BioSequence{A}})
+distance{A<:NucleicAcidAlphabet}(::Type{Kimura80}, seqs::Vector{BioSequence{A}})
 ```

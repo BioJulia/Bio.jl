@@ -17,9 +17,9 @@ macro biore_str(pat, opt...)
     opt = opt[1]
 
     if opt ∈ ("d", "dna")
-        :($(RE.Regex{DNANucleotide}(pat, :pcre)))
+        :($(RE.Regex{DNA}(pat, :pcre)))
     elseif opt ∈ ("r", "rna")
-        :($(RE.Regex{RNANucleotide}(pat, :pcre)))
+        :($(RE.Regex{RNA}(pat, :pcre)))
     elseif opt ∈ ("a", "aa")
         :($(RE.Regex{AminoAcid}(pat, :pcre)))
     else
@@ -65,8 +65,8 @@ end
 
 # list of symbols available for each symbol type
 const symbols = ObjectIdDict(
-    Bio.Seq.DNANucleotide => charset("ACGTMRWSYKVHDBN"),
-    Bio.Seq.RNANucleotide => charset("ACGUMRWSYKVHDBN"),
+    Bio.Seq.DNA => charset("ACGTMRWSYKVHDBN"),
+    Bio.Seq.RNA => charset("ACGUMRWSYKVHDBN"),
     Bio.Seq.AminoAcid     => charset("ARNDCQEGHILKMFPSTWYVOUBJZX"))
 
 macro check(ex, err)
@@ -323,7 +323,7 @@ function bits2sym{T}(::Type{T}, bits::UInt32)
     error("bits are not found")
 end
 
-mask{T<:Bio.Seq.Nucleotide}(::Type{T}) = (UInt32(1) << 4) - one(UInt32)
+mask{T<:Bio.Seq.NucleicAcid}(::Type{T}) = (UInt32(1) << 4) - one(UInt32)
 @assert Int(Bio.Seq.AA_U) + 1 == 22  # check there are 22 unambiguous amino acids
 mask(::Type{Bio.Seq.AminoAcid}) = (UInt32(1) << 22) - one(UInt32)
 
@@ -563,7 +563,7 @@ end
 # ---------------
 
 """
-Regular expression for `DNANucleotide`, `RNANucleotide`, and `AminoAcid`.
+Regular expression for `DNA`, `RNA`, and `AminoAcid`.
 """
 immutable Regex{T}
     pat::String       # regular expression pattern (for printing)
@@ -592,9 +592,9 @@ immutable Regex{T}
 end
 
 function Base.show{T}(io::IO, re::Regex{T})
-    if T == Bio.Seq.DNANucleotide
+    if T == Bio.Seq.DNA
         opt = "dna"
-    elseif T == Bio.Seq.RNANucleotide
+    elseif T == Bio.Seq.RNA
         opt = "rna"
     elseif T == Bio.Seq.AminoAcid
         opt = "aa"

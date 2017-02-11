@@ -107,45 +107,45 @@ function random_interval(minstart, maxstop)
     return start:rand(start:maxstop)
 end
 
-@testset "Nucleotides" begin
+@testset "NucleicAcids" begin
     @testset "Conversions" begin
         @testset "UInt8" begin
             @testset "DNA conversions from UInt8" begin
-                @test convert(DNANucleotide, 0b0000) === DNA_Gap
-                @test convert(DNANucleotide, 0b0001) === DNA_A
-                @test convert(DNANucleotide, 0b0010) === DNA_C
-                @test convert(DNANucleotide, 0b0011) === DNA_M
-                @test convert(DNANucleotide, 0b0100) === DNA_G
-                @test convert(DNANucleotide, 0b0101) === DNA_R
-                @test convert(DNANucleotide, 0b0110) === DNA_S
-                @test convert(DNANucleotide, 0b0111) === DNA_V
-                @test convert(DNANucleotide, 0b1000) === DNA_T
-                @test convert(DNANucleotide, 0b1001) === DNA_W
-                @test convert(DNANucleotide, 0b1010) === DNA_Y
-                @test convert(DNANucleotide, 0b1011) === DNA_H
-                @test convert(DNANucleotide, 0b1100) === DNA_K
-                @test convert(DNANucleotide, 0b1101) === DNA_D
-                @test convert(DNANucleotide, 0b1110) === DNA_B
-                @test convert(DNANucleotide, 0b1111) === DNA_N
+                @test convert(DNA, 0b0000) === DNA_Gap
+                @test convert(DNA, 0b0001) === DNA_A
+                @test convert(DNA, 0b0010) === DNA_C
+                @test convert(DNA, 0b0011) === DNA_M
+                @test convert(DNA, 0b0100) === DNA_G
+                @test convert(DNA, 0b0101) === DNA_R
+                @test convert(DNA, 0b0110) === DNA_S
+                @test convert(DNA, 0b0111) === DNA_V
+                @test convert(DNA, 0b1000) === DNA_T
+                @test convert(DNA, 0b1001) === DNA_W
+                @test convert(DNA, 0b1010) === DNA_Y
+                @test convert(DNA, 0b1011) === DNA_H
+                @test convert(DNA, 0b1100) === DNA_K
+                @test convert(DNA, 0b1101) === DNA_D
+                @test convert(DNA, 0b1110) === DNA_B
+                @test convert(DNA, 0b1111) === DNA_N
             end
 
             @testset "RNA conversions from UInt8" begin
-                @test convert(RNANucleotide, 0b0000) === RNA_Gap
-                @test convert(RNANucleotide, 0b0001) === RNA_A
-                @test convert(RNANucleotide, 0b0010) === RNA_C
-                @test convert(RNANucleotide, 0b0011) === RNA_M
-                @test convert(RNANucleotide, 0b0100) === RNA_G
-                @test convert(RNANucleotide, 0b0101) === RNA_R
-                @test convert(RNANucleotide, 0b0110) === RNA_S
-                @test convert(RNANucleotide, 0b0111) === RNA_V
-                @test convert(RNANucleotide, 0b1000) === RNA_U
-                @test convert(RNANucleotide, 0b1001) === RNA_W
-                @test convert(RNANucleotide, 0b1010) === RNA_Y
-                @test convert(RNANucleotide, 0b1011) === RNA_H
-                @test convert(RNANucleotide, 0b1100) === RNA_K
-                @test convert(RNANucleotide, 0b1101) === RNA_D
-                @test convert(RNANucleotide, 0b1110) === RNA_B
-                @test convert(RNANucleotide, 0b1111) === RNA_N
+                @test convert(RNA, 0b0000) === RNA_Gap
+                @test convert(RNA, 0b0001) === RNA_A
+                @test convert(RNA, 0b0010) === RNA_C
+                @test convert(RNA, 0b0011) === RNA_M
+                @test convert(RNA, 0b0100) === RNA_G
+                @test convert(RNA, 0b0101) === RNA_R
+                @test convert(RNA, 0b0110) === RNA_S
+                @test convert(RNA, 0b0111) === RNA_V
+                @test convert(RNA, 0b1000) === RNA_U
+                @test convert(RNA, 0b1001) === RNA_W
+                @test convert(RNA, 0b1010) === RNA_Y
+                @test convert(RNA, 0b1011) === RNA_H
+                @test convert(RNA, 0b1100) === RNA_K
+                @test convert(RNA, 0b1101) === RNA_D
+                @test convert(RNA, 0b1110) === RNA_B
+                @test convert(RNA, 0b1111) === RNA_N
             end
 
             @testset "DNA conversions to UInt8" begin
@@ -189,21 +189,21 @@ end
 
         @testset "UInt64" begin
             @testset "DNA conversions from UInt64" begin
-                @test convert(DNANucleotide, UInt64(0b0000)) === DNA_Gap
-                @test convert(DNANucleotide, UInt64(0b0001)) === DNA_A
-                @test convert(DNANucleotide, UInt64(0b0010)) === DNA_C
-                @test convert(DNANucleotide, UInt64(0b0100)) === DNA_G
-                @test convert(DNANucleotide, UInt64(0b1000)) === DNA_T
-                @test convert(DNANucleotide, UInt64(0b1111)) === DNA_N
+                @test convert(DNA, UInt64(0b0000)) === DNA_Gap
+                @test convert(DNA, UInt64(0b0001)) === DNA_A
+                @test convert(DNA, UInt64(0b0010)) === DNA_C
+                @test convert(DNA, UInt64(0b0100)) === DNA_G
+                @test convert(DNA, UInt64(0b1000)) === DNA_T
+                @test convert(DNA, UInt64(0b1111)) === DNA_N
             end
 
             @testset "RNA conversions from UInt64" begin
-                @test convert(RNANucleotide, UInt64(0b0000)) === RNA_Gap
-                @test convert(RNANucleotide, UInt64(0b0001)) === RNA_A
-                @test convert(RNANucleotide, UInt64(0b0010)) === RNA_C
-                @test convert(RNANucleotide, UInt64(0b0100)) === RNA_G
-                @test convert(RNANucleotide, UInt64(0b1000)) === RNA_U
-                @test convert(RNANucleotide, UInt64(0b1111)) === RNA_N
+                @test convert(RNA, UInt64(0b0000)) === RNA_Gap
+                @test convert(RNA, UInt64(0b0001)) === RNA_A
+                @test convert(RNA, UInt64(0b0010)) === RNA_C
+                @test convert(RNA, UInt64(0b0100)) === RNA_G
+                @test convert(RNA, UInt64(0b1000)) === RNA_U
+                @test convert(RNA, UInt64(0b1111)) === RNA_N
             end
 
             @testset "DNA conversions to UInt64" begin
@@ -227,19 +227,19 @@ end
 
         @testset "Char" begin
             @testset "DNA conversions from Char" begin
-                @test convert(DNANucleotide, 'A') == DNA_A
-                @test convert(DNANucleotide, 'C') == DNA_C
-                @test convert(DNANucleotide, 'G') == DNA_G
-                @test convert(DNANucleotide, 'T') == DNA_T
-                @test convert(DNANucleotide, 'N') == DNA_N
+                @test convert(DNA, 'A') == DNA_A
+                @test convert(DNA, 'C') == DNA_C
+                @test convert(DNA, 'G') == DNA_G
+                @test convert(DNA, 'T') == DNA_T
+                @test convert(DNA, 'N') == DNA_N
             end
 
             @testset "RNA conversions from Char" begin
-                @test convert(RNANucleotide, 'A') == RNA_A
-                @test convert(RNANucleotide, 'C') == RNA_C
-                @test convert(RNANucleotide, 'G') == RNA_G
-                @test convert(RNANucleotide, 'U') == RNA_U
-                @test convert(RNANucleotide, 'N') == RNA_N
+                @test convert(RNA, 'A') == RNA_A
+                @test convert(RNA, 'C') == RNA_C
+                @test convert(RNA, 'G') == RNA_G
+                @test convert(RNA, 'U') == RNA_U
+                @test convert(RNA, 'N') == RNA_N
             end
 
             @testset "DNA conversions to Char" begin
@@ -265,22 +265,22 @@ end
             @test convert(Int, DNA_G) === 4
             @test convert(Int, DNA_T) === 8
             @test convert(Int, DNA_N) === 15
-            @test convert(DNANucleotide,  1) === DNA_A
-            @test convert(DNANucleotide,  2) === DNA_C
-            @test convert(DNANucleotide,  4) === DNA_G
-            @test convert(DNANucleotide,  8) === DNA_T
-            @test convert(DNANucleotide, 15) === DNA_N
+            @test convert(DNA,  1) === DNA_A
+            @test convert(DNA,  2) === DNA_C
+            @test convert(DNA,  4) === DNA_G
+            @test convert(DNA,  8) === DNA_T
+            @test convert(DNA, 15) === DNA_N
 
             @test convert(Int, RNA_A) === 1
             @test convert(Int, RNA_C) === 2
             @test convert(Int, RNA_G) === 4
             @test convert(Int, RNA_U) === 8
             @test convert(Int, RNA_N) === 15
-            @test convert(RNANucleotide,  1) === RNA_A
-            @test convert(RNANucleotide,  2) === RNA_C
-            @test convert(RNANucleotide,  4) === RNA_G
-            @test convert(RNANucleotide,  8) === RNA_U
-            @test convert(RNANucleotide, 15) === RNA_N
+            @test convert(RNA,  1) === RNA_A
+            @test convert(RNA,  2) === RNA_C
+            @test convert(RNA,  4) === RNA_G
+            @test convert(RNA,  8) === RNA_U
+            @test convert(RNA, 15) === RNA_N
         end
     end
 
@@ -290,7 +290,7 @@ end
         @test !iscompatible(DNA_C, DNA_A)
         @test !iscompatible(DNA_C, DNA_R)
 
-        for x in alphabet(DNANucleotide)
+        for x in alphabet(DNA)
             @test iscompatible(x, DNA_N) == (x != DNA_Gap)
             @test iscompatible(DNA_N, x) == (x != DNA_Gap)
         end
@@ -300,35 +300,35 @@ end
         @test !iscompatible(RNA_C, RNA_A)
         @test !iscompatible(RNA_C, RNA_R)
 
-        for x in alphabet(RNANucleotide)
+        for x in alphabet(RNA)
             @test iscompatible(x, RNA_N) == (x != RNA_Gap)
             @test iscompatible(RNA_N, x) == (x != RNA_Gap)
         end
     end
 
     @testset "isambiguous" begin
-        for nt in alphabet(DNANucleotide)
+        for nt in alphabet(DNA)
             @test isambiguous(nt) == (nt ∉ (DNA_A, DNA_C, DNA_G, DNA_T))
         end
-        for nt in alphabet(RNANucleotide)
+        for nt in alphabet(RNA)
             @test isambiguous(nt) == (nt ∉ (RNA_A, RNA_C, RNA_G, RNA_U))
         end
     end
 
     @testset "ispurine" begin
-        for nt in alphabet(DNANucleotide)
+        for nt in alphabet(DNA)
             @test ispurine(nt) == (nt == DNA_A || nt == DNA_G || nt == DNA_R)
         end
-        for nt in alphabet(RNANucleotide)
+        for nt in alphabet(RNA)
             @test ispurine(nt) == (nt == RNA_A || nt == RNA_G || nt == RNA_R)
         end
     end
 
     @testset "ispyrimidine" begin
-        for nt in alphabet(DNANucleotide)
+        for nt in alphabet(DNA)
             @test ispyrimidine(nt) == (nt == DNA_T || nt == DNA_C || nt == DNA_Y)
         end
-        for nt in alphabet(RNANucleotide)
+        for nt in alphabet(RNA)
             @test ispyrimidine(nt) == (nt == RNA_U || nt == RNA_C || nt == RNA_Y)
         end
     end
@@ -364,10 +364,10 @@ end
             @test_throws EncodeError encode(DNAAlphabet{2}, DNA_Gap)
 
             # 4 bits
-            for nt in alphabet(DNANucleotide)
+            for nt in alphabet(DNA)
                 @test encode(DNAAlphabet{4}, nt) === reinterpret(UInt8, nt)
             end
-            @test_throws EncodeError encode(DNAAlphabet{4}, reinterpret(DNANucleotide, 0b10000))
+            @test_throws EncodeError encode(DNAAlphabet{4}, reinterpret(DNA, 0b10000))
         end
         @testset "RNA" begin
             encode = Seq.encode
@@ -383,10 +383,10 @@ end
             @test_throws EncodeError encode(RNAAlphabet{2}, RNA_Gap)
 
             # 4 bits
-            for nt in alphabet(RNANucleotide)
+            for nt in alphabet(RNA)
                 @test encode(RNAAlphabet{4}, nt) === reinterpret(UInt8, nt)
             end
-            @test_throws EncodeError encode(RNAAlphabet{4}, reinterpret(RNANucleotide, 0b10000))
+            @test_throws EncodeError encode(RNAAlphabet{4}, reinterpret(RNA, 0b10000))
         end
     end
 
@@ -405,7 +405,7 @@ end
 
             # 4 bits
             for x in 0b0000:0b1111
-                @test decode(DNAAlphabet{4}, x) === reinterpret(DNANucleotide, x)
+                @test decode(DNAAlphabet{4}, x) === reinterpret(DNA, x)
             end
             @test_throws DecodeError decode(DNAAlphabet{4}, 0b10000)
         end
@@ -423,7 +423,7 @@ end
 
             # 4 bits
             for x in 0b0000:0b1111
-                @test decode(RNAAlphabet{4}, x) === reinterpret(RNANucleotide, x)
+                @test decode(RNAAlphabet{4}, x) === reinterpret(RNA, x)
             end
             @test_throws DecodeError decode(RNAAlphabet{4}, 0b10000)
         end
@@ -441,8 +441,8 @@ end
             @test DNA_Gap - 1 === DNA_Gap - 17 === DNA_N
             @test DNA_Gap < DNA_A < DNA_C < DNA_G < DNA_T < DNA_N
             @test !(DNA_A > DNA_G)
-            @test gap(DNANucleotide) === DNA_Gap
-            @test collect(alphabet(DNANucleotide)) == sort([
+            @test gap(DNA) === DNA_Gap
+            @test collect(alphabet(DNA)) == sort([
                 DNA_A, DNA_C, DNA_G, DNA_T,
                 DNA_M, DNA_R, DNA_W, DNA_S,
                 DNA_Y, DNA_K, DNA_V, DNA_H,
@@ -459,8 +459,8 @@ end
             @test RNA_Gap - 1 === RNA_Gap - 17 === RNA_N
             @test RNA_Gap < RNA_A < RNA_C < RNA_G < RNA_U < RNA_N
             @test !(RNA_A > RNA_G)
-            @test gap(RNANucleotide) === RNA_Gap
-            @test collect(alphabet(RNANucleotide)) == sort([
+            @test gap(RNA) === RNA_Gap
+            @test collect(alphabet(RNA)) == sort([
                 RNA_A, RNA_C, RNA_G, RNA_U,
                 RNA_M, RNA_R, RNA_W, RNA_S,
                 RNA_Y, RNA_K, RNA_V, RNA_H,
@@ -669,8 +669,8 @@ end
 
 @testset "BioSequence" begin
     @testset "Constructing empty sequences" begin
-        @test DNASequence() == BioSequence(DNANucleotide)
-        @test RNASequence() == BioSequence(RNANucleotide)
+        @test DNASequence() == BioSequence(DNA)
+        @test RNASequence() == BioSequence(RNA)
         @test AminoAcidSequence() == BioSequence(AminoAcid)
         @test CharSequence() == BioSequence(Char)
     end
@@ -848,10 +848,10 @@ end
         @test seqmatrix(UInt8, dna, :seq) == seqmajnucint
         @test seqmatrix(UInt8, rna, :seq) == seqmajnucint
 
-        @test seqmatrix([dna"", dna"", dna""], :site) == Matrix{DNANucleotide}(3, 0)
-        @test seqmatrix([dna"", dna"", dna""], :seq) == Matrix{DNANucleotide}(0, 3)
-        @test seqmatrix([rna"", rna"", rna""], :site) == Matrix{RNANucleotide}(3, 0)
-        @test seqmatrix([rna"", rna"", rna""], :seq) == Matrix{RNANucleotide}(0, 3)
+        @test seqmatrix([dna"", dna"", dna""], :site) == Matrix{DNA}(3, 0)
+        @test seqmatrix([dna"", dna"", dna""], :seq) == Matrix{DNA}(0, 3)
+        @test seqmatrix([rna"", rna"", rna""], :site) == Matrix{RNA}(3, 0)
+        @test seqmatrix([rna"", rna"", rna""], :seq) == Matrix{RNA}(0, 3)
         @test seqmatrix(UInt8, [dna"", dna"", dna""], :site) == Matrix{UInt8}(3, 0)
         @test seqmatrix(UInt8, [dna"", dna"", dna""], :seq) == Matrix{UInt8}(0, 3)
         @test seqmatrix(UInt8, [rna"", rna"", rna""], :site) == Matrix{UInt8}(3, 0)
@@ -1779,7 +1779,7 @@ end
         @test_throws BoundsError seq[0]
         @test_throws BoundsError seq[1]
         @test_throws BoundsError seq[2:3]
-        @test collect(seq) == DNANucleotide[]
+        @test collect(seq) == DNA[]
 
         seq = ReferenceSequence(dna"ACGTN")
         @test length(seq) === endof(seq) === 5
@@ -1868,34 +1868,34 @@ end
 end
 
 @testset "Composition" begin
-    function string_nucleotide_count(::Type{DNANucleotide}, seq::AbstractString)
-        counts = Dict{DNANucleotide, Int}(
+    function string_nucleotide_count(::Type{DNA}, seq::AbstractString)
+        counts = Dict{DNA, Int}(
             DNA_A => 0,
             DNA_C => 0,
             DNA_G => 0,
             DNA_T => 0,
             DNA_N => 0 )
         for c in seq
-            counts[convert(DNANucleotide, c)] += 1
+            counts[convert(DNA, c)] += 1
         end
         return counts
     end
 
-    function string_nucleotide_count(::Type{RNANucleotide}, seq::AbstractString)
-        counts = Dict{RNANucleotide, Int}(
+    function string_nucleotide_count(::Type{RNA}, seq::AbstractString)
+        counts = Dict{RNA, Int}(
             RNA_A => 0,
             RNA_C => 0,
             RNA_G => 0,
             RNA_U => 0,
             RNA_N => 0 )
         for c in seq
-            counts[convert(RNANucleotide, c)] += 1
+            counts[convert(RNA, c)] += 1
         end
         return counts
     end
 
-    function check_nucleotide_count(::Type{DNANucleotide}, seq::AbstractString)
-        string_counts = string_nucleotide_count(DNANucleotide, seq)
+    function check_nucleotide_count(::Type{DNA}, seq::AbstractString)
+        string_counts = string_nucleotide_count(DNA, seq)
         seq_counts = composition(DNASequence(seq))
         return string_counts[DNA_A] == seq_counts[DNA_A] &&
                string_counts[DNA_C] == seq_counts[DNA_C] &&
@@ -1904,8 +1904,8 @@ end
                string_counts[DNA_N] == seq_counts[DNA_N]
     end
 
-    function check_nucleotide_count(::Type{RNANucleotide}, seq::AbstractString)
-        string_counts = string_nucleotide_count(RNANucleotide, seq)
+    function check_nucleotide_count(::Type{RNA}, seq::AbstractString)
+        string_counts = string_nucleotide_count(RNA, seq)
         seq_counts = composition(RNASequence(seq))
         return string_counts[RNA_A] == seq_counts[RNA_A] &&
                string_counts[RNA_C] == seq_counts[RNA_C] &&
@@ -1914,8 +1914,8 @@ end
                string_counts[RNA_N] == seq_counts[RNA_N]
     end
 
-    function check_kmer_nucleotide_count(::Type{DNANucleotide}, seq::AbstractString)
-        string_counts = string_nucleotide_count(DNANucleotide, seq)
+    function check_kmer_nucleotide_count(::Type{DNA}, seq::AbstractString)
+        string_counts = string_nucleotide_count(DNA, seq)
         kmer_counts = composition(DNAKmer(seq))
         return string_counts[DNA_A] == kmer_counts[DNA_A] &&
                string_counts[DNA_C] == kmer_counts[DNA_C] &&
@@ -1924,8 +1924,8 @@ end
                string_counts[DNA_N] == kmer_counts[DNA_N]
     end
 
-    function check_kmer_nucleotide_count(::Type{RNANucleotide}, seq::AbstractString)
-        string_counts = string_nucleotide_count(RNANucleotide, seq)
+    function check_kmer_nucleotide_count(::Type{RNA}, seq::AbstractString)
+        string_counts = string_nucleotide_count(RNA, seq)
         kmer_counts = composition(RNAKmer(seq))
         return string_counts[RNA_A] == kmer_counts[RNA_A] &&
                string_counts[RNA_C] == kmer_counts[RNA_C] &&
@@ -1936,8 +1936,8 @@ end
 
     reps = 10
     for len in [1, 10, 32, 1000, 10000, 100000]
-        @test all(Bool[check_nucleotide_count(DNANucleotide, random_dna(len)) for _ in 1:reps])
-        @test all(Bool[check_nucleotide_count(RNANucleotide, random_rna(len)) for _ in 1:reps])
+        @test all(Bool[check_nucleotide_count(DNA, random_dna(len)) for _ in 1:reps])
+        @test all(Bool[check_nucleotide_count(RNA, random_rna(len)) for _ in 1:reps])
     end
 
     @test composition(aa"MTTQAPMFTQPLQSVVV")[AA_E] === 0
@@ -1946,8 +1946,8 @@ end
     @test composition(aa"MTTQAPMFTQPLQSVVV")[AA_V] === 3
 
     for len in [1, 10, 32]
-        @test all(Bool[check_kmer_nucleotide_count(DNANucleotide, random_dna_kmer(len)) for _ in 1:reps])
-        @test all(Bool[check_kmer_nucleotide_count(RNANucleotide, random_rna_kmer(len)) for _ in 1:reps])
+        @test all(Bool[check_kmer_nucleotide_count(DNA, random_dna_kmer(len)) for _ in 1:reps])
+        @test all(Bool[check_kmer_nucleotide_count(RNA, random_rna_kmer(len)) for _ in 1:reps])
     end
 
     comp = composition(dna"ACGT")
@@ -2013,8 +2013,8 @@ end
         end
 
         # Check that kmers can be constructed from an array of nucleotides
-        #   Vector{Nucleotide} → Kmer → Vector{Nucleotide}
-        function check_nucarray_kmer{T <: Nucleotide}(seq::Vector{T})
+        #   Vector{NucleicAcid} → Kmer → Vector{NucleicAcid}
+        function check_nucarray_kmer{T <: NucleicAcid}(seq::Vector{T})
             return convert(AbstractString, [convert(Char, c) for c in seq]) ==
                    convert(AbstractString, Kmer(seq...))
         end
@@ -2031,12 +2031,12 @@ end
 
         for len in [0, 1, 16, 32]
             # UInt64 conversions
-            @test all(Bool[check_uint64_convertion(DNANucleotide, rand(UInt64(0):UInt64(UInt64(1) << 2len - 1)), len) for _ in 1:reps])
-            @test all(Bool[check_uint64_convertion(RNANucleotide, rand(UInt64(0):UInt64(UInt64(1) << 2len - 1)), len) for _ in 1:reps])
+            @test all(Bool[check_uint64_convertion(DNA, rand(UInt64(0):UInt64(UInt64(1) << 2len - 1)), len) for _ in 1:reps])
+            @test all(Bool[check_uint64_convertion(RNA, rand(UInt64(0):UInt64(UInt64(1) << 2len - 1)), len) for _ in 1:reps])
 
             # String construction
-            @test all(Bool[check_string_construction(DNANucleotide, random_dna_kmer(len)) for _ in 1:reps])
-            @test all(Bool[check_string_construction(RNANucleotide, random_rna_kmer(len)) for _ in 1:reps])
+            @test all(Bool[check_string_construction(DNA, random_dna_kmer(len)) for _ in 1:reps])
+            @test all(Bool[check_string_construction(RNA, random_rna_kmer(len)) for _ in 1:reps])
 
             # DNA/RNASequence Constructions
             @test all(Bool[check_dnasequence_construction(DNASequence(random_dna_kmer(len))) for _ in 1:reps])
@@ -2351,8 +2351,8 @@ end
 
         @testset "Reverse" begin
             for len in 0:32, _ in 1:10
-                test_reverse(DNANucleotide, random_dna_kmer(len))
-                test_reverse(RNANucleotide, random_rna_kmer(len))
+                test_reverse(DNA, random_dna_kmer(len))
+                test_reverse(RNA, random_rna_kmer(len))
             end
 
             seq = dna"AAAAAAAAAAAAAAAAAAAAAAAAAAAAGATAC"
@@ -2619,11 +2619,11 @@ end
     end
 
     @testset "Regular Expression" begin
-        @test isa(biore"A+"d, Seq.RE.Regex{DNANucleotide})
-        @test isa(biore"A+"r, Seq.RE.Regex{RNANucleotide})
+        @test isa(biore"A+"d, Seq.RE.Regex{DNA})
+        @test isa(biore"A+"r, Seq.RE.Regex{RNA})
         @test isa(biore"A+"a, Seq.RE.Regex{AminoAcid})
-        @test isa(biore"A+"dna, Seq.RE.Regex{DNANucleotide})
-        @test isa(biore"A+"rna, Seq.RE.Regex{RNANucleotide})
+        @test isa(biore"A+"dna, Seq.RE.Regex{DNA})
+        @test isa(biore"A+"rna, Seq.RE.Regex{RNA})
         @test isa(biore"A+"aa, Seq.RE.Regex{AminoAcid})
         @test_throws Exception eval(:(biore"A+"))
         @test_throws Exception eval(:(biore"A+"foo))
@@ -2790,7 +2790,7 @@ end
 
     function make_errors(seq, p=0.03)
         seq = copy(seq)
-        nucs = DNANucleotide['A', 'C', 'G', 'T', 'N']
+        nucs = DNA['A', 'C', 'G', 'T', 'N']
         i = 1
         while i ≤ endof(seq)
             if rand() < p

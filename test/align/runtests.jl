@@ -363,12 +363,12 @@ end
         myblosum[AA_O,AA_R] = -3
         @test myblosum[AA_O,AA_R] === -3
 
-        submat = SubstitutionMatrix(DNANucleotide, rand(Float64, 15, 15))
-        @test isa(submat, SubstitutionMatrix{DNANucleotide,Float64})
+        submat = SubstitutionMatrix(DNA, rand(Float64, 15, 15))
+        @test isa(submat, SubstitutionMatrix{DNA,Float64})
 
         submat = DichotomousSubstitutionMatrix(5, -4)
         @test isa(submat, DichotomousSubstitutionMatrix{Int})
-        submat = convert(SubstitutionMatrix{DNANucleotide,Int}, submat)
+        submat = convert(SubstitutionMatrix{DNA,Int}, submat)
         @test submat[DNA_A,DNA_A] ===  5
         @test submat[DNA_C,DNA_C] ===  5
         @test submat[DNA_A,DNA_C] === -4
@@ -395,7 +395,7 @@ end
         end
 
         # matrix
-        submat = SubstitutionMatrix(DNANucleotide, rand(Float64, 15, 15))
+        submat = SubstitutionMatrix(DNA, rand(Float64, 15, 15))
         for affinegap in [AffineGapScoreModel(submat, -3, -1),
                           AffineGapScoreModel(submat, gap_open=-3, gap_extend=-1),
                           AffineGapScoreModel(submat, gap_open_penalty=3, gap_extend_penalty=1)]
@@ -411,7 +411,7 @@ end
     end
 
     @testset "CostModel" begin
-        submat = SubstitutionMatrix(DNANucleotide, rand(Int, 15, 15))
+        submat = SubstitutionMatrix(DNA, rand(Int, 15, 15))
         for cost in [CostModel(submat, 5, 6),
                      CostModel(submat, insertion=5, deletion=6)]
             @test cost.insertion == 5

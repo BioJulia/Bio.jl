@@ -292,7 +292,7 @@ julia> count_aligned(aln)
 17
 
 julia> collect(aln)  # pairwise alignment is iterable
-17-element Array{Tuple{Bio.Seq.DNANucleotide,Bio.Seq.DNANucleotide},1}:
+17-element Array{Tuple{Bio.Seq.DNA,Bio.Seq.DNA},1}:
  (-,A)
  (C,C)
  (C,C)
@@ -337,7 +337,7 @@ defined:
 
 ```jlcon
 julia> EDNAFULL
-Bio.Align.SubstitutionMatrix{Bio.Seq.DNANucleotide,Int64}:
+Bio.Align.SubstitutionMatrix{Bio.Seq.DNA,Int64}:
      A  C  G  T  M  R  W  S  Y  K  V  H  D  B  N
   A  5 -4 -4 -4  1  1  1 -4 -4 -4 -1 -1 -1 -4 -2
   C -4  5 -4 -4  1 -4 -4  1  1 -4 -1 -1 -4 -1 -2

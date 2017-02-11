@@ -113,9 +113,9 @@ function parse_gencode(s)
     @assert length(aas) == 73
     for i in 10:73
         aa = AminoAcid(aas[i])
-        b1 = DNANucleotide(base1[i])
-        b2 = DNANucleotide(base2[i])
-        b3 = DNANucleotide(base3[i])
+        b1 = DNA(base1[i])
+        b2 = DNA(base2[i])
+        b3 = DNA(base3[i])
         codon = DNACodon(Kmer(b1, b2, b3))
         codes[codon] = aa
     end
@@ -358,9 +358,9 @@ function translate(seq::RNASequence, code::GeneticCode, allow_ambiguous_codons::
 end
 
 function try_translate_ambiguous_codon(code::GeneticCode,
-                                       x::RNANucleotide,
-                                       y::RNANucleotide,
-                                       z::RNANucleotide)
+                                       x::RNA,
+                                       y::RNA,
+                                       z::RNA)
     if !isambiguous(x) && !isambiguous(y)
         # try to translate a codon `(x, y, RNA_N)`
         aa_a = code[Kmer(x, y, RNA_A)]

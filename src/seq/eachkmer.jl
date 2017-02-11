@@ -32,7 +32,7 @@ end
 ```
 """
 function each{T,K}(::Type{Kmer{T,K}}, seq::Sequence, step::Integer=1)
-    if eltype(seq) ∉ (DNANucleotide, RNANucleotide)
+    if eltype(seq) ∉ (DNA, RNA)
         throw(ArgumentError("element type must be either DNA or RNA nucleotide"))
     elseif !(0 ≤ K ≤ 32)
         throw(ArgumentError("k-mer length must be between 0 and 32"))

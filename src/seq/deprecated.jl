@@ -7,7 +7,7 @@ import Base.depwarn
 @deprecate ispalindrome ispalindromic
 
 """
-Range type of biological symbols (especially `DNANucleotide`, `RNANucleotide`,
+Range type of biological symbols (especially `DNA`, `RNA`,
 and `AminoAcid`).
 """
 immutable SymbolRange{T} <: Range{T}
