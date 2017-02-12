@@ -1,5 +1,5 @@
 # NucleicAcids
-# ===========
+# ============
 #
 # DNA and RNA nucleotide types.
 #
@@ -12,11 +12,11 @@
 # Unambiguous nucleotides are represented in one-hot encoding as follows:
 #
 #   | NucleicAcid | Bits |
-#   | ---------- | ---- |
-#   |     A      | 0001 |
-#   |     C      | 0010 |
-#   |     G      | 0100 |
-#   |    T/U     | 1000 |
+#   | ----------- | ---- |
+#   |     A       | 0001 |
+#   |     C       | 0010 |
+#   |     G       | 0100 |
+#   |    T/U      | 1000 |
 #
 # Ambiguous nucleotides are bitwise OR of these four nucleotides. For example, R
 # , A or G, is represented as 0101 (= A: 0001 | G: 0100). The gap symbol is
@@ -180,14 +180,14 @@ end
 # NucleicAcid encoding definition
 # ------------------------------
 
-# DNA NucleicAcids
+# DNA
 
 # lookup table for characters
 const char_to_dna = [0x80 for _ in 0x00:0xff]
 const dna_to_char = Vector{Char}(16)
 
 # derived from "The DDBJ/ENA/GenBank Feature Table Definition"
-# §7.4.1 NucleicAcid base code (IUPAC)
+# §7.4.1 Nucleotide base code (IUPAC)
 # http://www.insdc.org/documents/feature_table.html#7.4.1
 for (char, doc, bits) in [
         ('-', "DNA Gap",                                   0b0000),
@@ -220,7 +220,7 @@ end
 const ACGT = (DNA_A, DNA_C, DNA_G, DNA_T)
 const ACGTN = (DNA_A, DNA_C, DNA_G, DNA_T, DNA_N)
 
-# RNA NucleicAcids
+# RNA
 
 # lookup table for characters
 const char_to_rna = [0x80 for _ in 0x00:0xff]
@@ -299,7 +299,7 @@ function Base.show(io::IO, nt::DNA)
             write(io, "DNA_", Char(nt))
         end
     else
-        write(io, "Invalid DNA NucleicAcid")
+        write(io, "Invalid DNA")
     end
     return
 end
@@ -312,14 +312,14 @@ function Base.show(io::IO, nt::RNA)
             write(io, "RNA_", Char(nt))
         end
     else
-        write(io, "Invalid RNA NucleicAcid")
+        write(io, "Invalid RNA")
     end
     return
 end
 
 function Base.print(io::IO, nt::NucleicAcid)
     if !isvalid(nt)
-        throw(ArgumentError("nucleotide is invalid"))
+        throw(ArgumentError("nucleic acid is invalid"))
     end
     write(io, Char(nt))
     return

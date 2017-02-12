@@ -110,9 +110,9 @@ end
 
 function Base.summary{T}(::Composition{T})
     if T == DNA
-        return "DNA NucleicAcid Composition"
+        return "DNA Composition"
     elseif T == RNA
-        return "RNA NucleicAcid Composition"
+        return "RNA Composition"
     elseif T == AminoAcid
         return "Amino Acid Composition"
     else

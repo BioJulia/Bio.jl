@@ -187,7 +187,7 @@ function gap end
 gap(::Type{Char}) = '-'
 
 include("sequence.jl")
-include("nucleotide.jl")
+include("nucleic_acids.jl")
 include("aminoacid.jl")
 include("alphabet.jl")
 include("bitindex.jl")
