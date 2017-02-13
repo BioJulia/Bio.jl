@@ -1,6 +1,14 @@
 import Base.@deprecate, Base.@deprecate_binding
 import Base.depwarn
 
+# v0.4
+# ----
+
+@deprecate_binding Nucleotide NucleicAcid
+@deprecate_binding DNANucleotide DNA
+@deprecate_binding RNANucleotide RNA
+
+
 # v0.3
 # ----
 
