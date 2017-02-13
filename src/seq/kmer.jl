@@ -24,27 +24,27 @@
 #       G      |   10
 #     T / U    |   11
 #
-# Nucleotides are filled from MSBs to LSBs and right-aligned so that all k-mers
+# NucleicAcids are filled from MSBs to LSBs and right-aligned so that all k-mers
 # are lexicographically ordered. For example, the memory layout of "TACG" is:
 #   64-bit: 0b 00 00 … 00 11 00 01 10
 #    4-mer:                T  A  C  G
 
-bitstype 64 Kmer{T<:Nucleotide, K} <: Sequence
+bitstype 64 Kmer{T<:NucleicAcid, K} <: Sequence
 
-typealias DNAKmer{K} Kmer{DNANucleotide, K}
-typealias RNAKmer{K} Kmer{RNANucleotide, K}
+typealias DNAKmer{K} Kmer{DNA, K}
+typealias RNAKmer{K} Kmer{RNA, K}
 typealias DNACodon DNAKmer{3}
 typealias RNACodon RNAKmer{3}
 
-function Kmer{T<:Nucleotide}(nts::T...)
+function Kmer{T<:NucleicAcid}(nts::T...)
     return make_kmer(nts)
 end
 
-function DNACodon(x::DNANucleotide, y::DNANucleotide, z::DNANucleotide)
+function DNACodon(x::DNA, y::DNA, z::DNA)
     return make_kmer((x, y, z))
 end
 
-function RNACodon(x::RNANucleotide, y::RNANucleotide, z::RNANucleotide)
+function RNACodon(x::RNA, y::RNA, z::RNA)
     return make_kmer((x, y, z))
 end
 
@@ -70,16 +70,16 @@ function Base.convert{T,K}(::Type{Kmer{T,K}}, seq::AbstractString)
 end
 
 function Base.convert{T,K,A<:DNAAlphabet}(::Type{Kmer{T,K}}, seq::BioSequence{A})
-    return make_kmer(Kmer{DNANucleotide,K}, seq)
+    return make_kmer(Kmer{DNA,K}, seq)
 end
 
 function Base.convert{T,K,A<:RNAAlphabet}(::Type{Kmer{T,K}}, seq::BioSequence{A})
-    return make_kmer(Kmer{RNANucleotide,K}, seq)
+    return make_kmer(Kmer{RNA,K}, seq)
 end
 
 Base.convert{T}(::Type{Kmer{T}}, seq::AbstractString) = convert(Kmer{T,length(seq)}, seq)
-Base.convert{A<:DNAAlphabet}(::Type{Kmer}, seq::BioSequence{A}) = convert(Kmer{DNANucleotide,length(seq)}, seq)
-Base.convert{A<:RNAAlphabet}(::Type{Kmer}, seq::BioSequence{A}) = convert(Kmer{RNANucleotide,length(seq)}, seq)
+Base.convert{A<:DNAAlphabet}(::Type{Kmer}, seq::BioSequence{A}) = convert(Kmer{DNA,length(seq)}, seq)
+Base.convert{A<:RNAAlphabet}(::Type{Kmer}, seq::BioSequence{A}) = convert(Kmer{RNA,length(seq)}, seq)
 Base.convert{A<:DNAAlphabet}(::Type{DNAKmer}, seq::BioSequence{A}) = convert(DNAKmer{length(seq)}, seq)
 Base.convert{A<:RNAAlphabet}(::Type{RNAKmer}, seq::BioSequence{A}) = convert(RNAKmer{length(seq)}, seq)
 

@@ -21,7 +21,7 @@ immutable ReferenceSequence <: Sequence
 end
 
 Base.length(seq::ReferenceSequence) = length(seq.part)
-Base.eltype(::Type{ReferenceSequence}) = DNANucleotide
+Base.eltype(::Type{ReferenceSequence}) = DNA
 Base.summary(seq::ReferenceSequence) = string(length(seq), "nt Reference Sequence")
 
 function Base.copy(seq::ReferenceSequence)
@@ -107,7 +107,7 @@ function encode(src::Vector{UInt8}, from::Integer, len::Integer)
         while index(next) == j && next < stop
             # FIXME: Hotspot
             char = convert(Char, src[i])
-            nt = convert(DNANucleotide, char)
+            nt = convert(DNA, char)
             if !isambiguous(nt)
                 x |= UInt64(encode(DNAAlphabet{2}, nt)) << offset(next)
             elseif nt == DNA_N
@@ -135,7 +135,7 @@ end
         return DNA_N
     else
         j = bitindex(seq, i)
-        return DNANucleotide(0x01 << ((seq.data[index(j)] >> offset(j)) & 0b11))
+        return DNA(0x01 << ((seq.data[index(j)] >> offset(j)) & 0b11))
     end
 end
 

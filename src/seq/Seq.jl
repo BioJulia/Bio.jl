@@ -9,9 +9,9 @@
 module Seq
 
 export
-    Nucleotide,
-    DNANucleotide,
-    RNANucleotide,
+    NucleicAcid,
+    DNA,
+    RNA,
     DNA_A,
     DNA_C,
     DNA_G,
@@ -56,7 +56,7 @@ export
     RNASequence,
     AminoAcidSequence,
     CharSequence,
-    NucleotideSequence,
+    NucleicAcidSequence,
     SeqRecord,
     seqname,
     sequence,
@@ -91,7 +91,7 @@ export
     each,
     Composition,
     composition,
-    NucleotideCounts,
+    NucleicAcidCounts,
     Kmer,
     DNAKmer,
     RNAKmer,
@@ -139,10 +139,10 @@ export
     Alphabet,
     DNAAlphabet,
     RNAAlphabet,
-    NucleotideAlphabets,
+    NucleicAcidAlphabets,
     AminoAcidAlphabet,
     CharAlphabet,
-    NucleotideAlphabet,
+    NucleicAcidAlphabet,
     ExactSearchQuery,
     ApproximateSearchQuery,
     approxsearch,
@@ -171,7 +171,7 @@ importall Bio
 
 Return an iterator of symbols of `typ`.
 
-`typ` is one of `DNANucleotide`, `RNANucleotide`, or `AminoAcid`.
+`typ` is one of `DNA`, `RNA`, or `AminoAcid`.
 """
 function alphabet end
 
@@ -180,14 +180,14 @@ function alphabet end
 
 Return the gap symbol of `typ`.
 
-`typ` is one of `DNANucleotide`, `RNANucleotide`, `AminoAcid`, or `Char`.
+`typ` is one of `DNA`, `RNA`, `AminoAcid`, or `Char`.
 """
 function gap end
 
 gap(::Type{Char}) = '-'
 
 include("sequence.jl")
-include("nucleotide.jl")
+include("nucleic_acids.jl")
 include("aminoacid.jl")
 include("alphabet.jl")
 include("bitindex.jl")

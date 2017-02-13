@@ -24,8 +24,8 @@ The `Bio.Seq` module provides three biological symbol (character) types:
 
 | Type            | Meaning        |
 | :-------------- | :------------- |
-| `DNANucleotide` | DNA nucleotide |
-| `RNANucleotide` | RNA nucleotide |
+| `DNA`           | DNA nucleotide |
+| `RNA`           | RNA nucleotide |
 | `AminoAcid`     | Amino acid     |
 
 These symbols can be elements of sequences like characters can be elements of
@@ -74,19 +74,19 @@ julia> DNA_Gap
 DNA_Gap
 
 julia> typeof(DNA_A)
-Bio.Seq.DNANucleotide
+Bio.Seq.DNA
 
 julia> typeof(RNA_A)
-Bio.Seq.RNANucleotide
+Bio.Seq.RNA
 
 ```
 
 Symbols can be constructed by converting regular characters:
 ```jlcon
-julia> convert(DNANucleotide, 'C')
+julia> convert(DNA, 'C')
 DNA_C
 
-julia> convert(DNANucleotide, 'C') === DNA_C
+julia> convert(DNA, 'C') === DNA_C
 true
 
 ```
@@ -99,7 +99,7 @@ ambiguous nucleotide can take. For example, `DNA_R` (meaning the nucleotide is
 either `DNA_A` or `DNA_G`) is encoded as `0101` because `0101` is the bitwise OR
 of `0001` (`DNA_A`) and `0100` (`DNA_G`). The gap symbol is always `0000`.
 
-|    Nucleotide    |  Bits  |
+|   NucleicAcid    |  Bits  |
 |:---------------- |:------ |
 | `DNA_A`, `RNA_A` | `0001` |
 | `DNA_C`, `RNA_C` | `0010` |
@@ -232,14 +232,14 @@ computation performance.  Here is the summary table of these three types:
 | Type                       | Description                                | Element type          | Mutability  | Allocation       |
 | :----                      | :-----------                               | :------------         | :---------- | :----------      |
 | `BioSequence{A<:Alphabet}` | general-purpose biological sequences       | DNA, RNA, Amino acids | mutable     | heap             |
-| `Kmer{T<:Nucleotide,k}`    | specialized for short nucleotide sequences | DNA, RNA              | immutable   | stack / register |
+| `Kmer{T<:NucleicAcid,k}`   | specialized for short nucleotide sequences | DNA, RNA              | immutable   | stack / register |
 | `ReferenceSequence`        | specialized for long reference genomes     | DNA                   | immutable   | heap             |
 
 Details of these different representations are explained in the following
 sections:
 
 * `BioSequence`: [General-purpose sequences](@ref)
-* `Kmer`: [Nucleotide k-mers](@ref)
+* `Kmer`: [NucleicAcid k-mers](@ref)
 * `ReferenceSequence`: [Reference sequences](@ref)
 
 
@@ -255,12 +255,12 @@ can't be intermixed in one sequence type.
 The following table summarizes common sequence types that are defined in the
 `Bio.Seq` module:
 
-| Type                               | Symbol type      | Type alias          |
-| :--------------------------------- | :--------------- | :------------------ |
-| `BioSequence{DNAAlphabet{4}}`      | `DNANucleotide`  | `DNASequence`       |
-| `BioSequence{RNAAlphabet{4}}`      | `RNANucleotide`  | `RNASequence`       |
-| `BioSequence{AminoAcidAlphabet}`   | `AminoAcid`      | `AminoAcidSequence` |
-| `BioSequence{CharAlphabet}`        | `Char`           | `CharSequence`      |
+| Type                               | Symbol type | Type alias          |
+| :--------------------------------- | :---------- | :------------------ |
+| `BioSequence{DNAAlphabet{4}}`      | `DNA`       | `DNASequence`       |
+| `BioSequence{RNAAlphabet{4}}`      | `RNA`       | `RNASequence`       |
+| `BioSequence{AminoAcidAlphabet}`   | `AminoAcid` | `AminoAcidSequence` |
+| `BioSequence{CharAlphabet}`        | `Char`      | `CharSequence`      |
 
 Parameterized definition of the `BioSequence{A}` type is for the purpose of
 unifying the data structure and operations of any symbol type. In most cases,
@@ -417,8 +417,8 @@ strings or arrays:
 julia> convert(String, dna"TTANGTA")
 "TTANGTA"
 
-julia> convert(Vector{DNANucleotide}, dna"TTANGTA")
-7-element Array{Bio.Seq.DNANucleotide,1}:
+julia> convert(Vector{DNA}, dna"TTANGTA")
+7-element Array{Bio.Seq.DNA,1}:
  DNA_T
  DNA_T
  DNA_A
@@ -694,7 +694,7 @@ end
 ```
 
 
-## Nucleotide k-mers
+## Nucleic acid k-mers
 
 A common strategy to simplify the analysis of sequence data is to operate or
 short k-mers, for size fixed size `k`. These can be packed into machine integers
@@ -703,8 +703,8 @@ representing short sequences in 64-bit integers. Besides being fixed length,
 `Kmer` types, unlike other sequence types cannot contain ambiguous symbols like
 'N'.
 
-The `Kmer{T,k}` type parameterized on symbol type (`T`, either `DNANucleotide`,
-or `RNANucleotide`) and size `k`. For ease of writing code, two type aliases for
+The `Kmer{T,k}` type parameterized on symbol type (`T`, either `DNA`,
+or `RNA`) and size `k`. For ease of writing code, two type aliases for
 each nucleotide type are defined and named as `DNAKmer{k}` and `RNAKmer{k}`:
 ```jlcon
 julia> DNAKmer("ACGT")  # create a DNA 4-mer from a string
@@ -716,7 +716,7 @@ RNA 4-mer:
 ACGU
 
 julia> typeof(DNAKmer("ACGT"))
-Bio.Seq.Kmer{Bio.Seq.DNANucleotide,4}
+Bio.Seq.Kmer{Bio.Seq.DNA,4}
 
 ```
 
@@ -988,7 +988,7 @@ Nullable(RegexMatch("CPVPQARG"))
 Sequence composition can be easily calculated using the `composition` function:
 ```jlcon
 julia> comp = composition(dna"ACGAG")
-DNA Nucleotide Composition:
+DNA NucleicAcid Composition:
   DNA_A   => 2
   DNA_C   => 1
   DNA_G   => 2

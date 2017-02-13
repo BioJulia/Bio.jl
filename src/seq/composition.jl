@@ -23,7 +23,7 @@ function Composition(seq::ReferenceSequence)
     @inbounds for x in seq
         counts[reinterpret(UInt8, x) + 1] += 1
     end
-    return Composition{DNANucleotide}(counts)
+    return Composition{DNA}(counts)
 end
 
 function Composition{T,k}(kmer::Kmer{T,k})
@@ -32,7 +32,7 @@ function Composition{T,k}(kmer::Kmer{T,k})
         counts[Int(DNA_A)+1] = count_a(kmer)
         counts[Int(DNA_C)+1] = count_c(kmer)
         counts[Int(DNA_G)+1] = count_g(kmer)
-        counts[Int(DNA_T)+1] = count_t(kmer)  # U when T == RNANucleotide
+        counts[Int(DNA_T)+1] = count_t(kmer)  # U when T == RNA
     end
     return Composition{T}(counts)
 end
@@ -109,10 +109,10 @@ function Base.merge!{T}(comp::Composition{T}, other::Composition{T})
 end
 
 function Base.summary{T}(::Composition{T})
-    if T == DNANucleotide
-        return "DNA Nucleotide Composition"
-    elseif T == RNANucleotide
-        return "RNA Nucleotide Composition"
+    if T == DNA
+        return "DNA Composition"
+    elseif T == RNA
+        return "RNA Composition"
     elseif T == AminoAcid
         return "Amino Acid Composition"
     else

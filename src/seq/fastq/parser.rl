@@ -47,7 +47,7 @@
             byte = convert(UInt8, convert(Char, get(input.fill_ambiguous)))
             for i in 1:input.seqbuf.position-1
                 b = input.seqbuf.buffer[i]
-                if isambiguous(convert(DNANucleotide, convert(Char, b)))
+                if isambiguous(convert(DNA, convert(Char, b)))
                     input.seqbuf.buffer[i] = byte
                 end
             end

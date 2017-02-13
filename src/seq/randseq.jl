@@ -28,8 +28,8 @@ function StationaryGenerator{T,U<:AbstractFloat}(
     return StationaryGenerator{T}(elems, probs)
 end
 
-alphatype(::Type{DNANucleotide}) = DNAAlphabet{4}
-alphatype(::Type{RNANucleotide}) = RNAAlphabet{4}
+alphatype(::Type{DNA}) = DNAAlphabet{4}
+alphatype(::Type{RNA}) = RNAAlphabet{4}
 alphatype(::Type{AminoAcid})     = AminoAcidAlphabet
 
 function randseq{T}(generator::StationaryGenerator{T}, len::Integer)

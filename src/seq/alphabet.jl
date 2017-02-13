@@ -42,7 +42,7 @@ Void alphabet (internal use only).
 """
 immutable VoidAlphabet <: Alphabet end
 
-typealias NucleotideAlphabet Union{DNAAlphabet,RNAAlphabet}
+typealias NucleicAcidAlphabet Union{DNAAlphabet,RNAAlphabet}
 
 """
 The number of bits to represent the alphabet.
@@ -59,18 +59,18 @@ bitsof(::Type{AminoAcidAlphabet}) = 8
 bitsof(::Type{CharAlphabet}) = 32
 bitsof(::Type{VoidAlphabet}) = 0
 
-Base.eltype(::Type{DNAAlphabet}) = DNANucleotide
-Base.eltype(::Type{RNAAlphabet}) = RNANucleotide
-Base.eltype{n}(::Type{DNAAlphabet{n}}) = DNANucleotide
-Base.eltype{n}(::Type{RNAAlphabet{n}}) = RNANucleotide
+Base.eltype(::Type{DNAAlphabet}) = DNA
+Base.eltype(::Type{RNAAlphabet}) = RNA
+Base.eltype{n}(::Type{DNAAlphabet{n}}) = DNA
+Base.eltype{n}(::Type{RNAAlphabet{n}}) = RNA
 Base.eltype(::Type{AminoAcidAlphabet}) = AminoAcid
 Base.eltype(::Type{CharAlphabet}) = Char
 Base.eltype(::Type{VoidAlphabet}) = Void
 
 alphabet(::Type{DNAAlphabet{2}}) = ACGT
 alphabet(::Type{RNAAlphabet{2}}) = ACGU
-alphabet(::Type{DNAAlphabet{4}}) = alphabet(DNANucleotide)
-alphabet(::Type{RNAAlphabet{4}}) = alphabet(RNANucleotide)
+alphabet(::Type{DNAAlphabet{4}}) = alphabet(DNA)
+alphabet(::Type{RNAAlphabet{4}}) = alphabet(RNA)
 alphabet(::Type{AminoAcidAlphabet}) = alphabet(AminoAcid)
 # TODO: this alphabet includes invalid Unicode scalar values
 alphabet(::Type{CharAlphabet}) = typemin(Char):typemax(Char)

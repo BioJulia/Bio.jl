@@ -177,7 +177,7 @@ function write_twobit_sequence(output, seq)
     return n
 end
 
-function nuc2twobit(nt::DNANucleotide)
+function nuc2twobit(nt::DNA)
     return (
         nt == DNA_A ? 0b10 :
         nt == DNA_C ? 0b01 :

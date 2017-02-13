@@ -135,8 +135,8 @@ function (::Type{BioSequence{A}}){A<:Alphabet}(len::Integer)
     return BioSequence{A}(Vector{UInt64}(seq_data_len(A, len)), 1:len, false)
 end
 
-BioSequence(::Type{DNANucleotide}) = DNASequence()
-BioSequence(::Type{RNANucleotide}) = RNASequence()
+BioSequence(::Type{DNA}) = DNASequence()
+BioSequence(::Type{RNA}) = RNASequence()
 BioSequence(::Type{AminoAcid}) = AminoAcidSequence()
 BioSequence(::Type{Char}) = CharSequence()
 
@@ -232,11 +232,11 @@ end
 
 # from a vector
 function Base.convert{A<:DNAAlphabet}(::Type{BioSequence{A}},
-                                      seq::AbstractVector{DNANucleotide})
+                                      seq::AbstractVector{DNA})
     return BioSequence{A}(seq, 1, endof(seq))
 end
 function Base.convert{A<:RNAAlphabet}(::Type{BioSequence{A}},
-                                      seq::AbstractVector{RNANucleotide})
+                                      seq::AbstractVector{RNA})
     return BioSequence{A}(seq, 1, endof(seq))
 end
 function Base.convert(::Type{AminoAcidSequence}, seq::AbstractVector{AminoAcid})
@@ -245,11 +245,11 @@ end
 
 # to a vector
 Base.convert(::Type{Vector}, seq::BioSequence) = collect(seq)
-function Base.convert{A<:DNAAlphabet}(::Type{Vector{DNANucleotide}},
+function Base.convert{A<:DNAAlphabet}(::Type{Vector{DNA}},
                                       seq::BioSequence{A})
     return collect(seq)
 end
-function Base.convert{A<:RNAAlphabet}(::Type{Vector{RNANucleotide}},
+function Base.convert{A<:RNAAlphabet}(::Type{Vector{RNA}},
                                       seq::BioSequence{A})
     return collect(seq)
 end
@@ -778,19 +778,19 @@ end
 # Ambiguous nucleotides iterator
 # ------------------------------
 
-immutable AmbiguousNucleotideIterator{A<:Union{DNAAlphabet,RNAAlphabet}}
+immutable AmbiguousNucleicAcidIterator{A<:Union{DNAAlphabet,RNAAlphabet}}
     seq::BioSequence{A}
 end
 
-ambiguous_positions(seq::BioSequence) = AmbiguousNucleotideIterator(seq)
+ambiguous_positions(seq::BioSequence) = AmbiguousNucleicAcidIterator(seq)
 
-Base.start(it::AmbiguousNucleotideIterator) = find_next_ambiguous(it.seq, 1)
-Base.done(it::AmbiguousNucleotideIterator, nextpos) = nextpos == 0
-function Base.next(it::AmbiguousNucleotideIterator, nextpos)
+Base.start(it::AmbiguousNucleicAcidIterator) = find_next_ambiguous(it.seq, 1)
+Base.done(it::AmbiguousNucleicAcidIterator, nextpos) = nextpos == 0
+function Base.next(it::AmbiguousNucleicAcidIterator, nextpos)
     return nextpos, find_next_ambiguous(it.seq, nextpos + 1)
 end
 
-Base.iteratorsize(::AmbiguousNucleotideIterator) = Base.SizeUnknown()
+Base.iteratorsize(::AmbiguousNucleicAcidIterator) = Base.SizeUnknown()
 
 function find_next_ambiguous{A<:Union{DNAAlphabet{2},RNAAlphabet{2}}}(
         seq::BioSequence{A}, i::Integer)
@@ -1107,14 +1107,14 @@ CCC
 GGG
 
 julia> seqmatrix(seqs, :site)
-4x3 Array{Bio.Seq.DNANucleotide,2}:
+4x3 Array{Bio.Seq.DNA,2}:
  DNA_A  DNA_A  DNA_A
  DNA_T  DNA_T  DNA_T
  DNA_C  DNA_C  DNA_C
  DNA_G  DNA_G  DNA_G
 
  julia> seqmatrix(seqs, :seq)
- 3x4 Array{Bio.Seq.DNANucleotide,2}:
+ 3x4 Array{Bio.Seq.DNA,2}:
   DNA_A  DNA_T  DNA_C  DNA_G
   DNA_A  DNA_T  DNA_C  DNA_G
   DNA_A  DNA_T  DNA_C  DNA_G
@@ -1216,7 +1216,7 @@ end
 # ---------
 
 """
-    majorityvote{A<:NucleotideAlphabet}(seqs::AbstractVector{BioSequence{A}})
+    majorityvote{A<:NucleicAcidAlphabet}(seqs::AbstractVector{BioSequence{A}})
 
 Construct a sequence that is a consensus of a vector of sequences.
 
@@ -1244,7 +1244,7 @@ julia> majorityvote(seqs)
 MTCGAAARATCG
 ```
 """
-function majorityvote{A<:NucleotideAlphabet}(seqs::AbstractVector{BioSequence{A}})
+function majorityvote{A<:NucleicAcidAlphabet}(seqs::AbstractVector{BioSequence{A}})
     mat = seqmatrix(UInt8, seqs, :site)
     nsites = size(mat, 2)
     nseqs = size(mat, 1)

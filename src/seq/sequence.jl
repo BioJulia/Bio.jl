@@ -113,7 +113,7 @@ Base.findlast(seq::Sequence, val) = findprev(seq, val, endof(seq))
 Calculate GC content of `seq`.
 """
 function gc_content(seq::Sequence)
-    if !(eltype(seq) <: Nucleotide)
+    if !(eltype(seq) <: NucleicAcid)
         error("elements must be nucleotides")
     end
 
@@ -145,7 +145,7 @@ end
 Return `true` if `seq` is a palindromic sequence; otherwise return `false`.
 """
 function ispalindromic(seq::Sequence)
-    if !(eltype(seq) <: Nucleotide)
+    if !(eltype(seq) <: NucleicAcid)
         error("elements must be nucleotide")
     end
 
