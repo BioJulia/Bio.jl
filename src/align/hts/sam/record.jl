@@ -18,13 +18,16 @@ type SAMRecord
     fields::Vector{UnitRange{Int}}
 end
 
-function SAMRecord()
-    return SAMRecord(
-        false,
-        UInt8[],
+function SAMRecord(data::Vector{UInt8}=UInt8[])
+    record = SAMRecord(
+        false, data,
         1:0, 1:0, 1:0, 1:0, 1:0,
         1:0, 1:0, 1:0, 1:0, 1:0,
         1:0, UnitRange{Int}[])
+    if !isempty(data)
+        index!(record)
+    end
+    return record
 end
 
 function initialize!(record::SAMRecord)

@@ -97,6 +97,8 @@ export
     qualities,
     header,
     isoverlapping,
+    SAMMetaInfo,
+    isfilled,
     # SAM flags
     SAM_FLAG_PAIRED,
     SAM_FLAG_PROPER_PAIR,

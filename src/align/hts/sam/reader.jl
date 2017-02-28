@@ -14,9 +14,9 @@ type SAMReader <: Bio.IO.AbstractReader
     header::SAMHeader
 
     function SAMReader(input::BufferedStreams.BufferedInputStream)
-        reader = new(Bio.Ragel.State(samheader_machine.start_state, input), SAMHeader())
+        reader = new(Bio.Ragel.State(sam_header_machine.start_state, input), SAMHeader())
         readheader!(reader)
-        reader.state.cs = sambody_machine.start_state
+        reader.state.cs = sam_body_machine.start_state
         return reader
     end
 end
@@ -37,7 +37,8 @@ function Base.eltype(::Type{SAMReader})
     return SAMRecord
 end
 
-const samheader_machine, sambody_machine = (function ()
+info("compiling SAM")
+const sam_metainfo_machine, sam_record_machine, sam_header_machine, sam_body_machine = (function ()
     cat = Automa.RegExp.cat
     rep = Automa.RegExp.rep
     alt = Automa.RegExp.alt
@@ -63,11 +64,15 @@ const samheader_machine, sambody_machine = (function ()
         dict.actions[:enter] = [:mark1]
         dict.actions[:exit]  = [:metainfo_val]
 
+        co = cat("CO")
+        co.actions[:enter] = [:mark1]
+        co.actions[:exit]  = [:metainfo_tag]
+
         comment = re"[^\r\n]*"
         comment.actions[:enter] = [:mark1]
         comment.actions[:exit]  = [:metainfo_val]
 
-        cat('@', alt(cat(tag, '\t', dict), cat("CO", '\t', comment)))
+        cat('@', alt(cat(tag, '\t', dict), cat(co, '\t', comment)))
     end
     metainfo.actions[:enter] = [:anchor]
     metainfo.actions[:exit]  = [:metainfo]
@@ -162,14 +167,67 @@ const samheader_machine, sambody_machine = (function ()
 
     body = rep(cat(record, newline))
 
-    return map(Automa.compile, (header, body))
+    return map(Automa.compile, (metainfo, record, header, body))
 end)()
 
-const samheader_actions = Dict(
+const sam_metainfo_actions = Dict(
     :metainfo_tag => :(metainfo.tag = (mark1:p-1) - offset),
     :metainfo_val => :(metainfo.val = (mark1:p-1) - offset),
     :metainfo_dict_key => :(push!(metainfo.dictkey, (mark2:p-1) - offset)),
     :metainfo_dict_val => :(push!(metainfo.dictval, (mark2:p-1) - offset)),
+    :metainfo => :(),
+    :anchor => :(),
+    :mark1  => :(mark1 = p),
+    :mark2  => :(mark2 = p))
+
+@eval function index!(metainfo::SAMMetaInfo)
+    data = metainfo.data
+    p = 1
+    p_end = p_eof = sizeof(data)
+    offset = mark1 = mark2 = 0
+    initialize!(metainfo)
+    cs = $(sam_metainfo_machine.start_state)
+    $(Automa.generate_exec_code(sam_metainfo_machine, actions=sam_metainfo_actions))
+    if cs != 0
+        throw(ArgumentError("failed to index SAMMetaInfo"))
+    end
+    metainfo.filled = true
+    return metainfo
+end
+
+const sam_record_actions = Dict(
+    :record_qname => :(record.qname = (mark:p-1) - offset),
+    :record_flag  => :(record.flag  = (mark:p-1) - offset),
+    :record_rname => :(record.rname = (mark:p-1) - offset),
+    :record_pos   => :(record.pos   = (mark:p-1) - offset),
+    :record_mapq  => :(record.mapq  = (mark:p-1) - offset),
+    :record_cigar => :(record.cigar = (mark:p-1) - offset),
+    :record_rnext => :(record.rnext = (mark:p-1) - offset),
+    :record_pnext => :(record.pnext = (mark:p-1) - offset),
+    :record_tlen  => :(record.tlen  = (mark:p-1) - offset),
+    :record_seq   => :(record.seq   = (mark:p-1) - offset),
+    :record_qual  => :(record.qual  = (mark:p-1) - offset),
+    :record_field => :(push!(record.fields, (mark:p-1) - offset)),
+    :record       => :(),
+    :anchor       => :(),
+    :mark         => :(mark = p))
+
+@eval function index!(record::SAMRecord)
+    data = record.data
+    p = 1
+    p_end = p_eof = sizeof(data)
+    offset = mark = 0
+    initialize!(record)
+    cs = $(sam_record_machine.start_state)
+    $(Automa.generate_exec_code(sam_record_machine, actions=sam_record_actions, code=:goto, check=false))
+    if cs != 0
+        throw(ArgumentError("failed to index SAMRecord"))
+    end
+    record.filled = true
+    return record
+end
+
+const sam_header_actions = merge(sam_metainfo_actions, Dict(
     :metainfo => quote
         metainfo.data = data[upanchor!(stream):p-1]
         metainfo.filled = true
@@ -177,26 +235,9 @@ const samheader_actions = Dict(
         metainfo = SAMMetaInfo()
     end,
     :header => :(finish_header = true; @escape),
-
     :countline => :(linenum += 1),
-    :anchor => :(anchor!(stream, p); offset = p - 1),
-    :mark1  => :(mark1 = p),
-    :mark2  => :(mark2 = p))
-
-@inline function anchor!(stream::BufferedStreams.BufferedInputStream, p)
-    stream.anchor = p
-    stream.immobilized = true
-    return stream
-end
-
-@inline function upanchor!(stream::BufferedStreams.BufferedInputStream)
-    @assert stream.anchor != 0 "upanchor! called with no anchor set"
-    anchor = stream.anchor
-    stream.anchor = 0
-    stream.immobilized = false
-    return anchor
-end
-
+    :anchor => :(anchor!(stream, p); offset = p - 1)))
+    
 function readheader!(reader::SAMReader)
     _readheader!(reader, reader.state)
 end
@@ -215,7 +256,7 @@ end
     metainfo = SAMMetaInfo()
  
     while true
-        $(Automa.generate_exec_code(samheader_machine, actions=samheader_actions, code=:table))
+        $(Automa.generate_exec_code(sam_header_machine, actions=sam_header_actions, code=:table))
  
         state.cs = cs
         state.finished = cs == 0
@@ -245,24 +286,10 @@ end
     end
 end
 
-const sambody_actions = Dict(
-    :record_qname => :(record.qname = (mark:p-1) - offset),
-    :record_flag  => :(record.flag  = (mark:p-1) - offset),
-    :record_rname => :(record.rname = (mark:p-1) - offset),
-    :record_pos   => :(record.pos   = (mark:p-1) - offset),
-    :record_mapq  => :(record.mapq  = (mark:p-1) - offset),
-    :record_cigar => :(record.cigar = (mark:p-1) - offset),
-    :record_rnext => :(record.rnext = (mark:p-1) - offset),
-    :record_pnext => :(record.pnext = (mark:p-1) - offset),
-    :record_tlen  => :(record.tlen  = (mark:p-1) - offset),
-    :record_seq   => :(record.seq   = (mark:p-1) - offset),
-    :record_qual  => :(record.qual  = (mark:p-1) - offset),
-    :record_field => :(push!(record.fields, (mark:p-1) - offset)),
-    :record       => :(found_record = true; @escape),
-
+const sam_body_actions = merge(sam_record_actions, Dict(
+    :record    => :(found_record = true; @escape),
     :countline => :(linenum += 1),
-    :anchor => :(anchor!(stream, p); offset = p - 1),
-    :mark   => :(mark = p))
+    :anchor    => :(anchor!(stream, p); offset = p - 1)))
 
 function Base.read!(reader::SAMReader, record::SAMRecord)::SAMRecord
     return _read!(reader, reader.state, record)
@@ -282,7 +309,7 @@ end
     found_record = false
 
     while true
-        $(Automa.generate_exec_code(sambody_machine, actions=sambody_actions, code=:goto, check=false))
+        $(Automa.generate_exec_code(sam_body_machine, actions=sam_body_actions, code=:goto, check=false))
 
         state.cs = cs
         state.finished = cs == 0
@@ -326,4 +353,18 @@ function ensure_margin(stream)
     if stream.position * 20 > length(stream.buffer) * 19
         BufferedStreams.shiftdata!(stream)
     end
+end
+
+@inline function anchor!(stream::BufferedStreams.BufferedInputStream, p)
+    stream.anchor = p
+    stream.immobilized = true
+    return stream
+end
+
+@inline function upanchor!(stream::BufferedStreams.BufferedInputStream)
+    @assert stream.anchor != 0 "upanchor! called with no anchor set"
+    anchor = stream.anchor
+    stream.anchor = 0
+    stream.immobilized = false
+    return anchor
 end
