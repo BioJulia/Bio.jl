@@ -2,24 +2,83 @@
 # ==========
 
 type SAMRecord
-    name::StringField
-    flag::UInt16
-    refname::StringField
-    pos::Int64
-    mapq::UInt8
-    cigar::StringField
-    next_refname::StringField
-    next_pos::Int64
-    tlen::Int32
-    seq::StringField
-    qual::StringField
-    optional_fields::Dict{String,Any}
+    filled::Bool
+    data::Vector{UInt8}
+    qname::UnitRange{Int}
+    flag::UnitRange{Int}
+    rname::UnitRange{Int}
+    pos::UnitRange{Int}
+    mapq::UnitRange{Int}
+    cigar::UnitRange{Int}
+    rnext::UnitRange{Int}
+    pnext::UnitRange{Int}
+    tlen::UnitRange{Int}
+    seq::UnitRange{Int}
+    qual::UnitRange{Int}
+    fields::Vector{UnitRange{Int}}
 end
 
 function SAMRecord()
-    return SAMRecord("*", SAM_FLAG_UNMAP, "*", 0, 0, "*", "*", 0, 0, "*", "*", Dict())
+    return SAMRecord(
+        false,
+        UInt8[],
+        1:0, 1:0, 1:0, 1:0, 1:0,
+        1:0, 1:0, 1:0, 1:0, 1:0,
+        1:0, UnitRange{Int}[])
 end
 
+function initialize!(record::SAMRecord)
+    record.filled = false
+    record.qname = 1:0
+    record.flag = 1:0
+    record.rname = 1:0
+    record.pos = 1:0
+    record.mapq = 1:0
+    record.cigar = 1:0
+    record.rnext = 1:0
+    record.pnext = 1:0
+    record.tlen = 1:0
+    record.seq = 1:0
+    record.qual = 1:0
+    empty!(record.fields)
+    return record
+end
+
+function Base.show(io::IO, record::SAMRecord)
+    print(io, summary(record), ':')
+    if isfilled(record)
+        println(io)
+        println(io, "    sequence name: ", seqname(record))
+        println(io, "             flag: ", flag(record))
+        println(io, "        reference: ", refname(record))
+        println(io, "         position: ", leftposition(record))
+        println(io, "  mapping quality: ", mappingquality(record))
+        println(io, "            CIGAR: ", cigar(record))
+        println(io, "   next reference: ", nextrefname(record))
+        println(io, "    next position: ", nextleftposition(record))
+        println(io, "  template length: ", templatelength(record))
+        println(io, "         sequence: ", sequence(record))
+        println(io, "   base qualities: ", qualities(record))
+          print(io, "  optional fields:")
+        for field in record.fields
+            print(io, ' ', String(record.data[field]))
+        end
+    else
+        print(io, " <not filled>")
+    end
+end
+
+function isfilled(record::SAMRecord)
+    return record.filled
+end
+
+function checkfilled(record::SAMRecord)
+    if !isfilled(record)
+        throw(ArgumentError("unfilled SAM record"))
+    end
+end
+
+# TODO
 function Base.isless(rec1::SAMRecord, rec2::SAMRecord)
     # compared by the left-most position of an alignment
     if rec1.name == rec2.name
@@ -29,131 +88,150 @@ function Base.isless(rec1::SAMRecord, rec2::SAMRecord)
     end
 end
 
-function Base.:(==)(rec1::SAMRecord, rec2::SAMRecord)
-    return (
-        rec1.name            == rec2.name         &&
-        rec1.flag            == rec2.flag         &&
-        rec1.refname         == rec2.refname      &&
-        rec1.pos             == rec2.pos          &&
-        rec1.mapq            == rec2.mapq         &&
-        rec1.cigar           == rec2.cigar        &&
-        rec1.next_refname    == rec2.next_refname &&
-        rec1.next_pos        == rec2.next_pos     &&
-        rec1.tlen            == rec2.tlen         &&
-        rec1.seq             == rec2.seq          &&
-        rec1.qual            == rec2.qual         &&
-        rec1.optional_fields == rec2.optional_fields)
-end
-
-function Base.copy(rec::SAMRecord)
+function Base.copy(record::SAMRecord)
     return SAMRecord(
-        copy(rec.name),
-        rec.flag,
-        copy(rec.refname),
-        rec.pos,
-        rec.mapq,
-        copy(rec.cigar),
-        copy(rec.next_refname),
-        rec.next_pos,
-        rec.tlen,
-        copy(rec.seq),
-        copy(rec.qual),
-        deepcopy(rec.optional_fields))
+        record.filled,
+        copy(record.data),
+        record.qname,
+        record.flag,
+        record.rname,
+        record.pos,
+        record.mapq,
+        record.cigar,
+        record.rnext,
+        record.pnext,
+        record.tlen,
+        record.seq,
+        record.qual,
+        copy(record.fields))
 end
 
 function ismapped(rec::SAMRecord)
     return flag(rec) & SAM_FLAG_UNMAP == 0
 end
 
-function Bio.seqname(rec::SAMRecord)
-    return rec.name
+function Bio.seqname(record::SAMRecord)
+    checkfilled(record)
+    return String(record.data[record.qname])
 end
 
-function flag(rec::SAMRecord)
-    return rec.flag
+function flag(record::SAMRecord)
+    checkfilled(record)
+    return unsafe_parse_decimal(UInt16, record.data, record.flag)
 end
 
-function refname(rec::SAMRecord)
-    return rec.refname
+function refname(record::SAMRecord)
+    checkfilled(record)
+    return String(record.data[record.rname])
 end
 
-function nextrefname(rec::SAMRecord)
-    return rec.next_refname
+function leftposition(record::SAMRecord)
+    checkfilled(record)
+    return unsafe_parse_decimal(Int, record.data, record.pos)
 end
 
-function Bio.leftposition(rec::SAMRecord)
-    return rec.pos
+function mappingquality(record::SAMRecord)
+    checkfilled(record)
+    return unsafe_parse_decimal(UInt8, record.data, record.mapq)
 end
 
-function Bio.rightposition(rec::SAMRecord)
-    return leftposition(rec) + alignment_length(rec) - 1
+function cigar(record::SAMRecord)
+    checkfilled(record)
+    return String(record.data[record.cigar])
 end
 
-function nextleftposition(rec::SAMRecord)
-    return rec.next_pos
+function nextrefname(record::SAMRecord)
+    checkfilled(record)
+    return String(record.data[record.rnext])
 end
 
-function mappingquality(rec::SAMRecord)
-    return rec.mapq
+function nextleftposition(record::SAMRecord)
+    checkfilled(record)
+    return unsafe_parse_decimal(Int, record.data, record.pnext)
 end
 
-function templatelength(rec::SAMRecord)
-    return rec.tlen
+function templatelength(record::SAMRecord)
+    checkfilled(record)
+    return unsafe_parse_decimal(Int, record.data, record.tlen)
 end
 
-function cigar(rec::SAMRecord)
-    return rec.cigar
+function sequence(record::SAMRecord)
+    checkfilled(record)
+    return String(record.data[record.seq])
 end
 
-function alignment(rec::SAMRecord)
-    if ismapped(rec)
-        return Alignment(rec.cigar, 1, leftposition(rec))
-    else
-        return Alignment(AlignmentAnchor[])
-    end
+function qualities(record::SAMRecord)
+    checkfilled(record)
+    return String(record.data[record.qual])
 end
 
-function Bio.sequence(rec::SAMRecord)
-    return rec.seq
-end
-
-function seqlength(rec::SAMRecord)
-    if rec.seq == "*"
+function seqlength(record::SAMRecord)
+    checkfilled(record)
+    if length(record.seq) == 1 && record.data[first(record.seq)] == UInt8('*')
         throw(ArgumentError("no sequence available"))
     end
     return length(rec.seq)
 end
 
-function qualities(rec::SAMRecord)
-    return rec.qual
+function alignment(rec::SAMRecord)
+    if ismapped(rec)
+        return Alignment(cigar(rec), 1, leftposition(rec))
+    else
+        return Alignment(AlignmentAnchor[])
+    end
 end
 
-function Base.getindex(rec::SAMRecord, tag::AbstractString)
-    checkkeytag(tag)
-    return rec.optional_fields[tag]
+function Base.keys(record::SAMRecord)
+    checkfilled(record)
+    return [String(record.data[first(f):first(f)+1]) for f in record.fields]
 end
 
-function Base.setindex!(rec::SAMRecord, val, tag::AbstractString)
-    checkkeytag(tag)
-    setindex!(rec.optional_fields, val, tag)
-    return rec
+# TODO: values
+function Base.values(record::SAMRecord)
 end
 
-function Base.delete!(rec::SAMRecord, tag::AbstractString)
-    checkkeytag(tag)
-    delete!(rec.optional_fields, tag)
-    return rec
+function Base.haskey(record::SAMRecord, tag::AbstractString)
+    return findtag(record, tag) > 0
 end
 
-function Base.haskey(rec::SAMRecord, tag::AbstractString)
-    checkkeytag(tag)
-    return haskey(rec.optional_fields, tag)
+function Base.getindex(record::SAMRecord, tag::AbstractString)
+    i = findtag(record, tag)
+    if i == 0
+        throw(KeyError(tag))
+    end
+    field = record.fields[i]
+    # TODO: type
+    #typ = record.data[first(field)+3]
+    lo = first(field) + 5
+    if i == endof(record.fields)
+        hi = last(field)
+    else
+        hi = first(record.fields[i+1]) - 2
+    end
+    return String(record.data[lo:hi])
 end
 
+function findtag(record::SAMRecord, tag::AbstractString)
+    checkfilled(record)
+    if sizeof(tag) != 2
+        return 0
+    end
+    t1, t2 = UInt8(tag[1]), UInt8(tag[2])
+    for (i, field) in enumerate(record.fields)
+        p = first(field)
+        if record.data[p] == t1 && record.data[p+1] == t2
+            return i
+        end
+    end
+    return 0
+end
+
+# TODO
 function optional_fields(rec::SAMRecord)
     return rec.optional_fields
 end
 
+# TODO
 # Return the length of alignment.
 function alignment_length(rec::SAMRecord)
     if rec.cigar == "*"
@@ -176,3 +254,34 @@ function alignment_length(rec::SAMRecord)
     end
     return length
 end
+
+# r"[0-9]+" must match `data[range]`.
+function unsafe_parse_decimal{T<:Unsigned}(::Type{T}, data::Vector{UInt8}, range::UnitRange{Int})
+    x = zero(T)
+    @inbounds for i in range
+        x = Base.Checked.checked_mul(x, 10 % T)
+        x = Base.Checked.checked_add(x, (data[i] - UInt8('0')) % T)
+    end
+    return x
+end
+
+# r"[-+]?[0-9]+" must match `data[range]`.
+function unsafe_parse_decimal{T<:Signed}(::Type{T}, data::Vector{UInt8}, range::UnitRange{Int})
+    lo = first(range)
+    if data[lo] == UInt8('-')
+        sign = T(-1)
+        lo += 1
+    elseif data[lo] == UInt8('+')
+        sign = T(+1)
+        lo += 1
+    else
+        sign = T(+1)
+    end
+    x = zero(T)
+    @inbounds for i in lo:last(range)
+        x = Base.Checked.checked_mul(x, 10 % T)
+        x = Base.Checked.checked_add(x, (data[i] - UInt8('0')) % T)
+    end
+    return sign * x
+end
+

@@ -111,6 +111,8 @@ export
     SAM_FLAG_DUP,
     SAM_FLAG_SUPPLEMENTARY
 
+import Automa
+import Automa.RegExp: @re_str
 import BGZFStreams
 import Bio.Ragel: Ragel
 import Bio.StringFields: StringField
