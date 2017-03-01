@@ -1,7 +1,7 @@
 # SAM Header
 # ==========
 
-type SAMHeader
+immutable SAMHeader
     metainfo::Vector{SAMMetaInfo}
 end
 
@@ -27,4 +27,15 @@ end
 
 function Base.next(header::SAMHeader, i)
     return header.metainfo[i], i + 1
+end
+
+# TODO: Delegate more methods?
+function Base.push!(header::SAMHeader, metainfo::SAMMetaInfo)
+    push!(header.metainfo, metainfo)
+    return header
+end
+
+function Base.push!(header::SAMHeader, metainfo::AbstractString)
+    push!(header.metainfo, SAMMetaInfo(convert(Vector{UInt8}, metainfo)))
+    return header
 end

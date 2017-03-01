@@ -133,6 +133,10 @@ function leftposition(record::SAMRecord)
     return unsafe_parse_decimal(Int, record.data, record.pos)
 end
 
+function rightposition(record::SAMRecord)
+    return leftposition(record) + alignment_length(record) - 1
+end
+
 function mappingquality(record::SAMRecord)
     checkfilled(record)
     return unsafe_parse_decimal(UInt8, record.data, record.mapq)
@@ -173,7 +177,7 @@ function seqlength(record::SAMRecord)
     if length(record.seq) == 1 && record.data[first(record.seq)] == UInt8('*')
         throw(ArgumentError("no sequence available"))
     end
-    return length(rec.seq)
+    return length(record.seq)
 end
 
 function alignment(rec::SAMRecord)
@@ -184,17 +188,17 @@ function alignment(rec::SAMRecord)
     end
 end
 
+function Base.haskey(record::SAMRecord, tag::AbstractString)
+    return findtag(record, tag) > 0
+end
+
 function Base.keys(record::SAMRecord)
     checkfilled(record)
     return [String(record.data[first(f):first(f)+1]) for f in record.fields]
 end
 
-# TODO: values
 function Base.values(record::SAMRecord)
-end
-
-function Base.haskey(record::SAMRecord, tag::AbstractString)
-    return findtag(record, tag) > 0
+    return [record[k] for k in keys(record)]
 end
 
 function Base.getindex(record::SAMRecord, tag::AbstractString)
@@ -203,15 +207,31 @@ function Base.getindex(record::SAMRecord, tag::AbstractString)
         throw(KeyError(tag))
     end
     field = record.fields[i]
-    # TODO: type
-    #typ = record.data[first(field)+3]
+    # data type
+    typ = record.data[first(field)+3]
     lo = first(field) + 5
     if i == endof(record.fields)
         hi = last(field)
     else
         hi = first(record.fields[i+1]) - 2
     end
-    return String(record.data[lo:hi])
+    if typ == UInt8('A')
+        @assert lo == hi
+        return Char(record.data[lo])
+    elseif typ == UInt8('i')
+        return unsafe_parse_decimal(Int, record.data, lo:hi)
+    elseif typ == UInt8('f')
+        # TODO: Call a C function directly for speed?
+        return parse(Float32, SubString(record.data[lo:hi]))
+    elseif typ == UInt8('Z')
+        return String(record.data[lo:hi])
+    elseif typ == UInt8('H')
+        return parse_hexarray(record.data, lo:hi)
+    elseif typ == UInt8('B')
+        return parse_typedarray(record.data, lo:hi)
+    else
+        throw(ArgumentError("type code '$(Char(typ))' is not defined"))
+    end
 end
 
 function findtag(record::SAMRecord, tag::AbstractString)
@@ -229,30 +249,27 @@ function findtag(record::SAMRecord, tag::AbstractString)
     return 0
 end
 
-# TODO
-function optional_fields(rec::SAMRecord)
-    return rec.optional_fields
+function optional_fields(record::SAMRecord)
+    return Dict(k => record[k] for k in keys(record))
 end
 
-# TODO
 # Return the length of alignment.
-function alignment_length(rec::SAMRecord)
-    if rec.cigar == "*"
+function alignment_length(record::SAMRecord)
+    if length(record.cigar) == 1 && record.data[first(record.cigar)] == UInt8('*')
         return 0
     end
     length = 0
     len = 0  # operation length
-    for c in rec.cigar
-        if isnumber(c)
-            len = len * 10 + (c - '0')
-        elseif isalpha(c)
-            op = convert(Operation, c)
+    for i in record.cigar
+        c = record.data[i]
+        if c ∈ UInt8('0'):UInt8('9')
+            len = len * 10 + (c - UInt8('0'))
+        else
+            op = convert(Operation, Char(c))
             if ismatchop(op) || isdeleteop(op)
                 length += len
                 len = 0
             end
-        else
-            error("invalid character in CIGAR: '$(c)'")
         end
     end
     return length
@@ -288,3 +305,37 @@ function unsafe_parse_decimal{T<:Signed}(::Type{T}, data::Vector{UInt8}, range::
     return sign * x
 end
 
+function parse_hexarray(data::Vector{UInt8}, range::UnitRange{Int})
+    @assert iseven(length(range))
+    ret = Vector{UInt8}(length(range) >> 1)
+    byte2hex(b) = b ∈ 0x30:0x39 ? (b - 0x30) : b ∈ 0x41:0x46 ? (b - 0x41 + 0x0A) : error("not in [0-9A-F]")
+    j = 1
+    for i in first(range):2:last(range)-1
+        ret[j] = (byte2hex(data[range[i]]) << 4) | byte2hex(data[range[i+1]])
+        j += 1
+    end
+    return ret
+end
+
+function parse_typedarray(data::Vector{UInt8}, range::UnitRange{Int})
+    # format: [cCsSiIf](,[-+]?[0-9]*\.?[0-9]+([eE][-+]?[0-9]+)?)+
+    t = data[first(range)]
+    xs = split(String(data[first(range)+2:last(range)]))
+    if t == UInt8('c')
+        return [parse(Int8, x) for x in xs]
+    elseif t == UInt8('C')
+        return [parse(UInt8, x) for x in xs]
+    elseif t == UInt8('s')
+        return [parse(Int16, x) for x in xs]
+    elseif t == UInt8('S')
+        return [parse(UInt16, x) for x in xs]
+    elseif t == UInt8('i')
+        return [parse(Int32, x) for x in xs]
+    elseif t == UInt8('I')
+        return [parse(UInt32, x) for x in xs]
+    elseif t == UInt8('f')
+        return [parse(Float32, x) for x in xs]
+    else
+        throw(ArgumentError("type code '$(Char(t))' is not defined"))
+    end
+end
