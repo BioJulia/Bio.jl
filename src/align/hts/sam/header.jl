@@ -29,6 +29,10 @@ function Base.next(header::SAMHeader, i)
     return header.metainfo[i], i + 1
 end
 
+function Base.find(header::SAMHeader, key::AbstractString)
+    return filter(m -> isequalkey(m, key), header.metainfo)
+end
+
 # TODO: Delegate more methods?
 function Base.push!(header::SAMHeader, metainfo::SAMMetaInfo)
     push!(header.metainfo, metainfo)

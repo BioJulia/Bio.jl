@@ -37,6 +37,9 @@ function Base.eltype(::Type{SAMReader})
     return SAMRecord
 end
 
+# file   = header . body
+# header = metainfo*
+# body   = record*
 info("compiling SAM")
 const sam_metainfo_machine, sam_record_machine, sam_header_machine, sam_body_machine = (function ()
     cat = Automa.RegExp.cat
@@ -94,7 +97,7 @@ const sam_metainfo_machine, sam_record_machine, sam_header_machine, sam_body_mac
         pos.actions[:enter] = [:mark]
         pos.actions[:exit]  = [:record_pos]
 
-        mapq  = re"[0-9]+"
+        mapq = re"[0-9]+"
         mapq.actions[:enter] = [:mark]
         mapq.actions[:exit]  = [:record_mapq]
 
@@ -118,7 +121,7 @@ const sam_metainfo_machine, sam_record_machine, sam_header_machine, sam_body_mac
         seq.actions[:enter] = [:mark]
         seq.actions[:exit]  = [:record_seq]
 
-        qual  = re"[!-~]+"
+        qual = re"[!-~]+"
         qual.actions[:enter] = [:mark]
         qual.actions[:exit]  = [:record_qual]
 

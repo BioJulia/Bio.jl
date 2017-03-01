@@ -1045,16 +1045,14 @@ end
             @test isa(collect(header), Vector{SAMMetaInfo})
         end
 
-        #=
         @testset "Reader" begin
             reader = open(SAMReader, joinpath(samdir, "ce#1.sam"))
             @test isa(reader, SAMReader)
             @test eltype(reader) === SAMRecord
-            @test startswith(repr(reader), "Bio.Align.SAMReader:")
 
             # header
             h = header(reader)
-            @test h["SQ"] == [Dict("SN" => "CHROMOSOME_I", "LN" => "1009800")]
+            @test find(header(reader), "SQ") == [SAMMetaInfo(b"@SQ\tSN:CHROMOSOME_I\tLN:1009800")]
 
             # first record
             rec = SAMRecord()
@@ -1092,7 +1090,6 @@ end
             @test length(collect(SAMReader(open(joinpath(samdir, "ce#1.sam"))))) == 1
             @test length(collect(SAMReader(open(joinpath(samdir, "ce#2.sam"))))) == 2
         end
-        =#
 
         @testset "Round trip" begin
             for specimen in YAML.load_file(joinpath(samdir, "index.yml"))

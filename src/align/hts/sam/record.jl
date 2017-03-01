@@ -280,7 +280,7 @@ function alignment_length(record::SAMRecord)
     if length(record.cigar) == 1 && record.data[first(record.cigar)] == UInt8('*')
         return 0
     end
-    length = 0
+    ret = 0
     len = 0  # operation length
     for i in record.cigar
         c = record.data[i]
@@ -289,12 +289,12 @@ function alignment_length(record::SAMRecord)
         else
             op = convert(Operation, Char(c))
             if ismatchop(op) || isdeleteop(op)
-                length += len
+                ret += len
                 len = 0
             end
         end
     end
-    return length
+    return ret
 end
 
 # r"[0-9]+" must match `data[range]`.
