@@ -45,17 +45,13 @@ function Base.show(io::IO, reader::BAMReader)
       print(io, "  number of contigs: ", length(reader.refseqnames))
 end
 
-function header(reader::BAMReader, fillSQ::Bool=false)
+function header(reader::BAMReader; fillSQ::Bool=false)
     if fillSQ
-        # TODO: fix
-        if haskey(reader.header, "SQ")
-            # TODO: check consistency
-        else
-            records = Dict{String,Any}[]
-            for (name, len) in zip(reader.refseqnames, reader.refseqlens)
-                push!(records, Dict("SN" => name, "LN" => len))
-            end
-            reader.header["SQ"] = records
+        if !isempty(find(reader.header, "SQ"))
+            throw(ArgumentError("SAM header already has SQ records"))
+        end
+        for (name, len) in zip(reader.refseqnames, reader.refseqlens)
+            push!(reader.header, SAMMetaInfo("SQ", ["SN" => name, "LN" => len]))
         end
     end
     return reader.header

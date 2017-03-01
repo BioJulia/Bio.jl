@@ -1227,8 +1227,7 @@ end
                     end
                     writer = BAMWriter(
                         BGZFStream(path, "w"),
-                        header(reader))
-                        #header(reader, true))
+                        header(reader, fillSQ=isempty(find(header(reader), "SQ"))))
                     records = BAMRecord[]
                     for rec in reader
                         push!(records, rec)
