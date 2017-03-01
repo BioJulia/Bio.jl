@@ -99,7 +99,7 @@ export
     isoverlapping,
     SAMMetaInfo,
     isfilled,
-    metainfokey,
+    metainfotag,
     metainfoval,
     # SAM flags
     SAM_FLAG_PAIRED,
