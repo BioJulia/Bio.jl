@@ -1064,7 +1064,8 @@ end
             @test seqname(rec) == "SRR065390.14978392"
             @test sequence(rec)  == "CCTAGCCCTAACCCTAACCCTAACCCTAGCCTAAGCCTAAGCCTAAGCCTAAGCCTAAGCCTAAGCCTAAGCCTAAGCCTAAGCCTAAGCCTAAGCCTAA"
             @test seqlength(rec) == 100
-            @test qualities(rec) == "#############################@B?8B?BA@@DDBCDDCBC@CDCDCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCC"
+            @test qualities(rec) == (b"#############################@B?8B?BA@@DDBCDDCBC@CDCDCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCC" .- 33)
+            @test qualities(String, rec) == "#############################@B?8B?BA@@DDBCDDCBC@CDCDCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCC"
             @test flag(rec) == 16
             @test cigar(rec) == "27M1D73M"
             @test alignment(rec) == Alignment([

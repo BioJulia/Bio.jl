@@ -61,7 +61,7 @@ function Base.show(io::IO, record::SAMRecord)
         println(io, "    next position: ", nextleftposition(record))
         println(io, "  template length: ", templatelength(record))
         println(io, "         sequence: ", sequence(record))
-        println(io, "   base qualities: ", qualities(record))
+        println(io, "   base qualities: ", qualities(String, record))
           print(io, "  optional fields:")
         for field in record.fields
             print(io, ' ', String(record.data[field]))
@@ -190,6 +190,15 @@ function sequence(record::SAMRecord)
 end
 
 function qualities(record::SAMRecord)
+    checkfilled(record)
+    qual = record.data[record.qual]
+    for i in 1:endof(qual)
+        @inbounds qual[i] -= 33
+    end
+    return qual
+end
+
+function qualities(::Type{String}, record::SAMRecord)
     checkfilled(record)
     return String(record.data[record.qual])
 end
