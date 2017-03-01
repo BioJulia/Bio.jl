@@ -71,6 +71,16 @@ function Base.show(io::IO, record::SAMRecord)
     end
 end
 
+function Base.print(io::IO, record::SAMRecord)
+    write(io, record)
+    return nothing
+end
+
+function Base.write(io::IO, record::SAMRecord)
+    checkfilled(record)
+    return unsafe_write(io, pointer(record.data), dataend(record))
+end
+
 function isfilled(record::SAMRecord)
     return record.filled
 end

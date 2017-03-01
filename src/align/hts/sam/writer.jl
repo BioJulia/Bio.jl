@@ -34,10 +34,10 @@ end
 
 function Base.write(writer::SAMWriter, metainfo::SAMMetaInfo)
     checkfilled(metainfo)
-    return write(writer.stream, metainfo.data, '\n')
+    return write(writer.stream, metainfo, '\n')
 end
 
 function Base.write(writer::SAMWriter, record::SAMRecord)
     checkfilled(record)
-    return write(writer.stream, record.data, '\n')
+    return write(writer.stream, record, '\n')
 end

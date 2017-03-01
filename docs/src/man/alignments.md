@@ -464,7 +464,54 @@ end
 close(reader)
 ```
 
-`SAMRecord` and `BAMRecord` supports the following accessors:
+`SAMReader` and `BAMReader` implement the `header` function, which returns a
+`SAMHeader` object. This is conceptually a sequence of `SAMMetaInfo` objects
+corresponding to header lines that start with '@' markers. To select
+`SAMMetaInfo` records with a specific tag, you can use the `find` function:
+```jlcon
+julia> reader = open(SAMReader, "data.sam");
+
+julia> find(header(reader), "SQ")
+7-element Array{Bio.Align.SAMMetaInfo,1}:
+ Bio.Align.SAMMetaInfo:
+    tag: SQ
+  value: SN=Chr1 LN=30427671
+ Bio.Align.SAMMetaInfo:
+    tag: SQ
+  value: SN=Chr2 LN=19698289
+ Bio.Align.SAMMetaInfo:
+    tag: SQ
+  value: SN=Chr3 LN=23459830
+ Bio.Align.SAMMetaInfo:
+    tag: SQ
+  value: SN=Chr4 LN=18585056
+ Bio.Align.SAMMetaInfo:
+    tag: SQ
+  value: SN=Chr5 LN=26975502
+ Bio.Align.SAMMetaInfo:
+    tag: SQ
+  value: SN=chloroplast LN=154478
+ Bio.Align.SAMMetaInfo:
+    tag: SQ
+  value: SN=mitochondria LN=366924
+
+```
+
+A `SAMMetaInfo` object can be created as follows:
+```jlcon
+julia> SAMMetaInfo("SQ", ["SN" => "chr1", "LN" => 1234])
+Bio.Align.SAMMetaInfo:
+    tag: SQ
+  value: SN=chr1 LN=1234
+
+julia> SAMMetaInfo("CO", "comment")
+Bio.Align.SAMMetaInfo:
+    tag: CO
+  value: comment
+
+```
+
+`SAMRecord` and `BAMRecord` support the following accessors:
 
 | Accessor         | Description                                    |
 | :--------------- | :--------------------------------------------- |

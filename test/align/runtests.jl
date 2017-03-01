@@ -1011,15 +1011,16 @@ end
             @test !isfilled(metainfo)
             @test contains(repr(metainfo), "not filled")
 
-            metainfo = SAMMetaInfo(b"@CO\tsome comment (parens)")
+            metainfo = SAMMetaInfo("CO", "some comment (parens)")
             @test isfilled(metainfo)
             @test contains(repr(metainfo), "CO")
             @test metainfokey(metainfo) == "CO"
             @test metainfoval(metainfo) == "some comment (parens)"
+            @test metainfo == SAMMetaInfo(b"@CO\tsome comment (parens)")
             @test_throws ArgumentError keys(metainfo)
             @test_throws ArgumentError values(metainfo)
 
-            metainfo = SAMMetaInfo(b"@HD\tVN:1.0\tSO:coordinate")
+            metainfo = SAMMetaInfo("HD", ["VN" => "1.0", "SO" => "coordinate"])
             @test isfilled(metainfo)
             @test contains(repr(metainfo), "HD")
             @test metainfokey(metainfo) == "HD"
@@ -1031,16 +1032,17 @@ end
             @test !haskey(metainfo, "GO")
             @test metainfo["VN"] == "1.0"
             @test metainfo["SO"] == "coordinate"
+            @test metainfo == SAMMetaInfo(b"@HD\tVN:1.0\tSO:coordinate")
             @test_throws KeyError metainfo["GO"]
         end
 
         @testset "SAMHeader" begin
             header = SAMHeader()
             @test isempty(header)
-            push!(header, SAMMetaInfo(b"@HD\tVN:1.0\tSO:coordinate"))
+            push!(header, SAMMetaInfo("@HD\tVN:1.0\tSO:coordinate"))
             @test !isempty(header)
             @test length(header) == 1
-            push!(header, "@CO\tsome comment")
+            push!(header, SAMMetaInfo("@CO\tsome comment"))
             @test length(header) == 2
             @test isa(collect(header), Vector{SAMMetaInfo})
         end

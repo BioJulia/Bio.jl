@@ -33,13 +33,12 @@ function Base.find(header::SAMHeader, key::AbstractString)
     return filter(m -> isequalkey(m, key), header.metainfo)
 end
 
-# TODO: Delegate more methods?
-function Base.push!(header::SAMHeader, metainfo::SAMMetaInfo)
-    push!(header.metainfo, metainfo)
+function Base.unshift!(header::SAMHeader, metainfo::SAMMetaInfo)
+    unshift!(header.metainfo, metainfo)
     return header
 end
 
-function Base.push!(header::SAMHeader, metainfo::AbstractString)
-    push!(header.metainfo, SAMMetaInfo(convert(Vector{UInt8}, metainfo)))
+function Base.push!(header::SAMHeader, metainfo::SAMMetaInfo)
+    push!(header.metainfo, metainfo)
     return header
 end
