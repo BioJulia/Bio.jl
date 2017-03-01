@@ -42,12 +42,12 @@ end
 
 function Base.show(io::IO, reader::BAMReader)
     println(io, summary(reader), ":")
-    println(io, "  header keys: ", join(keys(reader.header), ", "))
       print(io, "  number of contigs: ", length(reader.refseqnames))
 end
 
 function header(reader::BAMReader, fillSQ::Bool=false)
     if fillSQ
+        # TODO: fix
         if haskey(reader.header, "SQ")
             # TODO: check consistency
         else
@@ -84,7 +84,7 @@ function init_bam_reader(input::IO)
 
     # SAM header
     textlen = read(stream, Int32)
-    samheader = parse_samheader(read(stream, UInt8, textlen))
+    samreader = SAMReader(IOBuffer(read(stream, UInt8, textlen)))
 
     # reference sequences
     refseqnames = String[]
@@ -101,7 +101,7 @@ function init_bam_reader(input::IO)
 
     reader = BAMReader(
         stream,
-        samheader,
+        samreader.header,
         isa(input, Pipe) ? BGZFStreams.VirtualOffset(0, 0) : BGZFStreams.virtualoffset(stream),
         refseqnames,
         refseqlens,

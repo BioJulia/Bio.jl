@@ -81,6 +81,28 @@ function checkfilled(record::SAMRecord)
     end
 end
 
+function dataend(record::SAMRecord)
+    if record.filled
+        if isempty(record.fields)
+            return last(record.qual)
+        else
+            return last(record.fields[end])
+        end
+    else
+        return 0
+    end
+end
+
+function Base.:(==)(record1::SAMRecord, record2::SAMRecord)
+    if record1.filled == record2.filled == false
+        return true
+    elseif record1.filled == record2.filled == true
+        return dataend(record1) == dataend(record2) && memcmp(pointer(record1.data), pointer(record2.data), dataend(record1)) == 0
+    else
+        return false
+    end
+end
+
 # TODO
 function Base.isless(rec1::SAMRecord, rec2::SAMRecord)
     # compared by the left-most position of an alignment
@@ -338,4 +360,8 @@ function parse_typedarray(data::Vector{UInt8}, range::UnitRange{Int})
     else
         throw(ArgumentError("type code '$(Char(t))' is not defined"))
     end
+end
+
+function memcmp(p1::Ptr, p2::Ptr, n::Integer)
+    return ccall(:memcmp, Cint, (Ptr{Void}, Ptr{Void}, Csize_t), p1, p2, n)
 end

@@ -17,6 +17,7 @@ end
 function BAMWriter(stream::BGZFStreams.BGZFStream, header::SAMHeader)
     refseqnames = String[]
     refseqlens = Int[]
+    #= TODO
     for rec in header["SQ"]
         push!(refseqnames, rec["SN"])
         len = rec["LN"]
@@ -26,6 +27,7 @@ function BAMWriter(stream::BGZFStreams.BGZFStream, header::SAMHeader)
             push!(refseqlens, len)
         end
     end
+    =#
     write_header(stream, header, refseqnames, refseqlens)
     return BAMWriter(stream)
 end
