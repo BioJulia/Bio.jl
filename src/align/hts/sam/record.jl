@@ -60,7 +60,7 @@ function Base.show(io::IO, record::SAMRecord)
         println(io, "   next reference: ", nextrefname(record))
         println(io, "    next position: ", nextleftposition(record))
         println(io, "  template length: ", templatelength(record))
-        println(io, "         sequence: ", sequence(record))
+        println(io, "         sequence: ", sequence(String, record))
         println(io, "   base qualities: ", qualities(String, record))
           print(io, "  optional fields:")
         for field in record.fields
@@ -185,6 +185,18 @@ function templatelength(record::SAMRecord)
 end
 
 function sequence(record::SAMRecord)
+    checkfilled(record)
+    len = length(record.seq)
+    if len == 1 && record.data[first(record.seq)] == UInt8('*')
+        return Bio.Seq.DNASequence(0)
+    else
+        ret = Bio.Seq.DNASequence(length(record.seq))
+        Bio.Seq.encode_copy!(ret, 1, record.data, first(record.seq), len)
+        return ret
+    end
+end
+
+function sequence(::Type{String}, record::SAMRecord)
     checkfilled(record)
     return String(record.data[record.seq])
 end
