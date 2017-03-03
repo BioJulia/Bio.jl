@@ -31,7 +31,7 @@ end
 
 # VCF v4.3
 info("compiling VCF")
-const vcf_header_machine, vcf_body_machine, vcf_metainfo_machine, vcf_record_machine = (function ()
+const vcf_metainfo_machine, vcf_record_machine, vcf_header_machine, vcf_body_machine = (function ()
     cat = Automa.RegExp.cat
     rep = Automa.RegExp.rep
     alt = Automa.RegExp.alt
@@ -196,7 +196,7 @@ const vcf_header_machine, vcf_body_machine, vcf_metainfo_machine, vcf_record_mac
 
     vcfbody = rep(cat(record, newline))
 
-    return map(Automa.compile, (vcfheader, vcfbody, metainfo, record))
+    return map(Automa.compile, (metainfo, record, vcfheader, vcfbody))
 end)()
 
 #= Debug
@@ -206,50 +206,74 @@ write("vcf_body.dot", Automa.dfa2dot(vcf_body_machine.dfa))
 run(`dot -Tsvg -o vcf_body.svg vcf_body.dot`)
 =#
 
-function try_parse_int64(data, r::UnitRange{Int})
-    lo, hi = first(r), last(r)
-    if data[lo] == UInt8('.')
-        return Nullable{Int64}()
-    elseif data[lo] == UInt8('-')
-        sign = -1
-        lo += 1
-    else
-        sign = +1
-    end
-    x = Int64(0)
-    for i in lo:hi
-        x = 10x + data[i] - UInt8('0')
-    end
-    return Nullable{Int64}(sign * x)
-end
-
-function try_parse_float64(data, r::UnitRange{Int})
-    return ccall(
-        :jl_try_substrtod,
-        Nullable{Float64},
-        (Ptr{UInt8}, Csize_t, Csize_t),
-        data, first(r) - 1, length(r))
-end
-
-const vcf_header_actions = Dict(
+const vcf_metainfo_actions = Dict(
     :metainfo_key      => :(metainfo.key = (mark1:p-1) - offset),
     :metainfo_val      => :(metainfo.val = (mark2:p-1) - offset; metainfo.dict = data[mark2] == UInt8('<')),
     :metainfo_dict_key => :(push!(metainfo.dictkey, (mark1:p-1) - offset)),
     :metainfo_dict_val => :(push!(metainfo.dictval, (mark1:p-1) - offset)),
-    :metainfo          => quote
+    :metainfo          => :(),
+    :header_sampleID   => :(push!(reader.header.sampleID, String(data[mark1:p-1]))),
+    :vcfheader         => :(found_header = true; @escape),
+    :countline         => :(linenum += 1),
+    :anchor            => :(),
+    :mark              => :(mark1 = p),
+    :mark2             => :(mark2 = p))
+
+@eval function index!(metainfo::VCFMetaInfo)
+    data = metainfo.data
+    p = 1
+    p_end = p_eof = endof(data)
+    offset = mark1 = mark2 = 0
+    initialize!(metainfo)
+    cs = $(vcf_metainfo_machine.start_state)
+    $(Automa.generate_exec_code(vcf_metainfo_machine, actions=vcf_metainfo_actions))
+    if cs != 0
+        throw(ArgumentError("failed to index VCFMetaInfo"))
+    end
+    metainfo.filled = true
+    return metainfo
+end
+
+const vcf_record_actions = Dict(
+    :record_chrom        => :(record.chrom = (mark:p-1) - offset),
+    :record_pos          => :(record.pos = (mark:p-1) - offset),
+    :record_id           => :(push!(record.id, (mark:p-1) - offset)),
+    :record_ref          => :(record.ref = (mark:p-1) - offset),
+    :record_alt          => :(push!(record.alt, (mark:p-1) - offset)),
+    :record_qual         => :(record.qual = (mark:p-1) - offset),
+    :record_filter       => :(push!(record.filter, (mark:p-1) - offset)),
+    :record_info_key     => :(push!(record.infokey, (mark:p-1) - offset)),
+    :record_format       => :(push!(record.format, (mark:p-1) - offset)),
+    :record_genotype     => :(push!(record.genotype, UnitRange{Int}[])),
+    :record_genotype_elm => :(push!(record.genotype[end], (mark:p-1) - offset)),
+    :record              => :(),
+    :countline           => :(linenum += 1),
+    :anchor              => :(),
+    :mark                => :(mark = p))
+
+@eval function index!(record::VCFRecord)
+    data = record.data
+    p = 1
+    p_end = p_eof = endof(data)
+    offset = mark = 0
+    initialize!(record)
+    cs = $(vcf_record_machine.start_state)
+    $(Automa.generate_exec_code(vcf_record_machine, actions=vcf_record_actions, code=:goto))
+    if cs != 0
+        throw(ArgumentError("failed to index VCFRecord"))
+    end
+    record.filled = true
+    return record
+end
+
+const vcf_header_actions = merge(vcf_metainfo_actions, Dict(
+    :metainfo => quote
         metainfo.data = data[Bio.ReaderHelper.upanchor!(stream):p-1]
         metainfo.filled = true
         push!(reader.header.metainfo, metainfo)
         metainfo = VCFMetaInfo()
     end,
-
-    :header_sampleID => :(push!(reader.header.sampleID, String(data[mark1:p-1]))),
-    :vcfheader       => :(found_header = true; @escape),
-
-    :countline => :(linenum += 1),
-    :anchor    => :(Bio.ReaderHelper.anchor!(stream, p); offset = p - 1),
-    :mark      => :(mark1 = p),
-    :mark2     => :(mark2 = p))
+    :anchor    => :(Bio.ReaderHelper.anchor!(stream, p); offset = p - 1)))
 
 function readheader!(reader::VCFReader)
     _readheader!(reader, reader.state)
@@ -297,55 +321,8 @@ end
     end
 end
 
-const vcf_body_actions = Dict(
-    :record_chrom        => :(record.chrom = (mark:p-1) - offset),
-    :record_pos          => :(record.pos = (mark:p-1) - offset),
-    :record_id           => :(push!(record.id, (mark:p-1) - offset)),
-    :record_ref          => :(record.ref = (mark:p-1) - offset),
-    :record_alt          => :(push!(record.alt, (mark:p-1) - offset)),
-    :record_qual         => :(record.qual = (mark:p-1) - offset),
-    :record_filter       => :(push!(record.filter, (mark:p-1) - offset)),
-    :record_info_key     => :(push!(record.infokey, (mark:p-1) - offset)),
-    :record_format       => :(push!(record.format, (mark:p-1) - offset)),
-    :record_genotype     => :(push!(record.genotype, UnitRange{Int}[])),
-    :record_genotype_elm => :(push!(record.genotype[end], (mark:p-1) - offset)),
-    :record              => :(found_record = true; @escape),
-
-    :countline => :(linenum += 1),
-    :anchor    => :(Bio.ReaderHelper.anchor!(stream, p); offset = p - 1),
-    :mark      => :(mark = p))
+const vcf_body_actions = merge(vcf_record_actions, Dict(
+    :record => :(found_record = true; @escape),
+    :anchor => :(Bio.ReaderHelper.anchor!(stream, p); offset = p - 1)))
 
 eval(Bio.ReaderHelper.generate_read_functions("VCF", VCFReader, vcf_body_machine, vcf_body_actions))
-const vcf_metainfo_actions = merge(vcf_header_actions, Dict(:metainfo => :(), :anchor => :()))
-
-@eval function index!(metainfo::VCFMetaInfo)
-    data = metainfo.data
-    p = 1
-    p_end = p_eof = endof(data)
-    offset = mark1 = mark2 = 0
-    initialize!(metainfo)
-    cs = $(vcf_metainfo_machine.start_state)
-    $(Automa.generate_exec_code(vcf_metainfo_machine, actions=vcf_metainfo_actions))
-    if cs != 0
-        throw(ArgumentError("failed to index VCFMetaInfo"))
-    end
-    metainfo.filled = true
-    return metainfo
-end
-
-const vcf_record_actions = merge(vcf_body_actions, Dict(:record => :(), :anchor => :()))
-
-@eval function index!(record::VCFRecord)
-    data = record.data
-    p = 1
-    p_end = p_eof = endof(data)
-    offset = mark = 0
-    initialize!(record)
-    cs = $(vcf_record_machine.start_state)
-    $(Automa.generate_exec_code(vcf_record_machine, actions=vcf_record_actions, code=:goto))
-    if cs != 0
-        throw(ArgumentError("failed to index VCFRecord"))
-    end
-    record.filled = true
-    return record
-end
