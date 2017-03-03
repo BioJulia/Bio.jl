@@ -432,7 +432,7 @@ reference: AGGGTGGCATTTATCAG---ACGTTTCGAGAC
 
 
 <p>Map a position from sequence to reference.</p>
-<p><a target='_blank' href='https://github.com/BioJulia/Bio.jl/tree/a781f21e085718bb4c43f42cb11c6756c4d8f3d0/src/align/alignment.jl#L86-L90' class='documenter-source'>source</a><br></p>
+<p><a target='_blank' href='https://github.com/BioJulia/Bio.jl/tree/b0456c2dce758038bb2e910fbe592538b77fe00e/src/align/alignment.jl#L86-L90' class='documenter-source'>source</a><br></p>
 <p><a id='Bio.Align.ref2seq' href='#Bio.Align.ref2seq'>#</a>
 <strong><code>Bio.Align.ref2seq</code></strong> &mdash; <em>Function</em>.</p>
 <div class="codehilite"><pre><span></span>ref2seq(aln, i)
@@ -440,7 +440,7 @@ reference: AGGGTGGCATTTATCAG---ACGTTTCGAGAC
 
 
 <p>Map a position from reference to sequence.</p>
-<p><a target='_blank' href='https://github.com/BioJulia/Bio.jl/tree/a781f21e085718bb4c43f42cb11c6756c4d8f3d0/src/align/alignment.jl#L104-L108' class='documenter-source'>source</a><br></p>
+<p><a target='_blank' href='https://github.com/BioJulia/Bio.jl/tree/b0456c2dce758038bb2e910fbe592538b77fe00e/src/align/alignment.jl#L104-L108' class='documenter-source'>source</a><br></p>
 <p><a id='Bio.Align.cigar' href='#Bio.Align.cigar'>#</a>
 <strong><code>Bio.Align.cigar</code></strong> &mdash; <em>Function</em>.</p>
 <div class="codehilite"><pre><span></span>cigar(aln::Alignment)
@@ -449,13 +449,13 @@ reference: AGGGTGGCATTTATCAG---ACGTTTCGAGAC
 
 <p>Make a CIGAR string encoding of <code>aln</code>.</p>
 <p>This is not entirely lossless as it discards the alignments start positions.</p>
-<p><a target='_blank' href='https://github.com/BioJulia/Bio.jl/tree/a781f21e085718bb4c43f42cb11c6756c4d8f3d0/src/align/alignment.jl#L122-L128' class='documenter-source'>source</a><br></p>
+<p><a target='_blank' href='https://github.com/BioJulia/Bio.jl/tree/b0456c2dce758038bb2e910fbe592538b77fe00e/src/align/alignment.jl#L122-L128' class='documenter-source'>source</a><br></p>
 <div class="codehilite"><pre><span></span>cigar(rec::BAMRecord)
 </pre></div>
 
 
 <p>Return a CIGAR string of the alignment <code>rec</code>. See also <code>cigar_rle</code>.</p>
-<p><a target='_blank' href='https://github.com/BioJulia/Bio.jl/tree/a781f21e085718bb4c43f42cb11c6756c4d8f3d0/src/align/hts/bam/record.jl#L193-L197' class='documenter-source'>source</a><br></p>
+<p><a target='_blank' href='https://github.com/BioJulia/Bio.jl/tree/b0456c2dce758038bb2e910fbe592538b77fe00e/src/align/hts/bam/record.jl#L193-L197' class='documenter-source'>source</a><br></p>
 <p><a id='Pairwise-alignment-1'></a></p>
 <h2 id="pairwise-alignment">Pairwise alignment</h2>
 <p>Pairwise alignment is a sequence alignment between two sequences.  The <code>Bio.Align</code> module implements several pairwise alignment methods that maximize alignment score or minimize alignment cost.</p>
@@ -528,7 +528,7 @@ alignment
 
 
 <p>Count the number of matching positions.</p>
-<p><a target='_blank' href='https://github.com/BioJulia/Bio.jl/tree/a781f21e085718bb4c43f42cb11c6756c4d8f3d0/src/align/pairwise/alignment.jl#L84-L88' class='documenter-source'>source</a><br></p>
+<p><a target='_blank' href='https://github.com/BioJulia/Bio.jl/tree/b0456c2dce758038bb2e910fbe592538b77fe00e/src/align/pairwise/alignment.jl#L84-L88' class='documenter-source'>source</a><br></p>
 <p><a id='Bio.Align.count_mismatches' href='#Bio.Align.count_mismatches'>#</a>
 <strong><code>Bio.Align.count_mismatches</code></strong> &mdash; <em>Function</em>.</p>
 <div class="codehilite"><pre><span></span>count_mismatches(aln)
@@ -536,7 +536,7 @@ alignment
 
 
 <p>Count the number of mismatching positions.</p>
-<p><a target='_blank' href='https://github.com/BioJulia/Bio.jl/tree/a781f21e085718bb4c43f42cb11c6756c4d8f3d0/src/align/pairwise/alignment.jl#L91-L95' class='documenter-source'>source</a><br></p>
+<p><a target='_blank' href='https://github.com/BioJulia/Bio.jl/tree/b0456c2dce758038bb2e910fbe592538b77fe00e/src/align/pairwise/alignment.jl#L91-L95' class='documenter-source'>source</a><br></p>
 <p><a id='Bio.Align.count_insertions' href='#Bio.Align.count_insertions'>#</a>
 <strong><code>Bio.Align.count_insertions</code></strong> &mdash; <em>Function</em>.</p>
 <div class="codehilite"><pre><span></span>count_insertions(aln)
@@ -544,7 +544,7 @@ alignment
 
 
 <p>Count the number of inserting positions.</p>
-<p><a target='_blank' href='https://github.com/BioJulia/Bio.jl/tree/a781f21e085718bb4c43f42cb11c6756c4d8f3d0/src/align/pairwise/alignment.jl#L98-L102' class='documenter-source'>source</a><br></p>
+<p><a target='_blank' href='https://github.com/BioJulia/Bio.jl/tree/b0456c2dce758038bb2e910fbe592538b77fe00e/src/align/pairwise/alignment.jl#L98-L102' class='documenter-source'>source</a><br></p>
 <p><a id='Bio.Align.count_deletions' href='#Bio.Align.count_deletions'>#</a>
 <strong><code>Bio.Align.count_deletions</code></strong> &mdash; <em>Function</em>.</p>
 <div class="codehilite"><pre><span></span>count_deletions(aln)
@@ -552,7 +552,7 @@ alignment
 
 
 <p>Count the number of deleting positions.</p>
-<p><a target='_blank' href='https://github.com/BioJulia/Bio.jl/tree/a781f21e085718bb4c43f42cb11c6756c4d8f3d0/src/align/pairwise/alignment.jl#L105-L109' class='documenter-source'>source</a><br></p>
+<p><a target='_blank' href='https://github.com/BioJulia/Bio.jl/tree/b0456c2dce758038bb2e910fbe592538b77fe00e/src/align/pairwise/alignment.jl#L105-L109' class='documenter-source'>source</a><br></p>
 <p><a id='Bio.Align.count_aligned' href='#Bio.Align.count_aligned'>#</a>
 <strong><code>Bio.Align.count_aligned</code></strong> &mdash; <em>Function</em>.</p>
 <div class="codehilite"><pre><span></span>count_aligned(aln)
@@ -560,7 +560,7 @@ alignment
 
 
 <p>Count the number of aligned positions.</p>
-<p><a target='_blank' href='https://github.com/BioJulia/Bio.jl/tree/a781f21e085718bb4c43f42cb11c6756c4d8f3d0/src/align/pairwise/alignment.jl#L112-L116' class='documenter-source'>source</a><br></p>
+<p><a target='_blank' href='https://github.com/BioJulia/Bio.jl/tree/b0456c2dce758038bb2e910fbe592538b77fe00e/src/align/pairwise/alignment.jl#L112-L116' class='documenter-source'>source</a><br></p>
 <p>The example below shows a use case of these operations:</p>
 <div class="codehilite"><pre><span></span><span class="gp">julia&gt;</span> <span class="n">s1</span> <span class="o">=</span> <span class="n">dna</span><span class="s">&quot;CCTAGGAGGG&quot;</span><span class="p">;</span>
 
@@ -755,7 +755,49 @@ alignment
 </pre></div>
 
 
-<p><code>SAMRecord</code> and <code>BAMRecord</code> supports the following accessors:</p>
+<p><code>SAMReader</code> and <code>BAMReader</code> implement the <code>header</code> function, which returns a <code>SAMHeader</code> object. This is conceptually a sequence of <code>SAMMetaInfo</code> objects corresponding to header lines that start with '@' markers. To select <code>SAMMetaInfo</code> records with a specific tag, you can use the <code>find</code> function:</p>
+<div class="codehilite"><pre><span></span><span class="gp">julia&gt;</span> <span class="n">reader</span> <span class="o">=</span> <span class="n">open</span><span class="p">(</span><span class="n">SAMReader</span><span class="p">,</span> <span class="s">&quot;data.sam&quot;</span><span class="p">);</span>
+
+<span class="gp">julia&gt;</span> <span class="n">find</span><span class="p">(</span><span class="n">header</span><span class="p">(</span><span class="n">reader</span><span class="p">),</span> <span class="s">&quot;SQ&quot;</span><span class="p">)</span>
+<span class="go">7-element Array{Bio.Align.SAMMetaInfo,1}:</span>
+<span class="go"> Bio.Align.SAMMetaInfo:</span>
+<span class="go">    tag: SQ</span>
+<span class="go">  value: SN=Chr1 LN=30427671</span>
+<span class="go"> Bio.Align.SAMMetaInfo:</span>
+<span class="go">    tag: SQ</span>
+<span class="go">  value: SN=Chr2 LN=19698289</span>
+<span class="go"> Bio.Align.SAMMetaInfo:</span>
+<span class="go">    tag: SQ</span>
+<span class="go">  value: SN=Chr3 LN=23459830</span>
+<span class="go"> Bio.Align.SAMMetaInfo:</span>
+<span class="go">    tag: SQ</span>
+<span class="go">  value: SN=Chr4 LN=18585056</span>
+<span class="go"> Bio.Align.SAMMetaInfo:</span>
+<span class="go">    tag: SQ</span>
+<span class="go">  value: SN=Chr5 LN=26975502</span>
+<span class="go"> Bio.Align.SAMMetaInfo:</span>
+<span class="go">    tag: SQ</span>
+<span class="go">  value: SN=chloroplast LN=154478</span>
+<span class="go"> Bio.Align.SAMMetaInfo:</span>
+<span class="go">    tag: SQ</span>
+<span class="go">  value: SN=mitochondria LN=366924</span>
+</pre></div>
+
+
+<p>A <code>SAMMetaInfo</code> object can be created as follows:</p>
+<div class="codehilite"><pre><span></span><span class="gp">julia&gt;</span> <span class="n">SAMMetaInfo</span><span class="p">(</span><span class="s">&quot;SQ&quot;</span><span class="p">,</span> <span class="p">[</span><span class="s">&quot;SN&quot;</span> <span class="o">=&gt;</span> <span class="s">&quot;chr1&quot;</span><span class="p">,</span> <span class="s">&quot;LN&quot;</span> <span class="o">=&gt;</span> <span class="mi">1234</span><span class="p">])</span>
+<span class="go">Bio.Align.SAMMetaInfo:</span>
+<span class="go">    tag: SQ</span>
+<span class="go">  value: SN=chr1 LN=1234</span>
+
+<span class="gp">julia&gt;</span> <span class="n">SAMMetaInfo</span><span class="p">(</span><span class="s">&quot;CO&quot;</span><span class="p">,</span> <span class="s">&quot;comment&quot;</span><span class="p">)</span>
+<span class="go">Bio.Align.SAMMetaInfo:</span>
+<span class="go">    tag: CO</span>
+<span class="go">  value: comment</span>
+</pre></div>
+
+
+<p><code>SAMRecord</code> and <code>BAMRecord</code> support the following accessors:</p>
 <table>
 <thead>
 <tr>
