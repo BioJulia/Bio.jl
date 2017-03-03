@@ -60,6 +60,53 @@ function generate_index_function(record_type, machine, actions)
     end
 end
 
+function generate_readheader_function(reader_type, metainfo_type, machine, actions, finish_code=:())
+    quote
+        function readheader!(reader::$(reader_type))
+            _readheader!(reader, reader.state)
+        end
+
+        function _readheader!(reader::$(reader_type), state::Bio.Ragel.State)
+            stream = state.stream
+            Bio.ReaderHelper.ensure_margin!(stream)
+            cs = state.cs
+            linenum = state.linenum
+            data = stream.buffer
+            p = stream.position
+            p_end = stream.available
+            p_eof = -1
+            offset = mark1 = mark2 = 0
+            finish_header = false
+            record = $(metainfo_type)()
+
+            while true
+                $(Automa.generate_exec_code(machine, actions=actions, code=:table))
+
+                state.cs = cs
+                state.finished = cs == 0
+                state.linenum = linenum
+                stream.position = p
+
+                if cs < 0
+                    error("$($(reader_type)) file format error on line ", linenum)
+                elseif finish_header
+                    $(finish_code)
+                    break
+                elseif p > p_eof ≥ 0
+                    error("incomplete $($(reader_type)) input on line ", linenum)
+                else
+                    hits_eof = BufferedStreams.fillbuffer!(stream) == 0
+                    p = stream.position
+                    p_end = stream.available
+                    if hits_eof
+                        p_eof = p_end
+                    end
+                end
+            end
+        end
+    end
+end
+
 function generate_read_function(reader_type, machine, actions)
     quote
         function Base.read!(reader::$(reader_type), record::eltype($(reader_type)))::eltype($(reader_type))

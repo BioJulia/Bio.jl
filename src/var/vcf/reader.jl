@@ -249,51 +249,7 @@ const vcf_header_actions = merge(vcf_metainfo_actions, Dict(
     :countline => :(linenum += 1),
     :anchor    => :(Bio.ReaderHelper.anchor!(stream, p); offset = p - 1)))
 
-function readheader!(reader::VCFReader)
-    _readheader!(reader, reader.state)
-end
-
-@eval function _readheader!(reader::VCFReader, state::Bio.Ragel.State)
-    stream = state.stream
-    Bio.ReaderHelper.ensure_margin!(stream)
-    cs = state.cs
-    linenum = state.linenum
-    data = stream.buffer
-    p = stream.position
-    p_end = stream.available
-    p_eof = -1
-    offset = mark1 = mark2 = 0
-    finish_header = false
-    record = VCFMetaInfo()
-
-    while true
-        $(Automa.generate_exec_code(vcf_header_machine, actions=vcf_header_actions, code=:table))
-
-        @assert cs != 0
-        state.cs = cs
-        state.finished = cs == 0
-        state.linenum = linenum
-        stream.position = p
-
-        if cs < 0
-            error("VCF file format error on line ", linenum)
-        elseif finish_header
-            Bio.ReaderHelper.upanchor!(stream)
-            break
-        #elseif cs == 0
-        #    throw(EOFError())
-        elseif p > p_eof ≥ 0
-            error("incomplete VCF input on line ", linenum)
-        else
-            hits_eof = BufferedStreams.fillbuffer!(stream) == 0
-            p = stream.position
-            p_end = stream.available
-            if hits_eof
-                p_eof = p_end
-            end
-        end
-    end
-end
+eval(Bio.ReaderHelper.generate_readheader_function(VCFReader, VCFMetaInfo, vcf_header_machine, vcf_header_actions))
 
 const vcf_body_actions = merge(vcf_record_actions, Dict(
     :record    => :(found_record = true; @escape),

@@ -216,53 +216,14 @@ const sam_header_actions = merge(sam_metainfo_actions, Dict(
     :countline => :(linenum += 1),
     :anchor => :(Bio.ReaderHelper.anchor!(stream, p); offset = p - 1)))
 
-function readheader!(reader::SAMReader)
-    _readheader!(reader, reader.state)
-end
-
-@eval function _readheader!(reader::SAMReader, state::Bio.Ragel.State)
-    stream = state.stream
-    Bio.ReaderHelper.ensure_margin!(stream)
-    cs = state.cs
-    linenum = state.linenum
-    data = stream.buffer
-    p = stream.position
-    p_end = stream.available
-    p_eof = -1
-    offset = mark1 = mark2 = 0
-    finish_header = false
-    record = SAMMetaInfo()
- 
-    while true
-        $(Automa.generate_exec_code(sam_header_machine, actions=sam_header_actions, code=:table))
- 
-        state.cs = cs
-        state.finished = cs == 0
-        state.linenum = linenum
-        stream.position = p
-
-        if cs < 0
-            error("SAM file format error on line ", linenum)
-        elseif finish_header
-            #upanchor!(stream)
+eval(
+    Bio.ReaderHelper.generate_readheader_function(
+        SAMReader, SAMMetaInfo, sam_header_machine, sam_header_actions,
+        quote
             if !eof(stream)
-                stream.position -= 1  # cancel look ahead
+                stream.position -= 1  # cancel look-ahead
             end
-            break
-        #elseif cs == 0
-        #    throw(EOFError())
-        elseif p > p_eof ≥ 0
-            error("incomplete SAM input on line ", linenum)
-        else
-            hits_eof = BufferedStreams.fillbuffer!(stream) == 0
-            p = stream.position
-            p_end = stream.available
-            if hits_eof
-                p_eof = p_end
-            end
-        end
-    end
-end
+        end))
 
 const sam_body_actions = merge(sam_record_actions, Dict(
     :record    => :(found_record = true; @escape),
