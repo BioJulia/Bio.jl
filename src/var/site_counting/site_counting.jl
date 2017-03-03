@@ -50,16 +50,13 @@ function count_sites{T<:Site}(::Type{T}, a::EachWindowIterator, b::EachWindowIte
     results = Vector{IntervalValue{Int, Int}}(length(itr))
     i = 1
     for (wina, winb) in itr
-        range = wina[1]
-        results[i] = IntervalValue(first(range), last(range), count_sites(T, wina[2], winb[2]))
+        interval = wina[1]
+        results[i] = IntervalValue(first(interval), last(interval), count_sites(T, wina[2], winb[2]))
         i += 1
     end
     return results
 end
 
-"""
-    count_sites{T<:Mutation}(::Type{T}, a::EachWindowIterator, b::EachWindowIterator)
-"""
 function count_sites{T<:Mutation}(::Type{T}, a::EachWindowIterator, b::EachWindowIterator)
     itr = zip(a, b)
     len = length(itr)
@@ -67,15 +64,16 @@ function count_sites{T<:Mutation}(::Type{T}, a::EachWindowIterator, b::EachWindo
     undetermined = Vector{IntervalValue{Int}}(len)
     i = 1
     for (wina, winb) in itr
-        range = wina[1]
+        interval = wina[1]
         counts = count_sites(T, wina[2], winb[2])
-        results[i] = IntervalValue(first(range), last(range), counts[1])
-        undetermined[i] = IntervalValue(first(range), last(range), counts[2])
+        results[i] = IntervalValue(first(interval), last(interval), counts[1])
+        undetermined[i] = IntervalValue(first(interval), last(interval), counts[2])
         i += 1
     end
     return results, undetermined
 end
 
+"Count the number of sites between two nucleotide sequences using a sliding window."
 function count_sites{T<:Site}(::Type{T}, a::BioSequence, b::BioSequence, width::Int, step::Int)
     awindows = eachwindow(a, width, step)
     bwindows = eachwindow(b, width, step)
@@ -85,7 +83,7 @@ end
 """
 Count the number of mutations between nucleotide sequences in a pairwise manner.
 """
-function count_sites{T<:Site,A<:NucAlphs}(::Type{T}, sequences::Array{BioSequence{A}})
+function count_sites{T<:Site,A<:Alphabet}(::Type{T}, sequences::Array{BioSequence{A}})
     len = length(sequences)
     counts = PairwiseListMatrix(Int, len, false)
     @inbounds for i in 1:len, j in (i + 1):len
@@ -94,9 +92,13 @@ function count_sites{T<:Site,A<:NucAlphs}(::Type{T}, sequences::Array{BioSequenc
     return counts
 end
 
-function count_sites{T<:Site,A<:NucAlphs}(::Type{T}, sequences::Array{BioSequence{A}}, width::Int, step::Int)
+"""
+Count the number of mutations between nucleotide sequences in a pairwise manner,
+using a sliding window of a given width and step.
+"""
+function count_sites{T<:Site,A<:Alphabet}(::Type{T}, sequences::Array{BioSequence{A}}, width::Int, step::Int)
     len = length(sequences)
-    counts = PairwiseListMatrix(Int, len, false)
+    counts = PairwiseListMatrix(Vector{IntervalValue{Int}}, len, false)
     @inbounds for i in 1:len, j in (i + 1):len
         counts[i, j] = count_sites(T, sequences[i], sequences[j], width, step)
     end
@@ -106,12 +108,26 @@ end
 """
 Count the number of mutations between nucleotide sequences in a pairwise manner.
 """
-function count_sites{T<:Mutation,A<:NucAlphs}(::Type{T}, sequences::Array{BioSequence{A}})
+function count_sites{T<:Mutation,A<:Alphabet}(::Type{T}, sequences::Array{BioSequence{A}})
     len = length(sequences)
     counts = PairwiseListMatrix(Int, len, false)
     undetermined = PairwiseListMatrix(Int, len, false)
     @inbounds for i in 1:len, j in (i + 1):len
         counts[i, j], undetermined[i, j] = count_sites(T, sequences[i], sequences[j])
+    end
+    return counts, undetermined
+end
+
+"""
+Count the number of mutations between nucleotide sequences in a pairwise manner,
+using a sliding window of a given width and step.
+"""
+function count_sites{T<:Mutation,A<:Alphabet}(::Type{T}, sequences::Array{BioSequence{A}}, width::Int, step::Int)
+    len = length(sequences)
+    counts = PairwiseListMatrix(Vector{IntervalValue{Int}}, len, false)
+    undetermined = PairwiseListMatrix(Vector{IntervalValue{Int}}, len, false)
+    @inbounds for i in 1:len, j in (i + 1):len
+        counts[i, j], undetermined[i, j] = count_sites(T, sequences[i], sequences[j], width, step)
     end
     return counts, undetermined
 end

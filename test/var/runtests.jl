@@ -679,5 +679,4 @@ end
 
 =======
 =#
->>>>>>> Refreshed the mutation counting API to include more site types.
 end # module TestVar

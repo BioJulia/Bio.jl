@@ -1,5 +1,5 @@
-# Different types of site that can be coounted
-# ============================================
+# Different types of site that can be counted
+# ===========================================
 #
 # This file is a part of BioJulia.
 # License is MIT: https://github.com/BioJulia/Bio.jl/blob/master/LICENSE.md
