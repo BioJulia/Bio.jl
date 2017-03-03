@@ -199,13 +199,6 @@ const vcf_metainfo_machine, vcf_record_machine, vcf_header_machine, vcf_body_mac
     return map(Automa.compile, (metainfo, record, vcfheader, vcfbody))
 end)()
 
-#= Debug
-write("vcf_header.dot", Automa.dfa2dot(vcf_header_machine.dfa))
-run(`dot -Tsvg -o vcf_header.svg vcf_header.dot`)
-write("vcf_body.dot", Automa.dfa2dot(vcf_body_machine.dfa))
-run(`dot -Tsvg -o vcf_body.svg vcf_body.dot`)
-=#
-
 const vcf_metainfo_actions = Dict(
     :metainfo_key      => :(record.key = (mark1:p-1) - offset),
     :metainfo_val      => :(record.val = (mark2:p-1) - offset; record.dict = data[mark2] == UInt8('<')),
@@ -215,8 +208,21 @@ const vcf_metainfo_actions = Dict(
     :anchor            => :(),
     :mark              => :(mark1 = p),
     :mark2             => :(mark2 = p))
-
 eval(Bio.ReaderHelper.generate_index_function(VCFMetaInfo, vcf_metainfo_machine, vcf_metainfo_actions))
+
+const vcf_header_actions = merge(vcf_metainfo_actions, Dict(
+    :metainfo => quote
+        record.data = data[Bio.ReaderHelper.upanchor!(stream):p-1]
+        record.filled = true
+        push!(reader.header.metainfo, record)
+        Bio.ReaderHelper.ensure_margin!(stream)
+        record = VCFMetaInfo()
+    end,
+    :header_sampleID => :(push!(reader.header.sampleID, String(data[mark1:p-1]))),
+    :vcfheader => :(finish_header = true; @escape),
+    :countline => :(linenum += 1),
+    :anchor    => :(Bio.ReaderHelper.anchor!(stream, p); offset = p - 1)))
+eval(Bio.ReaderHelper.generate_readheader_function(VCFReader, VCFMetaInfo, vcf_header_machine, vcf_header_actions))
 
 const vcf_record_actions = Dict(
     :record_chrom        => :(record.chrom = (mark:p-1) - offset),
@@ -233,27 +239,10 @@ const vcf_record_actions = Dict(
     :record              => :(),
     :anchor              => :(),
     :mark                => :(mark = p))
-
 eval(Bio.ReaderHelper.generate_index_function(VCFRecord, vcf_record_machine, vcf_record_actions))
-
-const vcf_header_actions = merge(vcf_metainfo_actions, Dict(
-    :metainfo => quote
-        record.data = data[Bio.ReaderHelper.upanchor!(stream):p-1]
-        record.filled = true
-        push!(reader.header.metainfo, record)
-        Bio.ReaderHelper.ensure_margin!(stream)
-        record = VCFMetaInfo()
-    end,
-    :header_sampleID => :(push!(reader.header.sampleID, String(data[mark1:p-1]))),
-    :vcfheader => :(finish_header = true; @escape),
-    :countline => :(linenum += 1),
-    :anchor    => :(Bio.ReaderHelper.anchor!(stream, p); offset = p - 1)))
-
-eval(Bio.ReaderHelper.generate_readheader_function(VCFReader, VCFMetaInfo, vcf_header_machine, vcf_header_actions))
 
 const vcf_body_actions = merge(vcf_record_actions, Dict(
     :record    => :(found_record = true; @escape),
     :countline => :(linenum += 1),
     :anchor    => :(Bio.ReaderHelper.anchor!(stream, p); offset = p - 1)))
-
 eval(Bio.ReaderHelper.generate_read_function(VCFReader, vcf_body_machine, vcf_body_actions))

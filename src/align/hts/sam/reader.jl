@@ -182,8 +182,27 @@ const sam_metainfo_actions = Dict(
     :anchor => :(),
     :mark1  => :(mark1 = p),
     :mark2  => :(mark2 = p))
-
 eval(Bio.ReaderHelper.generate_index_function(SAMMetaInfo, sam_metainfo_machine, sam_metainfo_actions))
+
+const sam_header_actions = merge(sam_metainfo_actions, Dict(
+    :metainfo => quote
+        record.data = data[Bio.ReaderHelper.upanchor!(stream):p-1]
+        record.filled = true
+        push!(reader.header.metainfo, record)
+        Bio.ReaderHelper.ensure_margin!(stream)
+        record = SAMMetaInfo()
+    end,
+    :header => :(finish_header = true; @escape),
+    :countline => :(linenum += 1),
+    :anchor => :(Bio.ReaderHelper.anchor!(stream, p); offset = p - 1)))
+eval(
+    Bio.ReaderHelper.generate_readheader_function(
+        SAMReader, SAMMetaInfo, sam_header_machine, sam_header_actions,
+        quote
+            if !eof(stream)
+                stream.position -= 1  # cancel look-ahead
+            end
+        end))
 
 const sam_record_actions = Dict(
     :record_qname => :(record.qname = (mark:p-1) - offset),
@@ -201,33 +220,10 @@ const sam_record_actions = Dict(
     :record       => :(),
     :anchor       => :(),
     :mark         => :(mark = p))
-
 eval(Bio.ReaderHelper.generate_index_function(SAMRecord, sam_record_machine, sam_record_actions))
-
-const sam_header_actions = merge(sam_metainfo_actions, Dict(
-    :metainfo => quote
-        record.data = data[Bio.ReaderHelper.upanchor!(stream):p-1]
-        record.filled = true
-        push!(reader.header.metainfo, record)
-        Bio.ReaderHelper.ensure_margin!(stream)
-        record = SAMMetaInfo()
-    end,
-    :header => :(finish_header = true; @escape),
-    :countline => :(linenum += 1),
-    :anchor => :(Bio.ReaderHelper.anchor!(stream, p); offset = p - 1)))
-
-eval(
-    Bio.ReaderHelper.generate_readheader_function(
-        SAMReader, SAMMetaInfo, sam_header_machine, sam_header_actions,
-        quote
-            if !eof(stream)
-                stream.position -= 1  # cancel look-ahead
-            end
-        end))
 
 const sam_body_actions = merge(sam_record_actions, Dict(
     :record    => :(found_record = true; @escape),
     :countline => :(linenum += 1),
     :anchor    => :(Bio.ReaderHelper.anchor!(stream, p); offset = p - 1)))
-
 eval(Bio.ReaderHelper.generate_read_function(SAMReader, sam_body_machine, sam_body_actions))
