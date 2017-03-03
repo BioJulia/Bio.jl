@@ -97,6 +97,10 @@ export
     qualities,
     header,
     isoverlapping,
+    SAMMetaInfo,
+    isfilled,
+    metainfotag,
+    metainfoval,
     # SAM flags
     SAM_FLAG_PAIRED,
     SAM_FLAG_PROPER_PAIR,
@@ -111,6 +115,8 @@ export
     SAM_FLAG_DUP,
     SAM_FLAG_SUPPLEMENTARY
 
+import Automa
+import Automa.RegExp: @re_str
 import BGZFStreams
 import Bio.Ragel: Ragel
 import Bio.StringFields: StringField

@@ -17,14 +17,9 @@ end
 function BAMWriter(stream::BGZFStreams.BGZFStream, header::SAMHeader)
     refseqnames = String[]
     refseqlens = Int[]
-    for rec in header["SQ"]
-        push!(refseqnames, rec["SN"])
-        len = rec["LN"]
-        if isa(len, AbstractString)
-            push!(refseqlens, parse(Int, len))
-        else
-            push!(refseqlens, len)
-        end
+    for metainfo in find(header, "SQ")
+        push!(refseqnames, metainfo["SN"])
+        push!(refseqlens, parse(Int, metainfo["LN"]))
     end
     write_header(stream, header, refseqnames, refseqlens)
     return BAMWriter(stream)

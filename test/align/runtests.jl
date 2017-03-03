@@ -1006,71 +1006,55 @@ end
     @testset "SAM" begin
         samdir = joinpath(dirname(@__FILE__), "..", "BioFmtSpecimens", "SAM")
 
-        @testset "SAMHeader" begin
-            h = SAMHeader()
-            @test isa(h, Associative)
-            @test isempty(h)
-            h["HD"] = Dict("VN" => "100.100", "SO" => "unknown")
-            @test length(h) == 1
-            @test h["HD"]["VN"] == "100.100"
-            h["CO"] = ["comment1", "comment2"]
-            @test length(h) == 2
-            @test h["CO"] == ["comment1", "comment2"]
-            delete!(h, "CO")
-            @test length(h) == 1
+        @testset "SAMMetaInfo" begin
+            metainfo = SAMMetaInfo()
+            @test !isfilled(metainfo)
+            @test contains(repr(metainfo), "not filled")
+
+            metainfo = SAMMetaInfo("CO", "some comment (parens)")
+            @test isfilled(metainfo)
+            @test contains(repr(metainfo), "CO")
+            @test metainfotag(metainfo) == "CO"
+            @test metainfoval(metainfo) == "some comment (parens)"
+            @test metainfo == SAMMetaInfo(b"@CO\tsome comment (parens)")
+            @test_throws ArgumentError keys(metainfo)
+            @test_throws ArgumentError values(metainfo)
+
+            metainfo = SAMMetaInfo("HD", ["VN" => "1.0", "SO" => "coordinate"])
+            @test isfilled(metainfo)
+            @test contains(repr(metainfo), "HD")
+            @test metainfotag(metainfo) == "HD"
+            @test metainfoval(metainfo) == "VN:1.0\tSO:coordinate"
+            @test keys(metainfo) == ["VN", "SO"]
+            @test values(metainfo) == ["1.0", "coordinate"]
+            @test haskey(metainfo, "VN")
+            @test haskey(metainfo, "SO")
+            @test !haskey(metainfo, "GO")
+            @test metainfo["VN"] == "1.0"
+            @test metainfo["SO"] == "coordinate"
+            @test metainfo == SAMMetaInfo(b"@HD\tVN:1.0\tSO:coordinate")
+            @test_throws KeyError metainfo["GO"]
         end
 
-        @testset "Record" begin
-            rec = SAMRecord()
-            @test !ismapped(rec)
-
-            # default values
-            @test seqname(rec) == "*"
-            @test flag(rec) == SAM_FLAG_UNMAP
-            @test refname(rec) == "*"
-            @test leftposition(rec) == 0
-            @test rightposition(rec) == -1
-            @test nextrefname(rec) == "*"
-            @test nextleftposition(rec) == 0
-            @test templatelength(rec) == 0
-            @test cigar(rec) == "*"
-            @test alignment(rec) == Alignment(AlignmentAnchor[])
-            @test sequence(rec) == "*"
-            @test_throws ArgumentError seqlength(rec)
-            @test qualities(rec) == "*"
-            @test Align.alignment_length(rec) === 0
-
-            buf = IOBuffer()
-            show(buf, rec)
-            @test startswith(takebuf_string(buf), "Bio.Align.SAMRecord:")
-
-            buf = IOBuffer()
-            showcompact(buf, rec)
-            @test takebuf_string(buf) == "*\tunmapped"
-
-            # set & delete tags
-            rec = SAMRecord()
-            @test !haskey(rec, "MN")
-            rec["MN"] = 0x01
-            @test rec["MN"] === 0x01
-            @test haskey(rec, "MN")
-            @test !haskey(rec, "XY")
-            rec["XY"] = "foobar"
-            @test rec["XY"] == "foobar"
-            @test haskey(rec, "XY")
-            delete!(rec, "MN")
-            @test !haskey(rec, "MN")
+        @testset "SAMHeader" begin
+            header = SAMHeader()
+            @test isempty(header)
+            push!(header, SAMMetaInfo("@HD\tVN:1.0\tSO:coordinate"))
+            @test !isempty(header)
+            @test length(header) == 1
+            push!(header, SAMMetaInfo("@CO\tsome comment"))
+            @test length(header) == 2
+            @test isa(collect(header), Vector{SAMMetaInfo})
         end
 
         @testset "Reader" begin
             reader = open(SAMReader, joinpath(samdir, "ce#1.sam"))
             @test isa(reader, SAMReader)
             @test eltype(reader) === SAMRecord
-            @test startswith(repr(reader), "Bio.Align.SAMReader:")
 
             # header
             h = header(reader)
-            @test h["SQ"] == [Dict("SN" => "CHROMOSOME_I", "LN" => "1009800")]
+            @test find(header(reader), "SQ") == [SAMMetaInfo(b"@SQ\tSN:CHROMOSOME_I\tLN:1009800")]
 
             # first record
             rec = SAMRecord()
@@ -1080,9 +1064,11 @@ end
             @test leftposition(rec) == 2
             @test rightposition(rec) == 102
             @test seqname(rec) == "SRR065390.14978392"
-            @test sequence(rec)  == "CCTAGCCCTAACCCTAACCCTAACCCTAGCCTAAGCCTAAGCCTAAGCCTAAGCCTAAGCCTAAGCCTAAGCCTAAGCCTAAGCCTAAGCCTAAGCCTAA"
+            @test sequence(rec)      == dna"CCTAGCCCTAACCCTAACCCTAACCCTAGCCTAAGCCTAAGCCTAAGCCTAAGCCTAAGCCTAAGCCTAAGCCTAAGCCTAAGCCTAAGCCTAAGCCTAA"
+            @test sequence(String, rec) == "CCTAGCCCTAACCCTAACCCTAACCCTAGCCTAAGCCTAAGCCTAAGCCTAAGCCTAAGCCTAAGCCTAAGCCTAAGCCTAAGCCTAAGCCTAAGCCTAA"
             @test seqlength(rec) == 100
-            @test qualities(rec) == "#############################@B?8B?BA@@DDBCDDCBC@CDCDCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCC"
+            @test qualities(rec)       == (b"#############################@B?8B?BA@@DDBCDDCBC@CDCDCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCC" .- 33)
+            @test qualities(String, rec) == "#############################@B?8B?BA@@DDBCDDCBC@CDCDCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCC"
             @test flag(rec) == 16
             @test cigar(rec) == "27M1D73M"
             @test alignment(rec) == Alignment([
@@ -1189,7 +1175,7 @@ end
 
             # header
             h = header(reader)
-            @test h["SQ"] == [Dict("SN" => "CHROMOSOME_I", "LN" => "1009800")]
+            @test isa(h, SAMHeader)
 
             # first record
             rec = BAMRecord()
@@ -1245,7 +1231,7 @@ end
                     end
                     writer = BAMWriter(
                         BGZFStream(path, "w"),
-                        header(reader, true))
+                        header(reader, fillSQ=isempty(find(header(reader), "SQ"))))
                     records = BAMRecord[]
                     for rec in reader
                         push!(records, rec)
