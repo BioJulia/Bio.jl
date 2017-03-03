@@ -41,7 +41,7 @@ const vcf_metainfo_machine, vcf_record_machine, vcf_header_machine, vcf_body_mac
     # The 'fileformat' field is required and must be the first line.
     fileformat = let
         key = cat("fileformat")
-        key.actions[:enter] = [:mark]
+        key.actions[:enter] = [:mark1]
         key.actions[:exit]  = [:metainfo_key]
 
         version = re"[!-~]+"
@@ -56,7 +56,7 @@ const vcf_metainfo_machine, vcf_record_machine, vcf_header_machine, vcf_body_mac
     # All kinds of meta-information line after 'fileformat' are handled here.
     metainfo = let
         key = re"[0-9A-Za-z_]+"
-        key.actions[:enter] = [:mark]
+        key.actions[:enter] = [:mark1]
         key.actions[:exit]  = [:metainfo_key]
 
         str = re"[ -;=-~][ -~]*"  # does not starts with '<'
@@ -65,7 +65,7 @@ const vcf_metainfo_machine, vcf_record_machine, vcf_header_machine, vcf_body_mac
 
         dict = let
             dictkey = re"[0-9A-Za-z_]+"
-            dictkey.actions[:enter] = [:mark]
+            dictkey.actions[:enter] = [:mark1]
             dictkey.actions[:exit]  = [:metainfo_dict_key]
 
             dictval = let
@@ -73,7 +73,7 @@ const vcf_metainfo_machine, vcf_record_machine, vcf_header_machine, vcf_body_mac
                 unquoted = rep(re"[ -~]" \ re"[\",>]")
                 alt(quoted, unquoted)
             end
-            dictval.actions[:enter] = [:mark]
+            dictval.actions[:enter] = [:mark1]
             dictval.actions[:exit]  = [:metainfo_dict_val]
 
             cat('<', delim(cat(dictkey, '=', dictval), ','), '>')
@@ -89,7 +89,7 @@ const vcf_metainfo_machine, vcf_record_machine, vcf_header_machine, vcf_body_mac
     # The header line.
     header = let
         sampleID = re"[ -~]+"
-        sampleID.actions[:enter] = [:mark]
+        sampleID.actions[:enter] = [:mark1]
         sampleID.actions[:exit]  = [:header_sampleID]
 
         cat("#CHROM\tPOS\tID\tREF\tALT\tQUAL\tFILTER\tINFO", opt(re"\tFORMAT" * rep(re"\t" * sampleID)))
@@ -206,7 +206,7 @@ const vcf_metainfo_actions = Dict(
     :metainfo_dict_val => :(push!(record.dictval, (mark1:p-1) - offset)),
     :metainfo          => :(),
     :anchor            => :(),
-    :mark              => :(mark1 = p),
+    :mark1             => :(mark1 = p),
     :mark2             => :(mark2 = p))
 eval(
     Bio.ReaderHelper.generate_index_function(
