@@ -6,9 +6,9 @@ type VCFReader <: Bio.IO.AbstractReader
     header::VCFHeader
 
     function VCFReader(input::BufferedInputStream)
-        reader = new(Bio.Ragel.State(vcfheader_machine.start_state, input), VCFHeader())
+        reader = new(Bio.Ragel.State(vcf_header_machine.start_state, input), VCFHeader())
         readheader!(reader)
-        reader.state.cs = vcfbody_machine.start_state
+        reader.state.cs = vcf_body_machine.start_state
         return reader
     end
 end
@@ -31,7 +31,7 @@ end
 
 # VCF v4.3
 info("compiling VCF")
-const vcfheader_machine, vcfbody_machine, vcfmetainfo_machine, vcfrecord_machine = (function ()
+const vcf_header_machine, vcf_body_machine, vcf_metainfo_machine, vcf_record_machine = (function ()
     cat = Automa.RegExp.cat
     rep = Automa.RegExp.rep
     alt = Automa.RegExp.alt
@@ -200,10 +200,10 @@ const vcfheader_machine, vcfbody_machine, vcfmetainfo_machine, vcfrecord_machine
 end)()
 
 #= Debug
-write("vcfheader.dot", Automa.dfa2dot(vcfheader_machine.dfa))
-run(`dot -Tsvg -o vcfheader.svg vcfheader.dot`)
-write("vcfbody.dot", Automa.dfa2dot(vcfbody_machine.dfa))
-run(`dot -Tsvg -o vcfbody.svg vcfbody.dot`)
+write("vcf_header.dot", Automa.dfa2dot(vcf_header_machine.dfa))
+run(`dot -Tsvg -o vcf_header.svg vcf_header.dot`)
+write("vcf_body.dot", Automa.dfa2dot(vcf_body_machine.dfa))
+run(`dot -Tsvg -o vcf_body.svg vcf_body.dot`)
 =#
 
 function try_parse_int64(data, r::UnitRange{Int})
@@ -231,7 +231,7 @@ function try_parse_float64(data, r::UnitRange{Int})
         data, first(r) - 1, length(r))
 end
 
-const vcfheader_actions = Dict(
+const vcf_header_actions = Dict(
     :metainfo_key      => :(metainfo.key = (mark1:p-1) - offset),
     :metainfo_val      => :(metainfo.val = (mark2:p-1) - offset; metainfo.dict = data[mark2] == UInt8('<')),
     :metainfo_dict_key => :(push!(metainfo.dictkey, (mark1:p-1) - offset)),
@@ -272,7 +272,7 @@ end
     metainfo = VCFMetaInfo()
 
     while true
-        $(Automa.generate_exec_code(vcfheader_machine, actions=vcfheader_actions, code=:table))
+        $(Automa.generate_exec_code(vcf_header_machine, actions=vcf_header_actions, code=:table))
 
         @assert cs != 0
         state.cs = cs
@@ -300,7 +300,7 @@ end
     end
 end
 
-const vcfbody_actions = Dict(
+const vcf_body_actions = Dict(
     :record_chrom        => :(record.chrom = (mark:p-1) - offset),
     :record_pos          => :(record.pos = (mark:p-1) - offset),
     :record_id           => :(push!(record.id, (mark:p-1) - offset)),
@@ -341,7 +341,7 @@ end
     initialize!(record)
 
     while true
-        $(Automa.generate_exec_code(vcfbody_machine, actions=vcfbody_actions, code=:goto, check=false))
+        $(Automa.generate_exec_code(vcf_body_machine, actions=vcf_body_actions, code=:goto, check=false))
 
         state.cs = cs
         state.finished = cs == 0
@@ -385,7 +385,7 @@ function resize_and_copy!(dst, src, r)
     return dst
 end
 
-const vcfmetainfo_actions = merge(vcfheader_actions, Dict(:metainfo => :(), :anchor => :()))
+const vcf_metainfo_actions = merge(vcf_header_actions, Dict(:metainfo => :(), :anchor => :()))
 
 @eval function index!(metainfo::VCFMetaInfo)
     data = metainfo.data
@@ -393,8 +393,8 @@ const vcfmetainfo_actions = merge(vcfheader_actions, Dict(:metainfo => :(), :anc
     p_end = p_eof = endof(data)
     offset = mark1 = mark2 = 0
     initialize!(metainfo)
-    cs = $(vcfmetainfo_machine.start_state)
-    $(Automa.generate_exec_code(vcfmetainfo_machine, actions=vcfmetainfo_actions))
+    cs = $(vcf_metainfo_machine.start_state)
+    $(Automa.generate_exec_code(vcf_metainfo_machine, actions=vcf_metainfo_actions))
     if cs != 0
         throw(ArgumentError("failed to index VCFMetaInfo"))
     end
@@ -402,7 +402,7 @@ const vcfmetainfo_actions = merge(vcfheader_actions, Dict(:metainfo => :(), :anc
     return metainfo
 end
 
-const vcfrecord_actions = merge(vcfbody_actions, Dict(:record => :(), :anchor => :()))
+const vcf_record_actions = merge(vcf_body_actions, Dict(:record => :(), :anchor => :()))
 
 @eval function index!(record::VCFRecord)
     data = record.data
@@ -410,8 +410,8 @@ const vcfrecord_actions = merge(vcfbody_actions, Dict(:record => :(), :anchor =>
     p_end = p_eof = endof(data)
     offset = mark = 0
     initialize!(record)
-    cs = $(vcfrecord_machine.start_state)
-    $(Automa.generate_exec_code(vcfrecord_machine, actions=vcfrecord_actions, code=:goto))
+    cs = $(vcf_record_machine.start_state)
+    $(Automa.generate_exec_code(vcf_record_machine, actions=vcf_record_actions, code=:goto))
     if cs != 0
         throw(ArgumentError("failed to index VCFRecord"))
     end
