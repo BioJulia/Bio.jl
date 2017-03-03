@@ -207,10 +207,10 @@ run(`dot -Tsvg -o vcf_body.svg vcf_body.dot`)
 =#
 
 const vcf_metainfo_actions = Dict(
-    :metainfo_key      => :(metainfo.key = (mark1:p-1) - offset),
-    :metainfo_val      => :(metainfo.val = (mark2:p-1) - offset; metainfo.dict = data[mark2] == UInt8('<')),
-    :metainfo_dict_key => :(push!(metainfo.dictkey, (mark1:p-1) - offset)),
-    :metainfo_dict_val => :(push!(metainfo.dictval, (mark1:p-1) - offset)),
+    :metainfo_key      => :(record.key = (mark1:p-1) - offset),
+    :metainfo_val      => :(record.val = (mark2:p-1) - offset; record.dict = data[mark2] == UInt8('<')),
+    :metainfo_dict_key => :(push!(record.dictkey, (mark1:p-1) - offset)),
+    :metainfo_dict_val => :(push!(record.dictval, (mark1:p-1) - offset)),
     :metainfo          => :(),
     :header_sampleID   => :(push!(reader.header.sampleID, String(data[mark1:p-1]))),
     :vcfheader         => :(found_header = true; @escape),
@@ -219,20 +219,7 @@ const vcf_metainfo_actions = Dict(
     :mark              => :(mark1 = p),
     :mark2             => :(mark2 = p))
 
-@eval function index!(metainfo::VCFMetaInfo)
-    data = metainfo.data
-    p = 1
-    p_end = p_eof = endof(data)
-    offset = mark1 = mark2 = 0
-    initialize!(metainfo)
-    cs = $(vcf_metainfo_machine.start_state)
-    $(Automa.generate_exec_code(vcf_metainfo_machine, actions=vcf_metainfo_actions))
-    if cs != 0
-        throw(ArgumentError("failed to index VCFMetaInfo"))
-    end
-    metainfo.filled = true
-    return metainfo
-end
+eval(Bio.ReaderHelper.generate_index_function(VCFMetaInfo, vcf_metainfo_machine, vcf_metainfo_actions))
 
 const vcf_record_actions = Dict(
     :record_chrom        => :(record.chrom = (mark:p-1) - offset),
@@ -255,10 +242,10 @@ eval(Bio.ReaderHelper.generate_index_function(VCFRecord, vcf_record_machine, vcf
 
 const vcf_header_actions = merge(vcf_metainfo_actions, Dict(
     :metainfo => quote
-        metainfo.data = data[Bio.ReaderHelper.upanchor!(stream):p-1]
-        metainfo.filled = true
-        push!(reader.header.metainfo, metainfo)
-        metainfo = VCFMetaInfo()
+        record.data = data[Bio.ReaderHelper.upanchor!(stream):p-1]
+        record.filled = true
+        push!(reader.header.metainfo, record)
+        record = VCFMetaInfo()
     end,
     :anchor    => :(Bio.ReaderHelper.anchor!(stream, p); offset = p - 1)))
 
@@ -277,7 +264,7 @@ end
     p_eof = -1
     offset = mark1 = mark2 = 0
     found_header = false
-    metainfo = VCFMetaInfo()
+    record = VCFMetaInfo()
 
     while true
         $(Automa.generate_exec_code(vcf_header_machine, actions=vcf_header_actions, code=:table))

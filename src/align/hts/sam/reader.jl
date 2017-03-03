@@ -174,29 +174,16 @@ const sam_metainfo_machine, sam_record_machine, sam_header_machine, sam_body_mac
 end)()
 
 const sam_metainfo_actions = Dict(
-    :metainfo_tag => :(metainfo.tag = (mark1:p-1) - offset),
-    :metainfo_val => :(metainfo.val = (mark1:p-1) - offset),
-    :metainfo_dict_key => :(push!(metainfo.dictkey, (mark2:p-1) - offset)),
-    :metainfo_dict_val => :(push!(metainfo.dictval, (mark2:p-1) - offset)),
+    :metainfo_tag => :(record.tag = (mark1:p-1) - offset),
+    :metainfo_val => :(record.val = (mark1:p-1) - offset),
+    :metainfo_dict_key => :(push!(record.dictkey, (mark2:p-1) - offset)),
+    :metainfo_dict_val => :(push!(record.dictval, (mark2:p-1) - offset)),
     :metainfo => :(),
     :anchor => :(),
     :mark1  => :(mark1 = p),
     :mark2  => :(mark2 = p))
 
-@eval function index!(metainfo::SAMMetaInfo)
-    data = metainfo.data
-    p = 1
-    p_end = p_eof = sizeof(data)
-    offset = mark1 = mark2 = 0
-    initialize!(metainfo)
-    cs = $(sam_metainfo_machine.start_state)
-    $(Automa.generate_exec_code(sam_metainfo_machine, actions=sam_metainfo_actions))
-    if cs != 0
-        throw(ArgumentError("failed to index SAMMetaInfo"))
-    end
-    metainfo.filled = true
-    return metainfo
-end
+eval(Bio.ReaderHelper.generate_index_function(SAMMetaInfo, sam_metainfo_machine, sam_metainfo_actions))
 
 const sam_record_actions = Dict(
     :record_qname => :(record.qname = (mark:p-1) - offset),
@@ -219,10 +206,10 @@ eval(Bio.ReaderHelper.generate_index_function(SAMRecord, sam_record_machine, sam
 
 const sam_header_actions = merge(sam_metainfo_actions, Dict(
     :metainfo => quote
-        metainfo.data = data[Bio.ReaderHelper.upanchor!(stream):p-1]
-        metainfo.filled = true
-        push!(reader.header.metainfo, metainfo)
-        metainfo = SAMMetaInfo()
+        record.data = data[Bio.ReaderHelper.upanchor!(stream):p-1]
+        record.filled = true
+        push!(reader.header.metainfo, record)
+        record = SAMMetaInfo()
     end,
     :header => :(finish_header = true; @escape),
     :countline => :(linenum += 1),
@@ -243,7 +230,7 @@ end
     p_eof = -1
     offset = mark1 = mark2 = 0
     finish_header = false
-    metainfo = SAMMetaInfo()
+    record = SAMMetaInfo()
  
     while true
         $(Automa.generate_exec_code(sam_header_machine, actions=sam_header_actions, code=:table))
