@@ -41,6 +41,25 @@ function resize_and_copy!(dst::Vector{UInt8}, src::Vector{UInt8}, r::UnitRange{I
     return dst
 end
 
+function generate_index_function(record_type, machine, actions)
+    quote
+        function index!(record::$(record_type))
+            data = record.data
+            p = 1
+            p_end = p_eof = sizeof(data)
+            offset = mark = 0
+            initialize!(record)
+            cs = $(machine.start_state)
+            $(Automa.generate_exec_code(machine, actions=actions, code=:goto, check=false))
+            if cs != 0
+                throw(ArgumentError("failed to index $($(record_type))"))
+            end
+            record.filled = true
+            return record
+        end
+    end
+end
+
 function generate_read_functions(format_name, reader_type, machine, actions)
     quote
         function Base.read!(reader::$(reader_type), record::eltype($(reader_type)))::eltype($(reader_type))

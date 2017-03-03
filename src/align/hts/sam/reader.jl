@@ -215,20 +215,7 @@ const sam_record_actions = Dict(
     :anchor       => :(),
     :mark         => :(mark = p))
 
-@eval function index!(record::SAMRecord)
-    data = record.data
-    p = 1
-    p_end = p_eof = sizeof(data)
-    offset = mark = 0
-    initialize!(record)
-    cs = $(sam_record_machine.start_state)
-    $(Automa.generate_exec_code(sam_record_machine, actions=sam_record_actions, code=:goto, check=false))
-    if cs != 0
-        throw(ArgumentError("failed to index SAMRecord"))
-    end
-    record.filled = true
-    return record
-end
+eval(Bio.ReaderHelper.generate_index_function(SAMRecord, sam_record_machine, sam_record_actions))
 
 const sam_header_actions = merge(sam_metainfo_actions, Dict(
     :metainfo => quote

@@ -251,20 +251,7 @@ const vcf_record_actions = Dict(
     :anchor              => :(),
     :mark                => :(mark = p))
 
-@eval function index!(record::VCFRecord)
-    data = record.data
-    p = 1
-    p_end = p_eof = endof(data)
-    offset = mark = 0
-    initialize!(record)
-    cs = $(vcf_record_machine.start_state)
-    $(Automa.generate_exec_code(vcf_record_machine, actions=vcf_record_actions, code=:goto))
-    if cs != 0
-        throw(ArgumentError("failed to index VCFRecord"))
-    end
-    record.filled = true
-    return record
-end
+eval(Bio.ReaderHelper.generate_index_function(VCFRecord, vcf_record_machine, vcf_record_actions))
 
 const vcf_header_actions = merge(vcf_metainfo_actions, Dict(
     :metainfo => quote
