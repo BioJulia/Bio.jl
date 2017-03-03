@@ -24,4 +24,20 @@ end
     return anchor
 end
 
+function ensure_margin!(stream::BufferedStreams.BufferedInputStream)
+    if stream.position * 20 > length(stream.buffer) * 19
+        BufferedStreams.shiftdata!(stream)
+    end
+    return nothing
+end
+
+function resize_and_copy!(dst::Vector{UInt8}, src::Vector{UInt8}, r::UnitRange{Int})
+    rlen = length(r)
+    if length(dst) != rlen
+        resize!(dst, rlen)
+    end
+    copy!(dst, 1, src, first(r), rlen)
+    return dst
+end
+
 end

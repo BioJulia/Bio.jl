@@ -247,7 +247,7 @@ end
 
 @eval function _readheader!(reader::SAMReader, state::Bio.Ragel.State)
     stream = state.stream
-    ensure_margin(stream)
+    Bio.ReaderHelper.ensure_margin!(stream)
     cs = state.cs
     linenum = state.linenum
     data = stream.buffer
@@ -300,7 +300,7 @@ end
 
 @eval function _read!(reader::SAMReader, state::Bio.Ragel.State, record::SAMRecord)
     stream = state.stream
-    ensure_margin(stream)
+    Bio.ReaderHelper.ensure_margin!(stream)
     initialize!(record)
     cs = state.cs
     linenum = state.linenum
@@ -323,7 +323,7 @@ end
             @show String(data[p:min(p+8, p_end)])
             error("SAM file format error on line ", linenum)
         elseif found_record
-            resize_and_copy!(record.data, data, Bio.ReaderHelper.upanchor!(stream):p-2)
+            Bio.ReaderHelper.resize_and_copy!(record.data, data, Bio.ReaderHelper.upanchor!(stream):p-2)
             record.filled = true
             break
         elseif cs == 0
@@ -341,19 +341,4 @@ end
     end
 
     return record
-end
-
-function resize_and_copy!(dst, src, r)
-    len = length(r)
-    if length(dst) != len
-        resize!(dst, len)
-    end
-    copy!(dst, 1, src, first(r), len)
-    return dst
-end
-
-function ensure_margin(stream)
-    if stream.position * 20 > length(stream.buffer) * 19
-        BufferedStreams.shiftdata!(stream)
-    end
 end

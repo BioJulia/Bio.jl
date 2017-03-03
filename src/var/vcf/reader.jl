@@ -257,10 +257,7 @@ end
 
 @eval function _readheader!(reader::VCFReader, state::Bio.Ragel.State)
     stream = state.stream
-    if stream.position // length(stream.buffer) > 95 // 100
-        BufferedStreams.shiftdata!(stream)
-    end
-
+    Bio.ReaderHelper.ensure_margin!(stream)
     cs = state.cs
     linenum = state.linenum
     data = stream.buffer
@@ -325,10 +322,7 @@ end
 
 @eval function _read!(reader::VCFReader, state::Bio.Ragel.State, record::VCFRecord)
     stream = state.stream
-    if stream.position // length(stream.buffer) > 95 // 100
-        BufferedStreams.shiftdata!(stream)
-    end
-
+    Bio.ReaderHelper.ensure_margin!(stream)
     cs = state.cs
     linenum = state.linenum
     data = stream.buffer
@@ -353,7 +347,7 @@ end
             error("VCF file format error on line ", linenum)
         elseif found_record
             check_record(reader)
-            resize_and_copy!(record.data, data, Bio.ReaderHelper.upanchor!(stream):p-2)
+            Bio.ReaderHelper.resize_and_copy!(record.data, data, Bio.ReaderHelper.upanchor!(stream):p-2)
             record.filled = true
             break
         elseif cs == 0
@@ -374,15 +368,6 @@ end
 end
 
 function check_record(reader)
-end
-
-function resize_and_copy!(dst, src, r)
-    len = length(r)
-    if length(dst) != len
-        resize!(dst, len)
-    end
-    copy!(dst, 1, src, first(r), len)
-    return dst
 end
 
 const vcf_metainfo_actions = merge(vcf_header_actions, Dict(:metainfo => :(), :anchor => :()))
