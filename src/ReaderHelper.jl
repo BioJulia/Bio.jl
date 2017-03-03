@@ -60,7 +60,7 @@ function generate_index_function(record_type, machine, actions)
     end
 end
 
-function generate_read_functions(format_name, reader_type, machine, actions)
+function generate_read_function(reader_type, machine, actions)
     quote
         function Base.read!(reader::$(reader_type), record::eltype($(reader_type)))::eltype($(reader_type))
             return _read!(reader, reader.state, record)
@@ -88,7 +88,7 @@ function generate_read_functions(format_name, reader_type, machine, actions)
                 stream.position = p
 
                 if cs < 0
-                    error("$(format) file format error on line ", linenum)
+                    error("$($(reader_type)) file format error on line ", linenum)
                 elseif found_record
                     Bio.ReaderHelper.resize_and_copy!(record.data, data, Bio.ReaderHelper.upanchor!(stream):p-2)
                     record.filled = true
@@ -96,7 +96,7 @@ function generate_read_functions(format_name, reader_type, machine, actions)
                 elseif cs == 0
                     throw(EOFError())
                 elseif p > p_eof ≥ 0
-                    error("incomplete $(format_name) input on line ", linenum)
+                    error("incomplete $($(reader_type)) input on line ", linenum)
                 else
                     hits_eof = BufferedStreams.fillbuffer!(stream) == 0
                     p = stream.position

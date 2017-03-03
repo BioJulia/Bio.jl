@@ -281,4 +281,4 @@ const sam_body_actions = merge(sam_record_actions, Dict(
     :countline => :(linenum += 1),
     :anchor    => :(Bio.ReaderHelper.anchor!(stream, p); offset = p - 1)))
 
-eval(Bio.ReaderHelper.generate_read_functions("SAM", SAMReader, sam_body_machine, sam_body_actions))
+eval(Bio.ReaderHelper.generate_read_function(SAMReader, sam_body_machine, sam_body_actions))

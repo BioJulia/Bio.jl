@@ -312,4 +312,4 @@ const vcf_body_actions = merge(vcf_record_actions, Dict(
     :record => :(found_record = true; @escape),
     :anchor => :(Bio.ReaderHelper.anchor!(stream, p); offset = p - 1)))
 
-eval(Bio.ReaderHelper.generate_read_functions("VCF", VCFReader, vcf_body_machine, vcf_body_actions))
+eval(Bio.ReaderHelper.generate_read_function(VCFReader, vcf_body_machine, vcf_body_actions))
