@@ -5,6 +5,7 @@ module Bio
 include("declare.jl")
 include("IO.jl")
 include("Ragel.jl")
+include("ReaderHelper.jl")
 include("StringFields.jl")
 include("util/Util.jl")
 include("seq/Seq.jl")

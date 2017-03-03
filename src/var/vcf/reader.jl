@@ -231,27 +231,13 @@ function try_parse_float64(data, r::UnitRange{Int})
         data, first(r) - 1, length(r))
 end
 
-@inline function anchor!(stream::BufferedInputStream, p)
-    stream.anchor = p
-    stream.immobilized = true
-    return stream
-end
-
-@inline function upanchor!(stream::BufferedInputStream)
-    @assert stream.anchor != 0 "upanchor! called with no anchor set"
-    anchor = stream.anchor
-    stream.anchor = 0
-    stream.immobilized = false
-    return anchor
-end
-
 const vcfheader_actions = Dict(
     :metainfo_key      => :(metainfo.key = (mark1:p-1) - offset),
     :metainfo_val      => :(metainfo.val = (mark2:p-1) - offset; metainfo.dict = data[mark2] == UInt8('<')),
     :metainfo_dict_key => :(push!(metainfo.dictkey, (mark1:p-1) - offset)),
     :metainfo_dict_val => :(push!(metainfo.dictval, (mark1:p-1) - offset)),
     :metainfo          => quote
-        metainfo.data = data[upanchor!(stream):p-1]
+        metainfo.data = data[Bio.ReaderHelper.upanchor!(stream):p-1]
         metainfo.filled = true
         push!(reader.header.metainfo, metainfo)
         metainfo = VCFMetaInfo()
@@ -261,7 +247,7 @@ const vcfheader_actions = Dict(
     :vcfheader       => :(found_header = true; @escape),
 
     :countline => :(linenum += 1),
-    :anchor    => :(anchor!(stream, p); offset = p - 1),
+    :anchor    => :(Bio.ReaderHelper.anchor!(stream, p); offset = p - 1),
     :mark      => :(mark1 = p),
     :mark2     => :(mark2 = p))
 
@@ -297,7 +283,7 @@ end
         if cs < 0
             error("VCF file format error on line ", linenum)
         elseif found_header
-            upanchor!(stream)
+            Bio.ReaderHelper.upanchor!(stream)
             break
         #elseif cs == 0
         #    throw(EOFError())
@@ -329,7 +315,7 @@ const vcfbody_actions = Dict(
     :record              => :(found_record = true; @escape),
 
     :countline => :(linenum += 1),
-    :anchor    => :(anchor!(stream, p); offset = p - 1),
+    :anchor    => :(Bio.ReaderHelper.anchor!(stream, p); offset = p - 1),
     :mark      => :(mark = p))
 
 # Read a VCF record.
@@ -367,7 +353,7 @@ end
             error("VCF file format error on line ", linenum)
         elseif found_record
             check_record(reader)
-            resize_and_copy!(record.data, data, upanchor!(stream):p-2)
+            resize_and_copy!(record.data, data, Bio.ReaderHelper.upanchor!(stream):p-2)
             record.filled = true
             break
         elseif cs == 0

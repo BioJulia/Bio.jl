@@ -232,15 +232,15 @@ end
 
 const sam_header_actions = merge(sam_metainfo_actions, Dict(
     :metainfo => quote
-        metainfo.data = data[upanchor!(stream):p-1]
+        metainfo.data = data[Bio.ReaderHelper.upanchor!(stream):p-1]
         metainfo.filled = true
         push!(reader.header.metainfo, metainfo)
         metainfo = SAMMetaInfo()
     end,
     :header => :(finish_header = true; @escape),
     :countline => :(linenum += 1),
-    :anchor => :(anchor!(stream, p); offset = p - 1)))
-    
+    :anchor => :(Bio.ReaderHelper.anchor!(stream, p); offset = p - 1)))
+
 function readheader!(reader::SAMReader)
     _readheader!(reader, reader.state)
 end
@@ -292,7 +292,7 @@ end
 const sam_body_actions = merge(sam_record_actions, Dict(
     :record    => :(found_record = true; @escape),
     :countline => :(linenum += 1),
-    :anchor    => :(anchor!(stream, p); offset = p - 1)))
+    :anchor    => :(Bio.ReaderHelper.anchor!(stream, p); offset = p - 1)))
 
 function Base.read!(reader::SAMReader, record::SAMRecord)::SAMRecord
     return _read!(reader, reader.state, record)
@@ -323,7 +323,7 @@ end
             @show String(data[p:min(p+8, p_end)])
             error("SAM file format error on line ", linenum)
         elseif found_record
-            resize_and_copy!(record.data, data, upanchor!(stream):p-2)
+            resize_and_copy!(record.data, data, Bio.ReaderHelper.upanchor!(stream):p-2)
             record.filled = true
             break
         elseif cs == 0
@@ -356,18 +356,4 @@ function ensure_margin(stream)
     if stream.position * 20 > length(stream.buffer) * 19
         BufferedStreams.shiftdata!(stream)
     end
-end
-
-@inline function anchor!(stream::BufferedStreams.BufferedInputStream, p)
-    stream.anchor = p
-    stream.immobilized = true
-    return stream
-end
-
-@inline function upanchor!(stream::BufferedStreams.BufferedInputStream)
-    @assert stream.anchor != 0 "upanchor! called with no anchor set"
-    anchor = stream.anchor
-    stream.anchor = 0
-    stream.immobilized = false
-    return anchor
 end
