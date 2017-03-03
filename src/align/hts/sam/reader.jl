@@ -209,6 +209,7 @@ const sam_header_actions = merge(sam_metainfo_actions, Dict(
         record.data = data[Bio.ReaderHelper.upanchor!(stream):p-1]
         record.filled = true
         push!(reader.header.metainfo, record)
+        Bio.ReaderHelper.ensure_margin!(stream)
         record = SAMMetaInfo()
     end,
     :header => :(finish_header = true; @escape),

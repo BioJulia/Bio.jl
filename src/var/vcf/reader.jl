@@ -212,9 +212,6 @@ const vcf_metainfo_actions = Dict(
     :metainfo_dict_key => :(push!(record.dictkey, (mark1:p-1) - offset)),
     :metainfo_dict_val => :(push!(record.dictval, (mark1:p-1) - offset)),
     :metainfo          => :(),
-    :header_sampleID   => :(push!(reader.header.sampleID, String(data[mark1:p-1]))),
-    :vcfheader         => :(found_header = true; @escape),
-    :countline         => :(linenum += 1),
     :anchor            => :(),
     :mark              => :(mark1 = p),
     :mark2             => :(mark2 = p))
@@ -234,7 +231,6 @@ const vcf_record_actions = Dict(
     :record_genotype     => :(push!(record.genotype, UnitRange{Int}[])),
     :record_genotype_elm => :(push!(record.genotype[end], (mark:p-1) - offset)),
     :record              => :(),
-    :countline           => :(linenum += 1),
     :anchor              => :(),
     :mark                => :(mark = p))
 
@@ -245,8 +241,12 @@ const vcf_header_actions = merge(vcf_metainfo_actions, Dict(
         record.data = data[Bio.ReaderHelper.upanchor!(stream):p-1]
         record.filled = true
         push!(reader.header.metainfo, record)
+        Bio.ReaderHelper.ensure_margin!(stream)
         record = VCFMetaInfo()
     end,
+    :header_sampleID => :(push!(reader.header.sampleID, String(data[mark1:p-1]))),
+    :vcfheader => :(finish_header = true; @escape),
+    :countline => :(linenum += 1),
     :anchor    => :(Bio.ReaderHelper.anchor!(stream, p); offset = p - 1)))
 
 function readheader!(reader::VCFReader)
@@ -263,7 +263,7 @@ end
     p_end = stream.available
     p_eof = -1
     offset = mark1 = mark2 = 0
-    found_header = false
+    finish_header = false
     record = VCFMetaInfo()
 
     while true
@@ -277,7 +277,7 @@ end
 
         if cs < 0
             error("VCF file format error on line ", linenum)
-        elseif found_header
+        elseif finish_header
             Bio.ReaderHelper.upanchor!(stream)
             break
         #elseif cs == 0
@@ -296,7 +296,8 @@ end
 end
 
 const vcf_body_actions = merge(vcf_record_actions, Dict(
-    :record => :(found_record = true; @escape),
-    :anchor => :(Bio.ReaderHelper.anchor!(stream, p); offset = p - 1)))
+    :record    => :(found_record = true; @escape),
+    :countline => :(linenum += 1),
+    :anchor    => :(Bio.ReaderHelper.anchor!(stream, p); offset = p - 1)))
 
 eval(Bio.ReaderHelper.generate_read_function(VCFReader, vcf_body_machine, vcf_body_actions))
