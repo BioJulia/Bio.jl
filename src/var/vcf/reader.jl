@@ -315,61 +315,7 @@ const vcf_body_actions = Dict(
     :anchor    => :(Bio.ReaderHelper.anchor!(stream, p); offset = p - 1),
     :mark      => :(mark = p))
 
-# Read a VCF record.
-function Base.read!(reader::VCFReader, record::VCFRecord)
-    return _read!(reader, reader.state, record)
-end
-
-@eval function _read!(reader::VCFReader, state::Bio.Ragel.State, record::VCFRecord)
-    stream = state.stream
-    Bio.ReaderHelper.ensure_margin!(stream)
-    cs = state.cs
-    linenum = state.linenum
-    data = stream.buffer
-    p = stream.position
-    p_end = stream.available
-    p_eof = -1
-    mark = 0
-    found_record = false
-
-    initialize!(record)
-
-    while true
-        $(Automa.generate_exec_code(vcf_body_machine, actions=vcf_body_actions, code=:goto, check=false))
-
-        state.cs = cs
-        state.finished = cs == 0
-        state.linenum = linenum
-        stream.position = p
-
-        if cs < 0
-            @show String(data[p:min(p+8, p_end)])
-            error("VCF file format error on line ", linenum)
-        elseif found_record
-            check_record(reader)
-            Bio.ReaderHelper.resize_and_copy!(record.data, data, Bio.ReaderHelper.upanchor!(stream):p-2)
-            record.filled = true
-            break
-        elseif cs == 0
-            throw(EOFError())
-        elseif p > p_eof ≥ 0
-            error("incomplete VCF input on line ", linenum)
-        else
-            hits_eof = BufferedStreams.fillbuffer!(stream) == 0
-            p = stream.position
-            p_end = stream.available
-            if hits_eof
-                p_eof = p_end
-            end
-        end
-    end
-
-    return record
-end
-
-function check_record(reader)
-end
-
+eval(Bio.ReaderHelper.generate_read_functions("VCF", VCFReader, vcf_body_machine, vcf_body_actions))
 const vcf_metainfo_actions = merge(vcf_header_actions, Dict(:metainfo => :(), :anchor => :()))
 
 @eval function index!(metainfo::VCFMetaInfo)
