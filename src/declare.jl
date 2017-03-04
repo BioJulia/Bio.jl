@@ -25,4 +25,6 @@ end
     leftposition,
     rightposition,
     isoverlapping,
+    metainfoval,
+    metainfotag
 )

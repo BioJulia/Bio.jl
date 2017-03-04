@@ -87,12 +87,12 @@ function iscomment(metainfo::SAMMetaInfo)
     return isequalkey(metainfo, "CO")
 end
 
-function metainfotag(metainfo::SAMMetaInfo)
+function Bio.metainfotag(metainfo::SAMMetaInfo)
     checkfilled(metainfo)
     return String(metainfo.data[metainfo.tag])
 end
 
-function metainfoval(metainfo::SAMMetaInfo)
+function Bio.metainfoval(metainfo::SAMMetaInfo)
     checkfilled(metainfo)
     return String(metainfo.data[metainfo.val])
 end

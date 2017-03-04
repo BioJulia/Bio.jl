@@ -102,12 +102,12 @@ function isequaltag(metainfo::VCFMetaInfo, tag::AbstractString)
            memcmp(pointer(metainfo.data, first(metainfo.tag)), pointer(tag), length(metainfo.tag)) == 0
 end
 
-function metainfotag(metainfo::VCFMetaInfo)
+function Bio.metainfotag(metainfo::VCFMetaInfo)
     checkfilled(metainfo)
     return String(metainfo.data[metainfo.tag])
 end
 
-function metainfoval(metainfo::VCFMetaInfo)
+function Bio.metainfoval(metainfo::VCFMetaInfo)
     checkfilled(metainfo)
     return String(metainfo.data[metainfo.val])
 end
