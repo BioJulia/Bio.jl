@@ -32,6 +32,10 @@ function initialize!(metainfo::VCFMetaInfo)
     return metainfo
 end
 
+function Base.convert(::Type{VCFMetaInfo}, str::AbstractString)
+    return VCFMetaInfo(convert(Vector{UInt8}, str))
+end
+
 function datarange(metainfo::VCFMetaInfo)
     return metainfo.filled
 end

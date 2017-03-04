@@ -1,6 +1,15 @@
 # BCF Writer
 # ==========
 
+"""
+    BCFWriter(output::IO, header::VCFHeader)
+
+Create a data writer of the BCF file format.
+
+# Arguments
+* `output`: data sink
+* `header`: VCF header object
+"""
 type BCFWriter{T<:IO} <: Bio.IO.AbstractWriter
     stream::BGZFStream{T}
 end

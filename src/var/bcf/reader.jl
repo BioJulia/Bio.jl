@@ -1,7 +1,15 @@
 # BCF Reader
 # ==========
 
-type BCFReader{T} <: Bio.IO.AbstractReader
+"""
+    BCFReader(input::IO)
+
+Create a data reader of the BCF file format.
+
+# Arguments
+* `input`: data source
+"""
+type BCFReader{T<:IO} <: Bio.IO.AbstractReader
     version::Tuple{UInt8,UInt8}  # (major, minor)
     header::VCFHeader
     stream::BGZFStream{T}

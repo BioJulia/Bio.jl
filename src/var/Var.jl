@@ -53,6 +53,7 @@ export
     chromosome,
     leftposition,
     quality,
+    filter_,
     identifier,
     reference,
     alternate,

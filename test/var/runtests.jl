@@ -162,13 +162,13 @@ end
 
     record = VCFRecord(b".\t.\t.\t.\t.\t.\t.\t.\t")
     @test isfilled(record)
-    @test chromosome(record) == "."
+    @test isnull(chromosome(record))
     @test isnull(leftposition(record))
 
     record = VCFRecord(record)
     @test isa(record, VCFRecord)
     record = VCFRecord(record, chromosome="chr1")
-    @test chromosome(record) == "chr1"
+    @test get(chromosome(record)) == "chr1"
     record = VCFRecord(record, position=1234)
     @test get(leftposition(record)) == 1234
     record = VCFRecord(record, identifier="rs1111")
@@ -180,7 +180,7 @@ end
     record = VCFRecord(record, quality=11.2)
     @test get(quality(record)) == 11.2
     record = VCFRecord(record, filter="PASS")
-    @test Bio.Var.filter(record) == ["PASS"]
+    @test filter_(record) == ["PASS"]
     record = VCFRecord(record, information=Dict("DP" => 20, "AA" => "AT", "DB"=>nothing))
     @test information(record, "DP") == "20"
     @test information(record, "AA") == "AT"
@@ -277,7 +277,8 @@ end
     record = VCFRecord()
 
     @test read!(reader, record) === record
-    @test chromosome(record) == "chr1"
+    @test !isnull(chromosome(record))
+    @test get(chromosome(record)) == "chr1"
     @test !isnull(leftposition(record))
     @test get(leftposition(record)) === 1234
     @test identifier(record) == ["rs001234"]
@@ -285,7 +286,7 @@ end
     @test alternate(record) == ["C"]
     @test !isnull(quality(record))
     @test get(quality(record)) === 30.0
-    @test Bio.Var.filter(record) == ["PASS"]
+    @test filter_(record) == ["PASS"]
     @test information(record) == ["DP" => "10", "AF" => "0.3"]
     @test information(record, "DP") == "10"
     @test information(record, "AF") == "0.3"
@@ -300,14 +301,15 @@ end
     @test ismatch(r"^Bio.Var.VCFRecord:\n.*", repr(record))
 
     @test read!(reader, record) === record
-    @test chromosome(record) == "chr2"
+    @test !isnull(chromosome(record))
+    @test get(chromosome(record)) == "chr2"
     @test !isnull(leftposition(record))
     @test get(leftposition(record)) == 4
     @test isempty(identifier(record))
     @test reference(record) == "A"
     @test alternate(record) == ["AA", "AAT"]
     @test isnull(quality(record))
-    @test isempty(Bio.Var.filter(record))
+    @test isempty(filter_(record))
     @test information(record) == ["DP" => "5"]
     @test information(record, "DP") == "5"
     @test_throws KeyError information(record, "AF")

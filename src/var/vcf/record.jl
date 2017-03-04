@@ -47,6 +47,10 @@ function initialize!(record::VCFRecord)
     return record
 end
 
+function Base.convert(::Type{VCFRecord}, str::AbstractString)
+    return VCFRecord(convert(Vector{UInt8}, str))
+end
+
 function isfilled(record::VCFRecord)
     return !isempty(record.filled)
 end
@@ -296,7 +300,11 @@ end
 
 function chromosome(rec::VCFRecord)
     checkfilled(rec)
-    return String(rec.data[rec.chrom])
+    if ismissing(rec.data, rec.chrom)
+        return Nullable{String}()
+    else
+        return Nullable(String(rec.data[rec.chrom]))
+    end
 end
 
 function leftposition(rec::VCFRecord)
@@ -341,7 +349,7 @@ function quality(rec::VCFRecord)
     end
 end
 
-function filter(rec::VCFRecord)
+function filter_(rec::VCFRecord)
     checkfilled(rec)
     if length(rec.filter) == 1 && ismissing(rec.data, rec.filter[1])
         return String[]
@@ -495,13 +503,13 @@ function Base.show(io::IO, rec::VCFRecord)
     print(io, summary(rec), ':')
     if isfilled(rec)
         println(io)
-        println(io, "   chromosome: ", chromosome(rec))
+        println(io, "   chromosome: ", get(chromosome(rec), "."))
         println(io, "     position: ", get(leftposition(rec), "."))
         println(io, "   identifier: ", let x = identifier(rec); isempty(x) ? "." : join(x, " "); end)
         println(io, "    reference: ", reference(rec))
         println(io, "    alternate: ", let x = alternate(rec); isempty(x) ? "." : join(x, " "); end)
         println(io, "      quality: ", get(quality(rec), "."))
-        println(io, "       filter: ", let x = filter(rec); isempty(x) ? "." : join(x, " "); end)
+        println(io, "       filter: ", let x = filter_(rec); isempty(x) ? "." : join(x, " "); end)
         print(io, "  information: ")
         for (key, val) in information(rec)
             print(io, key)
