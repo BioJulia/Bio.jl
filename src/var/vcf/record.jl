@@ -2,10 +2,10 @@
 # ==========
 
 type VCFRecord
-    # data is supposed to be filled or not
-    filled::Bool
-    # data and indexes
+    # data and filled range
     data::Vector{UInt8}
+    filled::UnitRange{Int}
+    # indexes
     chrom::UnitRange{Int}
     pos::UnitRange{Int}
     id::Vector{UnitRange{Int}}
@@ -20,32 +20,26 @@ end
 
 function VCFRecord(data::Vector{UInt8}=UInt8[])
     record = VCFRecord(
-        !isempty(data),
-        data,
-        0:-1,
-        0:-1,
-        [],
-        0:-1,
-        [],
-        0:-1,
-        [],
-        [],
-        [],
-        [])
-    if record.filled
+        # data and filled
+        data, 1:0,
+        # chrom-alt
+        1:0, 1:0, UnitRange{Int}[], 1:0, UnitRange{Int}[],
+        # qual-genotype
+        1:0, UnitRange{Int}[], UnitRange{Int}[], UnitRange{Int}[], UnitRange{Int}[])
+    if !isempty(data)
         index!(record)
     end
     return record
 end
 
 function initialize!(record::VCFRecord)
-    record.filled = false
-    record.chrom = 0:-1
-    record.pos = 0:-1
+    record.filled = 1:0
+    record.chrom = 1:0
+    record.pos = 1:0
     empty!(record.id)
-    record.ref = 0:-1
+    record.ref = 1:0
     empty!(record.alt)
-    record.qual = 0:-1
+    record.qual = 1:0
     empty!(record.filter)
     empty!(record.infokey)
     empty!(record.format)
@@ -54,7 +48,21 @@ function initialize!(record::VCFRecord)
 end
 
 function isfilled(record::VCFRecord)
+    return !isempty(record.filled)
+end
+
+function datarange(record::VCFRecord)
     return record.filled
+end
+
+function Base.:(==)(record1::VCFRecord, record2::VCFRecord)
+    if isfilled(record1) == isfilled(record2) == true
+        r1 = datarange(record1)
+        r2 = datarange(record2)
+        return length(r1) == length(r2) && memcmp(pointer(record1.data, first(r1)), pointer(record2.data, first(r2)), length(r1)) == 0
+    else
+        return isfilled(record1) == isfilled(record2) == false
+    end
 end
 
 function checkfilled(record::VCFRecord)
@@ -267,8 +275,8 @@ end
 
 function Base.copy(rec::VCFRecord)
     return VCFRecord(
-        rec.filled,
         copy(rec.data),
+        rec.filled,
         rec.chrom,
         rec.pos,
         copy(rec.id),
@@ -485,7 +493,7 @@ end
 
 function Base.show(io::IO, rec::VCFRecord)
     print(io, summary(rec), ':')
-    if rec.filled
+    if isfilled(rec)
         println(io)
         println(io, "   chromosome: ", chromosome(rec))
         println(io, "     position: ", get(leftposition(rec), "."))
@@ -513,6 +521,6 @@ function Base.show(io::IO, rec::VCFRecord)
     end
 end
 
-function memcmp(p1, p2, n)
+function memcmp(p1::Ptr, p2::Ptr, n::Integer)
     return ccall(:memcmp, Cint, (Ptr{Void}, Ptr{Void}, Csize_t), p1, p2, n)
 end

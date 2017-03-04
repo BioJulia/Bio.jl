@@ -327,11 +327,22 @@ end
 
     for specimen in YAML.load_file(joinpath(vcfdir, "index.yml"))
         filepath = joinpath(vcfdir, specimen["filename"])
+        records = VCFRecord[]
         reader = open(VCFReader, filepath)
+        output = IOBuffer()
+        writer = VCFWriter(output, header(reader))
         for record in reader
-            # ...
+            write(writer, record)
+            push!(records, record)
         end
         close(reader)
+        flush(writer)
+
+        records2 = VCFRecord[]
+        for record in VCFReader(IOBuffer(takebuf_array(output)))
+            push!(records2, record)
+        end
+        @test records == records2
     end
 end
 

@@ -54,7 +54,7 @@ function generate_index_function(record_type, machine, actions)
             if cs != 0
                 throw(ArgumentError("failed to index $($(record_type))"))
             end
-            record.filled = true
+            @assert isfilled(record)
             return record
         end
     end
@@ -135,10 +135,8 @@ function generate_read_function(reader_type, machine, actions)
                 stream.position = p
 
                 if cs < 0
-                    error("$($(reader_type)) file format error on line ", linenum)
+                    error("$($(reader_type)) file format error on line ", linenum, " ", repr(String(data[p:min(p+7:p_end)])))
                 elseif found_record
-                    Bio.ReaderHelper.resize_and_copy!(record.data, data, Bio.ReaderHelper.upanchor!(stream):p-2)
-                    record.filled = true
                     break
                 elseif cs == 0
                     throw(EOFError())
@@ -154,6 +152,7 @@ function generate_read_function(reader_type, machine, actions)
                 end
             end
 
+            @assert isfilled(record)
             return record
         end
     end

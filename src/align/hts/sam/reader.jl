@@ -178,7 +178,10 @@ const sam_metainfo_actions = Dict(
     :metainfo_val => :(record.val = (mark1:p-1) - offset),
     :metainfo_dict_key => :(push!(record.dictkey, (mark2:p-1) - offset)),
     :metainfo_dict_val => :(push!(record.dictval, (mark2:p-1) - offset)),
-    :metainfo => :(),
+    :metainfo => quote
+        Bio.ReaderHelper.resize_and_copy!(record.data, data, offset+1:p-1)
+        record.filled = (offset+1:p-1) - offset
+    end,
     :anchor => :(),
     :mark1  => :(mark1 = p),
     :mark2  => :(mark2 = p))
@@ -194,8 +197,9 @@ eval(
         sam_header_machine,
         merge(sam_metainfo_actions, Dict(
             :metainfo => quote
-                record.data = data[Bio.ReaderHelper.upanchor!(stream):p-1]
-                record.filled = true
+                Bio.ReaderHelper.resize_and_copy!(record.data, data, Bio.ReaderHelper.upanchor!(stream):p-1)
+                record.filled = (offset+1:p-1) - offset
+                @assert isfilled(record)
                 push!(reader.header.metainfo, record)
                 Bio.ReaderHelper.ensure_margin!(stream)
                 record = SAMMetaInfo()
@@ -222,7 +226,10 @@ const sam_record_actions = Dict(
     :record_seq   => :(record.seq   = (mark:p-1) - offset),
     :record_qual  => :(record.qual  = (mark:p-1) - offset),
     :record_field => :(push!(record.fields, (mark:p-1) - offset)),
-    :record       => :(),
+    :record       => quote
+        Bio.ReaderHelper.resize_and_copy!(record.data, data, 1:p-1)
+        record.filled = (offset+1:p-1) - offset
+    end,
     :anchor       => :(),
     :mark         => :(mark = p))
 eval(
@@ -235,6 +242,11 @@ eval(
         SAMReader,
         sam_body_machine,
         merge(sam_record_actions, Dict(
-            :record    => :(found_record = true; @escape),
+            :record    => quote
+                Bio.ReaderHelper.resize_and_copy!(record.data, data, Bio.ReaderHelper.upanchor!(stream):p-1)
+                record.filled = (offset+1:p-1) - offset
+                found_record = true
+                @escape
+            end,
             :countline => :(linenum += 1),
             :anchor    => :(Bio.ReaderHelper.anchor!(stream, p); offset = p - 1)))))

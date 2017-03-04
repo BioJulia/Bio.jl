@@ -2,11 +2,12 @@
 # ============
 
 type VCFMetaInfo
-    # data is supposed to be filled or not
-    filled::Bool
+    # data and filled range
+    data::Vector{UInt8}
+    filled::UnitRange{Int}
     # true iff values are indexed by keys (e.g. <ID=...>).
     dict::Bool
-    data::Vector{UInt8}
+    # indexes
     key::UnitRange{Int}
     val::UnitRange{Int}
     dictkey::Vector{UnitRange{Int}}
@@ -14,7 +15,7 @@ type VCFMetaInfo
 end
 
 function VCFMetaInfo(data::Vector{UInt8}=UInt8[])
-    metainfo = VCFMetaInfo(false, false, data, 0:-1, 0:-1, [], [])
+    metainfo = VCFMetaInfo(data, 1:0, false, 1:0, 1:0, UnitRange{Int}[], UnitRange{Int}[])
     if !isempty(data)
         index!(metainfo)
     end
@@ -22,17 +23,27 @@ function VCFMetaInfo(data::Vector{UInt8}=UInt8[])
 end
 
 function initialize!(metainfo::VCFMetaInfo)
-    metainfo.filled = false
+    metainfo.filled = 1:0
     metainfo.dict = false
-    metainfo.key = 0:-1
-    metainfo.val = 0:-1
+    metainfo.key = 1:0
+    metainfo.val = 1:0
     empty!(metainfo.dictkey)
     empty!(metainfo.dictval)
     return metainfo
 end
 
 function isfilled(metainfo::VCFMetaInfo)
-    return metainfo.filled
+    return !isempty(metainfo.filled)
+end
+
+function Base.:(==)(metainfo1::VCFMetaInfo, metainfo2::VCFMetaInfo)
+    if isfilled(metainfo1) == isfilled(metainfo2) == true
+        r1 = datarange(metainfo1)
+        r2 = datarange(metainfo2)
+        return length(r1) == length(r2) && memcmp(pointer(metainfo1.data, first(r1)), pointer(metainfo2.data, first(r2)), length(r1)) == 0
+    else
+        return isfilled(metainfo1) == isfilled(metainfo2) == false
+    end
 end
 
 function checkfilled(metainfo::VCFMetaInfo)

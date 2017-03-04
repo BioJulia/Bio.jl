@@ -204,7 +204,10 @@ const vcf_metainfo_actions = Dict(
     :metainfo_val      => :(record.val = (mark2:p-1) - offset; record.dict = data[mark2] == UInt8('<')),
     :metainfo_dict_key => :(push!(record.dictkey, (mark1:p-1) - offset)),
     :metainfo_dict_val => :(push!(record.dictval, (mark1:p-1) - offset)),
-    :metainfo          => :(),
+    :metainfo          => quote
+        Bio.ReaderHelper.resize_and_copy!(record.data, data, offset+1:p-1)
+        record.filled = (offset+1:p-1) - offset
+    end,
     :anchor            => :(),
     :mark1             => :(mark1 = p),
     :mark2             => :(mark2 = p))
@@ -220,8 +223,9 @@ eval(
         vcf_header_machine,
         merge(vcf_metainfo_actions, Dict(
             :metainfo => quote
-                record.data = data[Bio.ReaderHelper.upanchor!(stream):p-1]
-                record.filled = true
+                Bio.ReaderHelper.resize_and_copy!(record.data, data, Bio.ReaderHelper.upanchor!(stream):p-1)
+                record.filled = (offset+1:p-1) - offset
+                @assert isfilled(record)
                 push!(reader.header.metainfo, record)
                 Bio.ReaderHelper.ensure_margin!(stream)
                 record = VCFMetaInfo()
@@ -243,7 +247,10 @@ const vcf_record_actions = Dict(
     :record_format       => :(push!(record.format, (mark:p-1) - offset)),
     :record_genotype     => :(push!(record.genotype, UnitRange{Int}[])),
     :record_genotype_elm => :(push!(record.genotype[end], (mark:p-1) - offset)),
-    :record              => :(),
+    :record              => quote
+        Bio.ReaderHelper.resize_and_copy!(record.data, data, 1:p-1)
+        record.filled = (offset+1:p-1) - offset
+    end,
     :anchor              => :(),
     :mark                => :(mark = p))
 eval(
@@ -256,6 +263,11 @@ eval(
         VCFReader,
         vcf_body_machine,
         merge(vcf_record_actions, Dict(
-            :record    => :(found_record = true; @escape),
+            :record    => quote
+                Bio.ReaderHelper.resize_and_copy!(record.data, data, Bio.ReaderHelper.upanchor!(stream):p-1)
+                record.filled = (offset+1:p-1) - offset
+                found_record = true
+                @escape
+            end,
             :countline => :(linenum += 1),
             :anchor    => :(Bio.ReaderHelper.anchor!(stream, p); offset = p - 1)))))

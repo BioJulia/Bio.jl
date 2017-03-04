@@ -43,6 +43,7 @@ export
     VCFHeader,
     VCFRecord,
     VCFReader,
+    VCFWriter,
     BCFRecord,
     BCFReader,
     header,
