@@ -10,8 +10,8 @@ function VCFHeader()
     return VCFHeader([], [])
 end
 
-function Base.getindex(header::VCFHeader, key::AbstractString)
-    return Base.filter(x -> metainfokey(x) == key, header.metainfo)
+function Base.find(header::VCFHeader, tag::AbstractString)
+    return Base.filter(m -> isequaltag(m, tag), header.metainfo)
 end
 
 function Base.write(io::IO, header::VCFHeader)

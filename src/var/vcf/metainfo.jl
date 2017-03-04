@@ -8,7 +8,7 @@ type VCFMetaInfo
     # true iff values are indexed by keys (e.g. <ID=...>).
     dict::Bool
     # indexes
-    key::UnitRange{Int}
+    tag::UnitRange{Int}
     val::UnitRange{Int}
     dictkey::Vector{UnitRange{Int}}
     dictval::Vector{UnitRange{Int}}
@@ -25,11 +25,15 @@ end
 function initialize!(metainfo::VCFMetaInfo)
     metainfo.filled = 1:0
     metainfo.dict = false
-    metainfo.key = 1:0
+    metainfo.tag = 1:0
     metainfo.val = 1:0
     empty!(metainfo.dictkey)
     empty!(metainfo.dictval)
     return metainfo
+end
+
+function datarange(metainfo::VCFMetaInfo)
+    return metainfo.filled
 end
 
 function isfilled(metainfo::VCFMetaInfo)
@@ -52,14 +56,14 @@ function checkfilled(metainfo::VCFMetaInfo)
     end
 end
 
-function VCFMetaInfo(base::VCFMetaInfo; key=nothing, value=nothing)
+function VCFMetaInfo(base::VCFMetaInfo; tag=nothing, value=nothing)
     checkfilled(base)
     buf = IOBuffer()
     print(buf, "##")
-    if key == nothing
-        write(buf, base.data[base.key])
+    if tag == nothing
+        write(buf, base.data[base.tag])
     else
-        print(buf, key)
+        print(buf, tag)
     end
     print(buf, '=')
     if value == nothing
@@ -88,9 +92,15 @@ function needs_quote(val::String)
     return contains(val, " ") || contains(val, ",") || contains(val, "\"") || contains(val, "\\")
 end
 
-function metainfokey(metainfo::VCFMetaInfo)
+function isequaltag(metainfo::VCFMetaInfo, tag::AbstractString)
     checkfilled(metainfo)
-    return String(metainfo.data[metainfo.key])
+    return length(metainfo.tag) == sizeof(tag) &&
+           memcmp(pointer(metainfo.data, first(metainfo.tag)), pointer(tag), length(metainfo.tag)) == 0
+end
+
+function metainfotag(metainfo::VCFMetaInfo)
+    checkfilled(metainfo)
+    return String(metainfo.data[metainfo.tag])
 end
 
 function metainfoval(metainfo::VCFMetaInfo)
@@ -146,7 +156,7 @@ function Base.show(io::IO, metainfo::VCFMetaInfo)
     print(io, summary(metainfo), ':')
     if isfilled(metainfo)
         println(io)
-        println(io, "    key: ", metainfokey(metainfo))
+        println(io, "    tag: ", metainfotag(metainfo))
         print(io, "  value:")
         if metainfo.dict
             for (key, val) in zip(keys(metainfo), values(metainfo))

@@ -1,6 +1,14 @@
 # VCF Reader
 # ==========
 
+"""
+    VCFReader(input::IO)
+
+Create a data reader of the VCF file format.
+
+# Arguments
+* `input`: data source
+"""
 type VCFReader <: Bio.IO.AbstractReader
     state::Bio.Ragel.State
     header::VCFHeader
@@ -42,7 +50,7 @@ const vcf_metainfo_machine, vcf_record_machine, vcf_header_machine, vcf_body_mac
     fileformat = let
         key = cat("fileformat")
         key.actions[:enter] = [:mark1]
-        key.actions[:exit]  = [:metainfo_key]
+        key.actions[:exit]  = [:metainfo_tag]
 
         version = re"[!-~]+"
         version.actions[:enter] = [:mark2]
@@ -55,9 +63,9 @@ const vcf_metainfo_machine, vcf_record_machine, vcf_header_machine, vcf_body_mac
 
     # All kinds of meta-information line after 'fileformat' are handled here.
     metainfo = let
-        key = re"[0-9A-Za-z_]+"
-        key.actions[:enter] = [:mark1]
-        key.actions[:exit]  = [:metainfo_key]
+        tag = re"[0-9A-Za-z_]+"
+        tag.actions[:enter] = [:mark1]
+        tag.actions[:exit]  = [:metainfo_tag]
 
         str = re"[ -;=-~][ -~]*"  # does not starts with '<'
         str.actions[:enter] = [:mark2]
@@ -81,7 +89,7 @@ const vcf_metainfo_machine, vcf_record_machine, vcf_header_machine, vcf_body_mac
         dict.actions[:enter] = [:mark2]
         dict.actions[:exit]  = [:metainfo_val]
 
-        cat("##", key, '=', alt(str, dict))
+        cat("##", tag, '=', alt(str, dict))
     end
     metainfo.actions[:enter] = [:anchor]
     metainfo.actions[:exit]  = [:metainfo]
@@ -200,7 +208,7 @@ const vcf_metainfo_machine, vcf_record_machine, vcf_header_machine, vcf_body_mac
 end)()
 
 const vcf_metainfo_actions = Dict(
-    :metainfo_key      => :(record.key = (mark1:p-1) - offset),
+    :metainfo_tag      => :(record.tag = (mark1:p-1) - offset),
     :metainfo_val      => :(record.val = (mark2:p-1) - offset; record.dict = data[mark2] == UInt8('<')),
     :metainfo_dict_key => :(push!(record.dictkey, (mark1:p-1) - offset)),
     :metainfo_dict_val => :(push!(record.dictval, (mark1:p-1) - offset)),

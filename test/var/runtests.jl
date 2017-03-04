@@ -134,25 +134,25 @@ end
     metainfo = VCFMetaInfo()
     @test !isfilled(metainfo)
     @test ismatch(r"^Bio.Var.VCFMetaInfo: <not filled>", repr(metainfo))
-    @test_throws ArgumentError metainfokey(metainfo)
+    @test_throws ArgumentError metainfotag(metainfo)
 
     metainfo = VCFMetaInfo(b"##source=foobar1234")
     @test isfilled(metainfo)
-    @test metainfokey(metainfo) == "source"
+    @test metainfotag(metainfo) == "source"
     @test metainfoval(metainfo) == "foobar1234"
 
     metainfo = VCFMetaInfo(metainfo)
     @test isa(metainfo, VCFMetaInfo)
-    metainfo = VCFMetaInfo(metainfo, key="date")
-    @test metainfokey(metainfo) == "date"
+    metainfo = VCFMetaInfo(metainfo, tag="date")
+    @test metainfotag(metainfo) == "date"
     metainfo = VCFMetaInfo(metainfo, value="2017-01-30")
     @test metainfoval(metainfo) == "2017-01-30"
-    metainfo = VCFMetaInfo(metainfo, key="INFO", value=["ID"=>"DP", "Number"=>"1", "Type"=>"Integer", "Description"=>"Total Depth"])
+    metainfo = VCFMetaInfo(metainfo, tag="INFO", value=["ID"=>"DP", "Number"=>"1", "Type"=>"Integer", "Description"=>"Total Depth"])
     @test metainfo["ID"] == "DP"
     @test metainfo["Number"] == "1"
     @test metainfo["Type"] == "Integer"
     @test metainfo["Description"] == "Total Depth"
-    @test metainfokey(metainfo) == "INFO"
+    @test metainfotag(metainfo) == "INFO"
     @test metainfoval(metainfo) == """<ID=DP,Number=1,Type=Integer,Description="Total Depth">"""
 
     record = VCFRecord()
@@ -198,7 +198,7 @@ end
     @test isa(header(reader), VCFHeader)
     let header = header(reader)
         @test length(header.metainfo) == 1
-        @test metainfokey(header.metainfo[1]) == "fileformat"
+        @test metainfotag(header.metainfo[1]) == "fileformat"
         @test metainfoval(header.metainfo[1]) == "VCFv4.3"
         @test isempty(header.sampleID)
     end
@@ -224,21 +224,23 @@ end
         @test length(header.metainfo) == 10
 
         let metainfo = header.metainfo[1]
-            @test metainfokey(metainfo) == "fileformat"
+            @test metainfotag(metainfo) == "fileformat"
             @test metainfoval(metainfo) == "VCFv4.2"
             @test_throws ArgumentError keys(metainfo)
             @test_throws ArgumentError values(metainfo)
         end
+        @test length(find(header, "fileformat")) == 1
+        @test first(find(header, "fileformat")) == header.metainfo[1]
 
         let metainfo = header.metainfo[2]
-            @test metainfokey(metainfo) == "fileDate"
+            @test metainfotag(metainfo) == "fileDate"
             @test metainfoval(metainfo) == "20090805"
             @test_throws ArgumentError keys(metainfo)
             @test_throws ArgumentError values(metainfo)
         end
 
         let metainfo = header.metainfo[5]
-            @test metainfokey(metainfo) == "contig"
+            @test metainfotag(metainfo) == "contig"
             @test metainfoval(metainfo) == """<ID=20,length=62435964,assembly=B36,md5=f126cdf8a6e0c7f379d618ff66beb2da,species="Homo sapiens",taxonomy=x>"""
             @test keys(metainfo) == ["ID", "length", "assembly", "md5", "species", "taxonomy"]
             @test values(metainfo) == ["20", "62435964", "B36", "f126cdf8a6e0c7f379d618ff66beb2da", "Homo sapiens", "x"]
@@ -248,13 +250,14 @@ end
         end
 
         let metainfo = header.metainfo[7]
-            @test metainfokey(metainfo) == "INFO"
+            @test metainfotag(metainfo) == "INFO"
             @test metainfoval(metainfo) == """<ID=NS,Number=1,Type=Integer,Description="Number of Samples With Data">"""
             @test keys(metainfo) == ["ID", "Number", "Type", "Description"]
             @test values(metainfo) == ["NS", "1", "Integer", "Number of Samples With Data"]
             @test metainfo["ID"] == "NS"
             @test metainfo["Type"] == "Integer"
         end
+        @test length(find(header, "INFO")) == 4
 
         @test header.sampleID == ["NA00001", "NA00002", "NA00003"]
     end

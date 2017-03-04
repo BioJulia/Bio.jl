@@ -47,7 +47,7 @@ export
     BCFRecord,
     BCFReader,
     header,
-    metainfokey,
+    metainfotag,
     metainfoval,
     isfilled,
     chromosome,

@@ -1,6 +1,15 @@
 # VCF Writer
 # ==========
 
+"""
+    VCFWriter(output::IO, header::VCFHeader)
+
+Create a data writer of the VCF file format.
+
+# Arguments
+* `output`: data sink
+* `header`: VCF header object
+"""
 type VCFWriter{T<:IO} <: Bio.IO.AbstractWriter
     stream::T
 end
