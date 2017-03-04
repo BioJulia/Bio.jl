@@ -111,6 +111,8 @@ The following table summarizes supported file formats.
 | PDB         | `PDB`    | `Bio.Structure` | <http://www.wwpdb.org/documentation/file-format-content/format33/v3.3.html> |
 | SAM         | `SAM`    | `Bio.Align`     | <https://samtools.github.io/hts-specs/SAMv1.pdf>                            |
 | BAM         | `BAM`    | `Bio.Align`     | <https://samtools.github.io/hts-specs/SAMv1.pdf>                            |
+| VCF         | `VCF`    | `Bio.Var`       | <https://samtools.github.io/hts-specs/VCFv4.3.pdf>                          |
+| BCF         | `BCF`    | `Bio.Var`       | <https://samtools.github.io/hts-specs/VCFv4.3.pdf>                          |
 
 
 ### FASTA
@@ -296,7 +298,6 @@ Bio.Align.SAMReader
 Bio.Align.SAMWriter
 ```
 
-
 ### BAM
 
 * Reader type: `BAMReader`
@@ -314,3 +315,30 @@ Bio.Align.BAMReader
 Bio.Align.BAMWriter
 ```
 
+
+### VCF
+
+* Reader type: `VCFReader`
+* Writer type: `VCFWriter{T<:IO}`
+* Element type: `VCFRecord`
+
+VCF is a text-based file format for representing genetic variations.
+
+```@docs
+Bio.Var.VCFReader
+Bio.Var.VCFWriter
+```
+
+
+### BCF
+
+* Reader type: `BCFReader{T<:IO}`
+* Writer type: `BCFWriter{T<:IO}`
+* Element type: `BCFRecord`
+
+BCF is a binary counterpart of the VCF file format.
+
+```@docs
+Bio.Var.BCFReader
+Bio.Var.BCFWriter
+```
