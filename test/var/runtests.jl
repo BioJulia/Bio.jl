@@ -383,7 +383,7 @@ end
     record = BCFRecord(record, alternate=["ATT", "ACT"])
     @test alternate(record) == ["ATT", "ACT"]
     record = BCFRecord(record, filter=[2, 3])
-    @test Bio.Var.filter(record) == [2, 3]
+    @test filter_(record) == [2, 3]
     record = BCFRecord(record, information=Dict(1 => Int8[42]))
     @test information(record) == [(1, 42)]
     @test information(record, simplify=false) == [(1, [42])]
@@ -399,7 +399,7 @@ end
     @test reference(record) == "G"
     @test alternate(record) == ["A"]
     @test quality(record) == 29.0
-    @test Bio.Var.filter(record) == [1]
+    @test filter_(record) == [1]
     @test information(record) == [(1,3),(2,14),(3,0.5),(5,nothing),(6,nothing)]
     @test information(record, simplify=false) == [(1,[3]),(2,[14]),(3,[0.5]),(5,[]),(6,[])]
     @test genotype(record) == [(9,[[2,3],[4,3],[4,4]]),(10,[[48],[48],[43]]),(2,[[1],[8],[5]]),(11,[[51,51],[51,51],[-128,-128]])]

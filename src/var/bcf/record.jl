@@ -163,7 +163,7 @@ function Base.show(io::IO, record::BCFRecord)
         println(io, "    reference: ", reference(record))
         println(io, "    alternate: ", join(alternate(record), ' '))
         println(io, "      quality: ", quality(record))
-        println(io, "       filter: ", join(filter(record), ' '))
+        println(io, "       filter: ", join(filter_(record), ' '))
           print(io, "  information: ", information(record))
     else
         print(io, " <not filled>")
@@ -243,7 +243,7 @@ function alternate(rec::BCFRecord)
     return alt
 end
 
-function filter(rec::BCFRecord)
+function filter_(rec::BCFRecord)
     checkfilled(rec)
     # skip ID, REF and ALTs
     offset = 24
