@@ -323,8 +323,8 @@ end
 
     @test_throws EOFError read!(reader, record)
 
-    vcfdir = Pkg.dir("Bio", "test", "BioFmtSpecimens", "VCF")
-
+    # round-trip test
+    vcfdir = joinpath(dirname(@__FILE__), "..", "BioFmtSpecimens", "VCF")
     for specimen in YAML.load_file(joinpath(vcfdir, "index.yml"))
         filepath = joinpath(vcfdir, specimen["filename"])
         records = VCFRecord[]
