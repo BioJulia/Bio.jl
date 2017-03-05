@@ -563,6 +563,7 @@ end
 
 Get the genotypes in `record` that match `indexes` and `keys`.
 `indexes` and `keys` can be either a scalar or a vector value.
+Trailing fields that are dropped are filled with `"."`.
 """
 function genotype(record::VCFRecord, index::Integer, key::String)::String
     checkfilled(record)

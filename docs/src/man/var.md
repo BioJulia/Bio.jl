@@ -170,7 +170,7 @@ julia> metainfo["ID"]
 ```
 
 `VCFRecord` and `BCFRecord` objects support the following accessor functions
-(see docstring of each accessor for the details):
+(see the docstring of each accessor for the details):
 
 | Accessor       | Description                    |
 | :-------       | :----------                    |
@@ -212,7 +212,7 @@ julia> identifier(record)
  "rs6054257"
 
 julia> reference(record)
-"G"
+Nullable{String}("G")
 
 julia> alternate(record)
 1-element Array{String,1}:
@@ -247,5 +247,17 @@ julia> genotype(record)
 2-element Array{Array{String,1},1}:
  String["0|0","48","1","51,51"]
  String["1|0","48","8","51,51"]
+
+julia> genotype(record, 1)
+4-element Array{String,1}:
+ "0|0"
+ "48"
+ "1"
+ "51,51"
+
+julia> genotype(record, 1:2, "GT")
+2-element Array{String,1}:
+ "0|0"
+ "1|0"
 
 ```
