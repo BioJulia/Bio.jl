@@ -412,6 +412,11 @@ end
 
     bcfdir = joinpath(dirname(@__FILE__), "..", "BioFmtSpecimens", "BCF")
     reader = BCFReader(open(joinpath(bcfdir, "example.bcf")))
+    let header = header(reader)
+        @test length(find(header, "fileformat")) == 1
+        @test find(header, "fileformat")[1] == VCFMetaInfo("##fileformat=VCFv4.2")
+        @test length(find(header, "FORMAT")) == 4
+    end
     record = BCFRecord()
     @test read!(reader, record) === record
     @test chromosome(record) == 1
