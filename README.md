@@ -30,6 +30,7 @@ developed as submodules:
 * `Bio.Align`: Sequence alignment
     * Alignment data structures
     * Pairwise alignment algorithms
+    * Reader for SAM and BAM file formats
 * `Bio.Intervals`: Genomic intervals and annotations
     * Genomic intervals with annotations
     * Readers for BED and BigBed file formats
