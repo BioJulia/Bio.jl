@@ -410,7 +410,8 @@ end
     @test information(record, 1) == 42
     @test information(record, 1, simplify=false) == [42]
 
-    reader = BCFReader(open("example.bcf"))
+    bcfdir = joinpath(dirname(@__FILE__), "..", "BioFmtSpecimens", "BCF")
+    reader = BCFReader(open(joinpath(bcfdir, "example.bcf")))
     record = BCFRecord()
     @test read!(reader, record) === record
     @test chromosome(record) == 1
@@ -429,6 +430,30 @@ end
     @test genotype(record, 2, 9) == [4,3]
     @test genotype(record, :, 9) == [[2,3],[4,3],[4,4]]
     @test ismatch(r"^Bio.Var.BCFRecord:\n.*", repr(record))
+    close(reader)
+
+    # round-trip test
+    for specimen in YAML.load_file(joinpath(bcfdir, "index.yml"))
+        filepath = joinpath(bcfdir, specimen["filename"])
+        records = BCFRecord[]
+        reader = open(BCFReader, filepath)
+        output = IOBuffer()
+        writer = BCFWriter(output, header(reader))
+        for record in reader
+            write(writer, record)
+            push!(records, record)
+        end
+        # HACK: take the data buffer before closing the writer
+        data = output.data
+        close(reader)
+        close(writer)
+
+        records2 = BCFRecord[]
+        for record in BCFReader(IOBuffer(data))
+            push!(records2, record)
+        end
+        @test records == records2
+    end
 end
 
 end # module TestVar

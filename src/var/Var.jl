@@ -46,6 +46,7 @@ export
     VCFWriter,
     BCFRecord,
     BCFReader,
+    BCFWriter,
     header,
     metainfotag,
     metainfoval,

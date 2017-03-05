@@ -18,10 +18,28 @@ function isfilled(record::BCFRecord)
     return !isempty(record.filled)
 end
 
+function datarange(record::BCFRecord)
+    return record.filled
+end
+
 function checkfilled(record::BCFRecord)
     if !isfilled(record)
         throw(ArgumentError("unfilled BCF record"))
     end
+end
+
+function Base.:(==)(record1::BCFRecord, record2::BCFRecord)
+    if isfilled(record1) == isfilled(record2) == true
+        r1 = datarange(record1)
+        r2 = datarange(record2)
+        return length(r1) == length(r2) && memcmp(pointer(record1.data, first(r1)), pointer(record2.data, first(r2)), length(r1)) == 0
+    else
+        return isfilled(record1) == isfilled(record2) == false
+    end
+end
+
+function Base.copy(record::BCFRecord)
+    return BCFRecord(record.data[record.filled], record.filled, record.sharedlen, record.indivlen)
 end
 
 function BCFRecord(base::BCFRecord;
