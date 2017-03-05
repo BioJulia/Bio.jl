@@ -160,6 +160,22 @@ end
     @test ismatch(r"^Bio.Var.VCFRecord: <not filled>", repr(record))
     @test_throws ArgumentError chromosome(record)
 
+    record = VCFRecord("20\t302\t.\tT\tTA\t999\t.\t.\tGT")
+    @test isfilled(record)
+    @test get(chromosome(record)) == "20"
+    @test get(leftposition(record)) == 302
+    @test identifier(record) == String[]
+    @test get(reference(record)) == "T"
+    @test alternate(record) == ["TA"]
+    @test get(quality(record)) == 999
+    @test filter_(record) == String[]
+    @test information(record) == Pair{String,String}[]
+    @test format(record) == ["GT"]
+
+    # empty data is not a valid VCF record
+    @test_throws ArgumentError VCFRecord("")
+    @test_throws ArgumentError VCFRecord(b"")
+
     record = VCFRecord(b".\t.\t.\t.\t.\t.\t.\t.\t")
     @test isfilled(record)
     @test isnull(chromosome(record))
@@ -174,7 +190,7 @@ end
     record = VCFRecord(record, identifier="rs1111")
     @test identifier(record) == ["rs1111"]
     record = VCFRecord(record, reference="A")
-    @test reference(record) == "A"
+    @test get(reference(record)) == "A"
     record = VCFRecord(record, alternate=["AT"])
     @test alternate(record) == ["AT"]
     record = VCFRecord(record, quality=11.2)
@@ -282,7 +298,7 @@ end
     @test !isnull(leftposition(record))
     @test get(leftposition(record)) === 1234
     @test identifier(record) == ["rs001234"]
-    @test reference(record) == "A"
+    @test get(reference(record)) == "A"
     @test alternate(record) == ["C"]
     @test !isnull(quality(record))
     @test get(quality(record)) === 30.0
@@ -306,7 +322,7 @@ end
     @test !isnull(leftposition(record))
     @test get(leftposition(record)) == 4
     @test isempty(identifier(record))
-    @test reference(record) == "A"
+    @test get(reference(record)) == "A"
     @test alternate(record) == ["AA", "AAT"]
     @test isnull(quality(record))
     @test isempty(filter_(record))

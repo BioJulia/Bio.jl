@@ -18,7 +18,17 @@ type VCFRecord
     genotype::Vector{Vector{UnitRange{Int}}}
 end
 
-function VCFRecord(data::Vector{UInt8}=UInt8[])
+function VCFRecord()
+    return VCFRecord(
+        # data and filled
+        UInt8[], 1:0,
+        # chrom-alt
+        1:0, 1:0, UnitRange{Int}[], 1:0, UnitRange{Int}[],
+        # qual-genotype
+        1:0, UnitRange{Int}[], UnitRange{Int}[], UnitRange{Int}[], UnitRange{Int}[])
+end
+
+function Base.convert(::Type{VCFRecord}, data::Vector{UInt8})
     record = VCFRecord(
         # data and filled
         data, 1:0,
@@ -26,10 +36,12 @@ function VCFRecord(data::Vector{UInt8}=UInt8[])
         1:0, 1:0, UnitRange{Int}[], 1:0, UnitRange{Int}[],
         # qual-genotype
         1:0, UnitRange{Int}[], UnitRange{Int}[], UnitRange{Int}[], UnitRange{Int}[])
-    if !isempty(data)
-        index!(record)
-    end
+    index!(record)
     return record
+end
+
+function Base.convert(::Type{VCFRecord}, str::String)
+    return VCFRecord(convert(Vector{UInt8}, str))
 end
 
 function initialize!(record::VCFRecord)
@@ -45,10 +57,6 @@ function initialize!(record::VCFRecord)
     empty!(record.format)
     empty!(record.genotype)
     return record
-end
-
-function Base.convert(::Type{VCFRecord}, str::AbstractString)
-    return VCFRecord(convert(Vector{UInt8}, str))
 end
 
 function isfilled(record::VCFRecord)
@@ -327,7 +335,11 @@ end
 
 function reference(rec::VCFRecord)
     checkfilled(rec)
-    return String(rec.data[rec.ref])
+    if ismissing(rec.data, rec.ref)
+        return Nullable{String}()
+    else
+        return Nullable(String(rec.data[rec.ref]))
+    end
 end
 
 function alternate(rec::VCFRecord)
@@ -495,7 +507,7 @@ function findgeno(rec::VCFRecord, key::String)
     return 0
 end
 
-function ismissing(data, range)
+function ismissing(data::Vector{UInt8}, range::UnitRange{Int})
     return length(range) == 1 && data[first(range)] == UInt8('.')
 end
 
@@ -506,7 +518,7 @@ function Base.show(io::IO, rec::VCFRecord)
         println(io, "   chromosome: ", get(chromosome(rec), "."))
         println(io, "     position: ", get(leftposition(rec), "."))
         println(io, "   identifier: ", let x = identifier(rec); isempty(x) ? "." : join(x, " "); end)
-        println(io, "    reference: ", reference(rec))
+        println(io, "    reference: ", get(reference(rec), "."))
         println(io, "    alternate: ", let x = alternate(rec); isempty(x) ? "." : join(x, " "); end)
         println(io, "      quality: ", get(quality(rec), "."))
         println(io, "       filter: ", let x = filter_(rec); isempty(x) ? "." : join(x, " "); end)
