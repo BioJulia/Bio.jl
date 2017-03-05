@@ -18,6 +18,11 @@ type VCFRecord
     genotype::Vector{Vector{UnitRange{Int}}}
 end
 
+"""
+    VCFRecord()
+
+Create an unfilled `VCFRecord` object.
+"""
 function VCFRecord()
     return VCFRecord(
         # data and filled
@@ -26,6 +31,17 @@ function VCFRecord()
         1:0, 1:0, UnitRange{Int}[], 1:0, UnitRange{Int}[],
         # qual-genotype
         1:0, UnitRange{Int}[], UnitRange{Int}[], UnitRange{Int}[], UnitRange{Int}[])
+end
+
+"""
+    VCFRecord(data::Vector{UInt8})
+
+Create a `VCFRecord` object from `data` containing a VCF record.
+This function verifies the format and indexes fields for accessors.
+Note that the ownership of `data` is transferred to a new `VCFRecord` object.
+"""
+function VCFRecord(data::Vector{UInt8})
+    return convert(VCFRecord, data)
 end
 
 function Base.convert(::Type{VCFRecord}, data::Vector{UInt8})
@@ -40,7 +56,17 @@ function Base.convert(::Type{VCFRecord}, data::Vector{UInt8})
     return record
 end
 
-function Base.convert(::Type{VCFRecord}, str::String)
+"""
+    VCFRecord(str::AbstractString)
+
+Create a `VCFRecord` object from `str` containing a VCF record.
+This function verifies the format and indexes fields for accessors.
+"""
+function VCFRecord(str::AbstractString)
+    return convert(VCFRecord, str)
+end
+
+function Base.convert(::Type{VCFRecord}, str::AbstractString)
     return VCFRecord(convert(Vector{UInt8}, str))
 end
 
@@ -306,7 +332,17 @@ function Base.write(io::IO, rec::VCFRecord)
     return write(io, rec.data)
 end
 
-function chromosome(rec::VCFRecord)
+
+# Accessor functions
+# ------------------
+
+"""
+    chromosome(record::VCFRecord)::Nullable{String}
+
+Get the chromosome name of `record`.
+This function returns a null value if CHROM is missing.
+"""
+function chromosome(rec::VCFRecord)::Nullable{String}
     checkfilled(rec)
     if ismissing(rec.data, rec.chrom)
         return Nullable{String}()
@@ -315,16 +351,29 @@ function chromosome(rec::VCFRecord)
     end
 end
 
-function leftposition(rec::VCFRecord)
+"""
+    leftposition(record::VCFRecord)::Nullable{Int}
+
+Get the reference position of `record`.
+This function returns a null value if POS is missing.
+"""
+function Bio.leftposition(rec::VCFRecord)::Nullable{Int}
     checkfilled(rec)
     if ismissing(rec.data, rec.pos)
         return Nullable{Int}()
     else
+        # TODO: no-copy accessor
         return Nullable(parse(Int, String(rec.data[rec.pos])))
     end
 end
 
-function identifier(rec::VCFRecord)
+"""
+    identifier(record::VCFRecord)::Vector{String}
+
+Get the identifiers of `record`.
+This function returns an empty vector if ID is missing.
+"""
+function identifier(rec::VCFRecord)::Vector{String}
     checkfilled(rec)
     if length(rec.id) == 1 && ismissing(rec.data, rec.id[1])
         return String[]
@@ -333,7 +382,13 @@ function identifier(rec::VCFRecord)
     end
 end
 
-function reference(rec::VCFRecord)
+"""
+    reference(record::VCFRecord)::Nullable{String}
+
+Get the reference bases of `record`.
+This function returns a null value if REF is missing.
+"""
+function reference(rec::VCFRecord)::Nullable{String}
     checkfilled(rec)
     if ismissing(rec.data, rec.ref)
         return Nullable{String}()
@@ -342,7 +397,13 @@ function reference(rec::VCFRecord)
     end
 end
 
-function alternate(rec::VCFRecord)
+"""
+    alternate(record::VCFRecord)::Vector{String}
+
+Get the alternate bases of `record`.
+This function returns an empty vector if ALT is missing.
+"""
+function alternate(rec::VCFRecord)::Vector{String}
     checkfilled(rec)
     if length(rec.alt) == 1 && ismissing(rec.data, rec.alt[1])
         return String[]
@@ -351,7 +412,13 @@ function alternate(rec::VCFRecord)
     end
 end
 
-function quality(rec::VCFRecord)
+"""
+    quality(record::VCFRecord)::Nullable{Float64}
+
+Get the quality score of `record`.
+This function returns a null value if QUAL is missing.
+"""
+function quality(rec::VCFRecord)::Nullable{Float64}
     checkfilled(rec)
     if ismissing(rec.data, rec.qual)
         return Nullable{Float64}()
@@ -361,7 +428,13 @@ function quality(rec::VCFRecord)
     end
 end
 
-function filter_(rec::VCFRecord)
+"""
+    filter_(record::VCFRecord)::Vector{String}
+
+Get the filter status of `record`.
+This function returns an empty vector if FILTER is missing.
+"""
+function filter_(rec::VCFRecord)::Vector{String}
     checkfilled(rec)
     if length(rec.filter) == 1 && ismissing(rec.data, rec.filter[1])
         return String[]
@@ -370,7 +443,13 @@ function filter_(rec::VCFRecord)
     end
 end
 
-function information(rec::VCFRecord)
+"""
+    information(record::VCFRecord)::Vector{Pair{String,String}}
+
+Get the additional information of `record`.
+This function returns an empty vector if INFO is missing.
+"""
+function information(rec::VCFRecord)::Vector{Pair{String,String}}
     checkfilled(rec)
     ret = Pair{String,String}[]
     for (i, key) in enumerate(rec.infokey)
@@ -380,10 +459,23 @@ function information(rec::VCFRecord)
     return ret
 end
 
-function information(rec::VCFRecord, key::String)
+"""
+    information(record::VCFRecord, key::String)::String
+
+Get the additional information of `record` with `key`.
+Keys without corresponding values return an empty string.
+"""
+function information(rec::VCFRecord, key::String)::String
     checkfilled(rec)
-    i = findinfokey(rec, key)
-    if i == 0
+    # find key index
+    i = 1
+    while i ≤ endof(rec.infokey)
+        if isequaldata(key, rec.data, rec.infokey[i])
+            break
+        end
+        i += 1
+    end
+    if i > endof(rec.infokey)
         throw(KeyError(key))
     end
     val = infovalrange(rec, i)
@@ -394,17 +486,13 @@ function information(rec::VCFRecord, key::String)
     end
 end
 
-function findinfokey(rec::VCFRecord, key::String)
-    for (i, infokey) in enumerate(rec.infokey)
-        n = length(infokey)
-        if n == sizeof(key) && memcmp(pointer(rec.data, first(infokey)), pointer(key), n) == 0
-            return i
-        end
-    end
-    return 0
-end
+"""
+    infokeys(record::VCFRecord)::Vector{String}
 
-function infokeys(rec::VCFRecord)
+Get the keys of the additional information of `record`.
+This function returns an empty vector if INFO is missing.
+"""
+function infokeys(rec::VCFRecord)::Vector{String}
     checkfilled(rec)
     if length(rec.infokey) == 1 && ismissing(rec.data, rec.infokey[1])
         return String[]
@@ -413,6 +501,7 @@ function infokeys(rec::VCFRecord)
     end
 end
 
+# Returns the data range of the `i`-th value.
 function infovalrange(rec::VCFRecord, i::Int)
     checkfilled(rec)
     data = rec.data
@@ -429,7 +518,13 @@ function infovalrange(rec::VCFRecord, i::Int)
     end
 end
 
-function format(rec::VCFRecord)
+"""
+    format(record::VCFRecord)::Vector{String}
+
+Get the genotype format of `reocrd`.
+This function returns an emtpy vector if FORMAT is missing.
+"""
+function format(rec::VCFRecord)::Vector{String}
     checkfilled(rec)
     if length(rec.format) == 1 && ismissing(rec.data, rec.format[1])
         return String[]
@@ -438,77 +533,93 @@ function format(rec::VCFRecord)
     end
 end
 
+"""
+    genotype(record::VCFRecord)::Vector{Vector{String}}
+
+Get the genotypes of `record`.
+"""
 function genotype(rec::VCFRecord)
     checkfilled(rec)
     ret = Vector{String}[]
     for i in 1:endof(rec.genotype)
-        push!(ret, genotype(rec, i))
+        push!(ret, genotype_impl(rec, i, 1:endof(rec.format)))
     end
     return ret
 end
 
+"""
+    genotype(record::VCFRecord, index::Integer)::Vector{String}
+
+Get the genotypes of the `index`-th individual in `record`.
+This is effectively equivalent to `genotype(record)[index]` but more efficient.
+"""
 function genotype(rec::VCFRecord, index::Integer)
     checkfilled(rec)
-    ret = String[]
-    indiv = rec.genotype[index]
-    for j in 1:endof(rec.format)
-        if j > endof(indiv)
-            push!(ret, ".")  # missing
-        else
-            push!(ret, String(rec.data[indiv[j]]))
-        end
-    end
-    return ret
+    return genotype_impl(rec, index, 1:endof(rec.format))
 end
 
-function genotype(rec::VCFRecord, index::Integer, key::String)
+"""
+    genotype(record::VCFRecord, indexes, keys)
+
+Get the genotypes in `record` that match `indexes` and `keys`.
+`indexes` and `keys` can be either a scalar or a vector value.
+"""
+function genotype(rec::VCFRecord, index::Integer, key::String)::String
     checkfilled(rec)
-    j = findgeno(rec, key)
-    if j == 0
+    k = findgenokey(rec, key)
+    if k == 0
         throw(KeyError(key))
     end
-    indiv = rec.genotype[index]
-    if endof(indiv) < j
+    return genotype_impl(rec, index, k)
+end
+
+function genotype(record::VCFRecord, index::Integer, keys::AbstractVector{String})::Vector{String}
+    checkfilled(record)
+    return [genotype(record, index, key) for key in keys]
+end
+
+function genotype{T<:Integer}(rec::VCFRecord, indexes::AbstractVector{T}, key::String)::Vector{String}
+    checkfilled(rec)
+    k = findgenokey(rec, key)
+    if k == 0
+        throw(KeyError(key))
+    end
+    return [genotype_impl(rec, i, k) for i in indexes]
+end
+
+function genotype{T<:Integer}(record::VCFRecord, indexes::AbstractVector{T}, keys::AbstractVector{String})::Vector{Vector{String}}
+    checkfilled(rec)
+    ks = Vector{Int}(length(keys))
+    for i in 1:endof(keys)
+        key = keys[i]
+        k = findgenokey(record, key)
+        if k == 0
+            throw(KeyError(key))
+        end
+        ks[i] = k
+    end
+    return [genotype_impl(record, i, ks) for i in indexes]
+end
+
+function genotype(record::VCFRecord, ::Colon, key::String)::Vector{String}
+    return genotype(record, 1:endof(record.genotype), key)
+end
+
+function findgenokey(record::VCFRecord, key::String)
+    return findfirst(r -> isequaldata(key, record.data, r), record.format)
+end
+
+function genotype_impl(record::VCFRecord, index::Int, keys::AbstractVector{Int})
+    return [genotype_impl(record, index, k) for k in keys]
+end
+
+function genotype_impl(record::VCFRecord, index::Int, key::Int)
+    geno = record.genotype[index]
+    if key > endof(geno)  # dropped field
         return "."
     else
-        return String(rec.data[indiv[j]])
+        return String(record.data[geno[key]])
     end
-end
-
-function genotype{T<:Integer}(rec::VCFRecord, indexes::AbstractVector{T}, key::String)
-    checkfilled(rec)
-    j = findgeno(rec, key)
-    if j == 0
-        throw(KeyError(key))
-    end
-    ret = String[]
-    for i in indexes
-        indiv = rec.genotype[i]
-        if endof(indiv) < j
-            push!(ret, ".")  # missing
-        else
-            push!(ret, String(rec.data[indiv[j]]))
-        end
-    end
-    return ret
-end
-
-function genotype(rec::VCFRecord, ::Colon, key::String)
-    return genotype(rec, 1:endof(rec.genotype), key)
-end
-
-function findgeno(rec::VCFRecord, key::String)
-    for (i, r) in enumerate(rec.format)
-        n = length(r)
-        if n == sizeof(key) && memcmp(pointer(rec.data, first(r)), pointer(key), n) == 0
-            return i
-        end
-    end
-    return 0
-end
-
-function ismissing(data::Vector{UInt8}, range::UnitRange{Int})
-    return length(range) == 1 && data[first(range)] == UInt8('.')
 end
 
 function Base.show(io::IO, rec::VCFRecord)
@@ -539,6 +650,16 @@ function Base.show(io::IO, rec::VCFRecord)
     else
         print(io, " <not filled>")
     end
+end
+
+function ismissing(data::Vector{UInt8}, range::UnitRange{Int})
+    return length(range) == 1 && data[first(range)] == UInt8('.')
+end
+
+# Check if `str == data[range]`
+function isequaldata(str::String, data::Vector{UInt8}, range::UnitRange{Int})
+    rlen = length(range)
+    return rlen == sizeof(str) && memcmp(pointer(data, first(range)), pointer(str), rlen) == 0
 end
 
 function memcmp(p1::Ptr, p2::Ptr, n::Integer)

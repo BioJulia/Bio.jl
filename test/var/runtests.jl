@@ -169,6 +169,7 @@ end
     @test alternate(record) == ["TA"]
     @test get(quality(record)) == 999
     @test filter_(record) == String[]
+    @test infokeys(record) == String[]
     @test information(record) == Pair{String,String}[]
     @test format(record) == ["GT"]
 
@@ -180,6 +181,8 @@ end
     @test isfilled(record)
     @test isnull(chromosome(record))
     @test isnull(leftposition(record))
+    @test isempty(information(record))
+    @test isempty(genotype(record))
 
     record = VCFRecord(record)
     @test isa(record, VCFRecord)
@@ -201,6 +204,7 @@ end
     @test information(record, "DP") == "20"
     @test information(record, "AA") == "AT"
     @test information(record, "DB") == ""
+    @test infokeys(record) == ["DP", "AA", "DB"]
     record = VCFRecord(record, genotype=[Dict("GT" => "0/0", "DP" => [10,20])])
     @test format(record) == ["DP", "GT"]
     @test genotype(record) == [["10,20", "0/0"]]

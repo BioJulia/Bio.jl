@@ -58,6 +58,7 @@ export
     reference,
     alternate,
     information,
+    infokeys,
     format,
     genotype
 
