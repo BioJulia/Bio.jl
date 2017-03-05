@@ -382,11 +382,11 @@ end
     @test_throws ArgumentError chromosome(record)
 
     record = BCFRecord()
-    record.filled = true  # fool it
     record.sharedlen = 0x1c
     record.indivlen = 0x00
     # generated from bcftools 1.3.1 (htslib 1.3.1)
     record.data = parsehex("00 00 00 00 ff ff ff ff 01 00 00 00 01 00 80 7f 00 00 01 00 00 00 00 00 07 17 2e 00")
+    record.filled = 1:endof(record.data)
     @test chromosome(record) == 1
     record = BCFRecord(record)
     @test isa(record, BCFRecord)

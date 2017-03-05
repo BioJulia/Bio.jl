@@ -2,19 +2,20 @@
 # ==========
 
 type BCFRecord
-    # data is supposed to be filled or not
-    filled::Bool
+    # data and filled range
+    data::Vector{UInt8}
+    filled::UnitRange{Int}
+    # fields
     sharedlen::UInt32
     indivlen::UInt32
-    data::Vector{UInt8}
 end
 
 function BCFRecord()
-    return BCFRecord(false, 0, 0, UInt8[])
+    return BCFRecord(UInt8[], 1:0, 0, 0)
 end
 
 function isfilled(record::BCFRecord)
-    return record.filled
+    return !isempty(record.filled)
 end
 
 function checkfilled(record::BCFRecord)
@@ -150,12 +151,12 @@ function BCFRecord(base::BCFRecord;
         error("modifying genotype is yet supported")
     end
 
-    return BCFRecord(true, sharedlen, offset - sharedlen, data)
+    return BCFRecord(data, 1:endof(data), sharedlen, offset - sharedlen)
 end
 
 function Base.show(io::IO, record::BCFRecord)
     print(io, summary(record), ':')
-    if record.filled
+    if isfilled(record)
         println(io)
         println(io, "   chromosome: ", chromosome(record))
         println(io, "     position: ", leftposition(record))

@@ -9,7 +9,7 @@ Create a data reader of the BCF file format.
 # Arguments
 * `input`: data source
 """
-type BCFReader{T<:IO} <: Bio.IO.AbstractReader
+immutable BCFReader{T<:IO} <: Bio.IO.AbstractReader
     version::Tuple{UInt8,UInt8}  # (major, minor)
     header::VCFHeader
     stream::BGZFStream{T}
@@ -59,8 +59,8 @@ function Base.read!(reader::BCFReader, record::BCFRecord)
     datalen = sharedlen + indivlen
     resize!(record.data, datalen)
     unsafe_read(reader.stream, pointer(record.data), datalen)
+    record.filled = 1:datalen
     record.sharedlen = sharedlen
     record.indivlen = indivlen
-    record.filled = true
     return record
 end
