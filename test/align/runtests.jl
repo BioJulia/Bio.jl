@@ -1047,6 +1047,23 @@ end
             @test isa(collect(header), Vector{SAMMetaInfo})
         end
 
+        @testset "SAMRecord" begin
+            record = SAMRecord(b"r001\t99\tchr1\t7\t30\t8M2I4M1D3M\t=\t37\t39\tTTAGATAAAGGATACTG\t*")
+            @test record == SAMRecord("r001\t99\tchr1\t7\t30\t8M2I4M1D3M\t=\t37\t39\tTTAGATAAAGGATACTG\t*")
+            @test ismapped(record)
+            @test seqname(record) == "r001"
+            @test flag(record) === UInt16(99)
+            @test refname(record) == "chr1"
+            @test leftposition(record) == 7
+            @test mappingquality(record) == 30
+            @test cigar(record) == "8M2I4M1D3M"
+            @test nextrefname(record) == "="
+            @test nextleftposition(record) == 37
+            @test templatelength(record) == 39
+            @test sequence(record) == dna"TTAGATAAAGGATACTG"
+            #@test qualities(record)
+        end
+
         @testset "Reader" begin
             reader = open(SAMReader, joinpath(samdir, "ce#1.sam"))
             @test isa(reader, SAMReader)
