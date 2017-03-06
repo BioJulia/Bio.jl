@@ -229,6 +229,11 @@
                 <li class="third-level"><a href="#the-distance-method">The distance method</a></li>
             
         
+            <li class="second-level"><a href="#file-formats-for-represeting-genetic-variations">File formats for represeting genetic variations</a></li>
+            
+                <li class="third-level"><a href="#vcf-and-bcf-file-formats">VCF and BCF file formats</a></li>
+            
+        
     
     </ul>
 </div></div>
@@ -246,17 +251,17 @@
 <strong><code>Bio.Var.AnyMutation</code></strong> &mdash; <em>Type</em>.</p>
 <p><code>AnyMutation</code> describes a site where two aligned nucleotides are not the same.</p>
 <p>Every kind of difference is counted.</p>
-<p><a target='_blank' href='https://github.com/BioJulia/Bio.jl/tree/a405c0f62d916cd21e290d3dac1e3af83f44feb9/src/var/mutation_counting.jl#L19-L24' class='documenter-source'>source</a><br></p>
+<p><a target='_blank' href='https://github.com/BioJulia/Bio.jl/tree/609d47e80c6a543be8e4b533d352d918630cccf6/src/var/mutation_counting.jl#L19-L24' class='documenter-source'>source</a><br></p>
 <p><a id='Bio.Var.TransitionMutation' href='#Bio.Var.TransitionMutation'>#</a>
 <strong><code>Bio.Var.TransitionMutation</code></strong> &mdash; <em>Type</em>.</p>
 <p><code>TransitionMutation</code> describes a situation with two aligned nucleotides, where a purine has mutated into another purine, or a pyrimadine has mutated into another pyrimadine.</p>
 <p>Possible transition mutations are: A &lt;-&gt; G C &lt;-&gt; T</p>
-<p><a target='_blank' href='https://github.com/BioJulia/Bio.jl/tree/a405c0f62d916cd21e290d3dac1e3af83f44feb9/src/var/mutation_counting.jl#L27-L35' class='documenter-source'>source</a><br></p>
+<p><a target='_blank' href='https://github.com/BioJulia/Bio.jl/tree/609d47e80c6a543be8e4b533d352d918630cccf6/src/var/mutation_counting.jl#L27-L35' class='documenter-source'>source</a><br></p>
 <p><a id='Bio.Var.TransversionMutation' href='#Bio.Var.TransversionMutation'>#</a>
 <strong><code>Bio.Var.TransversionMutation</code></strong> &mdash; <em>Type</em>.</p>
 <p><code>TransversionMutation</code> describes a situation with two aligned nucleotides, where a purine has mutated into a pyrimadine or vice versa.</p>
 <p>Possible transversion mutations are: A &lt;-&gt; T C &lt;-&gt; G A &lt;-&gt; C T &lt;-&gt; G</p>
-<p><a target='_blank' href='https://github.com/BioJulia/Bio.jl/tree/a405c0f62d916cd21e290d3dac1e3af83f44feb9/src/var/mutation_counting.jl#L38-L47' class='documenter-source'>source</a><br></p>
+<p><a target='_blank' href='https://github.com/BioJulia/Bio.jl/tree/609d47e80c6a543be8e4b533d352d918630cccf6/src/var/mutation_counting.jl#L38-L47' class='documenter-source'>source</a><br></p>
 <p><a id='The-count_mutations-method-1'></a></p>
 <h3 id="the-count_mutations-method">The <code>count_mutations</code> method</h3>
 <p>Mutations are counted using the <code>count_mutations</code> method. The method outputs a tuple. The first value is the number of mutations counted. The second value is the number of sites examined. Sites which have gaps and uncertain nucleotides are not examined and so this second value will be less than the length of the two biological sequences.</p>
@@ -295,19 +300,19 @@
 
 
 <p>Test if two nucleotides constitute a <code>AnyMutation</code>.</p>
-<p><a target='_blank' href='https://github.com/BioJulia/Bio.jl/tree/a405c0f62d916cd21e290d3dac1e3af83f44feb9/src/var/mutation_counting.jl#L60-L64' class='documenter-source'>source</a><br></p>
+<p><a target='_blank' href='https://github.com/BioJulia/Bio.jl/tree/609d47e80c6a543be8e4b533d352d918630cccf6/src/var/mutation_counting.jl#L60-L64' class='documenter-source'>source</a><br></p>
 <div class="codehilite"><pre><span></span>is_mutation{T&lt;:NucleicAcid}(::Type{TransitionMutation}, a::T, b::T)
 </pre></div>
 
 
 <p>Test if two nucleotides constitute a <code>TransitionMutation</code>.</p>
-<p><a target='_blank' href='https://github.com/BioJulia/Bio.jl/tree/a405c0f62d916cd21e290d3dac1e3af83f44feb9/src/var/mutation_counting.jl#L69-L73' class='documenter-source'>source</a><br></p>
+<p><a target='_blank' href='https://github.com/BioJulia/Bio.jl/tree/609d47e80c6a543be8e4b533d352d918630cccf6/src/var/mutation_counting.jl#L69-L73' class='documenter-source'>source</a><br></p>
 <div class="codehilite"><pre><span></span>is_mutation{T&lt;:NucleicAcid}(::Type{TransversionMutation}, a::T, b::T)
 </pre></div>
 
 
 <p>Test if two nucleotides constitute a <code>TransversionMutation</code>.</p>
-<p><a target='_blank' href='https://github.com/BioJulia/Bio.jl/tree/a405c0f62d916cd21e290d3dac1e3af83f44feb9/src/var/mutation_counting.jl#L78-L82' class='documenter-source'>source</a><br></p>
+<p><a target='_blank' href='https://github.com/BioJulia/Bio.jl/tree/609d47e80c6a543be8e4b533d352d918630cccf6/src/var/mutation_counting.jl#L78-L82' class='documenter-source'>source</a><br></p>
 <p><a id='Computing-evolutionary-and-genetic-distances-1'></a></p>
 <h2 id="computing-evolutionary-and-genetic-distances">Computing evolutionary and genetic distances</h2>
 <p>Just as you can count the number of mutations between two nucleotide sequences, you can compute the evolutionary distance between two nucleotide sequences.</p>
@@ -317,22 +322,22 @@
 <p><a id='Bio.Var.Count' href='#Bio.Var.Count'>#</a>
 <strong><code>Bio.Var.Count</code></strong> &mdash; <em>Type</em>.</p>
 <p>A distance which is the count of the mutations of type T that exist between the two sequences.</p>
-<p><a target='_blank' href='https://github.com/BioJulia/Bio.jl/tree/a405c0f62d916cd21e290d3dac1e3af83f44feb9/src/var/distances.jl#L18-L21' class='documenter-source'>source</a><br></p>
+<p><a target='_blank' href='https://github.com/BioJulia/Bio.jl/tree/609d47e80c6a543be8e4b533d352d918630cccf6/src/var/distances.jl#L18-L21' class='documenter-source'>source</a><br></p>
 <p><a id='Bio.Var.Proportion' href='#Bio.Var.Proportion'>#</a>
 <strong><code>Bio.Var.Proportion</code></strong> &mdash; <em>Type</em>.</p>
 <p>Proportion{T} is a distance which is the count of the mutations of type T that exist between the two biological sequences, divided by the number of valid sites examined (sites which don't have gap or ambiguous symbols).</p>
 <p>In other words this so called p-distance is simply the proportion of sites between each pair of sequences, that are mutated (again where T determines what kind of mutation).</p>
-<p><a target='_blank' href='https://github.com/BioJulia/Bio.jl/tree/a405c0f62d916cd21e290d3dac1e3af83f44feb9/src/var/distances.jl#L24-L32' class='documenter-source'>source</a><br></p>
+<p><a target='_blank' href='https://github.com/BioJulia/Bio.jl/tree/609d47e80c6a543be8e4b533d352d918630cccf6/src/var/distances.jl#L24-L32' class='documenter-source'>source</a><br></p>
 <p><a id='Bio.Var.JukesCantor69' href='#Bio.Var.JukesCantor69'>#</a>
 <strong><code>Bio.Var.JukesCantor69</code></strong> &mdash; <em>Type</em>.</p>
 <p>The JukesCantor69 distance is a p-distance adjusted/corrected by the substitution model developed by Jukes and Cantor in 1969.</p>
 <p>The Jukes and Cantor model assumes that all substitutions (i.e. a change of a base by another one) have the same probability. This probability is the same for all sites along the DNA sequence.</p>
-<p><a target='_blank' href='https://github.com/BioJulia/Bio.jl/tree/a405c0f62d916cd21e290d3dac1e3af83f44feb9/src/var/distances.jl#L35-L42' class='documenter-source'>source</a><br></p>
+<p><a target='_blank' href='https://github.com/BioJulia/Bio.jl/tree/609d47e80c6a543be8e4b533d352d918630cccf6/src/var/distances.jl#L35-L42' class='documenter-source'>source</a><br></p>
 <p><a id='Bio.Var.Kimura80' href='#Bio.Var.Kimura80'>#</a>
 <strong><code>Bio.Var.Kimura80</code></strong> &mdash; <em>Type</em>.</p>
 <p>The Kimura80 distance uses a substitution model developed by Kimura in 1980. It is somtimes called Kimura's 2 parameter distance.</p>
 <p>The model makes the same assumptions as Jukes and Cantor's model, but with a crucial difference: two-kinds of mutation are considered called Transitions and Transversions. Transitions and transversions can occur with different probabilities in this model, however, both transition and transversion rates/probabilities are the same for all sites along the DNA sequence.</p>
-<p><a target='_blank' href='https://github.com/BioJulia/Bio.jl/tree/a405c0f62d916cd21e290d3dac1e3af83f44feb9/src/var/distances.jl#L45-L55' class='documenter-source'>source</a><br></p>
+<p><a target='_blank' href='https://github.com/BioJulia/Bio.jl/tree/609d47e80c6a543be8e4b533d352d918630cccf6/src/var/distances.jl#L45-L55' class='documenter-source'>source</a><br></p>
 <p><a id='The-distance-method-1'></a></p>
 <h3 id="the-distance-method">The distance method</h3>
 <p><a id='Bio.distance' href='#Bio.distance'>#</a>
@@ -342,14 +347,14 @@
 
 
 <p>Retrun distance of alignment.</p>
-<p><a target='_blank' href='https://github.com/BioJulia/Bio.jl/tree/a405c0f62d916cd21e290d3dac1e3af83f44feb9/src/align/pairwise/result.jl#L40-L44' class='documenter-source'>source</a><br></p>
+<p><a target='_blank' href='https://github.com/BioJulia/Bio.jl/tree/609d47e80c6a543be8e4b533d352d918630cccf6/src/align/pairwise/result.jl#L40-L44' class='documenter-source'>source</a><br></p>
 <div class="codehilite"><pre><span></span>distance{T&lt;:MutationType,A&lt;:NucleicAcidAlphabet}(::Type{Count{T}}, seqs::Vector{BioSequence{A}})
 </pre></div>
 
 
 <p>Compute the number of mutations of type <code>T</code> between a set of sequences in a pairwise manner.</p>
 <p>This method of distance returns a tuple of the number of mutations of type <code>T</code> between sequences and the number of valid (i.e. non-ambiguous sites) counted by the function.</p>
-<p><a target='_blank' href='https://github.com/BioJulia/Bio.jl/tree/a405c0f62d916cd21e290d3dac1e3af83f44feb9/src/var/distances.jl#L124-L133' class='documenter-source'>source</a><br></p>
+<p><a target='_blank' href='https://github.com/BioJulia/Bio.jl/tree/609d47e80c6a543be8e4b533d352d918630cccf6/src/var/distances.jl#L124-L133' class='documenter-source'>source</a><br></p>
 <div class="codehilite"><pre><span></span>distance{T&lt;:MutationType,A&lt;:NucleicAcidAlphabet}(::Type{Count{T}}, seqs::Vector{BioSequence{A}}, width::Int, step::Int)
 </pre></div>
 
@@ -357,7 +362,7 @@
 <p>Compute pairwise distances using a sliding window.</p>
 <p>As the window of <code>width</code> base pairs in size moves across a pair of sequences it computes the distance between the two sequences in that window.</p>
 <p>This method computes mutation counts for every window, and returns a tuple of the matrix of p-distances for every window, a matrix of the number of valid sites counted by the function for each window.</p>
-<p><a target='_blank' href='https://github.com/BioJulia/Bio.jl/tree/a405c0f62d916cd21e290d3dac1e3af83f44feb9/src/var/distances.jl#L138-L149' class='documenter-source'>source</a><br></p>
+<p><a target='_blank' href='https://github.com/BioJulia/Bio.jl/tree/609d47e80c6a543be8e4b533d352d918630cccf6/src/var/distances.jl#L138-L149' class='documenter-source'>source</a><br></p>
 <div class="codehilite"><pre><span></span>distance{T&lt;:MutationType,N&lt;:NucleicAcid}(::Type{Count{T}}, seqs::Matrix{N})
 </pre></div>
 
@@ -365,20 +370,20 @@
 <p>Compute the number of mutations of type <code>T</code> between a set of sequences in a pairwise manner.</p>
 <p>This method of distance returns a tuple of the number of mutations of type <code>T</code> between sequences and the number of valid (i.e. non-ambiguous sites) counted by the function.</p>
 <p><strong>Note: This method assumes that the sequences are stored in the <code>Matrix{N}</code> provided as <code>seqs</code> in sequence major order i.e. each column of the matrix is one complete nucleotide sequence.</strong></p>
-<p><a target='_blank' href='https://github.com/BioJulia/Bio.jl/tree/a405c0f62d916cd21e290d3dac1e3af83f44feb9/src/var/distances.jl#L236-L249' class='documenter-source'>source</a><br></p>
+<p><a target='_blank' href='https://github.com/BioJulia/Bio.jl/tree/609d47e80c6a543be8e4b533d352d918630cccf6/src/var/distances.jl#L236-L249' class='documenter-source'>source</a><br></p>
 <div class="codehilite"><pre><span></span>distance{T&lt;:MutationType,A&lt;:NucleicAcidAlphabet}(::Type{Proportion{T}}, seqs::Vector{BioSequence{A}})
 </pre></div>
 
 
 <p>This method of distance returns a tuple of a vector of the p-distances, and a vector of the number of valid (i.e. non-ambiguous sites) counted by the function.</p>
-<p><a target='_blank' href='https://github.com/BioJulia/Bio.jl/tree/a405c0f62d916cd21e290d3dac1e3af83f44feb9/src/var/distances.jl#L262-L267' class='documenter-source'>source</a><br></p>
+<p><a target='_blank' href='https://github.com/BioJulia/Bio.jl/tree/609d47e80c6a543be8e4b533d352d918630cccf6/src/var/distances.jl#L262-L267' class='documenter-source'>source</a><br></p>
 <div class="codehilite"><pre><span></span>distance{T&lt;:MutationType,N&lt;:NucleicAcid}(::Type{Proportion{T}}, seqs::Matrix{N})
 </pre></div>
 
 
 <p>This method of distance returns a tuple of a vector of the p-distances, and a vector of the number of valid (i.e. non-ambiguous) sites counted by the function.</p>
 <p><strong>Note: This method assumes that the sequences are stored in the <code>Matrix{N}</code> provided as <code>seqs</code> in sequence major order i.e. each column of the matrix is one complete nucleotide sequence.</strong></p>
-<p><a target='_blank' href='https://github.com/BioJulia/Bio.jl/tree/a405c0f62d916cd21e290d3dac1e3af83f44feb9/src/var/distances.jl#L277-L286' class='documenter-source'>source</a><br></p>
+<p><a target='_blank' href='https://github.com/BioJulia/Bio.jl/tree/609d47e80c6a543be8e4b533d352d918630cccf6/src/var/distances.jl#L277-L286' class='documenter-source'>source</a><br></p>
 <div class="codehilite"><pre><span></span>distance{T&lt;:MutationType,A&lt;:NucleicAcidAlphabet}(::Type{Proportion{T}}, seqs::Vector{BioSequence{A}}, width::Int, step::Int)
 </pre></div>
 
@@ -386,13 +391,13 @@
 <p>A distance method which computes pairwise distances using a sliding window.</p>
 <p>As the window of <code>width</code> base pairs in size moves across a pair of sequences it computes the distance between the two sequences in that window.</p>
 <p>This method computes p-distances for every window, and returns a tuple of the matrix of p-distances for every window, a matrix of the number of valid sites counted by the function for each window.</p>
-<p><a target='_blank' href='https://github.com/BioJulia/Bio.jl/tree/a405c0f62d916cd21e290d3dac1e3af83f44feb9/src/var/distances.jl#L296-L307' class='documenter-source'>source</a><br></p>
+<p><a target='_blank' href='https://github.com/BioJulia/Bio.jl/tree/609d47e80c6a543be8e4b533d352d918630cccf6/src/var/distances.jl#L296-L307' class='documenter-source'>source</a><br></p>
 <div class="codehilite"><pre><span></span>distance{A&lt;:NucleicAcidAlphabet}(::Type{JukesCantor69}, seqs::Vector{BioSequence{A}})
 </pre></div>
 
 
 <p>This method of distance returns a tuple of the expected JukesCantor69 distance estimate, and the computed variance.</p>
-<p><a target='_blank' href='https://github.com/BioJulia/Bio.jl/tree/a405c0f62d916cd21e290d3dac1e3af83f44feb9/src/var/distances.jl#L317-L322' class='documenter-source'>source</a><br></p>
+<p><a target='_blank' href='https://github.com/BioJulia/Bio.jl/tree/609d47e80c6a543be8e4b533d352d918630cccf6/src/var/distances.jl#L317-L322' class='documenter-source'>source</a><br></p>
 <div class="codehilite"><pre><span></span>distance{T&lt;:MutationType,A&lt;:NucleicAcidAlphabet}(::Type{JukesCantor69}, seqs::Vector{BioSequence{A}}, width::Int, step::Int)
 </pre></div>
 
@@ -400,20 +405,20 @@
 <p>A distance method which computes pairwise distances using a sliding window.</p>
 <p>As the window of <code>width</code> base pairs in size moves across a pair of sequences it computes the distance between the two sequences in that window.</p>
 <p>This method computes the JukesCantor69 distance for every window, and returns a tuple of the matrix of p-distances for every window, a matrix of the number of valid sites counted by the function for each window.</p>
-<p><a target='_blank' href='https://github.com/BioJulia/Bio.jl/tree/a405c0f62d916cd21e290d3dac1e3af83f44feb9/src/var/distances.jl#L334-L345' class='documenter-source'>source</a><br></p>
+<p><a target='_blank' href='https://github.com/BioJulia/Bio.jl/tree/609d47e80c6a543be8e4b533d352d918630cccf6/src/var/distances.jl#L334-L345' class='documenter-source'>source</a><br></p>
 <div class="codehilite"><pre><span></span>distance{N&lt;:NucleicAcid}(::Type{JukesCantor69}, seqs::Matrix{N})
 </pre></div>
 
 
 <p>This method of distance returns a tuple of the expected JukesCantor69 distance estimate, and the computed variance.</p>
 <p><strong>Note: This method assumes that the sequences are stored in the <code>Matrix{N}</code> provided as <code>seqs</code> in sequence major order i.e. each column of the matrix is one complete nucleotide sequence.</strong></p>
-<p><a target='_blank' href='https://github.com/BioJulia/Bio.jl/tree/a405c0f62d916cd21e290d3dac1e3af83f44feb9/src/var/distances.jl#L360-L369' class='documenter-source'>source</a><br></p>
+<p><a target='_blank' href='https://github.com/BioJulia/Bio.jl/tree/609d47e80c6a543be8e4b533d352d918630cccf6/src/var/distances.jl#L360-L369' class='documenter-source'>source</a><br></p>
 <div class="codehilite"><pre><span></span>distance{A&lt;:NucleicAcidAlphabet}(::Type{Kimura80}, seqs::Vector{BioSequence{A}})
 </pre></div>
 
 
 <p>This method of distance returns a tuple of the expected Kimura80 distance estimate, and the computed variance.</p>
-<p><a target='_blank' href='https://github.com/BioJulia/Bio.jl/tree/a405c0f62d916cd21e290d3dac1e3af83f44feb9/src/var/distances.jl#L382-L387' class='documenter-source'>source</a><br></p>
+<p><a target='_blank' href='https://github.com/BioJulia/Bio.jl/tree/609d47e80c6a543be8e4b533d352d918630cccf6/src/var/distances.jl#L382-L387' class='documenter-source'>source</a><br></p>
 <div class="codehilite"><pre><span></span>distance{T&lt;:MutationType,A&lt;:NucleicAcidAlphabet}(::Type{Kimura80}, seqs::Vector{BioSequence{A}}, width::Int, step::Int)
 </pre></div>
 
@@ -421,16 +426,16 @@
 <p>A distance method which computes pairwise distances using a sliding window.</p>
 <p>As the window of <code>width</code> base pairs in size moves across a pair of sequences it computes the distance between the two sequences in that window.</p>
 <p>This method computes the Kimura80 distance for every window, and returns a tuple of the matrix of p-distances for every window, a matrix of the number of valid sites counted by the function for each window.</p>
-<p><a target='_blank' href='https://github.com/BioJulia/Bio.jl/tree/a405c0f62d916cd21e290d3dac1e3af83f44feb9/src/var/distances.jl#L404-L415' class='documenter-source'>source</a><br></p>
+<p><a target='_blank' href='https://github.com/BioJulia/Bio.jl/tree/609d47e80c6a543be8e4b533d352d918630cccf6/src/var/distances.jl#L404-L415' class='documenter-source'>source</a><br></p>
 <div class="codehilite"><pre><span></span>distance{N&lt;:NucleicAcid}(::Type{Kimura80}, seqs::Matrix{N})
 </pre></div>
 
 
 <p>This method of distance returns a tuple of the expected Kimura80 distance estimate, and the computed variance.</p>
 <p><strong>Note: This method assumes that the sequences are stored in the <code>Matrix{N}</code> provided as <code>seqs</code> in sequence major order i.e. each column of the matrix is one complete nucleotide sequence.</strong></p>
-<p><a target='_blank' href='https://github.com/BioJulia/Bio.jl/tree/a405c0f62d916cd21e290d3dac1e3af83f44feb9/src/var/distances.jl#L435-L444' class='documenter-source'>source</a><br></p>
+<p><a target='_blank' href='https://github.com/BioJulia/Bio.jl/tree/609d47e80c6a543be8e4b533d352d918630cccf6/src/var/distances.jl#L435-L444' class='documenter-source'>source</a><br></p>
 <p>Get the minimum distance between two <code>StructuralElementOrList</code>s. Additional arguments are atom selector functions - only atoms that return <code>true</code> from the functions are retained.</p>
-<p><a target='_blank' href='https://github.com/BioJulia/Bio.jl/tree/a405c0f62d916cd21e290d3dac1e3af83f44feb9/src/structure/spatial.jl#L114-L118' class='documenter-source'>source</a><br></p>
+<p><a target='_blank' href='https://github.com/BioJulia/Bio.jl/tree/609d47e80c6a543be8e4b533d352d918630cccf6/src/structure/spatial.jl#L114-L118' class='documenter-source'>source</a><br></p>
 <p><a id='Bio.distance-Tuple{Type{Bio.Var.Count{T<:Bio.Var.MutationType}},Array{Bio.Seq.BioSequence{A<:Union{Bio.Seq.DNAAlphabet,Bio.Seq.RNAAlphabet}},1}}' href='#Bio.distance-Tuple{Type{Bio.Var.Count{T<:Bio.Var.MutationType}},Array{Bio.Seq.BioSequence{A<:Union{Bio.Seq.DNAAlphabet,Bio.Seq.RNAAlphabet}},1}}'>#</a>
 <strong><code>Bio.distance</code></strong> &mdash; <em>Method</em>.</p>
 <div class="codehilite"><pre><span></span>distance{T&lt;:MutationType,A&lt;:NucleicAcidAlphabet}(::Type{Count{T}}, seqs::Vector{BioSequence{A}})
@@ -439,7 +444,7 @@
 
 <p>Compute the number of mutations of type <code>T</code> between a set of sequences in a pairwise manner.</p>
 <p>This method of distance returns a tuple of the number of mutations of type <code>T</code> between sequences and the number of valid (i.e. non-ambiguous sites) counted by the function.</p>
-<p><a target='_blank' href='https://github.com/BioJulia/Bio.jl/tree/a405c0f62d916cd21e290d3dac1e3af83f44feb9/src/var/distances.jl#L124-L133' class='documenter-source'>source</a><br></p>
+<p><a target='_blank' href='https://github.com/BioJulia/Bio.jl/tree/609d47e80c6a543be8e4b533d352d918630cccf6/src/var/distances.jl#L124-L133' class='documenter-source'>source</a><br></p>
 <p><a id='Bio.distance-Tuple{Type{Bio.Var.Proportion{T<:Bio.Var.MutationType}},Array{Bio.Seq.BioSequence{A<:Union{Bio.Seq.DNAAlphabet,Bio.Seq.RNAAlphabet}},1}}' href='#Bio.distance-Tuple{Type{Bio.Var.Proportion{T<:Bio.Var.MutationType}},Array{Bio.Seq.BioSequence{A<:Union{Bio.Seq.DNAAlphabet,Bio.Seq.RNAAlphabet}},1}}'>#</a>
 <strong><code>Bio.distance</code></strong> &mdash; <em>Method</em>.</p>
 <div class="codehilite"><pre><span></span>distance{T&lt;:MutationType,A&lt;:NucleicAcidAlphabet}(::Type{Proportion{T}}, seqs::Vector{BioSequence{A}})
@@ -447,7 +452,7 @@
 
 
 <p>This method of distance returns a tuple of a vector of the p-distances, and a vector of the number of valid (i.e. non-ambiguous sites) counted by the function.</p>
-<p><a target='_blank' href='https://github.com/BioJulia/Bio.jl/tree/a405c0f62d916cd21e290d3dac1e3af83f44feb9/src/var/distances.jl#L262-L267' class='documenter-source'>source</a><br></p>
+<p><a target='_blank' href='https://github.com/BioJulia/Bio.jl/tree/609d47e80c6a543be8e4b533d352d918630cccf6/src/var/distances.jl#L262-L267' class='documenter-source'>source</a><br></p>
 <p><a id='Bio.distance-Tuple{Type{Bio.Var.JukesCantor69},Array{Bio.Seq.BioSequence{A<:Union{Bio.Seq.DNAAlphabet,Bio.Seq.RNAAlphabet}},1}}' href='#Bio.distance-Tuple{Type{Bio.Var.JukesCantor69},Array{Bio.Seq.BioSequence{A<:Union{Bio.Seq.DNAAlphabet,Bio.Seq.RNAAlphabet}},1}}'>#</a>
 <strong><code>Bio.distance</code></strong> &mdash; <em>Method</em>.</p>
 <div class="codehilite"><pre><span></span>distance{A&lt;:NucleicAcidAlphabet}(::Type{JukesCantor69}, seqs::Vector{BioSequence{A}})
@@ -455,7 +460,7 @@
 
 
 <p>This method of distance returns a tuple of the expected JukesCantor69 distance estimate, and the computed variance.</p>
-<p><a target='_blank' href='https://github.com/BioJulia/Bio.jl/tree/a405c0f62d916cd21e290d3dac1e3af83f44feb9/src/var/distances.jl#L317-L322' class='documenter-source'>source</a><br></p>
+<p><a target='_blank' href='https://github.com/BioJulia/Bio.jl/tree/609d47e80c6a543be8e4b533d352d918630cccf6/src/var/distances.jl#L317-L322' class='documenter-source'>source</a><br></p>
 <p><a id='Bio.distance-Tuple{Type{Bio.Var.Kimura80},Array{Bio.Seq.BioSequence{A<:Union{Bio.Seq.DNAAlphabet,Bio.Seq.RNAAlphabet}},1}}' href='#Bio.distance-Tuple{Type{Bio.Var.Kimura80},Array{Bio.Seq.BioSequence{A<:Union{Bio.Seq.DNAAlphabet,Bio.Seq.RNAAlphabet}},1}}'>#</a>
 <strong><code>Bio.distance</code></strong> &mdash; <em>Method</em>.</p>
 <div class="codehilite"><pre><span></span>distance{A&lt;:NucleicAcidAlphabet}(::Type{Kimura80}, seqs::Vector{BioSequence{A}})
@@ -463,7 +468,226 @@
 
 
 <p>This method of distance returns a tuple of the expected Kimura80 distance estimate, and the computed variance.</p>
-<p><a target='_blank' href='https://github.com/BioJulia/Bio.jl/tree/a405c0f62d916cd21e290d3dac1e3af83f44feb9/src/var/distances.jl#L382-L387' class='documenter-source'>source</a><br></p></div>
+<p><a target='_blank' href='https://github.com/BioJulia/Bio.jl/tree/609d47e80c6a543be8e4b533d352d918630cccf6/src/var/distances.jl#L382-L387' class='documenter-source'>source</a><br></p>
+<p><a id='File-formats-for-represeting-genetic-variations-1'></a></p>
+<h2 id="file-formats-for-represeting-genetic-variations">File formats for represeting genetic variations</h2>
+<p>The module suports some common file formats to read and write genetic variations.</p>
+<p><a id='VCF-and-BCF-file-formats-1'></a></p>
+<h3 id="vcf-and-bcf-file-formats">VCF and BCF file formats</h3>
+<p>VCF and BCF file formats can be read using <code>VCFReader</code> and <code>BCFReader</code>, respectively:</p>
+<div class="codehilite"><pre><span></span><span class="n">reader</span> <span class="o">=</span> <span class="n">open</span><span class="p">(</span><span class="n">VCFReader</span><span class="p">,</span> <span class="s">&quot;example.vcf&quot;</span><span class="p">)</span>
+<span class="k">for</span> <span class="n">record</span> <span class="kp">in</span> <span class="n">reader</span>
+    <span class="c"># do something</span>
+<span class="k">end</span>
+<span class="n">close</span><span class="p">(</span><span class="n">reader</span><span class="p">)</span>
+</pre></div>
+
+
+<p>A reader first reads the header section of a file and creates a <code>VCFHeader</code> object. The <code>header</code> function is provided to access the header object of a reader:</p>
+<div class="codehilite"><pre><span></span><span class="gp">julia&gt;</span> <span class="n">header</span><span class="p">(</span><span class="n">reader</span><span class="p">)</span>
+<span class="go">Bio.Var.VCFHeader:</span>
+<span class="go">  metainfo tags: fileformat fileDate source reference contig phasing INFO FILTER FORMAT</span>
+<span class="go">     sample IDs: NA00001 NA00002 NA00003</span>
+
+<span class="gp">julia&gt;</span> <span class="n">find</span><span class="p">(</span><span class="n">header</span><span class="p">(</span><span class="n">reader</span><span class="p">),</span> <span class="s">&quot;FORMAT&quot;</span><span class="p">)</span>
+<span class="go">4-element Array{Bio.Var.VCFMetaInfo,1}:</span>
+<span class="go"> Bio.Var.VCFMetaInfo:</span>
+<span class="go">    tag: FORMAT</span>
+<span class="go">  value: ID=&quot;GT&quot; Number=&quot;1&quot; Type=&quot;String&quot; Description=&quot;Genotype&quot;</span>
+<span class="go"> Bio.Var.VCFMetaInfo:</span>
+<span class="go">    tag: FORMAT</span>
+<span class="go">  value: ID=&quot;GQ&quot; Number=&quot;1&quot; Type=&quot;Integer&quot; Description=&quot;Genotype Quality&quot;</span>
+<span class="go"> Bio.Var.VCFMetaInfo:</span>
+<span class="go">    tag: FORMAT</span>
+<span class="go">  value: ID=&quot;DP&quot; Number=&quot;1&quot; Type=&quot;Integer&quot; Description=&quot;Read Depth&quot;</span>
+<span class="go"> Bio.Var.VCFMetaInfo:</span>
+<span class="go">    tag: FORMAT</span>
+<span class="go">  value: ID=&quot;HQ&quot; Number=&quot;2&quot; Type=&quot;Integer&quot; Description=&quot;Haplotype Quality&quot;</span>
+</pre></div>
+
+
+<p><code>VCFMetaInfo</code> objects in the header support the following accessor functions:</p>
+<table>
+<thead>
+<tr>
+<th align="left">Accessor</th>
+<th align="left">Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td align="left"><code>metainfotag</code></td>
+<td align="left">tag string</td>
+</tr>
+<tr>
+<td align="left"><code>metainfoval</code></td>
+<td align="left">value string</td>
+</tr>
+<tr>
+<td align="left"><code>keys</code></td>
+<td align="left">keys of fields between '&lt;' and '&gt;'</td>
+</tr>
+<tr>
+<td align="left"><code>values</code></td>
+<td align="left">values of fields between '&lt;' and '&gt;'</td>
+</tr>
+<tr>
+<td align="left"><code>[&lt;key&gt;]</code></td>
+<td align="left">value of a field with <code>key</code></td>
+</tr>
+</tbody>
+</table>
+<div class="codehilite"><pre><span></span><span class="gp">julia&gt;</span> <span class="n">metainfo</span> <span class="o">=</span> <span class="n">VCFMetaInfo</span><span class="p">(</span><span class="s">&quot;##FORMAT=&lt;ID=GT,Number=1,Type=String,Description=</span><span class="se">\&quot;</span><span class="s">Genotype</span><span class="se">\&quot;</span><span class="s">&gt;&quot;</span><span class="p">)</span>
+<span class="go">Bio.Var.VCFMetaInfo:</span>
+<span class="go">    tag: FORMAT</span>
+<span class="go">  value: ID=&quot;GT&quot; Number=&quot;1&quot; Type=&quot;String&quot; Description=&quot;Genotype&quot;</span>
+
+<span class="gp">julia&gt;</span> <span class="n">metainfotag</span><span class="p">(</span><span class="n">metainfo</span><span class="p">)</span>
+<span class="go">&quot;FORMAT&quot;</span>
+
+<span class="gp">julia&gt;</span> <span class="n">metainfoval</span><span class="p">(</span><span class="n">metainfo</span><span class="p">)</span>
+<span class="go">&quot;&lt;ID=GT,Number=1,Type=String,Description=\&quot;Genotype\&quot;&gt;&quot;</span>
+
+<span class="gp">julia&gt;</span> <span class="n">keys</span><span class="p">(</span><span class="n">metainfo</span><span class="p">)</span>
+<span class="go">4-element Array{String,1}:</span>
+<span class="go"> &quot;ID&quot;</span>
+<span class="go"> &quot;Number&quot;</span>
+<span class="go"> &quot;Type&quot;</span>
+<span class="go"> &quot;Description&quot;</span>
+
+<span class="gp">julia&gt;</span> <span class="n">metainfo</span><span class="p">[</span><span class="s">&quot;ID&quot;</span><span class="p">]</span>
+<span class="go">&quot;GT&quot;</span>
+</pre></div>
+
+
+<p><code>VCFRecord</code> and <code>BCFRecord</code> objects support the following accessor functions (see the docstring of each accessor for the details):</p>
+<table>
+<thead>
+<tr>
+<th align="left">Accessor</th>
+<th align="left">Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td align="left"><code>chromosome</code></td>
+<td align="left">chromosome name</td>
+</tr>
+<tr>
+<td align="left"><code>leftposition</code></td>
+<td align="left">reference position</td>
+</tr>
+<tr>
+<td align="left"><code>identifier</code></td>
+<td align="left">unique identifiers</td>
+</tr>
+<tr>
+<td align="left"><code>reference</code></td>
+<td align="left">reference bases</td>
+</tr>
+<tr>
+<td align="left"><code>alternate</code></td>
+<td align="left">alternate bases</td>
+</tr>
+<tr>
+<td align="left"><code>quality</code></td>
+<td align="left">Phred-scaled quality score</td>
+</tr>
+<tr>
+<td align="left"><code>filter_</code></td>
+<td align="left">filter status</td>
+</tr>
+<tr>
+<td align="left"><code>information</code></td>
+<td align="left">additional information</td>
+</tr>
+<tr>
+<td align="left"><code>infokeys</code></td>
+<td align="left">keys of additional information</td>
+</tr>
+<tr>
+<td align="left"><code>format</code></td>
+<td align="left">genotype format</td>
+</tr>
+<tr>
+<td align="left"><code>genotype</code></td>
+<td align="left">genotype information</td>
+</tr>
+</tbody>
+</table>
+<div class="codehilite"><pre><span></span><span class="gp">julia&gt;</span> <span class="n">record</span> <span class="o">=</span> <span class="n">VCFRecord</span><span class="p">(</span><span class="s">&quot;20</span><span class="se">\t</span><span class="s">14370</span><span class="se">\t</span><span class="s">rs6054257</span><span class="se">\t</span><span class="s">G</span><span class="se">\t</span><span class="s">A</span><span class="se">\t</span><span class="s">29</span><span class="se">\t</span><span class="s">PASS</span><span class="se">\t</span><span class="s">NS=3;DP=14;AF=0.5;DB;H2</span><span class="se">\t</span><span class="s">GT:GQ:DP:HQ</span><span class="se">\t</span><span class="s">0|0:48:1:51,51</span><span class="se">\t</span><span class="s">1|0:48:8:51,51&quot;</span><span class="p">)</span>
+
+<span class="go">Bio.Var.VCFRecord:</span>
+<span class="go">   chromosome: 20</span>
+<span class="go">     position: 14370</span>
+<span class="go">   identifier: rs6054257</span>
+<span class="go">    reference: G</span>
+<span class="go">    alternate: A</span>
+<span class="go">      quality: 29.0</span>
+<span class="go">       filter: PASS</span>
+<span class="go">  information: NS=3 DP=14 AF=0.5 DB H2</span>
+<span class="go">       format: GT GQ DP HQ</span>
+<span class="go">     genotype: [1] 0|0 48 1 51,51 [2] 1|0 48 8 51,51</span>
+
+<span class="gp">julia&gt;</span> <span class="n">chromosome</span><span class="p">(</span><span class="n">record</span><span class="p">)</span>
+<span class="go">Nullable{String}(&quot;20&quot;)</span>
+
+<span class="gp">julia&gt;</span> <span class="n">leftposition</span><span class="p">(</span><span class="n">record</span><span class="p">)</span>
+<span class="go">Nullable{Int64}(14370)</span>
+
+<span class="gp">julia&gt;</span> <span class="n">identifier</span><span class="p">(</span><span class="n">record</span><span class="p">)</span>
+<span class="go">1-element Array{String,1}:</span>
+<span class="go"> &quot;rs6054257&quot;</span>
+
+<span class="gp">julia&gt;</span> <span class="n">reference</span><span class="p">(</span><span class="n">record</span><span class="p">)</span>
+<span class="go">Nullable{String}(&quot;G&quot;)</span>
+
+<span class="gp">julia&gt;</span> <span class="n">alternate</span><span class="p">(</span><span class="n">record</span><span class="p">)</span>
+<span class="go">1-element Array{String,1}:</span>
+<span class="go"> &quot;A&quot;</span>
+
+<span class="gp">julia&gt;</span> <span class="n">quality</span><span class="p">(</span><span class="n">record</span><span class="p">)</span>
+<span class="go">Nullable{Float64}(29.0)</span>
+
+<span class="gp">julia&gt;</span> <span class="n">filter_</span><span class="p">(</span><span class="n">record</span><span class="p">)</span>
+<span class="go">1-element Array{String,1}:</span>
+<span class="go"> &quot;PASS&quot;</span>
+
+<span class="gp">julia&gt;</span> <span class="n">information</span><span class="p">(</span><span class="n">record</span><span class="p">)</span>
+<span class="go">5-element Array{Pair{String,String},1}:</span>
+<span class="go"> &quot;NS&quot;=&gt;&quot;3&quot;</span>
+<span class="go"> &quot;DP&quot;=&gt;&quot;14&quot;</span>
+<span class="go"> &quot;AF&quot;=&gt;&quot;0.5&quot;</span>
+<span class="go"> &quot;DB&quot;=&gt;&quot;&quot;</span>
+<span class="go"> &quot;H2&quot;=&gt;&quot;&quot;</span>
+
+<span class="gp">julia&gt;</span> <span class="n">information</span><span class="p">(</span><span class="n">record</span><span class="p">,</span> <span class="s">&quot;AF&quot;</span><span class="p">)</span>
+<span class="go">&quot;0.5&quot;</span>
+
+<span class="gp">julia&gt;</span> <span class="n">format</span><span class="p">(</span><span class="n">record</span><span class="p">)</span>
+<span class="go">4-element Array{String,1}:</span>
+<span class="go"> &quot;GT&quot;</span>
+<span class="go"> &quot;GQ&quot;</span>
+<span class="go"> &quot;DP&quot;</span>
+<span class="go"> &quot;HQ&quot;</span>
+
+<span class="gp">julia&gt;</span> <span class="n">genotype</span><span class="p">(</span><span class="n">record</span><span class="p">)</span>
+<span class="go">2-element Array{Array{String,1},1}:</span>
+<span class="go"> String[&quot;0|0&quot;,&quot;48&quot;,&quot;1&quot;,&quot;51,51&quot;]</span>
+<span class="go"> String[&quot;1|0&quot;,&quot;48&quot;,&quot;8&quot;,&quot;51,51&quot;]</span>
+
+<span class="gp">julia&gt;</span> <span class="n">genotype</span><span class="p">(</span><span class="n">record</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span>
+<span class="go">4-element Array{String,1}:</span>
+<span class="go"> &quot;0|0&quot;</span>
+<span class="go"> &quot;48&quot;</span>
+<span class="go"> &quot;1&quot;</span>
+<span class="go"> &quot;51,51&quot;</span>
+
+<span class="gp">julia&gt;</span> <span class="n">genotype</span><span class="p">(</span><span class="n">record</span><span class="p">,</span> <span class="mi">1</span><span class="o">:</span><span class="mi">2</span><span class="p">,</span> <span class="s">&quot;GT&quot;</span><span class="p">)</span>
+<span class="go">2-element Array{String,1}:</span>
+<span class="go"> &quot;0|0&quot;</span>
+<span class="go"> &quot;1|0&quot;</span>
+</pre></div></div>
         
     </div>
 
