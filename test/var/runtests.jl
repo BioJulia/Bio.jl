@@ -141,6 +141,11 @@ end
     @test metainfotag(metainfo) == "source"
     @test metainfoval(metainfo) == "foobar1234"
 
+    metainfo = VCFMetaInfo("##source=foobar1234")
+    @test isfilled(metainfo)
+    @test metainfotag(metainfo) == "source"
+    @test metainfoval(metainfo) == "foobar1234"
+
     metainfo = VCFMetaInfo(metainfo)
     @test isa(metainfo, VCFMetaInfo)
     metainfo = VCFMetaInfo(metainfo, tag="date")
@@ -208,6 +213,26 @@ end
     record = VCFRecord(record, genotype=[Dict("GT" => "0/0", "DP" => [10,20])])
     @test format(record) == ["DP", "GT"]
     @test genotype(record) == [["10,20", "0/0"]]
+
+    let header = VCFHeader()
+        @test isempty(header)
+        push!(header, "##reference=file:///seq/references/1000GenomesPilot-NCBI36.fasta")
+        @test !isempty(header)
+        @test length(header) == 1
+        unshift!(header, "##fileformat=VCFv4.3")
+        @test length(header) == 2
+        @test collect(header) == [
+            VCFMetaInfo("##fileformat=VCFv4.3"),
+            VCFMetaInfo("##reference=file:///seq/references/1000GenomesPilot-NCBI36.fasta")]
+        @test startswith(repr(header), "Bio.Var.VCFHeader:")
+    end
+
+    let header = VCFHeader(["##fileformat=VCFv4.3"], ["Sample1"])
+        @test !isempty(header)
+        @test length(header) == 1
+        @test header.sampleID == ["Sample1"]
+        @test first(header) == VCFMetaInfo("##fileformat=VCFv4.3")
+    end
 
     # minimum header
     data = b"""

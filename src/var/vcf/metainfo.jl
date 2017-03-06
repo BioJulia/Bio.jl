@@ -14,12 +14,44 @@ type VCFMetaInfo
     dictval::Vector{UnitRange{Int}}
 end
 
-function VCFMetaInfo(data::Vector{UInt8}=UInt8[])
+"""
+    VCFMetaInfo()
+
+Create an unfilled `VCFMetaInfo` object.
+"""
+function VCFMetaInfo()
+    return VCFMetaInfo(UInt8[], 1:0, false, 1:0, 1:0, UnitRange{Int}[], UnitRange{Int}[])
+end
+
+"""
+    VCFMetaInfo(data::Vector{UInt8})
+
+Create a `VCFMetaInfo` object from `data` containing a VCF header line.
+This function verifies the format and indexes fields for accessors.
+Note that the ownership of `data` is transferred to a new `VCFMetaInfo` object.
+"""
+function VCFMetaInfo(data::Vector{UInt8})
+    return convert(VCFMetaInfo, data)
+end
+
+function Base.convert(::Type{VCFMetaInfo}, data::Vector{UInt8})
     metainfo = VCFMetaInfo(data, 1:0, false, 1:0, 1:0, UnitRange{Int}[], UnitRange{Int}[])
-    if !isempty(data)
-        index!(metainfo)
-    end
+    index!(metainfo)
     return metainfo
+end
+
+"""
+    VCFMetaInfo(str::AbstractString)
+
+Create a `VCFMetaInfo` object from `str` containing a VCF header line.
+This function verifies the format and indexes fields for accessors.
+"""
+function VCFMetaInfo(str::AbstractString)
+    return convert(VCFMetaInfo, str)
+end
+
+function Base.convert(::Type{VCFMetaInfo}, str::AbstractString)
+    return VCFMetaInfo(convert(Vector{UInt8}, str))
 end
 
 function initialize!(metainfo::VCFMetaInfo)
@@ -30,10 +62,6 @@ function initialize!(metainfo::VCFMetaInfo)
     empty!(metainfo.dictkey)
     empty!(metainfo.dictval)
     return metainfo
-end
-
-function Base.convert(::Type{VCFMetaInfo}, str::AbstractString)
-    return VCFMetaInfo(convert(Vector{UInt8}, str))
 end
 
 function datarange(metainfo::VCFMetaInfo)
