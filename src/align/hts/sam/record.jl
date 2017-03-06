@@ -2,8 +2,10 @@
 # ==========
 
 type SAMRecord
-    filled::Bool
+    # data and filled range
     data::Vector{UInt8}
+    filled::UnitRange{Int}
+    # indexes
     qname::UnitRange{Int}
     flag::UnitRange{Int}
     rname::UnitRange{Int}
@@ -20,9 +22,12 @@ end
 
 function SAMRecord(data::Vector{UInt8}=UInt8[])
     record = SAMRecord(
-        false, data,
+        data, 1:0,
+        # qname-mapq
         1:0, 1:0, 1:0, 1:0, 1:0,
+        # cigar-seq
         1:0, 1:0, 1:0, 1:0, 1:0,
+        # qual and fields
         1:0, UnitRange{Int}[])
     if !isempty(data)
         index!(record)
@@ -31,7 +36,7 @@ function SAMRecord(data::Vector{UInt8}=UInt8[])
 end
 
 function initialize!(record::SAMRecord)
-    record.filled = false
+    record.filled = 1:0
     record.qname = 1:0
     record.flag = 1:0
     record.rname = 1:0
@@ -45,6 +50,20 @@ function initialize!(record::SAMRecord)
     record.qual = 1:0
     empty!(record.fields)
     return record
+end
+
+function isfilled(record::SAMRecord)
+    return !isempty(record.filled)
+end
+
+function datarange(record::SAMRecord)
+    return record.filled
+end
+
+function checkfilled(record::SAMRecord)
+    if !isfilled(record)
+        throw(ArgumentError("unfilled SAM record"))
+    end
 end
 
 function Base.show(io::IO, record::SAMRecord)
@@ -78,38 +97,17 @@ end
 
 function Base.write(io::IO, record::SAMRecord)
     checkfilled(record)
-    return unsafe_write(io, pointer(record.data), dataend(record))
-end
-
-function isfilled(record::SAMRecord)
-    return record.filled
-end
-
-function checkfilled(record::SAMRecord)
-    if !isfilled(record)
-        throw(ArgumentError("unfilled SAM record"))
-    end
-end
-
-function dataend(record::SAMRecord)
-    if record.filled
-        if isempty(record.fields)
-            return last(record.qual)
-        else
-            return last(record.fields[end])
-        end
-    else
-        return 0
-    end
+    r = datarange(record)
+    return unsafe_write(io, pointer(record.data, first(r)), length(r))
 end
 
 function Base.:(==)(record1::SAMRecord, record2::SAMRecord)
-    if record1.filled == record2.filled == false
-        return true
-    elseif record1.filled == record2.filled == true
-        return dataend(record1) == dataend(record2) && memcmp(pointer(record1.data), pointer(record2.data), dataend(record1)) == 0
+    if isfilled(record1) == isfilled(record2) == true
+        r1 = datarange(record1)
+        r2 = datarange(record2)
+        return length(r1) == length(r2) && memcmp(pointer(record1.data, first(r1)), pointer(record2.data, first(r2)), length(r1)) == 0
     else
-        return false
+        return isfilled(record1) == isfilled(record2) == false
     end
 end
 
@@ -125,8 +123,8 @@ end
 
 function Base.copy(record::SAMRecord)
     return SAMRecord(
-        record.filled,
         copy(record.data),
+        record.filled,
         record.qname,
         record.flag,
         record.rname,

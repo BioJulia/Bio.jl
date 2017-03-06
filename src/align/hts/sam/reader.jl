@@ -174,29 +174,44 @@ const sam_metainfo_machine, sam_record_machine, sam_header_machine, sam_body_mac
 end)()
 
 const sam_metainfo_actions = Dict(
-    :metainfo_tag => :(metainfo.tag = (mark1:p-1) - offset),
-    :metainfo_val => :(metainfo.val = (mark1:p-1) - offset),
-    :metainfo_dict_key => :(push!(metainfo.dictkey, (mark2:p-1) - offset)),
-    :metainfo_dict_val => :(push!(metainfo.dictval, (mark2:p-1) - offset)),
-    :metainfo => :(),
+    :metainfo_tag => :(record.tag = (mark1:p-1) - offset),
+    :metainfo_val => :(record.val = (mark1:p-1) - offset),
+    :metainfo_dict_key => :(push!(record.dictkey, (mark2:p-1) - offset)),
+    :metainfo_dict_val => :(push!(record.dictval, (mark2:p-1) - offset)),
+    :metainfo => quote
+        Bio.ReaderHelper.resize_and_copy!(record.data, data, offset+1:p-1)
+        record.filled = (offset+1:p-1) - offset
+    end,
     :anchor => :(),
     :mark1  => :(mark1 = p),
     :mark2  => :(mark2 = p))
-
-@eval function index!(metainfo::SAMMetaInfo)
-    data = metainfo.data
-    p = 1
-    p_end = p_eof = sizeof(data)
-    offset = mark1 = mark2 = 0
-    initialize!(metainfo)
-    cs = $(sam_metainfo_machine.start_state)
-    $(Automa.generate_exec_code(sam_metainfo_machine, actions=sam_metainfo_actions))
-    if cs != 0
-        throw(ArgumentError("failed to index SAMMetaInfo"))
-    end
-    metainfo.filled = true
-    return metainfo
-end
+eval(
+    Bio.ReaderHelper.generate_index_function(
+        SAMMetaInfo,
+        sam_metainfo_machine,
+        sam_metainfo_actions))
+eval(
+    Bio.ReaderHelper.generate_readheader_function(
+        SAMReader,
+        SAMMetaInfo,
+        sam_header_machine,
+        merge(sam_metainfo_actions, Dict(
+            :metainfo => quote
+                Bio.ReaderHelper.resize_and_copy!(record.data, data, Bio.ReaderHelper.upanchor!(stream):p-1)
+                record.filled = (offset+1:p-1) - offset
+                @assert isfilled(record)
+                push!(reader.header.metainfo, record)
+                Bio.ReaderHelper.ensure_margin!(stream)
+                record = SAMMetaInfo()
+            end,
+            :header => :(finish_header = true; @escape),
+            :countline => :(linenum += 1),
+            :anchor => :(Bio.ReaderHelper.anchor!(stream, p); offset = p - 1))),
+        quote
+            if !eof(stream)
+                stream.position -= 1  # cancel look-ahead
+            end
+        end))
 
 const sam_record_actions = Dict(
     :record_qname => :(record.qname = (mark:p-1) - offset),
@@ -211,163 +226,27 @@ const sam_record_actions = Dict(
     :record_seq   => :(record.seq   = (mark:p-1) - offset),
     :record_qual  => :(record.qual  = (mark:p-1) - offset),
     :record_field => :(push!(record.fields, (mark:p-1) - offset)),
-    :record       => :(),
+    :record       => quote
+        Bio.ReaderHelper.resize_and_copy!(record.data, data, 1:p-1)
+        record.filled = (offset+1:p-1) - offset
+    end,
     :anchor       => :(),
     :mark         => :(mark = p))
-
-@eval function index!(record::SAMRecord)
-    data = record.data
-    p = 1
-    p_end = p_eof = sizeof(data)
-    offset = mark = 0
-    initialize!(record)
-    cs = $(sam_record_machine.start_state)
-    $(Automa.generate_exec_code(sam_record_machine, actions=sam_record_actions, code=:goto, check=false))
-    if cs != 0
-        throw(ArgumentError("failed to index SAMRecord"))
-    end
-    record.filled = true
-    return record
-end
-
-const sam_header_actions = merge(sam_metainfo_actions, Dict(
-    :metainfo => quote
-        metainfo.data = data[upanchor!(stream):p-1]
-        metainfo.filled = true
-        push!(reader.header.metainfo, metainfo)
-        metainfo = SAMMetaInfo()
-    end,
-    :header => :(finish_header = true; @escape),
-    :countline => :(linenum += 1),
-    :anchor => :(anchor!(stream, p); offset = p - 1)))
-    
-function readheader!(reader::SAMReader)
-    _readheader!(reader, reader.state)
-end
-
-@eval function _readheader!(reader::SAMReader, state::Bio.Ragel.State)
-    stream = state.stream
-    ensure_margin(stream)
-    cs = state.cs
-    linenum = state.linenum
-    data = stream.buffer
-    p = stream.position
-    p_end = stream.available
-    p_eof = -1
-    offset = mark1 = mark2 = 0
-    finish_header = false
-    metainfo = SAMMetaInfo()
- 
-    while true
-        $(Automa.generate_exec_code(sam_header_machine, actions=sam_header_actions, code=:table))
- 
-        state.cs = cs
-        state.finished = cs == 0
-        state.linenum = linenum
-        stream.position = p
-
-        if cs < 0
-            error("SAM file format error on line ", linenum)
-        elseif finish_header
-            #upanchor!(stream)
-            if !eof(stream)
-                stream.position -= 1  # cancel look ahead
-            end
-            break
-        #elseif cs == 0
-        #    throw(EOFError())
-        elseif p > p_eof ≥ 0
-            error("incomplete SAM input on line ", linenum)
-        else
-            hits_eof = BufferedStreams.fillbuffer!(stream) == 0
-            p = stream.position
-            p_end = stream.available
-            if hits_eof
-                p_eof = p_end
-            end
-        end
-    end
-end
-
-const sam_body_actions = merge(sam_record_actions, Dict(
-    :record    => :(found_record = true; @escape),
-    :countline => :(linenum += 1),
-    :anchor    => :(anchor!(stream, p); offset = p - 1)))
-
-function Base.read!(reader::SAMReader, record::SAMRecord)::SAMRecord
-    return _read!(reader, reader.state, record)
-end
-
-@eval function _read!(reader::SAMReader, state::Bio.Ragel.State, record::SAMRecord)
-    stream = state.stream
-    ensure_margin(stream)
-    initialize!(record)
-    cs = state.cs
-    linenum = state.linenum
-    data = stream.buffer
-    p = stream.position
-    p_end = stream.available
-    p_eof = -1
-    offset = mark = 0
-    found_record = false
-
-    while true
-        $(Automa.generate_exec_code(sam_body_machine, actions=sam_body_actions, code=:goto, check=false))
-
-        state.cs = cs
-        state.finished = cs == 0
-        state.linenum = linenum
-        stream.position = p
-
-        if cs < 0
-            @show String(data[p:min(p+8, p_end)])
-            error("SAM file format error on line ", linenum)
-        elseif found_record
-            resize_and_copy!(record.data, data, upanchor!(stream):p-2)
-            record.filled = true
-            break
-        elseif cs == 0
-            throw(EOFError())
-        elseif p > p_eof ≥ 0
-            error("incomplete SAM input on line ", linenum)
-        else
-            hits_eof = BufferedStreams.fillbuffer!(stream) == 0
-            p = stream.position
-            p_end = stream.available
-            if hits_eof
-                p_eof = p_end
-            end
-        end
-    end
-
-    return record
-end
-
-function resize_and_copy!(dst, src, r)
-    len = length(r)
-    if length(dst) != len
-        resize!(dst, len)
-    end
-    copy!(dst, 1, src, first(r), len)
-    return dst
-end
-
-function ensure_margin(stream)
-    if stream.position * 20 > length(stream.buffer) * 19
-        BufferedStreams.shiftdata!(stream)
-    end
-end
-
-@inline function anchor!(stream::BufferedStreams.BufferedInputStream, p)
-    stream.anchor = p
-    stream.immobilized = true
-    return stream
-end
-
-@inline function upanchor!(stream::BufferedStreams.BufferedInputStream)
-    @assert stream.anchor != 0 "upanchor! called with no anchor set"
-    anchor = stream.anchor
-    stream.anchor = 0
-    stream.immobilized = false
-    return anchor
-end
+eval(
+    Bio.ReaderHelper.generate_index_function(
+        SAMRecord,
+        sam_record_machine,
+        sam_record_actions))
+eval(
+    Bio.ReaderHelper.generate_read_function(
+        SAMReader,
+        sam_body_machine,
+        merge(sam_record_actions, Dict(
+            :record    => quote
+                Bio.ReaderHelper.resize_and_copy!(record.data, data, Bio.ReaderHelper.upanchor!(stream):p-1)
+                record.filled = (offset+1:p-1) - offset
+                found_record = true
+                @escape
+            end,
+            :countline => :(linenum += 1),
+            :anchor    => :(Bio.ReaderHelper.anchor!(stream, p); offset = p - 1)))))
