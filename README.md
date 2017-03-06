@@ -33,13 +33,14 @@ developed as submodules:
     * Reader for SAM and BAM file formats
 * `Bio.Intervals`: Genomic intervals and annotations
     * Genomic intervals with annotations
-    * Readers for BED and BigBed file formats
+    * Readers for BED, BigBed and GFF3 file formats
 * `Bio.Structure`: Molecular structures
     * Macromolecular structures (e.g. proteins)
     * Reader for PDB file format
 * `Bio.Var`: Biological variation
     * Mutation counting
     * Genetic and evolutionary distances
+    * Readers for VCF and BCF file formats
 * `Bio.Phylo`: Phylogenetics
     * Phylogenetic trees
 * `Bio.Services`: APIs to other services
