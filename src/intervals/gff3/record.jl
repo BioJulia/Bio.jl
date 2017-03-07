@@ -328,6 +328,17 @@ function attrvals(record::Record, i::Int)
     return vals
 end
 
+function attributes(record::Record, key::String)
+    checkfilled(record)
+    checkkind(record, :feature)
+    for (i, k) in enumerate(record.attribute_keys)
+        if isequaldata(key, record.data, k)
+            return attrvals(record, i)
+        end
+    end
+    throw(KeyError(key))
+end
+
 function searchend(data::Vector{UInt8}, b::UInt8, start::Int, stop::Int)
     p = start
     while p ≤ stop
@@ -340,13 +351,7 @@ function searchend(data::Vector{UInt8}, b::UInt8, start::Int, stop::Int)
 end
 
 function is_fasta_directive(record::Record)
-    if isdirective(record)
-        r = datarange(record)
-        if length(r) == 7 && memcmp(pointer(record.data, first(r)), pointer(b"##FASTA"), 7) == 0
-            return true
-        end
-    end
-    return false
+    return isdirective(record) && isequaldata("##FASTA", record.data, datarange(record))
 end
 
 function ismissing(record::Record, index::Int)
@@ -384,6 +389,12 @@ function decode(str::String)
     else
         return str
     end
+end
+
+# Check if `str == data[range]`
+function isequaldata(str::String, data::Vector{UInt8}, range::UnitRange{Int})
+    rlen = length(range)
+    return rlen == sizeof(str) && memcmp(pointer(data, first(range)), pointer(str), rlen) == 0
 end
 
 function memcmp(p1::Ptr, p2::Ptr, n::Integer)
