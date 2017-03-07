@@ -3,6 +3,7 @@ __precompile__()
 module Bio
 
 include("declare.jl")
+include("Exceptions.jl")
 include("IO.jl")
 include("Ragel.jl")
 include("ReaderHelper.jl")

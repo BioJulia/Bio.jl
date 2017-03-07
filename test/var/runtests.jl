@@ -167,15 +167,24 @@ end
 
     record = VCFRecord("20\t302\t.\tT\tTA\t999\t.\t.\tGT")
     @test isfilled(record)
-    @test get(chromosome(record)) == "20"
-    @test get(leftposition(record)) == 302
-    @test identifier(record) == String[]
-    @test get(reference(record)) == "T"
+    @test haschromosome(record)
+    @test chromosome(record) == "20"
+    @test hasleftposition(record)
+    @test leftposition(record) == 302
+    @test !hasidentifier(record)
+    @test_throws MissingFieldException identifier(record)
+    @test hasreference(record)
+    @test reference(record) == "T"
+    @test hasalternate(record)
     @test alternate(record) == ["TA"]
-    @test get(quality(record)) == 999
-    @test filter_(record) == String[]
+    @test hasquality(record)
+    @test quality(record) == 999
+    @test !hasfilter_(record)
+    @test_throws MissingFieldException filter_(record)
     @test infokeys(record) == String[]
-    @test information(record) == Pair{String,String}[]
+    @test !hasinformation(record)
+    @test_throws MissingFieldException information(record)
+    @test hasformat(record)
     @test format(record) == ["GT"]
 
     # empty data is not a valid VCF record
@@ -184,25 +193,29 @@ end
 
     record = VCFRecord(b".\t.\t.\t.\t.\t.\t.\t.\t")
     @test isfilled(record)
-    @test isnull(chromosome(record))
-    @test isnull(leftposition(record))
-    @test isempty(information(record))
-    @test isempty(genotype(record))
+    @test !haschromosome(record)
+    @test !hasleftposition(record)
+    @test !hasidentifier(record)
+    @test !hasreference(record)
+    @test !hasalternate(record)
+    @test !hasquality(record)
+    @test !hasfilter_(record)
+    @test !hasinformation(record)
 
     record = VCFRecord(record)
     @test isa(record, VCFRecord)
     record = VCFRecord(record, chromosome="chr1")
-    @test get(chromosome(record)) == "chr1"
+    @test chromosome(record) == "chr1"
     record = VCFRecord(record, position=1234)
-    @test get(leftposition(record)) == 1234
+    @test leftposition(record) == 1234
     record = VCFRecord(record, identifier="rs1111")
     @test identifier(record) == ["rs1111"]
     record = VCFRecord(record, reference="A")
-    @test get(reference(record)) == "A"
+    @test reference(record) == "A"
     record = VCFRecord(record, alternate=["AT"])
     @test alternate(record) == ["AT"]
     record = VCFRecord(record, quality=11.2)
-    @test get(quality(record)) == 11.2
+    @test quality(record) == 11.2
     record = VCFRecord(record, filter="PASS")
     @test filter_(record) == ["PASS"]
     record = VCFRecord(record, information=Dict("DP" => 20, "AA" => "AT", "DB"=>nothing))
@@ -322,15 +335,12 @@ end
     record = VCFRecord()
 
     @test read!(reader, record) === record
-    @test !isnull(chromosome(record))
-    @test get(chromosome(record)) == "chr1"
-    @test !isnull(leftposition(record))
-    @test get(leftposition(record)) === 1234
+    @test chromosome(record) == "chr1"
+    @test leftposition(record) === 1234
     @test identifier(record) == ["rs001234"]
-    @test get(reference(record)) == "A"
+    @test reference(record) == "A"
     @test alternate(record) == ["C"]
-    @test !isnull(quality(record))
-    @test get(quality(record)) === 30.0
+    @test quality(record) === 30.0
     @test filter_(record) == ["PASS"]
     @test information(record) == ["DP" => "10", "AF" => "0.3"]
     @test information(record, "DP") == "10"
@@ -346,15 +356,13 @@ end
     @test ismatch(r"^Bio.Var.VCFRecord:\n.*", repr(record))
 
     @test read!(reader, record) === record
-    @test !isnull(chromosome(record))
-    @test get(chromosome(record)) == "chr2"
-    @test !isnull(leftposition(record))
-    @test get(leftposition(record)) == 4
-    @test isempty(identifier(record))
-    @test get(reference(record)) == "A"
+    @test chromosome(record) == "chr2"
+    @test leftposition(record) == 4
+    @test !hasidentifier(record)
+    @test reference(record) == "A"
     @test alternate(record) == ["AA", "AAT"]
-    @test isnull(quality(record))
-    @test isempty(filter_(record))
+    @test !hasquality(record)
+    @test !hasfilter_(record)
     @test information(record) == ["DP" => "5"]
     @test information(record, "DP") == "5"
     @test_throws KeyError information(record, "AF")
