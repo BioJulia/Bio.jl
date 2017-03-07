@@ -15,11 +15,11 @@ include("intervals/Intervals.jl")
 include("align/Align.jl")
 include("util/tokenize.jl")
 include("util/indexing.jl")
+include("util/windows.jl")
 include("var/Var.jl")
 include("phylo/Phylo.jl")
 include("structure/Structure.jl")
 include("tools/Tools.jl")
-include("util/windows.jl")
 include("precompile.jl")
 
 end  # module Bio

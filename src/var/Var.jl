@@ -10,35 +10,31 @@
 module Var
 
 using Bio.Seq
+import PairwiseListMatrices: PairwiseListMatrix
 import Bio.Exceptions: MissingFieldException, missingerror
+import Bio.Windows: eachwindow, EachWindowIterator, SeqWinItr
 import Automa
 import Automa.RegExp: @re_str
 import BGZFStreams: BGZFStream
 # TODO: Needs this branch: https://github.com/BioJulia/BufferedStreams.jl/pull/33
 import BufferedStreams: BufferedStreams, BufferedInputStream
+import IntervalTrees: Interval, IntervalValue
 importall Bio
 
 export
-
-    # Mutation types
-    MutationType,
-    AnyMutation,
-    TransitionMutation,
-    TransversionMutation,
-
-    # Identifying and counting mutations
-    count_mutations,
-    is_mutation,
-    flagmutations,
-
-    # Genetic and Evolutionary distances
-    EvolutionaryDistance,
-    Count,
-    Proportion,
-    JukesCantor69,
-    Kimura80,
-
-    distance,
+    # Site types
+    Certain,
+    Ambiguous,
+    Gap,
+    Match,
+    Mismatch,
+    Conserved,
+    Mutated,
+    Transition,
+    Transversion,
+    # Site counting methods
+    count_sites_naive,
+    count_sites,
 
     # VCF and BCF
     VCFMetaInfo,
@@ -78,8 +74,8 @@ export
 
 # Bio.@reexport import Bio: isfilled, leftposition
 
-include("mutation_counting.jl")
-include("distances.jl")
+include("site_counting/site_counting.jl")
+#include("distances.jl")
 include("vcf/vcf.jl")
 include("bcf/bcf.jl")
 

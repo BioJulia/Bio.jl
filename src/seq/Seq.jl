@@ -48,6 +48,8 @@ export
     ACGU,
     iscompatible,
     isambiguous,
+    iscertain,
+    isgap,
     ispurine,
     ispyrimidine,
     Sequence,

@@ -11,6 +11,8 @@ module Windows
 export
     eachwindow,
     EachWindowIterator,
+    EachWinItr,
+    SeqWinItr,
     missed
 
 import Bio
@@ -38,17 +40,8 @@ immutable EachWindowIterator{T <: ArrayOrStringOrSeq}
     end
 end
 
-
-immutable EachWindow
-    to::Int
-    width::Int
-    step::Int
-end
-
-function Base.size(winitr::EachWindow)
-    return length(StepRange(winitr.width+1, winitr.step, length(winitr.data)))
-end
-
+typealias EachWinItr EachWindowIterator
+typealias SeqWinItr EachWindowIterator{Bio.Seq.BioSequence}
 
 """
 Calculate the number of windows that will result from iterating across the container.
@@ -89,14 +82,17 @@ function eachwindow{T <: ArrayOrStringOrSeq}(data::T, width::Int, step::Int = 1)
     EachWindowIterator{T}(data, width, step)
 end
 
+endpoint(state::Int, width::Int) = state + width - 1
+winrange(state::Int, width::Int) = state:endpoint(state, width)
+nextstate(state::Int, step::Int) = state + step
+
 @inline function Base.start(it::EachWindowIterator)
     return 1
 end
 
 @inline function Base.next(it::EachWindowIterator, state::Integer)
-    i = state
-    window = view(it.data, i:i + it.width - 1)
-    return (i, window), i + it.step
+    rng = winrange(state, it.width)
+    return (rng, view(it.data, rng)), nextstate(state, it.step)
 end
 
 # Extra next method to account for fact than strings don't have sub method
@@ -104,13 +100,12 @@ end
 # The operation is an indexing operation, rather than a "proper"
 # substring or subarray operation.
 @inline function Base.next{T <: AbstractString}(it::EachWindowIterator{T}, state::Integer)
-    i = state
-    window = it.data[i:i + it.width - 1]
-    return (i, window), i + it.step
+    rng = winrange(state, it.width)
+    return (rng, it.data[rng]), nextstate(state, it.step)
 end
 
 @inline function Base.done(it::EachWindowIterator, state::Integer)
-    return (state + it.width - 1) > length(it.data)
+    return endpoint(state, it.width) > length(it.data)
 end
 
 function Base.show(io::IO, it::EachWindowIterator)
