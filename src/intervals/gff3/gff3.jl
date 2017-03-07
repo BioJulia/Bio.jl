@@ -7,6 +7,7 @@ import Automa
 import Automa.RegExp: @re_str
 import BufferedStreams
 import Bio.Exceptions: missingerror
+import URIParser
 importall Bio
 
 include("record.jl")

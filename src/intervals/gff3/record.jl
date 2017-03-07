@@ -197,7 +197,7 @@ function Bio.seqname(record::Record)
     if ismissing(record, record.seqid)
         missingerror(:seqname)
     end
-    return String(record.data[record.seqid])
+    return decode(String(record.data[record.seqid]))
 end
 
 function Bio.hasseqname(record::Record)
@@ -210,7 +210,7 @@ function source(record::Record)
     if ismissing(record, record.source)
         missingerror(:source)
     end
-    return String(record.data[record.source])
+    return decode(String(record.data[record.source]))
 end
 
 function hassource(record::Record)
@@ -223,7 +223,7 @@ function type_(record::Record)
     if ismissing(record, record.typ)
         missingerror(:type_)
     end
-    return String(record.data[record.typ])
+    return decode(String(record.data[record.typ]))
 end
 
 function hastype_(record::Record)
@@ -301,7 +301,7 @@ function attributes(record::Record)
     checkkind(record, :feature)
     ret = Pair{String,Vector{String}}[]
     for (i, key) in enumerate(record.attribute_keys)
-        push!(ret, String(record.data[key]) => attrvals(record, i))
+        push!(ret, decode(String(record.data[key])) => attrvals(record, i))
     end
     return ret
 end
@@ -319,11 +319,11 @@ function attrvals(record::Record, i::Int)
     stop = last(valsrange)
     ps = first(valsrange)
     pe = searchend(record.data, UInt8(','), ps, stop)
-    vals = [String(record.data[ps:pe-1])]
+    vals = [decode(String(record.data[ps:pe-1]))]
     while pe ≤ stop
         ps = pe + 1
         pe = searchend(record.data, UInt8(','), ps, stop)
-        push!(vals, String(record.data[ps:pe-1]))
+        push!(vals, decode(String(record.data[ps:pe-1])))
     end
     return vals
 end
@@ -375,6 +375,15 @@ function unsafe_parse_decimal{T<:Signed}(::Type{T}, data::Vector{UInt8}, range::
         x = Base.Checked.checked_add(x, (data[i] - UInt8('0')) % T)
     end
     return sign * x
+end
+
+# Decode the percent-encoded string if needed.
+function decode(str::String)
+    if search(str, '%') > 0
+        return URIParser.unescape(str)
+    else
+        return str
+    end
 end
 
 function memcmp(p1::Ptr, p2::Ptr, n::Integer)
