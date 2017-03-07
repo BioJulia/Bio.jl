@@ -20,7 +20,34 @@ type SAMRecord
     fields::Vector{UnitRange{Int}}
 end
 
-function SAMRecord(data::Vector{UInt8}=UInt8[])
+"""
+    SAMRecord()
+
+Create an unfilled `SAMRecord` object.
+"""
+function SAMRecord()
+    return SAMRecord(
+        UInt8[], 1:0,
+        # qname-mapq
+        1:0, 1:0, 1:0, 1:0, 1:0,
+        # cigar-seq
+        1:0, 1:0, 1:0, 1:0, 1:0,
+        # qual and fields
+        1:0, UnitRange{Int}[])
+end
+
+"""
+    SAMRecord(data::Vector{UInt8})
+
+Create a `SAMRecord` object from `data` containing a SAM record.
+This function verifies the format and indexes fields for accessors.
+Note that the ownership of `data` is transferred to a new `SAMRecord` object.
+"""
+function SAMRecord(data::Vector{UInt8})
+    return convert(SAMRecord, data)
+end
+
+function Base.convert(::Type{SAMRecord}, data::Vector{UInt8})
     record = SAMRecord(
         data, 1:0,
         # qname-mapq
@@ -29,10 +56,22 @@ function SAMRecord(data::Vector{UInt8}=UInt8[])
         1:0, 1:0, 1:0, 1:0, 1:0,
         # qual and fields
         1:0, UnitRange{Int}[])
-    if !isempty(data)
-        index!(record)
-    end
+    index!(record)
     return record
+end
+
+"""
+    SAMRecord(data::Vector{UInt8})
+
+Create a `SAMRecord` object from `data` containing a SAM record.
+This function verifies the format and indexes fields for accessors.
+"""
+function SAMRecord(str::AbstractString)
+    return convert(SAMRecord, str)
+end
+
+function Base.convert(::Type{SAMRecord}, str::AbstractString)
+    return SAMRecord(convert(Vector{UInt8}, str))
 end
 
 function initialize!(record::SAMRecord)
