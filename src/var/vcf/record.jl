@@ -367,7 +367,7 @@ function Bio.leftposition(record::VCFRecord)::Int
     return parse(Int, String(record.data[record.pos]))
 end
 
-function hasleftposition(record::VCFRecord)
+function Bio.hasleftposition(record::VCFRecord)
     return isfilled(record) && !ismissing(record, record.pos)
 end
 
