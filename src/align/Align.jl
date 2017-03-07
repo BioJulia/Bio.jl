@@ -80,21 +80,32 @@ export
     BAI,
     AuxDataDict,
     ismapped,
+    seqname,
+    hasseqnmae,
+    flag,
+    hasflag,
     refname,
+    hasrefname,
+    leftposition,
+    hasleftposition,
+    rightposition,
+    mappingquality,
+    hasmappingquality,
+    cigar,
+    hascigar,
     nextrefname,
+    nextleftposition,
+    hasnextleftposition,
+    templatelength,
+    hastemplatelength,
+    sequence,
+    hassequence,
+    hasnextrefname,
+    qualities,
+    hasqualities,
     refindex,
     nextrefindex,
-    leftposition,
-    rightposition,
-    nextleftposition,
-    mappingquality,
-    flag,
-    templatelength,
-    seqname,
-    cigar,
-    sequence,
     seqlength,
-    qualities,
     header,
     isoverlapping,
     SAMMetaInfo,
@@ -113,11 +124,14 @@ export
     SAM_FLAG_SECONDARY,
     SAM_FLAG_QCFAIL,
     SAM_FLAG_DUP,
-    SAM_FLAG_SUPPLEMENTARY
+    SAM_FLAG_SUPPLEMENTARY,
+
+    MissingFieldException
 
 import Automa
 import Automa.RegExp: @re_str
 import BGZFStreams
+import Bio.Exceptions: MissingFieldException, missingerror
 import Bio.Ragel: Ragel
 import Bio.StringFields: StringField
 import BufferedStreams

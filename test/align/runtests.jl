@@ -1048,20 +1048,39 @@ end
         end
 
         @testset "SAMRecord" begin
-            record = SAMRecord(b"r001\t99\tchr1\t7\t30\t8M2I4M1D3M\t=\t37\t39\tTTAGATAAAGGATACTG\t*")
-            @test record == SAMRecord("r001\t99\tchr1\t7\t30\t8M2I4M1D3M\t=\t37\t39\tTTAGATAAAGGATACTG\t*")
+            record = SAMRecord()
+            @test !isfilled(record)
+            @test !ismapped(record)
+            @test_throws ArgumentError seqname(record)
+
+            record = SAMRecord("r001\t99\tchr1\t7\t30\t8M2I4M1D3M\t=\t37\t39\tTTAGATAAAGGATACTG\t*")
+            @test record == SAMRecord(b"r001\t99\tchr1\t7\t30\t8M2I4M1D3M\t=\t37\t39\tTTAGATAAAGGATACTG\t*")
+
+            record = SAMRecord("r001\t99\tchr1\t7\t30\t8M2I4M1D3M\t=\t37\t39\tTTAGATAAAGGATACTG\t*")
+            @test isfilled(record)
             @test ismapped(record)
+            @test hasseqnmae(record)
             @test seqname(record) == "r001"
+            @test hasflag(record)
             @test flag(record) === UInt16(99)
+            @test hasrefname(record)
             @test refname(record) == "chr1"
-            @test leftposition(record) == 7
-            @test mappingquality(record) == 30
+            @test hasleftposition(record)
+            @test leftposition(record) === 7
+            @test hasmappingquality(record)
+            @test mappingquality(record) === UInt8(30)
+            @test hascigar(record)
             @test cigar(record) == "8M2I4M1D3M"
+            @test hasnextrefname(record)
             @test nextrefname(record) == "="
-            @test nextleftposition(record) == 37
-            @test templatelength(record) == 39
+            @test hasnextleftposition(record)
+            @test nextleftposition(record) === 37
+            @test hastemplatelength(record)
+            @test templatelength(record) === 39
+            @test hassequence(record)
             @test sequence(record) == dna"TTAGATAAAGGATACTG"
-            #@test qualities(record)
+            @test !hasqualities(record)
+            @test_throws MissingFieldException qualities(record)
         end
 
         @testset "Reader" begin

@@ -178,13 +178,20 @@ function Base.copy(record::SAMRecord)
         copy(record.fields))
 end
 
-function ismapped(rec::SAMRecord)
-    return flag(rec) & SAM_FLAG_UNMAP == 0
+function ismapped(record::SAMRecord)
+    return isfilled(record) && (flag(record) & SAM_FLAG_UNMAP == 0)
 end
 
 function Bio.seqname(record::SAMRecord)
     checkfilled(record)
+    if ismissing(record, record.qname)
+        missingerror(:seqname)
+    end
     return String(record.data[record.qname])
+end
+
+function Bio.hasseqnmae(record::SAMRecord)
+    return isfilled(record) && !ismissing(record, record.qname)
 end
 
 function flag(record::SAMRecord)
@@ -192,14 +199,33 @@ function flag(record::SAMRecord)
     return unsafe_parse_decimal(UInt16, record.data, record.flag)
 end
 
+function hasflag(record::SAMRecord)
+    return isfilled(record)
+end
+
 function refname(record::SAMRecord)
     checkfilled(record)
+    if ismissing(record, record.rname)
+        missingerror(:refname)
+    end
     return String(record.data[record.rname])
 end
 
-function leftposition(record::SAMRecord)
+function hasrefname(record::SAMRecord)
+    return isfilled(record) && !ismissing(record, record.rname)
+end
+
+function Bio.leftposition(record::SAMRecord)
     checkfilled(record)
-    return unsafe_parse_decimal(Int, record.data, record.pos)
+    pos = unsafe_parse_decimal(Int, record.data, record.pos)
+    if pos == 0
+        missingerror(:leftposition)
+    end
+    return pos
+end
+
+function Bio.hasleftposition(record::SAMRecord)
+    return isfilled(record) && (length(record.pos) != 1 || record.data[first(record.pos)] != UInt8('0'))
 end
 
 function rightposition(record::SAMRecord)
@@ -208,39 +234,80 @@ end
 
 function mappingquality(record::SAMRecord)
     checkfilled(record)
-    return unsafe_parse_decimal(UInt8, record.data, record.mapq)
+    qual = unsafe_parse_decimal(UInt8, record.data, record.mapq)
+    if qual == 0xff
+        missingerror(:mappingquality)
+    end
+    return qual
+end
+
+function hasmappingquality(record::SAMRecord)
+    return isfilled(record) && unsafe_parse_decimal(UInt8, record.data, record.mapq) != 0xff
 end
 
 function cigar(record::SAMRecord)
     checkfilled(record)
+    if ismissing(record, record.cigar)
+        missingerror(:cigar)
+    end
     return String(record.data[record.cigar])
+end
+
+function hascigar(record::SAMRecord)
+    return isfilled(record) && !ismissing(record, record.cigar)
 end
 
 function nextrefname(record::SAMRecord)
     checkfilled(record)
+    if ismissing(record, record.rnext)
+        missingerror(:nextrefname)
+    end
     return String(record.data[record.rnext])
+end
+
+function hasnextrefname(record::SAMRecord)
+    return isfilled(record) && !ismissing(record, record.rnext)
 end
 
 function nextleftposition(record::SAMRecord)
     checkfilled(record)
-    return unsafe_parse_decimal(Int, record.data, record.pnext)
+    pos = unsafe_parse_decimal(Int, record.data, record.pnext)
+    if pos == 0
+        missingerror(:nextleftposition)
+    end
+    return pos
+end
+
+function hasnextleftposition(record::SAMRecord)
+    return isfilled(record) && (length(record.pnext) != 1 || record.data[first(record.pnext)] != UInt8('0'))
 end
 
 function templatelength(record::SAMRecord)
     checkfilled(record)
-    return unsafe_parse_decimal(Int, record.data, record.tlen)
+    len = unsafe_parse_decimal(Int, record.data, record.tlen)
+    if len == 0
+        missingerror(:templatelength)
+    end
+    return len
+end
+
+function hastemplatelength(record::SAMRecord)
+    return isfilled(record) && (length(record.tlen) != 1 || record.data[first(record.tlen)] != UInt8('0'))
 end
 
 function sequence(record::SAMRecord)
     checkfilled(record)
-    len = length(record.seq)
-    if len == 1 && record.data[first(record.seq)] == UInt8('*')
-        return Bio.Seq.DNASequence(0)
-    else
-        ret = Bio.Seq.DNASequence(length(record.seq))
-        Bio.Seq.encode_copy!(ret, 1, record.data, first(record.seq), len)
-        return ret
+    if ismissing(record, record.seq)
+        missingerror(:sequence)
     end
+    seqlen = length(record.seq)
+    ret = Bio.Seq.DNASequence(seqlen)
+    Bio.Seq.encode_copy!(ret, 1, record.data, first(record.seq), seqlen)
+    return ret
+end
+
+function hassequence(record::SAMRecord)
+    return isfilled(record) && !ismissing(record, record.seq)
 end
 
 function sequence(::Type{String}, record::SAMRecord)
@@ -250,11 +317,18 @@ end
 
 function qualities(record::SAMRecord)
     checkfilled(record)
+    if ismissing(record, record.qual)
+        missingerror(:qualities)
+    end
     qual = record.data[record.qual]
     for i in 1:endof(qual)
         @inbounds qual[i] -= 33
     end
     return qual
+end
+
+function hasqualities(record::SAMRecord)
+    return isfilled(record) && !ismissing(record, record.qual)
 end
 
 function qualities(::Type{String}, record::SAMRecord)
@@ -264,15 +338,15 @@ end
 
 function seqlength(record::SAMRecord)
     checkfilled(record)
-    if length(record.seq) == 1 && record.data[first(record.seq)] == UInt8('*')
-        throw(ArgumentError("no sequence available"))
+    if ismissing(record, record.seq)
+        missingerror(:seqlength)
     end
     return length(record.seq)
 end
 
-function alignment(rec::SAMRecord)
-    if ismapped(rec)
-        return Alignment(cigar(rec), 1, leftposition(rec))
+function alignment(record::SAMRecord)
+    if ismapped(record)
+        return Alignment(cigar(record), 1, leftposition(record))
     else
         return Alignment(AlignmentAnchor[])
     end
@@ -428,6 +502,10 @@ function parse_typedarray(data::Vector{UInt8}, range::UnitRange{Int})
     else
         throw(ArgumentError("type code '$(Char(t))' is not defined"))
     end
+end
+
+function ismissing(record::SAMRecord, range::UnitRange{Int})
+    return length(range) == 1 && record.data[first(range)] == UInt8('*')
 end
 
 function memcmp(p1::Ptr, p2::Ptr, n::Integer)
