@@ -432,7 +432,7 @@ reference: AGGGTGGCATTTATCAG---ACGTTTCGAGAC
 
 
 <p>Map a position from sequence to reference.</p>
-<p><a target='_blank' href='https://github.com/BioJulia/Bio.jl/tree/57e03a3800becc126d13ddf4409e1c5bc3d7a378/src/align/alignment.jl#L86-L90' class='documenter-source'>source</a><br></p>
+<p><a target='_blank' href='https://github.com/BioJulia/Bio.jl/tree/a53bcaae4ed4c40cc06571ab01eee566e71febdb/src/align/alignment.jl#L86-L90' class='documenter-source'>source</a><br></p>
 <p><a id='Bio.Align.ref2seq' href='#Bio.Align.ref2seq'>#</a>
 <strong><code>Bio.Align.ref2seq</code></strong> &mdash; <em>Function</em>.</p>
 <div class="codehilite"><pre><span></span>ref2seq(aln, i)
@@ -440,7 +440,7 @@ reference: AGGGTGGCATTTATCAG---ACGTTTCGAGAC
 
 
 <p>Map a position from reference to sequence.</p>
-<p><a target='_blank' href='https://github.com/BioJulia/Bio.jl/tree/57e03a3800becc126d13ddf4409e1c5bc3d7a378/src/align/alignment.jl#L104-L108' class='documenter-source'>source</a><br></p>
+<p><a target='_blank' href='https://github.com/BioJulia/Bio.jl/tree/a53bcaae4ed4c40cc06571ab01eee566e71febdb/src/align/alignment.jl#L104-L108' class='documenter-source'>source</a><br></p>
 <p><a id='Bio.Align.cigar' href='#Bio.Align.cigar'>#</a>
 <strong><code>Bio.Align.cigar</code></strong> &mdash; <em>Function</em>.</p>
 <div class="codehilite"><pre><span></span>cigar(aln::Alignment)
@@ -449,13 +449,13 @@ reference: AGGGTGGCATTTATCAG---ACGTTTCGAGAC
 
 <p>Make a CIGAR string encoding of <code>aln</code>.</p>
 <p>This is not entirely lossless as it discards the alignments start positions.</p>
-<p><a target='_blank' href='https://github.com/BioJulia/Bio.jl/tree/57e03a3800becc126d13ddf4409e1c5bc3d7a378/src/align/alignment.jl#L122-L128' class='documenter-source'>source</a><br></p>
+<p><a target='_blank' href='https://github.com/BioJulia/Bio.jl/tree/a53bcaae4ed4c40cc06571ab01eee566e71febdb/src/align/alignment.jl#L122-L128' class='documenter-source'>source</a><br></p>
 <div class="codehilite"><pre><span></span>cigar(rec::BAMRecord)
 </pre></div>
 
 
 <p>Return a CIGAR string of the alignment <code>rec</code>. See also <code>cigar_rle</code>.</p>
-<p><a target='_blank' href='https://github.com/BioJulia/Bio.jl/tree/57e03a3800becc126d13ddf4409e1c5bc3d7a378/src/align/hts/bam/record.jl#L193-L197' class='documenter-source'>source</a><br></p>
+<p><a target='_blank' href='https://github.com/BioJulia/Bio.jl/tree/a53bcaae4ed4c40cc06571ab01eee566e71febdb/src/align/hts/bam/record.jl#L193-L197' class='documenter-source'>source</a><br></p>
 <p><a id='Pairwise-alignment-1'></a></p>
 <h2 id="pairwise-alignment">Pairwise alignment</h2>
 <p>Pairwise alignment is a sequence alignment between two sequences.  The <code>Bio.Align</code> module implements several pairwise alignment methods that maximize alignment score or minimize alignment cost.</p>
@@ -528,7 +528,7 @@ alignment
 
 
 <p>Count the number of matching positions.</p>
-<p><a target='_blank' href='https://github.com/BioJulia/Bio.jl/tree/57e03a3800becc126d13ddf4409e1c5bc3d7a378/src/align/pairwise/alignment.jl#L84-L88' class='documenter-source'>source</a><br></p>
+<p><a target='_blank' href='https://github.com/BioJulia/Bio.jl/tree/a53bcaae4ed4c40cc06571ab01eee566e71febdb/src/align/pairwise/alignment.jl#L84-L88' class='documenter-source'>source</a><br></p>
 <p><a id='Bio.Align.count_mismatches' href='#Bio.Align.count_mismatches'>#</a>
 <strong><code>Bio.Align.count_mismatches</code></strong> &mdash; <em>Function</em>.</p>
 <div class="codehilite"><pre><span></span>count_mismatches(aln)
@@ -536,7 +536,7 @@ alignment
 
 
 <p>Count the number of mismatching positions.</p>
-<p><a target='_blank' href='https://github.com/BioJulia/Bio.jl/tree/57e03a3800becc126d13ddf4409e1c5bc3d7a378/src/align/pairwise/alignment.jl#L91-L95' class='documenter-source'>source</a><br></p>
+<p><a target='_blank' href='https://github.com/BioJulia/Bio.jl/tree/a53bcaae4ed4c40cc06571ab01eee566e71febdb/src/align/pairwise/alignment.jl#L91-L95' class='documenter-source'>source</a><br></p>
 <p><a id='Bio.Align.count_insertions' href='#Bio.Align.count_insertions'>#</a>
 <strong><code>Bio.Align.count_insertions</code></strong> &mdash; <em>Function</em>.</p>
 <div class="codehilite"><pre><span></span>count_insertions(aln)
@@ -544,7 +544,7 @@ alignment
 
 
 <p>Count the number of inserting positions.</p>
-<p><a target='_blank' href='https://github.com/BioJulia/Bio.jl/tree/57e03a3800becc126d13ddf4409e1c5bc3d7a378/src/align/pairwise/alignment.jl#L98-L102' class='documenter-source'>source</a><br></p>
+<p><a target='_blank' href='https://github.com/BioJulia/Bio.jl/tree/a53bcaae4ed4c40cc06571ab01eee566e71febdb/src/align/pairwise/alignment.jl#L98-L102' class='documenter-source'>source</a><br></p>
 <p><a id='Bio.Align.count_deletions' href='#Bio.Align.count_deletions'>#</a>
 <strong><code>Bio.Align.count_deletions</code></strong> &mdash; <em>Function</em>.</p>
 <div class="codehilite"><pre><span></span>count_deletions(aln)
@@ -552,7 +552,7 @@ alignment
 
 
 <p>Count the number of deleting positions.</p>
-<p><a target='_blank' href='https://github.com/BioJulia/Bio.jl/tree/57e03a3800becc126d13ddf4409e1c5bc3d7a378/src/align/pairwise/alignment.jl#L105-L109' class='documenter-source'>source</a><br></p>
+<p><a target='_blank' href='https://github.com/BioJulia/Bio.jl/tree/a53bcaae4ed4c40cc06571ab01eee566e71febdb/src/align/pairwise/alignment.jl#L105-L109' class='documenter-source'>source</a><br></p>
 <p><a id='Bio.Align.count_aligned' href='#Bio.Align.count_aligned'>#</a>
 <strong><code>Bio.Align.count_aligned</code></strong> &mdash; <em>Function</em>.</p>
 <div class="codehilite"><pre><span></span>count_aligned(aln)
@@ -560,7 +560,7 @@ alignment
 
 
 <p>Count the number of aligned positions.</p>
-<p><a target='_blank' href='https://github.com/BioJulia/Bio.jl/tree/57e03a3800becc126d13ddf4409e1c5bc3d7a378/src/align/pairwise/alignment.jl#L112-L116' class='documenter-source'>source</a><br></p>
+<p><a target='_blank' href='https://github.com/BioJulia/Bio.jl/tree/a53bcaae4ed4c40cc06571ab01eee566e71febdb/src/align/pairwise/alignment.jl#L112-L116' class='documenter-source'>source</a><br></p>
 <p>The example below shows a use case of these operations:</p>
 <div class="codehilite"><pre><span></span><span class="gp">julia&gt;</span> <span class="n">s1</span> <span class="o">=</span> <span class="n">dna</span><span class="s">&quot;CCTAGGAGGG&quot;</span><span class="p">;</span>
 
