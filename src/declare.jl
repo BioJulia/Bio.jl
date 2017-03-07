@@ -20,9 +20,11 @@ end
 @declare (
     distance,
     seqname,
+    hasseqnmae,
     sequence,
     metadata,
     leftposition,
+    hasleftposition,
     rightposition,
     isoverlapping,
     metainfoval,
