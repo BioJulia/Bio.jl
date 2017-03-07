@@ -10,6 +10,7 @@
 module Var
 
 using Bio.Seq
+import Bio.Exceptions: MissingFieldException, missingerror
 import Automa
 import Automa.RegExp: @re_str
 import BGZFStreams: BGZFStream
@@ -39,6 +40,7 @@ export
 
     distance,
 
+    # VCF and BCF
     VCFMetaInfo,
     VCFHeader,
     VCFRecord,
@@ -52,16 +54,27 @@ export
     metainfoval,
     isfilled,
     chromosome,
+    haschromosome,
     leftposition,
+    hasleftposition,
     quality,
+    hasquality,
     filter_,
+    hasfilter_,
     identifier,
+    hasidentifier,
     reference,
+    hasreference,
     alternate,
+    hasalternate,
     information,
+    hasinformation,
     infokeys,
     format,
-    genotype
+    hasformat,
+    genotype,
+
+    MissingFieldException
 
 # Bio.@reexport import Bio: isfilled, leftposition
 
