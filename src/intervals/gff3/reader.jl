@@ -1,89 +1,39 @@
+# GFF3 Reader
+# ===========
 
-"""
-    GFF3Reader(input::IO, save_directives::Bool=false)
-
-Create a reader for data in GFF3 format.
-
-# Arguments:
-* `input`: data source
-* `save_directives=false`: if true, store directive lines, which can be accessed
-  with the `directives` function
-"""
-type GFF3Reader <: Bio.IO.AbstractReader
-    state::Ragel.State
-    version::VersionNumber
-    sequence_regions::Vector{Interval{Void}}
-    key::StringField
+type Reader <: Bio.IO.AbstractReader
+    state::Bio.Ragel.State
     save_directives::Bool
-    entry_seen::Bool
-    fasta_seen::Bool
-    unescape_needed::Bool
+    found_fasta::Bool
+    directives::Vector{Record}
 
-    directive::StringField
-
-    preceding_directives::Vector{StringField}
-    preceding_directive_count::Int
-
-    directives::Vector{StringField}
-    directive_count::Int
-
-    function GFF3Reader(input::BufferedInputStream, save_directives::Bool=false)
-        return new(Ragel.State(gff3parser_start, input), VersionNumber(0), [],
-                   StringField(), save_directives, false, false, false,
-                   StringField(), StringField[], 0, StringField[], 0)
+    function Reader(input::BufferedStreams.BufferedInputStream, save_directives::Bool=false)
+        return new(Bio.Ragel.State(body_machine.start_state, input), save_directives, false, Record[])
     end
 end
 
-# GFF3 can end before the end of the file if there is a FASTA directive
-function Base.eof(reader::GFF3Reader)
-    return reader.state.finished || eof(reader.state.stream)
+function Reader(input::IO; save_directives::Bool=false)
+    return Reader(BufferedStreams.BufferedInputStream(input), save_directives)
 end
 
-function Bio.IO.stream(reader::GFF3Reader)
+function Base.eltype(::Type{Reader})
+    return Record
+end
+
+function Bio.IO.stream(reader::Reader)
     return reader.state.stream
 end
 
-function Base.close(reader::GFF3Reader)
-    # make trailing directives accessable
-    reader.preceding_directives, reader.directives =
-        reader.directives, reader.preceding_directives
-    close(Bio.IO.stream(reader))
-end
-
-function Intervals.metadatatype(::GFF3Reader)
-    return GFF3Metadata
-end
-
-function Base.eltype(::Type{GFF3Reader})
-    return GFF3Interval
-end
-
-function GFF3Reader(input::IO; save_directives::Bool=false)
-    return GFF3Reader(BufferedInputStream(input), save_directives)
-end
-
-function IntervalCollection(interval_stream::GFF3Reader)
-    intervals = collect(GFF3Interval, interval_stream)
-    return IntervalCollection{GFF3Metadata}(intervals, true)
-end
-
-"""
-Return all directives that preceded the last GFF entry parsed as an array of
-strings.
-
-Directives at the end of the file can be accessed by calling `close(reader)`
-and then `directives(reader)`.
-"""
-function directives(reader::GFF3Reader)
-    return view(reader.preceding_directives, 1:reader.preceding_directive_count)
+function Base.eof(reader::Reader)
+    return reader.state.finished || eof(reader.state.stream)
 end
 
 """
 Return true if the GFF3 stream is at its end and there is trailing FASTA data.
 """
-function hasfasta(reader::GFF3Reader)
+function hasfasta(reader::Reader)
     if eof(reader)
-        return reader.fasta_seen
+        return reader.found_fasta
     else
         error("GFF3 file must be read until the end before any FASTA sequences can be accessed")
     end
@@ -95,9 +45,140 @@ Return a FASTAReader initialized to parse trailing FASTA data.
 Throws an exception if there is no trailing FASTA, which can be checked using
 `hasfasta`.
 """
-function getfasta(reader::GFF3Reader)
+function getfasta(reader::Reader)
     if !hasfasta(reader)
-        error("GFF3 file has no FASTA data ")
+        error("GFF3 file has no FASTA data")
     end
     return Bio.Seq.FASTAReader(reader.state.stream)
 end
+
+info("compiling GFF3")
+const record_machine, body_machine = (function ()
+    cat = Automa.RegExp.cat
+    rep = Automa.RegExp.rep
+    rep1 = Automa.RegExp.rep1
+    alt = Automa.RegExp.alt
+    opt = Automa.RegExp.opt
+
+    feature = let
+        seqid = re"[a-zA-Z0-9.:^*$@!+_?\-|%]*"
+        seqid.actions[:enter] = [:mark]
+        seqid.actions[:exit]  = [:feature_seqid]
+
+        source = re"[ -~]*"
+        source.actions[:enter] = [:mark]
+        source.actions[:exit]  = [:feature_source]
+
+        typ = re"[ -~]*"
+        typ.actions[:enter] = [:mark]
+        typ.actions[:exit]  = [:feature_typ]
+
+        start = re"[0-9]+|\."
+        start.actions[:enter] = [:mark]
+        start.actions[:exit]  = [:feature_start]
+
+        stop = re"[0-9]+|\."
+        stop.actions[:enter] = [:mark]
+        stop.actions[:exit]  = [:feature_stop]
+
+        score = re"[ -~]*[0-9][ -~]*|\."
+        score.actions[:enter] = [:mark]
+        score.actions[:exit]  = [:feature_score]
+
+        strand = re"[+\-?]|\."
+        strand.actions[:enter] = [:feature_strand]
+
+        phase = re"[0-2]|\."
+        phase.actions[:enter] = [:feature_phase]
+
+        attributes = let
+            char = re"[ -~]" \ re"[=;,]"
+            key = rep1(char)
+            key.actions[:enter] = [:mark]
+            key.actions[:exit]  = [:feature_attribute_key]
+            val = rep(char)
+            attr = cat(key, '=', val, rep(cat(',', val)))
+
+            opt(cat(attr, rep(cat(';', attr))))
+        end
+
+        cat(seqid,  '\t',
+            source, '\t',
+            typ,    '\t',
+            start,  '\t',
+            stop,   '\t',
+            score,  '\t',
+            strand, '\t',
+            phase,  '\t',
+            attributes)
+    end
+    feature.actions[:exit] = [:feature]
+
+    directive = cat("##", re"[ -~]*")
+    directive.actions[:exit] = [:directive]
+
+    comment = cat('#', opt(cat(re"[ -~]" \ cat('#'), re"[ -~]*")))
+    comment.actions[:exit] = [:comment]
+
+    record = alt(feature, directive, comment)
+    record.actions[:enter] = [:anchor]
+    record.actions[:exit]  = [:record]
+
+    blank = re"[ \t]*"
+
+    newline = let
+        lf = re"\n"
+        lf.actions[:enter] = [:countline]
+
+        cat(opt('\r'), lf)
+    end
+
+    body = rep(cat(alt(record, blank), newline))
+
+    return map(Automa.compile, (record, body))
+end)()
+
+const record_actions = Dict(
+    :feature_seqid   => :(record.seqid  = (mark:p-1) - offset),
+    :feature_source  => :(record.source = (mark:p-1) - offset),
+    :feature_typ     => :(record.typ    = (mark:p-1) - offset),
+    :feature_start   => :(record.start  = (mark:p-1) - offset),
+    :feature_stop    => :(record.stop   = (mark:p-1) - offset),
+    :feature_score   => :(record.score  = (mark:p-1) - offset),
+    :feature_strand  => :(record.strand = p - offset),
+    :feature_phase   => :(record.phase  = p - offset),
+    :feature_attribute_key => :(push!(record.attribute_keys, (mark:p-1) - offset)),
+    :feature         => :(record.kind = :feature),
+    :directive       => :(record.kind = :directive),
+    :comment         => :(record.kind = :comment),
+    :record          => quote
+        Bio.ReaderHelper.resize_and_copy!(record.data, data, 1:p-1)
+        record.filled = (offset+1:p-1) - offset
+    end,
+    :anchor          => :(),
+    :mark            => :(mark = p))
+eval(
+    Bio.ReaderHelper.generate_index_function(
+        Record,
+        record_machine,
+        record_actions))
+eval(
+    Bio.ReaderHelper.generate_read_function(
+        Reader,
+        body_machine,
+        merge(record_actions, Dict(
+            :record    => quote
+                Bio.ReaderHelper.resize_and_copy!(record.data, data, Bio.ReaderHelper.upanchor!(stream):p-1)
+                record.filled = (offset+1:p-1) - offset
+                found_record = true
+                if isdirective(record) && reader.save_directives
+                    push!(reader.directive, copy(record))
+                end
+                if is_fasta_directive(record)
+                    reader.found_fasta = true
+                    reader.state.finished = true
+                end
+                @escape
+            end,
+            :countline => :(linenum += 1),
+            :anchor    => :(Bio.ReaderHelper.anchor!(stream, p); offset = p - 1)))))

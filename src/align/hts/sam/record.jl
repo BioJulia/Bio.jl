@@ -190,7 +190,7 @@ function Bio.seqname(record::SAMRecord)
     return String(record.data[record.qname])
 end
 
-function Bio.hasseqnmae(record::SAMRecord)
+function Bio.hasseqname(record::SAMRecord)
     return isfilled(record) && !ismissing(record, record.qname)
 end
 
