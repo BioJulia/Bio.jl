@@ -516,10 +516,10 @@ end
         @test GFF3.source(record) == "CCDS"
         @test GFF3.hastype_(record)
         @test GFF3.type_(record) == "gene"
-        @test hasleftposition(record)
-        @test leftposition(record) === 801943
-        @test hasrightposition(record)
-        @test rightposition(record) === 802434
+        @test GFF3.hasstart(record) === hasleftposition(record) === true
+        @test GFF3.start(record) === leftposition(record) === 801943
+        @test GFF3.hasend_(record) === hasrightposition(record) === true
+        @test GFF3.end_(record) === rightposition(record) === 802434
         @test !GFF3.hasscore(record)
         @test_throws MissingFieldException GFF3.score(record)
         @test GFF3.hasstrand(record)

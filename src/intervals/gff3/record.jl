@@ -12,7 +12,7 @@ type Record
     source::UnitRange{Int}
     type_::UnitRange{Int}
     start::UnitRange{Int}
-    stop::UnitRange{Int}
+    end_::UnitRange{Int}
     score::UnitRange{Int}
     strand::Int
     phase::Int
@@ -27,7 +27,7 @@ Create an unfilled GFF3 record.
 function Record()
     return Record(
         UInt8[], 1:0, :undefiend,
-        # seqid-stop
+        # seqid-end_
         1:0, 1:0, 1:0, 1:0, 1:0,
         # score-attribute_keys
         1:0, 0, 0, UnitRange{Int}[])
@@ -47,7 +47,7 @@ end
 function Base.convert(::Type{Record}, data::Vector{UInt8})
     record = Record(
         data, 1:0, :undefiend,
-        # seqid-stop
+        # seqid-end_
         1:0, 1:0, 1:0, 1:0, 1:0,
         # score-attribute_keys
         1:0, 0, 0, UnitRange{Int}[])
@@ -76,7 +76,7 @@ function initialize!(record::Record)
     record.source = 1:0
     record.type_ = 1:0
     record.start = 1:0
-    record.stop = 1:0
+    record.end_ = 1:0
     record.score = 1:0
     record.strand = 0
     record.phase = 0
@@ -115,7 +115,7 @@ function Base.copy(record::Record)
         record.source,
         record.type_,
         record.start,
-        record.stop,
+        record.end_,
         record.score,
         record.strand,
         record.phase,
@@ -268,30 +268,56 @@ function hastype_(record::Record)
     return record.kind == :feature && !ismissing(record, record.type_)
 end
 
-function Bio.leftposition(record::Record)
+"""
+    start(record::Record)::Int
+
+Get the start coordinate of `record`.
+"""
+function start(record::Record)
     checkfilled(record)
     checkkind(record, :feature)
     if ismissing(record, record.start)
-        missingerror(:leftposition)
+        missingerror(:start)
     end
     return unsafe_parse_decimal(Int, record.data, record.start)
 end
 
-function Bio.hasleftposition(record::Record)
+function hasstart(record::Record)
     return record.kind == :feature && !ismissing(record, record.start)
 end
 
-function Bio.rightposition(record::Record)
+function Bio.leftposition(record::Record)
+    return start(record)
+end
+
+function Bio.hasleftposition(record::Record)
+    return hasstart(record)
+end
+
+"""
+    end_(record::Record)::Int
+
+Get the end coordinate of `record`.
+"""
+function end_(record::Record)
     checkfilled(record)
     checkkind(record, :feature)
-    if ismissing(record, record.stop)
-        missingerror(:rightposition)
+    if ismissing(record, record.end_)
+        missingerror(:end_)
     end
-    return unsafe_parse_decimal(Int, record.data, record.stop)
+    return unsafe_parse_decimal(Int, record.data, record.end_)
+end
+
+function hasend_(record::Record)
+    return record.kind == :feature && !ismissing(record, record.end_)
+end
+
+function Bio.rightposition(record::Record)
+    return end_(record)
 end
 
 function Bio.hasrightposition(record::Record)
-    return record.kind == :feature && !ismissing(record, record.stop)
+    return hasend_(record)
 end
 
 """

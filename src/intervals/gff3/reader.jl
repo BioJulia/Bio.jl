@@ -128,9 +128,9 @@ const record_machine, body_machine = (function ()
         start.actions[:enter] = [:mark]
         start.actions[:exit]  = [:feature_start]
 
-        stop = re"[0-9]+|\."
-        stop.actions[:enter] = [:mark]
-        stop.actions[:exit]  = [:feature_stop]
+        end_ = re"[0-9]+|\."
+        end_.actions[:enter] = [:mark]
+        end_.actions[:exit]  = [:feature_end_]
 
         score = re"[ -~]*[0-9][ -~]*|\."
         score.actions[:enter] = [:mark]
@@ -157,7 +157,7 @@ const record_machine, body_machine = (function ()
             source, '\t',
             type_,  '\t',
             start,  '\t',
-            stop,   '\t',
+            end_,   '\t',
             score,  '\t',
             strand, '\t',
             phase,  '\t',
@@ -198,7 +198,7 @@ const record_actions = Dict(
     :feature_source  => :(record.source = (mark:p-1) - offset),
     :feature_type_   => :(record.type_  = (mark:p-1) - offset),
     :feature_start   => :(record.start  = (mark:p-1) - offset),
-    :feature_stop    => :(record.stop   = (mark:p-1) - offset),
+    :feature_end_    => :(record.end_   = (mark:p-1) - offset),
     :feature_score   => :(record.score  = (mark:p-1) - offset),
     :feature_strand  => :(record.strand = p - offset),
     :feature_phase   => :(record.phase  = p - offset),
