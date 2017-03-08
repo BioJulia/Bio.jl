@@ -18,5 +18,5 @@ function Bio.IO.stream(writer::Writer)
 end
 
 function Base.write(writer::Writer, record::Record)
-    return write(writer.stream, record)
+    return write(writer.stream, record, '\n')
 end

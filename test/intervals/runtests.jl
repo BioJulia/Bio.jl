@@ -567,7 +567,23 @@ end
             end
             close(stream)
 
-            return true
+            # copy
+            records = GFF3.Record[]
+            reader = open(GFF3.Reader, filename)
+            output = IOBuffer()
+            writer = GFF3.Writer(output)
+            for record in reader
+                write(writer, record)
+                push!(records, record)
+            end
+            close(reader)
+            flush(writer)
+
+            records2 = GFF3.Record[]
+            for record in GFF3.Reader(IOBuffer(takebuf_array(output)))
+                push!(records2, record)
+            end
+            return records == records2
         end
 
         path = joinpath(dirname(@__FILE__), "..", "BioFmtSpecimens", "GFF3")
