@@ -364,10 +364,17 @@ end
 
 function content(record::Record)
     checkfilled(record)
-    checkkind(record, :directive)
     lo = first(datarange(record))
     hi = last(datarange(record))
-    return String(record.data[lo+2:hi])
+    if isfeature(record)
+        return String(record.data[lo:hi])
+    elseif isdirective(record)
+        return String(record.data[lo+2:hi])
+    elseif iscomment(record)
+        return String(record.data[lo+1:hi])
+    else
+        @assert false
+    end
 end
 
 function is_fasta_directive(record::Record)

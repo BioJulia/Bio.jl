@@ -527,16 +527,19 @@ end
         @test !GFF3.hasphase(record)
         @test_throws MissingFieldException GFF3.phase(record)
         @test GFF3.attributes(record) == ["NAME" => ["LINC00115"]]
+        @test GFF3.content(record) == "CCDS1.1\tCCDS\tgene\t801943\t802434\t.\t-\t.\tNAME=LINC00115"
 
         record = GFF3.Record("##gff-version 3")
         @test isfilled(record)
         @test GFF3.isdirective(record)
+        @test GFF3.content(record) == "gff-version 3"
         @test convert(String, record) == "##gff-version 3"
 
-        record = GFF3.Record("# comment")
+        record = GFF3.Record("#comment")
         @test isfilled(record)
         @test GFF3.iscomment(record)
-        @test convert(String, record) == "# comment"
+        @test GFF3.content(record) == "comment"
+        @test convert(String, record) == "#comment"
     end
 
     @testset "GFF3 Parsing" begin
