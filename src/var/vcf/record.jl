@@ -543,7 +543,7 @@ end
 """
     format(record::VCFRecord)::Vector{String}
 
-Get the genotype format of `reocrd`.
+Get the genotype format of `record`.
 """
 function format(record::VCFRecord)::Vector{String}
     checkfilled(record)

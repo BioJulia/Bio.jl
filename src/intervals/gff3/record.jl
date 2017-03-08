@@ -209,7 +209,7 @@ function Bio.seqname(record::Record)
 end
 
 function Bio.hasseqname(record::Record)
-    return hasseqid(reocrd)
+    return hasseqid(record)
 end
 
 function source(record::Record)
@@ -289,6 +289,10 @@ end
 
 function hasstrand(record::Record)
     return record.kind == :feature && !ismissing(record, record.strand)
+end
+
+function Bio.Intervals.strand(record::Record)
+    return strand(record)
 end
 
 function phase(record::Record)

@@ -522,9 +522,8 @@ end
         @test rightposition(record) === 802434
         @test !GFF3.hasscore(record)
         @test_throws MissingFieldException GFF3.score(record)
-        # TODO: Use strand function defiend in Bio.Intervals
         @test GFF3.hasstrand(record)
-        @test GFF3.strand(record) === STRAND_NEG
+        @test strand(record) === GFF3.strand(record) === STRAND_NEG
         @test !GFF3.hasphase(record)
         @test_throws MissingFieldException GFF3.phase(record)
         @test GFF3.attributes(record) == ["NAME" => ["LINC00115"]]
