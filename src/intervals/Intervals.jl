@@ -30,6 +30,7 @@ export
     BEDInterval,
     BigBedReader,
     BigBedWriter,
+    GFF3,
     GFF3Reader,
     GFF3Metadata,
     GFF3Interval,

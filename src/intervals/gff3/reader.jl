@@ -1,19 +1,44 @@
 # GFF3 Reader
 # ===========
 
+"""
+    GFF3Reader(input::IO; save_directives::Bool=false)
+
+Create a reader for data in GFF3 format.
+
+# Arguments:
+* `input`: data source
+* `save_directives=false`: if true, store directive lines, which can be accessed
+  with the `directives` function
+"""
 type Reader <: Bio.IO.AbstractReader
     state::Bio.Ragel.State
     save_directives::Bool
+    targets::Vector{Symbol}
     found_fasta::Bool
     directives::Vector{Record}
 
-    function Reader(input::BufferedStreams.BufferedInputStream, save_directives::Bool=false)
-        return new(Bio.Ragel.State(body_machine.start_state, input), save_directives, false, Record[])
+    function Reader(input::BufferedStreams.BufferedInputStream,
+                    save_directives::Bool=false,
+                    skip_features::Bool=false, skip_directives::Bool=true, skip_comments::Bool=true)
+        targets = Symbol[]
+        if !skip_features
+            push!(targets, :feature)
+        end
+        if !skip_directives
+            push!(targets, :directive)
+        end
+        if !skip_comments
+            push!(targets, :comment)
+        end
+        return new(Bio.Ragel.State(body_machine.start_state, input), save_directives, targets, false, Record[])
     end
 end
 
-function Reader(input::IO; save_directives::Bool=false)
-    return Reader(BufferedStreams.BufferedInputStream(input), save_directives)
+function Reader(input::IO;
+                save_directives::Bool=false,
+                skip_features::Bool=false, skip_directives::Bool=true, skip_comments::Bool=true)
+    return Reader(BufferedStreams.BufferedInputStream(input), save_directives, skip_features, skip_directives, skip_comments)
 end
 
 function Base.eltype(::Type{Reader})
@@ -26,6 +51,17 @@ end
 
 function Base.eof(reader::Reader)
     return reader.state.finished || eof(reader.state.stream)
+end
+
+"""
+Return all directives that preceded the last GFF entry parsed as an array of
+strings.
+
+Directives at the end of the file can be accessed by calling `close(reader)`
+and then `directives(reader)`.
+"""
+function directives(reader::Reader)
+    return [convert(String, d)[3:end] for d in reader.directives]
 end
 
 """
@@ -59,6 +95,7 @@ const record_machine, body_machine = (function ()
     rep1 = Automa.RegExp.rep1
     alt = Automa.RegExp.alt
     opt = Automa.RegExp.opt
+    any = Automa.RegExp.any
 
     feature = let
         seqid = re"[a-zA-Z0-9.:^*$@!+_?\-|%]*"
@@ -99,7 +136,7 @@ const record_machine, body_machine = (function ()
             val = rep(char)
             attr = cat(key, '=', val, rep(cat(',', val)))
 
-            opt(cat(attr, rep(cat(';', attr))))
+            cat(rep(cat(attr, ';')), opt(attr))
         end
 
         cat(seqid,  '\t',
@@ -114,10 +151,10 @@ const record_machine, body_machine = (function ()
     end
     feature.actions[:exit] = [:feature]
 
-    directive = cat("##", re"[ -~]*")
+    directive = re"##[^\r\n]*"
     directive.actions[:exit] = [:directive]
 
-    comment = cat('#', opt(cat(re"[ -~]" \ cat('#'), re"[ -~]*")))
+    comment = re"#([^#\r\n][^\r\n]*)?"
     comment.actions[:exit] = [:comment]
 
     record = alt(feature, directive, comment)
@@ -134,8 +171,12 @@ const record_machine, body_machine = (function ()
     end
 
     body = rep(cat(alt(record, blank), newline))
+    body.actions[:exit] = [:body]
 
-    return map(Automa.compile, (record, body))
+    # look-ahead of the beginning of FASTA
+    body′ = cat(body, opt('>'))
+
+    return map(Automa.compile, (record, body′))
 end)()
 
 const record_actions = Dict(
@@ -167,18 +208,27 @@ eval(
         Reader,
         body_machine,
         merge(record_actions, Dict(
-            :record    => quote
+            :record => quote
                 Bio.ReaderHelper.resize_and_copy!(record.data, data, Bio.ReaderHelper.upanchor!(stream):p-1)
                 record.filled = (offset+1:p-1) - offset
-                found_record = true
+                found_record = record.kind ∈ reader.targets
                 if isdirective(record) && reader.save_directives
-                    push!(reader.directive, copy(record))
+                    push!(reader.directives, copy(record))
                 end
                 if is_fasta_directive(record)
                     reader.found_fasta = true
                     reader.state.finished = true
                 end
                 @escape
+            end,
+            :body => quote
+                if data[p] == UInt8('>')
+                    reader.found_fasta = true
+                    reader.state.finished = true
+                    # HACK: any better way?
+                    cs = 0
+                    @goto exit
+                end
             end,
             :countline => :(linenum += 1),
             :anchor    => :(Bio.ReaderHelper.anchor!(stream, p); offset = p - 1)))))
