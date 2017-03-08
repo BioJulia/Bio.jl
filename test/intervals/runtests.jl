@@ -632,17 +632,29 @@ TGCATGCA
 #comment3
 ##directive6
 """
-        # TODO: directives
         stream = GFF3.Reader(IOBuffer(test_input4), save_directives=true)
         read(stream)
-        #@test GFF3.directives(stream) == ["directive1", "directive2"]
+        @test GFF3.directives(stream) == ["directive1", "directive2"]
         read(stream)
-        #@test isempty(GFF3.directives(stream))
+        @test isempty(GFF3.directives(stream))
         read(stream)
-        #@test GFF3.directives(stream) == ["directive3", "directive4"]
-        #@test eof(stream)
+        @test GFF3.directives(stream) == ["directive3", "directive4"]
+        @test_throws EOFError read(stream)
+        @test eof(stream)
         close(stream)
-        #@test GFF3.directives(stream) == ["directive5", "directive6"]
+        @test GFF3.directives(stream) == ["directive5", "directive6"]
+
+        test_input5 = """
+        ##directive1
+        feature1\t.\t.\t.\t.\t.\t.\t.\t
+        #comment1
+        feature2\t.\t.\t.\t.\t.\t.\t.\t
+        ##directive2
+        feature3\t.\t.\t.\t.\t.\t.\t.\t
+        """
+        @test [r.kind for r in GFF3.Reader(IOBuffer(test_input5))] == [:feature, :feature, :feature]
+        @test [r.kind for r in GFF3.Reader(IOBuffer(test_input5), skip_directives=false)] == [:directive, :feature, :feature, :directive, :feature]
+        @test [r.kind for r in GFF3.Reader(IOBuffer(test_input5), skip_directives=false, skip_comments=false)] == [:directive, :feature, :comment, :feature, :directive, :feature]
     end
 end
 

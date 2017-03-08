@@ -17,6 +17,8 @@ type Reader <: Bio.IO.AbstractReader
     targets::Vector{Symbol}
     found_fasta::Bool
     directives::Vector{Record}
+    directive_count::Int
+    preceding_directive_count::Int
 
     function Reader(input::BufferedStreams.BufferedInputStream,
                     save_directives::Bool=false,
@@ -31,7 +33,7 @@ type Reader <: Bio.IO.AbstractReader
         if !skip_comments
             push!(targets, :comment)
         end
-        return new(Bio.Ragel.State(body_machine.start_state, input), save_directives, targets, false, Record[])
+        return new(Bio.Ragel.State(body_machine.start_state, input), save_directives, targets, false, Record[], 0, 0)
     end
 end
 
@@ -53,6 +55,14 @@ function Base.eof(reader::Reader)
     return reader.state.finished || eof(reader.state.stream)
 end
 
+function Base.close(reader::Reader)
+    # make trailing directives accessable
+    reader.directive_count = reader.preceding_directive_count
+    reader.preceding_directive_count = 0
+    close(Bio.IO.stream(reader))
+end
+
+
 """
 Return all directives that preceded the last GFF entry parsed as an array of
 strings.
@@ -61,7 +71,11 @@ Directives at the end of the file can be accessed by calling `close(reader)`
 and then `directives(reader)`.
 """
 function directives(reader::Reader)
-    return [convert(String, d)[3:end] for d in reader.directives]
+    ret = String[]
+    for i in endof(reader.directives)-reader.directive_count+1:endof(reader.directives)
+        push!(ret, content(reader.directives[i]))
+    end
+    return ret
 end
 
 """
@@ -106,9 +120,9 @@ const record_machine, body_machine = (function ()
         source.actions[:enter] = [:mark]
         source.actions[:exit]  = [:feature_source]
 
-        typ = re"[ -~]*"
-        typ.actions[:enter] = [:mark]
-        typ.actions[:exit]  = [:feature_typ]
+        type_ = re"[ -~]*"
+        type_.actions[:enter] = [:mark]
+        type_.actions[:exit]  = [:feature_type_]
 
         start = re"[0-9]+|\."
         start.actions[:enter] = [:mark]
@@ -141,7 +155,7 @@ const record_machine, body_machine = (function ()
 
         cat(seqid,  '\t',
             source, '\t',
-            typ,    '\t',
+            type_,  '\t',
             start,  '\t',
             stop,   '\t',
             score,  '\t',
@@ -182,7 +196,7 @@ end)()
 const record_actions = Dict(
     :feature_seqid   => :(record.seqid  = (mark:p-1) - offset),
     :feature_source  => :(record.source = (mark:p-1) - offset),
-    :feature_typ     => :(record.typ    = (mark:p-1) - offset),
+    :feature_type_   => :(record.type_  = (mark:p-1) - offset),
     :feature_start   => :(record.start  = (mark:p-1) - offset),
     :feature_stop    => :(record.stop   = (mark:p-1) - offset),
     :feature_score   => :(record.score  = (mark:p-1) - offset),
@@ -211,14 +225,20 @@ eval(
             :record => quote
                 Bio.ReaderHelper.resize_and_copy!(record.data, data, Bio.ReaderHelper.upanchor!(stream):p-1)
                 record.filled = (offset+1:p-1) - offset
+                if isfeature(record)
+                    reader.directive_count = reader.preceding_directive_count
+                    reader.preceding_directive_count = 0
+                elseif isdirective(record)
+                    reader.preceding_directive_count += 1
+                    if reader.save_directives
+                        push!(reader.directives, copy(record))
+                    end
+                    if is_fasta_directive(record)
+                        reader.found_fasta = true
+                        reader.state.finished = true
+                    end
+                end
                 found_record = record.kind ∈ reader.targets
-                if isdirective(record) && reader.save_directives
-                    push!(reader.directives, copy(record))
-                end
-                if is_fasta_directive(record)
-                    reader.found_fasta = true
-                    reader.state.finished = true
-                end
                 @escape
             end,
             :body => quote

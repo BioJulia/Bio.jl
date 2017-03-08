@@ -362,6 +362,14 @@ function searchend(data::Vector{UInt8}, b::UInt8, start::Int, stop::Int)
     return p
 end
 
+function content(record::Record)
+    checkfilled(record)
+    checkkind(record, :directive)
+    lo = first(datarange(record))
+    hi = last(datarange(record))
+    return String(record.data[lo+2:hi])
+end
+
 function is_fasta_directive(record::Record)
     return isdirective(record) && isequaldata("##FASTA", record.data, datarange(record))
 end
