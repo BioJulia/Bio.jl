@@ -1,6 +1,6 @@
 <p align="center"><img src="https://raw.githubusercontent.com/BioJulia/assets/master/branding/bio/optimised/BioJl_Design_1.png" width="50%" alt="Bio.jl" /></p>
 
-_The Bioinformatics and Computation Biology infrastructure for the julia language._
+_The Bioinformatics and Computation Biology infrastructure for the Julia language._
 
 | **Chat** | **Documentation** | **Build Status** |
 |:--------:|:-----------------:|:----------------:|
