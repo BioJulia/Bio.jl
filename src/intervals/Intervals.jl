@@ -27,7 +27,6 @@ export
     hasseqname,
     metadata,
     strand,
-    hasstrand,
     BEDReader,
     BEDWriter,
     BEDMetadata,

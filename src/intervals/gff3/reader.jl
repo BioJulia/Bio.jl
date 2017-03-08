@@ -109,7 +109,6 @@ const record_machine, body_machine = (function ()
     rep1 = Automa.RegExp.rep1
     alt = Automa.RegExp.alt
     opt = Automa.RegExp.opt
-    any = Automa.RegExp.any
 
     feature = let
         seqid = re"[a-zA-Z0-9.:^*$@!+_?\-|%]*"
