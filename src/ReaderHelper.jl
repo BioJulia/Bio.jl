@@ -52,7 +52,7 @@ function generate_index_function(record_type, machine, actions)
             cs = $(machine.start_state)
             $(Automa.generate_exec_code(machine, actions=actions, code=:goto, check=false))
             if cs != 0
-                throw(ArgumentError(string("failed to index $($(record_type))", " ~>", repr(String(data[p:min(p+7,p_end)])))))
+                throw(ArgumentError(string("failed to index ", $(record_type), " ~>", repr(String(data[p:min(p+7,p_end)])))))
             end
             @assert isfilled(record)
             return record
@@ -139,7 +139,7 @@ function generate_read_function(reader_type, machine, actions)
                 stream.position = p
 
                 if cs < 0
-                    error("$($(reader_type)) file format error on line ", linenum, " ~>", repr(String(data[p:min(p+7,p_end)])))
+                    error($(reader_type), " file format error on line ", linenum, " ~>", repr(String(data[p:min(p+7,p_end)])))
                 elseif found_record
                     break
                 elseif cs == 0
