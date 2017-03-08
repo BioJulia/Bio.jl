@@ -1,6 +1,7 @@
 
 include("bioseq/type.jl")
 include("bioseq/constructors.jl")
+include("bioseq/conversion.jl")
 include("bioseq/stringliterals.jl")
 include("bioseq/operators.jl")
 include("bioseq/transformations.jl")
