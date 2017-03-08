@@ -136,7 +136,7 @@ function Base.show(io::IO, record::Record)
     if isfilled(record)
         if isfeature(record)
             println(io)
-            println(io, "    sequence: ", hasseqname(record) ? seqname(record) : "<missing>")
+            println(io, "       seqid: ", hasseqid(record) ? seqid(record) : "<missing>")
             println(io, "      source: ", hassource(record) ? source(record) : "<missing>")
             println(io, "        type: ", hastype_(record) ? type_(record) : "<missing>")
             println(io, "       start: ", hasleftposition(record) ? leftposition(record) : "<missing>")
@@ -191,7 +191,7 @@ function checkkind(record::Record, kind::Symbol)
     end
 end
 
-function Bio.seqname(record::Record)
+function seqid(record::Record)
     checkfilled(record)
     checkkind(record, :feature)
     if ismissing(record, record.seqid)
@@ -200,8 +200,16 @@ function Bio.seqname(record::Record)
     return decode(String(record.data[record.seqid]))
 end
 
-function Bio.hasseqname(record::Record)
+function hasseqid(record::Record)
     return record.kind == :feature && !ismissing(record, record.seqid)
+end
+
+function Bio.seqname(record::Record)
+    return seqid(record)
+end
+
+function Bio.hasseqname(record::Record)
+    return hasseqid(reocrd)
 end
 
 function source(record::Record)

@@ -1,12 +1,11 @@
 module TestIntervals
 
 using Base.Test
-
-using Bio.Intervals,
-    Bio.Seq,
-    Distributions,
-    YAML,
-    TestFunctions
+using Bio.Intervals
+using Bio.Seq
+using Distributions
+using YAML
+using TestFunctions
 
 # Test that an array of intervals is well ordered
 function Intervals.isordered{I <: Interval}(intervals::Vector{I})
@@ -501,6 +500,44 @@ end
             @test check_intersection(filename_a, filename_b)
         end
 
+    end
+
+    @testset "GFF3" begin
+        record = GFF3.Record()
+        @test !isfilled(record)
+
+        record = GFF3.Record("CCDS1.1\tCCDS\tgene\t801943\t802434\t.\t-\t.\tNAME=LINC00115")
+        @test isfilled(record)
+        @test GFF3.isfeature(record)
+        @test hasseqname(record)
+        @test GFF3.hasseqid(record)
+        @test seqname(record) == GFF3.seqid(record) == "CCDS1.1"
+        @test GFF3.hassource(record)
+        @test GFF3.source(record) == "CCDS"
+        @test GFF3.hastype_(record)
+        @test GFF3.type_(record) == "gene"
+        @test hasleftposition(record)
+        @test leftposition(record) === 801943
+        @test hasrightposition(record)
+        @test rightposition(record) === 802434
+        @test !GFF3.hasscore(record)
+        @test_throws MissingFieldException GFF3.score(record)
+        # TODO: Use strand function defiend in Bio.Intervals
+        @test GFF3.hasstrand(record)
+        @test GFF3.strand(record) === STRAND_NEG
+        @test !GFF3.hasphase(record)
+        @test_throws MissingFieldException GFF3.phase(record)
+        @test GFF3.attributes(record) == ["NAME" => ["LINC00115"]]
+
+        record = GFF3.Record("##gff-version 3")
+        @test isfilled(record)
+        @test GFF3.isdirective(record)
+        @test convert(String, record) == "##gff-version 3"
+
+        record = GFF3.Record("# comment")
+        @test isfilled(record)
+        @test GFF3.iscomment(record)
+        @test convert(String, record) == "# comment"
     end
 
     @testset "GFF3 Parsing" begin

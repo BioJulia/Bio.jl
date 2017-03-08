@@ -250,15 +250,17 @@ Bio.Intervals.BEDWriter
 
 ### GFF3
 
-* Reader type: `GFF3Reader`
-* Element type: `Interval{GFF3Metadata}` (alias: `GFF3Interval`)
+* Reader type: `Bio.Intervals.GFF3.Reader`
+* Writer type: `Bio.Intervals.GFF3.Writer`
+* Element type: `GFF3Record`
 
 GFF3 is a text-based file format for representing genomic annotations. The major
 difference from BED is that is GFF3 is more structured and can include sequences
 in the FASTA file format.
 
 ```@docs
-Bio.Intervals.GFF3Reader
+Bio.Intervals.GFF3.Reader
+Bio.Intervals.GFF3.Writer
 ```
 
 

@@ -29,5 +29,6 @@ end
     hasrightposition,
     isoverlapping,
     metainfoval,
-    metainfotag
+    metainfotag,
+    isfilled
 )

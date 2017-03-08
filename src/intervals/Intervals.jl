@@ -12,7 +12,9 @@ export
     Strand,
     Interval,
     leftposition,
+    hasleftposition,
     rightposition,
+    hasrightposition,
     IntervalCollection,
     IntervalStream,
     STRAND_NA,
@@ -22,8 +24,10 @@ export
     coverage,
     isoverlapping,
     seqname,
+    hasseqname,
     metadata,
     strand,
+    hasstrand,
     BEDReader,
     BEDWriter,
     BEDMetadata,
@@ -39,9 +43,12 @@ export
     directives,
     Tabix,
     overlapchunks,
-    tryread!
+    tryread!,
+    isfilled,
+    MissingFieldException
 
 import Base.Collections: heappush!, heappop!
+import Bio.Exceptions: MissingFieldException
 import Bio.Ragel: Ragel, tryread!
 import Bio.StringFields: StringField
 import BufferedStreams: BufferedStreams, BufferedInputStream, upanchor!
