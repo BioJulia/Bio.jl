@@ -143,7 +143,7 @@ const record_machine, body_machine = (function ()
         phase.actions[:enter] = [:feature_phase]
 
         attributes = let
-            char = re"[ -~]" \ re"[=;,]"
+            char = re"[^=;,\r\n]"
             key = rep1(char)
             key.actions[:enter] = [:mark]
             key.actions[:exit]  = [:feature_attribute_key]
