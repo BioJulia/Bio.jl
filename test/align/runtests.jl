@@ -1059,7 +1059,7 @@ end
             record = SAMRecord("r001\t99\tchr1\t7\t30\t8M2I4M1D3M\t=\t37\t39\tTTAGATAAAGGATACTG\t*")
             @test isfilled(record)
             @test ismapped(record)
-            @test hasseqnmae(record)
+            @test hasseqname(record)
             @test seqname(record) == "r001"
             @test hasflag(record)
             @test flag(record) === UInt16(99)

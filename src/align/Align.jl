@@ -81,7 +81,7 @@ export
     AuxDataDict,
     ismapped,
     seqname,
-    hasseqnmae,
+    hasseqname,
     flag,
     hasflag,
     refname,
