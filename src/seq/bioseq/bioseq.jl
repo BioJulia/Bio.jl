@@ -112,3 +112,12 @@ Base.summary{A<:DNAAlphabet}(seq::BioSequence{A}) = string(length(seq), "nt ", "
 Base.summary{A<:RNAAlphabet}(seq::BioSequence{A}) = string(length(seq), "nt ", "RNA Sequence")
 Base.summary(seq::AminoAcidSequence) = string(length(seq), "aa ", "Amino Acid Sequence")
 Base.summary(seq::CharSequence) = string(length(seq), "char ", "Char Sequence")
+
+include("sequences/indexing.jl")
+include("sequences/constructors.jl")
+include("sequences/iteration.jl")
+include("sequences/copying.jl")
+include("sequences/conversion.jl")
+include("sequences/stringliterals.jl")
+include("sequences/transformations.jl")
+include("sequences/operators.jl")
