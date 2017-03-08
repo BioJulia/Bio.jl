@@ -10,7 +10,7 @@ type Record
     # indexes
     seqid::UnitRange{Int}
     source::UnitRange{Int}
-    typ::UnitRange{Int}
+    type_::UnitRange{Int}
     start::UnitRange{Int}
     stop::UnitRange{Int}
     score::UnitRange{Int}
@@ -74,7 +74,7 @@ function initialize!(record::Record)
     record.kind = :undefiend
     record.seqid = 1:0
     record.source = 1:0
-    record.typ = 1:0
+    record.type_ = 1:0
     record.start = 1:0
     record.stop = 1:0
     record.score = 1:0
@@ -113,7 +113,7 @@ function Base.copy(record::Record)
         record.kind,
         record.seqid,
         record.source,
-        record.typ,
+        record.type_,
         record.start,
         record.stop,
         record.score,
@@ -228,14 +228,14 @@ end
 function type_(record::Record)
     checkfilled(record)
     checkkind(record, :feature)
-    if ismissing(record, record.typ)
+    if ismissing(record, record.type_)
         missingerror(:type_)
     end
-    return decode(String(record.data[record.typ]))
+    return decode(String(record.data[record.type_]))
 end
 
 function hastype_(record::Record)
-    return record.kind == :feature && !ismissing(record, record.typ)
+    return record.kind == :feature && !ismissing(record, record.type_)
 end
 
 function Bio.leftposition(record::Record)
