@@ -167,14 +167,29 @@ end
 # Accessor functions
 # ------------------
 
+"""
+    isfeature(record::Record)::Bool
+
+Test if `record` is a feature record.
+"""
 function isfeature(record::Record)
     return record.kind == :feature
 end
 
+"""
+    isdirective(record::Record)::Bool
+
+Test if `record` is a directive record.
+"""
 function isdirective(record::Record)
     return record.kind == :directive
 end
 
+"""
+    iscomment(record::Record)::Bool
+
+Test if `record` is a comment record.
+"""
 function iscomment(record::Record)
     return record.kind == :comment
 end
@@ -191,6 +206,11 @@ function checkkind(record::Record, kind::Symbol)
     end
 end
 
+"""
+    seqid(record::Record)::String
+
+Get the sequence id of `record`.
+"""
 function seqid(record::Record)
     checkfilled(record)
     checkkind(record, :feature)
@@ -212,6 +232,11 @@ function Bio.hasseqname(record::Record)
     return hasseqid(record)
 end
 
+"""
+    source(record::Record)::String
+
+Get the source of `record`.
+"""
 function source(record::Record)
     checkfilled(record)
     checkkind(record, :feature)
@@ -225,6 +250,11 @@ function hassource(record::Record)
     return record.kind == :feature && !ismissing(record, record.source)
 end
 
+"""
+    type_(record::Record)::String
+
+Get the type of `record`.
+"""
 function type_(record::Record)
     checkfilled(record)
     checkkind(record, :feature)
@@ -264,6 +294,11 @@ function Bio.hasrightposition(record::Record)
     return record.kind == :feature && !ismissing(record, record.stop)
 end
 
+"""
+    score(record::Record)::Float64
+
+Get the score of `record`
+"""
 function score(record::Record)
     checkfilled(record)
     checkkind(record, :feature)
@@ -278,6 +313,11 @@ function hasscore(record::Record)
     return record.kind == :feature && !ismissing(record, record.score)
 end
 
+"""
+    strand(record::Record)::Bio.Intervals.Strand
+
+Get the strand of `record`.
+"""
 function strand(record::Record)
     checkfilled(record)
     checkkind(record, :feature)
@@ -295,6 +335,11 @@ function Bio.Intervals.strand(record::Record)
     return strand(record)
 end
 
+"""
+    phase(record::Record)::Int
+
+Get the phase of `record`.
+"""
 function phase(record::Record)
     checkfilled(record)
     checkkind(record, :feature)
@@ -308,6 +353,11 @@ function hasphase(record::Record)
     return record.kind == :feature && !ismissing(record, record.phase)
 end
 
+"""
+    attributes(record::Record)::Vector{Pair{String,Vector{String}}}
+
+Get the attributes of `record`.
+"""
 function attributes(record::Record)
     checkfilled(record)
     checkkind(record, :feature)
@@ -340,6 +390,11 @@ function attrvals(record::Record, i::Int)
     return vals
 end
 
+"""
+    attributes(record::Record, key::String)::Vector{String}
+
+Get the attributes of `record` with `key`.
+"""
 function attributes(record::Record, key::String)
     checkfilled(record)
     checkkind(record, :feature)
@@ -362,16 +417,21 @@ function searchend(data::Vector{UInt8}, b::UInt8, start::Int, stop::Int)
     return p
 end
 
+"""
+    content(record::Record)::String
+
+Get the content of `record`. Leading '#' letters are removed.
+"""
 function content(record::Record)
     checkfilled(record)
     lo = first(datarange(record))
     hi = last(datarange(record))
     if isfeature(record)
-        return String(record.data[lo:hi])
+        return decode(String(record.data[lo:hi]))
     elseif isdirective(record)
-        return String(record.data[lo+2:hi])
+        return decode(String(record.data[lo+2:hi]))
     elseif iscomment(record)
-        return String(record.data[lo+1:hi])
+        return decode(String(record.data[lo+1:hi]))
     else
         @assert false
     end
