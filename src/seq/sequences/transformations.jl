@@ -1,6 +1,134 @@
 # Transformations
 # ---------------
 
+function Base.push!{A}(seq::BioSequence{A}, x)
+    bin = enc64(seq, x)
+    resize!(seq, length(seq) + 1)
+    encoded_setindex!(seq, bin, endof(seq))
+    return seq
+end
+
+function Base.pop!(seq::BioSequence)
+    if isempty(seq)
+        throw(ArgumentError("sequence must be non-empty"))
+    end
+    x = seq[end]
+    deleteat!(seq, endof(seq))
+    return x
+end
+
+function Base.insert!{A}(seq::BioSequence{A}, i::Integer, x)
+    checkbounds(seq, i)
+    bin = enc64(seq, x)
+    resize!(seq, length(seq) + 1)
+    copy!(seq, i + 1, seq, i, endof(seq) - i)
+    encoded_setindex!(seq, bin, i)
+    return seq
+end
+
+function Base.deleteat!{A,T<:Integer}(seq::BioSequence{A}, range::UnitRange{T})
+    checkbounds(seq, range)
+    copy!(seq, range.start, seq, range.stop + 1, length(seq) - range.stop)
+    resize!(seq, length(seq) - length(range))
+    return seq
+end
+
+function Base.deleteat!(seq::BioSequence, i::Integer)
+    checkbounds(seq, i)
+    copy!(seq, i, seq, i + 1, length(seq) - i)
+    resize!(seq, length(seq) - 1)
+    return seq
+end
+
+function Base.append!{A}(seq::BioSequence{A}, other::BioSequence{A})
+    resize!(seq, length(seq) + length(other))
+    copy!(seq, endof(seq) - length(other) + 1, other, 1)
+    return seq
+end
+
+function Base.shift!(seq::BioSequence)
+    if isempty(seq)
+        throw(ArgumentError("sequence must be non-empty"))
+    end
+    x = seq[1]
+    deleteat!(seq, 1)
+    return x
+end
+
+function Base.unshift!{A}(seq::BioSequence{A}, x)
+    bin = enc64(seq, x)
+    resize!(seq, length(seq) + 1)
+    copy!(seq, 2, seq, 1, length(seq) - 1)
+    encoded_setindex!(seq, bin, 1)
+    return seq
+end
+
+"""
+    resize!(seq, size)
+
+Resize a biological sequence `seq`, to a given `size`.
+"""
+function Base.resize!{A}(seq::BioSequence{A}, size::Integer)
+    if size < 0
+        throw(ArgumentError("size must be non-negative"))
+    end
+    orphan!(seq, size)
+    resize!(seq.data, seq_data_len(A, size + seq.part.start - 1))
+    seq.part = seq.part.start:seq.part.start+size-1
+    return seq
+end
+
+"""
+    empty!(seq)
+
+Completely empty a biological sequence `seq` of nucleotides.
+"""
+Base.empty!(seq::BioSequence) = resize!(seq, 0)
+
+function Base.filter!{A}(f::Function, seq::BioSequence{A})
+    orphan!(seq)
+
+    len = 0
+    next = bitindex(seq, 1)
+    j = index(next)
+    datum::UInt64 = 0
+    for i in 1:endof(seq)
+        x = inbounds_getindex(seq, i)
+        if f(x)
+            datum |= enc64(seq, x) << offset(next)
+            len += 1
+            next += bitsof(A)
+            if index(next) != j
+                seq.data[j] = datum
+                datum = 0
+                j = index(next)
+            end
+        end
+    end
+    if offset(next) > 0
+        seq.data[j] = datum
+    end
+    resize!(seq, len)
+
+    return seq
+end
+
+function Base.filter(f::Function, seq::BioSequence)
+    return filter!(f, copy(seq))
+end
+
+function Base.map!(f::Function, seq::BioSequence)
+    orphan!(seq)
+    for i in 1:endof(seq)
+        unsafe_setindex!(seq, f(inbounds_getindex(seq, i)), i)
+    end
+    return seq
+end
+
+function Base.map(f::Function, seq::BioSequence)
+    return map!(f, copy(seq))
+end
+
 """
     reverse!(seq)
 
@@ -148,4 +276,21 @@ Ambiguous nucleotides are left as-is.
 """
 function reverse_complement{A<:Union{DNAAlphabet,RNAAlphabet}}(seq::BioSequence{A})
     return complement!(reverse(seq))
+end
+
+# Shuffle
+# -------
+
+function Base.shuffle(seq::BioSequence)
+    return shuffle!(copy(seq))
+end
+
+function Base.shuffle!(seq::BioSequence)
+    orphan!(seq)
+    # Fisher-Yates shuffle
+    for i in 1:endof(seq)-1
+        j = rand(i:endof(seq))
+        seq[i], seq[j] = seq[j], seq[i]
+    end
+    return seq
 end

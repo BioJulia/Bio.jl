@@ -1,5 +1,10 @@
 # Constructors
-# ------------
+# ============
+#
+# Constructor methods for Biological sequences.
+#
+# This file is a part of BioJulia.
+# License is MIT: https://github.com/BioJulia/Bio.jl/blob/master/LICENSE.md
 
 function (::Type{BioSequence{A}}){A<:Alphabet}(len::Integer)
     return BioSequence{A}(Vector{UInt64}(seq_data_len(A, len)), 1:len, false)
@@ -66,3 +71,7 @@ end
 Base.:*{A}(chunk::BioSequence{A}, chunks::BioSequence{A}...) =
     BioSequence{A}(chunk, chunks...)
 Base.:^(chunk::BioSequence, n::Integer) = repeat(chunk, n)
+
+function Base.similar{A}(seq::BioSequence{A}, len::Integer=length(seq))
+    return BioSequence{A}(len)
+end

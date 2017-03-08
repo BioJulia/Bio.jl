@@ -205,21 +205,22 @@ isambiguous
 ```
 
 
-## Overview of sequences types
+## Biological sequence types
 
 The `Bio.Seq` module provides representations and tools for manipulating
 nucleotide and amino acid sequences. Sequences in Bio.jl are more strictly typed
 than in many other libraries; elements in a sequence are typed as biological
-symbol instead of character or byte.  They are special purpose types rather than
+symbol instead of character or byte. They are special purpose types rather than
 simply strings and hence offer additional functionality that naive string types
 don't have. Though this strictness sacrifices some convenience, it also means
 you can always rely on a DNA sequence type to store DNA and nothing but DNA,
 without having to check, or deal with lowercase versus uppercase and so on.
 Strict separation of sequence types also means we are free to choose the most
-efficient representation. DNA and RNA sequences are encoded using four bits per
-base by default making them memory efficient, and also allowing us to speed up
-many common operations like nucleotide composition, reverse complement, and
-*k*-mer enumeration.
+efficient representation. DNA and RNA sequences are encoded using either four
+bits per base (which is the default), or two bits per base. This makes them
+memory efficient and allows us to speed up many common operations and
+transformations, like nucleotide composition, reverse complement, and *k*-mer
+enumeration.
 
 The `Bio.Seq` provides three different sequence types: `BioSequence`, `Kmer` and
 `ReferenceSequence`. Each of these types is a subtype of an abstract type called
@@ -274,42 +275,30 @@ described in [Defining a new alphabet](@ref) section.
 
 ### Constructing sequences
 
-Sequence types corresponding to these alphabets can be constructed a number of
-different ways. Most immediately, sequence literals can be constructed using
-the string macros `dna`, `rna`, `aa`, and `char`:
-```jlcon
-# String decorators are provided for common sequence types
-julia> dna"TACGTANNATC"
-11nt DNA Sequence:
-TACGTANNATC
+#### Using string literals
 
-julia> rna"AUUUGNCCANU"
-11nt RNA Sequence:
-AUUUGNCCANU
+Most immediately, sequence literals can be constructed using the string macros
+`dna`, `rna`, `aa`, and `char`:
 
-julia> aa"ARNDCQEGHILKMFPSTWYVX"
-21aa Amino Acid Sequence:
-ARNDCQEGHILKMFPSTWYVX
-
-julia> char"αβγδϵ"
-5char Char Sequence:
-αβγδϵ
-
+```@repl
+dna"TACGTANNATC"
+rna"AUUUGNCCANU"
+aa"ARNDCQEGHILKMFPSTWYVX"
+char"αβγδϵ"
 ```
 
 However it should be noted that by default these sequence literals
 allocate the `BioSequence` object before the code containing the sequence
 literal is run.
 This means there may be occasions where your program does not behave as you
-first expect, even though it is the intended behaviour.
+first expect.
 For example consider the following code:
 
-```jlcon
-julia> function foo()
-           s = dna"CTT"
-           push!(s, DNA_A)
-       end
-foo (generic function with 1 method)
+```@repl literalfoo
+function foo()
+    s = dna"CTT"
+    push!(s, DNA_A)
+end
 ```
 
 You might expect that every time you call `foo`, that a DNA sequence `CTTA` would
@@ -318,34 +307,22 @@ a new DNA sequence variable `CTT` is created, and and `A` nucleotide is pushed
 to it, and the result, `CTTA` is returned.
 In other words you might expect the following output:
 
-```jlcon
-julia> foo()
-4nt DNA Sequence:
-CTTA
-
-julia> foo()
-4nt DNA Sequence:
-CTTA
-
-julia> foo()
-4nt DNA Sequence:
-CTTA
+```@repl
+function foo()       # hide
+    s = dna"CTT"d    # hide
+    push!(s, DNA_A)  # hide
+end
+foo()
+foo()
+foo()
 ```
 
 However, this is not what happens, instead the following happens:
 
-```jlcon
-julia> foo()
-4nt DNA Sequence:
-CTTA
-
-julia> foo()
-5nt DNA Sequence:
-CTTAA
-
-julia> foo()
-6nt DNA Sequence:
-CTTAAA
+```@repl literalfoo
+foo()
+foo()
+foo()
 ```
 
 The reason for this is because the sequence literal is allocated only once
@@ -364,105 +341,63 @@ the sequence will be allocated at whilst the code is running, and not before.
 So to change `foo` so as it creates a new sequence
 each time it is called, simply add the 'd' flag to the sequence literal:
 
-```jlcon
-julia> function foo()
-           s = dna"CTT"d     # 'd' flag appended to the string literal.
-           push!(s, DNA_A)
-       end
-foo (generic function with 1 method)
+```@repl dynamicfoo
+function foo()
+    s = dna"CTT"d     # 'd' flag appended to the string literal.
+    push!(s, DNA_A)
+end
 ```
 
 Now every time `foo` is called, a new sequence `CTT` is created, and an `A`
 nucleotide is pushed to it:
 
-```jlcon
-julia> foo()
-4nt DNA Sequence:
-CTTA
-
-julia> foo()
-4nt DNA Sequence:
-CTTA
-
-julia> foo()
-4nt DNA Sequence:
-CTTA
+```@repl dynamicfoo
+foo()
+foo()
+foo()
 ```
 
-So the take come message of sequence literals is: Be careful when you are using
-sequence literals inside of functions, and inside the bodies of things like for
-loops. And if you use them and are unsure, use the 's' and 'd' flags to ensure
-the behaviour you get is the behaviour you intend.
+So the take come message of sequence literals is this:
+
+Be careful when you are using sequence literals inside of functions, and inside
+the bodies of things like for loops. And if you use them and are unsure, use the
+ 's' and 'd' flags to ensure the behaviour you get is the behaviour you intend.
+
+
+#### Other constructors and conversion
 
 Sequences can also be constructed from strings or arrays of nucleotide or amino
 acid symbols using constructors or the `convert` function:
-```jlcon
-julia> DNASequence("TTANC")
+
+```@repl
+DNASequence("TTANC")
+DNASequence([DNA_T, DNA_T, DNA_A, DNA_N, DNA_C])
+convert(DNASequence, [DNA_T, DNA_T, DNA_A, DNA_N, DNA_C])
 5nt DNA Sequence:
 TTANC
-
-julia> DNASequence([DNA_T, DNA_T, DNA_A, DNA_N, DNA_C])
-5nt DNA Sequence:
-TTANC
-
-julia> convert(DNASequence, [DNA_T, DNA_T, DNA_A, DNA_N, DNA_C])
-5nt DNA Sequence:
-TTANC
-
 ```
 
 Using `convert`, these operations are reversible: sequences can be converted to
 strings or arrays:
-```jlcon
-julia> convert(String, dna"TTANGTA")
-"TTANGTA"
-
-julia> convert(Vector{DNA}, dna"TTANGTA")
-7-element Array{Bio.Seq.DNA,1}:
- DNA_T
- DNA_T
- DNA_A
- DNA_N
- DNA_G
- DNA_T
- DNA_A
-
+```@repl
+convert(String, dna"TTANGTA")
+convert(Vector{DNA}, dna"TTANGTA")
 ```
 
 Sequences can also be concatenated into longer sequences:
-```jlcon
-julia> DNASequence(dna"ACGT", dna"NNNN", dna"TGCA")
-12nt DNA Sequence:
-ACGTNNNNTGCA
-
-julia> dna"ACGT" * dna"TGCA"
-8nt DNA Sequence:
-ACGTTGCA
-
-julia> repeat(dna"TA", 10)
-20nt DNA Sequence:
-TATATATATATATATATATA
-
-julia> dna"TA" ^ 10
-20nt DNA Sequence:
-TATATATATATATATATATA
-
+```@repl
+DNASequence(dna"ACGT", dna"NNNN", dna"TGCA")
+dna"ACGT" * dna"TGCA"
+repeat(dna"TA", 10)
+dna"TA" ^ 10
 ```
 
 Despite being separate types, `DNASequence` and `RNASequence` can freely be
 converted between efficiently without copying the underlying data:
-```jlcon
-julia> dna = dna"TTANGTAGACCG"
-12nt DNA Sequence:
-TTANGTAGACCG
-
-julia> rna = convert(RNASequence, dna)
-12nt RNA Sequence:
-UUANGUAGACCG
-
-julia> dna.data === rna.data  # underlying data are same
-true
-
+```@repl
+dna = dna"TTANGTAGACCG"
+rna = convert(RNASequence, dna)
+dna.data === rna.data  # underlying data are same
 ```
 
 A random sequence can be obtained by the `randdnaseq`, `randrnaseq` and
@@ -472,59 +407,44 @@ standard symbols without ambiguity and gap. For example, `randdnaseq(6)` may
 generate `dna"TCATAG"` but never generates `dna"TNANAG"` or `dna"T-ATAG"`.
 
 A translatable `RNASequence` can also be converted to an `AminoAcidSequence`
-using the [`translate`](@ref) function described below.
+using the [`translate`](@ref) function.
 
 
-### Indexing and modifying
+### Indexing, modifying and transformations
+
+#### Getindex
 
 Sequences for the most part behave like other vector or string types. They can
 be indexed using integers or ranges:
-```jlcon
-julia> seq = dna"ACGTTTANAGTNNAGTACC"
-19nt DNA Sequence:
-ACGTTTANAGTNNAGTACC
 
-julia> seq[5]
-DNA_T
-
-julia> seq[6:end]
-14nt DNA Sequence:
-TANAGTNNAGTACC
-
+```@repl
+seq = dna"ACGTTTANAGTNNAGTACC"
+seq[5]
+seq[6:end]
 ```
 
-Indexing by range creates a subsequence of the original sequence. Unlike
-`Vector` in the standard library, creating a subsequences is copy-free: a
-subsequence is just a reference to the original sequence with its range.  You
-may think that this is unsafe because modifying subsequences propagates to the
-original sequence, but this doesn't happen actually:
-```jlcon
-julia> seq = dna"AAAA"    # create a sequence
-4nt DNA Sequence:
-AAAA
+Note that, indexing a biological sequence by range creates a subsequence of the
+original sequence. Unlike `Arrays` in the standard library, creating a
+subsequence is copy-free: a subsequence simply points to the original sequence
+data with its range. You may think that this is unsafe because modifying
+subsequences propagates to the original sequence, but this doesn't happen
+actually:
 
-julia> subseq = seq[1:2]  # create a subsequence from `seq`
-2nt DNA Sequence:
-AA
-
-julia> subseq[2] = DNA_T  # modify the second element of it
-DNA_T
-
-julia> subseq             # the subsequence is modified
-2nt DNA Sequence:
-AT
-
-julia> seq                # but the original sequence is not
-4nt DNA Sequence:
-AAAA
-
+```@repl
+seq = dna"AAAA"    # create a sequence
+subseq = seq[1:2]  # create a subsequence from `seq`
+subseq[2] = DNA_T  # modify the second element of it
+subseq             # the subsequence is modified
+seq                # but the original sequence is not
 ```
 
 This is because modifying a sequence checks whether its underlying data are
 shared with other sequences under the hood. If and only if the data are shared,
 the subsequence creates a copy of itself. Any modifying operation does this
 check. This is called *copy-on-write* strategy and users don't need to care
-about it because it is transparent from outward.
+about it because it is transparent: If the user modifies a sequence with or
+subsequence, the job of managing and protecting the underlying data of sequences
+is handled for them.
 
 The following modifying operations are currently supported:
 ```julia

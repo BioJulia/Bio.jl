@@ -1,35 +1,10 @@
-# Basic Operators
-# ---------------
-
-"Gets the alphabet encoding of a given BioSequence."
-alphabet{A}(::Type{BioSequence{A}}) = alphabet(A)
-
-Base.length(seq::BioSequence) = length(seq.part)
-Base.eltype{A}(::Type{BioSequence{A}}) = eltype(A)
-
-"""
-Count how many nucleotides satisfy a condition (i.e. f(seq[i]) -> true).
-
-The first argument should be a function which accepts a nucleotide as its parameter.
-"""
-function Base.count(f::Function, seq::BioSequence)
-    n = 0
-    for x in seq
-        if f(x)
-            n += 1
-        end
-    end
-    return n
-end
-
-function Base.map(f::Function, seq::BioSequence)
-    return map!(f, copy(seq))
-end
-
-function Base.filter(f::Function, seq::BioSequence)
-    return filter!(f, copy(seq))
-end
-
+# Indexing
+# ========
+#
+# Indexing methods for biological sequences.
+#
+# This file is a part of BioJulia.
+# License is MIT: https://github.com/BioJulia/Bio.jl/blob/master/LICENSE.md
 
 # Getting and setting elements in a biological sequence.
 
@@ -166,6 +141,3 @@ end
     @inbounds seq.data[j] = (bin << r) | (seq.data[j] & ~(mask(A) << r))
     return seq
 end
-
-
-# Sequence manipulation.
