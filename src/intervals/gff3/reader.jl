@@ -62,6 +62,11 @@ function Base.close(reader::Reader)
     close(Bio.IO.stream(reader))
 end
 
+function Bio.Intervals.IntervalCollection(reader::Reader)
+    intervals = collect(Interval{Record}, reader)
+    return IntervalCollection(intervals, true)
+end
+
 
 """
 Return all directives that preceded the last GFF entry parsed as an array of
