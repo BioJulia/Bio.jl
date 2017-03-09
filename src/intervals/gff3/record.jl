@@ -88,6 +88,18 @@ function Base.convert(::Type{String}, record::Record)
     return String(record.data[datarange(record)])
 end
 
+function Base.convert(::Type{Bio.Intervals.Interval}, record::Record)
+    name = Bio.seqname(record)
+    lpos = Bio.leftposition(record)
+    rpos = Bio.rightposition(record)
+    strd = hasstrand(record) ? Bio.Intervals.strand(record) : Bio.Intervals.STRAND_BOTH
+    return Bio.Intervals.Interval(name, lpos, rpos, strd, record)
+end
+
+function Base.convert(::Type{Bio.Intervals.Interval{Record}}, record::Record)
+    return convert(Bio.Intervals.Interval, record)
+end
+
 function isfilled(record::Record)
     return !isempty(record.filled)
 end
