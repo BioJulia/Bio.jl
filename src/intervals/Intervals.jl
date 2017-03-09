@@ -67,7 +67,6 @@ include("index/index.jl")
 include("bed/bed.jl")
 include("bbi/bbi.jl")
 include("gff3/gff3.jl")
-include("gff3_old/gff3.jl")
 
 include("deprecated.jl")
 
