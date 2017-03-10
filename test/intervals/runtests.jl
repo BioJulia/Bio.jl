@@ -1,12 +1,11 @@
 module TestIntervals
 
 using Base.Test
-
-using Bio.Intervals,
-    Bio.Seq,
-    Distributions,
-    YAML,
-    TestFunctions
+using Bio.Intervals
+using Bio.Seq
+using Distributions
+using YAML
+using TestFunctions
 
 # Test that an array of intervals is well ordered
 function Intervals.isordered{I <: Interval}(intervals::Vector{I})
@@ -503,19 +502,59 @@ end
 
     end
 
+    @testset "GFF3" begin
+        record = GFF3.Record()
+        @test !isfilled(record)
+
+        record = GFF3.Record("CCDS1.1\tCCDS\tgene\t801943\t802434\t.\t-\t.\tNAME=LINC00115")
+        @test isfilled(record)
+        @test GFF3.isfeature(record)
+        @test hasseqname(record)
+        @test GFF3.hasseqid(record)
+        @test seqname(record) == GFF3.seqid(record) == "CCDS1.1"
+        @test GFF3.hassource(record)
+        @test GFF3.source(record) == "CCDS"
+        @test GFF3.hastype_(record)
+        @test GFF3.type_(record) == "gene"
+        @test GFF3.hasstart(record) === hasleftposition(record) === true
+        @test GFF3.start(record) === leftposition(record) === 801943
+        @test GFF3.hasend_(record) === hasrightposition(record) === true
+        @test GFF3.end_(record) === rightposition(record) === 802434
+        @test !GFF3.hasscore(record)
+        @test_throws MissingFieldException GFF3.score(record)
+        @test GFF3.hasstrand(record)
+        @test strand(record) === GFF3.strand(record) === STRAND_NEG
+        @test !GFF3.hasphase(record)
+        @test_throws MissingFieldException GFF3.phase(record)
+        @test GFF3.attributes(record) == ["NAME" => ["LINC00115"]]
+        @test GFF3.content(record) == "CCDS1.1\tCCDS\tgene\t801943\t802434\t.\t-\t.\tNAME=LINC00115"
+
+        record = GFF3.Record("##gff-version 3")
+        @test isfilled(record)
+        @test GFF3.isdirective(record)
+        @test GFF3.content(record) == "gff-version 3"
+        @test convert(String, record) == "##gff-version 3"
+
+        record = GFF3.Record("#comment")
+        @test isfilled(record)
+        @test GFF3.iscomment(record)
+        @test GFF3.content(record) == "comment"
+        @test convert(String, record) == "#comment"
+    end
+
     @testset "GFF3 Parsing" begin
         get_bio_fmt_specimens()
         function check_gff3_parse(filename)
             # Reading from a stream
-            for interval in GFF3Reader(open(filename))
+            for interval in GFF3.Reader(open(filename))
             end
 
             # Reading from a regular file
-            for interval in open(GFF3Reader, filename)
+            for interval in open(GFF3.Reader, filename)
             end
 
             # in-place parsing
-            stream = open(GFF3Reader, filename)
+            stream = open(GFF3.Reader, filename)
             entry = eltype(stream)()
             while !eof(stream)
                 try
@@ -528,7 +567,23 @@ end
             end
             close(stream)
 
-            return true
+            # copy
+            records = GFF3.Record[]
+            reader = open(GFF3.Reader, filename)
+            output = IOBuffer()
+            writer = GFF3.Writer(output)
+            for record in reader
+                write(writer, record)
+                push!(records, record)
+            end
+            close(reader)
+            flush(writer)
+
+            records2 = GFF3.Record[]
+            for record in GFF3.Reader(IOBuffer(takebuf_array(output)))
+                push!(records2, record)
+            end
+            return records == records2
         end
 
         path = joinpath(dirname(@__FILE__), "..", "BioFmtSpecimens", "GFF3")
@@ -546,10 +601,10 @@ end
 1	havana	exon	870086	870201	.	-	.	Parent=transcript:ENST00000432963;Name=ENSE00001791782;constitutive=0;ensembl_end_phase=-1;ensembl_phase=-1;exon_id=ENSE00001791782;rank=1;version=1
 1	havana	lincRNA	868403	876802	.	-	.	ID=transcript:ENST00000427857;Parent=gene:ENSG00000230368;Name=FAM41C-002;biotype=lincRNA;havana_transcript=OTTHUMT00000007022;havana_version=1;transcript_id=ENST00000427857;transcript_support_level=3;version=1
 """
-        stream = GFF3Reader(IOBuffer(test_input))
+        stream = GFF3.Reader(IOBuffer(test_input))
         collect(stream)
-        @test !hasfasta(stream)
-        @test_throws Exception getfasta(stream)
+        @test !GFF3.hasfasta(stream)
+        @test_throws Exception GFF3.getfasta(stream)
 
 
         # implicit fasta
@@ -559,10 +614,10 @@ ACGTACGT
 >seq2
 TGCATGCA
 """)
-        stream = GFF3Reader(IOBuffer(test_input2))
+        stream = GFF3.Reader(IOBuffer(test_input2))
         collect(stream)
-        @test hasfasta(stream)
-        @test collect(getfasta(stream)) ==
+        @test GFF3.hasfasta(stream)
+        @test collect(GFF3.getfasta(stream)) ==
             [FASTASeqRecord{BioSequence}("seq1", dna"ACGTACGT", Seq.FASTAMetadata())
              FASTASeqRecord{BioSequence}("seq2", dna"TGCATGCA", Seq.FASTAMetadata())]
 
@@ -574,10 +629,10 @@ ACGTACGT
 >seq2
 TGCATGCA
 """)
-        stream = GFF3Reader(IOBuffer(test_input3))
+        stream = GFF3.Reader(IOBuffer(test_input3))
         collect(stream)
-        @test hasfasta(stream)
-        @test collect(getfasta(stream)) ==
+        @test GFF3.hasfasta(stream)
+        @test collect(GFF3.getfasta(stream)) ==
             [FASTASeqRecord{BioSequence}("seq1", dna"ACGTACGT", Seq.FASTAMetadata())
              FASTASeqRecord{BioSequence}("seq2", dna"TGCATGCA", Seq.FASTAMetadata())]
 
@@ -596,16 +651,29 @@ TGCATGCA
 #comment3
 ##directive6
 """
-        stream = GFF3Reader(IOBuffer(test_input4), save_directives=true)
+        stream = GFF3.Reader(IOBuffer(test_input4), save_directives=true)
         read(stream)
-        @test directives(stream) == ["directive1", "directive2"]
+        @test GFF3.directives(stream) == ["directive1", "directive2"]
         read(stream)
-        @test isempty(directives(stream))
+        @test isempty(GFF3.directives(stream))
         read(stream)
-        @test directives(stream) == ["directive3", "directive4"]
+        @test GFF3.directives(stream) == ["directive3", "directive4"]
+        @test_throws EOFError read(stream)
         @test eof(stream)
         close(stream)
-        @test directives(stream) == ["directive5", "directive6"]
+        @test GFF3.directives(stream) == ["directive5", "directive6"]
+
+        test_input5 = """
+        ##directive1
+        feature1\t.\t.\t.\t.\t.\t.\t.\t
+        #comment1
+        feature2\t.\t.\t.\t.\t.\t.\t.\t
+        ##directive2
+        feature3\t.\t.\t.\t.\t.\t.\t.\t
+        """
+        @test [r.kind for r in GFF3.Reader(IOBuffer(test_input5))] == [:feature, :feature, :feature]
+        @test [r.kind for r in GFF3.Reader(IOBuffer(test_input5), skip_directives=false)] == [:directive, :feature, :feature, :directive, :feature]
+        @test [r.kind for r in GFF3.Reader(IOBuffer(test_input5), skip_directives=false, skip_comments=false)] == [:directive, :feature, :comment, :feature, :directive, :feature]
     end
 end
 

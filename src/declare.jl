@@ -20,13 +20,15 @@ end
 @declare (
     distance,
     seqname,
-    hasseqnmae,
+    hasseqname,
     sequence,
     metadata,
     leftposition,
     hasleftposition,
     rightposition,
+    hasrightposition,
     isoverlapping,
     metainfoval,
-    metainfotag
+    metainfotag,
+    isfilled
 )
