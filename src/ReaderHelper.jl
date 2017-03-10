@@ -146,7 +146,7 @@ function generate_read_function(reader_type, machine, actions)
                     throw(EOFError())
                 elseif p > p_eof ≥ 0
                     error("incomplete $($(reader_type)) input on line ", linenum)
-                else
+                elseif p > p_end
                     hits_eof = BufferedStreams.fillbuffer!(stream) == 0
                     p = stream.position
                     p_end = stream.available
