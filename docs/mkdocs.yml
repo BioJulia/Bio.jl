@@ -41,10 +41,20 @@ pages:
 - Manual:
   - Installation: man/install.md
   - IO API: man/reading.md
-  - Biological Sequences: man/seq.md
+  - Biological Sequences:
+      - Overview: man/seq/overview.md
+      - Biological Symbols: man/seq/symbols.md
+      - Sequence types:
+          - Overview: man/seq/sequences/overview.md
+          - BioSequence: man/seq/sequences/bioseq.md
+          - Reference Sequences: man/seq/sequences/refseq.md
+          - Nucleic acid k-mers: man/seq/sequences/kmer.md
+      - Searching: man/seq/search.md
+      - Sequence Records: man/seq/seqrecords.md
+      - Demultiplexing: man/seq/demultiplexer.jl
   - Alignments: man/alignments.md
   - Intervals: man/intervals.md
-  - Biological Variation: man/var.md
+  - Genetic Variation: man/var.md
   - Phylogenetic Trees: man/phylo.md
   - Structure: man/structure.md
   - Services: man/services.md

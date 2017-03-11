@@ -3,7 +3,7 @@
 ```@contents
 Pages = [
     "man/install.md",
-    "man/seq.md",
+    "man/seq/overview.md",
     "man/alignments.md",
     "man/intervals.md",
     "man/var.md",
