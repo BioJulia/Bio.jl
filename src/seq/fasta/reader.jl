@@ -79,7 +79,7 @@ const record_machine, file_machine = (function ()
     header.actions[:enter] = [:anchor]
     header.actions[:exit]  = [:header]
 
-    letters = rep1(any() \ space() \ cat('>'))
+    letters = re"[A-Za-z*\-]+"
     letters.actions[:enter] = [:movable_anchor, :mark]
     letters.actions[:exit]  = [:letters]
 
