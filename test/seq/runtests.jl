@@ -2937,10 +2937,12 @@ end
 
             record = FASTA.Record(b">foo\nACGT\n")
             @test isfilled(record)
+            @test hasseqname(record)
             @test FASTA.hasidentifier(record)
-            @test FASTA.identifier(record) == "foo"
+            @test seqname(record) == FASTA.identifier(record) == "foo"
             @test !FASTA.hasdescription(record)
             @test_throws MissingFieldException FASTA.description(record)
+            @test hassequence(record)
             @test FASTA.hassequence(record)
             @test FASTA.sequence(record) == dna"ACGT"
             @test FASTA.sequence(String, record) == "ACGT"
@@ -2948,7 +2950,8 @@ end
 
             record = FASTA.Record(b"""
             >CYS1_DICDI fragment
-            SCWSFSTTGNVEGQHFISQNKLVSLSEQNLVDCDHECMEYEGE
+            SCWSFSTTGNVEGQHFISQNKL
+            VSLSEQNLVDCDHECMEYEGE
             """)
             @test isfilled(record)
             @test FASTA.identifier(record) == "CYS1_DICDI"
