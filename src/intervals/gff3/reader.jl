@@ -242,8 +242,10 @@ eval(
                         reader.state.finished = true
                     end
                 end
-                found_record = record.kind ∈ reader.targets
-                @escape
+                if record.kind ∈ reader.targets
+                    found_record = true
+                    @escape
+                end
             end,
             :body => quote
                 if data[p] == UInt8('>')
