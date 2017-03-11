@@ -85,7 +85,7 @@ function encode_copy!{A}(dst::BioSequence{A},
                          src::Union{AbstractVector,AbstractString},
                          soff::Integer,
                          len::Integer)
-    if soff != 1 && !isascii(src)
+    if soff != 1 && isa(src, AbstractString) && !isascii(src)
         throw(ArgumentError("source offset ≠ 1 is not supported for non-ASCII string"))
     end
 
