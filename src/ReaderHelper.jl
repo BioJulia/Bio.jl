@@ -33,11 +33,15 @@ function ensure_margin!(stream::BufferedStreams.BufferedInputStream)
 end
 
 function resize_and_copy!(dst::Vector{UInt8}, src::Vector{UInt8}, r::UnitRange{Int})
+    return resize_and_copy!(dst, 1, src, r)
+end
+
+function resize_and_copy!(dst::Vector{UInt8}, dstart::Int, src::Vector{UInt8}, r::UnitRange{Int})
     rlen = length(r)
-    if length(dst) != rlen
-        resize!(dst, rlen)
+    if length(dst) != dstart + rlen - 1
+        resize!(dst, dstart + rlen - 1)
     end
-    copy!(dst, 1, src, first(r), rlen)
+    copy!(dst, dstart, src, first(r), rlen)
     return dst
 end
 
@@ -47,7 +51,7 @@ function generate_index_function(record_type, machine, actions)
             data = record.data
             p = 1
             p_end = p_eof = sizeof(data)
-            offset = mark = mark1 = mark2 = 0
+            offset = mark = mark1 = mark2 = copied = 0
             initialize!(record)
             cs = $(machine.start_state)
             $(Automa.generate_exec_code(machine, actions=actions, code=:goto, check=false))
@@ -123,7 +127,7 @@ function generate_read_function(reader_type, machine, actions)
             p = stream.position
             p_end = stream.available
             p_eof = -1
-            offset = mark = 0
+            offset = mark = copied = 0
             found_record = false
 
             if state.finished

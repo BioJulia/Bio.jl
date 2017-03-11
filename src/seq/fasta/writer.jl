@@ -2,7 +2,7 @@
 # ============
 
 """
-    FASTAWriter(output::IO; width=70)
+    FASTA.Writer(output::IO; width=70)
 
 Create a data writer of the FASTA file format.
 
@@ -10,42 +10,38 @@ Create a data writer of the FASTA file format.
 * `output`: data sink
 * `width=70`: wrapping width of sequence characters
 """
-type FASTAWriter{T<:IO} <: Bio.IO.AbstractWriter
+type Writer{T<:IO} <: Bio.IO.AbstractWriter
     output::T
     # maximum sequence width (no limit when width ≤ 0)
     width::Int
 end
 
-function Bio.IO.stream(writer::FASTAWriter)
+function Bio.IO.stream(writer::Writer)
     return writer.output
 end
 
-function FASTAWriter(output::IO; width::Integer=70)
-    return FASTAWriter(output, width)
+function Writer(output::IO; width::Integer=70)
+    return Writer(output, width)
 end
 
-function Base.write(writer::FASTAWriter, seqrec::FASTASeqRecord)
+function Base.write(writer::Writer, record::Record)
+    checkfilled(record)
     output = writer.output
-    n = 0
-
-    # header
-    n += write(output, '>', seqrec.name)
-    if !isempty(seqrec.metadata.description)
-        n += write(output, ' ', seqrec.metadata.description)
-    end
-    n += write(output, '\n')
-
-    # sequence
-    w = writer.width
-    for x in seqrec.seq
-        if writer.width > 0 && w == 0
+    n::Int = 0
+    if writer.width ≤ 0
+        n += write(output, record, '\n')
+    else
+        headerlen = hasdescription(record) ? last(record.description) : last(record.identifier)
+        n += unsafe_write(output, pointer(record.data), headerlen)
+        n += write(output, '\n')
+        p = pointer(record.data, first(record.sequence))
+        p_end = pointer(record.data, last(record.sequence))
+        while p ≤ p_end
+            w = min(writer.width, p_end - p + 1)
+            n += unsafe_write(output, p, w)
             n += write(output, '\n')
-            w = writer.width
+            p += w
         end
-        n += write(output, Char(x))
-        w -= 1
     end
-    n += write(output, '\n')
-
     return n
 end

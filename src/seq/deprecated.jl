@@ -8,6 +8,8 @@ import Base.depwarn
 @deprecate_binding DNANucleotide DNA
 @deprecate_binding RNANucleotide RNA
 
+include("fasta_old/fasta.jl")
+
 
 # v0.3
 # ----
@@ -72,7 +74,6 @@ function Base.getindex{T}(r::SymbolRange{T}, ir::UnitRange)
 end
 
 
-immutable FASTA <: Bio.IO.FileFormat end
 immutable FASTQ <: Bio.IO.FileFormat end
 immutable TwoBit <: Bio.IO.FileFormat end
-export FASTA, FASTQ, TwoBit
+export FASTQ, TwoBit

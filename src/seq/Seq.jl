@@ -130,6 +130,7 @@ export
     AA_X,
     AA_Term,
     AA_Gap,
+    FASTA,
     FASTAReader,
     FASTAWriter,
     FASTASeqRecord,
