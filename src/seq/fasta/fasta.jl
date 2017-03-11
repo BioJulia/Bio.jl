@@ -10,7 +10,7 @@ import Bio.Exceptions: missingerror
 importall Bio
 
 include("record.jl")
-include("fai.jl")
+include("index.jl")
 include("reader.jl")
 include("writer.jl")
 

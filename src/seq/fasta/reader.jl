@@ -20,6 +20,13 @@ Create a data reader of the FASTA file format.
 * `index=nothing`: filepath to a random access index (currently *fai* is supported)
 """
 function Reader(input::IO; index=nothing)
+    if isa(index, AbstractString)
+        index = Index(index)
+    else
+        if index != nothing
+            throw(ArgumentError("index must be a filepath or nothing"))
+        end
+    end
     return Reader(BufferedStreams.BufferedInputStream(input), index)
 end
 
@@ -29,6 +36,15 @@ end
 
 function Bio.IO.stream(reader::Reader)
     return reader.state.stream
+end
+
+function Base.getindex(reader::Reader, name::AbstractString)
+    if isnull(reader.index)
+        throw(ArgumentError("no index attached"))
+    end
+    seekrecord(reader.state.stream, get(reader.index), name)
+    reader.state.cs = file_machine.start_state
+    return read(reader)
 end
 
 info("compiling FASTA")
@@ -67,22 +83,24 @@ const record_machine, file_machine = (function ()
     letters.actions[:enter] = [:anchor, :mark]
     letters.actions[:exit]  = [:letters]
 
-    sequence = opt(cat(letters, rep(cat(rep1(newline), letters))))
+    sequence = opt(cat(letters, rep(cat(rep1(whitespace), letters))))
     sequence.actions[:enter] = [:sequence_start]
 
     record = cat(header, rep1(newline), sequence, rep1(newline))
     record.actions[:enter] = [:mark1]
     record.actions[:exit]  = [:record]
 
-    file = cat(rep(newline), rep(record))
+    record_trailing = cat(header, rep1(newline), sequence)
+    record_trailing.actions[:enter] = [:mark1]
+    record_trailing.actions[:exit]  = [:record]
+
+    file = cat(rep(newline), rep(record), opt(record_trailing))
 
     return map(Automa.compile, (record, file))
 end)()
 
-#=
 write("fasta.dot", Automa.machine2dot(file_machine))
 run(`dot -Tsvg -o fasta.svg fasta.dot`)
-=#
 
 const record_actions = Dict(
     :identifier  => :(record.identifier  = (mark:p-1)),

@@ -55,6 +55,31 @@ function Base.convert(::Type{String}, record::Record)
     return String(record.data[datarange(record)])
 end
 
+"""
+    FASTA.Record(identifier, description, sequence)
+
+Create a FASTA record object from `identifier`, `description` and `sequence`.
+"""
+function Record(identifier::AbstractString, description::Union{AbstractString,Void}, sequence)
+    buf = IOBuffer()
+    print(buf, '>', strip(identifier))
+    if description != nothing
+        print(buf, ' ', description)
+    end
+    print(buf, '\n')
+    print(buf, sequence, '\n')
+    return Record(takebuf_array(buf))
+end
+
+"""
+    FASTA.Record(identifier, sequence)
+
+Create a FASTA record object from `identifier` and `sequence`.
+"""
+function Record(identifier::AbstractString, sequence)
+    return Record(identifier, nothing, sequence)
+end
+
 function Base.:(==)(record1::Record, record2::Record)
     if isfilled(record1) == isfilled(record2) == true
         r1 = datarange(record1)
@@ -66,7 +91,12 @@ function Base.:(==)(record1::Record, record2::Record)
 end
 
 function Base.copy(record::Record)
-    return Record(record.data[record.filled], record.identifier, record.description, record.sequence)
+    return Record(
+        record.data[record.filled],
+        record.filled,
+        record.identifier,
+        record.description,
+        record.sequence)
 end
 
 function Base.write(io::IO, record::Record)
@@ -167,7 +197,7 @@ function sequence{S<:Bio.Seq.Sequence}(::Type{S}, record::Record)::S
     if !hassequence(record)
         missingerror(:sequence)
     end
-    return convert(S, record.data[record.sequence])
+    return S(record.data, first(record.sequence), last(record.sequence))
 end
 
 function sequence(::Type{String}, record::Record)::String
@@ -178,6 +208,19 @@ function sequence(::Type{String}, record::Record)::String
     return String(record.data[record.sequence])
 end
 
+"""
+    sequence(record::Record)
+
+Get the sequence of `record`.
+This function infers the sequence type from the data. When it is wrong or a
+stable type is desired, use `sequence(::Type{S}, record::Record)`.
+"""
+function sequence(record::Record)
+    checkfilled(record)
+    S = predict_seqtype(record.data, record.sequence)
+    return sequence(S, record)
+end
+
 function hassequence(record::Record)
     # zero-length sequence may exist
     return isfilled(record)
@@ -186,5 +229,45 @@ end
 function checkfilled(record)
     if !isfilled(record)
         throw(ArgumentError("unfilled FASTA record"))
+    end
+end
+
+# Predict sequence type based on character frequencies in `seq[start:stop]`.
+function predict_seqtype(seq::Vector{UInt8}, range)
+    # count characters
+    a = c = g = t = u = n = alpha = 0
+    for i in range
+        @inbounds x = seq[i]
+        if x == 0x41 || x == 0x61
+            a += 1
+        elseif x == 0x43 || x == 0x63
+            c += 1
+        elseif x == 0x47 || x == 0x67
+            g += 1
+        elseif x == 0x54 || x == 0x74
+            t += 1
+        elseif x == 0x55 || x == 0x75
+            u += 1
+        elseif x == 0x4e || x == 0x6e
+            n += 1
+        end
+        if 0x41 ≤ x ≤ 0x5a || 0x61 ≤ x ≤ 0x7a
+            alpha += 1
+            if alpha ≥ 300 && t + u > 0 && a + c + g + t + u + n == alpha
+                # pretty sure that the sequence is either DNA or RNA
+                break
+            end
+        end
+    end
+
+    # the threshold (= 0.95) is somewhat arbitrary
+    if (a + c + g + t + u + n) / alpha > 0.95
+        if t ≥ u
+            return Bio.Seq.DNASequence
+        else
+            return Bio.Seq.RNASequence
+        end
+    else
+        return Bio.Seq.AminoAcidSequence
     end
 end

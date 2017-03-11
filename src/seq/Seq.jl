@@ -157,10 +157,13 @@ export
     demultiplex,
     seqmatrix,
     majorityvote,
-    tryread!
+    tryread!,
+    isfilled,
+    MissingFieldException
 
 import Automa
 import Automa.RegExp: @re_str
+import Bio.Exceptions: MissingFieldException
 import Bio.Ragel: Ragel, tryread!
 import Bio.StringFields: StringField
 import BufferedStreams: BufferedStreams, BufferedInputStream, BufferedOutputStream
