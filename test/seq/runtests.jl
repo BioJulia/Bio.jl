@@ -3022,42 +3022,6 @@ end
             test_fasta_parse(joinpath(path, specimen["filename"]), valid)
         end
 
-        #= TODO: No longer needed.
-        @testset "specified sequence type" begin
-            input = IOBuffer("""
-            >xxx
-            ACG
-            """)
-            for A in (DNAAlphabet{2}, DNAAlphabet{4},
-                      RNAAlphabet{2}, RNAAlphabet{4},
-                      AminoAcidAlphabet)
-                seekstart(input)
-                record = first(FASTAReader{BioSequence{A}}(input))
-                @test record.name == "xxx"
-                @test typeof(record.seq) == BioSequence{A}
-            end
-
-            input = IOBuffer("""
-            >chr1
-            NNNAAACGTATN
-            NNNTTACGGNNN
-            """)
-            record = first(FASTAReader{ReferenceSequence}(input))
-            @test record.name == "chr1"
-            @test record.seq == dna"NNNAAACGTATNNNNTTACGGNNN"
-            @test isa(record.seq, ReferenceSequence)
-        end
-        =#
-
-        #=
-        @testset "genomic sequence" begin
-            path = joinpath(dirname(@__FILE__), "..", "BioFmtSpecimens", "FASTA", "genomic-seq.fasta")
-            dnaseq = open(first, FASTAReader{DNASequence}, path).seq
-            refseq = open(first, FASTAReader{ReferenceSequence}, path).seq
-            @test dnaseq == refseq
-        end
-        =#
-
         @testset "Faidx" begin
             fastastr = """
             >chr1
