@@ -2945,7 +2945,9 @@ end
             @test hassequence(record)
             @test FASTA.hassequence(record)
             @test FASTA.sequence(record) == dna"ACGT"
+            @test FASTA.sequence(record, 2:3) == dna"CG"
             @test FASTA.sequence(String, record) == "ACGT"
+            @test FASTA.sequence(String, record, 2:3) == "CG"
             @test record == FASTA.Record(">foo\nACGT\n")
 
             record = FASTA.Record(b"""
@@ -2957,6 +2959,7 @@ end
             @test FASTA.identifier(record) == "CYS1_DICDI"
             @test FASTA.description(record) == "fragment"
             @test FASTA.sequence(record) == aa"SCWSFSTTGNVEGQHFISQNKLVSLSEQNLVDCDHECMEYEGE"
+            @test FASTA.sequence(record, 10:15) == aa"NVEGQH"
         end
 
         output = IOBuffer()

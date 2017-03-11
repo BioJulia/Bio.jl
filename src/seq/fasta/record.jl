@@ -187,38 +187,41 @@ function hasdescription(record)
 end
 
 """
-    sequence(::Type{S}, record::Record)::S
+    sequence(::Type{S}, record::Record, [part::UnitRange{Int}])::S
 
 Get the sequence of `record`.
 `S` can be either a subtype of `Bio.Seq.Sequence` or `String`.
+If `part` argument is given, it returns the specified part of the sequence.
 """
-function sequence{S<:Bio.Seq.Sequence}(::Type{S}, record::Record)::S
+function sequence{S<:Bio.Seq.Sequence}(::Type{S}, record::Record, part::UnitRange{Int}=1:endof(record.sequence))::S
     checkfilled(record)
     if !hassequence(record)
         missingerror(:sequence)
     end
-    return S(record.data, first(record.sequence), last(record.sequence))
+    seqpart = record.sequence[part]
+    return S(record.data, first(seqpart), last(seqpart))
 end
 
-function sequence(::Type{String}, record::Record)::String
+function sequence(::Type{String}, record::Record, part::UnitRange{Int}=1:endof(record.sequence))::String
     checkfilled(record)
     if !hassequence(record)
         missingerror(:sequence)
     end
-    return String(record.data[record.sequence])
+    return String(record.data[record.sequence[part]])
 end
 
 """
-    sequence(record::Record)
+    sequence(record::Record, [part::UnitRange{Int}])
 
 Get the sequence of `record`.
 This function infers the sequence type from the data. When it is wrong or a
 stable type is desired, use `sequence(::Type{S}, record::Record)`.
+If `part` argument is given, it returns the specified part of the sequence.
 """
-function sequence(record::Record)
+function sequence(record::Record, part::UnitRange{Int}=1:endof(record.sequence))
     checkfilled(record)
     S = predict_seqtype(record.data, record.sequence)
-    return sequence(S, record)
+    return sequence(S, record, part)
 end
 
 function hassequence(record::Record)
