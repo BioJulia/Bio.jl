@@ -80,7 +80,7 @@ const record_machine, file_machine = (function ()
     header.actions[:exit]  = [:header]
 
     letters = re"[A-Za-z*\-]+"
-    letters.actions[:enter] = [:movable_anchor, :mark]
+    letters.actions[:enter] = [:movable_anchor]
     letters.actions[:exit]  = [:letters]
 
     sequence = opt(cat(letters, rep(cat(rep1(whitespace), letters))))
@@ -115,15 +115,16 @@ const record_actions = Dict(
         end
     end,
     :letters => quote
-        len = p - mark
-        copy!(record.data, filled + 1, record.data, mark, p - mark)
-        filled += len
-        record.sequence = first(record.sequence):last(record.sequence)+len
+        let len = p - mark
+            copy!(record.data, filled + 1, record.data, mark, p - mark)
+            filled += len
+            record.sequence = first(record.sequence):last(record.sequence)+len
+        end
     end,
     :sequence_start => :(record.sequence = filled+1:filled),
     :record => :(record.filled = 1:filled),
     :anchor => :(),
-    :movable_anchor => :(),
+    :movable_anchor => :(mark = p),
     :mark => :(mark = p),
     :countline => :(#= linenum += 1 =#))
 eval(
@@ -155,8 +156,8 @@ eval(
             :letters => quote
                 let len = p - stream.anchor
                     Bio.ReaderHelper.append_from_anchor!(record.data, filled + 1, stream, p - 1)
-                    record.sequence = first(record.sequence):last(record.sequence)+len
                     filled += len
+                    record.sequence = first(record.sequence):last(record.sequence)+len
                 end
             end,
             :record => quote
