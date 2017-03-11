@@ -80,7 +80,7 @@ const record_machine, file_machine = (function ()
     header.actions[:exit]  = [:header]
 
     letters = rep1(any() \ space() \ cat('>'))
-    letters.actions[:enter] = [:anchor, :mark]
+    letters.actions[:enter] = [:movable_anchor, :mark]
     letters.actions[:exit]  = [:letters]
 
     sequence = opt(cat(letters, rep(cat(rep1(whitespace), letters))))
@@ -123,23 +123,20 @@ const record_actions = Dict(
     :sequence_start => :(record.sequence = filled+1:filled),
     :record => :(record.filled = 1:filled),
     :anchor => :(),
+    :movable_anchor => :(),
     :mark => :(mark = p),
     :countline => :(#= linenum += 1 =#))
 eval(
     Bio.ReaderHelper.generate_index_function(
         Record,
         record_machine,
-        quote
-            filled = mark = 0
-        end,
+        :(filled = mark = 0),
         record_actions))
 eval(
     Bio.ReaderHelper.generate_read_function(
         Reader,
         file_machine,
-        quote
-            filled = mark = 0
-        end,
+        :(filled = mark = 0),
         merge(record_actions, Dict(
             :identifier  => :(record.identifier  = (mark:p-1) - stream.anchor + 1),
             :description => :(record.description = (mark:p-1) - stream.anchor + 1),
@@ -156,10 +153,11 @@ eval(
             end,
             :sequence_start => :(record.sequence = filled+1:filled),
             :letters => quote
-                range = Bio.ReaderHelper.upanchor!(stream):p-1
-                Bio.ReaderHelper.resize_and_copy!(record.data, filled + 1, data, range)
-                record.sequence = first(record.sequence):last(record.sequence)+length(range)
-                filled += length(range)
+                let len = p - stream.anchor
+                    Bio.ReaderHelper.append_from_anchor!(record.data, filled + 1, stream, p - 1)
+                    record.sequence = first(record.sequence):last(record.sequence)+len
+                    filled += len
+                end
             end,
             :record => quote
                 record.filled = 1:filled
@@ -167,4 +165,5 @@ eval(
                 @escape
             end,
             :countline => :(linenum += 1),
-            :anchor => :(Bio.ReaderHelper.anchor!(stream, p))))))
+            :anchor => :(Bio.ReaderHelper.anchor!(stream, p)),
+            :movable_anchor => :(Bio.ReaderHelper.anchor!(stream, p, false))))))

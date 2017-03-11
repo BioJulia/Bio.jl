@@ -11,9 +11,9 @@ module ReaderHelper
 import Automa
 import BufferedStreams
 
-@inline function anchor!(stream::BufferedStreams.BufferedInputStream, p)
+@inline function anchor!(stream::BufferedStreams.BufferedInputStream, p, immobilize=true)
     stream.anchor = p
-    stream.immobilized = true
+    stream.immobilized = immobilize
     return stream
 end
 
@@ -43,6 +43,10 @@ function resize_and_copy!(dst::Vector{UInt8}, dstart::Int, src::Vector{UInt8}, r
     end
     copy!(dst, dstart, src, first(r), rlen)
     return dst
+end
+
+function append_from_anchor!(dst::Vector{UInt8}, dstart::Int, stream::BufferedStreams.BufferedInputStream, p::Int)
+    return resize_and_copy!(dst, dstart, stream.buffer, upanchor!(stream):p)
 end
 
 function generate_index_function(record_type, machine, init_code, actions)
@@ -152,7 +156,7 @@ function generate_read_function(reader_type, machine, init_code, actions)
                     throw(EOFError())
                 elseif p > p_eof ≥ 0
                     error("incomplete $($(reader_type)) input on line ", linenum)
-                elseif p > p_end
+                elseif BufferedStreams.available_bytes(stream) < 64
                     hits_eof = BufferedStreams.fillbuffer!(stream) == 0
                     p = stream.position
                     p_end = stream.available
