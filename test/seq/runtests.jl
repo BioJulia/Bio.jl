@@ -3094,13 +3094,11 @@ end
                     TACTT
                     """
 
-                    #= TODO: EOFError?
                     chr1 = reader["chr1"]
                     @test FASTA.identifier(chr1) == "chr1"
                     @test FASTA.sequence(chr1) == dna"""
                     CCACACCACACCCACACACC
                     """
-                    =#
 
                     @test_throws ArgumentError reader["chr5"]
                 end

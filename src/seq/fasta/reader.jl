@@ -44,6 +44,7 @@ function Base.getindex(reader::Reader, name::AbstractString)
     end
     seekrecord(reader.state.stream, get(reader.index), name)
     reader.state.cs = file_machine.start_state
+    reader.state.finished = false
     return read(reader)
 end
 
