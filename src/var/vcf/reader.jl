@@ -223,12 +223,14 @@ eval(
     Bio.ReaderHelper.generate_index_function(
         VCFMetaInfo,
         vcf_metainfo_machine,
+        :(mark1 = mark2 = offset = 0),
         vcf_metainfo_actions))
 eval(
     Bio.ReaderHelper.generate_readheader_function(
         VCFReader,
         VCFMetaInfo,
         vcf_header_machine,
+        :(mark1 = mark2 = offset = 0),
         merge(vcf_metainfo_actions, Dict(
             :metainfo => quote
                 Bio.ReaderHelper.resize_and_copy!(record.data, data, Bio.ReaderHelper.upanchor!(stream):p-1)
@@ -265,11 +267,13 @@ eval(
     Bio.ReaderHelper.generate_index_function(
         VCFRecord,
         vcf_record_machine,
+        :(mark = offset = 0),
         vcf_record_actions))
 eval(
     Bio.ReaderHelper.generate_read_function(
         VCFReader,
         vcf_body_machine,
+        :(mark = offset = 0),
         merge(vcf_record_actions, Dict(
             :record    => quote
                 Bio.ReaderHelper.resize_and_copy!(record.data, data, Bio.ReaderHelper.upanchor!(stream):p-1)

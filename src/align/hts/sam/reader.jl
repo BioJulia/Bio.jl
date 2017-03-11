@@ -189,12 +189,14 @@ eval(
     Bio.ReaderHelper.generate_index_function(
         SAMMetaInfo,
         sam_metainfo_machine,
+        :(mark1 = mark2 = offset = 0),
         sam_metainfo_actions))
 eval(
     Bio.ReaderHelper.generate_readheader_function(
         SAMReader,
         SAMMetaInfo,
         sam_header_machine,
+        :(mark1 = mark2 = offset = 0),
         merge(sam_metainfo_actions, Dict(
             :metainfo => quote
                 Bio.ReaderHelper.resize_and_copy!(record.data, data, Bio.ReaderHelper.upanchor!(stream):p-1)
@@ -236,11 +238,13 @@ eval(
     Bio.ReaderHelper.generate_index_function(
         SAMRecord,
         sam_record_machine,
+        :(mark = offset = 0),
         sam_record_actions))
 eval(
     Bio.ReaderHelper.generate_read_function(
         SAMReader,
         sam_body_machine,
+        :(mark = offset = 0),
         merge(sam_record_actions, Dict(
             :record    => quote
                 Bio.ReaderHelper.resize_and_copy!(record.data, data, Bio.ReaderHelper.upanchor!(stream):p-1)

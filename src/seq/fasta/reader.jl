@@ -87,77 +87,82 @@ const record_machine, file_machine = (function ()
     sequence.actions[:enter] = [:sequence_start]
 
     record = cat(header, rep1(newline), sequence, rep1(newline))
-    record.actions[:enter] = [:mark1]
-    record.actions[:exit]  = [:record]
+    record.actions[:exit] = [:record]
 
     record_trailing = cat(header, rep1(newline), sequence)
-    record_trailing.actions[:enter] = [:mark1]
-    record_trailing.actions[:exit]  = [:record]
+    record_trailing.actions[:exit] = [:record]
 
     file = cat(rep(newline), rep(record), opt(record_trailing))
 
     return map(Automa.compile, (record, file))
 end)()
 
+#=
 write("fasta.dot", Automa.machine2dot(file_machine))
 run(`dot -Tsvg -o fasta.svg fasta.dot`)
+=#
 
 const record_actions = Dict(
     :identifier  => :(record.identifier  = (mark:p-1)),
     :description => :(record.description = (mark:p-1)),
-    :header      => quote
+    :header => quote
         @assert record.data === data
-        copy!(record.data, 1, record.data, 1, p - mark1)
-        copied += p - mark1
+        copy!(record.data, 1, record.data, 1, p - 1)
+        filled += p - 1
         if p ≤ endof(data)
             data[p] = UInt8('\n')
-            copied += 1
+            filled += 1
         end
     end,
     :letters => quote
         len = p - mark
-        copy!(record.data, copied + 1, record.data, mark, p - mark)
-        copied += len
+        copy!(record.data, filled + 1, record.data, mark, p - mark)
+        filled += len
         record.sequence = first(record.sequence):last(record.sequence)+len
     end,
-    :sequence_start => :(record.sequence = copied+1:copied),
-    :record => :(record.filled = 1:copied),
+    :sequence_start => :(record.sequence = filled+1:filled),
+    :record => :(record.filled = 1:filled),
     :anchor => :(),
     :mark => :(mark = p),
-    :mark1 => :(mark1 = p),
     :countline => :(#= linenum += 1 =#))
 eval(
     Bio.ReaderHelper.generate_index_function(
         Record,
         record_machine,
+        quote
+            filled = mark = 0
+        end,
         record_actions))
 eval(
     Bio.ReaderHelper.generate_read_function(
         Reader,
         file_machine,
+        quote
+            filled = mark = 0
+        end,
         merge(record_actions, Dict(
             :identifier  => :(record.identifier  = (mark:p-1) - stream.anchor + 1),
             :description => :(record.description = (mark:p-1) - stream.anchor + 1),
             :header => quote
                 range = Bio.ReaderHelper.upanchor!(stream):p-1
-                Bio.ReaderHelper.resize_and_copy!(record.data, copied + 1, data, range)
-                copied += length(range)
-                if copied + 1 ≤ endof(record.data)
-                    record.data[copied] = UInt8('\n')
+                Bio.ReaderHelper.resize_and_copy!(record.data, filled + 1, data, range)
+                filled += length(range)
+                if filled + 1 ≤ endof(record.data)
+                    record.data[filled] = UInt8('\n')
                 else
                     push!(record.data, UInt8('\n'))
                 end
-                copied += 1
+                filled += 1
             end,
-            :sequence_start => :(record.sequence = copied+1:copied),
+            :sequence_start => :(record.sequence = filled+1:filled),
             :letters => quote
                 range = Bio.ReaderHelper.upanchor!(stream):p-1
-                Bio.ReaderHelper.resize_and_copy!(record.data, copied + 1, data, range)
+                Bio.ReaderHelper.resize_and_copy!(record.data, filled + 1, data, range)
                 record.sequence = first(record.sequence):last(record.sequence)+length(range)
-                copied += length(range)
+                filled += length(range)
             end,
             :record => quote
-                record.filled = 1:copied
+                record.filled = 1:filled
                 found_record = true
                 @escape
             end,

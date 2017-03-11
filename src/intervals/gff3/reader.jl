@@ -220,11 +220,17 @@ eval(
     Bio.ReaderHelper.generate_index_function(
         Record,
         record_machine,
+        quote
+            mark = offset = 0
+        end,
         record_actions))
 eval(
     Bio.ReaderHelper.generate_read_function(
         Reader,
         body_machine,
+        quote
+            mark = offset = 0
+        end,
         merge(record_actions, Dict(
             :record => quote
                 Bio.ReaderHelper.resize_and_copy!(record.data, data, Bio.ReaderHelper.upanchor!(stream):p-1)

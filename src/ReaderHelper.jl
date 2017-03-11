@@ -45,14 +45,14 @@ function resize_and_copy!(dst::Vector{UInt8}, dstart::Int, src::Vector{UInt8}, r
     return dst
 end
 
-function generate_index_function(record_type, machine, actions)
+function generate_index_function(record_type, machine, init_code, actions)
     quote
         function index!(record::$(record_type))
             data = record.data
             p = 1
             p_end = p_eof = sizeof(data)
-            offset = mark = mark1 = mark2 = copied = 0
             initialize!(record)
+            $(init_code)
             cs = $(machine.start_state)
             $(Automa.generate_exec_code(machine, actions=actions, code=:goto, check=false))
             if cs != 0
@@ -64,7 +64,7 @@ function generate_index_function(record_type, machine, actions)
     end
 end
 
-function generate_readheader_function(reader_type, metainfo_type, machine, actions, finish_code=:())
+function generate_readheader_function(reader_type, metainfo_type, machine, init_code, actions, finish_code=:())
     quote
         function readheader!(reader::$(reader_type))
             _readheader!(reader, reader.state)
@@ -79,9 +79,10 @@ function generate_readheader_function(reader_type, metainfo_type, machine, actio
             p = stream.position
             p_end = stream.available
             p_eof = -1
-            offset = mark1 = mark2 = 0
             finish_header = false
             record = $(metainfo_type)()
+
+            $(init_code)
 
             while true
                 $(Automa.generate_exec_code(machine, actions=actions, code=:table))
@@ -111,7 +112,7 @@ function generate_readheader_function(reader_type, metainfo_type, machine, actio
     end
 end
 
-function generate_read_function(reader_type, machine, actions)
+function generate_read_function(reader_type, machine, init_code, actions)
     quote
         function Base.read!(reader::$(reader_type), record::eltype($(reader_type)))::eltype($(reader_type))
             return _read!(reader, reader.state, record)
@@ -120,15 +121,16 @@ function generate_read_function(reader_type, machine, actions)
         function _read!(reader::$(reader_type), state::Bio.Ragel.State, record::eltype($(reader_type)))
             stream = state.stream
             Bio.ReaderHelper.ensure_margin!(stream)
-            initialize!(record)
             cs = state.cs
             linenum = state.linenum
             data = stream.buffer
             p = stream.position
             p_end = stream.available
             p_eof = -1
-            offset = mark = copied = 0
             found_record = false
+            initialize!(record)
+
+            $(init_code)
 
             if state.finished
                 throw(EOFError())
