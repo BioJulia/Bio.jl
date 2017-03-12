@@ -4,8 +4,7 @@ DocTestSetup = quote
     using Bio.Seq
 end
 ```
-
-# General-purpose sequences
+## General-purpose sequences
 
 `BioSequence{A}` is a generic sequence type parameterized by an alphabet type
 `A` that defines the domain (or set) of biological symbols, and each alphabet
@@ -35,9 +34,9 @@ defining few numbers of methods.
 This is described in [Defining a new alphabet](@ref) section.
 
 
-## Constructing sequences
+### Constructing sequences
 
-### Using string literals
+#### Using string literals
 
 Most immediately, sequence literals can be constructed using the string macros
 `dna`, `rna`, `aa`, and `char`:
@@ -200,7 +199,7 @@ the bodies of things like for loops. And if you use them and are unsure, use the
  's' and 'd' flags to ensure the behaviour you get is the behaviour you intend.
 
 
-### Other constructors and conversion
+#### Other constructors and conversion
 
 Sequences can also be constructed from strings or arrays of nucleotide or amino
 acid symbols using constructors or the `convert` function:
@@ -284,9 +283,9 @@ A translatable `RNASequence` can also be converted to an `AminoAcidSequence`
 using the [`translate`](@ref) function.
 
 
-## Indexing, modifying and transformations
+### Indexing, modifying and transformations
 
-### Getindex
+#### Getindex
 
 Sequences for the most part behave like other vector or string types. They can
 be indexed using integers or ranges:
@@ -343,7 +342,7 @@ subsequence, the job of managing and protecting the underlying data of sequences
 is handled for them.
 
 
-### Setindex and modifying DNA sequences
+#### Setindex and modifying DNA sequences
 
 The biological symbol at a given locus in a biological sequence can be set using
 setindex:
@@ -410,7 +409,7 @@ AAT
 
 ```
 
-### Additional transformations
+#### Additional transformations
 
 In addition to these basic modifying functions, other sequence transformations
 which are common in bioinformatics are also provided.
@@ -448,7 +447,7 @@ ACGTAT
 
 ```
 
-#### Translation
+##### Translation
 
 Translation is a slightly more complex transformation for RNA Sequences and so
 we describe it here in more detail.
@@ -490,7 +489,7 @@ Translation Tables:
 <http://www.ncbi.nlm.nih.gov/Taxonomy/taxonomyhome.html/index.cgi?chapter=cgencodes>
 
 
-## Iteration
+### Iteration
 
 Sequences also work as iterators over symbols:
 
@@ -510,7 +509,7 @@ julia> n
 ```
 
 
-## Using a more compact sequence representation
+### Using a more compact sequence representation
 
 As we saw above, DNA and RNA sequences can store any ambiguous nucleotides like
 'N'.  If you are sure that nucleotide sequences store unambiguous nucleotides
@@ -535,7 +534,7 @@ consider to use the `ReferenceSequence` type described in the [Reference
 sequences](@ref) section.
 
 
-## Defining a new alphabet
+### Defining a new alphabet
 
 The alphabet type parameter `A` of `BioSequence{A}` enables a user to extend
 functionality of `BioSequence` with minimum effort. As an example, definition of

@@ -5,7 +5,7 @@ DocTestSetup = quote
 end
 ```
 
-### Sequence search
+# Sequence search
 
 Three kinds of on-line search functions are provided:
 
@@ -16,7 +16,7 @@ Three kinds of on-line search functions are provided:
 These are all specialized for biological sequences and ambiguities of symbols
 are considered.
 
-#### Exact search
+## Exact search
 
 Exact search functions search for an occurrence of the query symbol or
 sequence. Four functions, `search`, `searchindex`, `rsearch`, and
@@ -76,7 +76,7 @@ julia> rsearch(dna"ATTTATT", query)
 ```
 
 
-#### Approximate search
+## Approximate search
 
 The approximate search is similar to the exact search but allows a specific
 number of errors. That is, it tries to find a subsequence of the target sequence
@@ -128,7 +128,7 @@ julia> approxsearch(dna"ACTACGT", query, 2)
 
 ```
 
-### Regular expression search
+## Regular expression search
 
 Query patterns can be described in regular expressions. The syntax supports
 a subset of Perl and PROSITE's notation.

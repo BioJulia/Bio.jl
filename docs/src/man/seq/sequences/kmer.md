@@ -5,7 +5,7 @@ DocTestSetup = quote
 end
 ```
 
-# Nucleic acid k-mers
+## Nucleic acid k-mers
 
 A common strategy to simplify the analysis of sequence data is to operate or
 short k-mers, for size fixed size `k`. These can be packed into machine integers

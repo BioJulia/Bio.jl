@@ -1,4 +1,4 @@
-## Sequence records
+# Sequence records
 
 The `SeqRecord` type is used to represent a named sequence, optionally with
 accompanying metadata. It is defined as:

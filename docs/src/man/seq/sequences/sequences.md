@@ -1,13 +1,17 @@
-# Bioloigcal sequence data-types
+# Biological sequences
 
 The `Bio.Seq` module provides representations and tools for manipulating
-nucleotide and amino acid sequences. Sequences in Bio.jl are more strictly typed
-than in many other libraries; elements in a sequence are typed as biological
-symbol instead of character or byte. They are special purpose types rather than
-simply strings and hence offer additional functionality that naive string types
-don't have. Though this strictness sacrifices some convenience, it also means
-you can always rely on a DNA sequence type to store DNA and nothing but DNA,
-without having to check, or deal with lowercase versus uppercase and so on.
+nucleotide and amino acid sequences.
+
+## Introduction to the sequence data-types
+
+Sequences in Bio.jl are more strictly typed than in many other libraries;
+elements in a sequence are typed as biological symbol instead of character or
+byte. They are special purpose types rather than simply strings and hence offer
+additional functionality that naive string types don't have.
+Though this strictness sacrifices some convenience, it also means you can always
+rely on a DNA sequence type to store DNA and nothing but DNA, without having to
+check, or deal with lowercase versus uppercase and so on.
 Strict separation of sequence types also means we are free to choose the most
 efficient representation. DNA and RNA sequences are encoded using either four
 bits per base (which is the default), or two bits per base. This makes them

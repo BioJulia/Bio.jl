@@ -1,4 +1,4 @@
-### Reference sequences
+## Reference sequences
 
 `DNASequence` (alias of `BioSequence{DNAAlphabet{4}}`) is a flexible data
 structure but always consumes 4 bits per base, which will waste a large part of
@@ -31,7 +31,7 @@ ERROR: ArgumentError: invalid symbol M ∉ {A,C,G,T,N} at 4
 
 When reading reference sequences from a FASTA file, the following snippet will
 avoid allocating temporary sequences and conversion:
-```julia
+```jlcon
 for record in open(FASTAReader{ReferenceSequence}, "hg38.fa")
     # do something
 end

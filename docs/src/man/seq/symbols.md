@@ -1,11 +1,10 @@
-# Biological symbols
-
 ```@meta
 CurrentModule = Bio.Seq
 DocTestSetup = quote
     using Bio.Seq
 end
 ```
+# Biological symbols
 
 The `Bio.Seq` module provides three biological symbol (character) types:
 
@@ -17,7 +16,7 @@ The `Bio.Seq` module provides three biological symbol (character) types:
 
 These symbols are elements of biological sequences, just as characters are
 elements of strings. See sections beginning from
-[Bioloigcal sequence data-types](@ref) section for details.
+[Introduction to the sequence data-types](@ref) section for details.
 
 
 ## DNA and RNA nucleotides

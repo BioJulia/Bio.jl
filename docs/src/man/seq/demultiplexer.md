@@ -6,7 +6,7 @@ DocTestSetup = quote
 end
 ```
 
-## Sequence demultiplexing
+# Sequence demultiplexing
 
 Multiplex sequencing is a technology to sequence multiple samples at the same
 time on a high-throughput DNA sequencer. Samples are distinguished by the short
