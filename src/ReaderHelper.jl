@@ -32,11 +32,11 @@ function ensure_margin!(stream::BufferedStreams.BufferedInputStream)
     return nothing
 end
 
-function resize_and_copy!(dst::Vector{UInt8}, src::Vector{UInt8}, r::UnitRange{Int})
+@inline function resize_and_copy!(dst::Vector{UInt8}, src::Vector{UInt8}, r::UnitRange{Int})
     return resize_and_copy!(dst, 1, src, r)
 end
 
-function resize_and_copy!(dst::Vector{UInt8}, dstart::Int, src::Vector{UInt8}, r::UnitRange{Int})
+@inline function resize_and_copy!(dst::Vector{UInt8}, dstart::Int, src::Vector{UInt8}, r::UnitRange{Int})
     rlen = length(r)
     if length(dst) != dstart + rlen - 1
         resize!(dst, dstart + rlen - 1)
@@ -45,7 +45,7 @@ function resize_and_copy!(dst::Vector{UInt8}, dstart::Int, src::Vector{UInt8}, r
     return dst
 end
 
-function append_from_anchor!(dst::Vector{UInt8}, dstart::Int, stream::BufferedStreams.BufferedInputStream, p::Int)
+@inline function append_from_anchor!(dst::Vector{UInt8}, dstart::Int, stream::BufferedStreams.BufferedInputStream, p::Int)
     return resize_and_copy!(dst, dstart, stream.buffer, upanchor!(stream):p)
 end
 
