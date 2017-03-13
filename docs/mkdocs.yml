@@ -52,7 +52,7 @@ pages:
           - Nucleic acid k-mers: man/seq/sequences/kmer.md
       - Searching: man/seq/search.md
       - Sequence Records: man/seq/seqrecords.md
-      - Demultiplexing: man/seq/demultiplexer.jl
+      - Demultiplexing: man/seq/demultiplexer.md
   - Alignments: man/alignments.md
   - Intervals: man/intervals.md
   - Genetic Variation: man/var.md
