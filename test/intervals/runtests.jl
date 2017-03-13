@@ -54,10 +54,10 @@ function simple_intersection(intervals_a, intervals_b)
         ai = intervals_a[i]
         bj = intervals_b[j]
 
-        if Intervals.alphanum_isless(ai.seqname, bj.seqname) ||
+        if isless(ai.seqname, bj.seqname) ||
            (ai.seqname == bj.seqname && ai.last < bj.first)
             i += 1
-        elseif Intervals.alphanum_isless(bj.seqname, ai.seqname) ||
+        elseif isless(bj.seqname, ai.seqname) ||
                (ai.seqname == bj.seqname && bj.last < ai.first)
             j += 1
         else
@@ -309,7 +309,7 @@ end
         # non-empty versus non-empty, stream intersection
         it = Intervals.IntervalStreamIntersectIterator{Int, Int,
                 IntervalCollection{Int}, IntervalCollection{Int}}(
-                ic_a, ic_b, Intervals.alphanum_isless)
+                ic_a, ic_b, isless)
 
         @test sort(collect(it)) == sort(simple_intersection(intervals_a, intervals_b))
 

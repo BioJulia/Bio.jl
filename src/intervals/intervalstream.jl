@@ -303,5 +303,5 @@ function coverage(stream::Union{IntervalStreamOrArray,IntervalTrees.IntervalTree
 end
 
 function coverage(ic::IntervalCollection)
-    return coverage(ic, alphanum_isless)
+    return coverage(ic, isless)
 end
