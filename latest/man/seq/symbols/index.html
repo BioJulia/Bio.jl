@@ -1,0 +1,798 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0"> 
+    <meta name="author" content="The BioJulia Organisation"> 
+    <link rel="canonical" href="https://biojulia.github.io/Bio.jl/man/seq/symbols/"> 
+    <link rel="shortcut icon" href="../../../img/favicon.ico">
+
+    <title>Biological Symbols - Bio.jl</title>
+
+    <link href="../../../css/bootstrap-custom.min.css" rel="stylesheet">
+    <link href="//maxcdn.bootstrapcdn.com/font-awesome/4.4.0/css/font-awesome.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="//cdn.jsdelivr.net/font-hack/2.018/css/hack.min.css">
+    <link href='//fonts.googleapis.com/css?family=PT+Sans:400,400italic,700,700italic&subset=latin-ext,latin' rel='stylesheet' type='text/css'>
+    <link href='//fonts.googleapis.com/css?family=Open+Sans:300italic,400italic,700italic,400,300,600,700&subset=latin-ext,latin' rel='stylesheet' type='text/css'>
+    <link href="../../../css/base.css" rel="stylesheet">
+    <link href="../../../css/biojulia.css" rel="stylesheet">
+    <link rel="stylesheet" href="../../../css/highlight.css">
+    <link rel="stylesheet" href="../../../css/friendly.css" type="text/css">
+    <link href="../../../assets/Documenter.css" rel="stylesheet">
+
+    <!-- HTML5 shim and Respond.js IE8 support of HTML5 elements and media queries -->
+    <!--[if lt IE 9]>
+            <script src="https://oss.maxcdn.com/libs/html5shiv/3.7.0/html5shiv.js"></script>
+            <script src="https://oss.maxcdn.com/libs/respond.js/1.3.0/respond.min.js"></script>
+        <![endif]-->
+
+    <script src="https://ajax.googleapis.com/ajax/libs/webfont/1.5.18/webfont.js"></script>
+    <script>
+    WebFont.load({
+        google: {
+            families: ['Open Sans', 'PT Sans']
+        }
+    });
+    </script>
+
+    
+</head>
+
+<body>
+
+    <div class="navbar navbar-default navbar-fixed-top" role="navigation">
+    <div class="container">
+
+        <!-- Collapsed navigation -->
+        <div class="navbar-header">
+            
+            <!-- Expander button -->
+            <button type="button" class="navbar-toggle" data-toggle="collapse" data-target=".navbar-collapse">
+                <span class="sr-only">Toggle navigation</span>
+                <span class="icon-bar"></span>
+                <span class="icon-bar"></span>
+                <span class="icon-bar"></span>
+            </button>
+            
+
+            <!-- Main title -->
+            <a class="navbar-brand" href="../../../home/">Bio.jl</a>
+        </div>
+
+        <!-- Expanded navigation -->
+        <div class="navbar-collapse collapse">
+            
+                <!-- Main navigation -->
+                <ul class="nav navbar-nav">
+                
+                
+                    <li >
+                        <a href="../../../home/">Home</a>
+                    </li>
+                
+                
+                
+                    <li class="dropdown active">
+                        <a href="#" class="dropdown-toggle" data-toggle="dropdown">Manual <b class="caret"></b></a>
+                        <ul class="dropdown-menu">
+                        
+                            
+<li >
+    <a href="../../frontpage/">Front Page</a>
+</li>
+
+                        
+                            
+<li >
+    <a href="../../install/">Installation</a>
+</li>
+
+                        
+                            
+<li >
+    <a href="../../reading/">IO API</a>
+</li>
+
+                        
+                            
+  <li class="dropdown-submenu">
+    <a tabindex="-1" href="">Biological Sequences</a>
+    <ul class="dropdown-menu">
+        
+            
+<li >
+    <a href="../module/">Overview</a>
+</li>
+
+        
+            
+<li class="active">
+    <a href="./">Biological Symbols</a>
+</li>
+
+        
+            
+  <li class="dropdown-submenu">
+    <a tabindex="-1" href="">Sequence types</a>
+    <ul class="dropdown-menu">
+        
+            
+<li >
+    <a href="../sequences/sequences/">Overview</a>
+</li>
+
+        
+            
+<li >
+    <a href="../sequences/bioseq/">BioSequence</a>
+</li>
+
+        
+            
+<li >
+    <a href="../sequences/refseq/">Reference Sequences</a>
+</li>
+
+        
+            
+<li >
+    <a href="../sequences/kmer/">Nucleic acid k-mers</a>
+</li>
+
+        
+    </ul>
+  </li>
+
+        
+            
+<li >
+    <a href="../search/">Searching</a>
+</li>
+
+        
+            
+<li >
+    <a href="../seqrecords/">Sequence Records</a>
+</li>
+
+        
+            
+<li >
+    <a href="../demultiplexer/">Demultiplexing</a>
+</li>
+
+        
+    </ul>
+  </li>
+
+                        
+                            
+<li >
+    <a href="../../alignments/">Alignments</a>
+</li>
+
+                        
+                            
+<li >
+    <a href="../../intervals/">Intervals</a>
+</li>
+
+                        
+                            
+<li >
+    <a href="../../var/">Genetic Variation</a>
+</li>
+
+                        
+                            
+<li >
+    <a href="../../phylo/">Phylogenetic Trees</a>
+</li>
+
+                        
+                            
+<li >
+    <a href="../../structure/">Structure</a>
+</li>
+
+                        
+                            
+<li >
+    <a href="../../services/">Services</a>
+</li>
+
+                        
+                            
+<li >
+    <a href="../../util/">Util</a>
+</li>
+
+                        
+                            
+<li >
+    <a href="../../tools/">Tools</a>
+</li>
+
+                        
+                        </ul>
+                    </li>
+                
+                
+                
+                    <li class="dropdown">
+                        <a href="#" class="dropdown-toggle" data-toggle="dropdown">Reference <b class="caret"></b></a>
+                        <ul class="dropdown-menu">
+                        
+                            
+<li >
+    <a href="../../../lib/seq/">Seq</a>
+</li>
+
+                        
+                        </ul>
+                    </li>
+                
+                
+                
+                    <li >
+                        <a href="../../contributing/">Contributing</a>
+                    </li>
+                
+                
+                </ul>
+            
+
+            <ul class="nav navbar-nav navbar-right">
+                <li>
+                    <a href="#" data-toggle="modal" data-target="#mkdocs_search_modal">
+                        <i class="fa fa-search"></i> Search
+                    </a>
+                </li>
+                
+                    <li >
+                        <a rel="next" href="../module/">
+                            <i class="fa fa-arrow-left"></i> Previous
+                        </a>
+                    </li>
+                    <li >
+                        <a rel="prev" href="../sequences/sequences/">
+                            Next <i class="fa fa-arrow-right"></i>
+                        </a>
+                    </li>
+                
+                
+                    <li>
+                        <a href="https://github.com/BioJulia/Bio.jl">
+                            
+                                <i class="fa fa-github"></i>
+                            
+                            GitHub
+                        </a>
+                    </li>
+                
+                <li><a href="https://biojulia.github.io">BioJulia Home</a></li>
+            </ul>
+        </div>
+    </div>
+</div>
+
+    <div class="container">
+        
+        <div class="col-md-3"><div class="bs-sidebar hidden-print affix well" role="complementary">
+    <ul class="nav bs-sidenav">
+    
+        <li class="first-level active"><a href="#biological-symbols">Biological symbols</a></li>
+        
+            <li class="second-level"><a href="#dna-and-rna-nucleotides">DNA and RNA nucleotides</a></li>
+            
+        
+            <li class="second-level"><a href="#amino-acids">Amino acids</a></li>
+            
+        
+            <li class="second-level"><a href="#other-functions">Other functions</a></li>
+            
+        
+    
+    </ul>
+</div></div>
+        <div class="col-md-9" role="main">
+
+<p><a id='Biological-symbols-1'></a></p>
+<h1 id="biological-symbols">Biological symbols</h1>
+<p>The <code>Bio.Seq</code> module provides three biological symbol (character) types:</p>
+<table>
+<thead>
+<tr>
+<th align="left">Type</th>
+<th align="left">Meaning</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td align="left"><code>DNA</code></td>
+<td align="left">DNA nucleotide</td>
+</tr>
+<tr>
+<td align="left"><code>RNA</code></td>
+<td align="left">RNA nucleotide</td>
+</tr>
+<tr>
+<td align="left"><code>AminoAcid</code></td>
+<td align="left">Amino acid</td>
+</tr>
+</tbody>
+</table>
+<p>These symbols are elements of biological sequences, just as characters are elements of strings. See sections beginning from <a href="../sequences/sequences/#Introduction-to-the-sequence-data-types-1">Introduction to the sequence data-types</a> section for details.</p>
+<p><a id='DNA-and-RNA-nucleotides-1'></a></p>
+<h2 id="dna-and-rna-nucleotides">DNA and RNA nucleotides</h2>
+<p>Set of nucleotide symbols in Bio.jl covers IUPAC nucleotide base plus a gap symbol:</p>
+<table>
+<thead>
+<tr>
+<th align="left">Symbol</th>
+<th align="left">Constant</th>
+<th align="left">Meaning</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td align="left">'A'</td>
+<td align="left"><code>DNA_A</code> / <code>RNA_A</code></td>
+<td align="left">A; Adenine</td>
+</tr>
+<tr>
+<td align="left">'C'</td>
+<td align="left"><code>DNA_C</code> / <code>RNA_C</code></td>
+<td align="left">C; Cytosine</td>
+</tr>
+<tr>
+<td align="left">'G'</td>
+<td align="left"><code>DNA_G</code> / <code>RNA_G</code></td>
+<td align="left">G; Guanine</td>
+</tr>
+<tr>
+<td align="left">'T'</td>
+<td align="left"><code>DNA_T</code></td>
+<td align="left">T; Thymine (DNA only)</td>
+</tr>
+<tr>
+<td align="left">'U'</td>
+<td align="left"><code>RNA_U</code></td>
+<td align="left">U; Uracil (RNA only)</td>
+</tr>
+<tr>
+<td align="left">'M'</td>
+<td align="left"><code>DNA_M</code> / <code>RNA_M</code></td>
+<td align="left">A or C</td>
+</tr>
+<tr>
+<td align="left">'R'</td>
+<td align="left"><code>DNA_R</code> / <code>RNA_R</code></td>
+<td align="left">A or G</td>
+</tr>
+<tr>
+<td align="left">'W'</td>
+<td align="left"><code>DNA_W</code> / <code>RNA_W</code></td>
+<td align="left">A or T/U</td>
+</tr>
+<tr>
+<td align="left">'S'</td>
+<td align="left"><code>DNA_S</code> / <code>RNA_S</code></td>
+<td align="left">C or G</td>
+</tr>
+<tr>
+<td align="left">'Y'</td>
+<td align="left"><code>DNA_Y</code> / <code>RNA_Y</code></td>
+<td align="left">C or T/U</td>
+</tr>
+<tr>
+<td align="left">'K'</td>
+<td align="left"><code>DNA_K</code> / <code>RNA_K</code></td>
+<td align="left">G or T/U</td>
+</tr>
+<tr>
+<td align="left">'V'</td>
+<td align="left"><code>DNA_V</code> / <code>RNA_V</code></td>
+<td align="left">A or C or G; not T/U</td>
+</tr>
+<tr>
+<td align="left">'H'</td>
+<td align="left"><code>DNA_H</code> / <code>RNA_H</code></td>
+<td align="left">A or C or T; not G</td>
+</tr>
+<tr>
+<td align="left">'D'</td>
+<td align="left"><code>DNA_D</code> / <code>RNA_D</code></td>
+<td align="left">A or G or T/U; not C</td>
+</tr>
+<tr>
+<td align="left">'B'</td>
+<td align="left"><code>DNA_B</code> / <code>RNA_B</code></td>
+<td align="left">C or G or T/U; not A</td>
+</tr>
+<tr>
+<td align="left">'N'</td>
+<td align="left"><code>DNA_N</code> / <code>RNA_N</code></td>
+<td align="left">A or C or G or T/U</td>
+</tr>
+<tr>
+<td align="left">'-'</td>
+<td align="left"><code>DNA_Gap</code> / <code>RNA_Gap</code></td>
+<td align="left">Gap (none of the above)</td>
+</tr>
+</tbody>
+</table>
+<p><a href="http://www.insdc.org/documents/feature_table.html#7.4.1">http://www.insdc.org/documents/feature_table.html#7.4.1</a></p>
+<p>Symbols are accessible as constants with <code>DNA_</code> or <code>RNA_</code> prefix:</p>
+<div class="codehilite"><pre><span></span><span class="gp">julia&gt;</span> <span class="n">DNA_A</span>
+<span class="go">DNA_A</span>
+
+<span class="gp">julia&gt;</span> <span class="n">DNA_T</span>
+<span class="go">DNA_T</span>
+
+<span class="gp">julia&gt;</span> <span class="n">RNA_U</span>
+<span class="go">RNA_U</span>
+
+<span class="gp">julia&gt;</span> <span class="n">DNA_Gap</span>
+<span class="go">DNA_Gap</span>
+
+<span class="gp">julia&gt;</span> <span class="n">typeof</span><span class="p">(</span><span class="n">DNA_A</span><span class="p">)</span>
+<span class="go">Bio.Seq.DNA</span>
+
+<span class="gp">julia&gt;</span> <span class="n">typeof</span><span class="p">(</span><span class="n">RNA_A</span><span class="p">)</span>
+<span class="go">Bio.Seq.RNA</span>
+</pre></div>
+
+
+<p>Symbols can be constructed by converting regular characters:</p>
+<div class="codehilite"><pre><span></span><span class="gp">julia&gt;</span> <span class="n">convert</span><span class="p">(</span><span class="n">DNA</span><span class="p">,</span> <span class="sc">&#39;C&#39;</span><span class="p">)</span>
+<span class="go">DNA_C</span>
+
+<span class="gp">julia&gt;</span> <span class="n">convert</span><span class="p">(</span><span class="n">DNA</span><span class="p">,</span> <span class="sc">&#39;C&#39;</span><span class="p">)</span> <span class="o">===</span> <span class="n">DNA_C</span>
+<span class="go">true</span>
+</pre></div>
+
+
+<p>Every nucleotide is encoded using the lower 4 bits of a byte. An unambiguous nucleotide has only one set bit and the other bits are unset. The table below summarizes all unambiguous nucleotides and their corresponding bits. An ambiguous nucleotide is the bitwise OR of unambiguous nucleotides that the ambiguous nucleotide can take. For example, <code>DNA_R</code> (meaning the nucleotide is either <code>DNA_A</code> or <code>DNA_G</code>) is encoded as <code>0101</code> because <code>0101</code> is the bitwise OR of <code>0001</code> (<code>DNA_A</code>) and <code>0100</code> (<code>DNA_G</code>). The gap symbol is always <code>0000</code>.</p>
+<table>
+<thead>
+<tr>
+<th align="left">NucleicAcid</th>
+<th align="left">Bits</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td align="left"><code>DNA_A</code>, <code>RNA_A</code></td>
+<td align="left"><code>0001</code></td>
+</tr>
+<tr>
+<td align="left"><code>DNA_C</code>, <code>RNA_C</code></td>
+<td align="left"><code>0010</code></td>
+</tr>
+<tr>
+<td align="left"><code>DNA_G</code>, <code>RNA_G</code></td>
+<td align="left"><code>0100</code></td>
+</tr>
+<tr>
+<td align="left"><code>DNA_T</code>, <code>RNA_U</code></td>
+<td align="left"><code>1000</code></td>
+</tr>
+</tbody>
+</table>
+<p>The next examples demonstrate bit operations of DNA:</p>
+<div class="codehilite"><pre><span></span><span class="gp">julia&gt;</span> <span class="n">bits</span><span class="p">(</span><span class="n">reinterpret</span><span class="p">(</span><span class="kt">UInt8</span><span class="p">,</span> <span class="n">DNA_A</span><span class="p">))</span>
+<span class="go">&quot;00000001&quot;</span>
+
+<span class="gp">julia&gt;</span> <span class="n">bits</span><span class="p">(</span><span class="n">reinterpret</span><span class="p">(</span><span class="kt">UInt8</span><span class="p">,</span> <span class="n">DNA_G</span><span class="p">))</span>
+<span class="go">&quot;00000100&quot;</span>
+
+<span class="gp">julia&gt;</span> <span class="n">bits</span><span class="p">(</span><span class="n">reinterpret</span><span class="p">(</span><span class="kt">UInt8</span><span class="p">,</span> <span class="n">DNA_R</span><span class="p">))</span>
+<span class="go">&quot;00000101&quot;</span>
+
+<span class="gp">julia&gt;</span> <span class="n">bits</span><span class="p">(</span><span class="n">reinterpret</span><span class="p">(</span><span class="kt">UInt8</span><span class="p">,</span> <span class="n">DNA_B</span><span class="p">))</span>
+<span class="go">&quot;00001110&quot;</span>
+
+<span class="gp">julia&gt;</span> <span class="o">~</span><span class="n">DNA_A</span>
+<span class="go">DNA_B</span>
+
+<span class="gp">julia&gt;</span> <span class="n">DNA_A</span> <span class="o">|</span> <span class="n">DNA_G</span>
+<span class="go">DNA_R</span>
+
+<span class="gp">julia&gt;</span> <span class="n">DNA_R</span> <span class="o">&amp;</span> <span class="n">DNA_B</span>
+<span class="go">DNA_G</span>
+</pre></div>
+
+
+<p><a id='Amino-acids-1'></a></p>
+<h2 id="amino-acids">Amino acids</h2>
+<p>Set of amino acid symbols also covers IUPAC amino acid symbols plus a gap symbol:</p>
+<table>
+<thead>
+<tr>
+<th align="left">Symbol</th>
+<th align="left">Constant</th>
+<th align="left">Meaning</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td align="left">'A'</td>
+<td align="left"><code>AA_A</code></td>
+<td align="left">Alanine</td>
+</tr>
+<tr>
+<td align="left">'R'</td>
+<td align="left"><code>AA_R</code></td>
+<td align="left">Arginine</td>
+</tr>
+<tr>
+<td align="left">'N'</td>
+<td align="left"><code>AA_N</code></td>
+<td align="left">Asparagine</td>
+</tr>
+<tr>
+<td align="left">'D'</td>
+<td align="left"><code>AA_D</code></td>
+<td align="left">Aspartic acid (Aspartate)</td>
+</tr>
+<tr>
+<td align="left">'C'</td>
+<td align="left"><code>AA_C</code></td>
+<td align="left">Cysteine</td>
+</tr>
+<tr>
+<td align="left">'Q'</td>
+<td align="left"><code>AA_Q</code></td>
+<td align="left">Glutamine</td>
+</tr>
+<tr>
+<td align="left">'E'</td>
+<td align="left"><code>AA_E</code></td>
+<td align="left">Glutamic acid (Glutamate)</td>
+</tr>
+<tr>
+<td align="left">'G'</td>
+<td align="left"><code>AA_G</code></td>
+<td align="left">Glycine</td>
+</tr>
+<tr>
+<td align="left">'H'</td>
+<td align="left"><code>AA_H</code></td>
+<td align="left">Histidine</td>
+</tr>
+<tr>
+<td align="left">'I'</td>
+<td align="left"><code>AA_I</code></td>
+<td align="left">Isoleucine</td>
+</tr>
+<tr>
+<td align="left">'L'</td>
+<td align="left"><code>AA_L</code></td>
+<td align="left">Leucine</td>
+</tr>
+<tr>
+<td align="left">'K'</td>
+<td align="left"><code>AA_K</code></td>
+<td align="left">Lysine</td>
+</tr>
+<tr>
+<td align="left">'M'</td>
+<td align="left"><code>AA_M</code></td>
+<td align="left">Methionine</td>
+</tr>
+<tr>
+<td align="left">'F'</td>
+<td align="left"><code>AA_F</code></td>
+<td align="left">Phenylalanine</td>
+</tr>
+<tr>
+<td align="left">'P'</td>
+<td align="left"><code>AA_P</code></td>
+<td align="left">Proline</td>
+</tr>
+<tr>
+<td align="left">'S'</td>
+<td align="left"><code>AA_S</code></td>
+<td align="left">Serine</td>
+</tr>
+<tr>
+<td align="left">'T'</td>
+<td align="left"><code>AA_T</code></td>
+<td align="left">Threonine</td>
+</tr>
+<tr>
+<td align="left">'W'</td>
+<td align="left"><code>AA_W</code></td>
+<td align="left">Tryptophan</td>
+</tr>
+<tr>
+<td align="left">'Y'</td>
+<td align="left"><code>AA_Y</code></td>
+<td align="left">Tyrosine</td>
+</tr>
+<tr>
+<td align="left">'V'</td>
+<td align="left"><code>AA_V</code></td>
+<td align="left">Valine</td>
+</tr>
+<tr>
+<td align="left">'O'</td>
+<td align="left"><code>AA_O</code></td>
+<td align="left">Pyrrolysine</td>
+</tr>
+<tr>
+<td align="left">'U'</td>
+<td align="left"><code>AA_U</code></td>
+<td align="left">Selenocysteine</td>
+</tr>
+<tr>
+<td align="left">'B'</td>
+<td align="left"><code>AA_B</code></td>
+<td align="left">Aspartic acid or Asparagine</td>
+</tr>
+<tr>
+<td align="left">'J'</td>
+<td align="left"><code>AA_J</code></td>
+<td align="left">Leucine or Isoleucine</td>
+</tr>
+<tr>
+<td align="left">'Z'</td>
+<td align="left"><code>AA_Z</code></td>
+<td align="left">Glutamine or Glutamic acid</td>
+</tr>
+<tr>
+<td align="left">'X'</td>
+<td align="left"><code>AA_X</code></td>
+<td align="left">Any amino acid</td>
+</tr>
+<tr>
+<td align="left">'*'</td>
+<td align="left"><code>AA_Term</code></td>
+<td align="left">Termination codon</td>
+</tr>
+<tr>
+<td align="left">'-'</td>
+<td align="left"><code>AA_Gap</code></td>
+<td align="left">Gap (none of the above)</td>
+</tr>
+</tbody>
+</table>
+<p><a href="http://www.insdc.org/documents/feature_table.html#7.4.3">http://www.insdc.org/documents/feature_table.html#7.4.3</a></p>
+<p>Symbols are accessible as constants with <code>AA_</code> prefix:</p>
+<div class="codehilite"><pre><span></span><span class="gp">julia&gt;</span> <span class="n">AA_A</span>
+<span class="go">AA_A</span>
+
+<span class="gp">julia&gt;</span> <span class="n">AA_Q</span>
+<span class="go">AA_Q</span>
+
+<span class="gp">julia&gt;</span> <span class="n">AA_Term</span>
+<span class="go">AA_Term</span>
+
+<span class="gp">julia&gt;</span> <span class="n">typeof</span><span class="p">(</span><span class="n">AA_A</span><span class="p">)</span>
+<span class="go">Bio.Seq.AminoAcid</span>
+</pre></div>
+
+
+<p>Symbols can be constructed by converting regular characters:</p>
+<div class="codehilite"><pre><span></span><span class="gp">julia&gt;</span> <span class="n">convert</span><span class="p">(</span><span class="n">AminoAcid</span><span class="p">,</span> <span class="sc">&#39;A&#39;</span><span class="p">)</span>
+<span class="go">AA_A</span>
+
+<span class="gp">julia&gt;</span> <span class="n">convert</span><span class="p">(</span><span class="n">AminoAcid</span><span class="p">,</span> <span class="sc">&#39;P&#39;</span><span class="p">)</span> <span class="o">===</span> <span class="n">AA_P</span>
+<span class="go">true</span>
+</pre></div>
+
+
+<p><a id='Other-functions-1'></a></p>
+<h2 id="other-functions">Other functions</h2>
+<p><a id='Bio.Seq.alphabet' href='#Bio.Seq.alphabet'>#</a>
+<strong><code>Bio.Seq.alphabet</code></strong> &mdash; <em>Function</em>.</p>
+<div class="codehilite"><pre><span></span>alphabet(typ)
+</pre></div>
+
+
+<p>Return an iterator of symbols of <code>typ</code>.</p>
+<p><code>typ</code> is one of <code>DNA</code>, <code>RNA</code>, or <code>AminoAcid</code>.</p>
+<p><a target='_blank' href='https://github.com/BioJulia/Bio.jl/tree/bd9c128f4ec2dc41d34844716dd81163b8cf103b/src/seq/Seq.jl#L171-L177' class='documenter-source'>source</a><br></p>
+<p><a id='Bio.Seq.gap' href='#Bio.Seq.gap'>#</a>
+<strong><code>Bio.Seq.gap</code></strong> &mdash; <em>Function</em>.</p>
+<div class="codehilite"><pre><span></span>gap(typ)
+</pre></div>
+
+
+<p>Return the gap symbol of <code>typ</code>.</p>
+<p><code>typ</code> is one of <code>DNA</code>, <code>RNA</code>, <code>AminoAcid</code>, or <code>Char</code>.</p>
+<p><a target='_blank' href='https://github.com/BioJulia/Bio.jl/tree/bd9c128f4ec2dc41d34844716dd81163b8cf103b/src/seq/Seq.jl#L180-L186' class='documenter-source'>source</a><br></p>
+<p><a id='Bio.Seq.iscompatible' href='#Bio.Seq.iscompatible'>#</a>
+<strong><code>Bio.Seq.iscompatible</code></strong> &mdash; <em>Function</em>.</p>
+<div class="codehilite"><pre><span></span>iscompatible(x, y)
+</pre></div>
+
+
+<p>Return <code>true</code> if and only if <code>x</code> and <code>y</code> are compatible with each other (i.e. <code>x</code> and <code>y</code> can be the same symbol).</p>
+<p><code>x</code> and <code>y</code> must be the same type (<code>DNA</code>, <code>RNA</code> or <code>AminoAcid</code>).</p>
+<p><strong>Examples</strong></p>
+<div class="codehilite"><pre><span></span><span class="n">julia</span><span class="o">&gt;</span> <span class="n">iscompatible</span><span class="p">(</span><span class="n">DNA_A</span><span class="p">,</span> <span class="n">DNA_A</span><span class="p">)</span>
+<span class="kc">true</span>
+
+<span class="n">julia</span><span class="o">&gt;</span> <span class="n">iscompatible</span><span class="p">(</span><span class="n">DNA_C</span><span class="p">,</span> <span class="n">DNA_N</span><span class="p">)</span>  <span class="c"># DNA_N can be DNA_C</span>
+<span class="kc">true</span>
+
+<span class="n">julia</span><span class="o">&gt;</span> <span class="n">iscompatible</span><span class="p">(</span><span class="n">DNA_C</span><span class="p">,</span> <span class="n">DNA_R</span><span class="p">)</span>  <span class="c"># DNA_R (A or G) cannot be DNA_C</span>
+<span class="kc">false</span>
+
+<span class="n">julia</span><span class="o">&gt;</span> <span class="n">iscompatible</span><span class="p">(</span><span class="n">AA_A</span><span class="p">,</span> <span class="n">AA_X</span><span class="p">)</span>    <span class="c"># AA_X can be AA_A</span>
+<span class="kc">true</span>
+</pre></div>
+
+
+<p><a target='_blank' href='https://github.com/BioJulia/Bio.jl/tree/bd9c128f4ec2dc41d34844716dd81163b8cf103b/src/seq/nucleicacid.jl#L162-L186' class='documenter-source'>source</a><br></p>
+<p><a id='Bio.Seq.isambiguous' href='#Bio.Seq.isambiguous'>#</a>
+<strong><code>Bio.Seq.isambiguous</code></strong> &mdash; <em>Function</em>.</p>
+<div class="codehilite"><pre><span></span>isambiguous(nt::NucleicAcid)
+</pre></div>
+
+
+<p>Test if <code>nt</code> is ambiguous nucleotide.</p>
+<p><a target='_blank' href='https://github.com/BioJulia/Bio.jl/tree/bd9c128f4ec2dc41d34844716dd81163b8cf103b/src/seq/nucleicacid.jl#L115-L119' class='documenter-source'>source</a><br></p></div>
+        
+    </div>
+
+    <footer class="col-md-12 text-center">
+        <hr>
+        <p>
+        <small>Copyright (c) 2016 The BioJulia Organisation<br></small>
+        
+        <small>Documentation built with <a href="http://www.mkdocs.org/">MkDocs</a>.</p></small>
+    </footer>
+
+    <script src="../../../js/jquery-1.10.2.min.js"></script>
+    <script src="../../../js/bootstrap-3.0.3.min.js"></script>
+    <script src="../../../js/highlight.pack.js"></script>
+    <script>hljs.initHighlightingOnLoad();</script>
+    <script>
+    var base_url = '../../..';
+    </script>
+    <script data-main="../../../mkdocs/js/search.js" src="../../../mkdocs/js/require.js"></script>
+    <script src="../../../js/base.js"></script>
+    <script>
+        ((window.gitter = {}).chat = {}).options = {
+            room: 'BioJulia/Bio.jl'
+        };
+    </script>
+    <script src="https://sidecar.gitter.im/dist/sidecar.v1.js" async defer></script>
+    <script src="https://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS_HTML"></script>
+    <script src="../../../assets/mathjaxhelper.js"></script>
+
+    <div class="modal" id="mkdocs_search_modal" tabindex="-1" role="dialog" aria-labelledby="Search Modal" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <button type="button" class="close" data-dismiss="modal">
+                        <span aria-hidden="true">&times;</span>
+                        <span class="sr-only">Close</span>
+                    </button>
+                    <h4 class="modal-title" id="exampleModalLabel">Search</h4>
+                </div>
+                <div class="modal-body">
+                    <p>
+                        From here you can search these documents. Enter your search terms below.
+                    </p>
+                    <form role="form">
+                        <div class="form-group">
+                            <input type="text" class="form-control" placeholder="Search..." id="mkdocs-search-query">
+                        </div>
+                    </form>
+                    <div id="mkdocs-search-results"></div>
+                </div>
+                <div class="modal-footer">
+                </div>
+            </div>
+        </div>
+    </div>
+
+    </body>
+
+</html>
