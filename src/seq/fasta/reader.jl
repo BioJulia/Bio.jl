@@ -147,7 +147,7 @@ eval(
                 Bio.ReaderHelper.resize_and_copy!(record.data, filled + 1, data, range)
                 filled += length(range)
                 if filled + 1 ≤ endof(record.data)
-                    record.data[filled] = UInt8('\n')
+                    record.data[filled+1] = UInt8('\n')
                 else
                     push!(record.data, UInt8('\n'))
                 end

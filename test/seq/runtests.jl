@@ -2975,6 +2975,24 @@ end
         N
         """
 
+        reader = FASTA.Reader(IOBuffer(
+        """
+        >seqA some description
+        QIKDLLVSSSTDLDTTLKMK
+        ILELPFASGDLSM
+        >seqB
+        VLMALGMTDLFIPSANLTG*
+        """))
+        record = FASTA.Record()
+        @test read!(reader, record) === record
+        @test FASTA.identifier(record) == "seqA"
+        @test FASTA.description(record) == "some description"
+        @test FASTA.sequence(record) == aa"QIKDLLVSSSTDLDTTLKMKILELPFASGDLSM"
+        @test read!(reader, record) === record
+        @test FASTA.identifier(record) == "seqB"
+        @test !FASTA.hasdescription(record)
+        @test FASTA.sequence(record) == aa"VLMALGMTDLFIPSANLTG*"
+
         function test_fasta_parse(filename, valid)
             # Reading from a stream
             stream = open(FASTA.Reader, filename)
