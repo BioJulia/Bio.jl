@@ -5,7 +5,15 @@
 #
 # This file is a part of BioJulia.
 # License is MIT: https://github.com/BioJulia/Bio.jl/blob/master/LICENSE.md
+"""
+MinHash Sketch type
 
+MinHash sketches are a sorted set of kmer hashes, containing the smallest `s`
+hashes for kmers of a given length. The type contains two parameters:
+
+* .sketch: a sorted set of hashes
+* .kmersize: the length of kmers used to generate the sketch
+"""
 type MinHashSketch
     sketch::Vector{UInt64}
     kmersize::Int
@@ -18,22 +26,18 @@ type MinHashSketch
 end
 
 Base.getindex(s::MASHSketch, part) = getindex(s.sketch, part)
-
 Base.length(s::MinHashSketch) = length(s.sketch)
-
 Base.size(s::MinHashSketch) = (length(s), s.kmersize)
-
 Base.start(s::MinHashSketch) = start(s.sketch)
-
 Base.next(s::MinHashSketch, state) = next(s.sketch, state)
-
 Base.done(s::MinHashSketch, state) = done(s.sketch, state)
 
 function Base.:(==)(a::MASHSketch, b::MASHSketch)
     a.kmersize == b.kmersize && a.sketch == b.sketch
 end
 
-
+# A seqence and its reverse complement should be the same, so take the smallest
+# hash of a seq or its reverse complement.
 function revcomphash(kmer::Kmer)
     k = minimum((kmer, reverse_complement(kmer)))
     return hash(k)
@@ -74,11 +78,17 @@ function kmerminhash(seq::BioSequence, kmerset, kmerhashes::Vector{UInt64}, k::I
     return (kmerset, kmerhashes)
 end
 
+"""
+    minhash(seq, k::Int, s::Int)
 
+Generate a MinHash sketch of size `s` for kmers of length `k`.
+"""
 function minhash(seq::BioSequence, k::Int, s::Int)
     kmerset = Set{UInt64}()
     kmerhashes = Vector{UInt64}()
     kmerset, kmerhashes = kmerminhash(seq, kmerset, kmerhashes, k, s)
+
+    length(kmerhashes) == s || error("Sketch size is too large for the given kmer size")
     return MinHashSketch(kmerhashes, k)
 end
 
@@ -89,6 +99,8 @@ function minhash{T<:BioSequence}(seqs::Vector{T}, k::Int, s::Int)
     for seq in seqs
         kmerset, kmerhashes = kmerminhash(seq, kmerset, kmerhashes, k, s)
     end
+
+    length(kmerhashes) == s || error("Sketch size is too large for the given kmer size")
     return MinHashSketch(kmerhashes, k)
 end
 
@@ -98,5 +110,7 @@ function minhash{T<:BioSequence}(seqs::FASTAReader{T}, k::Int, s::Int)
     for seq in seqs
         kmerset, kmerhashes = kmerminhash(seq.seq, kmerset, kmerhashes, k, s)
     end
+
+    length(kmerhashes) == s || error("Sketch size is too large for the given kmer size")
     return MinHashSketch(kmerhashes, k)
 end
