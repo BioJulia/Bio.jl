@@ -1,17 +1,17 @@
 {
     "docs": [
         {
-            "location": "/home/", 
+            "location": "/", 
             "text": "Bio.jl Documentation\n\n\n\n\nThe Bio.jl User Manual", 
             "title": "Home"
         }, 
         {
-            "location": "/home/#biojl-documentation", 
+            "location": "/#biojl-documentation", 
             "text": "", 
             "title": "Bio.jl Documentation"
         }, 
         {
-            "location": "/home/#the-biojl-user-manual", 
+            "location": "/#the-biojl-user-manual", 
             "text": "", 
             "title": "The Bio.jl User Manual"
         }, 
