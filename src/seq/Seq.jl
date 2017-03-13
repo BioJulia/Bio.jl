@@ -188,14 +188,14 @@ function gap end
 
 gap(::Type{Char}) = '-'
 
-include("sequence.jl")
 include("nucleicacid.jl")
 include("aminoacid.jl")
 include("alphabet.jl")
 include("bitindex.jl")
-include("bioseq.jl")
-include("hash.jl")
-include("randseq.jl")
+include("sequence.jl")
+include("bioseq/bioseq.jl")
+include("bioseq/hash.jl")
+include("bioseq/randseq.jl")
 include("kmer.jl")
 include("nmask.jl")
 include("refseq.jl")

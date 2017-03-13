@@ -14,10 +14,11 @@ sequence, or pair/set of aligned nucleotide sequences.
 
 ### Different types of site
 
-#### The abstract SiteCase{p} type
+#### The abstract Site types
 
 ```@docs
-SiteCase
+Site
+Mutation
 ```
 
 #### The concrete types of site case
@@ -25,7 +26,7 @@ SiteCase
 The types of mutations that can currently be counted are summarized below:
 
 ```@docs
-Indel
+Gap
 Ambiguous
 Certain
 Match
@@ -35,7 +36,6 @@ Mutated
 Transition
 Transversion
 ```
-
 
 ### The `count_sites` method
 
@@ -57,36 +57,10 @@ count_sites(Transition, [rna"AUCGAUCG", rna"ACCGAUCG"])
 count_sites(Transversion, [rna"AUCGAUCG", rna"ACCGAUCG"])
 ```
 
-## Computing evolutionary and genetic distances
 
-Just as you can count the number of mutations between two nucleotide sequences,
-you can compute the evolutionary distance between two nucleotide sequences.
+## File formats for representing genetic variation
 
-### Different evolutionary distance measures
-
-The types of distances that can currently be computed are described below.
-
-```@docs
-Count{T}
-Proportion{T}
-JukesCantor69
-Kimura80
-```
-
-### The distance method
-
-```@docs
-distance
-distance{T<:MutationType,A<:NucleicAcidAlphabet}(::Type{Count{T}}, seqs::Vector{BioSequence{A}})
-distance{T<:MutationType,A<:NucleicAcidAlphabet}(::Type{Proportion{T}}, seqs::Vector{BioSequence{A}})
-distance{A<:NucleicAcidAlphabet}(::Type{JukesCantor69}, seqs::Vector{BioSequence{A}})
-distance{A<:NucleicAcidAlphabet}(::Type{Kimura80}, seqs::Vector{BioSequence{A}})
-```
-
-
-## File formats for represeting genetic variations
-
-The module suports some common file formats to read and write genetic
+This module supports some common file formats to read and write genetic
 variations.
 
 
