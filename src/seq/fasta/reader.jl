@@ -11,7 +11,7 @@ type Reader <: Bio.IO.AbstractReader
 end
 
 """
-    FASTAReader(input::IO; index=nothing)
+    Bio.Seq.FASTA.Reader(input::IO; index=nothing)
 
 Create a data reader of the FASTA file format.
 
