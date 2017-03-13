@@ -25,14 +25,14 @@ type MinHashSketch
     end
 end
 
-Base.getindex(s::MASHSketch, part) = getindex(s.sketch, part)
+Base.getindex(s::MinHashSketch, part) = getindex(s.sketch, part)
 Base.length(s::MinHashSketch) = length(s.sketch)
 Base.size(s::MinHashSketch) = (length(s), s.kmersize)
 Base.start(s::MinHashSketch) = start(s.sketch)
 Base.next(s::MinHashSketch, state) = next(s.sketch, state)
 Base.done(s::MinHashSketch, state) = done(s.sketch, state)
 
-function Base.:(==)(a::MASHSketch, b::MASHSketch)
+function Base.:(==)(a::MinHashSketch, b::MinHashSketch)
     a.kmersize == b.kmersize && a.sketch == b.sketch
 end
 
