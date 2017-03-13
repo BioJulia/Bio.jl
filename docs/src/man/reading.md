@@ -117,15 +117,15 @@ The following table summarizes supported file formats.
 
 ### FASTA
 
-* Reader type: `FASTA.Reader{S<:Sequence}`
-* Writer type: `FASTA.Writer{T<:IO}`
+* Reader type: `FASTA.Reader`
+* Writer type: `FASTA.Writer`
 * Element type: `FASTA.Record`
 
-FASTA is a text-based file format for representing biological sequences. A
-FASTA file stores a list of sequence records with name, description, and
-sequence. The template of a sequence record is:
+FASTA is a text-based file format for representing biological sequences. A FASTA
+file stores a list of records with identifier, description, and sequence. The
+template of a sequence record is:
 ```
->{name} {description}?
+>{identifier} {description}?
 {sequence}
 ```
 
@@ -150,6 +150,9 @@ chrIV = reader["chrIV"]  # directly read chromosome 4
 Bio.Seq.FASTA.Reader
 Bio.Seq.FASTA.Writer
 Bio.Seq.FASTA.Record
+Bio.Seq.FASTA.identifier
+Bio.Seq.FASTA.description
+Bio.Seq.FASTA.sequence
 ```
 
 
