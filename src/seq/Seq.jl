@@ -156,7 +156,10 @@ export
     demultiplex,
     seqmatrix,
     majorityvote,
-    tryread!
+    tryread!,
+    MaskedSequence,
+    mask,
+    ismasked
 
 import Automa
 import Automa.RegExp: @re_str
@@ -199,6 +202,7 @@ include("bioseq/randseq.jl")
 include("kmer.jl")
 include("nmask.jl")
 include("refseq.jl")
+include("masked.jl")
 include("eachkmer.jl")
 include("composition.jl")
 include("geneticcode.jl")
