@@ -111,6 +111,10 @@ end
                 @test count_sites(Conserved, i) == (PWM{Int, false}([0 6 6 5; 6 0 7 7; 6 7 0 6; 5 7 6 0]), ambigs)
                 @test count_sites(Mutated, i) == (PWM{Int, false}([0 1 1 2; 1 0 0 1; 1 0 0 1; 2 1 1 0]), ambigs)
             end
+
+            a = minhash(dnas[1], 4, 3)
+            b = minhash(dnas[2], 4, 3)
+            @test_approx_eq_eps mashdistance(a, b) 0.2745 1e-3
         end
 
         @testset "Windowed methods" begin

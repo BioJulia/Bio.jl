@@ -1,7 +1,7 @@
 # MinHash
 # ========
 #
-# Functions to MASH distance for MinHash sketches
+# Functions to get MASH distance for MinHash sketches
 #
 # see DOI: 10.1186/s13059-016-0997-x
 #
