@@ -108,7 +108,6 @@ function random_interval(minstart, maxstop)
     return start:rand(start:maxstop)
 end
 
-#=
 @testset "NucleicAcids" begin
     @testset "Conversions" begin
         @testset "UInt8" begin
@@ -2926,7 +2925,6 @@ end
     @test rec != rec3
     @test rec == copy(rec)
 end
-=#
 
 @testset "Reading and Writing" begin
     @testset "FASTA" begin
