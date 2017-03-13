@@ -162,7 +162,9 @@ export
     majorityvote,
     tryread!,
     isfilled,
-    MissingFieldException
+    MissingFieldException,
+    MinHashSketch,
+    minhash
 
 import Automa
 import Automa.RegExp: @re_str
@@ -211,6 +213,7 @@ include("composition.jl")
 include("geneticcode.jl")
 include("seqrecord.jl")
 include("demultiplexer.jl")
+include("minhash.jl")
 
 # Parsing file types
 include("fasta/fasta.jl")

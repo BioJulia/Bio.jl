@@ -1036,6 +1036,18 @@ end
         @test hash(rna"AAUUAA"[3:5]) === hash(rna"UUA")
         @test hash(aa"MTTQAPMFTQPLQ") === hash(aa"MTTQAPMFTQPLQ")
         @test hash(aa"MTTQAPMFTQPLQ"[5:10]) === hash(aa"APMFTQ")
+
+        @testset "MinHash" begin
+            seq = random_dna_kmer(1000)
+            h = minhash(seq, 10, 100)
+
+            @test length(h) == 100
+            @test size(h) == (100, 10)
+            @test h == minhash(seq, 10, 100)
+
+            @test_throws BoundsError h[101]
+        end
+
     end
 
     @testset "Length" begin
