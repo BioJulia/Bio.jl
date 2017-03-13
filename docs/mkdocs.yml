@@ -37,7 +37,7 @@ markdown_extensions:
 
 # Page tree
 pages:
-- Home: home.md
+- Home: index.md
 - Manual:
   - Front Page: man/frontpage.md
   - Installation: man/install.md
