@@ -158,4 +158,22 @@ function Base.:(==)(a::StringField, b::BufferedStreams.BufferedOutputStream)
     end
 end
 
+function Base.isless(a::StringField, b::StringField)
+    return cmp(a, b) < 0
+end
+
+function Base.cmp(a::StringField, b::StringField)
+    alen = length(a.part)
+    blen = length(b.part)
+    c = ccall(:memcmp, Cint,
+              (Ptr{Void}, Ptr{Void}, Csize_t),
+              pointer(a.data, a.part.start),
+              pointer(b.data, b.part.start),
+              min(alen, blen))
+    if c == 0
+        c = cmp(alen, blen)
+    end
+    return c
+end
+
 end # module StringFields
