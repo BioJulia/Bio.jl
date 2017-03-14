@@ -22,8 +22,8 @@ XWriter(stream::IO, args...)
 For example, when reading a FASTA file, a reader for the FASTA file format can
 be initialized as:
 ```julia
-using Bio.Seq  # import FASTAReader
-reader = open(FASTAReader, "hg38.fa")
+using Bio.Seq  # import FASTA
+reader = open(FASTA.Reader, "hg38.fa")
 # do something
 close(reader)
 ```
@@ -117,15 +117,15 @@ The following table summarizes supported file formats.
 
 ### FASTA
 
-* Reader type: `FASTAReader{S<:Sequence}`
-* Writer type: `FASTAWriter{T<:IO}`
-* Element type: `SeqRecord{S,FASTAMetadata}` (alias: `FASTASeqRecord{S}`)
+* Reader type: `FASTA.Reader`
+* Writer type: `FASTA.Writer`
+* Element type: `FASTA.Record`
 
-FASTA is a text-based file format for representing biological sequences. A
-FASTA file stores a list of sequence records with name, description, and
-sequence. The template of a sequence record is:
+FASTA is a text-based file format for representing biological sequences. A FASTA
+file stores a list of records with identifier, description, and sequence. The
+template of a sequence record is:
 ```
->{name} {description}?
+>{identifier} {description}?
 {sequence}
 ```
 
@@ -147,8 +147,12 @@ chrIV = reader["chrIV"]  # directly read chromosome 4
 ```
 
 ```@docs
-Bio.Seq.FASTAReader
-Bio.Seq.FASTAWriter
+Bio.Seq.FASTA.Reader
+Bio.Seq.FASTA.Writer
+Bio.Seq.FASTA.Record
+Bio.Seq.FASTA.identifier
+Bio.Seq.FASTA.description
+Bio.Seq.FASTA.sequence
 ```
 
 

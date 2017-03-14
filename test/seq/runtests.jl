@@ -4,10 +4,10 @@ using Base.Test
 
 using Bio: Seq, Var
 
-using BufferedStreams,
-    StatsBase,
-    YAML,
-    TestFunctions
+using BufferedStreams
+using StatsBase
+using YAML
+using TestFunctions
 
 
 const codons = [
@@ -2928,10 +2928,42 @@ end
 
 @testset "Reading and Writing" begin
     @testset "FASTA" begin
+        @testset "Record" begin
+            record = FASTA.Record()
+            @test !isfilled(record)
+            @test_throws ArgumentError FASTA.identifier(record)
+
+            record = FASTA.Record(b">foo\nACGT\n")
+            @test isfilled(record)
+            @test hasseqname(record)
+            @test FASTA.hasidentifier(record)
+            @test seqname(record) == FASTA.identifier(record) == "foo"
+            @test !FASTA.hasdescription(record)
+            @test_throws MissingFieldException FASTA.description(record)
+            @test hassequence(record)
+            @test FASTA.hassequence(record)
+            @test FASTA.sequence(record) == dna"ACGT"
+            @test FASTA.sequence(record, 2:3) == dna"CG"
+            @test FASTA.sequence(String, record) == "ACGT"
+            @test FASTA.sequence(String, record, 2:3) == "CG"
+            @test record == FASTA.Record(">foo\nACGT\n")
+
+            record = FASTA.Record(b"""
+            >CYS1_DICDI fragment
+            SCWSFSTTGNVEGQHFISQNKL
+            VSLSEQNLVDCDHECMEYEGE
+            """)
+            @test isfilled(record)
+            @test FASTA.identifier(record) == "CYS1_DICDI"
+            @test FASTA.description(record) == "fragment"
+            @test FASTA.sequence(record) == aa"SCWSFSTTGNVEGQHFISQNKLVSLSEQNLVDCDHECMEYEGE"
+            @test FASTA.sequence(record, 10:15) == aa"NVEGQH"
+        end
+
         output = IOBuffer()
-        writer = Seq.FASTAWriter(output, 5)
-        write(writer, FASTASeqRecord("seq1", dna"TTA"))
-        write(writer, FASTASeqRecord("seq2", dna"ACGTNN", "some description"))
+        writer = FASTA.Writer(output, 5)
+        write(writer, FASTA.Record("seq1", dna"TTA"))
+        write(writer, FASTA.Record("seq2", "some description", dna"ACGTNN"))
         flush(writer)
         @test takebuf_string(output) == """
         >seq1
@@ -2941,10 +2973,28 @@ end
         N
         """
 
+        reader = FASTA.Reader(IOBuffer(
+        """
+        >seqA some description
+        QIKDLLVSSSTDLDTTLKMK
+        ILELPFASGDLSM
+        >seqB
+        VLMALGMTDLFIPSANLTG*
+        """))
+        record = FASTA.Record()
+        @test read!(reader, record) === record
+        @test FASTA.identifier(record) == "seqA"
+        @test FASTA.description(record) == "some description"
+        @test FASTA.sequence(record) == aa"QIKDLLVSSSTDLDTTLKMKILELPFASGDLSM"
+        @test read!(reader, record) === record
+        @test FASTA.identifier(record) == "seqB"
+        @test !FASTA.hasdescription(record)
+        @test FASTA.sequence(record) == aa"VLMALGMTDLFIPSANLTG*"
+
         function test_fasta_parse(filename, valid)
             # Reading from a stream
-            stream = open(FASTAReader, filename)
-            @test eltype(stream) == FASTASeqRecord{BioSequence}
+            stream = open(FASTA.Reader, filename)
+            @test eltype(stream) == FASTA.Record
             if valid
                 for seqrec in stream end
                 @test true  # no error
@@ -2957,7 +3007,7 @@ end
             end
 
             # in-place parsing
-            stream = open(FASTAReader, filename)
+            stream = open(FASTA.Reader, filename)
             entry = eltype(stream)()
             while !eof(stream)
                 read!(stream, entry)
@@ -2965,17 +3015,17 @@ end
 
             # Check round trip
             output = IOBuffer()
-            writer = Seq.FASTAWriter(output, 60)
+            writer = FASTA.Writer(output, width=60)
             expected_entries = Any[]
-            for seqrec in open(FASTAReader, filename)
+            for seqrec in open(FASTA.Reader, filename)
                 write(writer, seqrec)
                 push!(expected_entries, seqrec)
             end
             flush(writer)
 
             seekstart(output)
-            read_entries = Any[]
-            for seqrec in FASTAReader(output)
+            read_entries = FASTA.Record[]
+            for seqrec in FASTA.Reader(output)
                 push!(read_entries, seqrec)
             end
 
@@ -2992,38 +3042,6 @@ end
                 continue
             end
             test_fasta_parse(joinpath(path, specimen["filename"]), valid)
-        end
-
-        @testset "specified sequence type" begin
-            input = IOBuffer("""
-            >xxx
-            ACG
-            """)
-            for A in (DNAAlphabet{2}, DNAAlphabet{4},
-                      RNAAlphabet{2}, RNAAlphabet{4},
-                      AminoAcidAlphabet)
-                seekstart(input)
-                record = first(FASTAReader{BioSequence{A}}(input))
-                @test record.name == "xxx"
-                @test typeof(record.seq) == BioSequence{A}
-            end
-
-            input = IOBuffer("""
-            >chr1
-            NNNAAACGTATN
-            NNNTTACGGNNN
-            """)
-            record = first(FASTAReader{ReferenceSequence}(input))
-            @test record.name == "chr1"
-            @test record.seq == dna"NNNAAACGTATNNNNTTACGGNNN"
-            @test isa(record.seq, ReferenceSequence)
-        end
-
-        @testset "genomic sequence" begin
-            path = joinpath(dirname(@__FILE__), "..", "BioFmtSpecimens", "FASTA", "genomic-seq.fasta")
-            dnaseq = open(first, FASTAReader{DNASequence}, path).seq
-            refseq = open(first, FASTAReader{ReferenceSequence}, path).seq
-            @test dnaseq == refseq
         end
 
         @testset "Faidx" begin
@@ -3050,51 +3068,51 @@ end
                 filepath = joinpath(dir, "test.fa")
                 write(filepath, fastastr)
                 write(filepath * ".fai", faistr)
-                open(FASTAReader, filepath, index=filepath * ".fai") do reader
+                open(FASTA.Reader, filepath, index=filepath * ".fai") do reader
                     chr3 = reader["chr3"]
-                    @test chr3.name == "chr3"
-                    @test chr3.seq == dna"""
+                    @test FASTA.identifier(chr3) == "chr3"
+                    @test FASTA.sequence(chr3) == dna"""
                     AAATAGCCCTCATGTACGTCTCCTCCAAGCCCTGTTGTCTCTTACCCGGA
                     TGTTCAACCAAAAGCTACTTACTACCTTTATTTTATGTTTACTTTTTATA
                     """
 
                     chr2 = reader["chr2"]
-                    @test chr2.name == "chr2"
-                    @test chr2.seq == dna"""
+                    @test FASTA.identifier(chr2) == "chr2"
+                    @test FASTA.sequence(chr2) == dna"""
                     ATGCATGCATGCAT
                     GCATGCATGCATGC
                     """
 
                     chr4 = reader["chr4"]
-                    @test chr4.name == "chr4"
-                    @test chr4.seq == dna"""
+                    @test FASTA.identifier(chr4) == "chr4"
+                    @test FASTA.sequence(chr4) == dna"""
                     TACTT
                     """
 
                     chr1 = reader["chr1"]
-                    @test chr1.name == "chr1"
-                    @test chr1.seq == dna"""
+                    @test FASTA.identifier(chr1) == "chr1"
+                    @test FASTA.sequence(chr1) == dna"""
                     CCACACCACACCCACACACC
                     """
 
-                    @test_throws Exception reader["chr5"]
+                    @test_throws ArgumentError reader["chr5"]
                 end
             end
 
             # invalid index
-            @test_throws ErrorException FASTAReader(IOBuffer(fastastr), index=π)
+            @test_throws ArgumentError FASTA.Reader(IOBuffer(fastastr), index=π)
         end
 
         @testset "append" begin
             intempdir() do
                 filepath = "test.fa"
-                writer = open(FASTAWriter, filepath)
-                write(writer, FASTASeqRecord("seq1", dna"AAA"))
+                writer = open(FASTA.Writer, filepath)
+                write(writer, FASTA.Record("seq1", dna"AAA"))
                 close(writer)
-                writer = open(FASTAWriter, filepath, append=true)
-                write(writer, FASTASeqRecord("seq2", dna"CCC"))
+                writer = open(FASTA.Writer, filepath, append=true)
+                write(writer, FASTA.Record("seq2", dna"CCC"))
                 close(writer)
-                seqs = open(collect, FASTAReader, filepath)
+                seqs = open(collect, FASTA.Reader, filepath)
                 @test length(seqs) == 2
             end
         end

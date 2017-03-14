@@ -618,8 +618,8 @@ TGCATGCA
         collect(stream)
         @test GFF3.hasfasta(stream)
         @test collect(GFF3.getfasta(stream)) ==
-            [FASTASeqRecord{BioSequence}("seq1", dna"ACGTACGT", Seq.FASTAMetadata())
-             FASTASeqRecord{BioSequence}("seq2", dna"TGCATGCA", Seq.FASTAMetadata())]
+            [FASTA.Record("seq1", dna"ACGTACGT")
+             FASTA.Record("seq2", dna"TGCATGCA")]
 
         # explicit fasta
         test_input3 = string(test_input, """
@@ -633,8 +633,8 @@ TGCATGCA
         collect(stream)
         @test GFF3.hasfasta(stream)
         @test collect(GFF3.getfasta(stream)) ==
-            [FASTASeqRecord{BioSequence}("seq1", dna"ACGTACGT", Seq.FASTAMetadata())
-             FASTASeqRecord{BioSequence}("seq2", dna"TGCATGCA", Seq.FASTAMetadata())]
+            [FASTA.Record("seq1", dna"ACGTACGT")
+             FASTA.Record("seq2", dna"TGCATGCA")]
 
 
         test_input4 = """

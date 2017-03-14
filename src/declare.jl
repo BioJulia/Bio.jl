@@ -22,6 +22,7 @@ end
     seqname,
     hasseqname,
     sequence,
+    hassequence,
     metadata,
     leftposition,
     hasleftposition,

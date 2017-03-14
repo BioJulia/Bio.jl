@@ -61,7 +61,9 @@ export
     NucleicAcidSequence,
     SeqRecord,
     seqname,
+    hasseqname,
     sequence,
+    hassequence,
     metadata,
     @dna_str,
     @rna_str,
@@ -130,6 +132,7 @@ export
     AA_X,
     AA_Term,
     AA_Gap,
+    FASTA,
     FASTAReader,
     FASTAWriter,
     FASTASeqRecord,
@@ -156,10 +159,13 @@ export
     demultiplex,
     seqmatrix,
     majorityvote,
-    tryread!
+    tryread!,
+    isfilled,
+    MissingFieldException
 
 import Automa
 import Automa.RegExp: @re_str
+import Bio.Exceptions: MissingFieldException
 import Bio.Ragel: Ragel, tryread!
 import Bio.StringFields: StringField
 import BufferedStreams: BufferedStreams, BufferedInputStream, BufferedOutputStream

@@ -95,7 +95,7 @@ function hasfasta(reader::Reader)
 end
 
 """
-Return a FASTAReader initialized to parse trailing FASTA data.
+Return a Bio.Seq.FASTA.Reader initialized to parse trailing FASTA data.
 
 Throws an exception if there is no trailing FASTA, which can be checked using
 `hasfasta`.
@@ -104,7 +104,7 @@ function getfasta(reader::Reader)
     if !hasfasta(reader)
         error("GFF3 file has no FASTA data")
     end
-    return Bio.Seq.FASTAReader(reader.state.stream)
+    return Bio.Seq.FASTA.Reader(reader.state.stream)
 end
 
 info("compiling GFF3")
@@ -220,11 +220,17 @@ eval(
     Bio.ReaderHelper.generate_index_function(
         Record,
         record_machine,
+        quote
+            mark = offset = 0
+        end,
         record_actions))
 eval(
     Bio.ReaderHelper.generate_read_function(
         Reader,
         body_machine,
+        quote
+            mark = offset = 0
+        end,
         merge(record_actions, Dict(
             :record => quote
                 Bio.ReaderHelper.resize_and_copy!(record.data, data, Bio.ReaderHelper.upanchor!(stream):p-1)

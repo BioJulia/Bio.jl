@@ -28,11 +28,3 @@ ERROR: ArgumentError: invalid symbol M ∉ {A,C,G,T,N} at 4
  in call at essentials.jl:56
 
 ```
-
-When reading reference sequences from a FASTA file, the following snippet will
-avoid allocating temporary sequences and conversion:
-```jlcon
-for record in open(FASTAReader{ReferenceSequence}, "hg38.fa")
-    # do something
-end
-```

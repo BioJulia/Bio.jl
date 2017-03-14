@@ -11,9 +11,9 @@ module ReaderHelper
 import Automa
 import BufferedStreams
 
-@inline function anchor!(stream::BufferedStreams.BufferedInputStream, p)
+@inline function anchor!(stream::BufferedStreams.BufferedInputStream, p, immobilize=true)
     stream.anchor = p
-    stream.immobilized = true
+    stream.immobilized = immobilize
     return stream
 end
 
@@ -32,23 +32,31 @@ function ensure_margin!(stream::BufferedStreams.BufferedInputStream)
     return nothing
 end
 
-function resize_and_copy!(dst::Vector{UInt8}, src::Vector{UInt8}, r::UnitRange{Int})
+@inline function resize_and_copy!(dst::Vector{UInt8}, src::Vector{UInt8}, r::UnitRange{Int})
+    return resize_and_copy!(dst, 1, src, r)
+end
+
+@inline function resize_and_copy!(dst::Vector{UInt8}, dstart::Int, src::Vector{UInt8}, r::UnitRange{Int})
     rlen = length(r)
-    if length(dst) != rlen
-        resize!(dst, rlen)
+    if length(dst) != dstart + rlen - 1
+        resize!(dst, dstart + rlen - 1)
     end
-    copy!(dst, 1, src, first(r), rlen)
+    copy!(dst, dstart, src, first(r), rlen)
     return dst
 end
 
-function generate_index_function(record_type, machine, actions)
+@inline function append_from_anchor!(dst::Vector{UInt8}, dstart::Int, stream::BufferedStreams.BufferedInputStream, p::Int)
+    return resize_and_copy!(dst, dstart, stream.buffer, upanchor!(stream):p)
+end
+
+function generate_index_function(record_type, machine, init_code, actions)
     quote
         function index!(record::$(record_type))
             data = record.data
             p = 1
             p_end = p_eof = sizeof(data)
-            offset = mark = mark1 = mark2 = 0
             initialize!(record)
+            $(init_code)
             cs = $(machine.start_state)
             $(Automa.generate_exec_code(machine, actions=actions, code=:goto, check=false))
             if cs != 0
@@ -60,7 +68,7 @@ function generate_index_function(record_type, machine, actions)
     end
 end
 
-function generate_readheader_function(reader_type, metainfo_type, machine, actions, finish_code=:())
+function generate_readheader_function(reader_type, metainfo_type, machine, init_code, actions, finish_code=:())
     quote
         function readheader!(reader::$(reader_type))
             _readheader!(reader, reader.state)
@@ -75,9 +83,10 @@ function generate_readheader_function(reader_type, metainfo_type, machine, actio
             p = stream.position
             p_end = stream.available
             p_eof = -1
-            offset = mark1 = mark2 = 0
             finish_header = false
             record = $(metainfo_type)()
+
+            $(init_code)
 
             while true
                 $(Automa.generate_exec_code(machine, actions=actions, code=:table))
@@ -107,7 +116,7 @@ function generate_readheader_function(reader_type, metainfo_type, machine, actio
     end
 end
 
-function generate_read_function(reader_type, machine, actions)
+function generate_read_function(reader_type, machine, init_code, actions)
     quote
         function Base.read!(reader::$(reader_type), record::eltype($(reader_type)))::eltype($(reader_type))
             return _read!(reader, reader.state, record)
@@ -116,15 +125,16 @@ function generate_read_function(reader_type, machine, actions)
         function _read!(reader::$(reader_type), state::Bio.Ragel.State, record::eltype($(reader_type)))
             stream = state.stream
             Bio.ReaderHelper.ensure_margin!(stream)
-            initialize!(record)
             cs = state.cs
             linenum = state.linenum
             data = stream.buffer
             p = stream.position
             p_end = stream.available
             p_eof = -1
-            offset = mark = 0
             found_record = false
+            initialize!(record)
+
+            $(init_code)
 
             if state.finished
                 throw(EOFError())
@@ -146,7 +156,7 @@ function generate_read_function(reader_type, machine, actions)
                     throw(EOFError())
                 elseif p > p_eof ≥ 0
                     error("incomplete $($(reader_type)) input on line ", linenum)
-                elseif p > p_end
+                elseif BufferedStreams.available_bytes(stream) < 64
                     hits_eof = BufferedStreams.fillbuffer!(stream) == 0
                     p = stream.position
                     p_end = stream.available
