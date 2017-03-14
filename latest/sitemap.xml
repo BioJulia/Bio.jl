@@ -83,12 +83,8 @@
      <changefreq>daily</changefreq>
     </url>
         
-    
-
-    
-        
     <url>
-     <loc>https://biojulia.github.io/Bio.jl//lib/seq/</loc>
+     <loc>https://biojulia.github.io/Bio.jl//man/</loc>
      <lastmod>2017-03-14</lastmod>
      <changefreq>daily</changefreq>
     </url>

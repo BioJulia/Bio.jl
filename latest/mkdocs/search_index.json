@@ -2,32 +2,27 @@
     "docs": [
         {
             "location": "/", 
-            "text": "Bio.jl Documentation\n\n\n\n\nThe Bio.jl User Manual", 
+            "text": "Bio.jl Documentation\n\n\nThis documentation site contains \nThe Bio.jl User Manual\n\n\nAs the flagship package of the BioJulia organisation, Bio.jl provides core modules containing efficient data types and algorithms, that most bioinformaticians and biologists would want to use for analyses or for building their own applications. Bio.jl is built on top of the Julia programming language, a high-level and high-performance programming language for technical computing. Bio.jl and Julia are open source and their source codes are immediately available to the public.\n\n\nBio.jl provides programmable components for quick prototyping of new analyses and algorithms. These components are carefully tuned to achieve the best performance without sacrificing the usability of the dynamic programming language. The following modules are currently part of the package and actively developed as submodules:\n\n\n\n\n\n\nBio.Seq\n: Biological sequences\n\n\n\n\nBiological symbols (DNA, RNA and amino acid)\n\n\nBiological sequences\n\n\nSequence search algorithms\n\n\nReaders for FASTA, FASTQ and .2bit file formats\n\n\n\n\nBio.Align\n: Sequence alignment\n\n\n\n\n\n\nAlignment data structures\n\n\n\n\nPairwise alignment algorithms\n\n\nReader for SAM and BAM file formats\n\n\n\n\nBio.Intervals\n: Genomic intervals and annotations\n\n\n\n\n\n\nGenomic intervals with annotations\n\n\n\n\nReaders for BED, BigBed and GFF3 file formats\n\n\n\n\nBio.Structure\n: Molecular structures\n\n\n\n\n\n\nMacromolecular structures (e.g. proteins)\n\n\n\n\nReader for PDB file format\n\n\n\n\nBio.Var\n: Biological variation\n\n\n\n\n\n\nMutation counting\n\n\n\n\nGenetic and evolutionary distances\n\n\nReaders for VCF and BCF file formats\n\n\n\n\nBio.Phylo\n: Phylogenetics\n\n\n\n\n\n\nPhylogenetic trees\n\n\n\n\n\n\nBio.Services\n: APIs to other services\n\n\n\n\n\n\nEntrez utilities (E-utilities)", 
             "title": "Home"
         }, 
         {
             "location": "/#biojl-documentation", 
-            "text": "", 
+            "text": "This documentation site contains  The Bio.jl User Manual  As the flagship package of the BioJulia organisation, Bio.jl provides core modules containing efficient data types and algorithms, that most bioinformaticians and biologists would want to use for analyses or for building their own applications. Bio.jl is built on top of the Julia programming language, a high-level and high-performance programming language for technical computing. Bio.jl and Julia are open source and their source codes are immediately available to the public.  Bio.jl provides programmable components for quick prototyping of new analyses and algorithms. These components are carefully tuned to achieve the best performance without sacrificing the usability of the dynamic programming language. The following modules are currently part of the package and actively developed as submodules:    Bio.Seq : Biological sequences   Biological symbols (DNA, RNA and amino acid)  Biological sequences  Sequence search algorithms  Readers for FASTA, FASTQ and .2bit file formats   Bio.Align : Sequence alignment    Alignment data structures   Pairwise alignment algorithms  Reader for SAM and BAM file formats   Bio.Intervals : Genomic intervals and annotations    Genomic intervals with annotations   Readers for BED, BigBed and GFF3 file formats   Bio.Structure : Molecular structures    Macromolecular structures (e.g. proteins)   Reader for PDB file format   Bio.Var : Biological variation    Mutation counting   Genetic and evolutionary distances  Readers for VCF and BCF file formats   Bio.Phylo : Phylogenetics    Phylogenetic trees    Bio.Services : APIs to other services    Entrez utilities (E-utilities)", 
             "title": "Bio.jl Documentation"
         }, 
         {
-            "location": "/#the-biojl-user-manual", 
-            "text": "", 
-            "title": "The Bio.jl User Manual"
-        }, 
-        {
             "location": "/man/frontpage/", 
-            "text": "The Bio.jl User Manual\n\n\n\n\nContents\n\n\n\n\nInstallation\n\n\nThe Bio.Seq Module: Biological Sequences\n\n\nAlign: Sequence Alignments\n\n\nIntervals: Genomic Interval Manipulation\n\n\nBio.Var: Biological Variation.\n\n\nBio.Structure: Macromolecular Structures\n\n\nBio.Services: APIs for Web Services\n\n\nBio.Util: Utility Functions\n\n\nBio.Tools: Misc tools and function wrappers", 
+            "text": "The Bio.jl User Manual\n\n\nThis User manual is an in-depth guide to the modules provided by the Bio.jl package, and how to use the data-types and methods contained within to complete common bioinformatics tasks.\n\n\nIf you are browsing this manual online you will notice a green Gitter chat tab on the bottom-right of your screen. If you have questions when reading this manual, you are welcomed to ask questions to our user and developer community. If the question is a more involved one, they may ask you to start a post at the \nJulia Discourse Site\n.\n\n\n\n\nContents\n\n\nThe contents of this user manual are laid out according to the organisation of the modules of the Bio.jl package. For example, if you want to do work on biological sequences, the Bio.jl module \nBio.Seq\n, and the manual section \nThe Bio.Seq Module: Biological Sequences\n is for you!\n\n\n\n\nInstallation\n\n\nThe Bio.Seq Module: Biological Sequences\n\n\nAlign: Sequence Alignments\n\n\nIntervals: Genomic Interval Manipulation\n\n\nBio.Var: Biological Variation.\n\n\nBio.Structure: Macromolecular Structures\n\n\nBio.Services: APIs for Web Services\n\n\nBio.Util: Utility Functions\n\n\nBio.Tools: Misc tools and function wrappers", 
             "title": "Front Page"
         }, 
         {
             "location": "/man/frontpage/#the-biojl-user-manual", 
-            "text": "", 
+            "text": "This User manual is an in-depth guide to the modules provided by the Bio.jl package, and how to use the data-types and methods contained within to complete common bioinformatics tasks.  If you are browsing this manual online you will notice a green Gitter chat tab on the bottom-right of your screen. If you have questions when reading this manual, you are welcomed to ask questions to our user and developer community. If the question is a more involved one, they may ask you to start a post at the  Julia Discourse Site .", 
             "title": "The Bio.jl User Manual"
         }, 
         {
             "location": "/man/frontpage/#contents", 
-            "text": "Installation  The Bio.Seq Module: Biological Sequences  Align: Sequence Alignments  Intervals: Genomic Interval Manipulation  Bio.Var: Biological Variation.  Bio.Structure: Macromolecular Structures  Bio.Services: APIs for Web Services  Bio.Util: Utility Functions  Bio.Tools: Misc tools and function wrappers", 
+            "text": "The contents of this user manual are laid out according to the organisation of the modules of the Bio.jl package. For example, if you want to do work on biological sequences, the Bio.jl module  Bio.Seq , and the manual section  The Bio.Seq Module: Biological Sequences  is for you!   Installation  The Bio.Seq Module: Biological Sequences  Align: Sequence Alignments  Intervals: Genomic Interval Manipulation  Bio.Var: Biological Variation.  Bio.Structure: Macromolecular Structures  Bio.Services: APIs for Web Services  Bio.Util: Utility Functions  Bio.Tools: Misc tools and function wrappers", 
             "title": "Contents"
         }, 
         {
@@ -571,24 +566,14 @@
             "title": "Options for blastn and blastp"
         }, 
         {
-            "location": "/lib/seq/", 
-            "text": "Reference: Bio.Seq - Biological Sequences\n\n\nUnder_Construction\n\n\n\n\nTypes\n\n\n\n\nMethods", 
-            "title": "Seq"
+            "location": "/man/", 
+            "text": "Bio.jl Index\n\n\n\n\nBio.Seq.ncbi_trans_table\n\n\nBio.Seq.FASTQReader\n\n\nBio.Seq.FASTQWriter\n\n\nBio.Seq.TwoBitReader\n\n\nBio.Seq.TwoBitWriter\n\n\nBio.Seq.alphabet\n\n\nBio.Seq.canonical\n\n\nBio.Seq.complement!\n\n\nBio.Seq.each\n\n\nBio.Seq.gap\n\n\nBio.Seq.isambiguous\n\n\nBio.Seq.iscompatible\n\n\nBio.Seq.neighbors\n\n\nBio.Seq.reverse_complement!\n\n\nBio.Seq.translate\n\n\nBio.Align.BAMReader\n\n\nBio.Align.BAMWriter\n\n\nBio.Align.SAMReader\n\n\nBio.Align.SAMWriter\n\n\nBio.Align.alignment\n\n\nBio.Align.cigar\n\n\nBio.Align.count_aligned\n\n\nBio.Align.count_deletions\n\n\nBio.Align.count_insertions\n\n\nBio.Align.count_matches\n\n\nBio.Align.count_mismatches\n\n\nBio.Align.hasalignment\n\n\nBio.Align.ref2seq\n\n\nBio.Align.score\n\n\nBio.Align.seq2ref\n\n\nBio.Intervals.BEDReader\n\n\nBio.Intervals.BEDWriter\n\n\nBio.Intervals.BigBedReader\n\n\nBio.Intervals.BigBedWriter\n\n\nBio.Intervals.coverage\n\n\nBio.Phylo.Phylogeny\n\n\nBio.Phylo.isrerootable\n\n\nBio.Phylo.isrooted\n\n\nBio.Phylo.root\n\n\nBio.Var.Ambiguous\n\n\nBio.Var.BCFReader\n\n\nBio.Var.BCFWriter\n\n\nBio.Var.Certain\n\n\nBio.Var.Conserved\n\n\nBio.Var.Gap\n\n\nBio.Var.Match\n\n\nBio.Var.Mismatch\n\n\nBio.Var.Mutated\n\n\nBio.Var.Transition\n\n\nBio.Var.Transversion\n\n\nBio.Var.VCFReader\n\n\nBio.Var.VCFWriter\n\n\nBio.Var.count_sites", 
+            "title": "Index"
         }, 
         {
-            "location": "/lib/seq/#reference-bioseq-biological-sequences", 
-            "text": "Under_Construction", 
-            "title": "Reference: Bio.Seq - Biological Sequences"
-        }, 
-        {
-            "location": "/lib/seq/#types", 
-            "text": "", 
-            "title": "Types"
-        }, 
-        {
-            "location": "/lib/seq/#methods", 
-            "text": "", 
-            "title": "Methods"
+            "location": "/man/#biojl-index", 
+            "text": "Bio.Seq.ncbi_trans_table  Bio.Seq.FASTQReader  Bio.Seq.FASTQWriter  Bio.Seq.TwoBitReader  Bio.Seq.TwoBitWriter  Bio.Seq.alphabet  Bio.Seq.canonical  Bio.Seq.complement!  Bio.Seq.each  Bio.Seq.gap  Bio.Seq.isambiguous  Bio.Seq.iscompatible  Bio.Seq.neighbors  Bio.Seq.reverse_complement!  Bio.Seq.translate  Bio.Align.BAMReader  Bio.Align.BAMWriter  Bio.Align.SAMReader  Bio.Align.SAMWriter  Bio.Align.alignment  Bio.Align.cigar  Bio.Align.count_aligned  Bio.Align.count_deletions  Bio.Align.count_insertions  Bio.Align.count_matches  Bio.Align.count_mismatches  Bio.Align.hasalignment  Bio.Align.ref2seq  Bio.Align.score  Bio.Align.seq2ref  Bio.Intervals.BEDReader  Bio.Intervals.BEDWriter  Bio.Intervals.BigBedReader  Bio.Intervals.BigBedWriter  Bio.Intervals.coverage  Bio.Phylo.Phylogeny  Bio.Phylo.isrerootable  Bio.Phylo.isrooted  Bio.Phylo.root  Bio.Var.Ambiguous  Bio.Var.BCFReader  Bio.Var.BCFWriter  Bio.Var.Certain  Bio.Var.Conserved  Bio.Var.Gap  Bio.Var.Match  Bio.Var.Mismatch  Bio.Var.Mutated  Bio.Var.Transition  Bio.Var.Transversion  Bio.Var.VCFReader  Bio.Var.VCFWriter  Bio.Var.count_sites", 
+            "title": "Bio.jl Index"
         }, 
         {
             "location": "/man/contributing/", 
