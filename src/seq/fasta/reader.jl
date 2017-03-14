@@ -66,9 +66,8 @@ const record_machine, file_machine = (function ()
     end
 
     hspace = re"[ \t\v]"
-    whitespace = space() | newline
 
-    identifier = rep1(any() \ space())
+    identifier = rep(any() \ space())
     identifier.actions[:enter] = [:mark]
     identifier.actions[:exit]  = [:identifier]
 
@@ -80,11 +79,12 @@ const record_machine, file_machine = (function ()
     header.actions[:enter] = [:anchor]
     header.actions[:exit]  = [:header]
 
+    # '*': terminal, `-': gap
     letters = re"[A-Za-z*\-]+"
     letters.actions[:enter] = [:movable_anchor]
     letters.actions[:exit]  = [:letters]
 
-    sequence = opt(cat(letters, rep(cat(rep1(whitespace), letters))))
+    sequence = opt(cat(letters, rep(cat(rep1(alt(hspace, newline)), letters))))
     sequence.actions[:enter] = [:sequence_start]
 
     record = cat(header, rep1(newline), sequence, rep1(newline))
