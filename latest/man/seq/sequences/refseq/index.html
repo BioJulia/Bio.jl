@@ -311,13 +311,6 @@
 <span class="gr">ERROR: ArgumentError: invalid symbol M ∉ {A,C,G,T,N} at 4</span>
 <span class="gr"> in convert at /Users/kenta/.julia/v0.4/Bio/src/seq/refseq.jl:58</span>
 <span class="gr"> in call at essentials.jl:56</span>
-</pre></div>
-
-
-<p>When reading reference sequences from a FASTA file, the following snippet will avoid allocating temporary sequences and conversion:</p>
-<div class="codehilite"><pre><span></span><span class="go">for record in open(FASTAReader{ReferenceSequence}, &quot;hg38.fa&quot;)</span>
-<span class="go">    # do something</span>
-<span class="go">end</span>
 </pre></div></div>
         
     </div>
