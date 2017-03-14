@@ -116,9 +116,17 @@ function Base.show(io::IO, record::Record)
         println(io)
         println(io, "   identifier: ", hasidentifier(record) ? identifier(record) : "<missing>")
         println(io, "  description: ", hasdescription(record) ? description(record) : "<missing>")
-          print(io, "     sequence: ", hassequence(record) ? sequence(String, record) : "<missing>")
+          print(io, "     sequence: ", hassequence(record) ? truncate(sequence(String, record), 40) : "<missing>")
     else
         print(io, " <not filled>")
+    end
+end
+
+function truncate(s, width)
+    if sizeof(s) > width
+        return "$(s[1:width-1])…"
+    else
+        return s
     end
 end
 
