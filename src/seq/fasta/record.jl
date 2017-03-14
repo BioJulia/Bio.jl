@@ -122,9 +122,9 @@ function Base.show(io::IO, record::Record)
     end
 end
 
-function truncate(s, width)
-    if sizeof(s) > width
-        return "$(s[1:width-1])…"
+function truncate(s::String, len::Integer)
+    if length(s) > len
+        return "$(String(collect(take(s, len - 1))))…"
     else
         return s
     end
