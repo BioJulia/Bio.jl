@@ -5,9 +5,9 @@ module FASTA
 
 import Automa
 import Automa.RegExp: @re_str
-import BufferedStreams
+import Bio: Bio, isfilled
 import Bio.Exceptions: missingerror
-importall Bio
+import BufferedStreams
 
 include("record.jl")
 include("index.jl")

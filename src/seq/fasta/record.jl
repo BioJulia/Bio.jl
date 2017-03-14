@@ -24,6 +24,7 @@ end
     FASTA.Record(data::Vector{UInt8})
 
 Create a FASTA record object from `data`.
+
 This function verifies and indexes fields for accessors.
 Note that the ownership of `data` is transferred to a new record object.
 """
@@ -41,6 +42,7 @@ end
     FASTA.Record(str::AbstractString)
 
 Create a FASTA record object from `str`.
+
 This function verifies and indexes fields for accessors.
 """
 function Record(str::AbstractString)
@@ -52,7 +54,16 @@ function Base.convert(::Type{Record}, str::AbstractString)
 end
 
 function Base.convert(::Type{String}, record::Record)
-    return String(record.data[datarange(record)])
+    return String(record.data[record.filled])
+end
+
+"""
+    FASTA.Record(identifier, sequence)
+
+Create a FASTA record object from `identifier` and `sequence`.
+"""
+function Record(identifier::AbstractString, sequence)
+    return Record(identifier, nothing, sequence)
 end
 
 """
@@ -71,19 +82,10 @@ function Record(identifier::AbstractString, description::Union{AbstractString,Vo
     return Record(takebuf_array(buf))
 end
 
-"""
-    FASTA.Record(identifier, sequence)
-
-Create a FASTA record object from `identifier` and `sequence`.
-"""
-function Record(identifier::AbstractString, sequence)
-    return Record(identifier, nothing, sequence)
-end
-
 function Base.:(==)(record1::Record, record2::Record)
     if isfilled(record1) == isfilled(record2) == true
-        r1 = datarange(record1)
-        r2 = datarange(record2)
+        r1 = record1.filled
+        r2 = record2.filled
         return length(r1) == length(r2) && memcmp(pointer(record1.data, first(r1)), pointer(record2.data, first(r2)), length(r1)) == 0
     else
         return isfilled(record1) == isfilled(record2) == false
@@ -128,12 +130,8 @@ function initialize!(record::Record)
     return record
 end
 
-function isfilled(record::Record)
+function Bio.isfilled(record::Record)
     return !isempty(record.filled)
-end
-
-function datarange(record::Record)
-    return record.filled
 end
 
 function memcmp(p1::Ptr, p2::Ptr, n::Integer)
@@ -190,6 +188,7 @@ end
     sequence(::Type{S}, record::Record, [part::UnitRange{Int}])::S
 
 Get the sequence of `record`.
+
 `S` can be either a subtype of `Bio.Seq.Sequence` or `String`.
 If `part` argument is given, it returns the specified part of the sequence.
 """
@@ -214,9 +213,10 @@ end
     sequence(record::Record, [part::UnitRange{Int}])
 
 Get the sequence of `record`.
-This function infers the sequence type from the data. When it is wrong or a
-stable type is desired, use `sequence(::Type{S}, record::Record)`.
-If `part` argument is given, it returns the specified part of the sequence.
+
+This function infers the sequence type from the data. When it is wrong or
+unreliable, use `sequence(::Type{S}, record::Record)`.  If `part` argument is
+given, it returns the specified part of the sequence.
 """
 function sequence(record::Record, part::UnitRange{Int}=1:endof(record.sequence))
     checkfilled(record)
@@ -227,6 +227,14 @@ end
 function hassequence(record::Record)
     # zero-length sequence may exist
     return isfilled(record)
+end
+
+function Bio.sequence(record::Record)
+    return sequence(record)
+end
+
+function Bio.hassequence(record::Record)
+    return hassequence(record)
 end
 
 function checkfilled(record)
