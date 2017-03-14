@@ -24,8 +24,8 @@
 # bits of a byte.
 
 abstract NucleicAcid
-bitstype 8 DNA <: NucleicAcid
-bitstype 8 RNA <: NucleicAcid
+primitive type DNA <: NucleicAcid 8 end
+primitive type RNA <: NucleicAcid 8 end
 
 
 # Conversion from/to integers

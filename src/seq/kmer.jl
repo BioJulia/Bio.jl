@@ -29,7 +29,7 @@
 #   64-bit: 0b 00 00 … 00 11 00 01 10
 #    4-mer:                T  A  C  G
 
-bitstype 64 Kmer{T<:NucleicAcid, K} <: Sequence
+primitive type Kmer{T<:NucleicAcid, K} <: Sequence 64 end
 
 typealias DNAKmer{K} Kmer{DNA, K}
 typealias RNAKmer{K} Kmer{RNA, K}
