@@ -206,7 +206,7 @@ end
 A type deriving `IntervalStream{T}` must be iterable and produce
 Interval{T} objects in sorted order.
 """
-abstract IntervalStream{T}
+abstract type IntervalStream{T} end
 
 typealias IntervalStreamOrArray{T} Union{Vector{Interval{T}},IntervalStream{T},Bio.IO.AbstractReader}
 

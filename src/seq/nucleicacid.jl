@@ -23,7 +23,7 @@
 # always 0000.  The meaningful four bits are stored in the least significant
 # bits of a byte.
 
-abstract NucleicAcid
+abstract type NucleicAcid end
 primitive type DNA <: NucleicAcid 8 end
 primitive type RNA <: NucleicAcid 8 end
 

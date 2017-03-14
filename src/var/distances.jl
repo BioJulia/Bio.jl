@@ -10,10 +10,10 @@
 # Types
 # -----
 
-abstract EvolutionaryDistance
-abstract UncorrectedDistance <: EvolutionaryDistance
-abstract CorrectedDistance <: EvolutionaryDistance
-abstract TsTv <: CorrectedDistance
+abstract type EvolutionaryDistance end
+abstract type UncorrectedDistance <: EvolutionaryDistance end
+abstract type CorrectedDistance <: EvolutionaryDistance end
+abstract type TsTv <: CorrectedDistance end
 
 """
 A distance which is the count of the mutations of type T that exist between the

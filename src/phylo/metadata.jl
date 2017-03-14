@@ -7,7 +7,7 @@
 #
 # This file is a part of BioJulia. License is MIT: https://github.com/BioJulia/Bio.jl/blob/master/LICENSE.md
 
-abstract BranchMetaData
+abstract type BranchMetaData end
 
 # Every Metadata type should be immutable, and should have the following
 # methods defined:

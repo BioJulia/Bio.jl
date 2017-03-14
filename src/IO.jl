@@ -13,12 +13,12 @@ Abstract file format type.
 
 See `subtypes(FileFormat)` for all available file formats.
 """
-abstract FileFormat
+abstract type FileFormat end
 
 """
 Abstract formatted input/output type.
 """
-abstract AbstractFormattedIO
+abstract type AbstractFormattedIO end
 
 """
     stream(io::AbstractFormattedIO)
@@ -50,7 +50,7 @@ Abstract data reader type.
 
 See `subtypes(AbstractReader)` for all available data readers.
 """
-abstract AbstractReader <: AbstractFormattedIO
+abstract type AbstractReader <: AbstractFormattedIO end
 
 Base.iteratorsize{T<:AbstractReader}(::Type{T}) = Base.SizeUnknown()
 
@@ -64,7 +64,7 @@ Abstract data writer type.
 
 See `subtypes(AbstractWriter)` for all available data writers.
 """
-abstract AbstractWriter <: AbstractFormattedIO
+abstract type AbstractWriter <: AbstractFormattedIO end
 
 function Base.open{T<:AbstractWriter}(::Type{T}, filepath::AbstractString, args...; kwargs...)
     i = findfirst(kwarg -> kwarg[1] == :append, kwargs)

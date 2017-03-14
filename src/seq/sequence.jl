@@ -16,7 +16,7 @@ Any subtype `S <: Sequence` should implement the following methods:
 * `inbounds_getindex(seq::S, i::Integer)`: return the element at `i` of `seq`
     without checking bounds
 """
-abstract Sequence
+abstract type Sequence end
 
 # This is useful for obscure reasons. We use SeqRecord{Sequence} for reading
 # sequence in an undetermined alphabet, but a consequence that we need to be

@@ -4,8 +4,8 @@
 # This file is a part of BioJulia.
 # License is MIT: https://github.com/BioJulia/Bio.jl/blob/master/LICENSE.md
 
-abstract Site
-abstract Mutation <: Site
+abstract type Site end
+abstract type Mutation <: Site end
 
 """
 A `Certain` site describes a site where both of two aligned sites are not an

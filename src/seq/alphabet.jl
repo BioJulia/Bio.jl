@@ -15,7 +15,7 @@
 """
 Alphabet of biological characters.
 """
-abstract Alphabet
+abstract type Alphabet end
 
 """
 DNA nucleotide alphabet.
