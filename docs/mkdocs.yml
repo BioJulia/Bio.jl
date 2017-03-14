@@ -61,6 +61,5 @@ pages:
   - Services: man/services.md
   - Util: man/util.md
   - Tools: man/tools.md
-- Reference:
-  - Seq: lib/seq.md
+  - Index: man/index.md
 - Contributing: man/contributing.md
