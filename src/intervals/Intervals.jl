@@ -26,6 +26,7 @@ export
     hasseqname,
     metadata,
     strand,
+    BED,
     BEDReader,
     BEDWriter,
     BEDMetadata,
@@ -65,6 +66,7 @@ include("index/index.jl")
 
 # Parsing file types
 include("bed/bed.jl")
+include("bed_old/bed.jl")
 include("bbi/bbi.jl")
 include("gff3/gff3.jl")
 
