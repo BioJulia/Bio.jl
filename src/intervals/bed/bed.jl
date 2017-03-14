@@ -69,7 +69,7 @@ function Base.:(==)(a::BEDMetadata, b::BEDMetadata)
 end
 
 "An `Interval` with associated metadata from a BED file"
-typealias BEDInterval Interval{BEDMetadata}
+const BEDInterval = Interval{BEDMetadata}
 
 include("reader.jl")
 include("parser.jl")

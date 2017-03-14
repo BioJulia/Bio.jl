@@ -52,10 +52,10 @@ type BioSequence{A<:Alphabet} <: Sequence
     end
 end
 
-typealias DNASequence       BioSequence{DNAAlphabet{4}}
-typealias RNASequence       BioSequence{RNAAlphabet{4}}
-typealias AminoAcidSequence BioSequence{AminoAcidAlphabet}
-typealias CharSequence      BioSequence{CharAlphabet}
+const DNASequence       =  BioSequence{DNAAlphabet{4}}
+const RNASequence       =  BioSequence{RNAAlphabet{4}}
+const AminoAcidSequence =  BioSequence{AminoAcidAlphabet}
+const CharSequence      =  BioSequence{CharAlphabet}
 
 "Gets the alphabet encoding of a given BioSequence."
 alphabet{A}(::Type{BioSequence{A}}) = alphabet(A)
