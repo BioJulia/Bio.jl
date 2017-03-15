@@ -16,7 +16,7 @@ hashes for kmers of a given length. The type contains two parameters:
 * .sketch: a sorted set of hashes
 * .kmersize: the length of kmers used to generate the sketch
 """
-type MinHashSketch
+immutable MinHashSketch
     sketch::Vector{UInt64}
     kmersize::Int
 
@@ -29,7 +29,6 @@ end
 
 Base.getindex(s::MinHashSketch, part) = getindex(s.sketch, part)
 Base.length(s::MinHashSketch) = length(s.sketch)
-Base.size(s::MinHashSketch) = (length(s), s.kmersize)
 Base.start(s::MinHashSketch) = start(s.sketch)
 Base.next(s::MinHashSketch, state) = next(s.sketch, state)
 Base.done(s::MinHashSketch, state) = done(s.sketch, state)
@@ -41,7 +40,7 @@ end
 # A seqence and its reverse complement should be the same, so take the smallest
 # hash of a seq or its reverse complement.
 function revcomphash(kmer::Kmer)
-    k = minimum((kmer, reverse_complement(kmer)))
+    k = min((kmer, reverse_complement(kmer)))
     return hash(k)
 end
 
@@ -66,7 +65,7 @@ function kmerminhash(seq::BioSequence, kmerset, kmerhashes::Vector{UInt64}, k::I
             h = revcomphash(kmer[2])
             if h < kmerhashes[end]
                 i = searchsortedlast(kmerhashes, h)
-                if i == 0 && i != kmerhashes[1]
+                if i == 0 && h != kmerhashes[1]
                     pop!(kmerhashes)
                     unshift!(kmerhashes, h)
                 elseif h != kmerhashes[i]
@@ -106,7 +105,7 @@ function minhash{T<:BioSequence}(seqs::Vector{T}, k::Int, s::Int)
     return MinHashSketch(kmerhashes, k)
 end
 
-function minhash{T<:BioSequence}(seqs::FASTAReader{T}, k::Int, s::Int)
+function minhash{T<:BioSequence}(seqs::FASTA.Reader{T}, k::Int, s::Int)
     kmerset = Set{UInt64}()
     kmerhashes = Vector{UInt64}()
     for seq in seqs
