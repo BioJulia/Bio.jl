@@ -58,7 +58,7 @@ importall Bio
 
 include("strand.jl")
 include("interval.jl")
-include("stream_buffer.jl")
+include("streambuffer.jl")
 include("intervalcollection.jl")
 include("intervalstream.jl")
 include("index/index.jl")
