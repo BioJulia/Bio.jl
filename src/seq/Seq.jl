@@ -213,7 +213,6 @@ include("composition.jl")
 include("geneticcode.jl")
 include("seqrecord.jl")
 include("demultiplexer.jl")
-include("minhash.jl")
 
 # Parsing file types
 include("fasta/fasta.jl")
@@ -224,6 +223,8 @@ include("abif/abif.jl")
 include("search/exact.jl")
 include("search/approx.jl")
 include("search/re.jl")
+
+include("minhash.jl")
 
 include("deprecated.jl")
 
