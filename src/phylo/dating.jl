@@ -24,8 +24,8 @@ Types inheriting from DatingEstimate should have the following methods defined:
 
 They may define their own show methods.
 """
-abstract DatingEstimate
-abstract DatingMethod
+abstract type DatingEstimate end
+abstract type DatingMethod end
 
 Base.print(io::IO, de::DatingEstimate) = println(io, "$(lower(de)) ... $(upper(de))")
 Base.show(io::IO, de::DatingEstimate) = println(io, "Coalesence time estimate between two sequences:\nt lies between $(lower(de)) and $(upper(de))")

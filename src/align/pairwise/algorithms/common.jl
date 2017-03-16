@@ -16,7 +16,7 @@ end
 # ----------
 
 # trace type for pairwise alignment
-typealias Trace UInt8
+const Trace = UInt8
 
 # trace bitmap
 const TRACE_NONE   = 0b00000

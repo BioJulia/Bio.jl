@@ -13,7 +13,7 @@ The required method:
 
 * `Base.getindex(submat, x, y)`: substitution score/cost from `x` to `y`
 """
-abstract AbstractSubstitutionMatrix{S<:Real}
+abstract type AbstractSubstitutionMatrix{S<:Real} end
 
 """
 Substitution matrix.

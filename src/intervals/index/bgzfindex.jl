@@ -10,10 +10,10 @@
 # License is MIT: https://github.com/BioJulia/Bio.jl/blob/master/LICENSE.md
 
 # binning index
-typealias BinIndex Dict{UInt32,Vector{Chunk}}
+const BinIndex = Dict{UInt32,Vector{Chunk}}
 
 # linear index
-typealias LinearIndex Vector{VirtualOffset}
+const LinearIndex = Vector{VirtualOffset}
 
 # Metadata providing a summary of the number of mappend/unmapped reads.
 type PseudoBin

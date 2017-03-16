@@ -76,7 +76,7 @@ julia> Alignment([
 
 Alignment operations follow closely from those used in the [SAM/BAM
 format](https://samtools.github.io/hts-specs/SAMv1.pdf) and are stored in the
-`Operation` bitstype.
+`Operation` primitive type.
 
 | Operation            | Operation Type     | Description                                                                     |
 | :------------------- | :----------------- | :------------------------------------------------------------------------------ |

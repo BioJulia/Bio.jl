@@ -14,7 +14,7 @@
 
 # Mutation types
 
-abstract MutationType
+abstract type MutationType end
 
 """
 `AnyMutation` describes a site where two aligned nucleotides are not the

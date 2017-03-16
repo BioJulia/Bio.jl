@@ -7,7 +7,7 @@
 # License is MIT: https://github.com/BioJulia/Bio.jl/blob/master/LICENSE.md
 
 "Type representing AminoAcids"
-bitstype 8 AminoAcid
+primitive type AminoAcid 8 end
 
 
 # Conversion from/to integers

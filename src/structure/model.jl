@@ -89,14 +89,14 @@ export
 
 
 "A macromolecular structural element."
-abstract StructuralElement
+abstract type StructuralElement end
 
 
 """
 An atom that is part of a macromolecule - either an `Atom` or a
 `DisorderedAtom`.
 """
-abstract AbstractAtom <: StructuralElement
+abstract type AbstractAtom <: StructuralElement end
 
 "An atom that is part of a macromolecule."
 immutable Atom <: AbstractAtom
@@ -122,7 +122,7 @@ end
 A residue (amino acid) or other molecule - either a`Residue` or a
 `DisorderedResidue`.
 """
-abstract AbstractResidue <: StructuralElement
+abstract type AbstractResidue <: StructuralElement end
 
 "A residue (amino acid) or other molecule."
 immutable Residue <: AbstractResidue

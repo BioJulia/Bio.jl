@@ -439,7 +439,7 @@ end
 # 0b110 | last      | matches the last of string
 # 0b111 | fork l    | push next and go to l
 
-bitstype 32 Op
+primitive type Op 32 end
 
 const MatchTag = UInt32(0b000) << 29
 const BitsTag  = UInt32(0b001) << 29

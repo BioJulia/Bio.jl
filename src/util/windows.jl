@@ -17,7 +17,7 @@ export
 
 import Bio
 
-typealias ArrayOrStringOrSeq Union{AbstractArray, AbstractString, Bio.Seq.BioSequence}
+const ArrayOrStringOrSeq = Union{AbstractArray, AbstractString, Bio.Seq.BioSequence}
 
 """
 An iterator which moves across a container, as a sliding window.

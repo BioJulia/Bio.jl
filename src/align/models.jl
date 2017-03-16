@@ -13,7 +13,7 @@
 """
 Supertype of score model.
 """
-abstract AbstractScoreModel{T<:Real}
+abstract type AbstractScoreModel{T<:Real} end
 
 """
     AffineGapScoreModel(submat, gap_open, gap_extend)
@@ -123,7 +123,7 @@ end
 """
 Supertype of cost model.
 """
-abstract AbstractCostModel{T}
+abstract type AbstractCostModel{T} end
 
 """
     CostModel(submat, insertion, deletion)

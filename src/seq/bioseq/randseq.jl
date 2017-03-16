@@ -9,7 +9,7 @@
 """
 Abstract sequence generator type.
 """
-abstract SequenceGenerator{T}
+abstract type SequenceGenerator{T} end
 
 # Sequence generator of stationary distributions.
 immutable StationaryGenerator{T} <: SequenceGenerator{T}

@@ -38,7 +38,7 @@ end
 
 Create a sequence record for the FASTQ file format.
 """
-typealias FASTQSeqRecord{S} SeqRecord{S,FASTQMetadata}
+const FASTQSeqRecord{S} = SeqRecord{S,FASTQMetadata}
 
 function (::Type{FASTQSeqRecord})(name::AbstractString,
                                   seq::Sequence,

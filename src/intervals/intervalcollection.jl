@@ -32,7 +32,7 @@
 #       ordered iteration.             ...
 #
 
-typealias IntervalCollectionTree{T} IntervalTrees.IntervalTree{Int64,Interval{T}}
+const IntervalCollectionTree{T} = IntervalTrees.IntervalTree{Int64,Interval{T}}
 
 type IntervalCollection{T} <: IntervalStream{T}
     # Sequence name mapped to IntervalTree, which in turn maps intervals to
@@ -136,7 +136,7 @@ Base.length(ic::IntervalCollection) = ic.length
 # Iterators
 # --------
 
-typealias IntervalCollectionTreeIteratorState{T} IntervalTrees.IntervalBTreeIteratorState{Int64,Interval{T},64}
+const IntervalCollectionTreeIteratorState{T} = IntervalTrees.IntervalBTreeIteratorState{Int64,Interval{T},64}
 
 immutable IntervalCollectionIteratorState{T}
     i::Int # index into ordered_trees

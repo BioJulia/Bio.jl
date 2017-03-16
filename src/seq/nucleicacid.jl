@@ -23,9 +23,9 @@
 # always 0000.  The meaningful four bits are stored in the least significant
 # bits of a byte.
 
-abstract NucleicAcid
-bitstype 8 DNA <: NucleicAcid
-bitstype 8 RNA <: NucleicAcid
+abstract type NucleicAcid end
+primitive type DNA <: NucleicAcid 8 end
+primitive type RNA <: NucleicAcid 8 end
 
 
 # Conversion from/to integers

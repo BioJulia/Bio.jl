@@ -28,7 +28,7 @@ end
 
 Create a sequence record for the FASTA file format.
 """
-typealias FASTASeqRecord{S} SeqRecord{S,FASTAMetadata}
+const FASTASeqRecord{S} = SeqRecord{S,FASTAMetadata}
 
 function (::Type{FASTASeqRecord})(name::AbstractString,
                                   seq::Sequence,

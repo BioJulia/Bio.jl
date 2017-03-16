@@ -7,7 +7,7 @@
 # License is MIT: https://github.com/BioJulia/Bio.jl/blob/master/LICENSE.md
 
 # An alignment operation type
-bitstype 8 Operation
+primitive type Operation 8 end
 
 
 # Conversion to and from integers

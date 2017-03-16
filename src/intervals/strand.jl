@@ -6,7 +6,7 @@
 # This file is a part of BioJulia.
 # License is MIT: https://github.com/BioJulia/Bio.jl/blob/master/LICENSE.md
 
-bitstype 8 Strand
+primitive type Strand 8 end
 
 Base.convert(::Type{Strand}, strand::UInt8) = reinterpret(Strand, strand)
 Base.convert(::Type{UInt8}, strand::Strand) = reinterpret(UInt8, strand)
