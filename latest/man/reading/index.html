@@ -504,7 +504,7 @@ CACACACACACATCCTAACACTACCCTAACACAGCCCTAATCTAACCCTG
 <li><code>input</code>: data source</li>
 <li><code>index=nothing</code>: filepath to a random access index (currently <em>fai</em> is supported)</li>
 </ul>
-<p><a target='_blank' href='https://github.com/BioJulia/Bio.jl/tree/4f64c5e12e4c427bafd43ff94adf6a50f78f0fd3/src/seq/fasta/reader.jl#L13-L21' class='documenter-source'>source</a><br></p>
+<p><a target='_blank' href='https://github.com/BioJulia/Bio.jl/tree/c7fa5d6b67da2da6b8386e18874e56002b566151/src/seq/fasta/reader.jl#L13-L21' class='documenter-source'>source</a><br></p>
 <p><a id='Bio.Seq.FASTA.Writer' href='#Bio.Seq.FASTA.Writer'>#</a>
 <strong><code>Bio.Seq.FASTA.Writer</code></strong> &mdash; <em>Type</em>.</p>
 <div class="codehilite"><pre><span></span><span class="nt">FASTA</span><span class="p">.</span><span class="nc">Writer</span><span class="o">(</span><span class="nt">output</span><span class="p">::</span><span class="nd">IO</span><span class="o">;</span> <span class="nt">width</span><span class="o">=</span><span class="nt">70</span><span class="o">)</span>
@@ -517,7 +517,7 @@ CACACACACACATCCTAACACTACCCTAACACAGCCCTAATCTAACCCTG
 <li><code>output</code>: data sink</li>
 <li><code>width=70</code>: wrapping width of sequence characters</li>
 </ul>
-<p><a target='_blank' href='https://github.com/BioJulia/Bio.jl/tree/4f64c5e12e4c427bafd43ff94adf6a50f78f0fd3/src/seq/fasta/writer.jl#L4-L12' class='documenter-source'>source</a><br></p>
+<p><a target='_blank' href='https://github.com/BioJulia/Bio.jl/tree/c7fa5d6b67da2da6b8386e18874e56002b566151/src/seq/fasta/writer.jl#L4-L12' class='documenter-source'>source</a><br></p>
 <p><a id='Bio.Seq.FASTA.Record' href='#Bio.Seq.FASTA.Record'>#</a>
 <strong><code>Bio.Seq.FASTA.Record</code></strong> &mdash; <em>Type</em>.</p>
 <div class="codehilite"><pre><span></span>FASTA.Record()
@@ -525,33 +525,33 @@ CACACACACACATCCTAACACTACCCTAACACAGCCCTAATCTAACCCTG
 
 
 <p>Create an unfilled FASTA record.</p>
-<p><a target='_blank' href='https://github.com/BioJulia/Bio.jl/tree/4f64c5e12e4c427bafd43ff94adf6a50f78f0fd3/src/seq/fasta/record.jl#L14-L18' class='documenter-source'>source</a><br></p>
+<p><a target='_blank' href='https://github.com/BioJulia/Bio.jl/tree/c7fa5d6b67da2da6b8386e18874e56002b566151/src/seq/fasta/record.jl#L14-L18' class='documenter-source'>source</a><br></p>
 <div class="codehilite"><pre><span></span>FASTA.Record(data::Vector{UInt8})
 </pre></div>
 
 
 <p>Create a FASTA record object from <code>data</code>.</p>
 <p>This function verifies and indexes fields for accessors. Note that the ownership of <code>data</code> is transferred to a new record object.</p>
-<p><a target='_blank' href='https://github.com/BioJulia/Bio.jl/tree/4f64c5e12e4c427bafd43ff94adf6a50f78f0fd3/src/seq/fasta/record.jl#L23-L30' class='documenter-source'>source</a><br></p>
+<p><a target='_blank' href='https://github.com/BioJulia/Bio.jl/tree/c7fa5d6b67da2da6b8386e18874e56002b566151/src/seq/fasta/record.jl#L23-L30' class='documenter-source'>source</a><br></p>
 <div class="codehilite"><pre><span></span>FASTA.Record(str::AbstractString)
 </pre></div>
 
 
 <p>Create a FASTA record object from <code>str</code>.</p>
 <p>This function verifies and indexes fields for accessors.</p>
-<p><a target='_blank' href='https://github.com/BioJulia/Bio.jl/tree/4f64c5e12e4c427bafd43ff94adf6a50f78f0fd3/src/seq/fasta/record.jl#L41-L47' class='documenter-source'>source</a><br></p>
+<p><a target='_blank' href='https://github.com/BioJulia/Bio.jl/tree/c7fa5d6b67da2da6b8386e18874e56002b566151/src/seq/fasta/record.jl#L41-L47' class='documenter-source'>source</a><br></p>
 <div class="codehilite"><pre><span></span>FASTA.Record(identifier, sequence)
 </pre></div>
 
 
 <p>Create a FASTA record object from <code>identifier</code> and <code>sequence</code>.</p>
-<p><a target='_blank' href='https://github.com/BioJulia/Bio.jl/tree/4f64c5e12e4c427bafd43ff94adf6a50f78f0fd3/src/seq/fasta/record.jl#L60-L64' class='documenter-source'>source</a><br></p>
+<p><a target='_blank' href='https://github.com/BioJulia/Bio.jl/tree/c7fa5d6b67da2da6b8386e18874e56002b566151/src/seq/fasta/record.jl#L60-L64' class='documenter-source'>source</a><br></p>
 <div class="codehilite"><pre><span></span>FASTA.Record(identifier, description, sequence)
 </pre></div>
 
 
 <p>Create a FASTA record object from <code>identifier</code>, <code>description</code> and <code>sequence</code>.</p>
-<p><a target='_blank' href='https://github.com/BioJulia/Bio.jl/tree/4f64c5e12e4c427bafd43ff94adf6a50f78f0fd3/src/seq/fasta/record.jl#L69-L73' class='documenter-source'>source</a><br></p>
+<p><a target='_blank' href='https://github.com/BioJulia/Bio.jl/tree/c7fa5d6b67da2da6b8386e18874e56002b566151/src/seq/fasta/record.jl#L69-L73' class='documenter-source'>source</a><br></p>
 <p><a id='Bio.Seq.FASTA.identifier' href='#Bio.Seq.FASTA.identifier'>#</a>
 <strong><code>Bio.Seq.FASTA.identifier</code></strong> &mdash; <em>Function</em>.</p>
 <div class="codehilite"><pre><span></span>identifier(record::Record)::String
@@ -559,7 +559,7 @@ CACACACACACATCCTAACACTACCCTAACACAGCCCTAATCTAACCCTG
 
 
 <p>Get the sequence identifier of <code>record</code>.</p>
-<p><a target='_blank' href='https://github.com/BioJulia/Bio.jl/tree/4f64c5e12e4c427bafd43ff94adf6a50f78f0fd3/src/seq/fasta/record.jl#L153-L157' class='documenter-source'>source</a><br></p>
+<p><a target='_blank' href='https://github.com/BioJulia/Bio.jl/tree/c7fa5d6b67da2da6b8386e18874e56002b566151/src/seq/fasta/record.jl#L153-L157' class='documenter-source'>source</a><br></p>
 <p><a id='Bio.Seq.FASTA.description' href='#Bio.Seq.FASTA.description'>#</a>
 <strong><code>Bio.Seq.FASTA.description</code></strong> &mdash; <em>Function</em>.</p>
 <div class="codehilite"><pre><span></span>description(record::Record)::String
@@ -567,7 +567,7 @@ CACACACACACATCCTAACACTACCCTAACACAGCCCTAATCTAACCCTG
 
 
 <p>Get the description of <code>record</code>.</p>
-<p><a target='_blank' href='https://github.com/BioJulia/Bio.jl/tree/4f64c5e12e4c427bafd43ff94adf6a50f78f0fd3/src/seq/fasta/record.jl#L178-L182' class='documenter-source'>source</a><br></p>
+<p><a target='_blank' href='https://github.com/BioJulia/Bio.jl/tree/c7fa5d6b67da2da6b8386e18874e56002b566151/src/seq/fasta/record.jl#L178-L182' class='documenter-source'>source</a><br></p>
 <p><a id='Bio.Seq.FASTA.sequence' href='#Bio.Seq.FASTA.sequence'>#</a>
 <strong><code>Bio.Seq.FASTA.sequence</code></strong> &mdash; <em>Function</em>.</p>
 <div class="codehilite"><pre><span></span>sequence(::Type{S}, record::Record, [part::UnitRange{Int}])::S
@@ -576,14 +576,14 @@ CACACACACACATCCTAACACTACCCTAACACAGCCCTAATCTAACCCTG
 
 <p>Get the sequence of <code>record</code>.</p>
 <p><code>S</code> can be either a subtype of <code>Bio.Seq.Sequence</code> or <code>String</code>. If <code>part</code> argument is given, it returns the specified part of the sequence.</p>
-<p><a target='_blank' href='https://github.com/BioJulia/Bio.jl/tree/4f64c5e12e4c427bafd43ff94adf6a50f78f0fd3/src/seq/fasta/record.jl#L195-L202' class='documenter-source'>source</a><br></p>
+<p><a target='_blank' href='https://github.com/BioJulia/Bio.jl/tree/c7fa5d6b67da2da6b8386e18874e56002b566151/src/seq/fasta/record.jl#L195-L202' class='documenter-source'>source</a><br></p>
 <div class="codehilite"><pre><span></span>sequence(record::Record, [part::UnitRange{Int}])
 </pre></div>
 
 
 <p>Get the sequence of <code>record</code>.</p>
 <p>This function infers the sequence type from the data. When it is wrong or unreliable, use <code>sequence(::Type{S}, record::Record)</code>.  If <code>part</code> argument is given, it returns the specified part of the sequence.</p>
-<p><a target='_blank' href='https://github.com/BioJulia/Bio.jl/tree/4f64c5e12e4c427bafd43ff94adf6a50f78f0fd3/src/seq/fasta/record.jl#L220-L228' class='documenter-source'>source</a><br></p>
+<p><a target='_blank' href='https://github.com/BioJulia/Bio.jl/tree/c7fa5d6b67da2da6b8386e18874e56002b566151/src/seq/fasta/record.jl#L220-L228' class='documenter-source'>source</a><br></p>
 <p><a id='FASTQ-1'></a></p>
 <h3 id="fastq">FASTQ</h3>
 <ul>
@@ -681,7 +681,7 @@ tcagTTAAGATGGGAT
 </tr>
 </tbody>
 </table>
-<p><a target='_blank' href='https://github.com/BioJulia/Bio.jl/tree/4f64c5e12e4c427bafd43ff94adf6a50f78f0fd3/src/seq/fastq/reader.jl#L4-L21' class='documenter-source'>source</a><br></p>
+<p><a target='_blank' href='https://github.com/BioJulia/Bio.jl/tree/c7fa5d6b67da2da6b8386e18874e56002b566151/src/seq/fastq/reader.jl#L4-L21' class='documenter-source'>source</a><br></p>
 <p><a id='Bio.Seq.FASTQWriter' href='#Bio.Seq.FASTQWriter'>#</a>
 <strong><code>Bio.Seq.FASTQWriter</code></strong> &mdash; <em>Type</em>.</p>
 <div class="codehilite"><pre><span></span><span class="nt">FASTQWriter</span><span class="o">(</span><span class="nt">output</span><span class="p">::</span><span class="nd">IO</span><span class="o">;</span> <span class="nt">quality_header</span><span class="o">=</span><span class="nt">false</span><span class="o">,</span> <span class="nt">quality_encoding</span><span class="o">=</span><span class="p">:</span><span class="nd">sanger</span><span class="o">)</span>
@@ -695,7 +695,7 @@ tcagTTAAGATGGGAT
 <li><code>quality_header=false</code>: output the title line at the third line just after '+'</li>
 <li><code>quality_encoding=:sanger</code>: encoding of base qualities; see <code>FASTQReader</code> for available values</li>
 </ul>
-<p><a target='_blank' href='https://github.com/BioJulia/Bio.jl/tree/4f64c5e12e4c427bafd43ff94adf6a50f78f0fd3/src/seq/fastq/writer.jl#L4-L13' class='documenter-source'>source</a><br></p>
+<p><a target='_blank' href='https://github.com/BioJulia/Bio.jl/tree/c7fa5d6b67da2da6b8386e18874e56002b566151/src/seq/fastq/writer.jl#L4-L13' class='documenter-source'>source</a><br></p>
 <p><a id='.2bit-1'></a></p>
 <h3 id="2bit">.2bit</h3>
 <ul>
@@ -721,7 +721,7 @@ tcagTTAAGATGGGAT
 <ul>
 <li><code>input</code>: data source</li>
 </ul>
-<p><a target='_blank' href='https://github.com/BioJulia/Bio.jl/tree/4f64c5e12e4c427bafd43ff94adf6a50f78f0fd3/src/seq/twobit/reader.jl#L4-L11' class='documenter-source'>source</a><br></p>
+<p><a target='_blank' href='https://github.com/BioJulia/Bio.jl/tree/c7fa5d6b67da2da6b8386e18874e56002b566151/src/seq/twobit/reader.jl#L4-L11' class='documenter-source'>source</a><br></p>
 <p><a id='Bio.Seq.TwoBitWriter' href='#Bio.Seq.TwoBitWriter'>#</a>
 <strong><code>Bio.Seq.TwoBitWriter</code></strong> &mdash; <em>Type</em>.</p>
 <div class="codehilite"><pre><span></span>TwoBitWriter(output::IO, names::AbstractVector)
@@ -734,7 +734,7 @@ tcagTTAAGATGGGAT
 <li><code>output</code>: data sink</li>
 <li><code>names</code>: a vector of sequence names written to <code>output</code></li>
 </ul>
-<p><a target='_blank' href='https://github.com/BioJulia/Bio.jl/tree/4f64c5e12e4c427bafd43ff94adf6a50f78f0fd3/src/seq/twobit/writer.jl#L4-L12' class='documenter-source'>source</a><br></p>
+<p><a target='_blank' href='https://github.com/BioJulia/Bio.jl/tree/c7fa5d6b67da2da6b8386e18874e56002b566151/src/seq/twobit/writer.jl#L4-L12' class='documenter-source'>source</a><br></p>
 <p><a id='BED-1'></a></p>
 <h3 id="bed">BED</h3>
 <ul>
@@ -760,7 +760,7 @@ chr9    68456943    68486659    NM_001206   0   -
 <ul>
 <li><code>input</code>: data source</li>
 </ul>
-<p><a target='_blank' href='https://github.com/BioJulia/Bio.jl/tree/4f64c5e12e4c427bafd43ff94adf6a50f78f0fd3/src/intervals/bed/reader.jl#L4-L11' class='documenter-source'>source</a><br></p>
+<p><a target='_blank' href='https://github.com/BioJulia/Bio.jl/tree/c7fa5d6b67da2da6b8386e18874e56002b566151/src/intervals/bed/reader.jl#L4-L11' class='documenter-source'>source</a><br></p>
 <p><a id='Bio.Intervals.BEDWriter' href='#Bio.Intervals.BEDWriter'>#</a>
 <strong><code>Bio.Intervals.BEDWriter</code></strong> &mdash; <em>Type</em>.</p>
 <div class="codehilite"><pre><span></span>BEDWriter(output::IO)
@@ -772,7 +772,7 @@ chr9    68456943    68486659    NM_001206   0   -
 <ul>
 <li><code>output</code>: data sink</li>
 </ul>
-<p><a target='_blank' href='https://github.com/BioJulia/Bio.jl/tree/4f64c5e12e4c427bafd43ff94adf6a50f78f0fd3/src/intervals/bed/writer.jl#L4-L11' class='documenter-source'>source</a><br></p>
+<p><a target='_blank' href='https://github.com/BioJulia/Bio.jl/tree/c7fa5d6b67da2da6b8386e18874e56002b566151/src/intervals/bed/writer.jl#L4-L11' class='documenter-source'>source</a><br></p>
 <p><a id='GFF3-1'></a></p>
 <h3 id="gff3">GFF3</h3>
 <ul>
@@ -793,7 +793,7 @@ chr9    68456943    68486659    NM_001206   0   -
 <li><code>input</code>: data source</li>
 <li><code>save_directives=false</code>: if true, store directive lines, which can be accessed with the <code>directives</code> function</li>
 </ul>
-<p><a target='_blank' href='https://github.com/BioJulia/Bio.jl/tree/4f64c5e12e4c427bafd43ff94adf6a50f78f0fd3/src/intervals/gff3/reader.jl#L4-L13' class='documenter-source'>source</a><br></p>
+<p><a target='_blank' href='https://github.com/BioJulia/Bio.jl/tree/c7fa5d6b67da2da6b8386e18874e56002b566151/src/intervals/gff3/reader.jl#L4-L13' class='documenter-source'>source</a><br></p>
 <p><a id='Bio.Intervals.GFF3.Writer' href='#Bio.Intervals.GFF3.Writer'>#</a>
 <strong><code>Bio.Intervals.GFF3.Writer</code></strong> &mdash; <em>Type</em>.</p>
 <div class="codehilite"><pre><span></span>GFF3.Writer(output::IO)
@@ -805,7 +805,7 @@ chr9    68456943    68486659    NM_001206   0   -
 <ul>
 <li><code>output</code>: data sink</li>
 </ul>
-<p><a target='_blank' href='https://github.com/BioJulia/Bio.jl/tree/4f64c5e12e4c427bafd43ff94adf6a50f78f0fd3/src/intervals/gff3/writer.jl#L4-L11' class='documenter-source'>source</a><br></p>
+<p><a target='_blank' href='https://github.com/BioJulia/Bio.jl/tree/c7fa5d6b67da2da6b8386e18874e56002b566151/src/intervals/gff3/writer.jl#L4-L11' class='documenter-source'>source</a><br></p>
 <p><a id='bigBed-1'></a></p>
 <h3 id="bigbed">bigBed</h3>
 <ul>
@@ -825,7 +825,7 @@ chr9    68456943    68486659    NM_001206   0   -
 <ul>
 <li><code>input</code>: data source</li>
 </ul>
-<p><a target='_blank' href='https://github.com/BioJulia/Bio.jl/tree/4f64c5e12e4c427bafd43ff94adf6a50f78f0fd3/src/intervals/bbi/reader.jl#L4-L11' class='documenter-source'>source</a><br></p>
+<p><a target='_blank' href='https://github.com/BioJulia/Bio.jl/tree/c7fa5d6b67da2da6b8386e18874e56002b566151/src/intervals/bbi/reader.jl#L4-L11' class='documenter-source'>source</a><br></p>
 <p><a id='Bio.Intervals.BigBedWriter' href='#Bio.Intervals.BigBedWriter'>#</a>
 <strong><code>Bio.Intervals.BigBedWriter</code></strong> &mdash; <em>Type</em>.</p>
 <div class="codehilite"><pre><span></span>BigBedWriter(output::IO)
@@ -837,7 +837,7 @@ chr9    68456943    68486659    NM_001206   0   -
 <ul>
 <li><code>output</code>: data sink</li>
 </ul>
-<p><a target='_blank' href='https://github.com/BioJulia/Bio.jl/tree/4f64c5e12e4c427bafd43ff94adf6a50f78f0fd3/src/intervals/bbi/writer.jl#L4-L11' class='documenter-source'>source</a><br></p>
+<p><a target='_blank' href='https://github.com/BioJulia/Bio.jl/tree/c7fa5d6b67da2da6b8386e18874e56002b566151/src/intervals/bbi/writer.jl#L4-L11' class='documenter-source'>source</a><br></p>
 <p><a id='PDB-1'></a></p>
 <h3 id="pdb">PDB</h3>
 <p>PDB is a text-based file format for representing 3D macromolecular structures. This has different reader interfaces from other file formats. Please consult the <a href="../structure/">Bio.Structure</a> chapter for details.</p>
@@ -860,7 +860,7 @@ chr9    68456943    68486659    NM_001206   0   -
 <ul>
 <li><code>input</code>: data source</li>
 </ul>
-<p><a target='_blank' href='https://github.com/BioJulia/Bio.jl/tree/4f64c5e12e4c427bafd43ff94adf6a50f78f0fd3/src/align/hts/sam/reader.jl#L4-L11' class='documenter-source'>source</a><br></p>
+<p><a target='_blank' href='https://github.com/BioJulia/Bio.jl/tree/c7fa5d6b67da2da6b8386e18874e56002b566151/src/align/hts/sam/reader.jl#L4-L11' class='documenter-source'>source</a><br></p>
 <p><a id='Bio.Align.SAMWriter' href='#Bio.Align.SAMWriter'>#</a>
 <strong><code>Bio.Align.SAMWriter</code></strong> &mdash; <em>Type</em>.</p>
 <div class="codehilite"><pre><span></span>SAMWriter(output::IO, header::SAMHeader=SAMHeader())
@@ -873,7 +873,7 @@ chr9    68456943    68486659    NM_001206   0   -
 <li><code>output</code>: data sink</li>
 <li><code>header=SAMHeader()</code>: SAM header object</li>
 </ul>
-<p><a target='_blank' href='https://github.com/BioJulia/Bio.jl/tree/4f64c5e12e4c427bafd43ff94adf6a50f78f0fd3/src/align/hts/sam/writer.jl#L4-L12' class='documenter-source'>source</a><br></p>
+<p><a target='_blank' href='https://github.com/BioJulia/Bio.jl/tree/c7fa5d6b67da2da6b8386e18874e56002b566151/src/align/hts/sam/writer.jl#L4-L12' class='documenter-source'>source</a><br></p>
 <p><a id='BAM-1'></a></p>
 <h3 id="bam">BAM</h3>
 <ul>
@@ -895,7 +895,7 @@ chr9    68456943    68486659    NM_001206   0   -
 <li><code>input</code>: data source</li>
 <li><code>index=nothing</code>: filepath to a random access index (currently <em>bai</em> is Supported)</li>
 </ul>
-<p><a target='_blank' href='https://github.com/BioJulia/Bio.jl/tree/4f64c5e12e4c427bafd43ff94adf6a50f78f0fd3/src/align/hts/bam/reader.jl#L4-L12' class='documenter-source'>source</a><br></p>
+<p><a target='_blank' href='https://github.com/BioJulia/Bio.jl/tree/c7fa5d6b67da2da6b8386e18874e56002b566151/src/align/hts/bam/reader.jl#L4-L12' class='documenter-source'>source</a><br></p>
 <p><a id='Bio.Align.BAMWriter' href='#Bio.Align.BAMWriter'>#</a>
 <strong><code>Bio.Align.BAMWriter</code></strong> &mdash; <em>Type</em>.</p>
 <div class="codehilite"><pre><span></span>BAMWriter(output::BGZFStream, header::SAMHeader)
@@ -908,7 +908,7 @@ chr9    68456943    68486659    NM_001206   0   -
 <li><code>output</code>: data sink</li>
 <li><code>header</code>: SAM header object</li>
 </ul>
-<p><a target='_blank' href='https://github.com/BioJulia/Bio.jl/tree/4f64c5e12e4c427bafd43ff94adf6a50f78f0fd3/src/align/hts/bam/writer.jl#L4-L12' class='documenter-source'>source</a><br></p>
+<p><a target='_blank' href='https://github.com/BioJulia/Bio.jl/tree/c7fa5d6b67da2da6b8386e18874e56002b566151/src/align/hts/bam/writer.jl#L4-L12' class='documenter-source'>source</a><br></p>
 <p><a id='VCF-1'></a></p>
 <h3 id="vcf">VCF</h3>
 <ul>
@@ -928,7 +928,7 @@ chr9    68456943    68486659    NM_001206   0   -
 <ul>
 <li><code>input</code>: data source</li>
 </ul>
-<p><a target='_blank' href='https://github.com/BioJulia/Bio.jl/tree/4f64c5e12e4c427bafd43ff94adf6a50f78f0fd3/src/var/vcf/reader.jl#L4-L11' class='documenter-source'>source</a><br></p>
+<p><a target='_blank' href='https://github.com/BioJulia/Bio.jl/tree/c7fa5d6b67da2da6b8386e18874e56002b566151/src/var/vcf/reader.jl#L4-L11' class='documenter-source'>source</a><br></p>
 <p><a id='Bio.Var.VCFWriter' href='#Bio.Var.VCFWriter'>#</a>
 <strong><code>Bio.Var.VCFWriter</code></strong> &mdash; <em>Type</em>.</p>
 <div class="codehilite"><pre><span></span>VCFWriter(output::IO, header::VCFHeader)
@@ -941,7 +941,7 @@ chr9    68456943    68486659    NM_001206   0   -
 <li><code>output</code>: data sink</li>
 <li><code>header</code>: VCF header object</li>
 </ul>
-<p><a target='_blank' href='https://github.com/BioJulia/Bio.jl/tree/4f64c5e12e4c427bafd43ff94adf6a50f78f0fd3/src/var/vcf/writer.jl#L4-L12' class='documenter-source'>source</a><br></p>
+<p><a target='_blank' href='https://github.com/BioJulia/Bio.jl/tree/c7fa5d6b67da2da6b8386e18874e56002b566151/src/var/vcf/writer.jl#L4-L12' class='documenter-source'>source</a><br></p>
 <p><a id='BCF-1'></a></p>
 <h3 id="bcf">BCF</h3>
 <ul>
@@ -961,7 +961,7 @@ chr9    68456943    68486659    NM_001206   0   -
 <ul>
 <li><code>input</code>: data source</li>
 </ul>
-<p><a target='_blank' href='https://github.com/BioJulia/Bio.jl/tree/4f64c5e12e4c427bafd43ff94adf6a50f78f0fd3/src/var/bcf/reader.jl#L4-L11' class='documenter-source'>source</a><br></p>
+<p><a target='_blank' href='https://github.com/BioJulia/Bio.jl/tree/c7fa5d6b67da2da6b8386e18874e56002b566151/src/var/bcf/reader.jl#L4-L11' class='documenter-source'>source</a><br></p>
 <p><a id='Bio.Var.BCFWriter' href='#Bio.Var.BCFWriter'>#</a>
 <strong><code>Bio.Var.BCFWriter</code></strong> &mdash; <em>Type</em>.</p>
 <div class="codehilite"><pre><span></span>BCFWriter(output::IO, header::VCFHeader)
@@ -974,7 +974,7 @@ chr9    68456943    68486659    NM_001206   0   -
 <li><code>output</code>: data sink</li>
 <li><code>header</code>: VCF header object</li>
 </ul>
-<p><a target='_blank' href='https://github.com/BioJulia/Bio.jl/tree/4f64c5e12e4c427bafd43ff94adf6a50f78f0fd3/src/var/bcf/writer.jl#L4-L12' class='documenter-source'>source</a><br></p></div>
+<p><a target='_blank' href='https://github.com/BioJulia/Bio.jl/tree/c7fa5d6b67da2da6b8386e18874e56002b566151/src/var/bcf/writer.jl#L4-L12' class='documenter-source'>source</a><br></p></div>
         
     </div>
 
