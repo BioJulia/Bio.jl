@@ -45,38 +45,40 @@ function revcomphash(kmer::Kmer)
 end
 
 
-function kmerminhash(seq::BioSequence, kmerset, kmerhashes::Vector{UInt64}, k::Int, s::Int)
-    typeof(kmerset) <: Set || typeof(kmerset) <: SortedSet || error("Kmerset must be a `Set` or `SortedSet`")
-    length(kmerhashes) <= s || error("Kmerhashes cannot be larger than the set size")
-
-    for kmer in each(DNAKmer{k}, seq)
-        if length(kmerhashes) == 0
-            if length(kmerset) < s
-                push!(kmerset, revcomphash(kmer[2]))
-            elseif length(kmerset) == s
-                kmerset = SortedSet(kmerset)
-                for i in kmerset
-                    push!(kmerhashes, pop!(kmerset))
-                end
-            end
+function kmerminhash{k}(::Type{DNAKmer{k}}, seq::BioSequence, s::Int)
+    # generate first `s` kmers
+    kmerhashes = UInt64[]
+    iter = each(DNAKmer{k}, seq)
+    state = start(iter)
+    while length(kmerhashes) < s && !done(iter, state)
+        (_, kmer), state = next(iter, state)
+        h = revcomphash(kmer)
+        if h ∉ kmerhashes
+            push!(kmerhashes, h)
         end
-
-        if length(kmerhashes) == s
-            h = revcomphash(kmer[2])
-            if h < kmerhashes[end]
-                i = searchsortedlast(kmerhashes, h)
-                if i == 0 && h != kmerhashes[1]
-                    pop!(kmerhashes)
-                    unshift!(kmerhashes, h)
-                elseif h != kmerhashes[i]
-                    pop!(kmerhashes)
-                    insert!(kmerhashes, i+1, h)
-                end
-            end
-        end
-
     end
-    return (kmerset, kmerhashes)
+
+    length(kmerhashes) < s && error("failed to generate enough hashes")
+
+    sort!(kmerhashes)
+
+    # scan `seq` to make a minhash
+    while !done(iter, state)
+        (_, kmer), state = next(iter, state)
+        h = revcomphash(kmer)
+        if h < kmerhashes[end]
+            i = searchsortedlast(kmerhashes, h)
+            if i == 0 && h != kmerhashes[1]
+                pop!(kmerhashes)
+                unshift!(kmerhashes, h)
+            elseif h != kmerhashes[i]
+                pop!(kmerhashes)
+                insert!(kmerhashes, i+1, h)
+            end
+        end
+    end
+
+    return kmerhashes
 end
 
 """
@@ -85,11 +87,7 @@ end
 Generate a MinHash sketch of size `s` for kmers of length `k`.
 """
 function minhash(seq::BioSequence, k::Int, s::Int)
-    kmerset = Set{UInt64}()
-    kmerhashes = Vector{UInt64}()
-    kmerset, kmerhashes = kmerminhash(seq, kmerset, kmerhashes, k, s)
-
-    length(kmerhashes) == s || error("Sketch size is too large for the given kmer size")
+    kmerhashes = mykmerminhash(DNAKmer{k}, seq, s)
     return MinHashSketch(kmerhashes, k)
 end
 
