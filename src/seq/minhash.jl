@@ -18,7 +18,7 @@ hashes for kmers of a given length. The type contains two parameters:
 """
 immutable MinHashSketch
     sketch::Vector{UInt64}
-    kmersize::Integer
+    kmersize::Int
 
     function MinHashSketch(sketch::Vector, kmersize::Integer)
         length(sketch) > 0 || error("Sketch cannot be empty")
@@ -45,9 +45,8 @@ function revcomphash(kmer::Kmer)
 end
 
 
-function kmerminhash{k}(::Type{DNAKmer{k}}, seq::BioSequence, s::Integer)
+function kmerminhash!{k}(::Type{DNAKmer{k}}, seq::BioSequence, s::Integer, kmerhashes::Vector{UInt64})
     # generate first `s` kmers
-    kmerhashes = UInt64[]
     iter = each(DNAKmer{k}, seq)
     state = start(iter)
     while length(kmerhashes) < s && !done(iter, state)
@@ -57,8 +56,6 @@ function kmerminhash{k}(::Type{DNAKmer{k}}, seq::BioSequence, s::Integer)
             push!(kmerhashes, h)
         end
     end
-
-    length(kmerhashes) < s && error("failed to generate enough hashes")
 
     sort!(kmerhashes)
 
@@ -87,29 +84,28 @@ end
 Generate a MinHash sketch of size `s` for kmers of length `k`.
 """
 function minhash(seq::BioSequence, k::Integer, s::Integer)
-    kmerhashes = mykmerminhash(DNAKmer{k}, seq, s)
+    kmerhashes = kmerminhash!(DNAKmer{k}, seq, s, UInt64[])
+    length(kmerhashes) < s && error("failed to generate enough hashes")
+
     return MinHashSketch(kmerhashes, k)
 end
 
 function minhash{T<:BioSequence}(seqs::Vector{T}, k::Integer, s::Integer)
-    kmerset = Set{UInt64}()
-    kmerhashes = Vector{UInt64}()
-
+    kmerhashes = UInt64[]
     for seq in seqs
-        kmerset, kmerhashes = kmerminhash(seq, kmerset, kmerhashes, k, s)
+        kmerminhash!(DNAKmer{k}, seq, s, kmerhashes)
     end
 
-    length(kmerhashes) == s || error("Sketch size is too large for the given kmer size")
+    length(kmerhashes) < s && error("failed to generate enough hashes")
     return MinHashSketch(kmerhashes, k)
 end
 
-function minhash{T<:BioSequence}(seqs::FASTA.Reader{T}, k::Integer, s::Integer)
-    kmerset = Set{UInt64}()
-    kmerhashes = Vector{UInt64}()
+function minhash{T<:BioSequence}(seqs::FASTAReader{T}, k::Integer, s::Integer)
+    kmerhashes = UInt64[]
     for seq in seqs
-        kmerset, kmerhashes = kmerminhash(seq.seq, kmerset, kmerhashes, k, s)
+        kmerminhash!(DNAKmer{k}, seq.seq, s, kmerhashes)
     end
 
-    length(kmerhashes) == s || error("Sketch size is too large for the given kmer size")
+    length(kmerhashes) < s && error("failed to generate enough hashes")
     return MinHashSketch(kmerhashes, k)
 end
