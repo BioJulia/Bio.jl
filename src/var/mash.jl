@@ -32,10 +32,15 @@ function jaccarddistance(sketch1::MinHashSketch, sketch2::MinHashSketch)
             end
         end
     end
-    matches == sketchlen ? (return 1.0) : return matches / (2 * sketchlen - matches)
+
+    if matches == sketchlen
+        return 1.0
+    else
+        return matches / (2 * sketchlen - matches)
+    end
 end
 
-function mashdistance(k::Int, j::Float64)
+function mashdistance(k::Integer, j::Float64)
     return -1/k * log(2j / (1+j))
 end
 

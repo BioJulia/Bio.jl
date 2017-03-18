@@ -18,12 +18,12 @@ hashes for kmers of a given length. The type contains two parameters:
 """
 immutable MinHashSketch
     sketch::Vector{UInt64}
-    kmersize::Int
+    kmersize::Integer
 
-    function MinHashSketch(sketch::Vector, kmersize::Int)
+    function MinHashSketch(sketch::Vector, kmersize::Integer)
         length(sketch) > 0 || error("Sketch cannot be empty")
         kmersize > 0 || error("Kmersize must be greater than 0")
-        new(sketch, kmersize)
+        return new(sketch, kmersize)
     end
 end
 
@@ -34,18 +34,18 @@ Base.next(s::MinHashSketch, state) = next(s.sketch, state)
 Base.done(s::MinHashSketch, state) = done(s.sketch, state)
 
 function Base.:(==)(a::MinHashSketch, b::MinHashSketch)
-    a.kmersize == b.kmersize && a.sketch == b.sketch
+    return a.kmersize == b.kmersize && a.sketch == b.sketch
 end
 
 # A seqence and its reverse complement should be the same, so take the smallest
 # hash of a seq or its reverse complement.
 function revcomphash(kmer::Kmer)
-    k = min((kmer, reverse_complement(kmer)))
+    k = min(kmer, reverse_complement(kmer))
     return hash(k)
 end
 
 
-function kmerminhash{k}(::Type{DNAKmer{k}}, seq::BioSequence, s::Int)
+function kmerminhash{k}(::Type{DNAKmer{k}}, seq::BioSequence, s::Integer)
     # generate first `s` kmers
     kmerhashes = UInt64[]
     iter = each(DNAKmer{k}, seq)
@@ -82,16 +82,16 @@ function kmerminhash{k}(::Type{DNAKmer{k}}, seq::BioSequence, s::Int)
 end
 
 """
-    minhash(seq, k::Int, s::Int)
+    minhash(seq, k::Integer, s::Integer)
 
 Generate a MinHash sketch of size `s` for kmers of length `k`.
 """
-function minhash(seq::BioSequence, k::Int, s::Int)
+function minhash(seq::BioSequence, k::Integer, s::Integer)
     kmerhashes = mykmerminhash(DNAKmer{k}, seq, s)
     return MinHashSketch(kmerhashes, k)
 end
 
-function minhash{T<:BioSequence}(seqs::Vector{T}, k::Int, s::Int)
+function minhash{T<:BioSequence}(seqs::Vector{T}, k::Integer, s::Integer)
     kmerset = Set{UInt64}()
     kmerhashes = Vector{UInt64}()
 
@@ -103,7 +103,7 @@ function minhash{T<:BioSequence}(seqs::Vector{T}, k::Int, s::Int)
     return MinHashSketch(kmerhashes, k)
 end
 
-function minhash{T<:BioSequence}(seqs::FASTA.Reader{T}, k::Int, s::Int)
+function minhash{T<:BioSequence}(seqs::FASTA.Reader{T}, k::Integer, s::Integer)
     kmerset = Set{UInt64}()
     kmerhashes = Vector{UInt64}()
     for seq in seqs
