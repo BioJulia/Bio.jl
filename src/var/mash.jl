@@ -23,11 +23,11 @@ function jaccarddistance(sketch1::MinHashSketch, sketch2::MinHashSketch)
             i += 1
             j += 1
         elseif sketch1.sketch[i] < sketch2.sketch[j]
-            while sketch1.sketch[i] < sketch2.sketch[j]
+            while i <= sketchlen && sketch1.sketch[i] < sketch2.sketch[j]
                 i += 1
             end
         elseif sketch2.sketch[j] < sketch1.sketch[i]
-            while sketch2.sketch[j] < sketch1.sketch[i]
+            while j <= sketchlen && sketch2.sketch[j] < sketch1.sketch[i]
                 j += 1
             end
         end
