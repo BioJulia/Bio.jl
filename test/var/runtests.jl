@@ -114,7 +114,7 @@ end
 
             a = minhash(dnas[1], 4, 3)
             b = minhash(dnas[2], 4, 3)
-            @test_approx_eq_eps mashdistance(a, b) 0.2745*1e-3
+            @test_approx_eq_eps mashdistance(a, b) 0.2745 1e-3
             @test mashdistance(a, a) == 0
             @test a.sketch == sort(a.sketch)
 
