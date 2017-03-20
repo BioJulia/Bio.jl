@@ -387,6 +387,45 @@ end
 
         @test sort(simple_coverage(intervals)) == sort(collect(coverage(ic)))
     end
+
+    @testset "eachoverlap" begin
+        # TODO: more tests
+
+        i = Interval("chr1", 1, 10)
+        intervals_a = typeof(i)[]
+        @test length(collect(eachoverlap(intervals_a, intervals_a))) == 0
+
+        intervals_a = [Interval("chr1", 1, 10)]
+        intervals_b = eltype(intervals_a)[]
+        @test length(collect(eachoverlap(intervals_a, intervals_b))) == 0
+        @test length(collect(eachoverlap(intervals_b, intervals_a))) == 0
+
+        intervals_a = [Interval("chr1", 1, 10)]
+        @test length(collect(eachoverlap(intervals_a, intervals_a))) == 1
+
+        intervals_a = [Interval("chr1", 1, 10)]
+        intervals_b = [Interval("chr2", 1, 10)]
+        @test length(collect(eachoverlap(intervals_a, intervals_b))) == 0
+        @test length(collect(eachoverlap(intervals_b, intervals_a))) == 0
+
+        intervals_a = [Interval("chr1", 1, 10)]
+        intervals_b = [Interval("chr1", 11, 15)]
+        @test length(collect(eachoverlap(intervals_a, intervals_b))) == 0
+        @test length(collect(eachoverlap(intervals_b, intervals_a))) == 0
+
+        intervals_a = [Interval("chr1", 11, 15)]
+        intervals_b = [Interval("chr1", 1, 10), Interval("chr1", 12, 13)]
+        @test length(collect(eachoverlap(intervals_a, intervals_b))) == 1
+        @test length(collect(eachoverlap(intervals_b, intervals_a))) == 1
+
+        intervals_a = [Interval("chr1", 1, 2), Interval("chr1", 2, 5), Interval("chr2", 1, 10)]
+        intervals_b = [Interval("chr1", 1, 2), Interval("chr1", 2, 3), Interval("chr2", 1, 2)]
+        @test length(collect(eachoverlap(intervals_a, intervals_b))) == 5
+        @test length(collect(eachoverlap(intervals_b, intervals_a))) == 5
+
+        intervals_a = [Interval("chr1", 1, 2), Interval("chr1", 3, 5), Interval("chr2", 1, 10)]
+        @test length(collect(eachoverlap(intervals_a, intervals_a))) == 3
+    end
 end
 
 

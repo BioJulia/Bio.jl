@@ -210,6 +210,18 @@ abstract IntervalStream{T}
 
 typealias IntervalStreamOrArray{T} Union{Vector{Interval{T}},IntervalStream{T},Bio.IO.AbstractReader}
 
-function metadatatype{T}(::IntervalStream{T})
+function metadatatype{T}(::Type{T})
+    return _metadatatype(eltype(T))
+end
+
+function metadatatype(x::Any)
+    return metadatatype(typeof(x))
+end
+
+function _metadatatype{T}(::Type{Interval{T}})
+    return T
+end
+
+function _metadatatype{T}(::Type{T})
     return T
 end

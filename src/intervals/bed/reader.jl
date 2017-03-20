@@ -28,7 +28,7 @@ function Bio.IO.stream(reader::BEDReader)
     return reader.state.stream
 end
 
-function Intervals.metadatatype(::BEDReader)
+function Intervals.metadatatype(::Type{BEDReader})
     return BEDMetadata
 end
 

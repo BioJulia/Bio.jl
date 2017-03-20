@@ -44,7 +44,8 @@ export
     overlapchunks,
     tryread!,
     isfilled,
-    MissingFieldException
+    MissingFieldException,
+    eachoverlap
 
 import Base.Collections: heappush!, heappop!
 import Bio.Exceptions: MissingFieldException
@@ -62,6 +63,8 @@ include("streambuffer.jl")
 include("intervalcollection.jl")
 include("intervalstream.jl")
 include("index/index.jl")
+include("queue.jl")
+include("overlap.jl")
 
 # Parsing file types
 include("bed/bed.jl")
