@@ -113,18 +113,10 @@ export
     metainfotag,
     metainfoval,
     # SAM flags
-    SAM_FLAG_PAIRED,
-    SAM_FLAG_PROPER_PAIR,
-    SAM_FLAG_UNMAP,
-    SAM_FLAG_MUNMAP,
-    SAM_FLAG_REVERSE,
-    SAM_FLAG_MREVERSE,
-    SAM_FLAG_READ1,
-    SAM_FLAG_READ2,
-    SAM_FLAG_SECONDARY,
-    SAM_FLAG_QCFAIL,
-    SAM_FLAG_DUP,
-    SAM_FLAG_SUPPLEMENTARY,
+    SAMFlags,
+    isflag,
+    flag,
+    decodeflag,
 
     MissingFieldException
 

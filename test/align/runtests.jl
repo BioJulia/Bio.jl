@@ -1168,7 +1168,7 @@ end
             @test leftposition(rec) == 0
             @test rightposition(rec) == -1
             @test mappingquality(rec) == 0
-            @test flag(rec) == SAM_FLAG_UNMAP
+            @test isflag(rec,SAMFlags.UNMAP) 
             @test nextrefname(rec) == "*"
             @test nextrefindex(rec) == 0
             @test nextleftposition(rec) == 0

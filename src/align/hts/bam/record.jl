@@ -24,7 +24,7 @@ end
 const BAM_FIXED_FIELDS_BYTES = 36
 
 function BAMRecord()
-    flag_nc = UInt32(SAM_FLAG_UNMAP) << 16
+    flag_nc = UInt32(flag(SAMFlags.UNMAP)) << 16
     return BAMRecord(0, -1, -1, 0, flag_nc, 0, -1, -1, 0, UInt8[], String[])
 end
 
@@ -70,9 +70,8 @@ end
 
 Return `true` if and only if `rec` is mapped to a reference sequence.
 """
-function ismapped(rec::BAMRecord)
-    return flag(rec) & SAM_FLAG_UNMAP == 0
-end
+ismapped(rec::BAMRecord) = !isflag(rec,SAMFlags.UNMAP)
+
 
 """
     refindex(rec::BAMRecord)
