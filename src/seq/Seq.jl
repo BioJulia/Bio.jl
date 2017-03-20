@@ -64,6 +64,8 @@ export
     hasseqname,
     sequence,
     hassequence,
+    description,
+    identifier,
     metadata,
     @dna_str,
     @rna_str,
@@ -221,5 +223,7 @@ include("search/approx.jl")
 include("search/re.jl")
 
 include("deprecated.jl")
+
+import .FASTA: identifier, description
 
 end  # module Bio.Seq
