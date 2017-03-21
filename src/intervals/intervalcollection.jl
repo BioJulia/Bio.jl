@@ -212,7 +212,7 @@ type IntersectIterator{S, T}
     end
 end
 
-function Base.iteratorsize(::Type{IntersectIterator})
+function Base.iteratorsize{S,T}(::Type{IntersectIterator{S,T}})
     return Base.SizeUnknown()
 end
 

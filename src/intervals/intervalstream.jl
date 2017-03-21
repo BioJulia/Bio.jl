@@ -21,7 +21,7 @@ type IntervalStreamIntersectIterator{S, T, SS, TS}
     end
 end
 
-function Base.iteratorsize(::Type{IntervalStreamIntersectIterator})
+function Base.iteratorsize{S,T,SS,TS}(::Type{IntervalStreamIntersectIterator{S,T,SS,TS}})
     return Base.SizeUnknown()
 end
 
