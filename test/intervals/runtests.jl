@@ -425,6 +425,17 @@ end
 
         intervals_a = [Interval("chr1", 1, 2), Interval("chr1", 3, 5), Interval("chr2", 1, 10)]
         @test length(collect(eachoverlap(intervals_a, intervals_a))) == 3
+
+        # compare generic and specific eachoverlap methods
+        intervals_a = [Interval("chr1", 1, 2), Interval("chr1", 1, 3), Interval("chr1", 5, 9),
+                       Interval("chr2", 1, 5), Interval("chr2", 6, 6), Interval("chr2", 6, 8)]
+        intervals_b = intervals_a
+        ic_a = IntervalCollection(intervals_a)
+        ic_b = IntervalCollection(intervals_b)
+        iter1 = eachoverlap(intervals_a, intervals_b)
+        iter2 = eachoverlap(ic_a, ic_b)
+        @test typeof(iter1) != typeof(iter2)
+        @test collect(iter1) == collect(iter2)
     end
 end
 
