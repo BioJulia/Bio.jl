@@ -54,8 +54,7 @@ type IntervalCollection{T} <: IntervalStream{T}
     ordered_trees_outdated::Bool
 
     function IntervalCollection()
-        return new(Dict{StringField, ICTree{T}}(), 0,
-                   ICTree{T}[], false)
+        return new(Dict{StringField,ICTree{T}}(), 0, ICTree{T}[], false)
     end
 
     # bulk insertion
@@ -119,7 +118,6 @@ function Base.push!{T}(ic::IntervalCollection{T}, i::Interval{T})
 end
 
 function Base.show(io::IO, ic::IntervalCollection)
-    const max_entries = 8
     n_entries = length(ic)
     println(io, "IntervalCollection with $(n_entries) intervals:")
     if n_entries > 0
@@ -129,7 +127,7 @@ function Base.show(io::IO, ic::IntervalCollection)
             end
             println(io, "  ", i)
         end
-        if n_entries > max_entries
+        if n_entries > 8
             print(io, "  ⋮")
         end
     end
@@ -159,7 +157,7 @@ end
 # Iterators
 # ---------
 
-immutable IntervalCollectionIteratorState{T}
+type IntervalCollectionIteratorState{T}
     i::Int # index into ordered_trees
     tree_state::ICTreeIteratorState{T}
 
@@ -185,8 +183,7 @@ function Base.start{T}(ic::IntervalCollection{T})
     return IntervalCollectionIteratorState{T}(i)
 end
 
-function Base.next{T}(ic::IntervalCollection{T},
-                      state::IntervalCollectionIteratorState{T})
+function Base.next(ic::IntervalCollection, state)
     i = state.i
     value, tree_state = next(ic.ordered_trees[i], state.tree_state)
     if done(ic.ordered_trees[i], tree_state)
@@ -199,11 +196,11 @@ function Base.next{T}(ic::IntervalCollection{T},
             i += 1
         end
     end
-    return value, IntervalCollectionIteratorState{T}(i, tree_state)
+    state.i, state.tree_state = i, tree_state
+    return value, state
 end
 
-function Base.done{T}(ic::IntervalCollection{T},
-                      state::IntervalCollectionIteratorState{T})
+function Base.done(ic::IntervalCollection, state)
     return state.i > length(ic.ordered_trees)
 end
 
