@@ -32,7 +32,12 @@
 #       ordered iteration.             ...
 #
 
-typealias IntervalCollectionTree{T} IntervalTrees.IntervalTree{Int64,Interval{T}}
+# TODO: shorter aliases ICTree?
+typealias IntervalCollectionTree{T}                             IntervalTrees.IntervalBTree{Int64,Interval{T},64}
+typealias IntervalCollectionTreeIteratorState{T}                IntervalTrees.IntervalBTreeIteratorState{Int64,Interval{T},64}
+typealias IntervalCollectionTreeIntersection{T}                 IntervalTrees.Intersection{Int64,Interval{T},64}
+typealias IntervalCollectionTreeIntersectionIterator{S,T}       IntervalTrees.IntersectionIterator{Int64,Interval{S},64,Interval{T},64}
+typealias IntervalCollectionTreeIntervalIntersectionIterator{T} IntervalTrees.IntervalIntersectionIterator{Int64,Interval{T},64}
 
 type IntervalCollection{T} <: IntervalStream{T}
     # Sequence name mapped to IntervalTree, which in turn maps intervals to
@@ -154,8 +159,6 @@ end
 # Iterators
 # ---------
 
-typealias IntervalCollectionTreeIteratorState{T} IntervalTrees.IntervalBTreeIteratorState{Int64,Interval{T},64}
-
 immutable IntervalCollectionIteratorState{T}
     i::Int # index into ordered_trees
     tree_state::IntervalCollectionTreeIteratorState{T}
@@ -212,7 +215,7 @@ function eachoverlap{T}(a::IntervalCollection{T}, b::Interval)
     if haskey(a.trees, b.seqname)
         return intersect(a.trees[b.seqname], b)
     else
-        return IntervalTrees.IntervalIntersectionIterator{Int64, Interval{T}, 64}()
+        return IntervalCollectionTreeIntervalIntersectionIterator{T}
     end
 end
 
@@ -225,11 +228,11 @@ function eachoverlap{S,T}(a::IntervalCollection{S}, b::IntervalCollection{T})
 end
 
 type IntersectIterator{S, T}
-    a_trees::Vector{IntervalTrees.IntervalBTree{Int64, Interval{S}, 64}}
-    b_trees::Vector{IntervalTrees.IntervalBTree{Int64, Interval{T}, 64}}
+    a_trees::Vector{IntervalCollectionTree{S}}
+    b_trees::Vector{IntervalCollectionTree{T}}
 
     i::Int # index into a_trees/b_trees.
-    intersect_iterator::IntervalTrees.IntersectionIterator{Int64, Interval{S}, 64, Interval{T}, 64}
+    intersect_iterator::IntervalCollectionTreeIntersectionIterator{S,T}
 
     function IntersectIterator(a_trees, b_trees)
         return new(a_trees, b_trees)
@@ -298,7 +301,7 @@ function Base.iteratorsize{S,T}(::Type{IntervalCollectionStreamIterator{S,T}})
 end
 
 type IntervalCollectionStreamIteratorState{Ta,Tb,U}
-    intersection::IntervalTrees.Intersection{Int64, Interval{Ta}, 64}
+    intersection::IntervalCollectionTreeIntersection{Ta}
     b_value::Interval{Tb}
     b_state::U
 
@@ -307,14 +310,14 @@ type IntervalCollectionStreamIteratorState{Ta,Tb,U}
     end
 
     function IntervalCollectionStreamIteratorState()
-        return new(IntervalTrees.Intersection{Int64, Interval{Ta}, 64}())
+        return new(IntervalCollectionTreeIntersection{Ta}())
     end
 end
 
 # This mostly follows from SuccessiveTreeIntersectionIterator in IntervalTrees
 function Base.start{S,T}(it::IntervalCollectionStreamIterator{S,T})
     b_state = start(it.b)
-    intersection = IntervalTrees.Intersection{Int64, Interval{S}, 64}()
+    intersection = IntervalCollectionTreeIntersection{S}()
     while !done(it.b, b_state)
         b_value, b_state = next(it.b, b_state)
         if haskey(it.a.trees, b_value.seqname)
