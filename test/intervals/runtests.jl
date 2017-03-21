@@ -205,22 +205,22 @@ end
         # empty versus empty
         ic_a = IntervalCollection{Int}()
         ic_b = IntervalCollection{Int}()
-        @test collect(intersect(ic_a, ic_b)) == Any[]
+        @test collect(eachoverlap(ic_a, ic_b)) == Any[]
 
         # empty versus non-empty
         for interval in intervals_a
             push!(ic_a, interval)
         end
 
-        @test collect(intersect(ic_a, ic_b)) == Any[]
-        @test collect(intersect(ic_b, ic_a)) == Any[]
+        @test collect(eachoverlap(ic_a, ic_b)) == Any[]
+        @test collect(eachoverlap(ic_b, ic_a)) == Any[]
 
         # non-empty versus non-empty
         for interval in intervals_b
             push!(ic_b, interval)
         end
 
-        @test sort(collect(intersect(ic_a, ic_b))) == sort(simple_intersection(intervals_a, intervals_b))
+        @test sort(collect(eachoverlap(ic_a, ic_b))) == sort(simple_intersection(intervals_a, intervals_b))
     end
 
 
