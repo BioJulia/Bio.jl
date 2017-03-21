@@ -27,7 +27,7 @@ type BigBedReader <: Bio.IO.AbstractReader
     uncompressed_data::Vector{UInt8}
 end
 
-function Base.iteratorsize(::BigBedReader)
+function Base.iteratorsize(::Type{BigBedReader})
     return Base.SizeUnknown()
 end
 

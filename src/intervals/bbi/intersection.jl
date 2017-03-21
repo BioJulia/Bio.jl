@@ -24,7 +24,7 @@ type BigBedIntersectIterator
     done::Bool
 end
 
-function Base.iteratorsize(::BigBedIntersectIterator)
+function Base.iteratorsize(::Type{BigBedIntersectIterator})
     return Base.SizeUnknown()
 end
 

@@ -24,8 +24,9 @@ This function assumes elements of `intervals_a` and `intervals_b` are sorted by
 its sequence name and left position.  If the element type is not a subtype of
 `Bio.Intervals.Interval`, elements are converted to `Interval` objects.
 
-The third argument is a function that defines the order of sequence names. The
-default function is `Base.isless`, which is the lexicographical order.
+The third optional argument is a function that defines the order of sequence
+names. The default function is `Base.isless`, which is the lexicographical
+order.
 """
 function eachoverlap(intervals_a, intervals_b, seqname_isless=Base.isless)
     return OverlapIterator(intervals_a, intervals_b, seqname_isless)

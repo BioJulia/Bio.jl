@@ -212,7 +212,9 @@ type IntersectIterator{S, T}
     end
 end
 
-Base.iteratorsize(::IntersectIterator) = Base.SizeUnknown()
+function Base.iteratorsize(::Type{IntersectIterator})
+    return Base.SizeUnknown()
+end
 
 "Iterate over pairs of intersecting intervals in two IntervalCollections"
 function Base.intersect{S, T}(a::IntervalCollection{S}, b::IntervalCollection{T})
