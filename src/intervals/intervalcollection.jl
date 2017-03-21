@@ -336,7 +336,7 @@ function Base.start{S,T}(it::IntervalCollectionStreamIterator{S,T})
     return IntervalCollectionStreamIteratorState{S,metadatatype(it.b),typeof(b_state)}()
 end
 
-function Base.next(it::IntervalCollectionStreamIterator, state::IntervalCollectionStreamIteratorState)
+function Base.next(it::IntervalCollectionStreamIterator, state)
     intersection = state.intersection
     entry = intersection.node.entries[intersection.index]
     return_value = (entry, state.b_value)
@@ -351,6 +351,6 @@ function Base.next(it::IntervalCollectionStreamIterator, state::IntervalCollecti
     return return_value, state
 end
 
-function Base.done(it::IntervalCollectionStreamIterator, state::IntervalCollectionStreamIteratorState)
+function Base.done(it::IntervalCollectionStreamIterator, state)
     return state.intersection.index == 0
 end
