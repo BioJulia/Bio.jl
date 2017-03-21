@@ -59,12 +59,11 @@ importall Bio
 
 include("strand.jl")
 include("interval.jl")
-include("streambuffer.jl")
 include("intervalcollection.jl")
-include("intervalstream.jl")
-include("index/index.jl")
 include("queue.jl")
 include("overlap.jl")
+include("coverage.jl")
+include("index/index.jl")
 
 # Parsing file types
 include("bed/bed.jl")
