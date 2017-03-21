@@ -215,7 +215,7 @@ function eachoverlap{T}(a::IntervalCollection{T}, b::Interval)
     if haskey(a.trees, b.seqname)
         return intersect(a.trees[b.seqname], b)
     else
-        return IntervalCollectionTreeIntervalIntersectionIterator{T}
+        return IntervalCollectionTreeIntervalIntersectionIterator{T}()
     end
 end
 
