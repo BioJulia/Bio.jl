@@ -11,6 +11,7 @@ Bio.jl v0.5.0 Release Notes
 * Sequence names are ordered lexicographically by default ([#291]).
 * IO APIs are reorganized into submodules:
     * `Bio.Seq.FASTAReader` => `Bio.Seq.FASTA.Reader` ([#413]).
+* Overloaded `Base.intersect` methods for intervals are removed. Use the `eachoverlap` function exported from `Bio.Intervals` instead ([#426]).
 
 [#138]: https://github.com/BioJulia/Bio.jl/pull/138
 [#291]: https://github.com/BioJulia/Bio.jl/issues/291
@@ -19,3 +20,4 @@ Bio.jl v0.5.0 Release Notes
 [#391]: https://github.com/BioJulia/Bio.jl/issues/391
 [#399]: https://github.com/BioJulia/Bio.jl/pull/399
 [#413]: https://github.com/BioJulia/Bio.jl/pull/413
+[#426]: https://github.com/BioJulia/Bio.jl/pull/426
