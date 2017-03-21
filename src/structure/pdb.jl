@@ -111,73 +111,134 @@ end
 # Constructor from PDB ATOM/HETATM line
 AtomRecord(pdb_line::String, line_n::Integer=1) = AtomRecord(
     pdb_line[1] == 'H', # This assumes the line has already been checked as an ATOM/HETATM record
-    parsestrict(pdb_line, 7, 11, Int, "Could not read atom serial number", line_n),
-    parsestrict(pdb_line, 13, 16, String, "Could not read atom name", line_n),
-    parsestrict(pdb_line, 17, 17, Char, "Could not read alt loc identifier", line_n),
-    parsestrict(pdb_line, 18, 20, String, "Could not read residue name", line_n),
-    parsestrict(pdb_line, 22, 22, Char, "Could not read chain ID", line_n),
-    parsestrict(pdb_line, 23, 26, Int, "Could not read residue number", line_n),
-    parsestrict(pdb_line, 27, 27, Char, "Could not read insertion code", line_n),
+    parseserial(pdb_line, line_n),
+    parseatomname(pdb_line, line_n),
+    parsealtloc(pdb_line, line_n),
+    parseresname(pdb_line, line_n),
+    parsechainid(pdb_line, line_n),
+    parseresnumber(pdb_line, line_n),
+    parseinscode(pdb_line, line_n),
     [
-        parsestrict(pdb_line, 31, 38, Float64, "Could not read x coordinate", line_n),
-        parsestrict(pdb_line, 39, 46, Float64, "Could not read y coordinate", line_n),
-        parsestrict(pdb_line, 47, 54, Float64, "Could not read z coordinate", line_n)
+        parsecoordx(pdb_line, line_n),
+        parsecoordy(pdb_line, line_n),
+        parsecoordz(pdb_line, line_n)
     ],
-    parselenient(pdb_line, 55, 60, Float64, 1.0),
-    parselenient(pdb_line, 61, 66, Float64, 0.0),
-    parselenient(pdb_line, 77, 78, String, "  "),
-    parselenient(pdb_line, 79, 80, String, "  ")
+    parseoccupancy(pdb_line),
+    parsetempfac(pdb_line),
+    parseelement(pdb_line),
+    parsecharge(pdb_line)
 )
 
 
-"Parse columns from a line and return the value or throw a `PDBParseError`."
-function parsestrict(line::String,
-                    col_1::Integer,
-                    col_2::Integer,
-                    out_type::Type,
-                    error_message::AbstractString,
-                    line_n::Integer)
+function parseserial(line::String, line_n::Integer=1)
     try
-        return parsevalue(line, col_1, col_2, out_type)
+        return parse(Int, line[7:11])
     catch
-        throw(PDBParseError(error_message, line_n, line))
+        throw(PDBParseError("Could not read atom serial number", line_n, line))
     end
 end
 
-
-"Parse columns from a line and return the value or a default value."
-function parselenient(line::String,
-                    col_1::Integer,
-                    col_2::Integer,
-                    out_type::Type,
-                    default)
+function parseatomname(line::String, line_n::Integer=1)
     try
-        return parsevalue(line, col_1, col_2, out_type)
+        return line[13:16]
     catch
-        return default
+        throw(PDBParseError("Could not read atom name", line_n, line))
     end
 end
 
-
-"Parse columns from a line into a given type."
-function parsevalue(line::String,
-                    col_1::Integer,
-                    col_2::Integer,
-                    out_type::Type)
+function parsealtloc(line::String, line_n::Integer=1)
     try
-        if out_type == Int
-            return parse(Int, line[col_1:col_2])
-        elseif out_type == Float64
-            return parse(Float64, line[col_1:col_2])
-        elseif out_type == String
-            return line[col_1:col_2]
-        elseif out_type == Char
-            return line[col_1]
-        else
-            error()
-        end
+        return line[17]
     catch
-        error("Could not parse to desired type")
+        throw(PDBParseError("Could not read alt loc identifier", line_n, line))
+    end
+end
+
+function parseresname(line::String, line_n::Integer=1)
+    try
+        return line[18:20]
+    catch
+        throw(PDBParseError("Could not read residue name", line_n, line))
+    end
+end
+
+function parsechainid(line::String, line_n::Integer=1)
+    try
+        return line[22]
+    catch
+        throw(PDBParseError("Could not read chain ID", line_n, line))
+    end
+end
+
+function parseresnumber(line::String, line_n::Integer=1)
+    try
+        return parse(Int, line[23:26])
+    catch
+        throw(PDBParseError("Could not read residue number", line_n, line))
+    end
+end
+
+function parseinscode(line::String, line_n::Integer=1)
+    try
+        return line[27]
+    catch
+        throw(PDBParseError("Could not read insertion code", line_n, line))
+    end
+end
+
+function parsecoordx(line::String, line_n::Integer=1)
+    try
+        return parse(Float64, line[31:38])
+    catch
+        throw(PDBParseError("Could not read x coordinate", line_n, line))
+    end
+end
+
+function parsecoordy(line::String, line_n::Integer=1)
+    try
+        return parse(Float64, line[39:46])
+    catch
+        throw(PDBParseError("Could not read y coordinate", line_n, line))
+    end
+end
+
+function parsecoordz(line::String, line_n::Integer=1)
+    try
+        return parse(Float64, line[47:54])
+    catch
+        throw(PDBParseError("Could not read z coordinate", line_n, line))
+    end
+end
+
+function parseoccupancy(line::String)
+    try
+        return parse(Float64, line[55:60])
+    catch
+        return 1.0
+    end
+end
+
+function parsetempfac(line::String)
+    try
+        return parse(Float64, line[61:66])
+    catch
+        return 0.0
+    end
+end
+
+function parseelement(line::String)
+    try
+        return line[77:78]
+    catch
+        return "  "
+    end
+end
+
+function parsecharge(line::String)
+    try
+        return line[79:80]
+    catch
+        return "  "
     end
 end
 
