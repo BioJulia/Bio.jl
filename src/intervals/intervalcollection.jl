@@ -288,17 +288,17 @@ function Base.done{S, T}(it::IntersectIterator{S, T}, state)
     return state.i > length(it.a_trees)
 end
 
-function eachoverlap(a::IntervalCollection, b)
+function eachoverlap(a, b::IntervalCollection)
     return IntervalCollectionStreamIterator(a, b)
 end
 
 immutable IntervalCollectionStreamIterator{S,T}
-    a::IntervalCollection{S}
-    b::T
+    a::S
+    b::IntervalCollection{T}
 end
 
 function Base.eltype{S,T}(::Type{IntervalCollectionStreamIterator{S,T}})
-    return Tuple{Interval{S},Interval{metadatatype(T)}}
+    return Tuple{Interval{metadatatype(S)},Interval{T}}
 end
 
 function Base.iteratorsize{S,T}(::Type{IntervalCollectionStreamIterator{S,T}})
@@ -306,46 +306,46 @@ function Base.iteratorsize{S,T}(::Type{IntervalCollectionStreamIterator{S,T}})
 end
 
 type IntervalCollectionStreamIteratorState{Ta,Tb,U}
-    intersection::IntervalCollectionTreeIntersection{Ta}
-    b_value::Interval{Tb}
-    b_state::U
+    intersection::IntervalCollectionTreeIntersection{Tb}
+    a_value::Interval{Ta}
+    a_state::U
 
-    function IntervalCollectionStreamIteratorState(intersection, b_value, b_state)
-        return new(intersection, b_value, b_state)
+    function IntervalCollectionStreamIteratorState(intersection, a_value, a_state)
+        return new(intersection, a_value, a_state)
     end
 
     function IntervalCollectionStreamIteratorState()
-        return new(IntervalCollectionTreeIntersection{Ta}())
+        return new(IntervalCollectionTreeIntersection{Tb}())
     end
 end
 
 # This mostly follows from SuccessiveTreeIntersectionIterator in IntervalTrees
 function Base.start{S,T}(it::IntervalCollectionStreamIterator{S,T})
-    b_state = start(it.b)
-    intersection = IntervalCollectionTreeIntersection{S}()
-    while !done(it.b, b_state)
-        b_value, b_state = next(it.b, b_state)
-        if haskey(it.a.trees, b_value.seqname)
-            tree = it.a.trees[b_value.seqname]
-            IntervalTrees.firstintersection!(tree, b_value, intersection)
+    a_state = start(it.a)
+    intersection = IntervalCollectionTreeIntersection{T}()
+    while !done(it.a, a_state)
+        a_value, a_state = next(it.a, a_state)
+        if haskey(it.b.trees, a_value.seqname)
+            tree = it.b.trees[a_value.seqname]
+            IntervalTrees.firstintersection!(tree, a_value, Nullable{Interval{T}}(), intersection)
             if intersection.index != 0
-                return IntervalCollectionStreamIteratorState{S,metadatatype(it.b),typeof(b_state)}(intersection, b_value, b_state)
+                return IntervalCollectionStreamIteratorState{T,metadatatype(it.a),typeof(a_state)}(intersection, a_value, a_state)
             end
         end
     end
-    return IntervalCollectionStreamIteratorState{S,metadatatype(it.b),typeof(b_state)}()
+    return IntervalCollectionStreamIteratorState{S,metadatatype(it.a),typeof(a_state)}()
 end
 
-function Base.next(it::IntervalCollectionStreamIterator, state)
+function Base.next{S,T}(it::IntervalCollectionStreamIterator{S,T}, state)
     intersection = state.intersection
     entry = intersection.node.entries[intersection.index]
-    return_value = (entry, state.b_value)
-    IntervalTrees.nextintersection!(intersection.node, intersection.index, state.b_value, intersection)
-    while intersection.index == 0 && !done(it.b, state.b_state)
-        state.b_value, state.b_state = next(it.b, state.b_state)
-        if haskey(it.a.trees, state.b_value.seqname)
-            tree = it.a.trees[state.b_value.seqname]
-            IntervalTrees.firstintersection!(tree, state.b_value, intersection)
+    return_value = (state.a_value, entry)
+    IntervalTrees.nextintersection!(intersection.node, intersection.index, state.a_value, intersection)
+    while intersection.index == 0 && !done(it.a, state.a_state)
+        state.a_value, state.a_state = next(it.a, state.a_state)
+        if haskey(it.b.trees, state.a_value.seqname)
+            tree = it.b.trees[state.a_value.seqname]
+            IntervalTrees.firstintersection!(tree, state.a_value, Nullable{Interval{T}}(), intersection)
         end
     end
     return return_value, state
