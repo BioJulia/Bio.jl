@@ -219,12 +219,12 @@ function eachoverlap{T}(a::IntervalCollection{T}, b::Interval)
     end
 end
 
-function eachoverlap{S,T}(a::IntervalCollection{S}, b::IntervalCollection{T})
+function eachoverlap(a::IntervalCollection, b::IntervalCollection)
     seqnames = collect(AbstractString, keys(a.trees) ∩ keys(b.trees))
     sort!(seqnames, lt=isless)
-    a_trees = IntervalCollectionTree{S}[a.trees[seqname] for seqname in seqnames]
-    b_trees = IntervalCollectionTree{T}[b.trees[seqname] for seqname in seqnames]
-    return IntersectIterator{S, T}(a_trees, b_trees)
+    a_trees = [a.trees[seqname] for seqname in seqnames]
+    b_trees = [b.trees[seqname] for seqname in seqnames]
+    return IntersectIterator(a_trees, b_trees)
 end
 
 immutable IntersectIterator{S, T}
