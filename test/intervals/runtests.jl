@@ -758,8 +758,8 @@ end
         num_queries = 1000
         queries = random_intervals(chroms, 1000000, num_queries)
 
-        @test all(Bool[IntervalCollection(collect(BEDInterval, intersect(intervals, query))) ==
-                       IntervalCollection(collect(BEDInterval, intersect(bb, query)))
+        @test all(Bool[IntervalCollection(collect(BEDInterval, eachoverlap(intervals, query))) ==
+                       IntervalCollection(collect(BEDInterval, eachoverlap(bb, query)))
                        for query in queries])
     end
 

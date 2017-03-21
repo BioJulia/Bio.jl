@@ -208,6 +208,14 @@ end
 # Overlaps
 # --------
 
+function eachoverlap{T}(a::IntervalCollection{T}, b::Interval)
+    if haskey(a.trees, b.seqname)
+        return intersect(a.trees[b.seqname], b)
+    else
+        return IntervalTrees.IntervalIntersectionIterator{Int64, Interval{T}, 64}()
+    end
+end
+
 function eachoverlap{S,T}(a::IntervalCollection{S}, b::IntervalCollection{T})
     seqnames = collect(AbstractString, keys(a.trees) ∩ keys(b.trees))
     sort!(seqnames, lt=isless)
@@ -245,7 +253,6 @@ function Base.start{S,T}(it::IntersectIterator{S,T})
         i += 1
     end
     it.i = i
-
     return nothing
 end
 
@@ -266,7 +273,6 @@ function Base.next{S,T}(it::IntersectIterator{S, T}, ::Void)
     end
     it.i = i
     it.intersect_iterator = intersect_iterator
-
     return value, nothing
 end
 
@@ -276,10 +282,6 @@ end
 
 function eachoverlap(a::IntervalCollection, b)
     return IntervalCollectionStreamIterator(a, b)
-end
-
-function eachoverlap{T}(a::IntervalCollection{T}, b::Interval)
-    return IntervalCollectionStreamIterator(a, [b])
 end
 
 immutable IntervalCollectionStreamIterator{S,T}
