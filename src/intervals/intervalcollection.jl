@@ -32,17 +32,17 @@
 #       ordered iteration.             ...
 #
 
-# TODO: shorter aliases ICTree?
-typealias IntervalCollectionTree{T}                             IntervalTrees.IntervalBTree{Int64,Interval{T},64}
-typealias IntervalCollectionTreeIteratorState{T}                IntervalTrees.IntervalBTreeIteratorState{Int64,Interval{T},64}
-typealias IntervalCollectionTreeIntersection{T}                 IntervalTrees.Intersection{Int64,Interval{T},64}
-typealias IntervalCollectionTreeIntersectionIterator{S,T}       IntervalTrees.IntersectionIterator{Int64,Interval{S},64,Interval{T},64}
-typealias IntervalCollectionTreeIntervalIntersectionIterator{T} IntervalTrees.IntervalIntersectionIterator{Int64,Interval{T},64}
+# Aliases for types of IntervalTrees.jl (IC: Interval Collection).
+typealias ICTree{T}                             IntervalTrees.IntervalBTree{Int64,Interval{T},64}
+typealias ICTreeIteratorState{T}                IntervalTrees.IntervalBTreeIteratorState{Int64,Interval{T},64}
+typealias ICTreeIntersection{T}                 IntervalTrees.Intersection{Int64,Interval{T},64}
+typealias ICTreeIntersectionIterator{S,T}       IntervalTrees.IntersectionIterator{Int64,Interval{S},64,Interval{T},64}
+typealias ICTreeIntervalIntersectionIterator{T} IntervalTrees.IntervalIntersectionIterator{Int64,Interval{T},64}
 
 type IntervalCollection{T} <: IntervalStream{T}
     # Sequence name mapped to IntervalTree, which in turn maps intervals to
     # a list of metadata.
-    trees::Dict{StringField, IntervalCollectionTree{T}}
+    trees::Dict{StringField, ICTree{T}}
 
     # Keep track of the number of stored intervals
     length::Int
@@ -50,12 +50,12 @@ type IntervalCollection{T} <: IntervalStream{T}
     # A vector of values(trees) sorted on sequence name.
     # This is used to iterate intervals as efficiently as possible, but is only
     # updated as needed, indicated by the ordered_trees_outdated flag.
-    ordered_trees::Vector{IntervalCollectionTree{T}}
+    ordered_trees::Vector{ICTree{T}}
     ordered_trees_outdated::Bool
 
     function IntervalCollection()
-        return new(Dict{StringField, IntervalCollectionTree{T}}(), 0,
-                   IntervalCollectionTree{T}[], false)
+        return new(Dict{StringField, ICTree{T}}(), 0,
+                   ICTree{T}[], false)
     end
 
     # bulk insertion
@@ -69,17 +69,17 @@ type IntervalCollection{T} <: IntervalStream{T}
         end
 
         n = length(intervals)
-        trees = Dict{StringField, IntervalCollectionTree{T}}()
+        trees = Dict{StringField, ICTree{T}}()
         i = 1
         while i <= n
             j = i
             while j <= n && intervals[i].seqname == intervals[j].seqname
                 j += 1
             end
-            trees[intervals[i].seqname] = IntervalCollectionTree{T}(view(intervals, i:j-1))
+            trees[intervals[i].seqname] = ICTree{T}(view(intervals, i:j-1))
             i = j
         end
-        return new(trees, n, IntervalCollectionTree{T}[], true)
+        return new(trees, n, ICTree{T}[], true)
     end
 end
 
@@ -98,7 +98,7 @@ end
 
 function update_ordered_trees!{T}(ic::IntervalCollection{T})
     if ic.ordered_trees_outdated
-        ic.ordered_trees = collect(IntervalCollectionTree{T}, values(ic.trees))
+        ic.ordered_trees = collect(ICTree{T}, values(ic.trees))
         p = sortperm(collect(AbstractString, keys(ic.trees)), lt=isless)
         ic.ordered_trees = ic.ordered_trees[p]
         ic.ordered_trees_outdated = false
@@ -107,7 +107,7 @@ end
 
 function Base.push!{T}(ic::IntervalCollection{T}, i::Interval{T})
     if !haskey(ic.trees, i.seqname)
-        tree = IntervalCollectionTree{T}()
+        tree = ICTree{T}()
         ic.trees[i.seqname] = tree
         ic.ordered_trees_outdated = true
     else
@@ -161,7 +161,7 @@ end
 
 immutable IntervalCollectionIteratorState{T}
     i::Int # index into ordered_trees
-    tree_state::IntervalCollectionTreeIteratorState{T}
+    tree_state::ICTreeIteratorState{T}
 
     function IntervalCollectionIteratorState(i::Int)
         return new(i)
@@ -215,7 +215,7 @@ function eachoverlap{T}(a::IntervalCollection{T}, b::Interval)
     if haskey(a.trees, b.seqname)
         return intersect(a.trees[b.seqname], b)
     else
-        return IntervalCollectionTreeIntervalIntersectionIterator{T}()
+        return ICTreeIntervalIntersectionIterator{T}()
     end
 end
 
@@ -228,13 +228,13 @@ function eachoverlap(a::IntervalCollection, b::IntervalCollection)
 end
 
 immutable IntersectIterator{S, T}
-    a_trees::Vector{IntervalCollectionTree{S}}
-    b_trees::Vector{IntervalCollectionTree{T}}
+    a_trees::Vector{ICTree{S}}
+    b_trees::Vector{ICTree{T}}
 end
 
 type IntersectIteratorState{S,T}
     i::Int  # index into a_trees/b_trees.
-    intersect_iterator::IntervalCollectionTreeIntersectionIterator{S,T}
+    intersect_iterator::ICTreeIntersectionIterator{S,T}
 
     function IntersectIteratorState(i)
         return new(i)
@@ -306,7 +306,7 @@ function Base.iteratorsize{S,T}(::Type{IntervalCollectionStreamIterator{S,T}})
 end
 
 type IntervalCollectionStreamIteratorState{Ta,Tb,U}
-    intersection::IntervalCollectionTreeIntersection{Tb}
+    intersection::ICTreeIntersection{Tb}
     a_value::Interval{Ta}
     a_state::U
 
@@ -315,14 +315,14 @@ type IntervalCollectionStreamIteratorState{Ta,Tb,U}
     end
 
     function IntervalCollectionStreamIteratorState()
-        return new(IntervalCollectionTreeIntersection{Tb}())
+        return new(ICTreeIntersection{Tb}())
     end
 end
 
 # This mostly follows from SuccessiveTreeIntersectionIterator in IntervalTrees
 function Base.start{S,T}(it::IntervalCollectionStreamIterator{S,T})
     a_state = start(it.a)
-    intersection = IntervalCollectionTreeIntersection{T}()
+    intersection = ICTreeIntersection{T}()
     while !done(it.a, a_state)
         a_value, a_state = next(it.a, a_state)
         if haskey(it.b.trees, a_value.seqname)
