@@ -227,16 +227,26 @@ function eachoverlap{S,T}(a::IntervalCollection{S}, b::IntervalCollection{T})
     return IntersectIterator{S, T}(a_trees, b_trees)
 end
 
-type IntersectIterator{S, T}
+immutable IntersectIterator{S, T}
     a_trees::Vector{IntervalCollectionTree{S}}
     b_trees::Vector{IntervalCollectionTree{T}}
+end
 
-    i::Int # index into a_trees/b_trees.
+type IntersectIteratorState{S,T}
+    i::Int  # index into a_trees/b_trees.
     intersect_iterator::IntervalCollectionTreeIntersectionIterator{S,T}
 
-    function IntersectIterator(a_trees, b_trees)
-        return new(a_trees, b_trees)
+    function IntersectIteratorState(i)
+        return new(i)
     end
+
+    function IntersectIteratorState(i, iter)
+        return new(i, iter)
+    end
+end
+
+function Base.eltype{S,T}(::Type{IntersectIterator{S,T}})
+    return Tuple{Interval{S},Interval{T}}
 end
 
 function Base.iteratorsize{S,T}(::Type{IntersectIterator{S,T}})
@@ -249,20 +259,16 @@ function Base.start{S,T}(it::IntersectIterator{S,T})
         intersect_iterator = intersect(it.a_trees[i], it.b_trees[i])
         intersect_iterator_state = start(intersect_iterator)
         if !done(intersect_iterator, intersect_iterator_state)
-            it.i = i
-            it.intersect_iterator = intersect_iterator
-            return nothing
+            return IntersectIteratorState{S,T}(i, intersect_iterator)
         end
         i += 1
     end
-    it.i = i
-    return nothing
+    return IntersectIteratorState{S,T}(i)
 end
 
-function Base.next{S,T}(it::IntersectIterator{S, T}, ::Void)
-    intersect_iterator = it.intersect_iterator
+function Base.next{S,T}(it::IntersectIterator{S, T}, state)
+    i, intersect_iterator = state.i, state.intersect_iterator
     value, intersect_iterator_state = next(intersect_iterator, nothing)
-    i = it.i
     if done(intersect_iterator, intersect_iterator_state)
         i += 1
         while i <= length(it.a_trees)
@@ -274,13 +280,12 @@ function Base.next{S,T}(it::IntersectIterator{S, T}, ::Void)
             i += 1
         end
     end
-    it.i = i
-    it.intersect_iterator = intersect_iterator
-    return value, nothing
+    state.i, state.intersect_iterator = i, intersect_iterator
+    return value, state
 end
 
 function Base.done{S, T}(it::IntersectIterator{S, T}, state)
-    return it.i > length(it.a_trees)
+    return state.i > length(it.a_trees)
 end
 
 function eachoverlap(a::IntervalCollection, b)
