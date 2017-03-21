@@ -184,7 +184,7 @@ for (x, y) in eachoverlap(xs, ys, Bio.Intervals.alphanum_isless)
 end
 ```
 
-A special sort of intersection can also be performed on a `IntervalStreams`
+A special sort of intersection can also be performed on an interval stream
 against itself to produce "coverage intervals".
 
 ```@docs
