@@ -16,7 +16,6 @@ export
     rightposition,
     hasrightposition,
     IntervalCollection,
-    IntervalStream,
     STRAND_NA,
     STRAND_POS,
     STRAND_NEG,

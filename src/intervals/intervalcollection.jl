@@ -39,7 +39,7 @@ typealias ICTreeIntersection{T}                 IntervalTrees.Intersection{Int64
 typealias ICTreeIntersectionIterator{S,T}       IntervalTrees.IntersectionIterator{Int64,Interval{S},64,Interval{T},64}
 typealias ICTreeIntervalIntersectionIterator{T} IntervalTrees.IntervalIntersectionIterator{Int64,Interval{T},64}
 
-type IntervalCollection{T} <: IntervalStream{T}
+type IntervalCollection{T}
     # Sequence name mapped to IntervalTree, which in turn maps intervals to
     # a list of metadata.
     trees::Dict{StringField, ICTree{T}}
@@ -86,13 +86,8 @@ function IntervalCollection{T}(intervals::AbstractVector{Interval{T}}, sort=fals
     return IntervalCollection{T}(intervals, sort)
 end
 
-function IntervalCollection{T}(interval_stream::IntervalStream{T})
-    intervals = collect(Interval{T}, interval_stream)
-    return IntervalCollection{T}(intervals, true)
-end
-
 function IntervalCollection(intervals)
-    return IntervalCollection(collect(intervals), true)
+    return IntervalCollection(collect(Interval{metadatatype(intervals)}, intervals), true)
 end
 
 function update_ordered_trees!{T}(ic::IntervalCollection{T})

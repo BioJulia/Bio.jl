@@ -10,6 +10,15 @@ import Base.depwarn
 #@deprecate Base.intersect{S,T}(a::IntervalCollection{S}, b::IntervalCollection{T}) eachoverlap(a, b)
 #@deprecate Base.intersect(a::IntervalCollection, b::IntervalStreamOrArray)         eachoverlap(a, b)
 
+"""
+A type deriving `IntervalStream{T}` must be iterable and produce
+Interval{T} objects in sorted order.
+"""
+abstract IntervalStream{T}
+export IntervalStream
+
+typealias IntervalStreamOrArray{T} Union{Vector{Interval{T}},IntervalStream{T},Bio.IO.AbstractReader}
+
 # NOTE: Copied from src/intervals/streambuffer.jl
 # Steam Buffer
 # ============
@@ -295,6 +304,7 @@ function Base.done{S,T,SS,TS,U,V}(it::IntervalStreamIntersectIterator{S,T,SS,TS}
                                   state::IntervalStreamIntersectIteratorState{U,V})
     return state.a_buffer_pos > length(it.a_buffer)
 end
+
 
 # Bio.jl v0.3
 # -----------
