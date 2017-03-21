@@ -6,9 +6,20 @@ using Bio.Structure
 using TestFunctions.get_bio_fmt_specimens
 using Bio.Structure:
     fixlists!,
-    parsestrict,
-    parselenient,
-    parsevalue,
+    parseserial,
+    parseatomname,
+    parsealtloc,
+    parseresname,
+    parsechainid,
+    parseresnumber,
+    parseinscode,
+    parsecoordx,
+    parsecoordy,
+    parsecoordz,
+    parseoccupancy,
+    parsetempfac,
+    parseelement,
+    parsecharge,
     spacestring
 
 
@@ -562,39 +573,38 @@ end
 
 
 @testset "Parsing" begin
-    # Test parsevalue
-    line = "ATOM     40  CB  LEU A   5      22.088  45.547  29.675  1.00 22.23           C  "
-    @test parsevalue(line, 7, 11, Int) == 40
-    @test parsevalue(line, 31, 38, Float64) == 22.088
-    @test parsevalue(line, 13, 16, String) == " CB "
-    @test parsevalue(line, 22, 22, Char) == 'A'
-    @test_throws ErrorException parsevalue(line, 1, 4, Int)
-    @test_throws ErrorException parsevalue(line, 1, 4, Bool)
-    @test_throws ErrorException parsevalue(line, 79, 100, Int)
+    # Test parsing functions
+    line = "ATOM    591  C   GLY A  80      29.876  54.131  35.806  1.00 40.97           C1+"
+    @test parseserial(line) == 591
+    @test parseatomname(line) == " C  "
+    @test parsealtloc(line) == ' '
+    @test parseresname(line) == "GLY"
+    @test parsechainid(line) == 'A'
+    @test parseresnumber(line) == 80
+    @test parseinscode(line) == ' '
+    @test parsecoordx(line) == 29.876
+    @test parsecoordy(line) == 54.131
+    @test parsecoordz(line) == 35.806
+    @test parseoccupancy(line) == 1.0
+    @test parsetempfac(line) == 40.97
+    @test parseelement(line) == " C"
+    @test parsecharge(line) == "1+"
 
-
-    # Test parsestrict
-    line =   "ATOM    591  C   GLY A  80      29.876  54.131  35.806  1.00 40.97           C  "
-    line_a = "ATOM    591  C   GLY A  80              54.131  35.806  1.00 40.97           C  "
-    line_b = "ATOM    591  C   GLY A  80 "
-    @test parsestrict(line, 7, 11, Int, "could not read atom serial number", 10) == 591
-    @test parsestrict(line, 13, 16, String, "could not read atom name", 20) == " C  "
-    @test_throws PDBParseError parsestrict(line_a, 31, 38, Float64, "could not read x coordinate", 10)
-    @test_throws PDBParseError parsestrict(line_b, 31, 38, Float64, "could not read x coordinate", 10)
-    @test_throws PDBParseError parsestrict(line, 7, 11, Bool, "could not read atom serial number", 10)
-
-
-    # Test parselenient
-    line =   "ATOM     40  CB  LEU A   5      22.088  45.547  29.675  1.00 22.23           C  "
-    line_a = "ATOM     40  CB  LEU A   5      22.088  45.547  29.675  1.00 22.23              "
-    line_b = "ATOM     40  CB  LEU A   5      22.088  45.547  29.675  1.00 22.23  "
-    line_c = "ATOM     40  CB  LEU A   5      22.088  45.547  29.675       22.23           C  "
-    @test parselenient(line, 77, 78, String, "  ") == " C"
-    @test parselenient(line_a, 77, 78, String, "  ") == "  "
-    @test parselenient(line_b, 77, 78, String, "  ") == "  "
-    @test parselenient(line_b, 77, 78, String, " C") == " C"
-    @test parselenient(line_c, 55, 60, Float64, 1.0) == 1.0
-    @test parselenient(line, 77, 78, Bool, " N") == " N"
+    line_short = "ATOM    591  C"
+    @test_throws PDBParseError    parseserial("ATOM         C   GLY A  80      29.876  54.131  35.806  1.00 40.97           C1+")
+    @test_throws PDBParseError  parseatomname(line_short)
+    @test_throws PDBParseError    parsealtloc(line_short)
+    @test_throws PDBParseError   parseresname(line_short)
+    @test_throws PDBParseError   parsechainid(line_short)
+    @test_throws PDBParseError parseresnumber("ATOM    591  C   GLY A          29.876  54.131  35.806  1.00 40.97           C1+")
+    @test_throws PDBParseError   parseinscode(line_short)
+    @test_throws PDBParseError    parsecoordx("ATOM    591  C   GLY A  80      xxxxxx  54.131  35.806  1.00 40.97           C1+")
+    @test_throws PDBParseError    parsecoordy("ATOM    591  C   GLY A  80      29.876  xxxxxx  35.806  1.00 40.97           C1+")
+    @test_throws PDBParseError    parsecoordz("ATOM    591  C   GLY A  80      29.876  54.131  xxxxxx  1.00 40.97           C1+")
+    @test parseoccupancy(line_short) == 1.0
+    @test parsetempfac(line_short) == 0.0
+    @test parseelement(line_short) == "  "
+    @test parsecharge(line_short) == "  "
 
 
     # Test AtomRecord constructor
