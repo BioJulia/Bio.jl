@@ -504,11 +504,11 @@ end
             # This is refactored out to close streams
             fa = open(BEDReader, filename_a)
             fb = open(BEDReader, filename_b)
-            xs = sort(collect(intersect(fa, fb)))
+            xs = sort(collect(eachoverlap(fa, fb)))
             close(fa)
             close(fb)
 
-            ys = sort(collect(intersect(ic_a, ic_b)))
+            ys = sort(collect(eachoverlap(ic_a, ic_b)))
 
             return xs == ys
         end
