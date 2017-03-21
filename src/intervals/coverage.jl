@@ -55,9 +55,9 @@ function coverage(stream, seqname_isless::Function=isless)
         end
 
         if !isempty(lasts) && lasts[1] < first(interval)
-            pos = heappop!(lasts)
+            pos = Collections.heappop!(lasts)
             if first(interval) == pos + 1
-                heappush!(lasts, last(interval))
+                Collections.heappush!(lasts, last(interval))
                 if done(stream, stream_state)
                     break
                 end
@@ -88,7 +88,7 @@ function coverage(stream, seqname_isless::Function=isless)
                 coverage_first = first(interval)
             end
 
-            heappush!(lasts, last(interval))
+            Collections.heappush!(lasts, last(interval))
             if done(stream, stream_state)
                 break
             end
@@ -113,7 +113,7 @@ function coverage_process_lasts_heap!(cov::IntervalCollection{UInt32},
                                       current_coverage, coverage_seqname,
                                       coverage_first, lasts)
     while !isempty(lasts)
-        pos = heappop!(lasts)
+        pos = Collections.heappop!(lasts)
         if pos == coverage_first - 1
             current_coverage -= 1
         else

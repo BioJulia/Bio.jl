@@ -47,7 +47,6 @@ export
     MissingFieldException,
     eachoverlap
 
-import Base.Collections: heappush!, heappop!
 import Bio.Exceptions: MissingFieldException
 import Bio.Ragel: Ragel, tryread!
 import Bio.StringFields: StringField
