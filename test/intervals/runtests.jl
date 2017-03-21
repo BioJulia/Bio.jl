@@ -434,8 +434,11 @@ end
         ic_b = IntervalCollection(intervals_b)
         iter1 = eachoverlap(intervals_a, intervals_b)
         iter2 = eachoverlap(ic_a, ic_b)
+        iter3 = eachoverlap(ic_a, intervals_b)
         @test typeof(iter1) != typeof(iter2)
-        @test collect(iter1) == collect(iter2)
+        @test typeof(iter2) != typeof(iter3)
+        @test typeof(iter1) != typeof(iter3)
+        @test collect(iter1) == collect(iter2) == collect(iter3)
     end
 end
 
