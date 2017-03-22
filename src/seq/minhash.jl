@@ -37,13 +37,6 @@ function Base.:(==)(a::MinHashSketch, b::MinHashSketch)
     return a.kmersize == b.kmersize && a.sketch == b.sketch
 end
 
-# A seqence and its reverse complement should be the same, so take the smallest
-# hash of a seq or its reverse complement.
-function revcomphash(kmer::Kmer)
-    k = min(kmer, reverse_complement(kmer))
-    return hash(k)
-end
-
 
 function kmerminhash!{k}(::Type{DNAKmer{k}}, seq::BioSequence, s::Integer, kmerhashes::Vector{UInt64})
     # generate first `s` kmers
@@ -51,7 +44,7 @@ function kmerminhash!{k}(::Type{DNAKmer{k}}, seq::BioSequence, s::Integer, kmerh
     state = start(iter)
     while length(kmerhashes) < s && !done(iter, state)
         (_, kmer), state = next(iter, state)
-        h = revcomphash(kmer)
+        h = hash(canonical(kmer)) # hash lexigraphic minimum of kmer and reverse compliment of kmer
         if h ∉ kmerhashes
             push!(kmerhashes, h)
         end
@@ -62,7 +55,7 @@ function kmerminhash!{k}(::Type{DNAKmer{k}}, seq::BioSequence, s::Integer, kmerh
     # scan `seq` to make a minhash
     while !done(iter, state)
         (_, kmer), state = next(iter, state)
-        h = revcomphash(kmer)
+        h = hash(canonical(kmer)) # hash lexigraphic minimum of kmer and reverse compliment of kmer
         if h < kmerhashes[end]
             i = searchsortedlast(kmerhashes, h)
             if i == 0 && h != kmerhashes[1]
