@@ -38,9 +38,7 @@ export
 
     # VCF and BCF
     VCF,
-    BCFRecord,
-    BCFReader,
-    BCFWriter,
+    BCF,
     header,
     metainfotag,
     metainfoval,

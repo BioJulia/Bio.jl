@@ -1,7 +1,7 @@
 # BCF Record
 # ==========
 
-type BCFRecord
+type Record
     # data and filled range
     data::Vector{UInt8}
     filled::UnitRange{Int}
@@ -10,25 +10,25 @@ type BCFRecord
     indivlen::UInt32
 end
 
-function BCFRecord()
-    return BCFRecord(UInt8[], 1:0, 0, 0)
+function Record()
+    return Record(UInt8[], 1:0, 0, 0)
 end
 
-function isfilled(record::BCFRecord)
+function isfilled(record::Record)
     return !isempty(record.filled)
 end
 
-function datarange(record::BCFRecord)
+function datarange(record::Record)
     return record.filled
 end
 
-function checkfilled(record::BCFRecord)
+function checkfilled(record::Record)
     if !isfilled(record)
         throw(ArgumentError("unfilled BCF record"))
     end
 end
 
-function Base.:(==)(record1::BCFRecord, record2::BCFRecord)
+function Base.:(==)(record1::Record, record2::Record)
     if isfilled(record1) == isfilled(record2) == true
         r1 = datarange(record1)
         r2 = datarange(record2)
@@ -38,14 +38,14 @@ function Base.:(==)(record1::BCFRecord, record2::BCFRecord)
     end
 end
 
-function Base.copy(record::BCFRecord)
-    return BCFRecord(record.data[record.filled], record.filled, record.sharedlen, record.indivlen)
+function Base.copy(record::Record)
+    return Record(record.data[record.filled], record.filled, record.sharedlen, record.indivlen)
 end
 
-function BCFRecord(base::BCFRecord;
-                   chromosome=nothing, position=nothing, quality=nothing,
-                   identifier=nothing, reference=nothing, alternate=nothing,
-                   filter=nothing, information=nothing, genotype=nothing)
+function Record(base::Record;
+                chromosome=nothing, position=nothing, quality=nothing,
+                identifier=nothing, reference=nothing, alternate=nothing,
+                filter=nothing, information=nothing, genotype=nothing)
     checkfilled(base)
     data = base.data[1:24]
 
@@ -169,15 +169,15 @@ function BCFRecord(base::BCFRecord;
         error("modifying genotype is yet supported")
     end
 
-    return BCFRecord(data, 1:endof(data), sharedlen, offset - sharedlen)
+    return Record(data, 1:endof(data), sharedlen, offset - sharedlen)
 end
 
-function Base.show(io::IO, record::BCFRecord)
+function Base.show(io::IO, record::Record)
     print(io, summary(record), ':')
     if isfilled(record)
         println(io)
         println(io, "   chromosome: ", chromosome(record))
-        println(io, "     position: ", leftposition(record))
+        println(io, "     position: ", position(record))
         println(io, "   identifier: ", identifier(record))
         println(io, "    reference: ", reference(record))
         println(io, "    alternate: ", join(alternate(record), ' '))
@@ -189,54 +189,54 @@ function Base.show(io::IO, record::BCFRecord)
     end
 end
 
-function chromosome(rec::BCFRecord)
+function chromosome(rec::Record)
     checkfilled(rec)
     return load(Int32, rec.data, 0)[1] % Int + 1
 end
 
-function leftposition(rec::BCFRecord)
+function position(rec::Record)
     checkfilled(rec)
     return load(Int32, rec.data, 4)[1] % Int + 1
 end
 
-function rlen(rec::BCFRecord)
+function rlen(rec::Record)
     checkfilled(rec)
     return load(Int32, rec.data, 8)[1] % Int
 end
 
-function quality(rec::BCFRecord)
+function quality(rec::Record)
     checkfilled(rec)
     # 0x7F800001 is a missing value.
     return load(Float32, rec.data, 12)[1]
 end
 
-function n_allele(rec::BCFRecord)
+function n_allele(rec::Record)
     checkfilled(rec)
     return (load(Int32, rec.data, 16)[1] >> 16) % Int
 end
 
-function n_info(rec::BCFRecord)
+function n_info(rec::Record)
     checkfilled(rec)
     return (load(Int32, rec.data, 16)[1] & 0x0000ffff) % Int
 end
 
-function n_format(rec::BCFRecord)
+function n_format(rec::Record)
     checkfilled(rec)
     return (load(UInt32, rec.data, 20)[1] >> 24) % Int
 end
 
-function n_sample(rec::BCFRecord)
+function n_sample(rec::Record)
     checkfilled(rec)
     return (load(UInt32, rec.data, 20)[1] & 0x000000ff) % Int
 end
 
-function identifier(rec::BCFRecord)
+function identifier(rec::Record)
     checkfilled(rec)
     offset = 24
     return loadstr(rec.data, offset)[1]
 end
 
-function reference(rec::BCFRecord)
+function reference(rec::Record)
     checkfilled(rec)
     # skip ID
     offset = 24
@@ -245,7 +245,7 @@ function reference(rec::BCFRecord)
     return loadstr(rec.data, offset + len)[1]
 end
 
-function alternate(rec::BCFRecord)
+function alternate(rec::Record)
     checkfilled(rec)
     # skip ID and REF
     offset = 24
@@ -262,7 +262,7 @@ function alternate(rec::BCFRecord)
     return alt
 end
 
-function filter_(rec::BCFRecord)
+function filter_(rec::Record)
     checkfilled(rec)
     # skip ID, REF and ALTs
     offset = 24
@@ -274,7 +274,7 @@ function filter_(rec::BCFRecord)
     return loadvec(rec.data, offset + len)[1] .+ 1
 end
 
-function information(rec::BCFRecord; simplify::Bool=true)
+function information(rec::Record; simplify::Bool=true)
     checkfilled(rec)
     # skip ID, REF, ALTs and FILTER
     offset::Int = 24
@@ -301,7 +301,7 @@ function information(rec::BCFRecord; simplify::Bool=true)
     return ret
 end
 
-function information(rec::BCFRecord, key::Integer; simplify::Bool=true)
+function information(rec::Record, key::Integer; simplify::Bool=true)
     checkfilled(rec)
     # skip ID, REF, ALTs and FILTER
     offset::Int = 24
@@ -331,7 +331,7 @@ function information(rec::BCFRecord, key::Integer; simplify::Bool=true)
     throw(KeyError(key))
 end
 
-function genotype(rec::BCFRecord)
+function genotype(rec::Record)
     checkfilled(rec)
     offset::Int = rec.sharedlen
     N = n_sample(rec)
@@ -350,11 +350,11 @@ function genotype(rec::BCFRecord)
     return ret
 end
 
-function genotype(rec::BCFRecord, index::Integer)
+function genotype(rec::Record, index::Integer)
     return [(k, geno[index]) for (k, geno) in genotype(rec)]
 end
 
-function genotype(rec::BCFRecord, index::Integer, key::Integer)
+function genotype(rec::Record, index::Integer, key::Integer)
     checkfilled(rec)
     N = n_sample(rec)
     offset::Int = rec.sharedlen
@@ -373,7 +373,7 @@ function genotype(rec::BCFRecord, index::Integer, key::Integer)
     throw(KeyError(key))
 end
 
-function genotype{T<:Integer}(rec::BCFRecord, indexes::AbstractVector{T}, key::Integer)
+function genotype{T<:Integer}(rec::Record, indexes::AbstractVector{T}, key::Integer)
     checkfilled(rec)
     N = n_sample(rec)
     offset::Int = rec.sharedlen
@@ -397,7 +397,7 @@ function genotype{T<:Integer}(rec::BCFRecord, indexes::AbstractVector{T}, key::I
     throw(KeyError(key))
 end
 
-function genotype(rec::BCFRecord, ::Colon, key::Integer)
+function genotype(rec::Record, ::Colon, key::Integer)
     return genotype(rec, 1:n_sample(rec), key)
 end
 
