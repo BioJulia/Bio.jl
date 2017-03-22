@@ -6,6 +6,8 @@ using Bio: Seq, Var
 using TestFunctions
 using PairwiseListMatrices
 using IntervalTrees: IntervalValue
+import BufferedStreams: BufferedInputStream
+import YAML
 
 typealias PWM PairwiseListMatrix
 
@@ -311,7 +313,7 @@ end
     @test round(distance(Kimura80, m2)[2][1], 3) == 1
 
 end
-<<<<<<< HEAD
+=#
 
 @testset "VCF" begin
     metainfo = VCFMetaInfo()
@@ -677,6 +679,4 @@ end
     end
 end
 
-=======
-=#
 end # module TestVar
