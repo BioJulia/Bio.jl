@@ -40,12 +40,12 @@ Create a VCF object from `data` containing a VCF record.
 This function verifies the format and indexes fields for accessors.
 Note that the ownership of `data` is transferred to a new record.
 """
-function VCFRecord(data::Vector{UInt8})
-    return convert(VCFRecord, data)
+function Record(data::Vector{UInt8})
+    return convert(Record, data)
 end
 
-function Base.convert(::Type{VCFRecord}, data::Vector{UInt8})
-    record = VCFRecord(
+function Base.convert(::Type{Record}, data::Vector{UInt8})
+    record = Record(
         # data and filled
         data, 1:0,
         # chrom-alt
@@ -354,20 +354,20 @@ function haschromosome(record::Record)
 end
 
 """
-    leftposition(record::Record)::Int
+    position(record::Record)::Int
 
 Get the reference position of `record`.
 """
-function Bio.leftposition(record::Record)::Int
+function position(record::Record)::Int
     checkfilled(record)
     if ismissing(record, record.pos)
-        missingerror(:leftposition)
+        missingerror(:position)
     end
     # TODO: no-copy accessor
     return parse(Int, String(record.data[record.pos]))
 end
 
-function Bio.hasleftposition(record::Record)
+function hasposition(record::Record)
     return isfilled(record) && !ismissing(record, record.pos)
 end
 
@@ -652,7 +652,7 @@ function Base.show(io::IO, record::Record)
     if isfilled(record)
         println(io)
         println(io, "   chromosome: ", haschromosome(record) ? chromosome(record) : "<missing>")
-        println(io, "     position: ", hasleftposition(record) ? leftposition(record) : "<missing>")
+        println(io, "     position: ", hasposition(record) ? position(record) : "<missing>")
         println(io, "   identifier: ", hasidentifier(record) ? join(identifier(record), " ") : "<missing>")
         println(io, "    reference: ", hasreference(record) ? reference(record) : "<missing>")
         println(io, "    alternate: ", hasalternate(record) ? join(alternate(record), " ") : "<missing>")

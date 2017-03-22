@@ -5,7 +5,7 @@ type Reader <: Bio.IO.AbstractReader
     state::Bio.Ragel.State
     header::Header
 
-    function Reader(input::BufferedInputStream)
+    function Reader(input::BufferedStreams.BufferedInputStream)
         reader = new(Bio.Ragel.State(vcf_header_machine.start_state, input), Header())
         readheader!(reader)
         reader.state.cs = vcf_body_machine.start_state
@@ -22,7 +22,7 @@ Create a data reader of the VCF file format.
 * `input`: data source
 """
 function Reader(input::IO)
-    return Reader(BufferedInputStream(input))
+    return Reader(BufferedStreams.BufferedInputStream(input))
 end
 
 function Base.eltype(::Type{Reader})
@@ -33,8 +33,17 @@ function Bio.IO.stream(reader::Reader)
     return reader.state.stream
 end
 
+"""
+    header(reader::VCF.Reader)::VCF.Header
+
+Get the header of `reader`.
+"""
 function header(reader::Reader)
     return reader.header
+end
+
+function Bio.header(reader::Reader)
+    return header(reader)
 end
 
 # VCF v4.3

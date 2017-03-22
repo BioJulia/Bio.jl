@@ -11,7 +11,7 @@ Create a data reader of the BCF file format.
 """
 immutable BCFReader{T<:IO} <: Bio.IO.AbstractReader
     version::Tuple{UInt8,UInt8}  # (major, minor)
-    header::VCFHeader
+    header::VCF.Header
     stream::BGZFStream{T}
 end
 
@@ -36,7 +36,7 @@ function BCFReader(input::IO)
     data = read(stream, l_header)
 
     # parse VCF header
-    vcfreader = VCFReader(BufferedInputStream(data))
+    vcfreader = VCF.Reader(BufferedInputStream(data))
 
     return BCFReader((major, minor), vcfreader.header, stream)
 end

@@ -64,7 +64,7 @@ end
 
 function Base.show(io::IO, header::Header)
     println(io, summary(header), ':')
-    tags = metainfotag.(header.metainfo)
+    tags = Bio.metainfotag.(header.metainfo)
     println(io, "  metainfo tags: ", join(unique(tags), ' '))
       print(io, "     sample IDs: ", join(header.sampleID, ' '))
 end

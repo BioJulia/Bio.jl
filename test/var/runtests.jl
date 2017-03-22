@@ -316,28 +316,28 @@ end
 =#
 
 @testset "VCF" begin
-    metainfo = VCFMetaInfo()
+    metainfo = VCF.MetaInfo()
     @test !isfilled(metainfo)
-    @test ismatch(r"^Bio.Var.VCFMetaInfo: <not filled>", repr(metainfo))
+    @test ismatch(r"^Bio.Var.VCF.MetaInfo: <not filled>", repr(metainfo))
     @test_throws ArgumentError metainfotag(metainfo)
 
-    metainfo = VCFMetaInfo(b"##source=foobar1234")
+    metainfo = VCF.MetaInfo(b"##source=foobar1234")
     @test isfilled(metainfo)
     @test metainfotag(metainfo) == "source"
     @test metainfoval(metainfo) == "foobar1234"
 
-    metainfo = VCFMetaInfo("##source=foobar1234")
+    metainfo = VCF.MetaInfo("##source=foobar1234")
     @test isfilled(metainfo)
     @test metainfotag(metainfo) == "source"
     @test metainfoval(metainfo) == "foobar1234"
 
-    metainfo = VCFMetaInfo(metainfo)
-    @test isa(metainfo, VCFMetaInfo)
-    metainfo = VCFMetaInfo(metainfo, tag="date")
+    metainfo = VCF.MetaInfo(metainfo)
+    @test isa(metainfo, VCF.MetaInfo)
+    metainfo = VCF.MetaInfo(metainfo, tag="date")
     @test metainfotag(metainfo) == "date"
-    metainfo = VCFMetaInfo(metainfo, value="2017-01-30")
+    metainfo = VCF.MetaInfo(metainfo, value="2017-01-30")
     @test metainfoval(metainfo) == "2017-01-30"
-    metainfo = VCFMetaInfo(metainfo, tag="INFO", value=["ID"=>"DP", "Number"=>"1", "Type"=>"Integer", "Description"=>"Total Depth"])
+    metainfo = VCF.MetaInfo(metainfo, tag="INFO", value=["ID"=>"DP", "Number"=>"1", "Type"=>"Integer", "Description"=>"Total Depth"])
     @test metainfo["ID"] == "DP"
     @test metainfo["Number"] == "1"
     @test metainfo["Type"] == "Integer"
@@ -345,74 +345,74 @@ end
     @test metainfotag(metainfo) == "INFO"
     @test metainfoval(metainfo) == """<ID=DP,Number=1,Type=Integer,Description="Total Depth">"""
 
-    record = VCFRecord()
+    record = VCF.Record()
     @test !isfilled(record)
-    @test ismatch(r"^Bio.Var.VCFRecord: <not filled>", repr(record))
-    @test_throws ArgumentError chromosome(record)
+    @test ismatch(r"^Bio.Var.VCF.Record: <not filled>", repr(record))
+    @test_throws ArgumentError VCF.chromosome(record)
 
-    record = VCFRecord("20\t302\t.\tT\tTA\t999\t.\t.\tGT")
+    record = VCF.Record("20\t302\t.\tT\tTA\t999\t.\t.\tGT")
     @test isfilled(record)
-    @test haschromosome(record)
-    @test chromosome(record) == "20"
-    @test hasleftposition(record)
-    @test leftposition(record) == 302
-    @test !hasidentifier(record)
-    @test_throws MissingFieldException identifier(record)
-    @test hasreference(record)
-    @test reference(record) == "T"
-    @test hasalternate(record)
-    @test alternate(record) == ["TA"]
-    @test hasquality(record)
-    @test quality(record) == 999
-    @test !hasfilter_(record)
-    @test_throws MissingFieldException filter_(record)
-    @test infokeys(record) == String[]
-    @test !hasinformation(record)
-    @test_throws MissingFieldException information(record)
-    @test hasformat(record)
-    @test format(record) == ["GT"]
+    @test VCF.haschromosome(record)
+    @test VCF.chromosome(record) == "20"
+    @test VCF.hasposition(record)
+    @test VCF.position(record) == 302
+    @test !VCF.hasidentifier(record)
+    @test_throws MissingFieldException VCF.identifier(record)
+    @test VCF.hasreference(record)
+    @test VCF.reference(record) == "T"
+    @test VCF.hasalternate(record)
+    @test VCF.alternate(record) == ["TA"]
+    @test VCF.hasquality(record)
+    @test VCF.quality(record) == 999
+    @test !VCF.hasfilter_(record)
+    @test_throws MissingFieldException VCF.filter_(record)
+    @test VCF.infokeys(record) == String[]
+    @test !VCF.hasinformation(record)
+    @test_throws MissingFieldException VCF.information(record)
+    @test VCF.hasformat(record)
+    @test VCF.format(record) == ["GT"]
 
     # empty data is not a valid VCF record
-    @test_throws ArgumentError VCFRecord("")
-    @test_throws ArgumentError VCFRecord(b"")
+    @test_throws ArgumentError VCF.Record("")
+    @test_throws ArgumentError VCF.Record(b"")
 
-    record = VCFRecord(b".\t.\t.\t.\t.\t.\t.\t.\t")
+    record = VCF.Record(b".\t.\t.\t.\t.\t.\t.\t.\t")
     @test isfilled(record)
-    @test !haschromosome(record)
-    @test !hasleftposition(record)
-    @test !hasidentifier(record)
-    @test !hasreference(record)
-    @test !hasalternate(record)
-    @test !hasquality(record)
-    @test !hasfilter_(record)
-    @test !hasinformation(record)
+    @test !VCF.haschromosome(record)
+    @test !VCF.hasposition(record)
+    @test !VCF.hasidentifier(record)
+    @test !VCF.hasreference(record)
+    @test !VCF.hasalternate(record)
+    @test !VCF.hasquality(record)
+    @test !VCF.hasfilter_(record)
+    @test !VCF.hasinformation(record)
 
-    record = VCFRecord(record)
-    @test isa(record, VCFRecord)
-    record = VCFRecord(record, chromosome="chr1")
-    @test chromosome(record) == "chr1"
-    record = VCFRecord(record, position=1234)
-    @test leftposition(record) == 1234
-    record = VCFRecord(record, identifier="rs1111")
-    @test identifier(record) == ["rs1111"]
-    record = VCFRecord(record, reference="A")
-    @test reference(record) == "A"
-    record = VCFRecord(record, alternate=["AT"])
-    @test alternate(record) == ["AT"]
-    record = VCFRecord(record, quality=11.2)
-    @test quality(record) == 11.2
-    record = VCFRecord(record, filter="PASS")
-    @test filter_(record) == ["PASS"]
-    record = VCFRecord(record, information=Dict("DP" => 20, "AA" => "AT", "DB"=>nothing))
-    @test information(record, "DP") == "20"
-    @test information(record, "AA") == "AT"
-    @test information(record, "DB") == ""
-    @test infokeys(record) == ["DP", "AA", "DB"]
-    record = VCFRecord(record, genotype=[Dict("GT" => "0/0", "DP" => [10,20])])
-    @test format(record) == ["DP", "GT"]
-    @test genotype(record) == [["10,20", "0/0"]]
+    record = VCF.Record(record)
+    @test isa(record, VCF.Record)
+    record = VCF.Record(record, chromosome="chr1")
+    @test VCF.chromosome(record) == "chr1"
+    record = VCF.Record(record, position=1234)
+    @test VCF.position(record) == 1234
+    record = VCF.Record(record, identifier="rs1111")
+    @test VCF.identifier(record) == ["rs1111"]
+    record = VCF.Record(record, reference="A")
+    @test VCF.reference(record) == "A"
+    record = VCF.Record(record, alternate=["AT"])
+    @test VCF.alternate(record) == ["AT"]
+    record = VCF.Record(record, quality=11.2)
+    @test VCF.quality(record) == 11.2
+    record = VCF.Record(record, filter="PASS")
+    @test VCF.filter_(record) == ["PASS"]
+    record = VCF.Record(record, information=Dict("DP" => 20, "AA" => "AT", "DB"=>nothing))
+    @test VCF.information(record, "DP") == "20"
+    @test VCF.information(record, "AA") == "AT"
+    @test VCF.information(record, "DB") == ""
+    @test VCF.infokeys(record) == ["DP", "AA", "DB"]
+    record = VCF.Record(record, genotype=[Dict("GT" => "0/0", "DP" => [10,20])])
+    @test VCF.format(record) == ["DP", "GT"]
+    @test VCF.genotype(record) == [["10,20", "0/0"]]
 
-    let header = VCFHeader()
+    let header = VCF.Header()
         @test isempty(header)
         push!(header, "##reference=file:///seq/references/1000GenomesPilot-NCBI36.fasta")
         @test !isempty(header)
@@ -420,16 +420,16 @@ end
         unshift!(header, "##fileformat=VCFv4.3")
         @test length(header) == 2
         @test collect(header) == [
-            VCFMetaInfo("##fileformat=VCFv4.3"),
-            VCFMetaInfo("##reference=file:///seq/references/1000GenomesPilot-NCBI36.fasta")]
-        @test startswith(repr(header), "Bio.Var.VCFHeader:")
+            VCF.MetaInfo("##fileformat=VCFv4.3"),
+            VCF.MetaInfo("##reference=file:///seq/references/1000GenomesPilot-NCBI36.fasta")]
+        @test startswith(repr(header), "Bio.Var.VCF.Header:")
     end
 
-    let header = VCFHeader(["##fileformat=VCFv4.3"], ["Sample1"])
+    let header = VCF.Header(["##fileformat=VCFv4.3"], ["Sample1"])
         @test !isempty(header)
         @test length(header) == 1
         @test header.sampleID == ["Sample1"]
-        @test first(header) == VCFMetaInfo("##fileformat=VCFv4.3")
+        @test first(header) == VCF.MetaInfo("##fileformat=VCFv4.3")
     end
 
     # minimum header
@@ -437,8 +437,8 @@ end
     ##fileformat=VCFv4.3
     #CHROM	POS	ID	REF	ALT	QUAL	FILTER	INFO
     """
-    reader = VCFReader(BufferedInputStream(data))
-    @test isa(header(reader), VCFHeader)
+    reader = VCF.Reader(BufferedInputStream(data))
+    @test isa(header(reader), VCF.Header)
     let header = header(reader)
         @test length(header.metainfo) == 1
         @test metainfotag(header.metainfo[1]) == "fileformat"
@@ -460,8 +460,8 @@ end
     ##INFO=<ID=AA,Number=1,Type=String,Description="Ancestral Allele">
     #CHROM	POS	ID	REF	ALT	QUAL	FILTER	INFO	FORMAT	NA00001	NA00002	NA00003
     """
-    reader = VCFReader(BufferedInputStream(data))
-    @test isa(header(reader), VCFHeader)
+    reader = VCF.Reader(BufferedInputStream(data))
+    @test isa(header(reader), VCF.Header)
 
     let header = header(reader)
         @test length(header.metainfo) == 10
@@ -516,53 +516,53 @@ end
     chr1\t1234\trs001234\tA\tC\t30\tPASS\tDP=10;AF=0.3\tGT\t0|0\t0/1
     chr2\t4\t.\tA\tAA,AAT\t.\t.\tDP=5\tGT:DP\t0|1:42\t0/1
     """
-    reader = VCFReader(BufferedInputStream(data))
-    record = VCFRecord()
+    reader = VCF.Reader(BufferedInputStream(data))
+    record = VCF.Record()
 
     @test read!(reader, record) === record
-    @test chromosome(record) == "chr1"
-    @test leftposition(record) === 1234
-    @test identifier(record) == ["rs001234"]
-    @test reference(record) == "A"
-    @test alternate(record) == ["C"]
-    @test quality(record) === 30.0
-    @test filter_(record) == ["PASS"]
-    @test information(record) == ["DP" => "10", "AF" => "0.3"]
-    @test information(record, "DP") == "10"
-    @test information(record, "AF") == "0.3"
-    @test format(record) == ["GT"]
-    @test genotype(record) == [["0|0"], ["0/1"]]
-    @test genotype(record, 1) == genotype(record)[1]
-    @test genotype(record, 2) == genotype(record)[2]
-    @test genotype(record, 1, "GT") == "0|0"
-    @test genotype(record, 2, "GT") == "0/1"
-    @test genotype(record, 1:2, "GT") == ["0|0", "0/1"]
-    @test genotype(record, :, "GT") == genotype(record, 1:2, "GT")
-    @test ismatch(r"^Bio.Var.VCFRecord:\n.*", repr(record))
+    @test VCF.chromosome(record) == "chr1"
+    @test VCF.position(record) === 1234
+    @test VCF.identifier(record) == ["rs001234"]
+    @test VCF.reference(record) == "A"
+    @test VCF.alternate(record) == ["C"]
+    @test VCF.quality(record) === 30.0
+    @test VCF.filter_(record) == ["PASS"]
+    @test VCF.information(record) == ["DP" => "10", "AF" => "0.3"]
+    @test VCF.information(record, "DP") == "10"
+    @test VCF.information(record, "AF") == "0.3"
+    @test VCF.format(record) == ["GT"]
+    @test VCF.genotype(record) == [["0|0"], ["0/1"]]
+    @test VCF.genotype(record, 1) == VCF.genotype(record)[1]
+    @test VCF.genotype(record, 2) == VCF.genotype(record)[2]
+    @test VCF.genotype(record, 1, "GT") == "0|0"
+    @test VCF.genotype(record, 2, "GT") == "0/1"
+    @test VCF.genotype(record, 1:2, "GT") == ["0|0", "0/1"]
+    @test VCF.genotype(record, :, "GT") == VCF.genotype(record, 1:2, "GT")
+    @test ismatch(r"^Bio.Var.VCF.Record:\n.*", repr(record))
 
     @test read!(reader, record) === record
-    @test chromosome(record) == "chr2"
-    @test leftposition(record) == 4
-    @test !hasidentifier(record)
-    @test reference(record) == "A"
-    @test alternate(record) == ["AA", "AAT"]
-    @test !hasquality(record)
-    @test !hasfilter_(record)
-    @test information(record) == ["DP" => "5"]
-    @test information(record, "DP") == "5"
-    @test_throws KeyError information(record, "AF")
-    @test format(record) == ["GT", "DP"]
-    @test genotype(record) == [["0|1", "42"], ["0/1", "."]]
-    @test genotype(record, 1) == genotype(record)[1]
-    @test genotype(record, 2) == genotype(record)[2]
-    @test genotype(record, 1, "GT") == "0|1"
-    @test genotype(record, 1, "DP") == "42"
-    @test genotype(record, 2, "GT") == "0/1"
-    @test genotype(record, 2, "DP") == "."
-    @test genotype(record, 1:2, "GT") == ["0|1", "0/1"]
-    @test genotype(record, 1:2, "DP") == ["42", "."]
-    @test genotype(record, :, "DP") == genotype(record, 1:2, "DP")
-    @test_throws KeyError genotype(record, :, "BAD")
+    @test VCF.chromosome(record) == "chr2"
+    @test VCF.position(record) == 4
+    @test !VCF.hasidentifier(record)
+    @test VCF.reference(record) == "A"
+    @test VCF.alternate(record) == ["AA", "AAT"]
+    @test !VCF.hasquality(record)
+    @test !VCF.hasfilter_(record)
+    @test VCF.information(record) == ["DP" => "5"]
+    @test VCF.information(record, "DP") == "5"
+    @test_throws KeyError VCF.information(record, "AF")
+    @test VCF.format(record) == ["GT", "DP"]
+    @test VCF.genotype(record) == [["0|1", "42"], ["0/1", "."]]
+    @test VCF.genotype(record, 1) == VCF.genotype(record)[1]
+    @test VCF.genotype(record, 2) == VCF.genotype(record)[2]
+    @test VCF.genotype(record, 1, "GT") == "0|1"
+    @test VCF.genotype(record, 1, "DP") == "42"
+    @test VCF.genotype(record, 2, "GT") == "0/1"
+    @test VCF.genotype(record, 2, "DP") == "."
+    @test VCF.genotype(record, 1:2, "GT") == ["0|1", "0/1"]
+    @test VCF.genotype(record, 1:2, "DP") == ["42", "."]
+    @test VCF.genotype(record, :, "DP") == VCF.genotype(record, 1:2, "DP")
+    @test_throws KeyError VCF.genotype(record, :, "BAD")
 
     @test_throws EOFError read!(reader, record)
 
@@ -570,10 +570,10 @@ end
     vcfdir = joinpath(dirname(@__FILE__), "..", "BioFmtSpecimens", "VCF")
     for specimen in YAML.load_file(joinpath(vcfdir, "index.yml"))
         filepath = joinpath(vcfdir, specimen["filename"])
-        records = VCFRecord[]
-        reader = open(VCFReader, filepath)
+        records = VCF.Record[]
+        reader = open(VCF.Reader, filepath)
         output = IOBuffer()
-        writer = VCFWriter(output, header(reader))
+        writer = VCF.Writer(output, header(reader))
         for record in reader
             write(writer, record)
             push!(records, record)
@@ -581,8 +581,8 @@ end
         close(reader)
         flush(writer)
 
-        records2 = VCFRecord[]
-        for record in VCFReader(IOBuffer(takebuf_array(output)))
+        records2 = VCF.Record[]
+        for record in VCF.Reader(IOBuffer(takebuf_array(output)))
             push!(records2, record)
         end
         @test records == records2
@@ -632,7 +632,7 @@ end
     reader = BCFReader(open(joinpath(bcfdir, "example.bcf")))
     let header = header(reader)
         @test length(find(header, "fileformat")) == 1
-        @test find(header, "fileformat")[1] == VCFMetaInfo("##fileformat=VCFv4.2")
+        @test find(header, "fileformat")[1] == VCF.MetaInfo("##fileformat=VCFv4.2")
         @test length(find(header, "FORMAT")) == 4
     end
     record = BCFRecord()

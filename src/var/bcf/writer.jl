@@ -2,7 +2,7 @@
 # ==========
 
 """
-    BCFWriter(output::IO, header::VCFHeader)
+    BCFWriter(output::IO, header::VCF.Header)
 
 Create a data writer of the BCF file format.
 
@@ -14,7 +14,7 @@ type BCFWriter{T<:IO} <: Bio.IO.AbstractWriter
     stream::BGZFStream{T}
 end
 
-function BCFWriter(output::IO, header::VCFHeader)
+function BCFWriter(output::IO, header::VCF.Header)
     stream = BGZFStream(output, "w")
     write(stream, b"BCF\x02\x02")
     buf = IOBuffer()

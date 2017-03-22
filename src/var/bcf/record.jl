@@ -612,3 +612,7 @@ function memcpy(dst::Ptr, src::Ptr, n::Int)
     ccall(:memcpy, Ptr{Void}, (Ptr{Void}, Ptr{Void}, Csize_t), dst, src, n)
     return nothing
 end
+
+function memcmp(p1::Ptr, p2::Ptr, n::Integer)
+    return ccall(:memcmp, Cint, (Ptr{Void}, Ptr{Void}, Csize_t), p1, p2, n)
+end
