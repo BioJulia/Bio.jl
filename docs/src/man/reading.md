@@ -356,13 +356,13 @@ Bio.Var.VCF.format
 
 ### BCF
 
-* Reader type: `BCFReader{T<:IO}`
-* Writer type: `BCFWriter{T<:IO}`
-* Element type: `BCFRecord`
+* Reader type: `BCF.Reader{T<:IO}`
+* Writer type: `BCF.Writer{T<:IO}`
+* Element type: `BCF.Record`
 
 BCF is a binary counterpart of the VCF file format.
 
 ```@docs
-Bio.Var.BCFReader
-Bio.Var.BCFWriter
+Bio.Var.BCF.Reader
+Bio.Var.BCF.Writer
 ```

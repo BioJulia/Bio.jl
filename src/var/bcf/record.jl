@@ -43,59 +43,59 @@ function Base.copy(record::Record)
 end
 
 function Record(base::Record;
-                chromosome=nothing, position=nothing, quality=nothing,
-                identifier=nothing, reference=nothing, alternate=nothing,
-                filter=nothing, information=nothing, genotype=nothing)
+                chrom=nothing, pos=nothing, qual=nothing,
+                id=nothing, ref=nothing, alt=nothing,
+                filter=nothing, info=nothing, genotype=nothing)
     checkfilled(base)
     data = base.data[1:24]
 
-    if chromosome != nothing
-        store!(data, 0, convert(Int32, chromosome - 1))
+    if chrom != nothing
+        store!(data, 0, convert(Int32, chrom - 1))
     end
-    if position != nothing
-        store!(data, 4, convert(Int32, position - 1))
+    if pos != nothing
+        store!(data, 4, convert(Int32, pos - 1))
     end
-    if quality != nothing
-        store!(data, 12, convert(Float32, quality))
+    if qual != nothing
+        store!(data, 12, convert(Float32, qual))
     end
 
     offset = boffset = 24
-    if identifier == nothing
+    if id == nothing
         offset, boffset = copyvec!(data, offset, base.data, boffset)
     else
-        offset = storestr!(data, offset, string(identifier))
+        offset = storestr!(data, offset, string(id))
         boffset = skipvec(base.data, boffset)
     end
 
-    if reference == nothing
+    if ref == nothing
         offset, boffset = copyvec!(data, offset, base.data, boffset)
     else
-        reference = string(reference)
-        offset = storestr!(data, offset, reference)
-        if sizeof(reference) != rlen(base)
-            store!(data, 8, convert(Int32, sizeof(reference)))
+        ref = string(ref)
+        offset = storestr!(data, offset, ref)
+        if sizeof(ref) != rlen(base)
+            store!(data, 8, convert(Int32, sizeof(ref)))
         end
         boffset = skipvec(base.data, boffset)
     end
 
     n = n_allele(base)
-    if alternate == nothing
+    if alt == nothing
         for _ in 1:n-1
             offset, boffset = copyvec!(data, offset, base.data, boffset)
         end
     else
-        if !isa(alternate, Vector)
-            alternate = [alternate]
+        if !isa(alt, Vector)
+            alt = [alt]
         end
-        for x in alternate
+        for x in alt
             offset = storestr!(data, offset, string(x))
         end
         for _ in 1:n-1
             boffset = skipvec(base.data, boffset)
         end
-        if length(alternate) != n
+        if length(alt) != n
             n_allele_info = load(UInt32, data, 16)[1]
-            n_allele_info = (n_allele_info & 0x0000ffff) | (UInt32(length(alternate) + 1) << 16)
+            n_allele_info = (n_allele_info & 0x0000ffff) | (UInt32(length(alt) + 1) << 16)
             store!(data, 16, n_allele_info)
         end
     end
@@ -111,18 +111,18 @@ function Record(base::Record;
     end
 
     n = n_info(base)
-    if information == nothing
+    if info == nothing
         for _ in 1:n
             # copy key and value(s)
             offset, boffset = copyvec!(data, offset, base.data, boffset)
             offset, boffset = copyvec!(data, offset, base.data, boffset)
         end
     else
-        if !isa(information, Associative)
+        if !isa(info, Associative)
             throw(ArgumentError("info must be an associative object"))
         end
         keyvec = Vector{Int8}(1)
-        for (key, val) in information
+        for (key, val) in info
             if !isa(key, Integer)
                 throw(ArgumentError("info key must be an integer"))
             end
@@ -136,12 +136,12 @@ function Record(base::Record;
                 offset = storevec!(data, offset, val)
             end
         end
-        if length(information) != n
-            if length(information) > typemax(UInt16)
+        if length(info) != n
+            if length(info) > typemax(UInt16)
                 throw(ArgumentError("too many info fields"))
             end
             n_allele_info = load(UInt32, data, 16)[1]
-            n_allele_info = (n_allele_info & 0xffff0000) | UInt32(length(information))
+            n_allele_info = (n_allele_info & 0xffff0000) | UInt32(length(info))
             store!(data, 16, n_allele_info)
         end
         for _ in 1:n
@@ -176,25 +176,25 @@ function Base.show(io::IO, record::Record)
     print(io, summary(record), ':')
     if isfilled(record)
         println(io)
-        println(io, "   chromosome: ", chromosome(record))
-        println(io, "     position: ", position(record))
-        println(io, "   identifier: ", identifier(record))
-        println(io, "    reference: ", reference(record))
-        println(io, "    alternate: ", join(alternate(record), ' '))
-        println(io, "      quality: ", quality(record))
-        println(io, "       filter: ", join(filter_(record), ' '))
-          print(io, "  information: ", information(record))
+        println(io, "   chromosome: ", chrom(record))
+        println(io, "     position: ", pos(record))
+        println(io, "   identifier: ", id(record))
+        println(io, "    reference: ", ref(record))
+        println(io, "    alternate: ", join(alt(record), ' '))
+        println(io, "      quality: ", qual(record))
+        println(io, "       filter: ", join(filter(record), ' '))
+          print(io, "  information: ", info(record))
     else
         print(io, " <not filled>")
     end
 end
 
-function chromosome(rec::Record)
+function chrom(rec::Record)
     checkfilled(rec)
     return load(Int32, rec.data, 0)[1] % Int + 1
 end
 
-function position(rec::Record)
+function pos(rec::Record)
     checkfilled(rec)
     return load(Int32, rec.data, 4)[1] % Int + 1
 end
@@ -204,7 +204,7 @@ function rlen(rec::Record)
     return load(Int32, rec.data, 8)[1] % Int
 end
 
-function quality(rec::Record)
+function qual(rec::Record)
     checkfilled(rec)
     # 0x7F800001 is a missing value.
     return load(Float32, rec.data, 12)[1]
@@ -230,13 +230,13 @@ function n_sample(rec::Record)
     return (load(UInt32, rec.data, 20)[1] & 0x000000ff) % Int
 end
 
-function identifier(rec::Record)
+function id(rec::Record)
     checkfilled(rec)
     offset = 24
     return loadstr(rec.data, offset)[1]
 end
 
-function reference(rec::Record)
+function ref(rec::Record)
     checkfilled(rec)
     # skip ID
     offset = 24
@@ -245,7 +245,7 @@ function reference(rec::Record)
     return loadstr(rec.data, offset + len)[1]
 end
 
-function alternate(rec::Record)
+function alt(rec::Record)
     checkfilled(rec)
     # skip ID and REF
     offset = 24
@@ -262,7 +262,7 @@ function alternate(rec::Record)
     return alt
 end
 
-function filter_(rec::Record)
+function filter(rec::Record)
     checkfilled(rec)
     # skip ID, REF and ALTs
     offset = 24
@@ -274,7 +274,7 @@ function filter_(rec::Record)
     return loadvec(rec.data, offset + len)[1] .+ 1
 end
 
-function information(rec::Record; simplify::Bool=true)
+function info(rec::Record; simplify::Bool=true)
     checkfilled(rec)
     # skip ID, REF, ALTs and FILTER
     offset::Int = 24
@@ -301,7 +301,7 @@ function information(rec::Record; simplify::Bool=true)
     return ret
 end
 
-function information(rec::Record, key::Integer; simplify::Bool=true)
+function info(rec::Record, key::Integer; simplify::Bool=true)
     checkfilled(rec)
     # skip ID, REF, ALTs and FILTER
     offset::Int = 24

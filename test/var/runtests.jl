@@ -597,7 +597,7 @@ end
     record = BCF.Record()
     @test !isfilled(record)
     @test ismatch(r"^Bio.Var.BCF.Record: <not filled>", repr(record))
-    @test_throws ArgumentError BCF.chromosome(record)
+    @test_throws ArgumentError BCF.chrom(record)
 
     record = BCF.Record()
     record.sharedlen = 0x1c
@@ -605,28 +605,28 @@ end
     # generated from bcftools 1.3.1 (htslib 1.3.1)
     record.data = parsehex("00 00 00 00 ff ff ff ff 01 00 00 00 01 00 80 7f 00 00 01 00 00 00 00 00 07 17 2e 00")
     record.filled = 1:endof(record.data)
-    @test BCF.chromosome(record) == 1
+    @test BCF.chrom(record) == 1
     record = BCF.Record(record)
     @test isa(record, BCF.Record)
-    record = BCF.Record(record, chromosome=4)
-    @test BCF.chromosome(record) == 4
-    record = BCF.Record(record, position=1234)
-    @test BCF.position(record) == 1234
-    record = BCF.Record(record, quality=12.3)
-    @test BCF.quality(record) == 12.3f0
-    record = BCF.Record(record, identifier="rs1234")
-    @test BCF.identifier(record) == "rs1234"
-    record = BCF.Record(record, reference="AT")
-    @test BCF.reference(record) == "AT"
-    record = BCF.Record(record, alternate=["ATT", "ACT"])
-    @test BCF.alternate(record) == ["ATT", "ACT"]
+    record = BCF.Record(record, chrom=4)
+    @test BCF.chrom(record) == 4
+    record = BCF.Record(record, pos=1234)
+    @test BCF.pos(record) == 1234
+    record = BCF.Record(record, qual=12.3)
+    @test BCF.qual(record) == 12.3f0
+    record = BCF.Record(record, id="rs1234")
+    @test BCF.id(record) == "rs1234"
+    record = BCF.Record(record, ref="AT")
+    @test BCF.ref(record) == "AT"
+    record = BCF.Record(record, alt=["ATT", "ACT"])
+    @test BCF.alt(record) == ["ATT", "ACT"]
     record = BCF.Record(record, filter=[2, 3])
-    @test BCF.filter_(record) == [2, 3]
-    record = BCF.Record(record, information=Dict(1 => Int8[42]))
-    @test BCF.information(record) == [(1, 42)]
-    @test BCF.information(record, simplify=false) == [(1, [42])]
-    @test BCF.information(record, 1) == 42
-    @test BCF.information(record, 1, simplify=false) == [42]
+    @test BCF.filter(record) == [2, 3]
+    record = BCF.Record(record, info=Dict(1 => Int8[42]))
+    @test BCF.info(record) == [(1, 42)]
+    @test BCF.info(record, simplify=false) == [(1, [42])]
+    @test BCF.info(record, 1) == 42
+    @test BCF.info(record, 1, simplify=false) == [42]
 
     bcfdir = joinpath(dirname(@__FILE__), "..", "BioFmtSpecimens", "BCF")
     reader = BCF.Reader(open(joinpath(bcfdir, "example.bcf")))
@@ -637,15 +637,15 @@ end
     end
     record = BCF.Record()
     @test read!(reader, record) === record
-    @test BCF.chromosome(record) == 1
-    @test BCF.position(record) == 14370
-    @test BCF.identifier(record) == "rs6054257"
-    @test BCF.reference(record) == "G"
-    @test BCF.alternate(record) == ["A"]
-    @test BCF.quality(record) == 29.0
-    @test BCF.filter_(record) == [1]
-    @test BCF.information(record) == [(1,3),(2,14),(3,0.5),(5,nothing),(6,nothing)]
-    @test BCF.information(record, simplify=false) == [(1,[3]),(2,[14]),(3,[0.5]),(5,[]),(6,[])]
+    @test BCF.chrom(record) == 1
+    @test BCF.pos(record) == 14370
+    @test BCF.id(record) == "rs6054257"
+    @test BCF.ref(record) == "G"
+    @test BCF.alt(record) == ["A"]
+    @test BCF.qual(record) == 29.0
+    @test BCF.filter(record) == [1]
+    @test BCF.info(record) == [(1,3),(2,14),(3,0.5),(5,nothing),(6,nothing)]
+    @test BCF.info(record, simplify=false) == [(1,[3]),(2,[14]),(3,[0.5]),(5,[]),(6,[])]
     @test BCF.genotype(record) == [(9,[[2,3],[4,3],[4,4]]),(10,[[48],[48],[43]]),(2,[[1],[8],[5]]),(11,[[51,51],[51,51],[-128,-128]])]
     @test BCF.genotype(record, 1) == [(9, [2,3]), (10, [48]), (2, [1]), (11, [51,51])]
     @test BCF.genotype(record, 1, 9) == [2,3]
