@@ -108,7 +108,6 @@ function random_interval(minstart, maxstop)
     return start:rand(start:maxstop)
 end
 
-#=
 @testset "NucleicAcids" begin
     @testset "Conversions" begin
         @testset "UInt8" begin
@@ -2926,10 +2925,8 @@ end
     @test rec != rec3
     @test rec == copy(rec)
 end
-=#
 
 @testset "Reading and Writing" begin
-    #=
     @testset "FASTA" begin
         @testset "Record" begin
             record = FASTA.Record()
@@ -3277,7 +3274,6 @@ end
             @test first(FASTQReader{BioSequence{DNAAlphabet{2}}}(input, fill_ambiguous=DNA_A)).seq == dna"ACGTAAACGTAA"
         end
     end
-    =#
 
     @testset "2bit" begin
         buffer = IOBuffer()
