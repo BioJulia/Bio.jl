@@ -202,9 +202,9 @@ Bio.Seq.FASTQWriter
 
 ### .2bit
 
-* Reader type: `TwoBitReader{T<:IO}`
-* Writer type: `TwoBitWriter{T<:IO}`
-* Element type: `SeqRecord{ReferenceSequence,Vector{UnitRange{Int}}}`
+* Reader type: `TwoBit.Reader{T<:IO}`
+* Writer type: `TwoBit.Writer{T<:IO}`
+* Element type: `TwoBit.Record`
 
 .2bit is a binary file format designed for storing a genome consists of multiple
 chromosomal sequences. The reading speed is often an order of magnitude faster
@@ -215,13 +215,17 @@ acid sequences.
 Like FASTA, the .2bit reader supports random access using an index included in
 the header section of a .2bit file:
 ```julia
-reader = open(TwoBitReader, "sacCer.2bit")  # load a random access index in the header
-chrIV = reader["chrIV"]                     # directly read chromosome 4
+reader = open(TwoBit.Reader, "sacCer.2bit")  # load a random access index in the header
+chrIV = reader["chrIV"]                      # directly read chromosome 4
 ```
 
 ```@docs
-Bio.Seq.TwoBitReader
-Bio.Seq.TwoBitWriter
+Bio.Seq.TwoBit.Reader
+Bio.Seq.TwoBit.Writer
+Bio.Seq.TwoBit.Record
+Bio.Seq.TwoBit.seqnames
+Bio.Seq.TwoBit.sequence
+Bio.Seq.TwoBit.maskedblocks
 ```
 
 

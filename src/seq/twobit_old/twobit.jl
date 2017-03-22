@@ -1,5 +1,5 @@
-# 2bit File Format
-# ================
+# 2bit format
+# ===========
 #
 # Reader and writer of the 2bit file format.
 #
@@ -10,12 +10,5 @@
 # This file is a part of BioJulia.
 # License is MIT: https://github.com/BioJulia/Bio.jl/blob/master/LICENSE.md
 
-module TwoBit
-
-import Bio
-
-include("record.jl")
 include("reader.jl")
 include("writer.jl")
-
-end
