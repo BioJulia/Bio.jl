@@ -332,15 +332,25 @@ Bio.Align.BAMWriter
 
 ### VCF
 
-* Reader type: `VCFReader`
-* Writer type: `VCFWriter{T<:IO}`
-* Element type: `VCFRecord`
+* Reader type: `VCF.Reader`
+* Writer type: `VCF.Writer{T<:IO}`
+* Element type: `VCF.Record`
 
 VCF is a text-based file format for representing genetic variations.
 
 ```@docs
-Bio.Var.VCFReader
-Bio.Var.VCFWriter
+Bio.Var.VCF.Reader
+Bio.Var.VCF.Writer
+Bio.Var.VCF.Record
+Bio.Var.VCF.chrom
+Bio.Var.VCF.pos
+Bio.Var.VCF.id
+Bio.Var.VCF.ref
+Bio.Var.VCF.alt
+Bio.Var.VCF.qual
+Bio.Var.VCF.filter
+Bio.Var.VCF.info
+Bio.Var.VCF.format
 ```
 
 

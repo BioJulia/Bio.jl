@@ -348,27 +348,27 @@ end
     record = VCF.Record()
     @test !isfilled(record)
     @test ismatch(r"^Bio.Var.VCF.Record: <not filled>", repr(record))
-    @test_throws ArgumentError VCF.chromosome(record)
+    @test_throws ArgumentError VCF.chrom(record)
 
     record = VCF.Record("20\t302\t.\tT\tTA\t999\t.\t.\tGT")
     @test isfilled(record)
-    @test VCF.haschromosome(record)
-    @test VCF.chromosome(record) == "20"
-    @test VCF.hasposition(record)
-    @test VCF.position(record) == 302
-    @test !VCF.hasidentifier(record)
-    @test_throws MissingFieldException VCF.identifier(record)
-    @test VCF.hasreference(record)
-    @test VCF.reference(record) == "T"
-    @test VCF.hasalternate(record)
-    @test VCF.alternate(record) == ["TA"]
-    @test VCF.hasquality(record)
-    @test VCF.quality(record) == 999
-    @test !VCF.hasfilter_(record)
-    @test_throws MissingFieldException VCF.filter_(record)
+    @test VCF.haschrom(record)
+    @test VCF.chrom(record) == "20"
+    @test VCF.haspos(record)
+    @test VCF.pos(record) == 302
+    @test !VCF.hasid(record)
+    @test_throws MissingFieldException VCF.id(record)
+    @test VCF.hasref(record)
+    @test VCF.ref(record) == "T"
+    @test VCF.hasalt(record)
+    @test VCF.alt(record) == ["TA"]
+    @test VCF.hasqual(record)
+    @test VCF.qual(record) == 999
+    @test !VCF.hasfilter(record)
+    @test_throws MissingFieldException VCF.filter(record)
     @test VCF.infokeys(record) == String[]
-    @test !VCF.hasinformation(record)
-    @test_throws MissingFieldException VCF.information(record)
+    @test !VCF.hasinfo(record)
+    @test_throws MissingFieldException VCF.info(record)
     @test VCF.hasformat(record)
     @test VCF.format(record) == ["GT"]
 
@@ -378,35 +378,35 @@ end
 
     record = VCF.Record(b".\t.\t.\t.\t.\t.\t.\t.\t")
     @test isfilled(record)
-    @test !VCF.haschromosome(record)
-    @test !VCF.hasposition(record)
-    @test !VCF.hasidentifier(record)
-    @test !VCF.hasreference(record)
-    @test !VCF.hasalternate(record)
-    @test !VCF.hasquality(record)
-    @test !VCF.hasfilter_(record)
-    @test !VCF.hasinformation(record)
+    @test !VCF.haschrom(record)
+    @test !VCF.haspos(record)
+    @test !VCF.hasid(record)
+    @test !VCF.hasref(record)
+    @test !VCF.hasalt(record)
+    @test !VCF.hasqual(record)
+    @test !VCF.hasfilter(record)
+    @test !VCF.hasinfo(record)
 
     record = VCF.Record(record)
     @test isa(record, VCF.Record)
-    record = VCF.Record(record, chromosome="chr1")
-    @test VCF.chromosome(record) == "chr1"
-    record = VCF.Record(record, position=1234)
-    @test VCF.position(record) == 1234
-    record = VCF.Record(record, identifier="rs1111")
-    @test VCF.identifier(record) == ["rs1111"]
-    record = VCF.Record(record, reference="A")
-    @test VCF.reference(record) == "A"
-    record = VCF.Record(record, alternate=["AT"])
-    @test VCF.alternate(record) == ["AT"]
-    record = VCF.Record(record, quality=11.2)
-    @test VCF.quality(record) == 11.2
+    record = VCF.Record(record, chrom="chr1")
+    @test VCF.chrom(record) == "chr1"
+    record = VCF.Record(record, pos=1234)
+    @test VCF.pos(record) == 1234
+    record = VCF.Record(record, id="rs1111")
+    @test VCF.id(record) == ["rs1111"]
+    record = VCF.Record(record, ref="A")
+    @test VCF.ref(record) == "A"
+    record = VCF.Record(record, alt=["AT"])
+    @test VCF.alt(record) == ["AT"]
+    record = VCF.Record(record, qual=11.2)
+    @test VCF.qual(record) == 11.2
     record = VCF.Record(record, filter="PASS")
-    @test VCF.filter_(record) == ["PASS"]
-    record = VCF.Record(record, information=Dict("DP" => 20, "AA" => "AT", "DB"=>nothing))
-    @test VCF.information(record, "DP") == "20"
-    @test VCF.information(record, "AA") == "AT"
-    @test VCF.information(record, "DB") == ""
+    @test VCF.filter(record) == ["PASS"]
+    record = VCF.Record(record, info=Dict("DP" => 20, "AA" => "AT", "DB"=>nothing))
+    @test VCF.info(record, "DP") == "20"
+    @test VCF.info(record, "AA") == "AT"
+    @test VCF.info(record, "DB") == ""
     @test VCF.infokeys(record) == ["DP", "AA", "DB"]
     record = VCF.Record(record, genotype=[Dict("GT" => "0/0", "DP" => [10,20])])
     @test VCF.format(record) == ["DP", "GT"]
@@ -520,16 +520,16 @@ end
     record = VCF.Record()
 
     @test read!(reader, record) === record
-    @test VCF.chromosome(record) == "chr1"
-    @test VCF.position(record) === 1234
-    @test VCF.identifier(record) == ["rs001234"]
-    @test VCF.reference(record) == "A"
-    @test VCF.alternate(record) == ["C"]
-    @test VCF.quality(record) === 30.0
-    @test VCF.filter_(record) == ["PASS"]
-    @test VCF.information(record) == ["DP" => "10", "AF" => "0.3"]
-    @test VCF.information(record, "DP") == "10"
-    @test VCF.information(record, "AF") == "0.3"
+    @test VCF.chrom(record) == "chr1"
+    @test VCF.pos(record) === 1234
+    @test VCF.id(record) == ["rs001234"]
+    @test VCF.ref(record) == "A"
+    @test VCF.alt(record) == ["C"]
+    @test VCF.qual(record) === 30.0
+    @test VCF.filter(record) == ["PASS"]
+    @test VCF.info(record) == ["DP" => "10", "AF" => "0.3"]
+    @test VCF.info(record, "DP") == "10"
+    @test VCF.info(record, "AF") == "0.3"
     @test VCF.format(record) == ["GT"]
     @test VCF.genotype(record) == [["0|0"], ["0/1"]]
     @test VCF.genotype(record, 1) == VCF.genotype(record)[1]
@@ -541,16 +541,16 @@ end
     @test ismatch(r"^Bio.Var.VCF.Record:\n.*", repr(record))
 
     @test read!(reader, record) === record
-    @test VCF.chromosome(record) == "chr2"
-    @test VCF.position(record) == 4
-    @test !VCF.hasidentifier(record)
-    @test VCF.reference(record) == "A"
-    @test VCF.alternate(record) == ["AA", "AAT"]
-    @test !VCF.hasquality(record)
-    @test !VCF.hasfilter_(record)
-    @test VCF.information(record) == ["DP" => "5"]
-    @test VCF.information(record, "DP") == "5"
-    @test_throws KeyError VCF.information(record, "AF")
+    @test VCF.chrom(record) == "chr2"
+    @test VCF.pos(record) == 4
+    @test !VCF.hasid(record)
+    @test VCF.ref(record) == "A"
+    @test VCF.alt(record) == ["AA", "AAT"]
+    @test !VCF.hasqual(record)
+    @test !VCF.hasfilter(record)
+    @test VCF.info(record) == ["DP" => "5"]
+    @test VCF.info(record, "DP") == "5"
+    @test_throws KeyError VCF.info(record, "AF")
     @test VCF.format(record) == ["GT", "DP"]
     @test VCF.genotype(record) == [["0|1", "42"], ["0/1", "."]]
     @test VCF.genotype(record, 1) == VCF.genotype(record)[1]

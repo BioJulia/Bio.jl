@@ -47,7 +47,7 @@ function Bio.header(reader::Reader)
 end
 
 # VCF v4.3
-info("compiling VCF")
+Base.info("compiling VCF")
 const vcf_metainfo_machine, vcf_record_machine, vcf_header_machine, vcf_body_machine = (function ()
     cat = Automa.RegExp.cat
     rep = Automa.RegExp.rep

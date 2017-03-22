@@ -110,27 +110,27 @@ function checkfilled(record::Record)
 end
 
 function Record(base::Record;
-                   chromosome=nothing, position=nothing, identifier=nothing,
-                   reference=nothing, alternate=nothing, quality=nothing,
-                   filter=nothing, information=nothing, genotype=nothing)
+                   chrom=nothing, pos=nothing, id=nothing,
+                   ref=nothing, alt=nothing, qual=nothing,
+                   filter=nothing, info=nothing, genotype=nothing)
     checkfilled(base)
     buf = IOBuffer()
 
-    if chromosome == nothing
+    if chrom == nothing
         write(buf, base.data[base.chrom])
     else
-        print(buf, string(chromosome))
+        print(buf, string(chrom))
     end
 
     print(buf, '\t')
-    if position == nothing
+    if pos == nothing
         write(buf, base.data[base.pos])
     else
-        print(buf, convert(Int, position))
+        print(buf, convert(Int, pos))
     end
 
     print(buf, '\t')
-    if identifier == nothing
+    if id == nothing
         if isempty(base.id)
             print(buf, '.')
         else
@@ -142,13 +142,13 @@ function Record(base::Record;
             end
         end
     else
-        if !isa(identifier, Vector)
-            identifier = [identifier]
+        if !isa(id, Vector)
+            id = [id]
         end
-        if isempty(identifier)
+        if isempty(id)
             print(buf, '.')
         else
-            for (i, x) in enumerate(identifier)
+            for (i, x) in enumerate(id)
                 if i != 1
                     print(buf, ';')
                 end
@@ -158,14 +158,14 @@ function Record(base::Record;
     end
 
     print(buf, '\t')
-    if reference == nothing
+    if ref == nothing
         write(buf, base.data[base.ref])
     else
-        print(buf, string(reference))
+        print(buf, string(ref))
     end
 
     print(buf, '\t')
-    if alternate == nothing
+    if alt == nothing
         if isempty(base.alt)
             print(buf, '.')
         else
@@ -177,13 +177,13 @@ function Record(base::Record;
             end
         end
     else
-        if !isa(alternate, Vector)
-            alternate = [alternate]
+        if !isa(alt, Vector)
+            alt = [alt]
         end
-        if isempty(alternate)
+        if isempty(alt)
             print(buf, '.')
         else
-            for (i, x) in enumerate(alternate)
+            for (i, x) in enumerate(alt)
                 if i != 1
                     print(buf, ';')
                 end
@@ -193,10 +193,10 @@ function Record(base::Record;
     end
 
     print(buf, '\t')
-    if quality == nothing
+    if qual == nothing
         write(buf, base.data[base.qual])
     else
-        print(buf, convert(Float64, quality))
+        print(buf, convert(Float64, qual))
     end
 
     print(buf, '\t')
@@ -228,19 +228,19 @@ function Record(base::Record;
     end
 
     print(buf, '\t')
-    if information == nothing
+    if info == nothing
         if isempty(base.infokey)
             print(buf, '.')
         else
             write(buf, base.data[first(base.infokey[1]):last(infovalrange(base, endof(base.infokey)))])
         end
     else
-        if !isa(information, Associative)
-            throw(ArgumentError("information must be an associative object"))
-        elseif isempty(information)
+        if !isa(info, Associative)
+            throw(ArgumentError("info must be an associative object"))
+        elseif isempty(info)
             print(buf, '.')
         else
-            for (i, (key, val)) in enumerate(information)
+            for (i, (key, val)) in enumerate(info)
                 if i != 1
                     print(buf, ';')
                 end
@@ -337,135 +337,135 @@ end
 # ------------------
 
 """
-    chromosome(record::Record)::String
+    chrom(record::Record)::String
 
 Get the chromosome name of `record`.
 """
-function chromosome(record::Record)::String
+function chrom(record::Record)::String
     checkfilled(record)
     if ismissing(record, record.chrom)
-        missingerror(:chromosome)
+        missingerror(:chrom)
     end
     return String(record.data[record.chrom])
 end
 
-function haschromosome(record::Record)
+function haschrom(record::Record)
     return isfilled(record) && !ismissing(record, record.chrom)
 end
 
 """
-    position(record::Record)::Int
+    pos(record::Record)::Int
 
 Get the reference position of `record`.
 """
-function position(record::Record)::Int
+function pos(record::Record)::Int
     checkfilled(record)
     if ismissing(record, record.pos)
-        missingerror(:position)
+        missingerror(:pos)
     end
     # TODO: no-copy accessor
     return parse(Int, String(record.data[record.pos]))
 end
 
-function hasposition(record::Record)
+function haspos(record::Record)
     return isfilled(record) && !ismissing(record, record.pos)
 end
 
 """
-    identifier(record::Record)::Vector{String}
+    id(record::Record)::Vector{String}
 
 Get the identifiers of `record`.
 """
-function identifier(record::Record)::Vector{String}
+function id(record::Record)::Vector{String}
     checkfilled(record)
     if isempty(record.id)
-        missingerror(:identifier)
+        missingerror(:id)
     end
     return [String(record.data[r]) for r in record.id]
 end
 
-function hasidentifier(record::Record)
+function hasid(record::Record)
     return isfilled(record) && !isempty(record.id)
 end
 
 """
-    reference(record::Record)::String
+    ref(record::Record)::String
 
 Get the reference bases of `record`.
 """
-function reference(record::Record)::String
+function ref(record::Record)::String
     checkfilled(record)
     if ismissing(record, record.ref)
-        missingerror(:reference)
+        missingerror(:ref)
     end
     return String(record.data[record.ref])
 end
 
-function hasreference(record::Record)
+function hasref(record::Record)
     return isfilled(record) && !ismissing(record, record.ref)
 end
 
 """
-    alternate(record::Record)::Vector{String}
+    alt(record::Record)::Vector{String}
 
 Get the alternate bases of `record`.
 """
-function alternate(record::Record)::Vector{String}
+function alt(record::Record)::Vector{String}
     checkfilled(record)
     if isempty(record.alt)
-        missingerror(:alternate)
+        missingerror(:alt)
     end
     return [String(record.data[r]) for r in record.alt]
 end
 
-function hasalternate(record::Record)
+function hasalt(record::Record)
     return isfilled(record) && !isempty(record.alt)
 end
 
 """
-    quality(record::Record)::Float64
+    qual(record::Record)::Float64
 
 Get the quality score of `record`.
 """
-function quality(record::Record)::Float64
+function qual(record::Record)::Float64
     checkfilled(record)
     if ismissing(record, record.qual)
-        missingerror(:quality)
+        missingerror(:qual)
     end
     # TODO: no-copy parse
     return parse(Float64, String(record.data[record.qual]))
 end
 
-function hasquality(record::Record)
+function hasqual(record::Record)
     return isfilled(record) && !ismissing(record, record.qual)
 end
 
 """
-    filter_(record::Record)::Vector{String}
+    filter(record::Record)::Vector{String}
 
 Get the filter status of `record`.
 """
-function filter_(record::Record)::Vector{String}
+function filter(record::Record)::Vector{String}
     checkfilled(record)
     if isempty(record.filter)
-        missingerror(:filter_)
+        missingerror(:filter)
     end
     return [String(record.data[r]) for r in record.filter]
 end
 
-function hasfilter_(record::Record)
+function hasfilter(record::Record)
     return isfilled(record) && !isempty(record.filter)
 end
 
 """
-    information(record::Record)::Vector{Pair{String,String}}
+    info(record::Record)::Vector{Pair{String,String}}
 
 Get the additional information of `record`.
 """
-function information(record::Record)::Vector{Pair{String,String}}
+function info(record::Record)::Vector{Pair{String,String}}
     checkfilled(record)
     if isempty(record.infokey)
-        missingerror(:information)
+        missingerror(:info)
     end
     ret = Pair{String,String}[]
     for (i, key) in enumerate(record.infokey)
@@ -475,17 +475,17 @@ function information(record::Record)::Vector{Pair{String,String}}
     return ret
 end
 
-function hasinformation(record::Record)
+function hasinfo(record::Record)
     return isfilled(record) && !isempty(record.infokey)
 end
 
 """
-    information(record::Record, key::String)::String
+    info(record::Record, key::String)::String
 
 Get the additional information of `record` with `key`.
 Keys without corresponding values return an empty string.
 """
-function information(record::Record, key::String)::String
+function info(record::Record, key::String)::String
     checkfilled(record)
     i = findinfokey(record, key)
     if i == 0
@@ -499,7 +499,7 @@ function information(record::Record, key::String)::String
     end
 end
 
-function hasinformation(record::Record, key::String)
+function hasinfo(record::Record, key::String)
     return isfilled(record) && findinfokey(key) > 0
 end
 
@@ -651,16 +651,16 @@ function Base.show(io::IO, record::Record)
     print(io, summary(record), ':')
     if isfilled(record)
         println(io)
-        println(io, "   chromosome: ", haschromosome(record) ? chromosome(record) : "<missing>")
-        println(io, "     position: ", hasposition(record) ? position(record) : "<missing>")
-        println(io, "   identifier: ", hasidentifier(record) ? join(identifier(record), " ") : "<missing>")
-        println(io, "    reference: ", hasreference(record) ? reference(record) : "<missing>")
-        println(io, "    alternate: ", hasalternate(record) ? join(alternate(record), " ") : "<missing>")
-        println(io, "      quality: ", hasquality(record) ? quality(record) : "<missing>")
-        println(io, "       filter: ", hasfilter_(record) ? join(filter_(record), " ") : "<missing>")
+        println(io, "   chromosome: ", haschrom(record) ? chrom(record) : "<missing>")
+        println(io, "     position: ", haspos(record) ? pos(record) : "<missing>")
+        println(io, "   identifier: ", hasid(record) ? join(id(record), " ") : "<missing>")
+        println(io, "    reference: ", hasref(record) ? ref(record) : "<missing>")
+        println(io, "    alternate: ", hasalt(record) ? join(alt(record), " ") : "<missing>")
+        println(io, "      quality: ", hasqual(record) ? qual(record) : "<missing>")
+        println(io, "       filter: ", hasfilter(record) ? join(filter(record), " ") : "<missing>")
           print(io, "  information: ")
-        if hasinformation(record)
-            for (key, val) in information(record)
+        if hasinfo(record)
+            for (key, val) in info(record)
                 print(io, key)
                 if !isempty(val)
                     print(io, '=', val)
