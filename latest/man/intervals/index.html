@@ -410,36 +410,45 @@
 <p>Bulding <code>IntervalCollections</code> in one shot like this should be preferred when it's convenient or speed in an issue.</p>
 <p><a id='Intersection-1'></a></p>
 <h2 id="intersection">Intersection</h2>
-<p>There are number of <code>intersect</code> function in the Intervals module. They follow two patterns: interval versus collection queries which return an iterator over intervals in the collection that intersect the query, and collection versus collection queries which iterate over all pairs of intersecting intervals.</p>
-<p><a id='Base.intersect' href='#Base.intersect'>#</a>
-<strong><code>Base.intersect</code></strong> &mdash; <em>Function</em>.</p>
-<div class="codehilite"><pre><span></span>intersect(s1,s2...)
-∩(s1,s2)
+<p>There are number of <code>eachoverlap</code> function in the Intervals module. They follow two patterns: interval versus collection queries which return an iterator over intervals in the collection that intersect the query, and collection versus collection queries which iterate over all pairs of overlapping intervals.</p>
+<p><a id='Bio.Intervals.eachoverlap' href='#Bio.Intervals.eachoverlap'>#</a>
+<strong><code>Bio.Intervals.eachoverlap</code></strong> &mdash; <em>Function</em>.</p>
+<div class="codehilite"><pre><span></span>eachoverlap(intervals_a, intervals_b, [seqname_isless=Base.isless])
 </pre></div>
 
 
-<p>Construct the intersection of two or more sets. Maintains order and multiplicity of the first argument for arrays and ranges.</p>
-<p><a target='_blank' href='https://github.com/JuliaLang/julia/tree/6445c82d0060dbe82b88436f0f4371a4ee64d918/base/docs/helpdb/Base.jl#L6013-L6019' class='documenter-source'>source</a><br></p>
+<p>Create an iterator of overlapping intervals between <code>intervals_a</code> and <code>intervals_b</code>.</p>
+<p>This function assumes elements of <code>intervals_a</code> and <code>intervals_b</code> are sorted by its sequence name and left position.  If the element type is not a subtype of <code>Bio.Intervals.Interval</code>, elements are converted to <code>Interval</code> objects.</p>
+<p>The third optional argument is a function that defines the order of sequence names. The default function is <code>Base.isless</code>, which is the lexicographical order.</p>
+<p><a target='_blank' href='https://github.com/BioJulia/Bio.jl/tree/2aebb141d9ba66629e8aab71084bbd6c51c72803/src/intervals/overlap.jl#L18-L30' class='documenter-source'>source</a><br></p>
+<p>The order of interval pairs is the same as the following nested loop but <code>eachoverlap</code> is often much faster:</p>
+<div class="codehilite"><pre><span></span><span class="k">for</span> <span class="n">a</span> <span class="kp">in</span> <span class="n">intervals_a</span><span class="p">,</span> <span class="n">b</span> <span class="kp">in</span> <span class="n">intervals_b</span>
+    <span class="k">if</span> <span class="n">isoverlapping</span><span class="p">(</span><span class="n">a</span><span class="p">,</span> <span class="n">b</span><span class="p">)</span>
+        <span class="c"># do something...</span>
+    <span class="k">end</span>
+<span class="k">end</span>
+</pre></div>
+
+
 <p><a id='Interval-streams-1'></a></p>
 <h2 id="interval-streams">Interval streams</h2>
 <p>Intervals need not necessarily stored in an indexed data structure for efficient intersection to be practical. Two collections of intervals need only be both sorted to compute all intersecting pairs. This is particularly useful in genomics where datasets are sometimes so large that loading them entirely into memory is not practical.</p>
-<p>The Intervals module is able to intersect any two iterators that yield intervals in sorted order, which we refer to as "interval streams". An <code>IntervalCollection</code> is also a interval stream, but so is a sorted array of intervals, and parsers over interval file formats. This allows for a very general notion of intersection.</p>
-<div class="codehilite"><pre><span></span><span class="k">for</span> <span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">)</span> <span class="kp">in</span> <span class="n">intersect</span><span class="p">(</span><span class="n">open</span><span class="p">(</span><span class="n">BEDReader</span><span class="p">,</span> <span class="s">&quot;x_features.bed&quot;</span><span class="p">),</span> <span class="n">open</span><span class="p">(</span><span class="n">BEDReader</span><span class="p">,</span> <span class="s">&quot;y_features.bed&quot;</span><span class="p">))</span>
+<p>The Intervals module is able to intersect any two iterators that yield intervals in sorted order, which we refer to as "interval streams". An <code>IntervalCollection</code> is also an interval stream, but so is a sorted array of intervals, and parsers over interval file formats. This allows for a very general notion of intersection.</p>
+<div class="codehilite"><pre><span></span><span class="k">for</span> <span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">)</span> <span class="kp">in</span> <span class="n">eachoverlap</span><span class="p">(</span><span class="n">open</span><span class="p">(</span><span class="n">BEDReader</span><span class="p">,</span> <span class="s">&quot;x_features.bed&quot;</span><span class="p">),</span> <span class="n">open</span><span class="p">(</span><span class="n">BEDReader</span><span class="p">,</span> <span class="s">&quot;y_features.bed&quot;</span><span class="p">))</span>
     <span class="n">println</span><span class="p">(</span><span class="s">&quot;Intersection found between &quot;</span><span class="p">,</span> <span class="n">x</span><span class="p">,</span> <span class="s">&quot; and &quot;</span><span class="p">,</span> <span class="n">y</span><span class="p">)</span>
 <span class="k">end</span>
 </pre></div>
 
 
-<p>An exception will be thrown if an interval in encountered out of order while processing an interval stream. Ordering of intervals has one complication: there is not necessarily a standardized way to order sequence names. By default in Bio.jl intervals are sorted using a special <code>alphanum_isless</code> comparison function that compares numbers numerically if they exist in string, so that names like <code>chr1, chr2, chr10</code> end up in their natural order.</p>
-<p>The <code>intersect</code> function takes as an optional parameter an <code>isless</code> function to use to compare sequence names to account for arbitrary sequence name orderings.</p>
-<div class="codehilite"><pre><span></span><span class="c"># assume lexigraphic ordering for sequence names</span>
-<span class="k">for</span> <span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">)</span> <span class="kp">in</span> <span class="n">intersect</span><span class="p">(</span><span class="n">xs</span><span class="p">,</span> <span class="n">ys</span><span class="p">,</span> <span class="n">isless</span><span class="p">)</span>
+<p>An exception will be thrown if an interval in encountered out of order while processing an interval stream. Ordering of intervals has one complication: there is not necessarily a standardized way to order sequence names. By default in Bio.jl intervals are sorted using a <code>Base.isless</code> comparison function that is a default order in most command-line tools. The Intervals module also offers <code>alphanum_isless</code> comparison that compares numbers numerically if they exist in string, so that names like <code>chr1, chr2, chr10</code> end up in their natural order.</p>
+<p>The <code>eachoverlap</code> function takes as an optional parameter an <code>isless</code> function to use to compare sequence names to account for arbitrary sequence name orderings.</p>
+<div class="codehilite"><pre><span></span><span class="k">for</span> <span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">)</span> <span class="kp">in</span> <span class="n">eachoverlap</span><span class="p">(</span><span class="n">xs</span><span class="p">,</span> <span class="n">ys</span><span class="p">,</span> <span class="n">Bio</span><span class="o">.</span><span class="n">Intervals</span><span class="o">.</span><span class="n">alphanum_isless</span><span class="p">)</span>
     <span class="n">println</span><span class="p">(</span><span class="s">&quot;Intersection found between &quot;</span><span class="p">,</span> <span class="n">a</span><span class="p">,</span> <span class="s">&quot; and &quot;</span><span class="p">,</span> <span class="n">b</span><span class="p">)</span>
 <span class="k">end</span>
 </pre></div>
 
 
-<p>A special sort of intersection can also be performed on a <code>IntervalStreams</code> against itself to produce "coverage intervals".</p>
+<p>A special sort of intersection can also be performed on an interval stream against itself to produce "coverage intervals".</p>
 <p><a id='Bio.Intervals.coverage' href='#Bio.Intervals.coverage'>#</a>
 <strong><code>Bio.Intervals.coverage</code></strong> &mdash; <em>Function</em>.</p>
 <div class="codehilite"><pre><span></span>coverage(intervals)
@@ -458,7 +467,7 @@
 </pre></div>
 
 
-<p><a target='_blank' href='https://github.com/BioJulia/Bio.jl/tree/96bd4573f327f720ba519cc5a91cec660e200918/src/intervals/intervalstream.jl#L207-L222' class='documenter-source'>source</a><br></p></div>
+<p><a target='_blank' href='https://github.com/BioJulia/Bio.jl/tree/2aebb141d9ba66629e8aab71084bbd6c51c72803/src/intervals/coverage.jl#L9-L24' class='documenter-source'>source</a><br></p></div>
         
     </div>
 
