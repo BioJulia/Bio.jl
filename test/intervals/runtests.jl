@@ -205,22 +205,22 @@ end
         # empty versus empty
         ic_a = IntervalCollection{Int}()
         ic_b = IntervalCollection{Int}()
-        @test collect(intersect(ic_a, ic_b)) == Any[]
+        @test collect(eachoverlap(ic_a, ic_b)) == Any[]
 
         # empty versus non-empty
         for interval in intervals_a
             push!(ic_a, interval)
         end
 
-        @test collect(intersect(ic_a, ic_b)) == Any[]
-        @test collect(intersect(ic_b, ic_a)) == Any[]
+        @test collect(eachoverlap(ic_a, ic_b)) == Any[]
+        @test collect(eachoverlap(ic_b, ic_a)) == Any[]
 
         # non-empty versus non-empty
         for interval in intervals_b
             push!(ic_b, interval)
         end
 
-        @test sort(collect(intersect(ic_a, ic_b))) == sort(simple_intersection(intervals_a, intervals_b))
+        @test sort(collect(eachoverlap(ic_a, ic_b))) == sort(simple_intersection(intervals_a, intervals_b))
     end
 
 
@@ -387,6 +387,57 @@ end
 
         @test sort(simple_coverage(intervals)) == sort(collect(coverage(ic)))
     end
+
+    @testset "eachoverlap" begin
+        # TODO: more tests
+
+        i = Interval("chr1", 1, 10)
+        intervals_a = typeof(i)[]
+        @test length(collect(eachoverlap(intervals_a, intervals_a))) == 0
+
+        intervals_a = [Interval("chr1", 1, 10)]
+        intervals_b = eltype(intervals_a)[]
+        @test length(collect(eachoverlap(intervals_a, intervals_b))) == 0
+        @test length(collect(eachoverlap(intervals_b, intervals_a))) == 0
+
+        intervals_a = [Interval("chr1", 1, 10)]
+        @test length(collect(eachoverlap(intervals_a, intervals_a))) == 1
+
+        intervals_a = [Interval("chr1", 1, 10)]
+        intervals_b = [Interval("chr2", 1, 10)]
+        @test length(collect(eachoverlap(intervals_a, intervals_b))) == 0
+        @test length(collect(eachoverlap(intervals_b, intervals_a))) == 0
+
+        intervals_a = [Interval("chr1", 1, 10)]
+        intervals_b = [Interval("chr1", 11, 15)]
+        @test length(collect(eachoverlap(intervals_a, intervals_b))) == 0
+        @test length(collect(eachoverlap(intervals_b, intervals_a))) == 0
+
+        intervals_a = [Interval("chr1", 11, 15)]
+        intervals_b = [Interval("chr1", 1, 10), Interval("chr1", 12, 13)]
+        @test length(collect(eachoverlap(intervals_a, intervals_b))) == 1
+        @test length(collect(eachoverlap(intervals_b, intervals_a))) == 1
+
+        intervals_a = [Interval("chr1", 1, 2), Interval("chr1", 2, 5), Interval("chr2", 1, 10)]
+        intervals_b = [Interval("chr1", 1, 2), Interval("chr1", 2, 3), Interval("chr2", 1, 2)]
+        @test length(collect(eachoverlap(intervals_a, intervals_b))) == 5
+        @test length(collect(eachoverlap(intervals_b, intervals_a))) == 5
+
+        intervals_a = [Interval("chr1", 1, 2), Interval("chr1", 3, 5), Interval("chr2", 1, 10)]
+        @test length(collect(eachoverlap(intervals_a, intervals_a))) == 3
+
+        # compare generic and specific eachoverlap methods
+        intervals_a = [Interval("chr1", 1, 2), Interval("chr1", 1, 3), Interval("chr1", 5, 9),
+                       Interval("chr2", 1, 5), Interval("chr2", 6, 6), Interval("chr2", 6, 8)]
+        intervals_b = intervals_a
+        ic_a = IntervalCollection(intervals_a)
+        ic_b = IntervalCollection(intervals_b)
+        iter1 = eachoverlap(intervals_a, intervals_b)
+        iter2 = eachoverlap(intervals_a, ic_b)
+        iter3 = eachoverlap(ic_a, intervals_b)
+        iter4 = eachoverlap(ic_a, ic_b)
+        @test collect(iter1) == collect(iter2) == collect(iter3) == collect(iter4)
+    end
 end
 
 
@@ -465,11 +516,11 @@ end
             # This is refactored out to close streams
             fa = open(BEDReader, filename_a)
             fb = open(BEDReader, filename_b)
-            xs = sort(collect(intersect(fa, fb)))
+            xs = sort(collect(eachoverlap(fa, fb)))
             close(fa)
             close(fb)
 
-            ys = sort(collect(intersect(ic_a, ic_b)))
+            ys = sort(collect(eachoverlap(ic_a, ic_b)))
 
             return xs == ys
         end
@@ -719,8 +770,8 @@ end
         num_queries = 1000
         queries = random_intervals(chroms, 1000000, num_queries)
 
-        @test all(Bool[IntervalCollection(collect(BEDInterval, intersect(intervals, query))) ==
-                       IntervalCollection(collect(BEDInterval, intersect(bb, query)))
+        @test all(Bool[IntervalCollection(collect(BEDInterval, eachoverlap(intervals, query))) ==
+                       IntervalCollection(collect(BEDInterval, eachoverlap(bb, query)))
                        for query in queries])
     end
 

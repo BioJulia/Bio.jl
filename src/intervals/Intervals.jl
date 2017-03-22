@@ -16,7 +16,6 @@ export
     rightposition,
     hasrightposition,
     IntervalCollection,
-    IntervalStream,
     STRAND_NA,
     STRAND_POS,
     STRAND_NEG,
@@ -44,9 +43,9 @@ export
     overlapchunks,
     tryread!,
     isfilled,
-    MissingFieldException
+    MissingFieldException,
+    eachoverlap
 
-import Base.Collections: heappush!, heappop!
 import Bio.Exceptions: MissingFieldException
 import Bio.Ragel: Ragel, tryread!
 import Bio.StringFields: StringField
@@ -58,9 +57,10 @@ importall Bio
 
 include("strand.jl")
 include("interval.jl")
-include("streambuffer.jl")
 include("intervalcollection.jl")
-include("intervalstream.jl")
+include("queue.jl")
+include("overlap.jl")
+include("coverage.jl")
 include("index/index.jl")
 
 # Parsing file types
