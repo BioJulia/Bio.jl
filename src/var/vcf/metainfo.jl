@@ -1,7 +1,7 @@
 # VCF MetaInfo
 # ============
 
-type VCFMetaInfo
+type MetaInfo
     # data and filled range
     data::Vector{UInt8}
     filled::UnitRange{Int}
@@ -15,46 +15,46 @@ type VCFMetaInfo
 end
 
 """
-    VCFMetaInfo()
+    VCF.MetaInfo()
 
-Create an unfilled `VCFMetaInfo` object.
+Create an unfilled VCF metainfo.
 """
-function VCFMetaInfo()
-    return VCFMetaInfo(UInt8[], 1:0, false, 1:0, 1:0, UnitRange{Int}[], UnitRange{Int}[])
+function MetaInfo()
+    return MetaInfo(UInt8[], 1:0, false, 1:0, 1:0, UnitRange{Int}[], UnitRange{Int}[])
 end
 
 """
-    VCFMetaInfo(data::Vector{UInt8})
+    VCF.MetaInfo(data::Vector{UInt8})
 
-Create a `VCFMetaInfo` object from `data` containing a VCF header line.
+Create a VCF metainfo from `data` containing a VCF header line.
 This function verifies the format and indexes fields for accessors.
-Note that the ownership of `data` is transferred to a new `VCFMetaInfo` object.
+Note that the ownership of `data` is transferred to a new metainfo object.
 """
-function VCFMetaInfo(data::Vector{UInt8})
-    return convert(VCFMetaInfo, data)
+function MetaInfo(data::Vector{UInt8})
+    return convert(MetaInfo, data)
 end
 
-function Base.convert(::Type{VCFMetaInfo}, data::Vector{UInt8})
-    metainfo = VCFMetaInfo(data, 1:0, false, 1:0, 1:0, UnitRange{Int}[], UnitRange{Int}[])
+function Base.convert(::Type{MetaInfo}, data::Vector{UInt8})
+    metainfo = MetaInfo(data, 1:0, false, 1:0, 1:0, UnitRange{Int}[], UnitRange{Int}[])
     index!(metainfo)
     return metainfo
 end
 
 """
-    VCFMetaInfo(str::AbstractString)
+    VCF.MetaInfo(str::AbstractString)
 
-Create a `VCFMetaInfo` object from `str` containing a VCF header line.
+Create a VCF metainfo from `str` containing a VCF header line.
 This function verifies the format and indexes fields for accessors.
 """
-function VCFMetaInfo(str::AbstractString)
-    return convert(VCFMetaInfo, str)
+function MetaInfo(str::AbstractString)
+    return convert(MetaInfo, str)
 end
 
-function Base.convert(::Type{VCFMetaInfo}, str::AbstractString)
-    return VCFMetaInfo(convert(Vector{UInt8}, str))
+function Base.convert(::Type{MetaInfo}, str::AbstractString)
+    return MetaInfo(convert(Vector{UInt8}, str))
 end
 
-function initialize!(metainfo::VCFMetaInfo)
+function initialize!(metainfo::MetaInfo)
     metainfo.filled = 1:0
     metainfo.dict = false
     metainfo.tag = 1:0
@@ -64,15 +64,15 @@ function initialize!(metainfo::VCFMetaInfo)
     return metainfo
 end
 
-function datarange(metainfo::VCFMetaInfo)
+function datarange(metainfo::MetaInfo)
     return metainfo.filled
 end
 
-function isfilled(metainfo::VCFMetaInfo)
+function isfilled(metainfo::MetaInfo)
     return !isempty(metainfo.filled)
 end
 
-function Base.:(==)(metainfo1::VCFMetaInfo, metainfo2::VCFMetaInfo)
+function Base.:(==)(metainfo1::MetaInfo, metainfo2::MetaInfo)
     if isfilled(metainfo1) == isfilled(metainfo2) == true
         r1 = datarange(metainfo1)
         r2 = datarange(metainfo2)
@@ -82,13 +82,13 @@ function Base.:(==)(metainfo1::VCFMetaInfo, metainfo2::VCFMetaInfo)
     end
 end
 
-function checkfilled(metainfo::VCFMetaInfo)
+function checkfilled(metainfo::MetaInfo)
     if !isfilled(metainfo)
         throw(ArgumentError("unfilled VCF metainfo"))
     end
 end
 
-function VCFMetaInfo(base::VCFMetaInfo; tag=nothing, value=nothing)
+function MetaInfo(base::MetaInfo; tag=nothing, value=nothing)
     checkfilled(base)
     buf = IOBuffer()
     print(buf, "##")
@@ -117,30 +117,30 @@ function VCFMetaInfo(base::VCFMetaInfo; tag=nothing, value=nothing)
         end
         print(buf, '>')
     end
-    return VCFMetaInfo(takebuf_array(buf))
+    return MetaInfo(takebuf_array(buf))
 end
 
 function needs_quote(val::String)
     return contains(val, " ") || contains(val, ",") || contains(val, "\"") || contains(val, "\\")
 end
 
-function isequaltag(metainfo::VCFMetaInfo, tag::AbstractString)
+function isequaltag(metainfo::MetaInfo, tag::AbstractString)
     checkfilled(metainfo)
     return length(metainfo.tag) == sizeof(tag) &&
            memcmp(pointer(metainfo.data, first(metainfo.tag)), pointer(tag), length(metainfo.tag)) == 0
 end
 
-function Bio.metainfotag(metainfo::VCFMetaInfo)
+function Bio.metainfotag(metainfo::MetaInfo)
     checkfilled(metainfo)
     return String(metainfo.data[metainfo.tag])
 end
 
-function Bio.metainfoval(metainfo::VCFMetaInfo)
+function Bio.metainfoval(metainfo::MetaInfo)
     checkfilled(metainfo)
     return String(metainfo.data[metainfo.val])
 end
 
-function Base.keys(metainfo::VCFMetaInfo)
+function Base.keys(metainfo::MetaInfo)
     checkfilled(metainfo)
     if !metainfo.dict
         throw(ArgumentError("not a dictionary"))
@@ -148,7 +148,7 @@ function Base.keys(metainfo::VCFMetaInfo)
     return [String(metainfo.data[r]) for r in metainfo.dictkey]
 end
 
-function Base.values(metainfo::VCFMetaInfo)
+function Base.values(metainfo::MetaInfo)
     checkfilled(metainfo)
     if !metainfo.dict
         throw(ArgumentError("not a dictionary"))
@@ -160,7 +160,7 @@ function Base.values(metainfo::VCFMetaInfo)
     return vals
 end
 
-function Base.getindex(metainfo::VCFMetaInfo, key::String)
+function Base.getindex(metainfo::MetaInfo, key::String)
     checkfilled(metainfo)
     if !metainfo.dict
         throw(ArgumentError("not a dictionary"))
@@ -184,7 +184,7 @@ function extract_metainfo_value(data::Vector{UInt8}, range::UnitRange{Int})
     end
 end
 
-function Base.show(io::IO, metainfo::VCFMetaInfo)
+function Base.show(io::IO, metainfo::MetaInfo)
     print(io, summary(metainfo), ':')
     if isfilled(metainfo)
         println(io)
@@ -202,8 +202,7 @@ function Base.show(io::IO, metainfo::VCFMetaInfo)
     end
 end
 
-function Base.write(io::IO, metainfo::VCFMetaInfo)
+function Base.write(io::IO, metainfo::MetaInfo)
     checkfilled(metainfo)
     return write(io, metainfo.data)
 end
-
