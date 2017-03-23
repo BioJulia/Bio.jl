@@ -42,6 +42,7 @@ end
     BED.Record(data::Vector{UInt8})
 
 Create a BED record object from `data`.
+
 This function verifies and indexes fields for accessors.
 Note that the ownership of `data` is transferred to a new record object.
 """
@@ -66,6 +67,7 @@ end
     BED.Record(str::AbstractString)
 
 Create a BED record object from `str`.
+
 This function verifies and indexes fields for accessors.
 """
 function Record(str::AbstractString)
@@ -324,6 +326,8 @@ end
     thickstart(record::Record)::Int
 
 Get the starting position at which `record` is drawn thickly.
+
+Note that the first base is numbered 1.
 """
 function thickstart(record::Record)::Int
     checkfilled(record)
@@ -359,7 +363,7 @@ end
 
 Get the RGB value of `record`.
 
-The return type is defined in ColorTypes.jl.
+The return type is defined in [ColorTypes.jl](https://github.com/JuliaGraphics/ColorTypes.jl).
 """
 function itemrgb(record::Record)::ColorTypes.RGB
     checkfilled(record)
@@ -448,6 +452,8 @@ end
     blockstarts(record::Record)::Vector{Int}
 
 Get the block (exon) starts of `record`.
+
+Note that the first base is numbered 1.
 """
 function blockstarts(record::Record)::Vector{Int}
     checkfilled(record)

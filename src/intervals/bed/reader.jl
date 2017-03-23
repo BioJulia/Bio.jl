@@ -14,7 +14,7 @@ end
 
 Create a data reader of the BED file format.
 
-# Arguments
+# Arguments:
 * `input`: data source
 """
 function Reader(input::IO)

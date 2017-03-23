@@ -34,7 +34,7 @@ close(reader)
 Readers in Bio.jl all read and return entries one at a time. The most convenient
 way to do this by iteration:
 ```julia
-reader = open(BEDReader, "input.bed")
+reader = open(BED.Reader, "input.bed")
 for record in reader
     # perform some operation on entry
 end
@@ -52,27 +52,22 @@ overwriting one entry. For files with a large number of small entries, this can
 greatly speed up reading.
 
 Instead of looping over a reader stream `read!` is called with a preallocated
-entry.
+entry.  Some care is necessary when using this interface because `record` is
+completely overwritten on each iteration:
 ```julia
-reader = open(BEDReader, "input.bed")
-record = BEDInterval()
+reader = open(BED.Reader, "input.bed")
+record = BED.Record()
 while !eof(reader)
     read!(reader, record)
-    # perform some operation on `entry`
+    # perform some operation on `record`
 end
 close(reader)
 ```
 
-Some care is necessary when using this interface. Because `entry` is completely
-overwritten on each iteration, one must manually copy any field from `entry`
-that should be preserved. For example, if we wish to save the `seqname` field
-from `entry` when parsing BED, we must call `copy(entry.seqname)`.
-
-Empty entry types that correspond to the file format be found using `eltype`,
-making it easy to allocate an empty entry for any reader stream.
-
+Empty record types that correspond to the file format be found using `eltype`,
+making it easy to allocate an empty record for any reader stream:
 ```julia
-entry = eltype(stream)()
+record = eltype(stream)()
 ```
 
 
@@ -232,9 +227,9 @@ Bio.Seq.TwoBitWriter
 
 ### BED
 
-* Reader type: `BEDReader`
-* Writer type: `BEDWriter{T<:IO}`
-* Element type: `Interval{BEDMetadata}` (alias: `BEDInterval`)
+* Reader type: `BED.Reader`
+* Writer type: `BED.Writer`
+* Element type: `BED.Record`
 
 BED is a text-based file format for representing genomic annotations like genes,
 transcripts, and so on. A BED file has tab-delimited and variable-length fields;
@@ -247,8 +242,21 @@ chr9	68456943	68486659	NM_001206	0	-
 ```
 
 ```@docs
-Bio.Intervals.BEDReader
-Bio.Intervals.BEDWriter
+Bio.Intervals.BED.Reader
+Bio.Intervals.BED.Writer
+Bio.Intervals.BED.Record
+Bio.Intervals.BED.chrom
+Bio.Intervals.BED.chromstart
+Bio.Intervals.BED.chromend
+Bio.Intervals.BED.name
+Bio.Intervals.BED.score
+Bio.Intervals.BED.strand
+Bio.Intervals.BED.thickstart
+Bio.Intervals.BED.thickend
+Bio.Intervals.BED.itemrgb
+Bio.Intervals.BED.blockcount
+Bio.Intervals.BED.blocksizes
+Bio.Intervals.BED.blockstarts
 ```
 
 
