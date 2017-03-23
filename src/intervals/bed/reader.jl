@@ -1,7 +1,7 @@
 # BED Reader
 # ==========
 
-type Reader <: Bio.IO.AbstractReader
+immutable Reader <: Bio.IO.AbstractReader
     state::Bio.Ragel.State
 
     function Reader(input::BufferedStreams.BufferedInputStream)
@@ -10,7 +10,7 @@ type Reader <: Bio.IO.AbstractReader
 end
 
 """
-BED.Reader(input::IO)
+    BED.Reader(input::IO)
 
 Create a data reader of the BED file format.
 
@@ -33,8 +33,6 @@ info("compiling BED")
 const record_machine, file_machine = (function ()
     cat = Automa.RegExp.cat
     rep = Automa.RegExp.rep
-    rep1 = Automa.RegExp.rep1
-    alt = Automa.RegExp.alt
     opt = Automa.RegExp.opt
 
     record = let
@@ -128,9 +126,9 @@ const record_machine, file_machine = (function ()
 end)()
 
 #=
-=#
 write("bed.dot", Automa.machine2dot(file_machine))
 run(`dot -Tsvg -o bed.svg bed.dot`)
+=#
 
 const record_actions = Dict(
     :record_chrom                  => :(record.chrom      = (mark:p-1) - offset; record.ncols += 1),
