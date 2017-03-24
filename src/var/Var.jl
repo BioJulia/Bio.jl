@@ -70,7 +70,8 @@ export
     hasformat,
     genotype,
 
-    MissingFieldException
+    MissingFieldException,
+    mashdistance
 
 # Bio.@reexport import Bio: isfilled, leftposition
 
@@ -78,5 +79,6 @@ include("site_counting/site_counting.jl")
 #include("distances.jl")
 include("vcf/vcf.jl")
 include("bcf/bcf.jl")
+include("mash.jl")
 
 end # module Var
