@@ -161,12 +161,6 @@ function decode_sequence(packeddna, seqlen, nbits, table)
     return data
 end
 
-function checkfilled(record)
-    if !isfilled(record)
-        throw(ArgumentError("unfilled 2bit record"))
-    end
-end
-
 const twobit2refseq_table = let
     # T: 00, C: 01, A: 10, G: 11
     f(x) = x == 0b00 ? UInt64(3) :
@@ -175,13 +169,8 @@ const twobit2refseq_table = let
            x == 0b11 ? UInt64(2) : error()
     tcag = 0b00:0b11
     tbl = UInt64[]
-    for a in tcag, b in tcag, c in tcag, d in tcag
-        x::UInt64 = 0
-        x |= f(a) << 0
-        x |= f(b) << 2
-        x |= f(c) << 4
-        x |= f(d) << 6
-        push!(tbl, x)
+    for x in tcag, y in tcag, z in tcag, w in tcag
+        push!(tbl, f(x) | f(y) << 2 | f(z) << 4 | f(w) << 6)
     end
     tbl
 end
@@ -195,9 +184,15 @@ const twobit2dnaseq_table = let
     tcag = 0b00:0b11
     tbl = UInt64[]
     for x in tcag, y in tcag, z in tcag, w in tcag
-        push!(tbl, f(x) << 0 | f(y) << 4 | f(z) << 8 | f(w) << 12)
+        push!(tbl, f(x) | f(y) << 4 | f(z) << 8 | f(w) << 12)
     end
     tbl
+end
+
+function checkfilled(record)
+    if !isfilled(record)
+        throw(ArgumentError("unfilled 2bit record"))
+    end
 end
 
 function memcmp(p1::Ptr, p2::Ptr, n::Integer)
