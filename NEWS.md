@@ -13,10 +13,12 @@ Bio.jl v0.5.0 Release Notes
     * `Bio.Seq.FASTAReader` => `Bio.Seq.FASTA.Reader` ([#413]).
     * `Bio.Intervals.BEDReader` => `Bio.Intervals.BED.Reader` ([#418]).
 * Overloaded `Base.intersect` methods for intervals are removed. Use the `eachoverlap` function exported from `Bio.Intervals` instead ([#426]).
+* A reader for the ABIF format by Applied Biosystems is introduced ([#353]).
 
 [#138]: https://github.com/BioJulia/Bio.jl/pull/138
 [#291]: https://github.com/BioJulia/Bio.jl/issues/291
 [#350]: https://github.com/BioJulia/Bio.jl/pull/350
+[#353]: https://github.com/BioJulia/Bio.jl/pull/353
 [#378]: https://github.com/BioJulia/Bio.jl/pull/378
 [#391]: https://github.com/BioJulia/Bio.jl/issues/391
 [#399]: https://github.com/BioJulia/Bio.jl/pull/399

@@ -141,6 +141,7 @@ export
     FASTQSeqRecord,
     TwoBitReader,
     TwoBitWriter,
+    AbifReader,
     Alphabet,
     DNAAlphabet,
     RNAAlphabet,
@@ -215,6 +216,7 @@ include("demultiplexer.jl")
 include("fasta/fasta.jl")
 include("fastq/fastq.jl")
 include("twobit/twobit.jl")
+include("abif/abif.jl")
 
 include("search/exact.jl")
 include("search/approx.jl")
