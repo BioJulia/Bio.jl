@@ -339,7 +339,7 @@
 <p><a id='Reading-by-iteration-1'></a></p>
 <h2 id="reading-by-iteration">Reading by iteration</h2>
 <p>Readers in Bio.jl all read and return entries one at a time. The most convenient way to do this by iteration:</p>
-<div class="codehilite"><pre><span></span><span class="n">reader</span> <span class="o">=</span> <span class="n">open</span><span class="p">(</span><span class="n">BEDReader</span><span class="p">,</span> <span class="s">&quot;input.bed&quot;</span><span class="p">)</span>
+<div class="codehilite"><pre><span></span><span class="n">reader</span> <span class="o">=</span> <span class="n">open</span><span class="p">(</span><span class="n">BED</span><span class="o">.</span><span class="n">Reader</span><span class="p">,</span> <span class="s">&quot;input.bed&quot;</span><span class="p">)</span>
 <span class="k">for</span> <span class="n">record</span> <span class="kp">in</span> <span class="n">reader</span>
     <span class="c"># perform some operation on entry</span>
 <span class="k">end</span>
@@ -350,20 +350,19 @@
 <p><a id='In-place-reading-1'></a></p>
 <h2 id="in-place-reading">In-place reading</h2>
 <p>Iterating through entries in a file is convenient, but for each entry in the file, the reader must allocate, and ultimately the garbage collector must spend time to deallocate it. For performance critical applications, a separate lower level parsing interface can be used that avoid unnecessary allocation by overwriting one entry. For files with a large number of small entries, this can greatly speed up reading.</p>
-<p>Instead of looping over a reader stream <code>read!</code> is called with a preallocated entry.</p>
-<div class="codehilite"><pre><span></span><span class="n">reader</span> <span class="o">=</span> <span class="n">open</span><span class="p">(</span><span class="n">BEDReader</span><span class="p">,</span> <span class="s">&quot;input.bed&quot;</span><span class="p">)</span>
-<span class="n">record</span> <span class="o">=</span> <span class="n">BEDInterval</span><span class="p">()</span>
+<p>Instead of looping over a reader stream <code>read!</code> is called with a preallocated entry.  Some care is necessary when using this interface because <code>record</code> is completely overwritten on each iteration:</p>
+<div class="codehilite"><pre><span></span><span class="n">reader</span> <span class="o">=</span> <span class="n">open</span><span class="p">(</span><span class="n">BED</span><span class="o">.</span><span class="n">Reader</span><span class="p">,</span> <span class="s">&quot;input.bed&quot;</span><span class="p">)</span>
+<span class="n">record</span> <span class="o">=</span> <span class="n">BED</span><span class="o">.</span><span class="n">Record</span><span class="p">()</span>
 <span class="k">while</span> <span class="o">!</span><span class="n">eof</span><span class="p">(</span><span class="n">reader</span><span class="p">)</span>
     <span class="n">read!</span><span class="p">(</span><span class="n">reader</span><span class="p">,</span> <span class="n">record</span><span class="p">)</span>
-    <span class="c"># perform some operation on `entry`</span>
+    <span class="c"># perform some operation on `record`</span>
 <span class="k">end</span>
 <span class="n">close</span><span class="p">(</span><span class="n">reader</span><span class="p">)</span>
 </pre></div>
 
 
-<p>Some care is necessary when using this interface. Because <code>entry</code> is completely overwritten on each iteration, one must manually copy any field from <code>entry</code> that should be preserved. For example, if we wish to save the <code>seqname</code> field from <code>entry</code> when parsing BED, we must call <code>copy(entry.seqname)</code>.</p>
-<p>Empty entry types that correspond to the file format be found using <code>eltype</code>, making it easy to allocate an empty entry for any reader stream.</p>
-<div class="codehilite"><pre><span></span><span class="n">entry</span> <span class="o">=</span> <span class="n">eltype</span><span class="p">(</span><span class="n">stream</span><span class="p">)()</span>
+<p>Empty record types that correspond to the file format be found using <code>eltype</code>, making it easy to allocate an empty record for any reader stream:</p>
+<div class="codehilite"><pre><span></span><span class="n">record</span> <span class="o">=</span> <span class="n">eltype</span><span class="p">(</span><span class="n">stream</span><span class="p">)()</span>
 </pre></div>
 
 
@@ -504,7 +503,7 @@ CACACACACACATCCTAACACTACCCTAACACAGCCCTAATCTAACCCTG
 <li><code>input</code>: data source</li>
 <li><code>index=nothing</code>: filepath to a random access index (currently <em>fai</em> is supported)</li>
 </ul>
-<p><a target='_blank' href='https://github.com/BioJulia/Bio.jl/tree/725fc9eb9381ec75675547d8157fd6a3efd3d2d6/src/seq/fasta/reader.jl#L13-L21' class='documenter-source'>source</a><br></p>
+<p><a target='_blank' href='https://github.com/BioJulia/Bio.jl/tree/999cb1dac0fc399ca45542672f1d645ad3318d85/src/seq/fasta/reader.jl#L13-L21' class='documenter-source'>source</a><br></p>
 <p><a id='Bio.Seq.FASTA.Writer' href='#Bio.Seq.FASTA.Writer'>#</a>
 <strong><code>Bio.Seq.FASTA.Writer</code></strong> &mdash; <em>Type</em>.</p>
 <div class="codehilite"><pre><span></span><span class="nt">FASTA</span><span class="p">.</span><span class="nc">Writer</span><span class="o">(</span><span class="nt">output</span><span class="p">::</span><span class="nd">IO</span><span class="o">;</span> <span class="nt">width</span><span class="o">=</span><span class="nt">70</span><span class="o">)</span>
@@ -517,7 +516,7 @@ CACACACACACATCCTAACACTACCCTAACACAGCCCTAATCTAACCCTG
 <li><code>output</code>: data sink</li>
 <li><code>width=70</code>: wrapping width of sequence characters</li>
 </ul>
-<p><a target='_blank' href='https://github.com/BioJulia/Bio.jl/tree/725fc9eb9381ec75675547d8157fd6a3efd3d2d6/src/seq/fasta/writer.jl#L4-L12' class='documenter-source'>source</a><br></p>
+<p><a target='_blank' href='https://github.com/BioJulia/Bio.jl/tree/999cb1dac0fc399ca45542672f1d645ad3318d85/src/seq/fasta/writer.jl#L4-L12' class='documenter-source'>source</a><br></p>
 <p><a id='Bio.Seq.FASTA.Record' href='#Bio.Seq.FASTA.Record'>#</a>
 <strong><code>Bio.Seq.FASTA.Record</code></strong> &mdash; <em>Type</em>.</p>
 <div class="codehilite"><pre><span></span>FASTA.Record()
@@ -525,33 +524,33 @@ CACACACACACATCCTAACACTACCCTAACACAGCCCTAATCTAACCCTG
 
 
 <p>Create an unfilled FASTA record.</p>
-<p><a target='_blank' href='https://github.com/BioJulia/Bio.jl/tree/725fc9eb9381ec75675547d8157fd6a3efd3d2d6/src/seq/fasta/record.jl#L14-L18' class='documenter-source'>source</a><br></p>
+<p><a target='_blank' href='https://github.com/BioJulia/Bio.jl/tree/999cb1dac0fc399ca45542672f1d645ad3318d85/src/seq/fasta/record.jl#L14-L18' class='documenter-source'>source</a><br></p>
 <div class="codehilite"><pre><span></span>FASTA.Record(data::Vector{UInt8})
 </pre></div>
 
 
 <p>Create a FASTA record object from <code>data</code>.</p>
 <p>This function verifies and indexes fields for accessors. Note that the ownership of <code>data</code> is transferred to a new record object.</p>
-<p><a target='_blank' href='https://github.com/BioJulia/Bio.jl/tree/725fc9eb9381ec75675547d8157fd6a3efd3d2d6/src/seq/fasta/record.jl#L23-L30' class='documenter-source'>source</a><br></p>
+<p><a target='_blank' href='https://github.com/BioJulia/Bio.jl/tree/999cb1dac0fc399ca45542672f1d645ad3318d85/src/seq/fasta/record.jl#L23-L30' class='documenter-source'>source</a><br></p>
 <div class="codehilite"><pre><span></span>FASTA.Record(str::AbstractString)
 </pre></div>
 
 
 <p>Create a FASTA record object from <code>str</code>.</p>
 <p>This function verifies and indexes fields for accessors.</p>
-<p><a target='_blank' href='https://github.com/BioJulia/Bio.jl/tree/725fc9eb9381ec75675547d8157fd6a3efd3d2d6/src/seq/fasta/record.jl#L41-L47' class='documenter-source'>source</a><br></p>
+<p><a target='_blank' href='https://github.com/BioJulia/Bio.jl/tree/999cb1dac0fc399ca45542672f1d645ad3318d85/src/seq/fasta/record.jl#L41-L47' class='documenter-source'>source</a><br></p>
 <div class="codehilite"><pre><span></span>FASTA.Record(identifier, sequence)
 </pre></div>
 
 
 <p>Create a FASTA record object from <code>identifier</code> and <code>sequence</code>.</p>
-<p><a target='_blank' href='https://github.com/BioJulia/Bio.jl/tree/725fc9eb9381ec75675547d8157fd6a3efd3d2d6/src/seq/fasta/record.jl#L60-L64' class='documenter-source'>source</a><br></p>
+<p><a target='_blank' href='https://github.com/BioJulia/Bio.jl/tree/999cb1dac0fc399ca45542672f1d645ad3318d85/src/seq/fasta/record.jl#L60-L64' class='documenter-source'>source</a><br></p>
 <div class="codehilite"><pre><span></span>FASTA.Record(identifier, description, sequence)
 </pre></div>
 
 
 <p>Create a FASTA record object from <code>identifier</code>, <code>description</code> and <code>sequence</code>.</p>
-<p><a target='_blank' href='https://github.com/BioJulia/Bio.jl/tree/725fc9eb9381ec75675547d8157fd6a3efd3d2d6/src/seq/fasta/record.jl#L69-L73' class='documenter-source'>source</a><br></p>
+<p><a target='_blank' href='https://github.com/BioJulia/Bio.jl/tree/999cb1dac0fc399ca45542672f1d645ad3318d85/src/seq/fasta/record.jl#L69-L73' class='documenter-source'>source</a><br></p>
 <p><a id='Bio.Seq.FASTA.identifier' href='#Bio.Seq.FASTA.identifier'>#</a>
 <strong><code>Bio.Seq.FASTA.identifier</code></strong> &mdash; <em>Function</em>.</p>
 <div class="codehilite"><pre><span></span>identifier(record::Record)::String
@@ -559,7 +558,7 @@ CACACACACACATCCTAACACTACCCTAACACAGCCCTAATCTAACCCTG
 
 
 <p>Get the sequence identifier of <code>record</code>.</p>
-<p><a target='_blank' href='https://github.com/BioJulia/Bio.jl/tree/725fc9eb9381ec75675547d8157fd6a3efd3d2d6/src/seq/fasta/record.jl#L153-L157' class='documenter-source'>source</a><br></p>
+<p><a target='_blank' href='https://github.com/BioJulia/Bio.jl/tree/999cb1dac0fc399ca45542672f1d645ad3318d85/src/seq/fasta/record.jl#L153-L157' class='documenter-source'>source</a><br></p>
 <p><a id='Bio.Seq.FASTA.description' href='#Bio.Seq.FASTA.description'>#</a>
 <strong><code>Bio.Seq.FASTA.description</code></strong> &mdash; <em>Function</em>.</p>
 <div class="codehilite"><pre><span></span>description(record::Record)::String
@@ -567,7 +566,7 @@ CACACACACACATCCTAACACTACCCTAACACAGCCCTAATCTAACCCTG
 
 
 <p>Get the description of <code>record</code>.</p>
-<p><a target='_blank' href='https://github.com/BioJulia/Bio.jl/tree/725fc9eb9381ec75675547d8157fd6a3efd3d2d6/src/seq/fasta/record.jl#L178-L182' class='documenter-source'>source</a><br></p>
+<p><a target='_blank' href='https://github.com/BioJulia/Bio.jl/tree/999cb1dac0fc399ca45542672f1d645ad3318d85/src/seq/fasta/record.jl#L178-L182' class='documenter-source'>source</a><br></p>
 <p><a id='Bio.Seq.FASTA.sequence' href='#Bio.Seq.FASTA.sequence'>#</a>
 <strong><code>Bio.Seq.FASTA.sequence</code></strong> &mdash; <em>Function</em>.</p>
 <div class="codehilite"><pre><span></span>sequence(::Type{S}, record::Record, [part::UnitRange{Int}])::S
@@ -576,14 +575,14 @@ CACACACACACATCCTAACACTACCCTAACACAGCCCTAATCTAACCCTG
 
 <p>Get the sequence of <code>record</code>.</p>
 <p><code>S</code> can be either a subtype of <code>Bio.Seq.Sequence</code> or <code>String</code>. If <code>part</code> argument is given, it returns the specified part of the sequence.</p>
-<p><a target='_blank' href='https://github.com/BioJulia/Bio.jl/tree/725fc9eb9381ec75675547d8157fd6a3efd3d2d6/src/seq/fasta/record.jl#L195-L202' class='documenter-source'>source</a><br></p>
+<p><a target='_blank' href='https://github.com/BioJulia/Bio.jl/tree/999cb1dac0fc399ca45542672f1d645ad3318d85/src/seq/fasta/record.jl#L195-L202' class='documenter-source'>source</a><br></p>
 <div class="codehilite"><pre><span></span>sequence(record::Record, [part::UnitRange{Int}])
 </pre></div>
 
 
 <p>Get the sequence of <code>record</code>.</p>
 <p>This function infers the sequence type from the data. When it is wrong or unreliable, use <code>sequence(::Type{S}, record::Record)</code>.  If <code>part</code> argument is given, it returns the specified part of the sequence.</p>
-<p><a target='_blank' href='https://github.com/BioJulia/Bio.jl/tree/725fc9eb9381ec75675547d8157fd6a3efd3d2d6/src/seq/fasta/record.jl#L220-L228' class='documenter-source'>source</a><br></p>
+<p><a target='_blank' href='https://github.com/BioJulia/Bio.jl/tree/999cb1dac0fc399ca45542672f1d645ad3318d85/src/seq/fasta/record.jl#L220-L228' class='documenter-source'>source</a><br></p>
 <p><a id='FASTQ-1'></a></p>
 <h3 id="fastq">FASTQ</h3>
 <ul>
@@ -681,7 +680,7 @@ tcagTTAAGATGGGAT
 </tr>
 </tbody>
 </table>
-<p><a target='_blank' href='https://github.com/BioJulia/Bio.jl/tree/725fc9eb9381ec75675547d8157fd6a3efd3d2d6/src/seq/fastq/reader.jl#L4-L21' class='documenter-source'>source</a><br></p>
+<p><a target='_blank' href='https://github.com/BioJulia/Bio.jl/tree/999cb1dac0fc399ca45542672f1d645ad3318d85/src/seq/fastq/reader.jl#L4-L21' class='documenter-source'>source</a><br></p>
 <p><a id='Bio.Seq.FASTQWriter' href='#Bio.Seq.FASTQWriter'>#</a>
 <strong><code>Bio.Seq.FASTQWriter</code></strong> &mdash; <em>Type</em>.</p>
 <div class="codehilite"><pre><span></span><span class="nt">FASTQWriter</span><span class="o">(</span><span class="nt">output</span><span class="p">::</span><span class="nd">IO</span><span class="o">;</span> <span class="nt">quality_header</span><span class="o">=</span><span class="nt">false</span><span class="o">,</span> <span class="nt">quality_encoding</span><span class="o">=</span><span class="p">:</span><span class="nd">sanger</span><span class="o">)</span>
@@ -695,7 +694,7 @@ tcagTTAAGATGGGAT
 <li><code>quality_header=false</code>: output the title line at the third line just after '+'</li>
 <li><code>quality_encoding=:sanger</code>: encoding of base qualities; see <code>FASTQReader</code> for available values</li>
 </ul>
-<p><a target='_blank' href='https://github.com/BioJulia/Bio.jl/tree/725fc9eb9381ec75675547d8157fd6a3efd3d2d6/src/seq/fastq/writer.jl#L4-L13' class='documenter-source'>source</a><br></p>
+<p><a target='_blank' href='https://github.com/BioJulia/Bio.jl/tree/999cb1dac0fc399ca45542672f1d645ad3318d85/src/seq/fastq/writer.jl#L4-L13' class='documenter-source'>source</a><br></p>
 <p><a id='.2bit-1'></a></p>
 <h3 id="2bit">.2bit</h3>
 <ul>
@@ -721,7 +720,7 @@ tcagTTAAGATGGGAT
 <ul>
 <li><code>input</code>: data source</li>
 </ul>
-<p><a target='_blank' href='https://github.com/BioJulia/Bio.jl/tree/725fc9eb9381ec75675547d8157fd6a3efd3d2d6/src/seq/twobit/reader.jl#L4-L11' class='documenter-source'>source</a><br></p>
+<p><a target='_blank' href='https://github.com/BioJulia/Bio.jl/tree/999cb1dac0fc399ca45542672f1d645ad3318d85/src/seq/twobit/reader.jl#L4-L11' class='documenter-source'>source</a><br></p>
 <p><a id='Bio.Seq.TwoBitWriter' href='#Bio.Seq.TwoBitWriter'>#</a>
 <strong><code>Bio.Seq.TwoBitWriter</code></strong> &mdash; <em>Type</em>.</p>
 <div class="codehilite"><pre><span></span>TwoBitWriter(output::IO, names::AbstractVector)
@@ -734,13 +733,13 @@ tcagTTAAGATGGGAT
 <li><code>output</code>: data sink</li>
 <li><code>names</code>: a vector of sequence names written to <code>output</code></li>
 </ul>
-<p><a target='_blank' href='https://github.com/BioJulia/Bio.jl/tree/725fc9eb9381ec75675547d8157fd6a3efd3d2d6/src/seq/twobit/writer.jl#L4-L12' class='documenter-source'>source</a><br></p>
+<p><a target='_blank' href='https://github.com/BioJulia/Bio.jl/tree/999cb1dac0fc399ca45542672f1d645ad3318d85/src/seq/twobit/writer.jl#L4-L12' class='documenter-source'>source</a><br></p>
 <p><a id='BED-1'></a></p>
 <h3 id="bed">BED</h3>
 <ul>
-<li>Reader type: <code>BEDReader</code></li>
-<li>Writer type: <code>BEDWriter{T&lt;:IO}</code></li>
-<li>Element type: <code>Interval{BEDMetadata}</code> (alias: <code>BEDInterval</code>)</li>
+<li>Reader type: <code>BED.Reader</code></li>
+<li>Writer type: <code>BED.Writer</code></li>
+<li>Element type: <code>BED.Record</code></li>
 </ul>
 <p>BED is a text-based file format for representing genomic annotations like genes, transcripts, and so on. A BED file has tab-delimited and variable-length fields; the first three fields denoting a genomic interval are mandatory.</p>
 <p>This is an example of RNA transcripts:</p>
@@ -749,30 +748,152 @@ chr9    68456943    68486659    NM_001206   0   -
 </pre></div>
 
 
-<p><a id='Bio.Intervals.BEDReader' href='#Bio.Intervals.BEDReader'>#</a>
-<strong><code>Bio.Intervals.BEDReader</code></strong> &mdash; <em>Type</em>.</p>
-<div class="codehilite"><pre><span></span>BEDReader(input::IO)
+<p><a id='Bio.Intervals.BED.Reader' href='#Bio.Intervals.BED.Reader'>#</a>
+<strong><code>Bio.Intervals.BED.Reader</code></strong> &mdash; <em>Type</em>.</p>
+<div class="codehilite"><pre><span></span>BED.Reader(input::IO)
 </pre></div>
 
 
 <p>Create a data reader of the BED file format.</p>
-<p><strong>Arguments</strong></p>
+<p><strong>Arguments:</strong></p>
 <ul>
 <li><code>input</code>: data source</li>
 </ul>
-<p><a target='_blank' href='https://github.com/BioJulia/Bio.jl/tree/725fc9eb9381ec75675547d8157fd6a3efd3d2d6/src/intervals/bed/reader.jl#L4-L11' class='documenter-source'>source</a><br></p>
-<p><a id='Bio.Intervals.BEDWriter' href='#Bio.Intervals.BEDWriter'>#</a>
-<strong><code>Bio.Intervals.BEDWriter</code></strong> &mdash; <em>Type</em>.</p>
-<div class="codehilite"><pre><span></span>BEDWriter(output::IO)
+<p><a target='_blank' href='https://github.com/BioJulia/Bio.jl/tree/999cb1dac0fc399ca45542672f1d645ad3318d85/src/intervals/bed/reader.jl#L12-L19' class='documenter-source'>source</a><br></p>
+<p><a id='Bio.Intervals.BED.Writer' href='#Bio.Intervals.BED.Writer'>#</a>
+<strong><code>Bio.Intervals.BED.Writer</code></strong> &mdash; <em>Type</em>.</p>
+<div class="codehilite"><pre><span></span>BED.Writer(output::IO)
 </pre></div>
 
 
 <p>Create a data writer of the BED file format.</p>
-<p><strong>Arguments</strong></p>
+<p><strong>Arguments:</strong></p>
 <ul>
 <li><code>output</code>: data sink</li>
 </ul>
-<p><a target='_blank' href='https://github.com/BioJulia/Bio.jl/tree/725fc9eb9381ec75675547d8157fd6a3efd3d2d6/src/intervals/bed/writer.jl#L4-L11' class='documenter-source'>source</a><br></p>
+<p><a target='_blank' href='https://github.com/BioJulia/Bio.jl/tree/999cb1dac0fc399ca45542672f1d645ad3318d85/src/intervals/bed/writer.jl#L4-L11' class='documenter-source'>source</a><br></p>
+<p><a id='Bio.Intervals.BED.Record' href='#Bio.Intervals.BED.Record'>#</a>
+<strong><code>Bio.Intervals.BED.Record</code></strong> &mdash; <em>Type</em>.</p>
+<div class="codehilite"><pre><span></span>BED.Record()
+</pre></div>
+
+
+<p>Create an unfilled BED record.</p>
+<p><a target='_blank' href='https://github.com/BioJulia/Bio.jl/tree/999cb1dac0fc399ca45542672f1d645ad3318d85/src/intervals/bed/record.jl#L25-L29' class='documenter-source'>source</a><br></p>
+<div class="codehilite"><pre><span></span>BED.Record(data::Vector{UInt8})
+</pre></div>
+
+
+<p>Create a BED record object from <code>data</code>.</p>
+<p>This function verifies and indexes fields for accessors. Note that the ownership of <code>data</code> is transferred to a new record object.</p>
+<p><a target='_blank' href='https://github.com/BioJulia/Bio.jl/tree/999cb1dac0fc399ca45542672f1d645ad3318d85/src/intervals/bed/record.jl#L41-L48' class='documenter-source'>source</a><br></p>
+<div class="codehilite"><pre><span></span>BED.Record(str::AbstractString)
+</pre></div>
+
+
+<p>Create a BED record object from <code>str</code>.</p>
+<p>This function verifies and indexes fields for accessors.</p>
+<p><a target='_blank' href='https://github.com/BioJulia/Bio.jl/tree/999cb1dac0fc399ca45542672f1d645ad3318d85/src/intervals/bed/record.jl#L66-L72' class='documenter-source'>source</a><br></p>
+<p><a id='Bio.Intervals.BED.chrom' href='#Bio.Intervals.BED.chrom'>#</a>
+<strong><code>Bio.Intervals.BED.chrom</code></strong> &mdash; <em>Function</em>.</p>
+<div class="codehilite"><pre><span></span>chrom(record::Record)::String
+</pre></div>
+
+
+<p>Get the chromosome name of <code>record</code>.</p>
+<p><a target='_blank' href='https://github.com/BioJulia/Bio.jl/tree/999cb1dac0fc399ca45542672f1d645ad3318d85/src/intervals/bed/record.jl#L202-L206' class='documenter-source'>source</a><br></p>
+<p><a id='Bio.Intervals.BED.chromstart' href='#Bio.Intervals.BED.chromstart'>#</a>
+<strong><code>Bio.Intervals.BED.chromstart</code></strong> &mdash; <em>Function</em>.</p>
+<div class="codehilite"><pre><span></span>chromstart(record::Record)::Int
+</pre></div>
+
+
+<p>Get the starting position of <code>record</code>.</p>
+<p>Note that the first base is numbered 1.</p>
+<p><a target='_blank' href='https://github.com/BioJulia/Bio.jl/tree/999cb1dac0fc399ca45542672f1d645ad3318d85/src/intervals/bed/record.jl#L224-L230' class='documenter-source'>source</a><br></p>
+<p><a id='Bio.Intervals.BED.chromend' href='#Bio.Intervals.BED.chromend'>#</a>
+<strong><code>Bio.Intervals.BED.chromend</code></strong> &mdash; <em>Function</em>.</p>
+<div class="codehilite"><pre><span></span>chromend(record::Record)::Int
+</pre></div>
+
+
+<p>Get the end position of <code>record</code>.</p>
+<p><a target='_blank' href='https://github.com/BioJulia/Bio.jl/tree/999cb1dac0fc399ca45542672f1d645ad3318d85/src/intervals/bed/record.jl#L248-L252' class='documenter-source'>source</a><br></p>
+<p><a id='Bio.Intervals.BED.name' href='#Bio.Intervals.BED.name'>#</a>
+<strong><code>Bio.Intervals.BED.name</code></strong> &mdash; <em>Function</em>.</p>
+<div class="codehilite"><pre><span></span>name(record::Record)::String
+</pre></div>
+
+
+<p>Get the name of <code>record</code>.</p>
+<p><a target='_blank' href='https://github.com/BioJulia/Bio.jl/tree/999cb1dac0fc399ca45542672f1d645ad3318d85/src/intervals/bed/record.jl#L270-L274' class='documenter-source'>source</a><br></p>
+<p><a id='Bio.Intervals.BED.score' href='#Bio.Intervals.BED.score'>#</a>
+<strong><code>Bio.Intervals.BED.score</code></strong> &mdash; <em>Function</em>.</p>
+<div class="codehilite"><pre><span></span>score(record::Record)::Int
+</pre></div>
+
+
+<p>Get the score between 0 and 1000.</p>
+<p><a target='_blank' href='https://github.com/BioJulia/Bio.jl/tree/999cb1dac0fc399ca45542672f1d645ad3318d85/src/intervals/bed/record.jl#L287-L291' class='documenter-source'>source</a><br></p>
+<p><a id='Bio.Intervals.BED.strand' href='#Bio.Intervals.BED.strand'>#</a>
+<strong><code>Bio.Intervals.BED.strand</code></strong> &mdash; <em>Function</em>.</p>
+<div class="codehilite"><pre><span></span>strand(record::Record)::Bio.Intervals.Strand
+</pre></div>
+
+
+<p>Get the strand of <code>record</code>.</p>
+<p><a target='_blank' href='https://github.com/BioJulia/Bio.jl/tree/999cb1dac0fc399ca45542672f1d645ad3318d85/src/intervals/bed/record.jl#L304-L308' class='documenter-source'>source</a><br></p>
+<p><a id='Bio.Intervals.BED.thickstart' href='#Bio.Intervals.BED.thickstart'>#</a>
+<strong><code>Bio.Intervals.BED.thickstart</code></strong> &mdash; <em>Function</em>.</p>
+<div class="codehilite"><pre><span></span>thickstart(record::Record)::Int
+</pre></div>
+
+
+<p>Get the starting position at which <code>record</code> is drawn thickly.</p>
+<p>Note that the first base is numbered 1.</p>
+<p><a target='_blank' href='https://github.com/BioJulia/Bio.jl/tree/999cb1dac0fc399ca45542672f1d645ad3318d85/src/intervals/bed/record.jl#L325-L331' class='documenter-source'>source</a><br></p>
+<p><a id='Bio.Intervals.BED.thickend' href='#Bio.Intervals.BED.thickend'>#</a>
+<strong><code>Bio.Intervals.BED.thickend</code></strong> &mdash; <em>Function</em>.</p>
+<div class="codehilite"><pre><span></span>thickend(record::Record)::Int
+</pre></div>
+
+
+<p>Get the end position at which <code>record</code> is drawn thickly.</p>
+<p><a target='_blank' href='https://github.com/BioJulia/Bio.jl/tree/999cb1dac0fc399ca45542672f1d645ad3318d85/src/intervals/bed/record.jl#L344-L348' class='documenter-source'>source</a><br></p>
+<p><a id='Bio.Intervals.BED.itemrgb' href='#Bio.Intervals.BED.itemrgb'>#</a>
+<strong><code>Bio.Intervals.BED.itemrgb</code></strong> &mdash; <em>Function</em>.</p>
+<div class="codehilite"><pre><span></span>itemrgb(record::Record)::ColorTypes.RGB
+</pre></div>
+
+
+<p>Get the RGB value of <code>record</code>.</p>
+<p>The return type is defined in <a href="https://github.com/JuliaGraphics/ColorTypes.jl">ColorTypes.jl</a>.</p>
+<p><a target='_blank' href='https://github.com/BioJulia/Bio.jl/tree/999cb1dac0fc399ca45542672f1d645ad3318d85/src/intervals/bed/record.jl#L361-L367' class='documenter-source'>source</a><br></p>
+<p><a id='Bio.Intervals.BED.blockcount' href='#Bio.Intervals.BED.blockcount'>#</a>
+<strong><code>Bio.Intervals.BED.blockcount</code></strong> &mdash; <em>Function</em>.</p>
+<div class="codehilite"><pre><span></span>blockcount(record::Record)::Int
+</pre></div>
+
+
+<p>Get the number of blocks (exons) in <code>record</code>.</p>
+<p><a target='_blank' href='https://github.com/BioJulia/Bio.jl/tree/999cb1dac0fc399ca45542672f1d645ad3318d85/src/intervals/bed/record.jl#L417-L421' class='documenter-source'>source</a><br></p>
+<p><a id='Bio.Intervals.BED.blocksizes' href='#Bio.Intervals.BED.blocksizes'>#</a>
+<strong><code>Bio.Intervals.BED.blocksizes</code></strong> &mdash; <em>Function</em>.</p>
+<div class="codehilite"><pre><span></span>blocksizes(record::Record)::Vector{Int}
+</pre></div>
+
+
+<p>Get the block (exon) sizes of <code>record</code>.</p>
+<p><a target='_blank' href='https://github.com/BioJulia/Bio.jl/tree/999cb1dac0fc399ca45542672f1d645ad3318d85/src/intervals/bed/record.jl#L434-L438' class='documenter-source'>source</a><br></p>
+<p><a id='Bio.Intervals.BED.blockstarts' href='#Bio.Intervals.BED.blockstarts'>#</a>
+<strong><code>Bio.Intervals.BED.blockstarts</code></strong> &mdash; <em>Function</em>.</p>
+<div class="codehilite"><pre><span></span>blockstarts(record::Record)::Vector{Int}
+</pre></div>
+
+
+<p>Get the block (exon) starts of <code>record</code>.</p>
+<p>Note that the first base is numbered 1.</p>
+<p><a target='_blank' href='https://github.com/BioJulia/Bio.jl/tree/999cb1dac0fc399ca45542672f1d645ad3318d85/src/intervals/bed/record.jl#L451-L457' class='documenter-source'>source</a><br></p>
 <p><a id='GFF3-1'></a></p>
 <h3 id="gff3">GFF3</h3>
 <ul>
@@ -793,7 +914,7 @@ chr9    68456943    68486659    NM_001206   0   -
 <li><code>input</code>: data source</li>
 <li><code>save_directives=false</code>: if true, store directive lines, which can be accessed with the <code>directives</code> function</li>
 </ul>
-<p><a target='_blank' href='https://github.com/BioJulia/Bio.jl/tree/725fc9eb9381ec75675547d8157fd6a3efd3d2d6/src/intervals/gff3/reader.jl#L4-L13' class='documenter-source'>source</a><br></p>
+<p><a target='_blank' href='https://github.com/BioJulia/Bio.jl/tree/999cb1dac0fc399ca45542672f1d645ad3318d85/src/intervals/gff3/reader.jl#L4-L13' class='documenter-source'>source</a><br></p>
 <p><a id='Bio.Intervals.GFF3.Writer' href='#Bio.Intervals.GFF3.Writer'>#</a>
 <strong><code>Bio.Intervals.GFF3.Writer</code></strong> &mdash; <em>Type</em>.</p>
 <div class="codehilite"><pre><span></span>GFF3.Writer(output::IO)
@@ -805,7 +926,7 @@ chr9    68456943    68486659    NM_001206   0   -
 <ul>
 <li><code>output</code>: data sink</li>
 </ul>
-<p><a target='_blank' href='https://github.com/BioJulia/Bio.jl/tree/725fc9eb9381ec75675547d8157fd6a3efd3d2d6/src/intervals/gff3/writer.jl#L4-L11' class='documenter-source'>source</a><br></p>
+<p><a target='_blank' href='https://github.com/BioJulia/Bio.jl/tree/999cb1dac0fc399ca45542672f1d645ad3318d85/src/intervals/gff3/writer.jl#L4-L11' class='documenter-source'>source</a><br></p>
 <p><a id='bigBed-1'></a></p>
 <h3 id="bigbed">bigBed</h3>
 <ul>
@@ -825,7 +946,7 @@ chr9    68456943    68486659    NM_001206   0   -
 <ul>
 <li><code>input</code>: data source</li>
 </ul>
-<p><a target='_blank' href='https://github.com/BioJulia/Bio.jl/tree/725fc9eb9381ec75675547d8157fd6a3efd3d2d6/src/intervals/bbi/reader.jl#L4-L11' class='documenter-source'>source</a><br></p>
+<p><a target='_blank' href='https://github.com/BioJulia/Bio.jl/tree/999cb1dac0fc399ca45542672f1d645ad3318d85/src/intervals/bbi/reader.jl#L4-L11' class='documenter-source'>source</a><br></p>
 <p><a id='Bio.Intervals.BigBedWriter' href='#Bio.Intervals.BigBedWriter'>#</a>
 <strong><code>Bio.Intervals.BigBedWriter</code></strong> &mdash; <em>Type</em>.</p>
 <div class="codehilite"><pre><span></span>BigBedWriter(output::IO)
@@ -837,7 +958,7 @@ chr9    68456943    68486659    NM_001206   0   -
 <ul>
 <li><code>output</code>: data sink</li>
 </ul>
-<p><a target='_blank' href='https://github.com/BioJulia/Bio.jl/tree/725fc9eb9381ec75675547d8157fd6a3efd3d2d6/src/intervals/bbi/writer.jl#L4-L11' class='documenter-source'>source</a><br></p>
+<p><a target='_blank' href='https://github.com/BioJulia/Bio.jl/tree/999cb1dac0fc399ca45542672f1d645ad3318d85/src/intervals/bbi/writer.jl#L4-L11' class='documenter-source'>source</a><br></p>
 <p><a id='PDB-1'></a></p>
 <h3 id="pdb">PDB</h3>
 <p>PDB is a text-based file format for representing 3D macromolecular structures. This has different reader interfaces from other file formats. Please consult the <a href="../structure/">Bio.Structure</a> chapter for details.</p>
@@ -860,7 +981,7 @@ chr9    68456943    68486659    NM_001206   0   -
 <ul>
 <li><code>input</code>: data source</li>
 </ul>
-<p><a target='_blank' href='https://github.com/BioJulia/Bio.jl/tree/725fc9eb9381ec75675547d8157fd6a3efd3d2d6/src/align/hts/sam/reader.jl#L4-L11' class='documenter-source'>source</a><br></p>
+<p><a target='_blank' href='https://github.com/BioJulia/Bio.jl/tree/999cb1dac0fc399ca45542672f1d645ad3318d85/src/align/hts/sam/reader.jl#L4-L11' class='documenter-source'>source</a><br></p>
 <p><a id='Bio.Align.SAMWriter' href='#Bio.Align.SAMWriter'>#</a>
 <strong><code>Bio.Align.SAMWriter</code></strong> &mdash; <em>Type</em>.</p>
 <div class="codehilite"><pre><span></span>SAMWriter(output::IO, header::SAMHeader=SAMHeader())
@@ -873,7 +994,7 @@ chr9    68456943    68486659    NM_001206   0   -
 <li><code>output</code>: data sink</li>
 <li><code>header=SAMHeader()</code>: SAM header object</li>
 </ul>
-<p><a target='_blank' href='https://github.com/BioJulia/Bio.jl/tree/725fc9eb9381ec75675547d8157fd6a3efd3d2d6/src/align/hts/sam/writer.jl#L4-L12' class='documenter-source'>source</a><br></p>
+<p><a target='_blank' href='https://github.com/BioJulia/Bio.jl/tree/999cb1dac0fc399ca45542672f1d645ad3318d85/src/align/hts/sam/writer.jl#L4-L12' class='documenter-source'>source</a><br></p>
 <p><a id='BAM-1'></a></p>
 <h3 id="bam">BAM</h3>
 <ul>
@@ -895,7 +1016,7 @@ chr9    68456943    68486659    NM_001206   0   -
 <li><code>input</code>: data source</li>
 <li><code>index=nothing</code>: filepath to a random access index (currently <em>bai</em> is Supported)</li>
 </ul>
-<p><a target='_blank' href='https://github.com/BioJulia/Bio.jl/tree/725fc9eb9381ec75675547d8157fd6a3efd3d2d6/src/align/hts/bam/reader.jl#L4-L12' class='documenter-source'>source</a><br></p>
+<p><a target='_blank' href='https://github.com/BioJulia/Bio.jl/tree/999cb1dac0fc399ca45542672f1d645ad3318d85/src/align/hts/bam/reader.jl#L4-L12' class='documenter-source'>source</a><br></p>
 <p><a id='Bio.Align.BAMWriter' href='#Bio.Align.BAMWriter'>#</a>
 <strong><code>Bio.Align.BAMWriter</code></strong> &mdash; <em>Type</em>.</p>
 <div class="codehilite"><pre><span></span>BAMWriter(output::BGZFStream, header::SAMHeader)
@@ -908,7 +1029,7 @@ chr9    68456943    68486659    NM_001206   0   -
 <li><code>output</code>: data sink</li>
 <li><code>header</code>: SAM header object</li>
 </ul>
-<p><a target='_blank' href='https://github.com/BioJulia/Bio.jl/tree/725fc9eb9381ec75675547d8157fd6a3efd3d2d6/src/align/hts/bam/writer.jl#L4-L12' class='documenter-source'>source</a><br></p>
+<p><a target='_blank' href='https://github.com/BioJulia/Bio.jl/tree/999cb1dac0fc399ca45542672f1d645ad3318d85/src/align/hts/bam/writer.jl#L4-L12' class='documenter-source'>source</a><br></p>
 <p><a id='VCF-1'></a></p>
 <h3 id="vcf">VCF</h3>
 <ul>
@@ -928,7 +1049,7 @@ chr9    68456943    68486659    NM_001206   0   -
 <ul>
 <li><code>input</code>: data source</li>
 </ul>
-<p><a target='_blank' href='https://github.com/BioJulia/Bio.jl/tree/725fc9eb9381ec75675547d8157fd6a3efd3d2d6/src/var/vcf/reader.jl#L4-L11' class='documenter-source'>source</a><br></p>
+<p><a target='_blank' href='https://github.com/BioJulia/Bio.jl/tree/999cb1dac0fc399ca45542672f1d645ad3318d85/src/var/vcf/reader.jl#L4-L11' class='documenter-source'>source</a><br></p>
 <p><a id='Bio.Var.VCFWriter' href='#Bio.Var.VCFWriter'>#</a>
 <strong><code>Bio.Var.VCFWriter</code></strong> &mdash; <em>Type</em>.</p>
 <div class="codehilite"><pre><span></span>VCFWriter(output::IO, header::VCFHeader)
@@ -941,7 +1062,7 @@ chr9    68456943    68486659    NM_001206   0   -
 <li><code>output</code>: data sink</li>
 <li><code>header</code>: VCF header object</li>
 </ul>
-<p><a target='_blank' href='https://github.com/BioJulia/Bio.jl/tree/725fc9eb9381ec75675547d8157fd6a3efd3d2d6/src/var/vcf/writer.jl#L4-L12' class='documenter-source'>source</a><br></p>
+<p><a target='_blank' href='https://github.com/BioJulia/Bio.jl/tree/999cb1dac0fc399ca45542672f1d645ad3318d85/src/var/vcf/writer.jl#L4-L12' class='documenter-source'>source</a><br></p>
 <p><a id='BCF-1'></a></p>
 <h3 id="bcf">BCF</h3>
 <ul>
@@ -961,7 +1082,7 @@ chr9    68456943    68486659    NM_001206   0   -
 <ul>
 <li><code>input</code>: data source</li>
 </ul>
-<p><a target='_blank' href='https://github.com/BioJulia/Bio.jl/tree/725fc9eb9381ec75675547d8157fd6a3efd3d2d6/src/var/bcf/reader.jl#L4-L11' class='documenter-source'>source</a><br></p>
+<p><a target='_blank' href='https://github.com/BioJulia/Bio.jl/tree/999cb1dac0fc399ca45542672f1d645ad3318d85/src/var/bcf/reader.jl#L4-L11' class='documenter-source'>source</a><br></p>
 <p><a id='Bio.Var.BCFWriter' href='#Bio.Var.BCFWriter'>#</a>
 <strong><code>Bio.Var.BCFWriter</code></strong> &mdash; <em>Type</em>.</p>
 <div class="codehilite"><pre><span></span>BCFWriter(output::IO, header::VCFHeader)
@@ -974,7 +1095,7 @@ chr9    68456943    68486659    NM_001206   0   -
 <li><code>output</code>: data sink</li>
 <li><code>header</code>: VCF header object</li>
 </ul>
-<p><a target='_blank' href='https://github.com/BioJulia/Bio.jl/tree/725fc9eb9381ec75675547d8157fd6a3efd3d2d6/src/var/bcf/writer.jl#L4-L12' class='documenter-source'>source</a><br></p></div>
+<p><a target='_blank' href='https://github.com/BioJulia/Bio.jl/tree/999cb1dac0fc399ca45542672f1d645ad3318d85/src/var/bcf/writer.jl#L4-L12' class='documenter-source'>source</a><br></p></div>
         
     </div>
 

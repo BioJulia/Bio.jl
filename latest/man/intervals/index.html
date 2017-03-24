@@ -420,7 +420,7 @@
 <p>Create an iterator of overlapping intervals between <code>intervals_a</code> and <code>intervals_b</code>.</p>
 <p>This function assumes elements of <code>intervals_a</code> and <code>intervals_b</code> are sorted by its sequence name and left position.  If the element type is not a subtype of <code>Bio.Intervals.Interval</code>, elements are converted to <code>Interval</code> objects.</p>
 <p>The third optional argument is a function that defines the order of sequence names. The default function is <code>Base.isless</code>, which is the lexicographical order.</p>
-<p><a target='_blank' href='https://github.com/BioJulia/Bio.jl/tree/725fc9eb9381ec75675547d8157fd6a3efd3d2d6/src/intervals/overlap.jl#L18-L30' class='documenter-source'>source</a><br></p>
+<p><a target='_blank' href='https://github.com/BioJulia/Bio.jl/tree/999cb1dac0fc399ca45542672f1d645ad3318d85/src/intervals/overlap.jl#L18-L30' class='documenter-source'>source</a><br></p>
 <p>The order of interval pairs is the same as the following nested loop but <code>eachoverlap</code> is often much faster:</p>
 <div class="codehilite"><pre><span></span><span class="k">for</span> <span class="n">a</span> <span class="kp">in</span> <span class="n">intervals_a</span><span class="p">,</span> <span class="n">b</span> <span class="kp">in</span> <span class="n">intervals_b</span>
     <span class="k">if</span> <span class="n">isoverlapping</span><span class="p">(</span><span class="n">a</span><span class="p">,</span> <span class="n">b</span><span class="p">)</span>
@@ -467,7 +467,7 @@
 </pre></div>
 
 
-<p><a target='_blank' href='https://github.com/BioJulia/Bio.jl/tree/725fc9eb9381ec75675547d8157fd6a3efd3d2d6/src/intervals/coverage.jl#L9-L24' class='documenter-source'>source</a><br></p></div>
+<p><a target='_blank' href='https://github.com/BioJulia/Bio.jl/tree/999cb1dac0fc399ca45542672f1d645ad3318d85/src/intervals/coverage.jl#L9-L24' class='documenter-source'>source</a><br></p></div>
         
     </div>
 
