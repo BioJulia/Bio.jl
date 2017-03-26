@@ -395,18 +395,25 @@ function info(record::Record, key::Integer; simplify::Bool=true)
     throw(KeyError(key))
 end
 
-function genotype(rec::Record)
-    checkfilled(rec)
-    offset::Int = rec.sharedlen
-    N = n_sample(rec)
-    ret = Tuple{Int,Any}[]
-    for j in 1:n_format(rec)
-        key, offset = loadvec(rec.data, offset)
+"""
+    genotype(record::Record)::Vector{Tuple{Int,Vector{Any}}}
+
+Get the genotypes of `record`.
+
+BCF genotypes are encoded by field, not by sample like VCF.
+"""
+function genotype(record::Record)::Vector{Tuple{Int,Vector{Any}}}
+    checkfilled(record)
+    offset::Int = record.sharedlen
+    N = n_sample(record)
+    ret = Tuple{Int,Vector{Any}}[]
+    for j in 1:n_format(record)
+        key, offset = loadvec(record.data, offset)
         @assert length(key) == 1
-        head, offset = loadvechead(rec.data, offset)
+        head, offset = loadvechead(record.data, offset)
         vals = Vector{Any}[]
         for n in 1:N
-            val, offset = loadvecbody(rec.data, offset, head)
+            val, offset = loadvecbody(record.data, offset, head)
             push!(vals, val)
         end
         push!(ret, (key[1], vals))
@@ -414,55 +421,55 @@ function genotype(rec::Record)
     return ret
 end
 
-function genotype(rec::Record, index::Integer)
-    return [(k, geno[index]) for (k, geno) in genotype(rec)]
+function genotype(record::Record, index::Integer)
+    return [(k, geno[index]) for (k, geno) in genotype(record)]
 end
 
-function genotype(rec::Record, index::Integer, key::Integer)
-    checkfilled(rec)
-    N = n_sample(rec)
-    offset::Int = rec.sharedlen
-    for j in 1:n_format(rec)
-        k, offset = loadvec(rec.data, offset)
+function genotype(record::Record, index::Integer, key::Integer)
+    checkfilled(record)
+    N = n_sample(record)
+    offset::Int = record.sharedlen
+    for j in 1:n_format(record)
+        k, offset = loadvec(record.data, offset)
         @assert length(k) == 1
-        head, offset = loadvechead(rec.data, offset)
+        head, offset = loadvechead(record.data, offset)
         for n in 1:N
             if k[1] == key && n == index
-                return loadvecbody(rec.data, offset, head)[1]
+                return loadvecbody(record.data, offset, head)[1]
             else
-                offset = skipvecbody(rec.data, offset, head)
+                offset = skipvecbody(record.data, offset, head)
             end
         end
     end
     throw(KeyError(key))
 end
 
-function genotype{T<:Integer}(rec::Record, indexes::AbstractVector{T}, key::Integer)
-    checkfilled(rec)
-    N = n_sample(rec)
-    offset::Int = rec.sharedlen
-    for j in 1:n_format(rec)
-        k, offset = loadvec(rec.data, offset)
+function genotype{T<:Integer}(record::Record, indexes::AbstractVector{T}, key::Integer)
+    checkfilled(record)
+    N = n_sample(record)
+    offset::Int = record.sharedlen
+    for j in 1:n_format(record)
+        k, offset = loadvec(record.data, offset)
         @assert length(k) == 1
-        head, offset = loadvechead(rec.data, offset)
+        head, offset = loadvechead(record.data, offset)
         if k[1] == key
             vals = Vector{Any}[]
             for n in 1:N
-                val, offset = loadvecbody(rec.data, offset, head)
+                val, offset = loadvecbody(record.data, offset, head)
                 push!(vals, val)
             end
             return vals[indexes]
         else
             for n in 1:N
-                offset = skipvecbody(rec.data, offset, head)
+                offset = skipvecbody(record.data, offset, head)
             end
         end
     end
     throw(KeyError(key))
 end
 
-function genotype(rec::Record, ::Colon, key::Integer)
-    return genotype(rec, 1:n_sample(rec), key)
+function genotype(record::Record, ::Colon, key::Integer)
+    return genotype(record, 1:n_sample(record), key)
 end
 
 function gt(x::Int8)

@@ -374,4 +374,5 @@ Bio.Var.BCF.ref
 Bio.Var.BCF.alt
 Bio.Var.BCF.filter
 Bio.Var.BCF.info
+Bio.Var.BCF.genotype
 ```
