@@ -322,21 +322,29 @@ function filter(record::Record)::Vector{Int}
     return loadvec(record.data, offset + len)[1] .+ 1
 end
 
-function info(rec::Record; simplify::Bool=true)
-    checkfilled(rec)
+"""
+    info(record::Record, [simplify::Bool=true])::Vector{Tuple{Int,Any}}
+
+Get the additional information of `record`.
+
+When `simplify` is `true`, a vector with a single element is converted to the
+element itself and an empty vector of the void type is converted to `nothing`.
+"""
+function info(record::Record; simplify::Bool=true)::Vector{Tuple{Int,Any}}
+    checkfilled(record)
     # skip ID, REF, ALTs and FILTER
     offset::Int = 24
     len = 0
-    for _ in 1:n_allele(rec)+2
-        len, offset = loadveclen(rec.data, offset + len)
+    for _ in 1:n_allele(record)+2
+        len, offset = loadveclen(record.data, offset + len)
     end
     offset += len
     # load INFO
-    ret = Vector{Tuple{Int,Any}}(n_info(rec))
+    ret = Vector{Tuple{Int,Any}}(n_info(record))
     for i in 1:endof(ret)
-        key, offset = loadvec(rec.data, offset)
+        key, offset = loadvec(record.data, offset)
         @assert length(key) == 1
-        val, offset = loadvec(rec.data, offset)
+        val, offset = loadvec(record.data, offset)
         if simplify
             if isa(val, Vector) && length(val) == 1
                 val = val[1]
@@ -349,21 +357,29 @@ function info(rec::Record; simplify::Bool=true)
     return ret
 end
 
-function info(rec::Record, key::Integer; simplify::Bool=true)
-    checkfilled(rec)
+"""
+    info(record::Record, key::Integer, [simplify::Bool=true])
+
+Get the additional information of `record` with `key`.
+
+When `simplify` is `true`, a vector with a single element is converted to the
+element itself and an empty vector of the void type is converted to `nothing`.
+"""
+function info(record::Record, key::Integer; simplify::Bool=true)
+    checkfilled(record)
     # skip ID, REF, ALTs and FILTER
     offset::Int = 24
     len = 0
-    for _ in 1:n_allele(rec)+2
-        len, offset = loadveclen(rec.data, offset + len)
+    for _ in 1:n_allele(record)+2
+        len, offset = loadveclen(record.data, offset + len)
     end
     offset += len
     # load INFO
-    for _ in 1:n_info(rec)
-        k, offset = loadvec(rec.data, offset)
+    for _ in 1:n_info(record)
+        k, offset = loadvec(record.data, offset)
         @assert length(k) == 1
         if k[1] == key
-            val, offset = loadvec(rec.data, offset)
+            val, offset = loadvec(record.data, offset)
             if simplify
                 if isa(val, Vector) && length(val) == 1
                     val = val[1]
@@ -373,7 +389,7 @@ function info(rec::Record, key::Integer; simplify::Bool=true)
             end
             return val
         else
-            offset = skipvec(rec.data, offset)
+            offset = skipvec(record.data, offset)
         end
     end
     throw(KeyError(key))
