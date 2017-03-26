@@ -234,6 +234,8 @@ end
     qual(record::Record)::Float32
 
 Get the quality score of `record`.
+
+Note that `0x7F800001` (signaling NaN) is interpreted as a missing value.
 """
 function qual(record::Record)
     checkfilled(record)
