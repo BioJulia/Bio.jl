@@ -10,6 +10,11 @@ type Record
     indivlen::UInt32
 end
 
+"""
+    BCF.Record()
+
+Create an unfilled BCF record.
+"""
 function Record()
     return Record(UInt8[], 1:0, 0, 0)
 end
