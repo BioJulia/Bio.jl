@@ -230,10 +230,15 @@ function rlen(record::Record)::Int
     return load(Int32, record.data, 8)[1] % Int
 end
 
-function qual(rec::Record)
-    checkfilled(rec)
+"""
+    qual(record::Record)::Float32
+
+Get the quality score of `record`.
+"""
+function qual(record::Record)
+    checkfilled(record)
     # 0x7F800001 is a missing value.
-    return load(Float32, rec.data, 12)[1]
+    return load(Float32, record.data, 12)[1]
 end
 
 function n_allele(rec::Record)
