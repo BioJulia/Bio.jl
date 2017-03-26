@@ -269,13 +269,18 @@ function id(rec::Record)
     return loadstr(rec.data, offset)[1]
 end
 
-function ref(rec::Record)
-    checkfilled(rec)
+"""
+    ref(record::Record)::String
+
+Get the reference bases of `record`.
+"""
+function ref(record::Record)::String
+    checkfilled(record)
     # skip ID
     offset = 24
-    len, offset = loadveclen(rec.data, offset)
+    len, offset = loadveclen(record.data, offset)
     # load REF
-    return loadstr(rec.data, offset + len)[1]
+    return loadstr(record.data, offset + len)[1]
 end
 
 function alt(rec::Record)
