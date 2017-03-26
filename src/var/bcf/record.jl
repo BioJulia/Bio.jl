@@ -1,7 +1,7 @@
 # BCF Record
 # ==========
 
-type BCFRecord
+type Record
     # data and filled range
     data::Vector{UInt8}
     filled::UnitRange{Int}
@@ -10,25 +10,30 @@ type BCFRecord
     indivlen::UInt32
 end
 
-function BCFRecord()
-    return BCFRecord(UInt8[], 1:0, 0, 0)
+"""
+    BCF.Record()
+
+Create an unfilled BCF record.
+"""
+function Record()
+    return Record(UInt8[], 1:0, 0, 0)
 end
 
-function isfilled(record::BCFRecord)
+function isfilled(record::Record)
     return !isempty(record.filled)
 end
 
-function datarange(record::BCFRecord)
+function datarange(record::Record)
     return record.filled
 end
 
-function checkfilled(record::BCFRecord)
+function checkfilled(record::Record)
     if !isfilled(record)
         throw(ArgumentError("unfilled BCF record"))
     end
 end
 
-function Base.:(==)(record1::BCFRecord, record2::BCFRecord)
+function Base.:(==)(record1::Record, record2::Record)
     if isfilled(record1) == isfilled(record2) == true
         r1 = datarange(record1)
         r2 = datarange(record2)
@@ -38,64 +43,64 @@ function Base.:(==)(record1::BCFRecord, record2::BCFRecord)
     end
 end
 
-function Base.copy(record::BCFRecord)
-    return BCFRecord(record.data[record.filled], record.filled, record.sharedlen, record.indivlen)
+function Base.copy(record::Record)
+    return Record(record.data[record.filled], record.filled, record.sharedlen, record.indivlen)
 end
 
-function BCFRecord(base::BCFRecord;
-                   chromosome=nothing, position=nothing, quality=nothing,
-                   identifier=nothing, reference=nothing, alternate=nothing,
-                   filter=nothing, information=nothing, genotype=nothing)
+function Record(base::Record;
+                chrom=nothing, pos=nothing, qual=nothing,
+                id=nothing, ref=nothing, alt=nothing,
+                filter=nothing, info=nothing, genotype=nothing)
     checkfilled(base)
     data = base.data[1:24]
 
-    if chromosome != nothing
-        store!(data, 0, convert(Int32, chromosome - 1))
+    if chrom != nothing
+        store!(data, 0, convert(Int32, chrom - 1))
     end
-    if position != nothing
-        store!(data, 4, convert(Int32, position - 1))
+    if pos != nothing
+        store!(data, 4, convert(Int32, pos - 1))
     end
-    if quality != nothing
-        store!(data, 12, convert(Float32, quality))
+    if qual != nothing
+        store!(data, 12, convert(Float32, qual))
     end
 
     offset = boffset = 24
-    if identifier == nothing
+    if id == nothing
         offset, boffset = copyvec!(data, offset, base.data, boffset)
     else
-        offset = storestr!(data, offset, string(identifier))
+        offset = storestr!(data, offset, string(id))
         boffset = skipvec(base.data, boffset)
     end
 
-    if reference == nothing
+    if ref == nothing
         offset, boffset = copyvec!(data, offset, base.data, boffset)
     else
-        reference = string(reference)
-        offset = storestr!(data, offset, reference)
-        if sizeof(reference) != rlen(base)
-            store!(data, 8, convert(Int32, sizeof(reference)))
+        ref = string(ref)
+        offset = storestr!(data, offset, ref)
+        if sizeof(ref) != rlen(base)
+            store!(data, 8, convert(Int32, sizeof(ref)))
         end
         boffset = skipvec(base.data, boffset)
     end
 
     n = n_allele(base)
-    if alternate == nothing
+    if alt == nothing
         for _ in 1:n-1
             offset, boffset = copyvec!(data, offset, base.data, boffset)
         end
     else
-        if !isa(alternate, Vector)
-            alternate = [alternate]
+        if !isa(alt, Vector)
+            alt = [alt]
         end
-        for x in alternate
+        for x in alt
             offset = storestr!(data, offset, string(x))
         end
         for _ in 1:n-1
             boffset = skipvec(base.data, boffset)
         end
-        if length(alternate) != n
+        if length(alt) != n
             n_allele_info = load(UInt32, data, 16)[1]
-            n_allele_info = (n_allele_info & 0x0000ffff) | (UInt32(length(alternate) + 1) << 16)
+            n_allele_info = (n_allele_info & 0x0000ffff) | (UInt32(length(alt) + 1) << 16)
             store!(data, 16, n_allele_info)
         end
     end
@@ -111,18 +116,18 @@ function BCFRecord(base::BCFRecord;
     end
 
     n = n_info(base)
-    if information == nothing
+    if info == nothing
         for _ in 1:n
             # copy key and value(s)
             offset, boffset = copyvec!(data, offset, base.data, boffset)
             offset, boffset = copyvec!(data, offset, base.data, boffset)
         end
     else
-        if !isa(information, Associative)
+        if !isa(info, Associative)
             throw(ArgumentError("info must be an associative object"))
         end
         keyvec = Vector{Int8}(1)
-        for (key, val) in information
+        for (key, val) in info
             if !isa(key, Integer)
                 throw(ArgumentError("info key must be an integer"))
             end
@@ -136,12 +141,12 @@ function BCFRecord(base::BCFRecord;
                 offset = storevec!(data, offset, val)
             end
         end
-        if length(information) != n
-            if length(information) > typemax(UInt16)
+        if length(info) != n
+            if length(info) > typemax(UInt16)
                 throw(ArgumentError("too many info fields"))
             end
             n_allele_info = load(UInt32, data, 16)[1]
-            n_allele_info = (n_allele_info & 0xffff0000) | UInt32(length(information))
+            n_allele_info = (n_allele_info & 0xffff0000) | UInt32(length(info))
             store!(data, 16, n_allele_info)
         end
         for _ in 1:n
@@ -169,126 +174,177 @@ function BCFRecord(base::BCFRecord;
         error("modifying genotype is yet supported")
     end
 
-    return BCFRecord(data, 1:endof(data), sharedlen, offset - sharedlen)
+    return Record(data, 1:endof(data), sharedlen, offset - sharedlen)
 end
 
-function Base.show(io::IO, record::BCFRecord)
+function Base.show(io::IO, record::Record)
     print(io, summary(record), ':')
     if isfilled(record)
         println(io)
-        println(io, "   chromosome: ", chromosome(record))
-        println(io, "     position: ", leftposition(record))
-        println(io, "   identifier: ", identifier(record))
-        println(io, "    reference: ", reference(record))
-        println(io, "    alternate: ", join(alternate(record), ' '))
-        println(io, "      quality: ", quality(record))
-        println(io, "       filter: ", join(filter_(record), ' '))
-          print(io, "  information: ", information(record))
+        println(io, "   chromosome: ", chrom(record))
+        println(io, "     position: ", pos(record))
+        println(io, "   identifier: ", id(record))
+        println(io, "    reference: ", ref(record))
+        println(io, "    alternate: ", join(alt(record), ' '))
+        println(io, "      quality: ", qual(record))
+        println(io, "       filter: ", join(filter(record), ' '))
+          print(io, "  information: ", info(record))
     else
         print(io, " <not filled>")
     end
 end
 
-function chromosome(rec::BCFRecord)
-    checkfilled(rec)
-    return load(Int32, rec.data, 0)[1] % Int + 1
+
+# Accessor functions
+# ------------------
+
+"""
+    chrom(record::Record)::Int
+
+Get the chromosome index of `record`.
+"""
+function chrom(record::Record)::Int
+    checkfilled(record)
+    return load(Int32, record.data, 0)[1] % Int + 1
 end
 
-function leftposition(rec::BCFRecord)
-    checkfilled(rec)
-    return load(Int32, rec.data, 4)[1] % Int + 1
+"""
+    pos(record::Record)::Int
+
+Get the reference position of `record`.
+
+Note that the position of the first base is 1 (i.e. 1-based coordinate).
+"""
+function pos(record::Record)::Int
+    checkfilled(record)
+    return load(Int32, record.data, 4)[1] % Int + 1
 end
 
-function rlen(rec::BCFRecord)
-    checkfilled(rec)
-    return load(Int32, rec.data, 8)[1] % Int
+"""
+    rlen(record::Record)::Int
+
+Get the length of `record` projected onto the reference sequence.
+"""
+function rlen(record::Record)::Int
+    checkfilled(record)
+    return load(Int32, record.data, 8)[1] % Int
 end
 
-function quality(rec::BCFRecord)
-    checkfilled(rec)
+"""
+    qual(record::Record)::Float32
+
+Get the quality score of `record`.
+
+Note that `0x7F800001` (signaling NaN) is interpreted as a missing value.
+"""
+function qual(record::Record)
+    checkfilled(record)
     # 0x7F800001 is a missing value.
-    return load(Float32, rec.data, 12)[1]
+    return load(Float32, record.data, 12)[1]
 end
 
-function n_allele(rec::BCFRecord)
+function n_allele(rec::Record)
     checkfilled(rec)
     return (load(Int32, rec.data, 16)[1] >> 16) % Int
 end
 
-function n_info(rec::BCFRecord)
+function n_info(rec::Record)
     checkfilled(rec)
     return (load(Int32, rec.data, 16)[1] & 0x0000ffff) % Int
 end
 
-function n_format(rec::BCFRecord)
+function n_format(rec::Record)
     checkfilled(rec)
     return (load(UInt32, rec.data, 20)[1] >> 24) % Int
 end
 
-function n_sample(rec::BCFRecord)
+function n_sample(rec::Record)
     checkfilled(rec)
     return (load(UInt32, rec.data, 20)[1] & 0x000000ff) % Int
 end
 
-function identifier(rec::BCFRecord)
+function id(rec::Record)
     checkfilled(rec)
     offset = 24
     return loadstr(rec.data, offset)[1]
 end
 
-function reference(rec::BCFRecord)
-    checkfilled(rec)
+"""
+    ref(record::Record)::String
+
+Get the reference bases of `record`.
+"""
+function ref(record::Record)::String
+    checkfilled(record)
     # skip ID
     offset = 24
-    len, offset = loadveclen(rec.data, offset)
+    len, offset = loadveclen(record.data, offset)
     # load REF
-    return loadstr(rec.data, offset + len)[1]
+    return loadstr(record.data, offset + len)[1]
 end
 
-function alternate(rec::BCFRecord)
-    checkfilled(rec)
+"""
+    alt(record::Record)::Vector{String}
+
+Get the alternate bases of `record`.
+"""
+function alt(record::Record)
+    checkfilled(record)
     # skip ID and REF
     offset = 24
-    len, offset = loadveclen(rec.data, offset)
-    len, offset = loadveclen(rec.data, offset + len)
+    len, offset = loadveclen(record.data, offset)
+    len, offset = loadveclen(record.data, offset + len)
     # load ALTs
-    N = n_allele(rec) - 1
+    N = n_allele(record) - 1
     alt = Vector{String}(N)
     for n in 1:N
-        str, offset = loadstr(rec.data, offset + len)
+        str, offset = loadstr(record.data, offset + len)
         alt[n] = str
         len = sizeof(str)
     end
     return alt
 end
 
-function filter_(rec::BCFRecord)
-    checkfilled(rec)
+"""
+    filter(record::Record)::Vector{Int}
+
+Get the filter indexes of `record`.
+"""
+function filter(record::Record)::Vector{Int}
+    checkfilled(record)
     # skip ID, REF and ALTs
     offset = 24
     len = 0
-    for _ in 1:n_allele(rec)+1
-        len, offset = loadveclen(rec.data, offset + len)
+    for _ in 1:n_allele(record)+1
+        len, offset = loadveclen(record.data, offset + len)
     end
     # load FILTER
-    return loadvec(rec.data, offset + len)[1] .+ 1
+    return loadvec(record.data, offset + len)[1] .+ 1
 end
 
-function information(rec::BCFRecord; simplify::Bool=true)
-    checkfilled(rec)
+"""
+    info(record::Record, [simplify::Bool=true])::Vector{Tuple{Int,Any}}
+
+Get the additional information of `record`.
+
+When `simplify` is `true`, a vector with a single element is converted to the
+element itself and an empty vector of the void type is converted to `nothing`.
+"""
+function info(record::Record; simplify::Bool=true)::Vector{Tuple{Int,Any}}
+    checkfilled(record)
     # skip ID, REF, ALTs and FILTER
     offset::Int = 24
     len = 0
-    for _ in 1:n_allele(rec)+2
-        len, offset = loadveclen(rec.data, offset + len)
+    for _ in 1:n_allele(record)+2
+        len, offset = loadveclen(record.data, offset + len)
     end
     offset += len
     # load INFO
-    ret = Vector{Tuple{Int,Any}}(n_info(rec))
+    ret = Vector{Tuple{Int,Any}}(n_info(record))
     for i in 1:endof(ret)
-        key, offset = loadvec(rec.data, offset)
+        key, offset = loadvec(record.data, offset)
         @assert length(key) == 1
-        val, offset = loadvec(rec.data, offset)
+        val, offset = loadvec(record.data, offset)
         if simplify
             if isa(val, Vector) && length(val) == 1
                 val = val[1]
@@ -301,21 +357,29 @@ function information(rec::BCFRecord; simplify::Bool=true)
     return ret
 end
 
-function information(rec::BCFRecord, key::Integer; simplify::Bool=true)
-    checkfilled(rec)
+"""
+    info(record::Record, key::Integer, [simplify::Bool=true])
+
+Get the additional information of `record` with `key`.
+
+When `simplify` is `true`, a vector with a single element is converted to the
+element itself and an empty vector of the void type is converted to `nothing`.
+"""
+function info(record::Record, key::Integer; simplify::Bool=true)
+    checkfilled(record)
     # skip ID, REF, ALTs and FILTER
     offset::Int = 24
     len = 0
-    for _ in 1:n_allele(rec)+2
-        len, offset = loadveclen(rec.data, offset + len)
+    for _ in 1:n_allele(record)+2
+        len, offset = loadveclen(record.data, offset + len)
     end
     offset += len
     # load INFO
-    for _ in 1:n_info(rec)
-        k, offset = loadvec(rec.data, offset)
+    for _ in 1:n_info(record)
+        k, offset = loadvec(record.data, offset)
         @assert length(k) == 1
         if k[1] == key
-            val, offset = loadvec(rec.data, offset)
+            val, offset = loadvec(record.data, offset)
             if simplify
                 if isa(val, Vector) && length(val) == 1
                     val = val[1]
@@ -325,24 +389,31 @@ function information(rec::BCFRecord, key::Integer; simplify::Bool=true)
             end
             return val
         else
-            offset = skipvec(rec.data, offset)
+            offset = skipvec(record.data, offset)
         end
     end
     throw(KeyError(key))
 end
 
-function genotype(rec::BCFRecord)
-    checkfilled(rec)
-    offset::Int = rec.sharedlen
-    N = n_sample(rec)
-    ret = Tuple{Int,Any}[]
-    for j in 1:n_format(rec)
-        key, offset = loadvec(rec.data, offset)
+"""
+    genotype(record::Record)::Vector{Tuple{Int,Vector{Any}}}
+
+Get the genotypes of `record`.
+
+BCF genotypes are encoded by field, not by sample like VCF.
+"""
+function genotype(record::Record)::Vector{Tuple{Int,Vector{Any}}}
+    checkfilled(record)
+    offset::Int = record.sharedlen
+    N = n_sample(record)
+    ret = Tuple{Int,Vector{Any}}[]
+    for j in 1:n_format(record)
+        key, offset = loadvec(record.data, offset)
         @assert length(key) == 1
-        head, offset = loadvechead(rec.data, offset)
+        head, offset = loadvechead(record.data, offset)
         vals = Vector{Any}[]
         for n in 1:N
-            val, offset = loadvecbody(rec.data, offset, head)
+            val, offset = loadvecbody(record.data, offset, head)
             push!(vals, val)
         end
         push!(ret, (key[1], vals))
@@ -350,55 +421,55 @@ function genotype(rec::BCFRecord)
     return ret
 end
 
-function genotype(rec::BCFRecord, index::Integer)
-    return [(k, geno[index]) for (k, geno) in genotype(rec)]
+function genotype(record::Record, index::Integer)
+    return [(k, geno[index]) for (k, geno) in genotype(record)]
 end
 
-function genotype(rec::BCFRecord, index::Integer, key::Integer)
-    checkfilled(rec)
-    N = n_sample(rec)
-    offset::Int = rec.sharedlen
-    for j in 1:n_format(rec)
-        k, offset = loadvec(rec.data, offset)
+function genotype(record::Record, index::Integer, key::Integer)
+    checkfilled(record)
+    N = n_sample(record)
+    offset::Int = record.sharedlen
+    for j in 1:n_format(record)
+        k, offset = loadvec(record.data, offset)
         @assert length(k) == 1
-        head, offset = loadvechead(rec.data, offset)
+        head, offset = loadvechead(record.data, offset)
         for n in 1:N
             if k[1] == key && n == index
-                return loadvecbody(rec.data, offset, head)[1]
+                return loadvecbody(record.data, offset, head)[1]
             else
-                offset = skipvecbody(rec.data, offset, head)
+                offset = skipvecbody(record.data, offset, head)
             end
         end
     end
     throw(KeyError(key))
 end
 
-function genotype{T<:Integer}(rec::BCFRecord, indexes::AbstractVector{T}, key::Integer)
-    checkfilled(rec)
-    N = n_sample(rec)
-    offset::Int = rec.sharedlen
-    for j in 1:n_format(rec)
-        k, offset = loadvec(rec.data, offset)
+function genotype{T<:Integer}(record::Record, indexes::AbstractVector{T}, key::Integer)
+    checkfilled(record)
+    N = n_sample(record)
+    offset::Int = record.sharedlen
+    for j in 1:n_format(record)
+        k, offset = loadvec(record.data, offset)
         @assert length(k) == 1
-        head, offset = loadvechead(rec.data, offset)
+        head, offset = loadvechead(record.data, offset)
         if k[1] == key
             vals = Vector{Any}[]
             for n in 1:N
-                val, offset = loadvecbody(rec.data, offset, head)
+                val, offset = loadvecbody(record.data, offset, head)
                 push!(vals, val)
             end
             return vals[indexes]
         else
             for n in 1:N
-                offset = skipvecbody(rec.data, offset, head)
+                offset = skipvecbody(record.data, offset, head)
             end
         end
     end
     throw(KeyError(key))
 end
 
-function genotype(rec::BCFRecord, ::Colon, key::Integer)
-    return genotype(rec, 1:n_sample(rec), key)
+function genotype(record::Record, ::Colon, key::Integer)
+    return genotype(record, 1:n_sample(record), key)
 end
 
 function gt(x::Int8)
@@ -611,4 +682,8 @@ end
 function memcpy(dst::Ptr, src::Ptr, n::Int)
     ccall(:memcpy, Ptr{Void}, (Ptr{Void}, Ptr{Void}, Csize_t), dst, src, n)
     return nothing
+end
+
+function memcmp(p1::Ptr, p2::Ptr, n::Integer)
+    return ccall(:memcmp, Cint, (Ptr{Void}, Ptr{Void}, Csize_t), p1, p2, n)
 end

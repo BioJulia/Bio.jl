@@ -353,27 +353,47 @@ Bio.Align.BAMWriter
 
 ### VCF
 
-* Reader type: `VCFReader`
-* Writer type: `VCFWriter{T<:IO}`
-* Element type: `VCFRecord`
+* Reader type: `VCF.Reader`
+* Writer type: `VCF.Writer{T<:IO}`
+* Element type: `VCF.Record`
 
 VCF is a text-based file format for representing genetic variations.
 
 ```@docs
-Bio.Var.VCFReader
-Bio.Var.VCFWriter
+Bio.Var.VCF.Reader
+Bio.Var.VCF.Writer
+Bio.Var.VCF.Record
+Bio.Var.VCF.chrom
+Bio.Var.VCF.pos
+Bio.Var.VCF.id
+Bio.Var.VCF.ref
+Bio.Var.VCF.alt
+Bio.Var.VCF.qual
+Bio.Var.VCF.filter
+Bio.Var.VCF.info
+Bio.Var.VCF.format
 ```
 
 
 ### BCF
 
-* Reader type: `BCFReader{T<:IO}`
-* Writer type: `BCFWriter{T<:IO}`
-* Element type: `BCFRecord`
+* Reader type: `BCF.Reader{T<:IO}`
+* Writer type: `BCF.Writer{T<:IO}`
+* Element type: `BCF.Record`
 
 BCF is a binary counterpart of the VCF file format.
 
 ```@docs
-Bio.Var.BCFReader
-Bio.Var.BCFWriter
+Bio.Var.BCF.Reader
+Bio.Var.BCF.Writer
+Bio.Var.BCF.Record
+Bio.Var.BCF.chrom
+Bio.Var.BCF.pos
+Bio.Var.BCF.rlen
+Bio.Var.BCF.qual
+Bio.Var.BCF.ref
+Bio.Var.BCF.alt
+Bio.Var.BCF.filter
+Bio.Var.BCF.info
+Bio.Var.BCF.genotype
 ```

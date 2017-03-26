@@ -37,14 +37,8 @@ export
     count_sites,
 
     # VCF and BCF
-    VCFMetaInfo,
-    VCFHeader,
-    VCFRecord,
-    VCFReader,
-    VCFWriter,
-    BCFRecord,
-    BCFReader,
-    BCFWriter,
+    VCF,
+    BCF,
     header,
     metainfotag,
     metainfoval,

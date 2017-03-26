@@ -1,44 +1,53 @@
 # VCF Reader
 # ==========
 
-"""
-    VCFReader(input::IO)
-
-Create a data reader of the VCF file format.
-
-# Arguments
-* `input`: data source
-"""
-type VCFReader <: Bio.IO.AbstractReader
+type Reader <: Bio.IO.AbstractReader
     state::Bio.Ragel.State
-    header::VCFHeader
+    header::Header
 
-    function VCFReader(input::BufferedInputStream)
-        reader = new(Bio.Ragel.State(vcf_header_machine.start_state, input), VCFHeader())
+    function Reader(input::BufferedStreams.BufferedInputStream)
+        reader = new(Bio.Ragel.State(vcf_header_machine.start_state, input), Header())
         readheader!(reader)
         reader.state.cs = vcf_body_machine.start_state
         return reader
     end
 end
 
-function VCFReader(input::IO)
-    return VCFReader(BufferedInputStream(input))
+"""
+    VCF.Reader(input::IO)
+
+Create a data reader of the VCF file format.
+
+# Arguments
+* `input`: data source
+"""
+function Reader(input::IO)
+    return Reader(BufferedStreams.BufferedInputStream(input))
 end
 
-function Base.eltype(::Type{VCFReader})
-    return VCFRecord
+function Base.eltype(::Type{Reader})
+    return Record
 end
 
-function Bio.IO.stream(reader::VCFReader)
+function Bio.IO.stream(reader::Reader)
     return reader.state.stream
 end
 
-function header(reader::VCFReader)
+"""
+    header(reader::VCF.Reader)::VCF.Header
+
+Get the header of `reader`.
+"""
+function header(reader::Reader)
     return reader.header
 end
 
+function Bio.header(reader::Reader)
+    return header(reader)
+end
+
 # VCF v4.3
-info("compiling VCF")
+Base.info("compiling VCF")
 const vcf_metainfo_machine, vcf_record_machine, vcf_header_machine, vcf_body_machine = (function ()
     cat = Automa.RegExp.cat
     rep = Automa.RegExp.rep
@@ -221,14 +230,14 @@ const vcf_metainfo_actions = Dict(
     :mark2             => :(mark2 = p))
 eval(
     Bio.ReaderHelper.generate_index_function(
-        VCFMetaInfo,
+        MetaInfo,
         vcf_metainfo_machine,
         :(mark1 = mark2 = offset = 0),
         vcf_metainfo_actions))
 eval(
     Bio.ReaderHelper.generate_readheader_function(
-        VCFReader,
-        VCFMetaInfo,
+        Reader,
+        MetaInfo,
         vcf_header_machine,
         :(mark1 = mark2 = offset = 0),
         merge(vcf_metainfo_actions, Dict(
@@ -238,7 +247,7 @@ eval(
                 @assert isfilled(record)
                 push!(reader.header.metainfo, record)
                 Bio.ReaderHelper.ensure_margin!(stream)
-                record = VCFMetaInfo()
+                record = MetaInfo()
             end,
             :header_sampleID => :(push!(reader.header.sampleID, String(data[mark1:p-1]))),
             :vcfheader => :(finish_header = true; @escape),
@@ -265,13 +274,13 @@ const vcf_record_actions = Dict(
     :mark                => :(mark = p))
 eval(
     Bio.ReaderHelper.generate_index_function(
-        VCFRecord,
+        Record,
         vcf_record_machine,
         :(mark = offset = 0),
         vcf_record_actions))
 eval(
     Bio.ReaderHelper.generate_read_function(
-        VCFReader,
+        Reader,
         vcf_body_machine,
         :(mark = offset = 0),
         merge(vcf_record_actions, Dict(
