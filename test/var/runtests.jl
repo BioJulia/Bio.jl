@@ -639,6 +639,7 @@ end
     @test read!(reader, record) === record
     @test BCF.chrom(record) == 1
     @test BCF.pos(record) == 14370
+    @test BCF.rlen(record) == 1
     @test BCF.id(record) == "rs6054257"
     @test BCF.ref(record) == "G"
     @test BCF.alt(record) == ["A"]

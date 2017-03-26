@@ -215,14 +215,19 @@ Get the reference position of `record`.
 
 Note that the position of the first base is 1 (i.e. 1-based coordinate).
 """
-function pos(rec::Record)::Int
-    checkfilled(rec)
-    return load(Int32, rec.data, 4)[1] % Int + 1
+function pos(record::Record)::Int
+    checkfilled(record)
+    return load(Int32, record.data, 4)[1] % Int + 1
 end
 
-function rlen(rec::Record)
-    checkfilled(rec)
-    return load(Int32, rec.data, 8)[1] % Int
+"""
+    rlen(record::Record)::Int
+
+Get the length of `record` projected onto the reference sequence.
+"""
+function rlen(record::Record)::Int
+    checkfilled(record)
+    return load(Int32, record.data, 8)[1] % Int
 end
 
 function qual(rec::Record)
