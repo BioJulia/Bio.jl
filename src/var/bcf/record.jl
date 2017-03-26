@@ -305,16 +305,21 @@ function alt(record::Record)
     return alt
 end
 
-function filter(rec::Record)
-    checkfilled(rec)
+"""
+    filter(record::Record)::Vector{Int}
+
+Get the filter indexes of `record`.
+"""
+function filter(record::Record)::Vector{Int}
+    checkfilled(record)
     # skip ID, REF and ALTs
     offset = 24
     len = 0
-    for _ in 1:n_allele(rec)+1
-        len, offset = loadveclen(rec.data, offset + len)
+    for _ in 1:n_allele(record)+1
+        len, offset = loadveclen(record.data, offset + len)
     end
     # load FILTER
-    return loadvec(rec.data, offset + len)[1] .+ 1
+    return loadvec(record.data, offset + len)[1] .+ 1
 end
 
 function info(rec::Record; simplify::Bool=true)
