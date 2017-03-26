@@ -199,6 +199,10 @@ function chrom(rec::Record)
     return load(Int32, rec.data, 0)[1] % Int + 1
 end
 
+
+# Accessor functions
+# ------------------
+
 function pos(rec::Record)
     checkfilled(rec)
     return load(Int32, rec.data, 4)[1] % Int + 1
