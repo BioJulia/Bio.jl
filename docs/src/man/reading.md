@@ -365,4 +365,9 @@ BCF is a binary counterpart of the VCF file format.
 ```@docs
 Bio.Var.BCF.Reader
 Bio.Var.BCF.Writer
+Bio.Var.BCF.Record
+Bio.Var.BCF.chrom
+Bio.Var.BCF.pos
+Bio.Var.BCF.rlen
+Bio.Var.BCF.qual
 ```
