@@ -371,4 +371,5 @@ Bio.Var.BCF.pos
 Bio.Var.BCF.rlen
 Bio.Var.BCF.qual
 Bio.Var.BCF.ref
+Bio.Var.BCF.alt
 ```

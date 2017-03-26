@@ -283,17 +283,22 @@ function ref(record::Record)::String
     return loadstr(record.data, offset + len)[1]
 end
 
-function alt(rec::Record)
-    checkfilled(rec)
+"""
+    alt(record::Record)::Vector{String}
+
+Get the alternate bases of `record`.
+"""
+function alt(record::Record)
+    checkfilled(record)
     # skip ID and REF
     offset = 24
-    len, offset = loadveclen(rec.data, offset)
-    len, offset = loadveclen(rec.data, offset + len)
+    len, offset = loadveclen(record.data, offset)
+    len, offset = loadveclen(record.data, offset + len)
     # load ALTs
-    N = n_allele(rec) - 1
+    N = n_allele(record) - 1
     alt = Vector{String}(N)
     for n in 1:N
-        str, offset = loadstr(rec.data, offset + len)
+        str, offset = loadstr(record.data, offset + len)
         alt[n] = str
         len = sizeof(str)
     end
