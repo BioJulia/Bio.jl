@@ -194,16 +194,28 @@ function Base.show(io::IO, record::Record)
     end
 end
 
-function chrom(rec::Record)
-    checkfilled(rec)
-    return load(Int32, rec.data, 0)[1] % Int + 1
-end
-
 
 # Accessor functions
 # ------------------
 
-function pos(rec::Record)
+"""
+    chrom(record::Record)::Int
+
+Get the chromosome index of `record`.
+"""
+function chrom(record::Record)::Int
+    checkfilled(record)
+    return load(Int32, record.data, 0)[1] % Int + 1
+end
+
+"""
+    pos(record::Record)::Int
+
+Get the reference position of `record`.
+
+Note that the position of the first base is 1 (i.e. 1-based coordinate).
+"""
+function pos(rec::Record)::Int
     checkfilled(rec)
     return load(Int32, rec.data, 4)[1] % Int + 1
 end
