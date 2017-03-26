@@ -1036,6 +1036,17 @@ end
         @test hash(rna"AAUUAA"[3:5]) === hash(rna"UUA")
         @test hash(aa"MTTQAPMFTQPLQ") === hash(aa"MTTQAPMFTQPLQ")
         @test hash(aa"MTTQAPMFTQPLQ"[5:10]) === hash(aa"APMFTQ")
+
+        @testset "MinHash" begin
+            seq = DNASequence(random_dna(1000))
+            h = minhash(seq, 10, 100)
+
+            @test length(h) == 100
+            @test h == minhash(seq, 10, 100)
+
+            @test_throws BoundsError h[101]
+        end
+
     end
 
     @testset "Length" begin
@@ -3330,6 +3341,36 @@ end
                 @test check_2bit_parse(filepath)
             else
                 @test_throws Exception check_fasta_parse(filepath)
+            end
+        end
+    end
+
+    @testset "ABIF Reader" begin
+        function check_abif_parse(filename)
+            stream = open(AbifReader, filename)
+
+            for record in stream end
+            for (a,b) in collect(stream[1]) end
+            for (a,b) in getindex(stream, get_tags(stream)) end
+            @test typeof(stream) == AbifReader{IOStream}
+            @test get_tags(stream)[1].name == "AEPt"
+            @test get_tags(stream, "DATA")[1].name == "DATA"
+            @test length(stream["DATA"]) == 12
+            @test length(stream[1]) == 1
+
+            @test typeof(getindex(stream, get_tags(stream))) == Dict{String,Any}
+            @test tagelements(stream, "DATA") == 12
+        end
+
+        get_bio_fmt_specimens()
+        path = Pkg.dir("Bio", "test", "BioFmtSpecimens", "ABI")
+        for specimen in YAML.load_file(joinpath(path, "index.yml"))
+            valid = get(specimen, "valid", true)
+            filepath = joinpath(path, specimen["filename"])
+            if valid
+                check_abif_parse(filepath)
+            else
+                @test_throws Exception check_abif_parse(filepath)
             end
         end
     end

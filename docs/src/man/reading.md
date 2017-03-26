@@ -228,6 +228,27 @@ Bio.Seq.TwoBit.sequence
 Bio.Seq.TwoBit.maskedblocks
 ```
 
+### ABIF
+
+* Reader type: `AbifReader{T<:IO}`
+ABIF is a binary file format for storing data produced by sequencers, those developed by Applied Biosystems, Inc.
+When the file is opened, we save all the existing tags, so we can read only the tags that are needed.
+```julia
+reader = open(AbifReader, "3100.ab1")       # load a random access
+data   = reader["DATA"]                     # directly read all existing `DATA` Tags
+data   = reader[1]                          # directly read Tag at index
+data  = tags(reader)                       # return all existing tags
+
+# iterator by all tags
+for (key, value) in getindex(reader, data)
+end
+```
+
+```@docs
+Bio.Seq.AbifReader
+Bio.Seq.tags
+Bio.Seq.elements
+```
 
 ### BED
 

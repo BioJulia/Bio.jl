@@ -228,3 +228,40 @@ julia> genotype(record, 1:2, "GT")
  "1|0"
 
 ```
+
+# MASH Distances
+
+[MASH distances](http://doi.org/10.1186/s13059-016-0997-x), based on MinHash
+sketches of genome sequences can provide rapid genome-scale sequence comparisons
+when sequence distance (not specific mutations) are all that's required.
+
+A MinHash sketch is made by taking the `s` smallest hash values for kmers of
+length `k` for a given sequence. The genome distance for two genomes is then
+essentially the [Jaccard index](https://en.wikipedia.org/wiki/Jaccard_index)
+of the minhashes, with some additional modification to account for the size of
+the kmers used.
+
+You can generate a MinHash sketch using the `minhash()` function in `Bio.seq`.
+
+```julia
+using Bio.Seq
+
+seq1 = dna"AAATAAGGCACAACTATGCAT"
+sketch1 = minhash(seq, 5, 10)
+```
+
+Then, if you have MinHash sketches with the same parameters for two sequences,
+you can determine the MASH distance between them.
+
+```julia
+seq2 = dna"AATTAACGCACGGACTGCGGTAAT"
+sketch2 = minhash(seq, 5, 10)
+
+using Bio.Var
+
+mashdistance(sketch1, sketch2)
+```
+
+For more information on what size kmers and what size sketches are appropriate
+for your use-case, see [Odnov et. al.](http://doi.org/10.1186/s13059-016-0997-x)
+in _Genome Biology_. 
