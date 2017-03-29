@@ -9,6 +9,9 @@ import Bio: Bio, isfilled
 import Bio.Exceptions: missingerror
 import BufferedStreams
 
+export description,
+       identifier
+
 include("record.jl")
 include("index.jl")
 include("reader.jl")

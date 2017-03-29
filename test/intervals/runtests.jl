@@ -4,8 +4,10 @@ using Base.Test
 using Bio.Intervals
 using Bio.Seq
 using Distributions
-using YAML
 using TestFunctions
+using YAML
+import ColorTypes: RGB
+import FixedPointNumbers: N0f8
 
 # Test that an array of intervals is well ordered
 function Intervals.isordered{I <: Interval}(intervals::Vector{I})
@@ -205,22 +207,22 @@ end
         # empty versus empty
         ic_a = IntervalCollection{Int}()
         ic_b = IntervalCollection{Int}()
-        @test collect(intersect(ic_a, ic_b)) == Any[]
+        @test collect(eachoverlap(ic_a, ic_b)) == Any[]
 
         # empty versus non-empty
         for interval in intervals_a
             push!(ic_a, interval)
         end
 
-        @test collect(intersect(ic_a, ic_b)) == Any[]
-        @test collect(intersect(ic_b, ic_a)) == Any[]
+        @test collect(eachoverlap(ic_a, ic_b)) == Any[]
+        @test collect(eachoverlap(ic_b, ic_a)) == Any[]
 
         # non-empty versus non-empty
         for interval in intervals_b
             push!(ic_b, interval)
         end
 
-        @test sort(collect(intersect(ic_a, ic_b))) == sort(simple_intersection(intervals_a, intervals_b))
+        @test sort(collect(eachoverlap(ic_a, ic_b))) == sort(simple_intersection(intervals_a, intervals_b))
     end
 
 
@@ -387,24 +389,119 @@ end
 
         @test sort(simple_coverage(intervals)) == sort(collect(coverage(ic)))
     end
+
+    @testset "eachoverlap" begin
+        # TODO: more tests
+
+        i = Interval("chr1", 1, 10)
+        intervals_a = typeof(i)[]
+        @test length(collect(eachoverlap(intervals_a, intervals_a))) == 0
+
+        intervals_a = [Interval("chr1", 1, 10)]
+        intervals_b = eltype(intervals_a)[]
+        @test length(collect(eachoverlap(intervals_a, intervals_b))) == 0
+        @test length(collect(eachoverlap(intervals_b, intervals_a))) == 0
+
+        intervals_a = [Interval("chr1", 1, 10)]
+        @test length(collect(eachoverlap(intervals_a, intervals_a))) == 1
+
+        intervals_a = [Interval("chr1", 1, 10)]
+        intervals_b = [Interval("chr2", 1, 10)]
+        @test length(collect(eachoverlap(intervals_a, intervals_b))) == 0
+        @test length(collect(eachoverlap(intervals_b, intervals_a))) == 0
+
+        intervals_a = [Interval("chr1", 1, 10)]
+        intervals_b = [Interval("chr1", 11, 15)]
+        @test length(collect(eachoverlap(intervals_a, intervals_b))) == 0
+        @test length(collect(eachoverlap(intervals_b, intervals_a))) == 0
+
+        intervals_a = [Interval("chr1", 11, 15)]
+        intervals_b = [Interval("chr1", 1, 10), Interval("chr1", 12, 13)]
+        @test length(collect(eachoverlap(intervals_a, intervals_b))) == 1
+        @test length(collect(eachoverlap(intervals_b, intervals_a))) == 1
+
+        intervals_a = [Interval("chr1", 1, 2), Interval("chr1", 2, 5), Interval("chr2", 1, 10)]
+        intervals_b = [Interval("chr1", 1, 2), Interval("chr1", 2, 3), Interval("chr2", 1, 2)]
+        @test length(collect(eachoverlap(intervals_a, intervals_b))) == 5
+        @test length(collect(eachoverlap(intervals_b, intervals_a))) == 5
+
+        intervals_a = [Interval("chr1", 1, 2), Interval("chr1", 3, 5), Interval("chr2", 1, 10)]
+        @test length(collect(eachoverlap(intervals_a, intervals_a))) == 3
+
+        # compare generic and specific eachoverlap methods
+        intervals_a = [Interval("chr1", 1, 2), Interval("chr1", 1, 3), Interval("chr1", 5, 9),
+                       Interval("chr2", 1, 5), Interval("chr2", 6, 6), Interval("chr2", 6, 8)]
+        intervals_b = intervals_a
+        ic_a = IntervalCollection(intervals_a)
+        ic_b = IntervalCollection(intervals_b)
+        iter1 = eachoverlap(intervals_a, intervals_b)
+        iter2 = eachoverlap(intervals_a, ic_b)
+        iter3 = eachoverlap(ic_a, intervals_b)
+        iter4 = eachoverlap(ic_a, ic_b)
+        @test collect(iter1) == collect(iter2) == collect(iter3) == collect(iter4)
+    end
 end
 
 
 @testset "Interval Parsing" begin
-    @testset "BED Parsing" begin
+    @testset "BED" begin
+        @testset "Record" begin
+            record = BED.Record(b"chr1\t17368\t17436")
+            @test BED.chrom(record) == "chr1"
+            @test BED.chromstart(record) === 17369
+            @test BED.chromend(record) === 17436
+            @test !BED.hasname(record)
+            @test !BED.hasscore(record)
+            @test !BED.hasstrand(record)
+            @test !BED.hasthickstart(record)
+            @test !BED.hasthickend(record)
+            @test !BED.hasitemrgb(record)
+            @test !BED.hasblockcount(record)
+            @test !BED.hasblocksizes(record)
+            @test !BED.hasblockstarts(record)
+
+            record = BED.Record(b"chrXIII\t854794\t855293\tYMR292W\t0\t+\t854794\t855293\t0\t2\t22,395,\t0,104,")
+            @test BED.chrom(record) == "chrXIII"
+            @test BED.chromstart(record) === 854795
+            @test BED.chromend(record) === 855293
+            @test BED.name(record) == "YMR292W"
+            @test BED.score(record) === 0
+            @test BED.strand(record) === STRAND_POS
+            @test BED.thickstart(record) === 854795
+            @test BED.thickend(record) === 855293
+            @test BED.itemrgb(record) === RGB(0, 0, 0)
+            @test BED.blockcount(record) === 2
+            @test BED.blocksizes(record) == [22, 395]
+            @test BED.blockstarts(record) == [1, 105]
+
+            record = BED.Record(b"chrX\t151080532\t151081699\tCHOCOLATE1\t0\t-\t151080532\t151081699\t255,127,36")
+            @test BED.chrom(record) == "chrX"
+            @test BED.chromstart(record) === 151080533
+            @test BED.chromend(record) === 151081699
+            @test BED.name(record) == "CHOCOLATE1"
+            @test BED.score(record) === 0
+            @test BED.strand(record) === STRAND_NEG
+            @test BED.thickstart(record) === 151080533
+            @test BED.thickend(record) === 151081699
+            @test BED.itemrgb(record) === RGB(map(x -> reinterpret(N0f8, UInt8(x)), (255, 127, 36))...)
+            @test !BED.hasblockcount(record)
+            @test !BED.hasblocksizes(record)
+            @test !BED.hasblockstarts(record)
+        end
+
         get_bio_fmt_specimens()
 
         function check_bed_parse(filename)
             # Reading from a stream
-            for interval in BEDReader(open(filename))
+            for interval in BED.Reader(open(filename))
             end
 
             # Reading from a regular file
-            for interval in open(BEDReader, filename)
+            for interval in open(BED.Reader, filename)
             end
 
             # in-place parsing
-            stream = open(BEDReader, filename)
+            stream = open(BED.Reader, filename)
             entry = eltype(stream)()
             while !eof(stream)
                 read!(stream, entry)
@@ -413,17 +510,17 @@ end
 
             # Check round trip
             output = IOBuffer()
-            writer = BEDWriter(output)
-            expected_entries = Any[]
-            for interval in open(BEDReader, filename)
+            writer = BED.Writer(output)
+            expected_entries = BED.Record[]
+            for interval in open(BED.Reader, filename)
                 write(writer, interval)
                 push!(expected_entries, interval)
             end
             flush(writer)
 
             seekstart(output)
-            read_entries = Any[]
-            for interval in BEDReader(output)
+            read_entries = BED.Record[]
+            for interval in BED.Reader(output)
                 push!(read_entries, interval)
             end
 
@@ -448,28 +545,28 @@ end
         # random BED files.
 
         function check_intersection(filename_a, filename_b)
-            ic_a = IntervalCollection{BEDMetadata}()
-            open(BEDReader, filename_a) do intervals
-                for interval in intervals
-                    push!(ic_a, interval)
+            ic_a = IntervalCollection{BED.Record}()
+            open(BED.Reader, filename_a) do reader
+                for record in reader
+                    push!(ic_a, Interval(record))
                 end
             end
 
-            ic_b = IntervalCollection{BEDMetadata}()
-            open(BEDReader, filename_b) do intervals
-                for interval in intervals
-                    push!(ic_b, interval)
+            ic_b = IntervalCollection{BED.Record}()
+            open(BED.Reader, filename_b) do reader
+                for record in reader
+                    push!(ic_b, Interval(record))
                 end
             end
 
             # This is refactored out to close streams
-            fa = open(BEDReader, filename_a)
-            fb = open(BEDReader, filename_b)
-            xs = sort(collect(intersect(fa, fb)))
+            fa = open(BED.Reader, filename_a)
+            fb = open(BED.Reader, filename_b)
+            xs = sort(collect(eachoverlap(fa, fb)))
             close(fa)
             close(fb)
 
-            ys = sort(collect(intersect(ic_a, ic_b)))
+            ys = sort(collect(eachoverlap(ic_a, ic_b)))
 
             return xs == ys
         end
@@ -719,8 +816,8 @@ end
         num_queries = 1000
         queries = random_intervals(chroms, 1000000, num_queries)
 
-        @test all(Bool[IntervalCollection(collect(BEDInterval, intersect(intervals, query))) ==
-                       IntervalCollection(collect(BEDInterval, intersect(bb, query)))
+        @test all(Bool[IntervalCollection(collect(BEDInterval, eachoverlap(intervals, query))) ==
+                       IntervalCollection(collect(BEDInterval, eachoverlap(bb, query)))
                        for query in queries])
     end
 

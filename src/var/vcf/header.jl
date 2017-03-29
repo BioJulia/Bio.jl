@@ -1,75 +1,75 @@
 # VCF Header
 # ==========
 
-immutable VCFHeader
-    metainfo::Vector{VCFMetaInfo}
+immutable Header
+    metainfo::Vector{MetaInfo}
     sampleID::Vector{String}
 
-    function VCFHeader(metainfo::Vector{VCFMetaInfo}, sampleID::Vector{String})
+    function Header(metainfo::Vector{MetaInfo}, sampleID::Vector{String})
         return new(metainfo, sampleID)
     end
 end
 
 """
-    VCFHeader()
+    VCF.Header()
 
-Create an empty `VCFHeader` object.
+Create an empty VCF header.
 """
-function VCFHeader()
-    return VCFHeader(VCFMetaInfo[], String[])
+function Header()
+    return Header(MetaInfo[], String[])
 end
 
 """
-    VCFHeader(metainfo::Vector, sampleID::Vector)
+    VCF.Header(metainfo::Vector, sampleID::Vector)
 
-Create a `VCFHeader` object with `metainfo` and `sampleID`.
+Create a VCF header with `metainfo` and `sampleID`.
 """
-function VCFHeader(metainfo::Vector, sampleID::Vector)
-    return VCFHeader(convert(Vector{VCFMetaInfo}, metainfo), convert(Vector{String}, sampleID))
+function Header(metainfo::Vector, sampleID::Vector)
+    return Header(convert(Vector{MetaInfo}, metainfo), convert(Vector{String}, sampleID))
 end
 
-function Base.eltype(::Type{VCFHeader})
-    return VCFMetaInfo
+function Base.eltype(::Type{Header})
+    return MetaInfo
 end
 
-function Base.length(header::VCFHeader)
+function Base.length(header::Header)
     return length(header.metainfo)
 end
 
-function Base.start(header::VCFHeader)
+function Base.start(header::Header)
     return 1
 end
 
-function Base.done(header::VCFHeader, i)
+function Base.done(header::Header, i)
     return i > endof(header.metainfo)
 end
 
-function Base.next(header::VCFHeader, i)
+function Base.next(header::Header, i)
     return header.metainfo[i], i + 1
 end
 
-function Base.find(header::VCFHeader, tag::AbstractString)
+function Base.find(header::Header, tag::AbstractString)
     return Base.filter(m -> isequaltag(m, tag), header.metainfo)
 end
 
-function Base.unshift!(header::VCFHeader, metainfo)
-    unshift!(header.metainfo, convert(VCFMetaInfo, metainfo))
+function Base.unshift!(header::Header, metainfo)
+    unshift!(header.metainfo, convert(MetaInfo, metainfo))
     return header
 end
 
-function Base.push!(header::VCFHeader, metainfo)
-    push!(header.metainfo, convert(VCFMetaInfo, metainfo))
+function Base.push!(header::Header, metainfo)
+    push!(header.metainfo, convert(MetaInfo, metainfo))
     return header
 end
 
-function Base.show(io::IO, header::VCFHeader)
+function Base.show(io::IO, header::Header)
     println(io, summary(header), ':')
-    tags = metainfotag.(header.metainfo)
+    tags = Bio.metainfotag.(header.metainfo)
     println(io, "  metainfo tags: ", join(unique(tags), ' '))
       print(io, "     sample IDs: ", join(header.sampleID, ' '))
 end
 
-function Base.write(io::IO, header::VCFHeader)
+function Base.write(io::IO, header::Header)
     n = 0
     for metainfo in header.metainfo
         n += write(io, metainfo, '\n')

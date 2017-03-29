@@ -34,7 +34,7 @@ close(reader)
 Readers in Bio.jl all read and return entries one at a time. The most convenient
 way to do this by iteration:
 ```julia
-reader = open(BEDReader, "input.bed")
+reader = open(BED.Reader, "input.bed")
 for record in reader
     # perform some operation on entry
 end
@@ -52,27 +52,22 @@ overwriting one entry. For files with a large number of small entries, this can
 greatly speed up reading.
 
 Instead of looping over a reader stream `read!` is called with a preallocated
-entry.
+entry.  Some care is necessary when using this interface because `record` is
+completely overwritten on each iteration:
 ```julia
-reader = open(BEDReader, "input.bed")
-record = BEDInterval()
+reader = open(BED.Reader, "input.bed")
+record = BED.Record()
 while !eof(reader)
     read!(reader, record)
-    # perform some operation on `entry`
+    # perform some operation on `record`
 end
 close(reader)
 ```
 
-Some care is necessary when using this interface. Because `entry` is completely
-overwritten on each iteration, one must manually copy any field from `entry`
-that should be preserved. For example, if we wish to save the `seqname` field
-from `entry` when parsing BED, we must call `copy(entry.seqname)`.
-
-Empty entry types that correspond to the file format be found using `eltype`,
-making it easy to allocate an empty entry for any reader stream.
-
+Empty record types that correspond to the file format be found using `eltype`,
+making it easy to allocate an empty record for any reader stream:
 ```julia
-entry = eltype(stream)()
+record = eltype(stream)()
 ```
 
 
@@ -207,9 +202,9 @@ Bio.Seq.FASTQWriter
 
 ### .2bit
 
-* Reader type: `TwoBitReader{T<:IO}`
-* Writer type: `TwoBitWriter{T<:IO}`
-* Element type: `SeqRecord{ReferenceSequence,Vector{UnitRange{Int}}}`
+* Reader type: `TwoBit.Reader{T<:IO}`
+* Writer type: `TwoBit.Writer{T<:IO}`
+* Element type: `TwoBit.Record`
 
 .2bit is a binary file format designed for storing a genome consists of multiple
 chromosomal sequences. The reading speed is often an order of magnitude faster
@@ -220,21 +215,46 @@ acid sequences.
 Like FASTA, the .2bit reader supports random access using an index included in
 the header section of a .2bit file:
 ```julia
-reader = open(TwoBitReader, "sacCer.2bit")  # load a random access index in the header
-chrIV = reader["chrIV"]                     # directly read chromosome 4
+reader = open(TwoBit.Reader, "sacCer.2bit")  # load a random access index in the header
+chrIV = reader["chrIV"]                      # directly read chromosome 4
 ```
 
 ```@docs
-Bio.Seq.TwoBitReader
-Bio.Seq.TwoBitWriter
+Bio.Seq.TwoBit.Reader
+Bio.Seq.TwoBit.Writer
+Bio.Seq.TwoBit.Record
+Bio.Seq.TwoBit.seqnames
+Bio.Seq.TwoBit.sequence
+Bio.Seq.TwoBit.maskedblocks
 ```
 
+### ABIF
+
+* Reader type: `AbifReader{T<:IO}`
+ABIF is a binary file format for storing data produced by sequencers, those developed by Applied Biosystems, Inc.
+When the file is opened, we save all the existing tags, so we can read only the tags that are needed.
+```julia
+reader = open(AbifReader, "3100.ab1")       # load a random access
+data   = reader["DATA"]                     # directly read all existing `DATA` Tags
+data   = reader[1]                          # directly read Tag at index
+data  = tags(reader)                       # return all existing tags
+
+# iterator by all tags
+for (key, value) in getindex(reader, data)
+end
+```
+
+```@docs
+Bio.Seq.AbifReader
+Bio.Seq.tags
+Bio.Seq.elements
+```
 
 ### BED
 
-* Reader type: `BEDReader`
-* Writer type: `BEDWriter{T<:IO}`
-* Element type: `Interval{BEDMetadata}` (alias: `BEDInterval`)
+* Reader type: `BED.Reader`
+* Writer type: `BED.Writer`
+* Element type: `BED.Record`
 
 BED is a text-based file format for representing genomic annotations like genes,
 transcripts, and so on. A BED file has tab-delimited and variable-length fields;
@@ -247,8 +267,21 @@ chr9	68456943	68486659	NM_001206	0	-
 ```
 
 ```@docs
-Bio.Intervals.BEDReader
-Bio.Intervals.BEDWriter
+Bio.Intervals.BED.Reader
+Bio.Intervals.BED.Writer
+Bio.Intervals.BED.Record
+Bio.Intervals.BED.chrom
+Bio.Intervals.BED.chromstart
+Bio.Intervals.BED.chromend
+Bio.Intervals.BED.name
+Bio.Intervals.BED.score
+Bio.Intervals.BED.strand
+Bio.Intervals.BED.thickstart
+Bio.Intervals.BED.thickend
+Bio.Intervals.BED.itemrgb
+Bio.Intervals.BED.blockcount
+Bio.Intervals.BED.blocksizes
+Bio.Intervals.BED.blockstarts
 ```
 
 
@@ -324,27 +357,47 @@ Bio.Align.BAMWriter
 
 ### VCF
 
-* Reader type: `VCFReader`
-* Writer type: `VCFWriter{T<:IO}`
-* Element type: `VCFRecord`
+* Reader type: `VCF.Reader`
+* Writer type: `VCF.Writer{T<:IO}`
+* Element type: `VCF.Record`
 
 VCF is a text-based file format for representing genetic variations.
 
 ```@docs
-Bio.Var.VCFReader
-Bio.Var.VCFWriter
+Bio.Var.VCF.Reader
+Bio.Var.VCF.Writer
+Bio.Var.VCF.Record
+Bio.Var.VCF.chrom
+Bio.Var.VCF.pos
+Bio.Var.VCF.id
+Bio.Var.VCF.ref
+Bio.Var.VCF.alt
+Bio.Var.VCF.qual
+Bio.Var.VCF.filter
+Bio.Var.VCF.info
+Bio.Var.VCF.format
 ```
 
 
 ### BCF
 
-* Reader type: `BCFReader{T<:IO}`
-* Writer type: `BCFWriter{T<:IO}`
-* Element type: `BCFRecord`
+* Reader type: `BCF.Reader{T<:IO}`
+* Writer type: `BCF.Writer{T<:IO}`
+* Element type: `BCF.Record`
 
 BCF is a binary counterpart of the VCF file format.
 
 ```@docs
-Bio.Var.BCFReader
-Bio.Var.BCFWriter
+Bio.Var.BCF.Reader
+Bio.Var.BCF.Writer
+Bio.Var.BCF.Record
+Bio.Var.BCF.chrom
+Bio.Var.BCF.pos
+Bio.Var.BCF.rlen
+Bio.Var.BCF.qual
+Bio.Var.BCF.ref
+Bio.Var.BCF.alt
+Bio.Var.BCF.filter
+Bio.Var.BCF.info
+Bio.Var.BCF.genotype
 ```

@@ -1,8 +1,12 @@
 # VCF Writer
 # ==========
 
+type Writer{T<:IO} <: Bio.IO.AbstractWriter
+    stream::T
+end
+
 """
-    VCFWriter(output::IO, header::VCFHeader)
+    VCF.Writer(output::IO, header::VCF.Header)
 
 Create a data writer of the VCF file format.
 
@@ -10,21 +14,17 @@ Create a data writer of the VCF file format.
 * `output`: data sink
 * `header`: VCF header object
 """
-type VCFWriter{T<:IO} <: Bio.IO.AbstractWriter
-    stream::T
-end
-
-function VCFWriter(output::IO, header::VCFHeader)
-    writer = VCFWriter(output)
+function Writer(output::IO, header::Header)
+    writer = Writer(output)
     write(writer, header)
     return writer
 end
 
-function Bio.IO.stream(writer::VCFWriter)
+function Bio.IO.stream(writer::Writer)
     return writer.stream
 end
 
-function Base.write(writer::VCFWriter, header::VCFHeader)
+function Base.write(writer::Writer, header::Header)
     n = 0
     for metainfo in header.metainfo
         n += write(writer.stream, metainfo, '\n')
@@ -40,7 +40,6 @@ function Base.write(writer::VCFWriter, header::VCFHeader)
     return n
 end
 
-function Base.write(writer::VCFWriter, record::VCFRecord)
+function Base.write(writer::Writer, record::Record)
     return write(writer.stream, record, '\n')
 end
-

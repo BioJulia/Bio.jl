@@ -202,14 +202,18 @@ function alphanum_isless(a::AbstractString, b::AbstractString)
     return j <= length(b)
 end
 
-"""
-A type deriving `IntervalStream{T}` must be iterable and produce
-Interval{T} objects in sorted order.
-"""
-abstract IntervalStream{T}
+function metadatatype{T}(::Type{T})
+    return _metadatatype(eltype(T))
+end
 
-typealias IntervalStreamOrArray{T} Union{Vector{Interval{T}},IntervalStream{T},Bio.IO.AbstractReader}
+function metadatatype(x::Any)
+    return metadatatype(typeof(x))
+end
 
-function metadatatype{T}(::IntervalStream{T})
+function _metadatatype{T}(::Type{Interval{T}})
+    return T
+end
+
+function _metadatatype{T}(::Type{T})
     return T
 end

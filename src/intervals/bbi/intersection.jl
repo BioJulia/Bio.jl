@@ -24,11 +24,11 @@ type BigBedIntersectIterator
     done::Bool
 end
 
-function Base.iteratorsize(::BigBedIntersectIterator)
+function Base.iteratorsize(::Type{BigBedIntersectIterator})
     return Base.SizeUnknown()
 end
 
-function Base.intersect(bb::BigBedReader, query::Interval)
+function eachoverlap(bb::BigBedReader, query::Interval)
     seqname, first, last = query.seqname, query.first, query.last
     chrom_id, chrom_size = lookup_seqname(bb, seqname)
 

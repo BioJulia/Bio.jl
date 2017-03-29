@@ -142,9 +142,7 @@ function Base.hash(field::StringField, h::UInt64)
 end
 
 function Base.:(==)(a::StringField, b::StringField)
-    return length(a) == length(b) &&
-        ccall(:memcmp, Cint, (Ptr{Void}, Ptr{Void}, Csize_t),
-              pointer(a.data, a.part.start), pointer(b.data, b.part.start), length(a)) == 0
+    return length(a.part) == length(b.part) && cmp(a, b) == 0
 end
 
 function Base.:(==)(a::StringField, b::BufferedStreams.BufferedOutputStream)

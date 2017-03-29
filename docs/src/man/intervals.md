@@ -127,13 +127,23 @@ it's convenient or speed in an issue.
 
 ## Intersection
 
-There are number of `intersect` function in the Intervals module. They follow
+There are number of `eachoverlap` function in the Intervals module. They follow
 two patterns: interval versus collection queries which return an iterator over
 intervals in the collection that intersect the query, and collection versus
-collection queries which iterate over all pairs of intersecting intervals.
+collection queries which iterate over all pairs of overlapping intervals.
 
 ```@docs
-intersect
+eachoverlap
+```
+
+The order of interval pairs is the same as the following nested loop but
+`eachoverlap` is often much faster:
+```julia
+for a in intervals_a, b in intervals_b
+    if isoverlapping(a, b)
+        # do something...
+    end
+end
 ```
 
 
@@ -147,12 +157,12 @@ memory is not practical.
 
 The Intervals module is able to intersect any two iterators that yield intervals
 in sorted order, which we refer to as "interval streams". An
-`IntervalCollection` is also a interval stream, but so is a sorted array of
+`IntervalCollection` is also an interval stream, but so is a sorted array of
 intervals, and parsers over interval file formats. This allows for a very
 general notion of intersection.
 
 ```julia
-for (x, y) in intersect(open(BEDReader, "x_features.bed"), open(BEDReader, "y_features.bed"))
+for (x, y) in eachoverlap(open(BEDReader, "x_features.bed"), open(BEDReader, "y_features.bed"))
     println("Intersection found between ", x, " and ", y)
 end
 ```
@@ -160,21 +170,21 @@ end
 An exception will be thrown if an interval in encountered out of order while
 processing an interval stream. Ordering of intervals has one complication: there
 is not necessarily a standardized way to order sequence names. By default in
-Bio.jl intervals are sorted using a special `alphanum_isless` comparison
-function that compares numbers numerically if they exist in string, so that
-names like `chr1, chr2, chr10` end up in their natural order.
+Bio.jl intervals are sorted using a `Base.isless` comparison function that is a
+default order in most command-line tools. The Intervals module also offers
+`alphanum_isless` comparison that compares numbers numerically if they exist in
+string, so that names like `chr1, chr2, chr10` end up in their natural order.
 
-The `intersect` function takes as an optional parameter an `isless` function to
+The `eachoverlap` function takes as an optional parameter an `isless` function to
 use to compare sequence names to account for arbitrary sequence name orderings.
 
 ```julia
-# assume lexigraphic ordering for sequence names
-for (x, y) in intersect(xs, ys, isless)
+for (x, y) in eachoverlap(xs, ys, Bio.Intervals.alphanum_isless)
     println("Intersection found between ", a, " and ", b)
 end
 ```
 
-A special sort of intersection can also be performed on a `IntervalStreams`
+A special sort of intersection can also be performed on an interval stream
 against itself to produce "coverage intervals".
 
 ```@docs

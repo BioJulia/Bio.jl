@@ -133,14 +133,12 @@ export
     AA_Term,
     AA_Gap,
     FASTA,
-    FASTAReader,
-    FASTAWriter,
     FASTASeqRecord,
     FASTQReader,
     FASTQWriter,
     FASTQSeqRecord,
-    TwoBitReader,
-    TwoBitWriter,
+    TwoBit,
+    AbifReader,
     Alphabet,
     DNAAlphabet,
     RNAAlphabet,
@@ -161,7 +159,9 @@ export
     majorityvote,
     tryread!,
     isfilled,
-    MissingFieldException
+    MissingFieldException,
+    MinHashSketch,
+    minhash
 
 import Automa
 import Automa.RegExp: @re_str
@@ -215,10 +215,13 @@ include("demultiplexer.jl")
 include("fasta/fasta.jl")
 include("fastq/fastq.jl")
 include("twobit/twobit.jl")
+include("abif/abif.jl")
 
 include("search/exact.jl")
 include("search/approx.jl")
 include("search/re.jl")
+
+include("minhash.jl")
 
 include("deprecated.jl")
 
