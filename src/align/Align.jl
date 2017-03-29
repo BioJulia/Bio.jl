@@ -147,7 +147,6 @@ include("types.jl")
 include("submat.jl")
 include("models.jl")
 include("pairwise/pairalign.jl")
-include("hts/hts.jl")
 
 include("deprecated.jl")
 
