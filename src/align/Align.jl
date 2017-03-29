@@ -127,8 +127,8 @@ export
     SAM_FLAG_SUPPLEMENTARY,
     hasflag,
     decodeflag,
-    decomposeflag
-
+    decomposeflag,
+    
     MissingFieldException
 
 import Automa

@@ -39,7 +39,7 @@ const SAM_FLAG_DUP           = UInt16(0x400)
 "supplementary alignment"
 const SAM_FLAG_SUPPLEMENTARY = UInt16(0x800)
 
-hasflag(rec::Union{Bio.Align.SAMRecord,Bio.Align.BAMRecord},flag::UInt16) = (flag(rec) & flag) == flag
+hasflag(rec::Union{Bio.Align.SAMRecord,Bio.Align.BAMRecord},f::UInt16) = (flag(rec) & f) == f
 
 function decomposeflag(rec::Union{Bio.Align.SAMRecord,Bio.Align.BAMRecord})
     flags = [SAM_FLAG_PAIRED,
@@ -55,7 +55,7 @@ function decomposeflag(rec::Union{Bio.Align.SAMRecord,Bio.Align.BAMRecord})
             SAM_FLAG_DUP,
             SAM_FLAG_SUPPLEMENTARY]
 
-    out = Array{eltype(flags),0}
+    out = Array(eltype(flags),0)
     for f in flags
         hasflag(rec,f) && push!(out,f)
     end

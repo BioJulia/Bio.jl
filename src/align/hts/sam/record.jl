@@ -179,7 +179,7 @@ function Base.copy(record::SAMRecord)
 end
 
 function ismapped(record::SAMRecord)
-    return isfilled(record) && !hasflag(record,SAMFlags.UNMAP)
+    return isfilled(record) && !hasflag(record,SAM_FLAG_UNMAP)
 end
 
 function Bio.seqname(record::SAMRecord)
