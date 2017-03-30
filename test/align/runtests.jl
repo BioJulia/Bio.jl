@@ -1051,6 +1051,7 @@ end
             record = SAM.Record()
             @test !isfilled(record)
             @test !SAM.ismapped(record)
+            @test repr(record) == "Bio.Align.SAM.Record: <not filled>"
             @test_throws ArgumentError SAM.qname(record)
 
             record = SAM.Record("r001\t99\tchr1\t7\t30\t8M2I4M1D3M\t=\t37\t39\tTTAGATAAAGGATACTG\t*")
@@ -1058,6 +1059,7 @@ end
 
             record = SAM.Record("r001\t99\tchr1\t7\t30\t8M2I4M1D3M\t=\t37\t39\tTTAGATAAAGGATACTG\t*")
             @test isfilled(record)
+            @test ismatch(r"^Bio.Align.SAM.Record:\n", repr(record))
             @test SAM.ismapped(record)
             @test SAM.hasqname(record)
             @test SAM.qname(record) == "r001"
