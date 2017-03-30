@@ -327,7 +327,7 @@ This has different reader interfaces from other file formats. Please consult the
 ### SAM
 
 * Reader type: `SAM.Reader`
-* Writer type: `SAM.Writer{T<:IO}`
+* Writer type: `SAM.Writer`
 * Element type: `SAM.Record`
 
 SAM is a text-based file format for representing sequence alignments.
