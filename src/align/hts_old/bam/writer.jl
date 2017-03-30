@@ -2,7 +2,7 @@
 # ==========
 
 """
-    BAMWriter(output::BGZFStream, header::SAMHeader)
+    BAMWriter(output::BGZFStream, header::SAM.Header)
 
 Create a data writer of the BAM file format.
 
@@ -14,7 +14,7 @@ type BAMWriter <: Bio.IO.AbstractWriter
     stream::BGZFStreams.BGZFStream
 end
 
-function BAMWriter(stream::BGZFStreams.BGZFStream, header::SAMHeader)
+function BAMWriter(stream::BGZFStreams.BGZFStream, header::SAM.Header)
     refseqnames = String[]
     refseqlens = Int[]
     for metainfo in find(header, "SQ")
@@ -38,7 +38,7 @@ function write_header(stream, header, refseqnames, refseqlens)
 
     # SAM header
     buf = IOBuffer()
-    l = write(SAMWriter(buf), header)
+    l = write(SAM.Writer(buf), header)
     n += write(stream, Int32(l))
     n += write(stream, takebuf_array(buf))
 

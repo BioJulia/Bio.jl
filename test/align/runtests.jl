@@ -1006,21 +1006,21 @@ end
     @testset "SAM" begin
         samdir = joinpath(dirname(@__FILE__), "..", "BioFmtSpecimens", "SAM")
 
-        @testset "SAMMetaInfo" begin
-            metainfo = SAMMetaInfo()
+        @testset "MetaInfo" begin
+            metainfo = SAM.MetaInfo()
             @test !isfilled(metainfo)
             @test contains(repr(metainfo), "not filled")
 
-            metainfo = SAMMetaInfo("CO", "some comment (parens)")
+            metainfo = SAM.MetaInfo("CO", "some comment (parens)")
             @test isfilled(metainfo)
             @test contains(repr(metainfo), "CO")
             @test metainfotag(metainfo) == "CO"
             @test metainfoval(metainfo) == "some comment (parens)"
-            @test metainfo == SAMMetaInfo(b"@CO\tsome comment (parens)")
+            @test metainfo == SAM.MetaInfo(b"@CO\tsome comment (parens)")
             @test_throws ArgumentError keys(metainfo)
             @test_throws ArgumentError values(metainfo)
 
-            metainfo = SAMMetaInfo("HD", ["VN" => "1.0", "SO" => "coordinate"])
+            metainfo = SAM.MetaInfo("HD", ["VN" => "1.0", "SO" => "coordinate"])
             @test isfilled(metainfo)
             @test contains(repr(metainfo), "HD")
             @test metainfotag(metainfo) == "HD"
@@ -1032,82 +1032,82 @@ end
             @test !haskey(metainfo, "GO")
             @test metainfo["VN"] == "1.0"
             @test metainfo["SO"] == "coordinate"
-            @test metainfo == SAMMetaInfo(b"@HD\tVN:1.0\tSO:coordinate")
+            @test metainfo == SAM.MetaInfo(b"@HD\tVN:1.0\tSO:coordinate")
             @test_throws KeyError metainfo["GO"]
         end
 
-        @testset "SAMHeader" begin
-            header = SAMHeader()
+        @testset "Header" begin
+            header = SAM.Header()
             @test isempty(header)
-            push!(header, SAMMetaInfo("@HD\tVN:1.0\tSO:coordinate"))
+            push!(header, SAM.MetaInfo("@HD\tVN:1.0\tSO:coordinate"))
             @test !isempty(header)
             @test length(header) == 1
-            push!(header, SAMMetaInfo("@CO\tsome comment"))
+            push!(header, SAM.MetaInfo("@CO\tsome comment"))
             @test length(header) == 2
-            @test isa(collect(header), Vector{SAMMetaInfo})
+            @test isa(collect(header), Vector{SAM.MetaInfo})
         end
 
-        @testset "SAMRecord" begin
-            record = SAMRecord()
+        @testset "Record" begin
+            record = SAM.Record()
             @test !isfilled(record)
-            @test !ismapped(record)
-            @test_throws ArgumentError seqname(record)
+            @test !SAM.ismapped(record)
+            @test_throws ArgumentError SAM.qname(record)
 
-            record = SAMRecord("r001\t99\tchr1\t7\t30\t8M2I4M1D3M\t=\t37\t39\tTTAGATAAAGGATACTG\t*")
-            @test record == SAMRecord(b"r001\t99\tchr1\t7\t30\t8M2I4M1D3M\t=\t37\t39\tTTAGATAAAGGATACTG\t*")
+            record = SAM.Record("r001\t99\tchr1\t7\t30\t8M2I4M1D3M\t=\t37\t39\tTTAGATAAAGGATACTG\t*")
+            @test record == SAM.Record(b"r001\t99\tchr1\t7\t30\t8M2I4M1D3M\t=\t37\t39\tTTAGATAAAGGATACTG\t*")
 
-            record = SAMRecord("r001\t99\tchr1\t7\t30\t8M2I4M1D3M\t=\t37\t39\tTTAGATAAAGGATACTG\t*")
+            record = SAM.Record("r001\t99\tchr1\t7\t30\t8M2I4M1D3M\t=\t37\t39\tTTAGATAAAGGATACTG\t*")
             @test isfilled(record)
-            @test ismapped(record)
-            @test hasseqname(record)
-            @test seqname(record) == "r001"
-            @test hasflag(record)
-            @test flag(record) === UInt16(99)
-            @test hasrefname(record)
-            @test refname(record) == "chr1"
-            @test hasleftposition(record)
-            @test leftposition(record) === 7
-            @test hasmappingquality(record)
-            @test mappingquality(record) === UInt8(30)
-            @test hascigar(record)
-            @test cigar(record) == "8M2I4M1D3M"
-            @test hasnextrefname(record)
-            @test nextrefname(record) == "="
-            @test hasnextleftposition(record)
-            @test nextleftposition(record) === 37
-            @test hastemplatelength(record)
-            @test templatelength(record) === 39
-            @test hassequence(record)
-            @test sequence(record) == dna"TTAGATAAAGGATACTG"
-            @test !hasqualities(record)
-            @test_throws MissingFieldException qualities(record)
+            @test SAM.ismapped(record)
+            @test SAM.hasqname(record)
+            @test SAM.qname(record) == "r001"
+            @test SAM.hasflag(record)
+            @test SAM.flag(record) === UInt16(99)
+            @test SAM.hasrname(record)
+            @test SAM.rname(record) == "chr1"
+            @test SAM.haspos(record)
+            @test SAM.pos(record) === 7
+            @test SAM.hasmapq(record)
+            @test SAM.mapq(record) === UInt8(30)
+            @test SAM.hascigar(record)
+            @test SAM.cigar(record) == "8M2I4M1D3M"
+            @test SAM.hasrnext(record)
+            @test SAM.rnext(record) == "="
+            @test SAM.haspnext(record)
+            @test SAM.pnext(record) === 37
+            @test SAM.hastlen(record)
+            @test SAM.tlen(record) === 39
+            @test SAM.hasseq(record)
+            @test SAM.seq(record) == dna"TTAGATAAAGGATACTG"
+            @test !SAM.hasqual(record)
+            @test_throws MissingFieldException SAM.qual(record)
         end
 
         @testset "Reader" begin
-            reader = open(SAMReader, joinpath(samdir, "ce#1.sam"))
-            @test isa(reader, SAMReader)
-            @test eltype(reader) === SAMRecord
+            reader = open(SAM.Reader, joinpath(samdir, "ce#1.sam"))
+            @test isa(reader, SAM.Reader)
+            @test eltype(reader) === SAM.Record
 
             # header
             h = header(reader)
-            @test find(header(reader), "SQ") == [SAMMetaInfo(b"@SQ\tSN:CHROMOSOME_I\tLN:1009800")]
+            @test find(header(reader), "SQ") == [SAM.MetaInfo(b"@SQ\tSN:CHROMOSOME_I\tLN:1009800")]
 
             # first record
-            rec = SAMRecord()
+            rec = SAM.Record()
             read!(reader, rec)
-            @test ismapped(rec)
-            @test refname(rec) == "CHROMOSOME_I"
-            @test leftposition(rec) == 2
+            @test SAM.ismapped(rec)
+            @test SAM.rname(rec) == "CHROMOSOME_I"
+            @test SAM.pos(rec) == leftposition(rec) == 2
             @test rightposition(rec) == 102
-            @test seqname(rec) == "SRR065390.14978392"
-            @test sequence(rec)      == dna"CCTAGCCCTAACCCTAACCCTAACCCTAGCCTAAGCCTAAGCCTAAGCCTAAGCCTAAGCCTAAGCCTAAGCCTAAGCCTAAGCCTAAGCCTAAGCCTAA"
-            @test sequence(String, rec) == "CCTAGCCCTAACCCTAACCCTAACCCTAGCCTAAGCCTAAGCCTAAGCCTAAGCCTAAGCCTAAGCCTAAGCCTAAGCCTAAGCCTAAGCCTAAGCCTAA"
-            @test seqlength(rec) == 100
-            @test qualities(rec)       == (b"#############################@B?8B?BA@@DDBCDDCBC@CDCDCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCC" .- 33)
-            @test qualities(String, rec) == "#############################@B?8B?BA@@DDBCDDCBC@CDCDCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCC"
-            @test flag(rec) == 16
-            @test cigar(rec) == "27M1D73M"
-            @test alignment(rec) == Alignment([
+            @test SAM.qname(rec) == seqname(rec) == "SRR065390.14978392"
+            @test SAM.seq(rec) == sequence(rec) == dna"CCTAGCCCTAACCCTAACCCTAACCCTAGCCTAAGCCTAAGCCTAAGCCTAAGCCTAAGCCTAAGCCTAAGCCTAAGCCTAAGCCTAAGCCTAAGCCTAA"
+            @test SAM.seq(String, rec)          ==    "CCTAGCCCTAACCCTAACCCTAACCCTAGCCTAAGCCTAAGCCTAAGCCTAAGCCTAAGCCTAAGCCTAAGCCTAAGCCTAAGCCTAAGCCTAAGCCTAA"
+            @test SAM.seqlength(rec) == 100
+            @test SAM.qual(rec)         == (b"#############################@B?8B?BA@@DDBCDDCBC@CDCDCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCC" .- 33)
+            @test SAM.qual(String, rec) ==   "#############################@B?8B?BA@@DDBCDDCBC@CDCDCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCC"
+            @test SAM.flag(rec) == 16
+            @test SAM.cigar(rec) == "27M1D73M"
+            @test SAM.alignment(rec) == Alignment([
                 AlignmentAnchor(  0,   1, OP_START),
                 AlignmentAnchor( 27,  28, OP_MATCH),
                 AlignmentAnchor( 27,  29, OP_DELETE),
@@ -1123,12 +1123,12 @@ end
             close(reader)
 
             # iterator
-            @test length(collect(open(SAMReader, joinpath(samdir, "ce#1.sam")))) == 1
-            @test length(collect(open(SAMReader, joinpath(samdir, "ce#2.sam")))) == 2
+            @test length(collect(open(SAM.Reader, joinpath(samdir, "ce#1.sam")))) == 1
+            @test length(collect(open(SAM.Reader, joinpath(samdir, "ce#2.sam")))) == 2
 
             # IOStream
-            @test length(collect(SAMReader(open(joinpath(samdir, "ce#1.sam"))))) == 1
-            @test length(collect(SAMReader(open(joinpath(samdir, "ce#2.sam"))))) == 2
+            @test length(collect(SAM.Reader(open(joinpath(samdir, "ce#1.sam"))))) == 1
+            @test length(collect(SAM.Reader(open(joinpath(samdir, "ce#2.sam"))))) == 2
         end
 
         @testset "Round trip" begin
@@ -1136,9 +1136,9 @@ end
                 filepath = joinpath(samdir, specimen["filename"])
                 mktemp() do path, io
                     # copy
-                    reader = open(SAMReader, filepath)
-                    writer = SAMWriter(io, header(reader))
-                    records = SAMRecord[]
+                    reader = open(SAM.Reader, filepath)
+                    writer = SAM.Writer(io, header(reader))
+                    records = SAM.Record[]
                     for rec in reader
                         push!(records, rec)
                         write(writer, rec)
@@ -1147,7 +1147,7 @@ end
                     close(writer)
 
                     # read again
-                    reader = open(SAMReader, path)
+                    reader = open(SAM.Reader, path)
                     @test collect(reader) == records
                     close(reader)
                 end
@@ -1168,7 +1168,7 @@ end
             @test leftposition(rec) == 0
             @test rightposition(rec) == -1
             @test mappingquality(rec) == 0
-            @test flag(rec) == SAM_FLAG_UNMAP
+            @test flag(rec) == SAM.FLAG_UNMAP
             @test nextrefname(rec) == "*"
             @test nextrefindex(rec) == 0
             @test nextleftposition(rec) == 0
@@ -1211,7 +1211,7 @@ end
 
             # header
             h = header(reader)
-            @test isa(h, SAMHeader)
+            @test isa(h, SAM.Header)
 
             # first record
             rec = BAMRecord()

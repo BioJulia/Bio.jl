@@ -12,7 +12,7 @@ Create a data reader of the BAM file format.
 """
 type BAMReader{T} <: Bio.IO.AbstractReader
     stream::BGZFStreams.BGZFStream{T}
-    header::SAMHeader
+    header::SAM.Header
     start_offset::BGZFStreams.VirtualOffset
     refseqnames::Vector{String}
     refseqlens::Vector{Int}
@@ -51,7 +51,7 @@ function header(reader::BAMReader; fillSQ::Bool=false)
             throw(ArgumentError("SAM header already has SQ records"))
         end
         for (name, len) in zip(reader.refseqnames, reader.refseqlens)
-            push!(reader.header, SAMMetaInfo("SQ", ["SN" => name, "LN" => len]))
+            push!(reader.header, SAM.MetaInfo("SQ", ["SN" => name, "LN" => len]))
         end
     end
     return reader.header
@@ -80,7 +80,7 @@ function init_bam_reader(input::IO)
 
     # SAM header
     textlen = read(stream, Int32)
-    samreader = SAMReader(IOBuffer(read(stream, UInt8, textlen)))
+    samreader = SAM.Reader(IOBuffer(read(stream, UInt8, textlen)))
 
     # reference sequences
     refseqnames = String[]

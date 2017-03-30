@@ -108,8 +108,9 @@ end
 function Base.show(io::IO, record::Record)
     print(io, summary(record), ':')
     if isfilled(record)
+        # TODO: check existence
         println(io)
-        println(io, "    sequence name: ", seqname(record))
+        println(io, "    sequence name: ", qname(record))
         println(io, "             flag: ", flag(record))
         println(io, "        reference: ", rname(record))
         println(io, "         position: ", pos(record))
@@ -381,6 +382,14 @@ function hasseq(record::Record)
     return isfilled(record) && !ismissing(record, record.seq)
 end
 
+function Bio.sequence(record::Record)
+    return seq(record)
+end
+
+function Bio.hassequence(record::Record)
+    return hasseq(record)
+end
+
 """
     seq(::Type{String}, record::Record)::String
 
@@ -520,8 +529,8 @@ function alignment_length(record::Record)
         if c ∈ UInt8('0'):UInt8('9')
             len = len * 10 + (c - UInt8('0'))
         else
-            op = convert(Operation, Char(c))
-            if ismatchop(op) || isdeleteop(op)
+            op = convert(Bio.Align.Operation, Char(c))
+            if Bio.Align.ismatchop(op) || Bio.Align.isdeleteop(op)
                 ret += len
                 len = 0
             end
