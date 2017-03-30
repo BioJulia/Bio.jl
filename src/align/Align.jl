@@ -69,6 +69,7 @@ export
     distance,
     alignment,
     hasalignment,
+    SAM,
     # HTS
     SAMHeader,
     SAMRecord,
@@ -147,6 +148,8 @@ include("types.jl")
 include("submat.jl")
 include("models.jl")
 include("pairwise/pairalign.jl")
+
+include("sam/sam.jl")
 
 include("deprecated.jl")
 
