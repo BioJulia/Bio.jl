@@ -12,16 +12,16 @@ Create a data writer of the SAM file format.
 """
 type Writer <: Bio.IO.AbstractWriter
     stream::IO
+
+    function Writer(output::IO, header::Header=Header())
+        writer = new(output)
+        write(writer, header)
+        return writer
+    end
 end
 
 function Bio.IO.stream(writer::Writer)
     return writer.stream
-end
-
-function Writer(output::IO, header::Header=Header())
-    writer = Writer(output)
-    write(writer, header)
-    return writer
 end
 
 function Base.write(writer::Writer, header::Header)
