@@ -1259,6 +1259,56 @@ end
         end
     end
 
+    @testset "Site counting" begin
+        @testset "Naive methods" begin
+
+            alphabets = (DNAAlphabet{4}, DNAAlphabet{2},
+                         RNAAlphabet{4}, RNAAlphabet{2})
+
+            for alph in alphabets
+
+                # Answers to these tests were worked out manually to verify
+                # count_sites_naive was working.
+                # seqA and seqB contain all possible observations of sites.
+
+                istwobit = Seq.bitsof(alph) == 2
+
+                seqA, seqB = generate_possibilities_tester(alph)
+
+                # Test methods which work on single sequences.
+                @test Seq.count_sites_naive(Certain, seqA) == ifelse(istwobit, length(seqA), 49)
+                @test Seq.count_sites_naive(Certain, seqB) == ifelse(istwobit, length(seqB), 19)
+                @test Seq.count_sites_naive(Gap, seqA) == ifelse(istwobit, 0, 16)
+                @test Seq.count_sites_naive(Gap, seqB) == ifelse(istwobit, 0, 1)
+                @test Seq.count_sites_naive(Ambiguous, seqA) == ifelse(istwobit, 0, length(seqA) - 65)
+                @test Seq.count_sites_naive(Ambiguous, seqB) == ifelse(istwobit, 0, length(seqB) - 20)
+
+                # Test methods which work on two sequences.
+                # Test when sequences are of the same bitencoding.
+
+                @test Seq.count_sites_naive(Certain, seqA, seqB) == Seq.count_sites_naive(Certain, seqB, seqA) == 10
+                @test Seq.count_sites_naive(Gap, seqA, seqB) == Seq.count_sites_naive(Gap, seqB, seqA) == ifelse(istwobit, 0, 16)
+                @test Seq.count_sites_naive(Ambiguous, seqA, seqB) == Seq.count_sites_naive(Ambiguous, seqB, seqA) == ifelse(istwobit, 0, 121)
+                @test Seq.count_sites_naive(Match, seqA, seqB) == Seq.count_sites_naive(Match, seqB, seqA) == length(alphabet(alph))
+                @test Seq.count_sites_naive(Mismatch, seqA, seqB) == Seq.count_sites_naive(Mismatch, seqB, seqA) == (length(seqA) - length(alphabet(alph)))
+            end
+
+            # Test for when sequences are of different bitencodings.
+            for alphs in [(DNAAlphabet{2}, DNAAlphabet{4}),
+                          (RNAAlphabet{2}, RNAAlphabet{4})]
+                seqA, seqB = generate_possibilities_tester(alphs...)
+                @test Seq.count_sites_naive(Certain, seqA, seqB) == Seq.count_sites_naive(Certain, seqB, seqA) == 16
+            @test Seq.count_sites_naive(Gap, seqA, seqB) == Seq.count_sites_naive(Gap, seqB, seqA) == 4
+            @test Seq.count_sites_naive(Ambiguous, seqA, seqB) == Seq.count_sites_naive(Ambiguous, seqB, seqA) == 44
+            @test Seq.count_sites_naive(Match, seqA, seqB) == Seq.count_sites_naive(Match, seqB, seqA) == 4
+            @test Seq.count_sites_naive(Mismatch, seqA, seqB) == Seq.count_sites_naive(Mismatch, seqB, seqA) == 60
+        end
+    end
+
+
+
+    end
+
     @testset "GC content" begin
         @test gc_content(dna"") === 0.0
         @test gc_content(dna"AATA") === 0.0

@@ -164,7 +164,13 @@ export
     isfilled,
     MissingFieldException,
     MinHashSketch,
-    minhash
+    minhash,
+    Site,
+    Certain,
+    Ambiguous,
+    Gap,
+    Match,
+    Mismatch
 
 import Automa
 import Automa.RegExp: @re_str

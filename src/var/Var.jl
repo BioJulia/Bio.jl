@@ -9,7 +9,18 @@
 
 module Var
 
-using Bio.Seq
+import Bio.Seq:
+    Site,
+    issite,
+    Certain,
+    Match,
+    Mismatch,
+    NucleicAcid,
+    MinHashSketch,
+    start_count,
+    update_count,
+    ispurine,
+    ispyrimidine
 import PairwiseListMatrices: PairwiseListMatrix
 import Bio.Exceptions: MissingFieldException, missingerror
 import Bio.Windows: eachwindow, EachWindowIterator, SeqWinItr
@@ -23,18 +34,11 @@ importall Bio
 
 export
     # Site types
-    Certain,
-    Ambiguous,
-    Gap,
-    Match,
-    Mismatch,
+    Mutation,
     Conserved,
     Mutated,
     Transition,
     Transversion,
-    # Site counting methods
-    count_sites_naive,
-    count_sites,
 
     # VCF and BCF
     VCF,

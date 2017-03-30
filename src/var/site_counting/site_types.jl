@@ -1,41 +1,18 @@
-# Different types of site that can be counted
-# ===========================================
+# Extending BioSequence site counting to include mutations
+# ========================================================
 #
 # This file is a part of BioJulia.
 # License is MIT: https://github.com/BioJulia/Bio.jl/blob/master/LICENSE.md
 
-abstract Site
-abstract Mutation <: Site
+abstract Mutation <: Bio.Seq.Site
+start_count{T<:Mutation}(::Type{T}) = 0, 0
+update_count(kacc::Int, dacc::Int, k::Bool, d::Bool) = kacc + k, dacc + d
 
-"""
-A `Certain` site describes a site where both of two aligned sites are not an
-ambiguity symbol or a gap.
-"""
-immutable Certain <: Site end
-
-"""
-An `Ambiguous` site describes a site where either of two aligned sites are an
-ambiguity symbol.
-"""
-immutable Ambiguous <: Site end
-
-"""
-An `Gap` site describes a site where either of two aligned sites are a
-gap symbol '-'.
-"""
-immutable Gap <: Site end
-
-"""
-A `Match` site describes a site where two aligned nucleotides are the
-same biological symbol.
-"""
-immutable Match <: Site end
-
-"""
-A `Mismatch` site describes a site where two aligned nucleotides are not the
-same biological symbol.
-"""
-immutable Mismatch <: Site end
+@inline function issite{T<:NucleicAcid,M<:Mutation}(::Type{M}, a::T, b::T)
+    k = ischange(M, a, b)
+    d = issite(Certain, a, b)
+    return k & d, !d
+end
 
 """
 A `Mismatch` site describes a site where two aligned nucleotides are definately
@@ -44,12 +21,20 @@ non-ambiguity symbols, and they are the same symbol.
 """
 immutable Conserved <: Mutation end
 
+@inline function ischange{T<:NucleicAcid}(::Type{Conserved}, a::T, b::T)
+    return issite(Match, a, b)
+end
+
 """
 A `Mutated` site describes a site where two aligned nucleotides are definately
 mutated. By definately mutated this means that the symbols of the site are
 non-ambiguity symbols, and they are not the same symbol.
 """
 immutable Mutated <: Mutation end
+
+@inline function ischange{T<:NucleicAcid}(::Type{Mutated}, a::T, b::T)
+    return issite(Mismatch, a, b)
+end
 
 """
 A `Transition` site describes a site where two aligned nucleotides are definately
@@ -59,6 +44,10 @@ be different such that they constitute a transition mutation: i.e. A<->G, or C<-
 """
 immutable Transition <: Mutation end
 
+@inline function ischange{T<:NucleicAcid}(::Type{Transition}, a::T, b::T)
+    return issite(Mismatch, a, b) & ((ispurine(a) & ispurine(b)) | (ispyrimidine(a) & ispyrimidine(b)))
+end
+
 """
 A `Transversion` site describes a site where two aligned nucleotides are definately
 mutated, and the type of mutation is a transversion mutation.
@@ -67,3 +56,7 @@ be different such that they constitute a transversion mutation: i.e. A<->C,
 A<->T, G<->T, G<->C.
 """
 immutable Transversion <: Mutation end
+
+@inline function ischange{T<:NucleicAcid}(::Type{Transversion}, a::T, b::T)
+    return issite(Mismatch, a, b) & ((ispurine(a) & ispyrimidine(b)) | (ispyrimidine(a) & ispurine(b)))
+end

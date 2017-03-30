@@ -6,32 +6,9 @@
 
 include("site_types.jl")
 
-typealias FourBitAlphs Union{DNAAlphabet{4},RNAAlphabet{4}}
+#=typealias FourBitAlphs Union{DNAAlphabet{4},RNAAlphabet{4}}
 typealias TwoBitAlphs Union{DNAAlphabet{2},RNAAlphabet{2}}
 typealias NucAlphs Union{DNAAlphabet, RNAAlphabet}
-
-# Includes for naieve site counting.
-include("naive/is_site.jl")
-include("naive/count_sites_naive.jl")
-
-"""
-    count_sites{T<:Site}(::Type{T}, a::BioSequence, b::BioSequence)
-
-Mutations are counted using the `count_sites` method.
-
-If the concrete site case type inherits from NoPairDel, then the result will
-be a simple integer value of the number of counts of site.
-
-If the concrete site case type inherits from PairDel, then the result
-will be a tuple. As a result, counting methods for such types also count and
-return the number of sites which could not be unambiguously determined.
-This second count is important for some downstream purposes, for example
-evolutionary/genetic distance computations in which pairwise deletion of
-ambiguous sites is necessary.
-"""
-function count_sites{T<:Site}(::Type{T}, a::BioSequence, b::BioSequence)
-    return count_sites_naive(T, a, b)
-end
 
 """
     count_sites{T<:NoPairDel}(::Type{T}, a::EachWindowIterator, b::EachWindowIterator)
@@ -136,3 +113,4 @@ end
 function count_sites{T<:Site}(::Type{T}, seq::BioSequence)
     return count_sites_naive(T, seq)
 end
+=#

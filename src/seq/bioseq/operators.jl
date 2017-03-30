@@ -8,13 +8,19 @@ The first argument should be a function which accepts a nucleotide as its parame
 """
 function Base.count(f::Function, seq::BioSequence)
     n = 0
-    for x in seq
+    @inbounds for x in seq
         if f(x)
             n += 1
         end
     end
     return n
 end
+
+# Site counting
+# -------------
+
+include("site_counting/site_counting.jl")
+
 
 # Mismatch counting
 # -----------------
@@ -107,6 +113,7 @@ end
                 mismatches += $bitpar_mismatches(x & m, y & m)
             end
         elseif nexta < stopa
+
             y = b.data[index(nextb)]
             nextb += 64
 
