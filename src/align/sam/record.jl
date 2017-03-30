@@ -426,7 +426,7 @@ end
 
 Get the ASCII-encoded base quality of `record`.
 """
-function qual(::Type{String}, record::Record)
+function qual(::Type{String}, record::Record)::String
     checkfilled(record)
     return String(record.data[record.qual])
 end
@@ -436,7 +436,7 @@ end
 
 Get the sequence length of `record`.
 """
-function seqlength(record::Record)
+function seqlength(record::Record)::Int
     checkfilled(record)
     if ismissing(record, record.seq)
         missingerror(:seq)
@@ -444,7 +444,12 @@ function seqlength(record::Record)
     return length(record.seq)
 end
 
-function alignment(record::Record)
+"""
+    alignment(record::Record)::Bio.Align.Alignment
+
+Get the alignment of `record`.
+"""
+function alignment(record::Record)::Bio.Align.Alignment
     if ismapped(record)
         return Bio.Align.Alignment(cigar(record), 1, pos(record))
     else

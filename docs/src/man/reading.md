@@ -326,15 +326,30 @@ This has different reader interfaces from other file formats. Please consult the
 
 ### SAM
 
-* Reader type: `SAMReader`
-* Writer type: `SAMWriter{T<:IO}`
-* Element type: `SAMRecord`
+* Reader type: `SAM.Reader`
+* Writer type: `SAM.Writer{T<:IO}`
+* Element type: `SAM.Record`
 
 SAM is a text-based file format for representing sequence alignments.
 
 ```@docs
-Bio.Align.SAMReader
-Bio.Align.SAMWriter
+Bio.Align.SAM.Reader
+Bio.Align.SAM.Writer
+Bio.Align.SAM.Record
+Bio.Align.SAM.ismapped
+Bio.Align.SAM.qname
+Bio.Align.SAM.flag
+Bio.Align.SAM.rname
+Bio.Align.SAM.pos
+Bio.Align.SAM.mapq
+Bio.Align.SAM.cigar
+Bio.Align.SAM.alignment
+Bio.Align.SAM.rnext
+Bio.Align.SAM.pnext
+Bio.Align.SAM.tlen
+Bio.Align.SAM.seq
+Bio.Align.SAM.seqlength
+Bio.Align.SAM.qual
 ```
 
 ### BAM
