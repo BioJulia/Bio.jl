@@ -3,8 +3,8 @@ module TestSeq
 using Base.Test
 
 using Bio: Seq, Var
-
 import BioSymbols
+using IntervalTrees.IntervalValue
 using BufferedStreams
 using StatsBase
 using YAML
@@ -1298,15 +1298,57 @@ end
                           (RNAAlphabet{2}, RNAAlphabet{4})]
                 seqA, seqB = generate_possibilities_tester(alphs...)
                 @test Seq.count_sites_naive(Certain, seqA, seqB) == Seq.count_sites_naive(Certain, seqB, seqA) == 16
-            @test Seq.count_sites_naive(Gap, seqA, seqB) == Seq.count_sites_naive(Gap, seqB, seqA) == 4
-            @test Seq.count_sites_naive(Ambiguous, seqA, seqB) == Seq.count_sites_naive(Ambiguous, seqB, seqA) == 44
-            @test Seq.count_sites_naive(Match, seqA, seqB) == Seq.count_sites_naive(Match, seqB, seqA) == 4
-            @test Seq.count_sites_naive(Mismatch, seqA, seqB) == Seq.count_sites_naive(Mismatch, seqB, seqA) == 60
+                @test Seq.count_sites_naive(Gap, seqA, seqB) == Seq.count_sites_naive(Gap, seqB, seqA) == 4
+                @test Seq.count_sites_naive(Ambiguous, seqA, seqB) == Seq.count_sites_naive(Ambiguous, seqB, seqA) == 44
+                @test Seq.count_sites_naive(Match, seqA, seqB) == Seq.count_sites_naive(Match, seqB, seqA) == 4
+                @test Seq.count_sites_naive(Mismatch, seqA, seqB) == Seq.count_sites_naive(Mismatch, seqB, seqA) == 60
+            end
         end
-    end
 
+        @testset "Windowed methods" begin
+            dnaA = dna"ATCGCCA-M"
+            dnaB = dna"ATCGCCTAA"
+            rnaA = rna"AUCGCCA-M"
+            rnaB = rna"AUCGCCUAA"
+            for seqs in ((dnaA, dnaB), (rnaA, rnaB))
 
-
+                @test count(Certain, seqs[1], seqs[2], 3, 1) == [IntervalValue(1, 3, 3),
+                                                                 IntervalValue(2, 4, 3),
+                                                                 IntervalValue(3, 5, 3),
+                                                                 IntervalValue(4, 6, 3),
+                                                                 IntervalValue(5, 7, 3),
+                                                                 IntervalValue(6, 8, 2),
+                                                                 IntervalValue(7, 9, 1)]
+                @test count(Ambiguous, seqs[1], seqs[2], 3, 1) == [IntervalValue(1, 3, 0),
+                                                                   IntervalValue(2, 4, 0),
+                                                                   IntervalValue(3, 5, 0),
+                                                                   IntervalValue(4, 6, 0),
+                                                                   IntervalValue(5, 7, 0),
+                                                                   IntervalValue(6, 8, 0),
+                                                                   IntervalValue(7, 9, 1)]
+                @test count(Gap, seqs[1], seqs[2], 3, 1) == [IntervalValue(1, 3, 0),
+                                                             IntervalValue(2, 4, 0),
+                                                             IntervalValue(3, 5, 0),
+                                                             IntervalValue(4, 6, 0),
+                                                             IntervalValue(5, 7, 0),
+                                                             IntervalValue(6, 8, 1),
+                                                             IntervalValue(7, 9, 1)]
+                @test count(Match, seqs[1], seqs[2], 3, 1) == [IntervalValue(1, 3, 3),
+                                                               IntervalValue(2, 4, 3),
+                                                               IntervalValue(3, 5, 3),
+                                                               IntervalValue(4, 6, 3),
+                                                               IntervalValue(5, 7, 2),
+                                                               IntervalValue(6, 8, 1),
+                                                               IntervalValue(7, 9, 0)]
+                @test count(Mismatch, seqs[1], seqs[2], 3, 1) == [IntervalValue(1, 3, 0),
+                                                                  IntervalValue(2, 4, 0),
+                                                                  IntervalValue(3, 5, 0),
+                                                                  IntervalValue(4, 6, 0),
+                                                                  IntervalValue(5, 7, 1),
+                                                                  IntervalValue(6, 8, 2),
+                                                                  IntervalValue(7, 9, 3)]
+            end
+        end
     end
 
     @testset "GC content" begin

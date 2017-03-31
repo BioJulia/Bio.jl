@@ -50,13 +50,6 @@ function count_sites{T<:Mutation}(::Type{T}, a::EachWindowIterator, b::EachWindo
     return results, undetermined
 end
 
-"Count the number of sites between two nucleotide sequences using a sliding window."
-function count_sites{T<:Site}(::Type{T}, a::BioSequence, b::BioSequence, width::Int, step::Int)
-    awindows = eachwindow(a, width, step)
-    bwindows = eachwindow(b, width, step)
-    return count_sites(T, awindows, bwindows)
-end
-
 """
 Count the number of mutations between nucleotide sequences in a pairwise manner.
 """

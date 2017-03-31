@@ -8,6 +8,7 @@
 An abstract type which you can inherit from to build on the site counting
 """
 abstract Site
+acc_type{T<:Site}(::Type{T}) = Int
 start_count{T<:Site}(::Type{T}) = 0
 update_count(acc::Int, up::Bool) = acc + up
 
