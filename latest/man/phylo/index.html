@@ -298,13 +298,13 @@
 <p>The <code>Bio.Phylo</code> module is for data types and methods for handling phylogenetic trees and networks.</p>
 <p><a id='Phylogenies-1'></a></p>
 <h2 id="phylogenies">Phylogenies</h2>
-<p><a id='Bio.Phylo.Phylogeny' href='#Bio.Phylo.Phylogeny'>#</a>
-<strong><code>Bio.Phylo.Phylogeny</code></strong> &mdash; <em>Type</em>.</p>
+<p><a id='Phylogenies.Phylogeny' href='#Phylogenies.Phylogeny'>#</a>
+<strong><code>Phylogenies.Phylogeny</code></strong> &mdash; <em>Type</em>.</p>
 <p>Phylogeny represents a phylogenetic tree.</p>
 <p>The type is parametric with two parameters <code>C</code> and <code>B</code>.</p>
 <p>This is because it is common to want to annotate tips, clades, and branches in a phylogeny with data to create a richer model of evolution of do other things like dictate aesthetic values when plotting.</p>
 <p>Type parameter <code>C</code> dictates what datatype can be stored in the phylogeny to annotate clades and tips. Type parameter <code>B</code> dictates what datatype can be stored in the phylogeny to annotate branches. Think <code>C</code> for clades and <code>B</code> for branches.</p>
-<p><a target='_blank' href='https://github.com/BioJulia/Bio.jl/tree/4b9dbb1fae2906db7eed646f6028ac68cdf8f421/src/phylo/phylogeny.jl#L23-L35' class='documenter-source'>source</a><br></p>
+<p><a target='_blank' href='https://github.com/BioJulia/Phylogenies.jl/tree/ca021549dc4ce15560f4c64f8c32835aa891ad57/src/phylogeny.jl#L22-L34' class='documenter-source'>source</a><br></p>
 <p><a id='Constructors-1'></a></p>
 <h3 id="constructors">Constructors</h3>
 <p>You can create a very simple unresolved phylogeny (a star phylogeny) by providing the tips as a vector of strings or a vector of symbols.</p>
@@ -313,7 +313,7 @@
 </pre></div>
 
 
-<div class="codehilite"><pre><span></span>Bio.Phylo.Phylogeny{Float64,Bio.Phylo.BasicBranch}({5, 3} directed graph,Bio.Indexers.Indexer{Int64}(Dict(:C=&gt;3,:B=&gt;2,:A=&gt;1,:Root=&gt;4),Symbol[:A,:B,:C,:Root]),Float64[],Dict{Pair{Int64,Int64},Bio.Phylo.BasicBranch}(),3,false,true)
+<div class="codehilite"><pre><span></span>Phylogenies.Phylogeny{Float64,Phylogenies.BasicBranch}({5, 3} directed graph,Phylogenies.Indexer{Int64}(Dict(:C=&gt;3,:B=&gt;2,:A=&gt;1,:Root=&gt;4),Symbol[:A,:B,:C,:Root]),Float64[],Dict{Pair{Int64,Int64},Phylogenies.BasicBranch}(),3,false,true)
 </pre></div>
 
 
@@ -322,15 +322,15 @@
 </pre></div>
 
 
-<div class="codehilite"><pre><span></span>Bio.Phylo.Phylogeny{Float64,Bio.Phylo.BasicBranch}({5, 3} directed graph,Bio.Indexers.Indexer{Int64}(Dict(:C=&gt;3,:B=&gt;2,:A=&gt;1,:Root=&gt;4),Symbol[:A,:B,:C,:Root]),Float64[],Dict{Pair{Int64,Int64},Bio.Phylo.BasicBranch}(),3,false,true)
+<div class="codehilite"><pre><span></span>Phylogenies.Phylogeny{Float64,Phylogenies.BasicBranch}({5, 3} directed graph,Phylogenies.Indexer{Int64}(Dict(:C=&gt;3,:B=&gt;2,:A=&gt;1,:Root=&gt;4),Symbol[:A,:B,:C,:Root]),Float64[],Dict{Pair{Int64,Int64},Phylogenies.BasicBranch}(),3,false,true)
 </pre></div>
 
 
 <p><a id='Roots-1'></a></p>
 <h3 id="roots">Roots</h3>
 <p>You can test whether such a phylogeny is rooted, is re-rootable, and get the root vertex of a phylogeny. You can also test if a vertex of a phylogeny is a root.</p>
-<p><a id='Bio.Phylo.isrooted' href='#Bio.Phylo.isrooted'>#</a>
-<strong><code>Bio.Phylo.isrooted</code></strong> &mdash; <em>Function</em>.</p>
+<p><a id='Phylogenies.isrooted' href='#Phylogenies.isrooted'>#</a>
+<strong><code>Phylogenies.isrooted</code></strong> &mdash; <em>Function</em>.</p>
 <div class="codehilite"><pre><span></span>isrooted(x::Phylogeny)
 </pre></div>
 
@@ -341,9 +341,9 @@
 </pre></div>
 
 
-<p><a target='_blank' href='https://github.com/BioJulia/Bio.jl/tree/4b9dbb1fae2906db7eed646f6028ac68cdf8f421/src/phylo/phylogeny.jl#L159-L168' class='documenter-source'>source</a><br></p>
-<p><a id='Bio.Phylo.isrerootable' href='#Bio.Phylo.isrerootable'>#</a>
-<strong><code>Bio.Phylo.isrerootable</code></strong> &mdash; <em>Function</em>.</p>
+<p><a target='_blank' href='https://github.com/BioJulia/Phylogenies.jl/tree/ca021549dc4ce15560f4c64f8c32835aa891ad57/src/phylogeny.jl#L158-L167' class='documenter-source'>source</a><br></p>
+<p><a id='Phylogenies.isrerootable' href='#Phylogenies.isrerootable'>#</a>
+<strong><code>Phylogenies.isrerootable</code></strong> &mdash; <em>Function</em>.</p>
 <div class="codehilite"><pre><span></span>isrerootable(x::Phylogeny)
 </pre></div>
 
@@ -354,11 +354,11 @@
 </pre></div>
 
 
-<p><a target='_blank' href='https://github.com/BioJulia/Bio.jl/tree/4b9dbb1fae2906db7eed646f6028ac68cdf8f421/src/phylo/phylogeny.jl#L173-L182' class='documenter-source'>source</a><br></p>
-<p><a id='Bio.Phylo.root' href='#Bio.Phylo.root'>#</a>
-<strong><code>Bio.Phylo.root</code></strong> &mdash; <em>Function</em>.</p>
+<p><a target='_blank' href='https://github.com/BioJulia/Phylogenies.jl/tree/ca021549dc4ce15560f4c64f8c32835aa891ad57/src/phylogeny.jl#L172-L181' class='documenter-source'>source</a><br></p>
+<p><a id='Phylogenies.root' href='#Phylogenies.root'>#</a>
+<strong><code>Phylogenies.root</code></strong> &mdash; <em>Function</em>.</p>
 <p>Get the vertex of the tree which represents the root of the tree.</p>
-<p><a target='_blank' href='https://github.com/BioJulia/Bio.jl/tree/4b9dbb1fae2906db7eed646f6028ac68cdf8f421/src/phylo/phylogeny.jl#L187' class='documenter-source'>source</a><br></p>
+<p><a target='_blank' href='https://github.com/BioJulia/Phylogenies.jl/tree/ca021549dc4ce15560f4c64f8c32835aa891ad57/src/phylogeny.jl#L186' class='documenter-source'>source</a><br></p>
 <div class="codehilite"><pre><span></span><span class="n">isrooted</span><span class="p">(</span><span class="n">tree</span><span class="p">)</span>
 </pre></div>
 
@@ -389,22 +389,9 @@
 <p><a id='Dating-methods-1'></a></p>
 <h3 id="dating-methods">Dating methods</h3>
 <p>Currently <code>Phylo.Dating</code> has two types which are used as function arguments to dictate how to compute coalescence times. They all inherit from the abstract data type <code>DatingMethod</code>.</p>
-<p><a id='Bio.Phylo.Dating.SimpleEstimate' href='#Bio.Phylo.Dating.SimpleEstimate'>#</a>
-<strong><code>Bio.Phylo.Dating.SimpleEstimate</code></strong> &mdash; <em>Type</em>.</p>
-<p>A very simple expected divergence time estimate. Assumes a strict molecult clock and that the divergence time is equal to</p>
-<p>$ t = d / (2\mu) $</p>
-<p>Where $d$ is the evolutionary distance computed for two aligned sequences, and $\mu$ is the substitution rate.</p>
-<p><a target='_blank' href='https://github.com/BioJulia/Bio.jl/tree/4b9dbb1fae2906db7eed646f6028ac68cdf8f421/src/phylo/dating.jl#L34-L42' class='documenter-source'>source</a><br></p>
-<p><a id='Bio.Phylo.Dating.SpeedDating' href='#Bio.Phylo.Dating.SpeedDating'>#</a>
-<strong><code>Bio.Phylo.Dating.SpeedDating</code></strong> &mdash; <em>Type</em>.</p>
-<p><code>SpeedDate</code> is the name given to a method of estimating a divergence time between two DNA sequence regions that was first implemented in the R package HybridCheck in order to date regions of introgression in large sequence contigs.</p>
-<p>The coalescence time is estimated using the number of mutations that have occurred between two aligned sequences. The calculation uses a strict molecular clock which assumes a constant substitution rate, both through time and across taxa. Modelling the mutation accumulation process as a Bernoulli trial, the probability of observing  $k$  or fewer mutations between two sequences of length $n$ can be given as:</p>
-<p>$ Pr(X \le k) = \sum_{i=0}^{\lfloor k \rfloor} \binom{n}{i} p^i (1 - p)^{n-i} $</p>
-<p>Where $p$ is the probability of observing a single mutation between the two aligned sequences. The value of $p$ depends on two key factors: the substitution rate and the coalescence time. If you assume a molecular clock, whereby two DNA sequences are both accumulating mutations at a rate $\mu$ for $t$ generations, then you may define $p = 2\mu t$.</p>
-<p>Using these assumptions, the SpeedDate method finds the root of the following formula for $Pr(X \le k) = 0.05$, $0.5$, and $0.95$, and then divides the three answers by twice the assumed substitution rate.</p>
-<p>$ f(n, k, 2\mu t, Pr(X \le k) = \left( \sum_{i=0}^{\lfloor k \rfloor} \binom{n}{i} {2\mu t}^i (1 - 2\mu t)^{n-i}   \right) - Pr(X \le k) $</p>
-<p>This results in an upper, middle, and lower estimate of the coalescence time $t$ of the two sequences (expressed as the number of generations).</p>
-<p><a target='_blank' href='https://github.com/BioJulia/Bio.jl/tree/4b9dbb1fae2906db7eed646f6028ac68cdf8f421/src/phylo/dating.jl#L84-L116' class='documenter-source'>source</a><br></p></div>
+<div class="codehilite"><pre><span></span>Dating.SimpleEstimate
+Dating.SpeedDating
+</pre></div></div>
         
     </div>
 
