@@ -1,7 +1,6 @@
 # all test targets
 available_targets = [
     "align",
-    "phylo",
     "intervals",
     "seq",
     "var",
