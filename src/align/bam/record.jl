@@ -116,52 +116,28 @@ end
 Get the ID of a reference sequence of `record`.
 
 The ID is 1-based (i.e. the first sequence is 1) and is 0 for a record without a mapping position.
+
+See also: `BAM.rname`
 """
 function refid(record::Record)::Int
     checkfilled(record)
     return record.refid + 1
 end
 
-# TODO: rname?
-
 """
-    refindex(rec::Record)
+    rname(record::Record, reader::Reader)::String
 
-Return the index of a reference sequence that `rec` is mapped onto.
+Get the reference sequence name of `record`.
 
-The index is 1-based and will be 0 for an alignment without mapping position.
+See also: `BAM.refid`
 """
-function refindex(rec::Record)
-    return rec.refid + 1
-end
-
-function nextrefindex(rec::Record)
-    return rec.next_refid + 1
-end
-
-"""
-    refname(rec::Record)
-
-Return the name of a reference sequence that `rec` is mapped onto.
-
-If `rec` is unmapped, it returns `"*"` like SAM records.
-"""
-function refname(rec::Record)
-    i = refindex(rec)
-    if i == 0
-        return "*"
-    else
-        return rec.refseqnames[i]
+function rname(record::Record, reader)::String
+    checkfilled(record)
+    id = refid(record)
+    if id == 0
+        throw(ArgumentError("record is not mapped"))
     end
-end
-
-function nextrefname(rec::Record)
-    i = nextrefindex(rec)
-    if i == 0
-        return "*"
-    else
-        return rec.refseqnames[i]
-    end
+    return reader.refseqnames[id]
 end
 
 """
@@ -241,10 +217,27 @@ function hastlen(record::Record)
     return isfilled(record)
 end
 
-# TODO: is this needed?
-function Bio.seqname(rec::Record)
+"""
+    qname(record::Record)::String
+
+Get the query template name of `record`.
+"""
+function qname(record::Record)::String
+    checkfilled(record)
     # drop the last NUL character
-    return unsafe_string(pointer(rec.data), max(seqname_length(rec) - 1, 0))
+    return unsafe_string(pointer(record.data), max(seqname_length(record) - 1, 0))
+end
+
+function hasqname(record::Record)
+    return isfilled(record)
+end
+
+function Bio.seqname(record::Record)
+    return qname(record)
+end
+
+function Bio.hasseqname(record::Record)
+    return hasqname(record)
 end
 
 """

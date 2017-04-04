@@ -1221,12 +1221,13 @@ end
             record = BAM.Record()
             read!(reader, record)
             @test BAM.ismapped(record)
-            #@test rname(record, reader) == "CHROMOSOME_I"
+            @test BAM.rname(record, reader) == "CHROMOSOME_I"
             @test BAM.refid(record) === 1
             @test BAM.haspos(record) === hasleftposition(record) === true
             @test BAM.pos(record) === leftposition(record) === 2
             @test rightposition(record) == 102
-            #@test seqname(rec) == "SRR065390.14978392"
+            @test BAM.hasqname(record) === hasseqname(record) === true
+            @test BAM.qname(record) == seqname(record) == "SRR065390.14978392"
             @test BAM.hasseq(record) === hassequence(record) === true
             @test BAM.seq(record) == sequence(record) == dna"""
             CCTAGCCCTAACCCTAACCCTAACCCTAGCCTAAGCCTAAGCCTAAGCCT
