@@ -70,6 +70,7 @@ export
     alignment,
     hasalignment,
     SAM,
+    BAM,
     # HTS
     SAMHeader,
     SAMRecord,
@@ -150,6 +151,7 @@ include("models.jl")
 include("pairwise/pairalign.jl")
 
 include("sam/sam.jl")
+include("bam/bam.jl")
 
 include("deprecated.jl")
 

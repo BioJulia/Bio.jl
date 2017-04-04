@@ -1161,57 +1161,60 @@ end
         bamdir = joinpath(dirname(@__FILE__), "..", "BioFmtSpecimens", "BAM")
 
         @testset "Record" begin
-            rec = BAMRecord()
-            @test !ismapped(rec)
+            record = BAM.Record()
+            @test !isfilled(record)
+            @test repr(record) == "Bio.Align.BAM.Record: <not filled>"
+            @test_throws ArgumentError BAM.refid(record)
 
             # default values
-            @test refname(rec) == "*"
-            @test refindex(rec) == 0
-            @test leftposition(rec) == 0
-            @test rightposition(rec) == -1
-            @test mappingquality(rec) == 0
-            @test flag(rec) == SAM.FLAG_UNMAP
-            @test nextrefname(rec) == "*"
-            @test nextrefindex(rec) == 0
-            @test nextleftposition(rec) == 0
-            @test templatelength(rec) == 0
-            @test seqname(rec) == ""
-            @test cigar(rec) == ""
-            @test sequence(rec) == dna""
-            @test seqlength(rec) == 0
-            @test alignment(rec) == Alignment(AlignmentAnchor[])
-            @test qualities(rec) == UInt8[]
-            @test Align.alignment_length(rec) === 0
+            #@test refname(rec) == "*"
+            #@test BAM.refid(rec) == 0
+            #@test leftposition(rec) == 0
+            #@test rightposition(rec) == -1
+            #@test mappingquality(rec) == 0
+            #@test flag(rec) == SAM.FLAG_UNMAP
+            #@test nextrefname(rec) == "*"
+            #@test nextrefindex(rec) == 0
+            #@test nextleftposition(rec) == 0
+            #@test templatelength(rec) == 0
+            #@test seqname(rec) == ""
+            #@test cigar(rec) == ""
+            #@test sequence(rec) == dna""
+            #@test seqlength(rec) == 0
+            #@test alignment(rec) == Alignment(AlignmentAnchor[])
+            #@test qualities(rec) == UInt8[]
+            #@test Align.alignment_length(rec) === 0
 
-            buf = IOBuffer()
-            show(buf, rec)
-            @test startswith(takebuf_string(buf), "Bio.Align.BAMRecord:")
+            #buf = IOBuffer()
+            #show(buf, rec)
+            #@test startswith(takebuf_string(buf), "Bio.Align.BAMRecord:")
 
-            buf = IOBuffer()
-            showcompact(buf, rec)
-            @test takebuf_string(buf) == "(empty name)\tunmapped"
+            #buf = IOBuffer()
+            #showcompact(buf, rec)
+            #@test takebuf_string(buf) == "(empty name)\tunmapped"
 
-            # set & delete tags
-            rec = BAMRecord()
-            @test !haskey(rec, "MN")
-            rec["MN"] = 0x01
-            @test rec["MN"] === 0x01
-            @test haskey(rec, "MN")
-            @test !haskey(rec, "XY")
-            rec["XY"] = "foobar"
-            @test rec["XY"] == "foobar"
-            @test haskey(rec, "XY")
-            delete!(rec, "MN")
-            @test !haskey(rec, "MN")
+            ## set & delete tags
+            #rec = BAMRecord()
+            #@test !haskey(rec, "MN")
+            #rec["MN"] = 0x01
+            #@test rec["MN"] === 0x01
+            #@test haskey(rec, "MN")
+            #@test !haskey(rec, "XY")
+            #rec["XY"] = "foobar"
+            #@test rec["XY"] == "foobar"
+            #@test haskey(rec, "XY")
+            #delete!(rec, "MN")
+            #@test !haskey(rec, "MN")
         end
 
         @testset "Reader" begin
-            reader = open(BAMReader, joinpath(bamdir, "ce#1.bam"))
-            @test isa(reader, BAMReader)
-            @test eltype(reader) === BAMRecord
-            @test startswith(repr(reader), "Bio.Align.BAMReader{IOStream}:")
+            reader = open(BAM.Reader, joinpath(bamdir, "ce#1.bam"))
+            @test isa(reader, BAM.Reader)
+            @test eltype(reader) === BAM.Record
+            @test startswith(repr(reader), "Bio.Align.BAM.Reader{IOStream}:")
 
             # header
+            reader = open(BAMReader, joinpath(bamdir, "ce#1.bam"))
             h = header(reader)
             @test isa(h, SAM.Header)
 
@@ -1263,14 +1266,14 @@ end
                 mktemp() do path, _
                     # copy
                     if contains(get(specimen, "tags", ""), "bai")
-                        reader = open(BAMReader, filepath, index=filepath * ".bai")
+                        reader = open(BAM.Reader, filepath, index=filepath * ".bai")
                     else
-                        reader = open(BAMReader, filepath)
+                        reader = open(BAM.Reader, filepath)
                     end
-                    writer = BAMWriter(
+                    writer = BAM.Writer(
                         BGZFStream(path, "w"),
-                        header(reader, fillSQ=isempty(find(header(reader), "SQ"))))
-                    records = BAMRecord[]
+                        BAM.header(reader, fillSQ=isempty(find(header(reader), "SQ"))))
+                    records = BAM.Record[]
                     for rec in reader
                         push!(records, rec)
                         write(writer, rec)
@@ -1279,7 +1282,7 @@ end
                     close(writer)
 
                     # read again
-                    reader = open(BAMReader, path)
+                    reader = open(BAM.Reader, path)
                     @test collect(reader) == records
                     close(reader)
                 end
