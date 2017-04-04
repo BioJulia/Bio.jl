@@ -1243,13 +1243,13 @@ end
                 AlignmentAnchor( 27,  28, OP_MATCH),
                 AlignmentAnchor( 27,  29, OP_DELETE),
                 AlignmentAnchor(100, 102, OP_MATCH)])
-            #@test record["XG"] == 1
-            #@test record["XM"] == 5
-            #@test record["XN"] == 0
-            #@test record["XO"] == 1
-            #@test record["AS"] == -18
-            #@test record["XS"] == -18
-            #@test record["YT"] == "UU"
+            @test record["XG"] == 1
+            @test record["XM"] == 5
+            @test record["XN"] == 0
+            @test record["XO"] == 1
+            @test record["AS"] == -18
+            @test record["XS"] == -18
+            @test record["YT"] == "UU"
             @test eof(reader)
             close(reader)
 
