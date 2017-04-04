@@ -107,7 +107,7 @@ end
 Test if `record` is mapped.
 """
 function ismapped(record::Record)
-    return flag(rec) & SAM.FLAG_UNMAP == 0
+    return flag(record) & SAM.FLAG_UNMAP == 0
 end
 
 """
@@ -193,7 +193,7 @@ Return the rightmost mapping position of `rec`.
 """
 function Bio.rightposition(record::Record)
     checkfilled(record)
-    return Int32(leftposition(record) + alignment_length(record) - 1)
+    return Int32(pos(record) + alignment_length(record) - 1)
 end
 
 function nextleftposition(rec::Record)
@@ -214,11 +214,11 @@ function hasmapq(record::Record)
 end
 
 """
-    flag(record::Record)
+    flag(record::Record)::UInt16
 
 Get the bitwise flag of `record`.
 """
-function flag(record::Record)
+function flag(record::Record)::UInt16
     checkfilled(record)
     return UInt16(record.flag_nc >> 16)
 end
@@ -269,13 +269,13 @@ function cigar_rle(record::Record)
 end
 
 """
-    cigar(record::Record)
+    cigar(record::Record)::String
 
 Get the CIGAR string of `record`.
 
 See also `cigar_rle`.
 """
-function cigar(record::Record)
+function cigar(record::Record)::String
     buf = IOBuffer()
     for (op, len) in zip(cigar_rle(record)...)
         print(buf, len, Char(op))
@@ -288,28 +288,28 @@ end
 
 Get the alignment of `record`.
 """
-function alignment(record::Record)
+function alignment(record::Record)::Bio.Align.Alignment
     checkfilled(record)
     if !ismapped(record)
-        return Alignment(AlignmentAnchor[])
+        return Bio.Align.Alignment(Bio.Align.AlignmentAnchor[])
     end
     seqpos = 0
-    refpos = leftposition(record) - 1
-    anchors = [AlignmentAnchor(seqpos, refpos, OP_START)]
+    refpos = pos(record) - 1
+    anchors = [Bio.Align.AlignmentAnchor(seqpos, refpos, Bio.Align.OP_START)]
     for (op, len) in zip(cigar_rle(record)...)
-        if ismatchop(op)
+        if Bio.Align.ismatchop(op)
             seqpos += len
             refpos += len
-        elseif isinsertop(op)
+        elseif Bio.Align.isinsertop(op)
             seqpos += len
-        elseif isdeleteop(op)
+        elseif Bio.Align.isdeleteop(op)
             refpos += len
         else
             error("operation $(op) is not supported")
         end
-        push!(anchors, AlignmentAnchor(seqpos, refpos, op))
+        push!(anchors, Bio.Align.AlignmentAnchor(seqpos, refpos, op))
     end
-    return Alignment(anchors)
+    return Bio.Align.Alignment(anchors)
 end
 
 """
@@ -349,18 +349,22 @@ Get the sequence length of `record`.
 """
 function seqlength(record::Record)::Int
     checkfilled(record)
-    return record.l_seq
+    return record.l_seq % Int
 end
 
 """
-    qualities(rec::Record)
+    qual(record::Record)::Vector{UInt8}
 
-Return base qualities of the alignment `rec`.
+Get the base quality of  `record`.
 """
-function qualities(rec::Record)
-    seqlen = seqlength(rec)
-    offset = seqname_length(rec) + n_cigar_op(rec) * 4 + cld(seqlen, 2)
-    return [reinterpret(Int8, rec.data[i+offset]) for i in 1:seqlen]
+function qual(record::Record)::Vector{UInt8}
+    seqlen = seqlength(record)
+    offset = seqname_length(record) + n_cigar_op(record) * 4 + cld(seqlen, 2)
+    return [reinterpret(Int8, record.data[i+offset]) for i in 1:seqlen]
+end
+
+function hasqual(record::Record)
+    return isfilled(record)
 end
 
 function Base.getindex(rec::Record, tag::AbstractString)
@@ -400,8 +404,8 @@ function alignment_length(rec::Record)
     length::Int = 0
     for i in offset+1:4:offset+n_cigar_op(rec)*4
         x = unsafe_load(Ptr{UInt32}(pointer(rec.data, i)))
-        op = Operation(x & 0x0f)
-        if ismatchop(op) || isdeleteop(op)
+        op = Bio.Align.Operation(x & 0x0f)
+        if Bio.Align.ismatchop(op) || Bio.Align.isdeleteop(op)
             length += x >> 4
         end
     end
