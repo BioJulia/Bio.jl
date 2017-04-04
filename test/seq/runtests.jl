@@ -111,6 +111,29 @@ function random_interval(minstart, maxstop)
     return start:rand(start:maxstop)
 end
 
+function generate_possibilities_tester{A<:Union{DNAAlphabet{4}, DNAAlphabet{2}, RNAAlphabet{4}, RNAAlphabet{2}}}(::Type{A})
+    symbols = alphabet(A)
+    arra = Vector{eltype(A)}()
+    arrb = Vector{eltype(A)}()
+    for i in 1:length(symbols), j in i:length(symbols)
+        push!(arra, symbols[i])
+        push!(arrb, symbols[j])
+    end
+    return BioSequence{A}(arra), BioSequence{A}(arrb)
+end
+
+for alph in (:DNAAlphabet, :RNAAlphabet)
+    @eval function generate_possibilities_tester(::Type{$alph{2}}, ::Type{$alph{4}})
+        arra = Vector{eltype($alph)}()
+        arrb = Vector{eltype($alph)}()
+        for i in alphabet($alph{2}), j in alphabet($alph{4})
+            push!(arra, i)
+            push!(arrb, j)
+        end
+        return BioSequence{$alph{2}}(arra), BioSequence{$alph{4}}(arrb)
+    end
+end
+
 # NOTE: Most tests related to biological symbols are located in BioSymbols.jl.
 @testset "Symbols" begin
     @testset "DNA" begin
@@ -1198,69 +1221,6 @@ end
         @test findlast(seq, DNA_T) == 0
     end
 
-    @testset "Mismatches" begin
-        @test mismatches(dna"ACGT", dna"ACGT") == 0
-        @test mismatches(dna"ACGT", dna"ACGTT") == 0
-        @test mismatches(dna"ACGT", dna"ACGA") == 1
-        @test mismatches(dna"ACGT", dna"ACGAA") == 1
-
-        @test mismatches(rna"ACGU", rna"ACGU") == 0
-        @test mismatches(rna"ACGU", rna"ACGUU") == 0
-        @test mismatches(rna"ACGU", rna"ACGA") == 1
-        @test mismatches(rna"ACGU", rna"ACGAA") == 1
-
-        @test mismatches(aa"MTTQAP", aa"MTTQAP") == 0
-        @test mismatches(aa"MTTQAP", aa"MTTQAPM") == 0
-        @test mismatches(aa"MTTQAP", aa"MTTQAT") == 1
-        @test mismatches(aa"MTTQAP", aa"MTTQATT") == 1
-
-        @test mismatches(dna"ACGT", dna"TACTG"[2:end]) == 2
-        @test mismatches(dna"ACGT"[2:end], dna"AGT") == 1
-
-        function test_mismatches(A, a, b)
-            count = 0
-            for (x, y) in zip(a, b)
-                if (A == AminoAcidAlphabet && x != y && x != 'X' && y != 'X') ||
-                   (A != AminoAcidAlphabet && x != y && x != 'N' && y != 'N')
-                    count += 1
-                end
-            end
-            seq_a = BioSequence{A}(a)
-            seq_b = BioSequence{A}(b)
-            @test mismatches(seq_a, seq_b, true) ==
-                  mismatches(seq_b, seq_a, true) ==
-                  count
-        end
-
-        function test_mismatches_strict(A, a, b)
-            count = 0
-            for (x, y) in zip(a, b)
-                if x != y
-                    count += 1
-                end
-            end
-            seq_a = BioSequence{A}(a)
-            seq_b = BioSequence{A}(b)
-            @test mismatches(seq_a, seq_b, false) ==
-                  mismatches(seq_b, seq_a, false) ==
-                  count
-        end
-
-        for len in [0, 1, 10, 32, 1000], _ in 1:10
-            test_mismatches(DNAAlphabet{4}, random_dna(len), random_dna(len))
-            test_mismatches(RNAAlphabet{4}, random_rna(len), random_rna(len))
-            test_mismatches(AminoAcidAlphabet, random_aa(len), random_aa(len))
-
-            test_mismatches_strict(DNAAlphabet{4}, random_dna(len), random_dna(len))
-            test_mismatches_strict(RNAAlphabet{4}, random_rna(len), random_rna(len))
-            test_mismatches_strict(AminoAcidAlphabet, random_aa(len), random_aa(len))
-
-            probs = [0.25, 0.25, 0.25, 0.25, 0.00]
-            test_mismatches(DNAAlphabet{2}, random_dna(len, probs), random_dna(len, probs))
-            test_mismatches(RNAAlphabet{2}, random_rna(len, probs), random_rna(len, probs))
-        end
-    end
-
     @testset "Site counting" begin
         @testset "Naive methods" begin
 
@@ -1270,7 +1230,7 @@ end
             for alph in alphabets
 
                 # Answers to these tests were worked out manually to verify
-                # count_sites_naive was working.
+                # count_sites_naive was working correctly.
                 # seqA and seqB contain all possible observations of sites.
 
                 istwobit = Seq.bitsof(alph) == 2
@@ -1304,6 +1264,43 @@ end
                 @test Seq.count_sites_naive(Ambiguous, seqA, seqB) == Seq.count_sites_naive(Ambiguous, seqB, seqA) == 44
                 @test Seq.count_sites_naive(Match, seqA, seqB) == Seq.count_sites_naive(Match, seqB, seqA) == 4
                 @test Seq.count_sites_naive(Mismatch, seqA, seqB) == Seq.count_sites_naive(Mismatch, seqB, seqA) == 60
+            end
+        end
+
+        @testset "Bit parallel methods" begin
+            # Having determined that naive counting algorithm is correct.
+            # We can verify the bitparallel algorithm is correct by randomly
+            # generating test-cases, and verifying the naive algorithm, and
+            # the bitparallel algorithm give the same answer.
+            @testset "4 bit encoding" begin
+                alphabets = (DNAAlphabet{4}, RNAAlphabet{4})
+                for alph in alphabets
+                    for _ in 1:50
+                        seqA = random_seq(alph, rand(10:100))
+                        seqB = random_seq(alph, rand(10:100))
+                        subA = seqA[1:rand(10:length(seqA))]
+                        subB = seqB[1:rand(10:length(seqB))]
+                        @test Seq.count_sites_bitpar(Mismatch, subA, subB) == Seq.count_sites_bitpar(Mismatch, subB, subA) == Seq.count_sites_naive(Mismatch, subA, subB)
+                        @test Seq.count_sites_bitpar(Match, subA, subB) == Seq.count_sites_bitpar(Match, subB, subA) == Seq.count_sites_naive(Match, subA, subB)
+                        @test Seq.count_sites_bitpar(Certain, subA, subB) == Seq.count_sites_bitpar(Certain, subB, subA) == Seq.count_sites_naive(Certain, subA, subB)
+                        @test Seq.count_sites_bitpar(Gap, subA, subB) == Seq.count_sites_bitpar(Gap, subB, subA) == Seq.count_sites_naive(Gap, subA, subB)
+                        @test Seq.count_sites_bitpar(Ambiguous, subA, subB) == Seq.count_sites_bitpar(Ambiguous, subB, subA) == Seq.count_sites_naive(Ambiguous, subA, subB)
+                    end
+                end
+            end
+
+            @testset "2 bit encoding" begin
+                alphabets = (DNAAlphabet{4}, RNAAlphabet{4})
+                for alph in alphabets
+                    for _ in 1:50
+                        seqA = random_seq(alph, rand(10:100))
+                        seqB = random_seq(alph, rand(10:100))
+                        subA = seqA[1:rand(10:length(seqA))]
+                        subB = seqB[1:rand(10:length(seqB))]
+                        @test Seq.count_sites_bitpar(Mismatch, subA, subB) == Seq.count_sites_bitpar(Mismatch, subB, subA) == Seq.count_sites_naive(Mismatch, subA, subB)
+                        @test Seq.count_sites_bitpar(Match, subA, subB) == Seq.count_sites_bitpar(Match, subB, subA) == Seq.count_sites_naive(Match, subA, subB)
+                    end
+                end
             end
         end
 

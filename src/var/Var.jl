@@ -21,7 +21,8 @@ import Bio.Seq:
     out_type,
     update_count,
     ispurine,
-    ispyrimidine
+    ispyrimidine,
+    BioSequence
 import PairwiseListMatrices: PairwiseListMatrix
 import Bio.Exceptions: MissingFieldException, missingerror
 import Bio.Windows: eachwindow, EachWindowIterator, SeqWinItr
@@ -70,12 +71,14 @@ export
     genotype,
 
     MissingFieldException,
-    mashdistance
+    mashdistance,
+    distance,
+    Proportion
 
 # Bio.@reexport import Bio: isfilled, leftposition
 
-include("site_types.jl")
-#include("distances.jl")
+include("site_types/site_types.jl")
+include("distances/dist.jl")
 include("vcf/vcf.jl")
 include("bcf/bcf.jl")
 include("mash.jl")

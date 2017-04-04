@@ -6,8 +6,10 @@
 # This file is a part of BioJulia.
 # License is MIT: https://github.com/BioJulia/Bio.jl/blob/master/LICENSE.md
 
-include("site_types.jl")
+include("binary_operations.jl")
+include("site_types/site_types.jl")
 include("count_sites_naive.jl")
+include("count_sites_bitpar.jl")
 
 function Base.count{T<:Site}(::Type{T}, a::BioSequence)
     return count_sites_naieve(T, a)
@@ -21,7 +23,7 @@ function Base.count{T<:Site}(::Type{T}, a::BioSequence, b::BioSequence, width::I
     len = min(length(a), length(b))
     ritr = StepRange(width, step, len)
     width -= 1
-    results = Vector{IntervalValue{out_type(T)}}(length(ritr))
+    results = Vector{IntervalValue{Int,out_type(T)}}(length(ritr))
     r = 1
     @inbounds for i in ritr
         idx = (i - width):i
