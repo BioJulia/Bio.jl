@@ -11,13 +11,14 @@ module Var
 
 import Bio.Seq:
     Site,
-    issite,
     Certain,
     Match,
     Mismatch,
     NucleicAcid,
     MinHashSketch,
+    issite,
     start_count,
+    out_type,
     update_count,
     ispurine,
     ispyrimidine
@@ -73,7 +74,7 @@ export
 
 # Bio.@reexport import Bio: isfilled, leftposition
 
-include("site_counting/site_counting.jl")
+include("site_types.jl")
 #include("distances.jl")
 include("vcf/vcf.jl")
 include("bcf/bcf.jl")

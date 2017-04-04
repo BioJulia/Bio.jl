@@ -9,7 +9,9 @@ using BufferedStreams
 using StatsBase
 using YAML
 using TestFunctions
+using PairwiseListMatrices
 
+typealias PWM PairwiseListMatrix
 
 const codons = [
         "AAA", "AAC", "AAG", "AAU",
@@ -1347,6 +1349,20 @@ end
                                                                   IntervalValue(5, 7, 1),
                                                                   IntervalValue(6, 8, 2),
                                                                   IntervalValue(7, 9, 3)]
+            end
+        end
+
+        @testset "Pairwise methods" begin
+            dnas = [dna"ATCGCCA-", dna"ATCGCCTA", dna"ATCGCCT-", dna"GTCGCCTA"]
+            rnas = [rna"AUCGCCA-", rna"AUCGCCUA", rna"AUCGCCU-", rna"GUCGCCUA"]
+            answer_mismatch = PWM{Int, false}([0 2 1 3; 2 0 1 1; 1 1 0 2; 3 1 2 0])
+            answer_match = PWM{Int, false}([0 6 7 5; 6 0 7 7; 7 7 0 6; 5 7 6 0])
+            for i in (dnas, rnas)
+                @test count_pairwise(Mismatch, i...) == answer_mismatch
+                @test count_pairwise(Match, i...) == answer_match
+                @test count_pairwise(Certain, i...) == PWM{Int, false}([0 7 7 7; 7 0 7 8; 7 7 0 7; 7 8 7 0])
+                @test count_pairwise(Ambiguous, i...) == PWM{Int, false}([0 0 0 0; 0 0 0 0; 0 0 0 0; 0 0 0 0])
+                @test count_pairwise(Gap, i...) == PWM{Int, false}([0 1 1 1; 1 0 1 0; 1 1 0 1; 1 0 1 0])
             end
         end
     end

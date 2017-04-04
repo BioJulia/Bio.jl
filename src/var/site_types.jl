@@ -4,8 +4,12 @@
 # This file is a part of BioJulia.
 # License is MIT: https://github.com/BioJulia/Bio.jl/blob/master/LICENSE.md
 
-abstract Mutation <: Bio.Seq.Site
+Base.zero(::Type{Tuple{Int,Int}}) = zero(Int), zero(Int)
+
+
+abstract Mutation <: Site
 start_count{T<:Mutation}(::Type{T}) = 0, 0
+out_type{T<:Mutation}(::Type{T}) = Tuple{Int,Int}
 update_count(kacc::Int, dacc::Int, k::Bool, d::Bool) = kacc + k, dacc + d
 
 @inline function issite{T<:NucleicAcid,M<:Mutation}(::Type{M}, a::T, b::T)

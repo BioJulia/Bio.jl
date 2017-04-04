@@ -170,7 +170,8 @@ export
     Ambiguous,
     Gap,
     Match,
-    Mismatch
+    Mismatch,
+    count_pairwise
 
 import Automa
 import Automa.RegExp: @re_str
@@ -182,6 +183,7 @@ import Combinatorics
 import IndexableBitVectors
 import Iterators
 import IntervalTrees: IntervalValue
+import PairwiseListMatrices: PairwiseListMatrix
 importall Bio
 importall BioSymbols
 

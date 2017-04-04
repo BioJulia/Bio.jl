@@ -10,8 +10,6 @@ import BufferedStreams: BufferedInputStream
 import Bio.Seq: count_sites_naive
 import YAML
 
-typealias PWM PairwiseListMatrix
-
 function generate_possibilities_tester{A<:Union{DNAAlphabet{4}, DNAAlphabet{2}, RNAAlphabet{4}, RNAAlphabet{2}}}(::Type{A})
     symbols = alphabet(A)
     arra = Vector{eltype(A)}()
@@ -69,27 +67,37 @@ end
                 @test count_sites_naive(Transversion, seqA, seqB) == count_sites_naive(Transversion, seqB, seqA) == (8, 48)
             end
         end
-#=
-        @testset "Pairwise methods" begin
-            dnas = [dna"ATCGCCA-", dna"ATCGCCTA", dna"ATCGCCT-", dna"GTCGCCTA"]
-            rnas = [rna"AUCGCCA-", rna"AUCGCCUA", rna"AUCGCCU-", rna"GUCGCCUA"]
-            answer_mismatch = PWM{Int, false}([0 2 1 3; 2 0 1 1; 1 1 0 2; 3 1 2 0])
-            answer_match = PWM{Int, false}([0 6 7 5; 6 0 7 7; 7 7 0 6; 5 7 6 0])
-            for i in (dnas, rnas)
-                ambigs = PWM{Int, false}([0 1 1 1; 1 0 1 0; 1 1 0 1; 1 0 1 0])
-                @test count_sites(Conserved, i) == (PWM{Int, false}([0 6 6 5; 6 0 7 7; 6 7 0 6; 5 7 6 0]), ambigs)
-                @test count_sites(Mutated, i) == (PWM{Int, false}([0 1 1 2; 1 0 0 1; 1 0 0 1; 2 1 1 0]), ambigs)
-            end
 
-            a = minhash(dnas[1], 4, 3)
-            b = minhash(dnas[2], 4, 3)
+        @testset "Pairwise methods" begin
+            dnas = [dna"ATCGCCA-",
+                    dna"ATCGCCTA",
+                    dna"ATCGCCT-",
+                    dna"GTCGCCTA"]
+
+            rnas = [rna"AUCGCCA-",
+                    rna"AUCGCCUA",
+                    rna"AUCGCCU-",
+                    rna"GUCGCCUA"]
+
+            for i in (dnas, rnas)
+                @test count_pairwise(Conserved, i...) == PairwiseListMatrix([(6,1), (6,1), (5,1), (7,1), (7,0), (6,1)], false)
+
+                @test count_pairwise(Mutated, i...) == PairwiseListMatrix([(1,1), (1,1), (2,1), (0,1), (1,0), (1,1)], false)
+
+                @test count_pairwise(Transition, i...) == PairwiseListMatrix([(0,1), (0,1), (1,1), (0,1), (1,0), (1,1)], false)
+
+                @test count_pairwise(Transversion, i...) == PairwiseListMatrix([(1,1), (1,1), (1,1), (0,1), (0,0), (0,1)], false)
+            end
+        end
+
+        @testset "MASH distances" begin
+            a = minhash(dna"ATCGCCA-", 4, 3)
+            b = minhash(dna"ATCGCCTA", 4, 3)
             @test_approx_eq_eps mashdistance(a, b) 0.2745 1e-3
             @test mashdistance(a, a) == 0
             @test a.sketch == sort(a.sketch)
-
-
         end
-
+#=
         @testset "Windowed methods" begin
             dnaA = dna"ATCGCCA-M"
             dnaB = dna"ATCGCCTAA"
@@ -155,7 +163,7 @@ end
                                                                            IntervalValue(6, 8, 1),
                                                                            IntervalValue(7, 9, 2)])
             end
-            
+
         end=#
 
     end

@@ -18,16 +18,25 @@ function Base.count{T<:Site}(::Type{T}, a::BioSequence, b::BioSequence)
 end
 
 function Base.count{T<:Site}(::Type{T}, a::BioSequence, b::BioSequence, width::Int, step::Int)
-    ridx = 1:width
     len = min(length(a), length(b))
     ritr = StepRange(width, step, len)
-    step -= 1
-    results = Vector{IntervalValue{acc_type(T)}}(length(ritr))
+    width -= 1
+    results = Vector{IntervalValue{out_type(T)}}(length(ritr))
     r = 1
     @inbounds for i in ritr
-        idx = (i - step):i
+        idx = (i - width):i
         results[r] = IntervalValue(first(idx), last(idx), count(T, a[idx], b[idx]))
         r += 1
     end
     return results
+end
+
+function count_pairwise{T<:Site,N}(::Type{T}, seqs::Vararg{BioSequence,N})
+    counts = Vector{out_type(T)}(Int((N * (N - 1)) / 2))
+    c = 1
+    @inbounds for i in 1:N, j in (i + 1):N
+        counts[c] = count(T, seqs[i], seqs[j])
+        c += 1
+    end
+    return PairwiseListMatrix(counts, false)
 end
