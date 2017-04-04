@@ -71,7 +71,6 @@ function Base.read!(reader::Reader, record::Record)
         resize!(record.data, dsize)
     end
     unsafe_read(reader.stream, pointer(record.data), dsize)
-    record.refseqnames = reader.refseqnames
     return record
 end
 

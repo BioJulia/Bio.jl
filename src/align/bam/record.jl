@@ -12,12 +12,8 @@ type Record
     next_refid::Int32
     next_pos::Int32
     tlen::Int32
-
     # variable length data
     data::Vector{UInt8}
-
-    # pointer to reference sequence names (shared)
-    refseqnames::Vector{String}
 end
 
 # the data size of fixed-length fields (.block_size-.tlen)
@@ -30,7 +26,7 @@ Create an unfilled BAM record.
 """
 function Record()
     flag_nc = UInt32(SAM.FLAG_UNMAP) << 16
-    return Record(0, -1, -1, 0, flag_nc, 0, -1, -1, 0, UInt8[], String[])
+    return Record(0, -1, -1, 0, flag_nc, 0, -1, -1, 0, UInt8[])
 end
 
 function Record(data::Vector{UInt8})
@@ -55,7 +51,6 @@ function Bio.isfilled(record::Record)
     return record.block_size != 0
 end
 
-# NOTE: this does not copy `refseqnames`.
 function Base.copy(rec::Record)
     return Record(
         rec.block_size,
@@ -67,8 +62,7 @@ function Base.copy(rec::Record)
         rec.next_refid,
         rec.next_pos,
         rec.tlen,
-        copy(rec.data),
-        rec.refseqnames)
+        copy(rec.data))
 end
 
 function Base.isless(rec1::Record, rec2::Record)
