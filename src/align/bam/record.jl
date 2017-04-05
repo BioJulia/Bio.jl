@@ -89,7 +89,23 @@ end
 function Base.show(io::IO, record::Record)
     print(io, summary(record), ':')
     if isfilled(record)
-        # TODO
+        println(io)
+        println(io, "     sequence name: ", qname(record))
+        println(io, "              flag: ", flag(record))
+        println(io, "      reference ID: ", refid(record))
+        println(io, "          position: ", pos(record))
+        println(io, "   mapping quality: ", mapq(record))
+        println(io, "             CIGAR: ", cigar(record))
+        println(io, " next reference ID: ", nextrefid(record))
+        println(io, "     next position: ", nextpos(record))
+        println(io, "   template length: ", tlen(record))
+        println(io, "          sequence: ", seq(record))
+        # TODO: pretty print base quality
+        println(io, "      base quality: ", qual(record))
+          print(io, "   optional fields:")
+        for field in keys(optional_fields(record))
+            print(io, ' ', field, '=', record[field])
+        end
     else
         print(io, " <not filled>")
     end
@@ -107,7 +123,7 @@ end
 """
     refid(record::Record)::Int
 
-Get the ID of a reference sequence of `record`.
+Get the reference sequence ID of `record`.
 
 The ID is 1-based (i.e. the first sequence is 1) and is 0 for a record without a mapping position.
 
@@ -116,6 +132,24 @@ See also: `BAM.rname`
 function refid(record::Record)::Int
     checkfilled(record)
     return record.refid + 1
+end
+
+function hasrefid(record::Record)
+    return isfilled(record)
+end
+
+"""
+    nextrefid(record::Record)::Int
+
+Get the next/mate reference sequence ID of `record`.
+"""
+function nextrefid(record::Record)::Int
+    checkfilled(record)
+    return record.next_refid + 1
+end
+
+function hasnextrefid(record::Record)
+    return isfilled(record)
 end
 
 """
@@ -154,6 +188,20 @@ end
 
 function Bio.hasleftposition(record::Record)
     return haspos(record)
+end
+
+"""
+    nextpos(record::Record)::Int
+
+Get the 1-based leftmost mapping position of the next/mate read of `record`.
+"""
+function nextpos(record::Record)::Int
+    checkfilled(record)
+    return record.next_pos + 1
+end
+
+function hasnextpos(record::Record)
+    return isfilled(record)
 end
 
 """
