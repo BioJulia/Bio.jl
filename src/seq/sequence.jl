@@ -209,8 +209,16 @@ end
 # Printers
 # --------
 
-function Base.print(io::IO, seq::Sequence)
-    foreach(x -> print(io, x), seq)
+function Base.print(io::IO, seq::Sequence; width::Integer=0)
+    col = 1
+    for x in seq
+        if width > 0 && col > width
+            write(io, '\n')
+            col = 1
+        end
+        print(io, x)
+        col += 1
+    end
 end
 
 function Base.show(io::IO, seq::Sequence)
