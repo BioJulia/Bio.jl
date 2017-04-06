@@ -51,18 +51,18 @@ function Bio.isfilled(record::Record)
     return record.block_size != 0
 end
 
-function Base.copy(rec::Record)
+function Base.copy(record::Record)
     return Record(
-        rec.block_size,
-        rec.refid,
-        rec.pos,
-        rec.bin_mq_nl,
-        rec.flag_nc,
-        rec.l_seq,
-        rec.next_refid,
-        rec.next_pos,
-        rec.tlen,
-        copy(rec.data))
+        record.block_size,
+        record.refid,
+        record.pos,
+        record.bin_mq_nl,
+        record.flag_nc,
+        record.l_seq,
+        record.next_refid,
+        record.next_pos,
+        record.tlen,
+        copy(record.data))
 end
 
 function Base.isless(rec1::Record, rec2::Record)
@@ -414,43 +414,43 @@ function hasqual(record::Record)
     return isfilled(record)
 end
 
-function Base.getindex(rec::Record, tag::AbstractString)
+function Base.getindex(record::Record, tag::AbstractString)
     checkkeytag(tag)
-    return getvalue(rec.data, auxdata_position(rec), UInt8(tag[1]), UInt8(tag[2]))
+    return getvalue(record.data, auxdata_position(record), UInt8(tag[1]), UInt8(tag[2]))
 end
 
-function Base.setindex!(rec::Record, val, tag::AbstractString)
+function Base.setindex!(record::Record, val, tag::AbstractString)
     checkkeytag(tag)
-    setvalue!(rec.data, auxdata_position(rec), val, UInt8(tag[1]), UInt8(tag[2]))
-    return rec
+    setvalue!(record.data, auxdata_position(record), val, UInt8(tag[1]), UInt8(tag[2]))
+    return record
 end
 
-function Base.delete!(rec::Record, tag::AbstractString)
+function Base.delete!(record::Record, tag::AbstractString)
     checkkeytag(tag)
-    deletevalue!(rec.data, auxdata_position(rec), UInt8(tag[1]), UInt8(tag[2]))
-    return rec
+    deletevalue!(record.data, auxdata_position(record), UInt8(tag[1]), UInt8(tag[2]))
+    return record
 end
 
-function Base.haskey(rec::Record, tag::AbstractString)
+function Base.haskey(record::Record, tag::AbstractString)
     checkkeytag(tag)
-    return findtag(rec.data, auxdata_position(rec), UInt8(tag[1]), UInt8(tag[2])) > 0
+    return findtag(record.data, auxdata_position(record), UInt8(tag[1]), UInt8(tag[2])) > 0
 end
 
-function optional_fields(rec::Record)
-    return AuxDataDict(rec.data[auxdata_position(rec):data_size(rec)])
+function optional_fields(record::Record)
+    return AuxDataDict(record.data[auxdata_position(record):data_size(record)])
 end
 
-function auxdata_position(rec)
-    seqlen = seqlength(rec)
-    return seqname_length(rec) + n_cigar_op(rec) * 4 + cld(seqlen, 2) + seqlen + 1
+function auxdata_position(record)
+    seqlen = seqlength(record)
+    return seqname_length(record) + n_cigar_op(record) * 4 + cld(seqlen, 2) + seqlen + 1
 end
 
 # Return the length of alignment.
-function alignment_length(rec::Record)
-    offset = seqname_length(rec)
+function alignment_length(record::Record)
+    offset = seqname_length(record)
     length::Int = 0
-    for i in offset+1:4:offset+n_cigar_op(rec)*4
-        x = unsafe_load(Ptr{UInt32}(pointer(rec.data, i)))
+    for i in offset+1:4:offset+n_cigar_op(record)*4
+        x = unsafe_load(Ptr{UInt32}(pointer(record.data, i)))
         op = Bio.Align.Operation(x & 0x0f)
         if Bio.Align.ismatchop(op) || Bio.Align.isdeleteop(op)
             length += x >> 4
@@ -460,13 +460,13 @@ function alignment_length(rec::Record)
 end
 
 # Return the length of the read name.
-function seqname_length(rec)
-    return rec.bin_mq_nl & 0xff
+function seqname_length(record)
+    return record.bin_mq_nl & 0xff
 end
 
 # Return the number of CIGAR operations.
-function n_cigar_op(rec)
-    return rec.flag_nc & 0xffff
+function n_cigar_op(record)
+    return record.flag_nc & 0xffff
 end
 
 function checkfilled(record::Record)
