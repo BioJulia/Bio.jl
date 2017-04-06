@@ -210,16 +210,7 @@ end
 # --------
 
 function Base.print(io::IO, seq::Sequence)
-    width = 70
-    col = 1
-    for x in seq
-        if col > width
-            write(io, '\n')
-            col = 1
-        end
-        print(io, x)
-        col += 1
-    end
+    foreach(x -> print(io, x), seq)
 end
 
 function Base.show(io::IO, seq::Sequence)
