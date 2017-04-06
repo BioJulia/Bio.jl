@@ -354,9 +354,9 @@ Bio.Align.SAM.qual
 
 ### BAM
 
-* Reader type: `BAMReader`
-* Writer type: `BAMWriter`
-* Element type: `BAMRecord`
+* Reader type: `BAM.Reader`
+* Writer type: `BAM.Writer`
+* Element type: `BAM.Record`
 
 BAM is a binary counterpart of the SAM file format.
 
@@ -365,8 +365,25 @@ be wrapped with a `BGZFStream` object provided from
 [BGZFStreams.jl](https://github.com/BioJulia/BGZFStreams.jl).
 
 ```@docs
-Bio.Align.BAMReader
-Bio.Align.BAMWriter
+Bio.Align.BAM.Reader
+Bio.Align.BAM.Writer
+Bio.Align.BAM.Record
+Bio.Align.BAM.ismapped
+Bio.Align.BAM.refid
+Bio.Align.BAM.nextrefid
+Bio.Align.BAM.rname
+Bio.Align.BAM.pos
+Bio.Align.BAM.nextpos
+Bio.Align.BAM.mapq
+Bio.Align.BAM.flag
+Bio.Align.BAM.tlen
+Bio.Align.BAM.qname
+Bio.Align.BAM.cigar
+Bio.Align.BAM.cigar_rle
+Bio.Align.BAM.alignment
+Bio.Align.BAM.seq
+Bio.Align.BAM.seqlength
+Bio.Align.BAM.qual
 ```
 
 

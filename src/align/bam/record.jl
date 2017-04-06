@@ -312,7 +312,7 @@ end
 
 Get the CIGAR string of `record`.
 
-See also `cigar_rle`.
+See also `BAM.cigar_rle`.
 """
 function cigar(record::Record)::String
     buf = IOBuffer()
