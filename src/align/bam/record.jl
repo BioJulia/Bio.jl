@@ -204,18 +204,22 @@ function hasnextpos(record::Record)
     return isfilled(record)
 end
 
-"""
-    rightposition(rec::Record)
-
-Return the rightmost mapping position of `rec`.
-"""
-function Bio.rightposition(record::Record)
+function rpos(record::Record)
     checkfilled(record)
     return Int32(pos(record) + alignment_length(record) - 1)
 end
 
-function nextleftposition(rec::Record)
-    return rec.next_pos + 1
+"""
+    rightposition(record::Record)
+
+Return the rightmost mapping position of `record`.
+"""
+function Bio.rightposition(record::Record)
+    return rpos(record)
+end
+
+function nextleftposition(record::Record)
+    return record.next_pos + 1
 end
 
 """

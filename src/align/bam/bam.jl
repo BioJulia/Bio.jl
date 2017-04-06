@@ -12,5 +12,6 @@ include("auxdict.jl")
 include("record.jl")
 include("reader.jl")
 include("writer.jl")
+include("overlap.jl")
 
 end

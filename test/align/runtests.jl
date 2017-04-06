@@ -5,6 +5,7 @@ using Base.Test
 using Bio
 using Bio.Seq
 using Bio.Align
+using Bio.Intervals
 using BGZFStreams
 using TestFunctions
 using YAML
@@ -1298,17 +1299,17 @@ end
 
         @testset "Random access" begin
             filepath = joinpath(bamdir, "GSE25840_GSM424320_GM06985_gencode_spliced.head.bam")
-            reader = open(BAMReader, filepath, index=filepath * ".bai")
+            reader = open(BAM.Reader, filepath, index=filepath * ".bai")
 
             # expected values are counted using samtools
             for (refname, interval, expected) in [
-                    ("chr1", 1000:10000,      21),
-                    ("chr1", 8000:10000,      20),
+                    ("chr1", 1_000:10000,      21),
+                    ("chr1", 8_000:10000,      20),
                     ("chr1", 766_000:800_000, 142),
                     ("chr1", 786_000:800_000, 1),
                     ("chr1", 796_000:800_000, 0)]
-                intsect = intersect(reader, refname, interval)
-                @test eltype(intsect) == BAMRecord
+                intsect = eachoverlap(reader, refname, interval)
+                @test eltype(intsect) == BAM.Record
                 @test count(_ -> true, intsect) == expected
                 # check that the intersection iterator is stateless
                 @test count(_ -> true, intsect) == expected
@@ -1321,18 +1322,18 @@ end
                 range = randrange(1:1_000_000)
                 seekstart(reader)
                 # linear scan
-                expected = collect(filter(reader) do rec
-                    isoverlapping(rec, refindex, range)
+                expected = collect(filter(reader) do record
+                    Bio.Align.BAM.isoverlapping(record, refindex, range)
                 end)
                 # indexed scan
-                actual = collect(intersect(reader, refname, range))
+                actual = collect(eachoverlap(reader, refname, range))
                 @test actual == expected
             end
             close(reader)
 
             filepath = joinpath(bamdir, "R_12h_D06.uniq.q40.bam")
-            reader = open(BAMReader, filepath, index=filepath * ".bai")
-            @test isempty(collect(intersect(reader, "chr19", 5823708:5846478)))
+            reader = open(BAM.Reader, filepath, index=filepath * ".bai")
+            @test isempty(collect(eachoverlap(reader, "chr19", 5823708:5846478)))
             close(reader)
         end
     end

@@ -61,6 +61,14 @@ function Bio.header(reader::Reader)
     return header(reader)
 end
 
+function Base.seek(reader::Reader, voffset::BGZFStreams.VirtualOffset)
+    seek(reader.stream, voffset)
+end
+
+function Base.seekstart(reader::Reader)
+    seek(reader.stream, reader.start_offset)
+end
+
 function Base.read!(reader::Reader, record::Record)
     unsafe_read(
         reader.stream,
