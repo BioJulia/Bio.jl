@@ -1223,8 +1223,12 @@ end
             @test BAM.ismapped(record)
             @test BAM.rname(record, reader) == "CHROMOSOME_I"
             @test BAM.refid(record) === 1
+            @test BAM.hasnextrefid(record)
+            @test BAM.nextrefid(record) === 0
             @test BAM.haspos(record) === hasleftposition(record) === true
             @test BAM.pos(record) === leftposition(record) === 2
+            @test BAM.hasnextpos(record)
+            @test BAM.nextpos(record) === 0
             @test rightposition(record) == 102
             @test BAM.hasqname(record) === hasseqname(record) === true
             @test BAM.qname(record) == seqname(record) == "SRR065390.14978392"
