@@ -204,18 +204,26 @@ function hasnextpos(record::Record)
     return isfilled(record)
 end
 
-function rpos(record::Record)
+"""
+    rpos(record::Record)::Int
+
+Get the 1-based rightmost mapping position of `record`.
+"""
+function rpos(record::Record)::Int
     checkfilled(record)
     return Int32(pos(record) + alignment_length(record) - 1)
 end
 
-"""
-    rightposition(record::Record)
+function hasrpos(record::Record)
+    return isfilled(record) && ismapped(record)
+end
 
-Return the rightmost mapping position of `record`.
-"""
 function Bio.rightposition(record::Record)
     return rpos(record)
+end
+
+function Bio.hasrightposition(record::Record)
+    return hasrpos(record)
 end
 
 function nextleftposition(record::Record)

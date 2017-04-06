@@ -374,6 +374,7 @@ Bio.Align.BAM.nextrefid
 Bio.Align.BAM.rname
 Bio.Align.BAM.pos
 Bio.Align.BAM.nextpos
+Bio.Align.BAM.rpos
 Bio.Align.BAM.mapq
 Bio.Align.BAM.flag
 Bio.Align.BAM.tlen
