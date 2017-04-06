@@ -42,4 +42,3 @@ function Base.push!(header::Header, metainfo::MetaInfo)
     push!(header.metainfo, metainfo)
     return header
 end
-

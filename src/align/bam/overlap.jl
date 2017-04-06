@@ -78,4 +78,3 @@ end
 function isoverlapping(record::Record, refid_::Integer, interval::UnitRange)
     return refid(record) == refid_ && pos(record) ≤ last(interval) && rpos(record) ≥ first(interval)
 end
-
