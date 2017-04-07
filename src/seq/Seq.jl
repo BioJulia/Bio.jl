@@ -29,6 +29,7 @@ export
     DNA_N,
     DNA_Gap,
     ACGT,
+    ACGTN,
     RNA_A,
     RNA_C,
     RNA_G,
