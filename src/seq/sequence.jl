@@ -209,11 +209,10 @@ end
 # Printers
 # --------
 
-function Base.print(io::IO, seq::Sequence)
-    width = 70
+function Base.print(io::IO, seq::Sequence; width::Integer=0)
     col = 1
     for x in seq
-        if col > width
+        if width > 0 && col > width
             write(io, '\n')
             col = 1
         end

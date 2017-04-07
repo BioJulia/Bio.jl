@@ -1331,7 +1331,11 @@ end
 
         buf = IOBuffer()
         print(buf, dna"A"^100)
-        @test takebuf_string(buf) == "A"^70 * "\n" * "A"^30
+        @test takebuf_string(buf) == "A"^100
+
+        buf = IOBuffer()
+        print(buf, dna"A"^100, width=70)
+        @test takebuf_string(buf) == string("A"^70, '\n', "A"^30)
     end
 
     @testset "Transformations" begin
@@ -1829,7 +1833,7 @@ end
 
         buf = IOBuffer()
         print(buf, ReferenceSequence(dna"A"^100))
-        @test takebuf_string(buf) == "A"^70 * "\n" * "A"^30
+        @test takebuf_string(buf) == "A"^100
     end
 
     @testset "Random sequence" begin
