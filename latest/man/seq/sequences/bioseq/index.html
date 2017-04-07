@@ -617,13 +617,13 @@ copy!
 
 
 <p>Make a complement sequence of <code>seq</code> in place.</p>
-<p><a target='_blank' href='https://github.com/BioJulia/Bio.jl/tree/7782a111468e1e186dfee41880f8112a1be1ac9f/src/seq/bioseq/transformations.jl#L215-L219' class='documenter-source'>source</a><br></p>
+<p><a target='_blank' href='https://github.com/BioJulia/Bio.jl/tree/472fff302c1b651b2f24deb97553113a82fe223b/src/seq/bioseq/transformations.jl#L215-L219' class='documenter-source'>source</a><br></p>
 <div class="codehilite"><pre><span></span>complement!(seq)
 </pre></div>
 
 
 <p>Transform <code>seq</code> into it's complement.</p>
-<p><a target='_blank' href='https://github.com/BioJulia/Bio.jl/tree/7782a111468e1e186dfee41880f8112a1be1ac9f/src/seq/bioseq/transformations.jl#L231-L235' class='documenter-source'>source</a><br></p>
+<p><a target='_blank' href='https://github.com/BioJulia/Bio.jl/tree/472fff302c1b651b2f24deb97553113a82fe223b/src/seq/bioseq/transformations.jl#L231-L235' class='documenter-source'>source</a><br></p>
 <p><a id='Bio.Seq.reverse_complement!' href='#Bio.Seq.reverse_complement!'>#</a>
 <strong><code>Bio.Seq.reverse_complement!</code></strong> &mdash; <em>Function</em>.</p>
 <div class="codehilite"><pre><span></span>reverse_complement!(seq)
@@ -632,7 +632,7 @@ copy!
 
 <p>Make a reversed complement sequence of <code>seq</code> in place.</p>
 <p>Ambiguous nucleotides are left as-is.</p>
-<p><a target='_blank' href='https://github.com/BioJulia/Bio.jl/tree/7782a111468e1e186dfee41880f8112a1be1ac9f/src/seq/bioseq/transformations.jl#L259-L265' class='documenter-source'>source</a><br></p>
+<p><a target='_blank' href='https://github.com/BioJulia/Bio.jl/tree/472fff302c1b651b2f24deb97553113a82fe223b/src/seq/bioseq/transformations.jl#L259-L265' class='documenter-source'>source</a><br></p>
 <div class="codehilite"><pre><span></span><span class="gp">julia&gt;</span> <span class="n">seq</span> <span class="o">=</span> <span class="n">dna</span><span class="s">&quot;ACG&quot;</span>
 <span class="go">3nt DNA Sequence:</span>
 <span class="go">ACG</span>
@@ -671,12 +671,12 @@ copy!
 
 <p>Translate an <code>RNASequence</code> to an <code>AminoAcidSequence</code>.</p>
 <p>Translation uses genetic code <code>code</code> to map codons to amino acids. See <code>ncbi_trans_table</code> for available genetic codes. If codons in the given RNA sequence cannot determine a unique amino acid, they will be translated to <code>AA_X</code> if <code>allow_ambiguous_codons</code> is <code>true</code> and otherwise result in an error.</p>
-<p><a target='_blank' href='https://github.com/BioJulia/Bio.jl/tree/7782a111468e1e186dfee41880f8112a1be1ac9f/src/seq/geneticcode.jl#L311-L321' class='documenter-source'>source</a><br></p>
+<p><a target='_blank' href='https://github.com/BioJulia/Bio.jl/tree/472fff302c1b651b2f24deb97553113a82fe223b/src/seq/geneticcode.jl#L311-L321' class='documenter-source'>source</a><br></p>
 <p><a id='Bio.Seq.ncbi_trans_table' href='#Bio.Seq.ncbi_trans_table'>#</a>
 <strong><code>Bio.Seq.ncbi_trans_table</code></strong> &mdash; <em>Constant</em>.</p>
 <p>Genetic code list of NCBI.</p>
 <p>The standard genetic code is <code>ncbi_trans_table[1]</code> and others can be shown by <code>show(ncbi_trans_table)</code>. For more details, consult the next link: http://www.ncbi.nlm.nih.gov/Taxonomy/taxonomyhome.html/index.cgi?chapter=cgencodes.</p>
-<p><a target='_blank' href='https://github.com/BioJulia/Bio.jl/tree/7782a111468e1e186dfee41880f8112a1be1ac9f/src/seq/geneticcode.jl#L90-L97' class='documenter-source'>source</a><br></p>
+<p><a target='_blank' href='https://github.com/BioJulia/Bio.jl/tree/472fff302c1b651b2f24deb97553113a82fe223b/src/seq/geneticcode.jl#L90-L97' class='documenter-source'>source</a><br></p>
 <div class="codehilite"><pre><span></span><span class="gp">julia&gt;</span> <span class="n">ncbi_trans_table</span>
 <span class="go">Translation Tables:</span>
 <span class="go">  1. The Standard Code (standard_genetic_code)</span>
