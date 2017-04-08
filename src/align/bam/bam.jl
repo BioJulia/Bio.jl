@@ -9,8 +9,8 @@ import Bio: Bio, isfilled
 
 include("bai.jl")
 include("auxdata.jl")
-include("record.jl")
 include("reader.jl")
+include("record.jl")
 include("writer.jl")
 include("overlap.jl")
 

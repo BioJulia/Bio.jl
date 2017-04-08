@@ -1214,7 +1214,7 @@ end
             record = BAM.Record()
             read!(reader, record)
             @test BAM.ismapped(record)
-            @test BAM.rname(record, reader) == "CHROMOSOME_I"
+            @test BAM.rname(record) == "CHROMOSOME_I"
             @test BAM.refid(record) === 1
             @test BAM.hasnextrefid(record)
             @test BAM.nextrefid(record) === 0

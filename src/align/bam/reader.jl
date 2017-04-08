@@ -69,19 +69,6 @@ function Base.seekstart(reader::Reader)
     seek(reader.stream, reader.start_offset)
 end
 
-function Base.read!(reader::Reader, record::Record)
-    unsafe_read(
-        reader.stream,
-        pointer_from_objref(record),
-        FIXED_FIELDS_BYTES)
-    dsize = data_size(record)
-    if length(record.data) < dsize
-        resize!(record.data, dsize)
-    end
-    unsafe_read(reader.stream, pointer(record.data), dsize)
-    return record
-end
-
 function Base.start(reader::Reader)
     return Record()
 end
@@ -137,4 +124,18 @@ end
 
 function init_bam_reader(input::IO)
     return init_bam_reader(BGZFStreams.BGZFStream(input))
+end
+
+function _read!(reader::Reader, record)
+    unsafe_read(
+        reader.stream,
+        pointer_from_objref(record),
+        FIXED_FIELDS_BYTES)
+    dsize = data_size(record)
+    if length(record.data) < dsize
+        resize!(record.data, dsize)
+    end
+    unsafe_read(reader.stream, pointer(record.data), dsize)
+    record.reader = reader
+    return record
 end

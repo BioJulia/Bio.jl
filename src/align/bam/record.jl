@@ -1,6 +1,11 @@
 # BAM Record
 # ==========
 
+"""
+    BAM.Record()
+
+Create an unfilled BAM record.
+"""
 type Record
     # fixed-length fields (see BMA specs for the details)
     block_size::Int32
@@ -14,20 +19,15 @@ type Record
     tlen::Int32
     # variable length data
     data::Vector{UInt8}
+    reader::Reader
+
+    function Record()
+        return new(0, 0, 0, 0, 0, 0, 0, 0, 0, UInt8[])
+    end
 end
 
-# the data size of fixed-length fields (.block_size-.tlen)
+# the data size of fixed-length fields (block_size-tlen)
 const FIXED_FIELDS_BYTES = 36
-
-"""
-    BAM.Record()
-
-Create an unfilled BAM record.
-"""
-function Record()
-    flag_nc = UInt32(SAM.FLAG_UNMAP) << 16
-    return Record(0, -1, -1, 0, flag_nc, 0, -1, -1, 0, UInt8[])
-end
 
 function Record(data::Vector{UInt8})
     return convert(Record, data)
@@ -44,7 +44,11 @@ end
 
 # Return the size of the `.data` field.
 function data_size(record::Record)
-    return record.block_size - FIXED_FIELDS_BYTES + sizeof(record.block_size)
+    if isfilled(record)
+        return record.block_size - FIXED_FIELDS_BYTES + sizeof(record.block_size)
+    else
+        return 0
+    end
 end
 
 function Bio.isfilled(record::Record)
@@ -52,17 +56,21 @@ function Bio.isfilled(record::Record)
 end
 
 function Base.copy(record::Record)
-    return Record(
-        record.block_size,
-        record.refid,
-        record.pos,
-        record.bin_mq_nl,
-        record.flag_nc,
-        record.l_seq,
-        record.next_refid,
-        record.next_pos,
-        record.tlen,
-        copy(record.data))
+    copy = Record()
+    copy.block_size = record.block_size
+    copy.refid      = record.refid
+    copy.pos        = record.pos
+    copy.bin_mq_nl  = record.bin_mq_nl
+    copy.flag_nc    = record.flag_nc
+    copy.l_seq      = record.l_seq
+    copy.next_refid = record.next_refid
+    copy.next_pos   = record.next_pos
+    copy.tlen       = record.tlen
+    copy.data       = record.data[1:data_size(record)]
+    if isdefined(record, :reader)
+        copy.reader = record.reader
+    end
+    return copy
 end
 
 function Base.isless(rec1::Record, rec2::Record)
@@ -90,19 +98,19 @@ function Base.show(io::IO, record::Record)
     print(io, summary(record), ':')
     if isfilled(record)
         println(io)
-        println(io, "     sequence name: ", qname(record))
-        println(io, "              flag: ", flag(record))
-        println(io, "      reference ID: ", refid(record))
-        println(io, "          position: ", pos(record))
-        println(io, "   mapping quality: ", mapq(record))
-        println(io, "             CIGAR: ", cigar(record))
-        println(io, " next reference ID: ", nextrefid(record))
-        println(io, "     next position: ", nextpos(record))
-        println(io, "   template length: ", tlen(record))
-        println(io, "          sequence: ", seq(record))
+        println(io, "      sequence name: ", qname(record))
+        println(io, "               flag: ", flag(record))
+        println(io, "       reference ID: ", refid(record))
+        println(io, "           position: ", pos(record))
+        println(io, "    mapping quality: ", mapq(record))
+        println(io, "              CIGAR: ", cigar(record))
+        println(io, "  next reference ID: ", nextrefid(record))
+        println(io, "      next position: ", nextpos(record))
+        println(io, "    template length: ", tlen(record))
+        println(io, "           sequence: ", seq(record))
         # TODO: pretty print base quality
-        println(io, "      base quality: ", qual(record))
-          print(io, "   optional fields:")
+        println(io, "       base quality: ", qual(record))
+          print(io, "     auxiliary data:")
         for field in keys(auxdata(record))
             print(io, ' ', field, '=', record[field])
         end
@@ -111,8 +119,12 @@ function Base.show(io::IO, record::Record)
     end
 end
 
+function Base.read!(reader::Reader, record::Record)
+    return _read!(reader, record)
+end
+
 """
-    ismapped(record::Record)
+    ismapped(record::Record)::Bool
 
 Test if `record` is mapped.
 """
@@ -153,19 +165,21 @@ function hasnextrefid(record::Record)
 end
 
 """
-    rname(record::Record, reader::Reader)::String
+    rname(record::Record)::String
 
 Get the reference sequence name of `record`.
 
 See also: `BAM.refid`
 """
-function rname(record::Record, reader)::String
+function rname(record::Record)::String
     checkfilled(record)
     id = refid(record)
     if id == 0
         throw(ArgumentError("record is not mapped"))
+    elseif !isdefined(record, :reader)
+        throw(ArgumentError("reader is not defined"))
     end
-    return reader.refseqnames[id]
+    return record.reader.refseqnames[id]
 end
 
 """
