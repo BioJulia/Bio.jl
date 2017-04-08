@@ -1161,6 +1161,38 @@ end
     @testset "BAM" begin
         bamdir = joinpath(dirname(@__FILE__), "..", "BioFmtSpecimens", "BAM")
 
+        @testset "AuxData" begin
+            auxdata = BAM.AuxData(UInt8[])
+            @test isempty(auxdata)
+
+            buf = IOBuffer()
+            write(buf, "NM", UInt8('s'), Int16(1))
+            auxdata = BAM.AuxData(takebuf_array(buf))
+            @test length(auxdata) == 1
+            @test auxdata["NM"] === Int16(1)
+            @test collect(auxdata) == ["NM" => Int16(1)]
+
+            buf = IOBuffer()
+            write(buf, "AS", UInt8('c'), Int8(-18))
+            write(buf, "NM", UInt8('s'), Int16(1))
+            write(buf, "XA", UInt8('f'), Float32(3.14))
+            write(buf, "XB", UInt8('Z'), "some text\0")
+            write(buf, "XC", UInt8('B'), UInt8('i'), Int32(3), Int32[10, -5, 8])
+            auxdata = BAM.AuxData(takebuf_array(buf))
+            @test length(auxdata) == 5
+            @test auxdata["AS"] === Int8(-18)
+            @test auxdata["NM"] === Int16(1)
+            @test auxdata["XA"] === Float32(3.14)
+            @test auxdata["XB"] == "some text"
+            @test auxdata["XC"] == Int32[10, -5, 8]
+            @test convert(Dict{String,Any}, auxdata) == Dict(
+                "AS" => Int8(-18),
+                "NM" => Int16(1),
+                "XA" => Float32(3.14),
+                "XB" => "some text",
+                "XC" => Int32[10, -5, 8])
+        end
+
         @testset "Record" begin
             record = BAM.Record()
             @test !isfilled(record)

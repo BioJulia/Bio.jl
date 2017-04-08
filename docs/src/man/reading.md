@@ -385,6 +385,7 @@ Bio.Align.BAM.alignment
 Bio.Align.BAM.seq
 Bio.Align.BAM.seqlength
 Bio.Align.BAM.qual
+Bio.Align.BAM.auxdata
 ```
 
 

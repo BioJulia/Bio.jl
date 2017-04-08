@@ -103,7 +103,7 @@ function Base.show(io::IO, record::Record)
         # TODO: pretty print base quality
         println(io, "      base quality: ", qual(record))
           print(io, "   optional fields:")
-        for field in keys(optional_fields(record))
+        for field in keys(auxdata(record))
             print(io, ' ', field, '=', record[field])
         end
     else
@@ -405,6 +405,7 @@ end
 Get the base quality of  `record`.
 """
 function qual(record::Record)::Vector{UInt8}
+    checkfilled(record)
     seqlen = seqlength(record)
     offset = seqname_length(record) + n_cigar_op(record) * 4 + cld(seqlen, 2)
     return [reinterpret(Int8, record.data[i+offset]) for i in 1:seqlen]
@@ -414,30 +415,28 @@ function hasqual(record::Record)
     return isfilled(record)
 end
 
+"""
+    auxdata(record::Record)::BAM.AuxData
+
+Get the auxiliary data of `record`.
+"""
+function auxdata(record::Record)
+    checkfilled(record)
+    return AuxData(record.data[auxdata_position(record):data_size(record)])
+end
+
+function hasauxdata(record::Record)
+    return isfilled(record)
+end
+
 function Base.getindex(record::Record, tag::AbstractString)
-    checkkeytag(tag)
-    return getvalue(record.data, auxdata_position(record), UInt8(tag[1]), UInt8(tag[2]))
-end
-
-function Base.setindex!(record::Record, val, tag::AbstractString)
-    checkkeytag(tag)
-    setvalue!(record.data, auxdata_position(record), val, UInt8(tag[1]), UInt8(tag[2]))
-    return record
-end
-
-function Base.delete!(record::Record, tag::AbstractString)
-    checkkeytag(tag)
-    deletevalue!(record.data, auxdata_position(record), UInt8(tag[1]), UInt8(tag[2]))
-    return record
+    checkauxtag(tag)
+    return getauxvalue(record.data, auxdata_position(record), UInt8(tag[1]), UInt8(tag[2]))
 end
 
 function Base.haskey(record::Record, tag::AbstractString)
-    checkkeytag(tag)
-    return findtag(record.data, auxdata_position(record), UInt8(tag[1]), UInt8(tag[2])) > 0
-end
-
-function optional_fields(record::Record)
-    return AuxDataDict(record.data[auxdata_position(record):data_size(record)])
+    checkauxtag(tag)
+    return findauxtag(record.data, auxdata_position(record), UInt8(tag[1]), UInt8(tag[2])) > 0
 end
 
 function auxdata_position(record)
