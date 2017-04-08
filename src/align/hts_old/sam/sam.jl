@@ -51,8 +51,8 @@ function parse_keyvals(s)
 end
 
 include("flags.jl")
-include("metainfo.jl")
 include("header.jl")
 include("record.jl")
 include("reader.jl")
+include("parser.jl")
 include("writer.jl")

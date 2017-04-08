@@ -1,44 +1,58 @@
 # SAM Header
 # ==========
 
-immutable SAMHeader
-    metainfo::Vector{SAMMetaInfo}
+# Implicit type restriction for predefiend tags:
+#   * HD: Dict{String,String}
+#   * SQ: Vector{Dict{String,Any}}
+#   * RG: Vector{Dict{String,Any}}
+#   * PG: Vector{Dict{String,Any}}
+#   * CO: Vector{String}
+
+type SAMHeader <: Associative{String,Any}
+    data::Dict{String,Any}
 end
 
 function SAMHeader()
-    return SAMHeader(SAMMetaInfo[])
-end
-
-function Base.eltype(::Type{SAMHeader})
-    return SAMMetaInfo
+    return SAMHeader(Dict{String,Any}())
 end
 
 function Base.length(header::SAMHeader)
-    return length(header.metainfo)
+    return length(header.data)
+end
+
+function Base.keys(header::SAMHeader)
+    return keys(header.data)
+end
+
+function Base.values(header::SAMHeader)
+    return values(header.data)
+end
+
+function Base.getindex(header::SAMHeader, key::AbstractString)
+    return getindex(header.data, key)
+end
+
+function Base.setindex!(header::SAMHeader, val, key::AbstractString)
+    if length(key) != 2
+        error("SAM header tag must be of length 2")
+    end
+    # TODO: check value type and validity?
+    setindex!(header.data, val, key)
+    return header
+end
+
+function Base.delete!(header::SAMHeader, key::AbstractString)
+    return delete!(header.data, key)
 end
 
 function Base.start(header::SAMHeader)
-    return 1
+    return start(header.data)
 end
 
-function Base.done(header::SAMHeader, i)
-    return i > length(header.metainfo)
+function Base.done(header::SAMHeader, s)
+    return done(header.data, s)
 end
 
-function Base.next(header::SAMHeader, i)
-    return header.metainfo[i], i + 1
-end
-
-function Base.find(header::SAMHeader, key::AbstractString)
-    return filter(m -> isequalkey(m, key), header.metainfo)
-end
-
-function Base.unshift!(header::SAMHeader, metainfo::SAMMetaInfo)
-    unshift!(header.metainfo, metainfo)
-    return header
-end
-
-function Base.push!(header::SAMHeader, metainfo::SAMMetaInfo)
-    push!(header.metainfo, metainfo)
-    return header
+function Base.next(header::SAMHeader, s)
+    return next(header.data, s)
 end
