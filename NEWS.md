@@ -28,5 +28,5 @@ Bio.jl v0.5.0 Release Notes
 [#418]: https://github.com/BioJulia/Bio.jl/pull/418
 [#426]: https://github.com/BioJulia/Bio.jl/pull/426
 [#431]: https://github.com/BioJulia/Bio.jl/pull/431
-[#431]: https://github.com/BioJulia/Bio.jl/pull/440
-[#431]: https://github.com/BioJulia/Bio.jl/pull/441
+[#440]: https://github.com/BioJulia/Bio.jl/pull/440
+[#441]: https://github.com/BioJulia/Bio.jl/pull/441
