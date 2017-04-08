@@ -167,4 +167,3 @@ function Base.write(io::IO, metainfo::MetaInfo)
     r = datarange(metainfo)
     return unsafe_write(io, pointer(metainfo.data, first(r)), length(r))
 end
-
