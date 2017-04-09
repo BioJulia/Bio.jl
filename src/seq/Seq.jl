@@ -47,6 +47,7 @@ export
     RNA_N,
     RNA_Gap,
     ACGU,
+    ACGUN,
     isGC,
     iscompatible,
     isambiguous,
