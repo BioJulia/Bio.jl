@@ -515,6 +515,14 @@ end
         @test ACGT[4] === DNA_T
         @test collect(ACGT) == [DNA_A, DNA_C, DNA_G, DNA_T]
 
+        @test length(ACGTN) == 5
+        @test ACGTN[1] === DNA_A
+        @test ACGTN[2] === DNA_C
+        @test ACGTN[3] === DNA_G
+        @test ACGTN[4] === DNA_T
+        @test ACGTN[5] === DNA_N
+        @test collect(ACGTN) == [DNA_A, DNA_C, DNA_G, DNA_T, DNA_N]
+
         @test length(ACGU) == 4
         @test ACGU[1] === RNA_A
         @test ACGU[2] === RNA_C
