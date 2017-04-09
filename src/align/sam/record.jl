@@ -140,13 +140,15 @@ function Base.write(io::IO, record::Record)
     return unsafe_write(io, pointer(record.data, first(r)), length(r))
 end
 
-function Base.:(==)(record1::Record, record2::Record)
-    if isfilled(record1) == isfilled(record2) == true
-        r1 = datarange(record1)
-        r2 = datarange(record2)
-        return length(r1) == length(r2) && memcmp(pointer(record1.data, first(r1)), pointer(record2.data, first(r2)), length(r1)) == 0
+function Base.:(==)(r1::Record, r2::Record)
+    if isfilled(r1) == isfilled(r2) == true
+        dr1 = datarange(r1)
+        dr2 = datarange(r2)
+        return (
+            length(dr1) == length(dr2) &&
+            compare_memory(r1.data, first(dr1), r2.data, first(dr2), length(dr1)) == 0)
     else
-        return isfilled(record1) == isfilled(record2) == false
+        return isfilled(r1) == isfilled(r2) == false
     end
 end
 
@@ -598,36 +600,6 @@ function findauxtag(record::Record, tag::AbstractString)
     return 0
 end
 
-# r"[0-9]+" must match `data[range]`.
-function unsafe_parse_decimal{T<:Unsigned}(::Type{T}, data::Vector{UInt8}, range::UnitRange{Int})
-    x = zero(T)
-    @inbounds for i in range
-        x = Base.Checked.checked_mul(x, 10 % T)
-        x = Base.Checked.checked_add(x, (data[i] - UInt8('0')) % T)
-    end
-    return x
-end
-
-# r"[-+]?[0-9]+" must match `data[range]`.
-function unsafe_parse_decimal{T<:Signed}(::Type{T}, data::Vector{UInt8}, range::UnitRange{Int})
-    lo = first(range)
-    if data[lo] == UInt8('-')
-        sign = T(-1)
-        lo += 1
-    elseif data[lo] == UInt8('+')
-        sign = T(+1)
-        lo += 1
-    else
-        sign = T(+1)
-    end
-    x = zero(T)
-    @inbounds for i in lo:last(range)
-        x = Base.Checked.checked_mul(x, 10 % T)
-        x = Base.Checked.checked_add(x, (data[i] - UInt8('0')) % T)
-    end
-    return sign * x
-end
-
 function parse_hexarray(data::Vector{UInt8}, range::UnitRange{Int})
     @assert iseven(length(range))
     ret = Vector{UInt8}(length(range) >> 1)
@@ -665,8 +637,4 @@ end
 
 function ismissing(record::Record, range::UnitRange{Int})
     return length(range) == 1 && record.data[first(range)] == UInt8('*')
-end
-
-function memcmp(p1::Ptr, p2::Ptr, n::Integer)
-    return ccall(:memcmp, Cint, (Ptr{Void}, Ptr{Void}, Csize_t), p1, p2, n)
 end
