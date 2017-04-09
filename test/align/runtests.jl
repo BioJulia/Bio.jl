@@ -1094,32 +1094,32 @@ end
             @test string.(find(header(reader), "SQ")) == ["@SQ\tSN:CHROMOSOME_I\tLN:1009800"]
 
             # first record
-            rec = SAM.Record()
-            read!(reader, rec)
-            @test SAM.ismapped(rec)
-            @test SAM.refname(rec) == "CHROMOSOME_I"
-            @test SAM.position(rec) == leftposition(rec) == 2
-            @test SAM.rightposition(rec) == rightposition(rec) == 102
-            @test SAM.tempname(rec) == seqname(rec) == "SRR065390.14978392"
-            @test SAM.sequence(rec) == sequence(rec) == dna"CCTAGCCCTAACCCTAACCCTAACCCTAGCCTAAGCCTAAGCCTAAGCCTAAGCCTAAGCCTAAGCCTAAGCCTAAGCCTAAGCCTAAGCCTAAGCCTAA"
-            @test SAM.sequence(String, rec)          ==    "CCTAGCCCTAACCCTAACCCTAACCCTAGCCTAAGCCTAAGCCTAAGCCTAAGCCTAAGCCTAAGCCTAAGCCTAAGCCTAAGCCTAAGCCTAAGCCTAA"
-            @test SAM.seqlength(rec) == 100
-            @test SAM.quality(rec)         == (b"#############################@B?8B?BA@@DDBCDDCBC@CDCDCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCC" .- 33)
-            @test SAM.quality(String, rec) ==   "#############################@B?8B?BA@@DDBCDDCBC@CDCDCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCC"
-            @test SAM.flag(rec) == 16
-            @test SAM.cigar(rec) == "27M1D73M"
-            @test SAM.alignment(rec) == Alignment([
+            record = SAM.Record()
+            read!(reader, record)
+            @test SAM.ismapped(record)
+            @test SAM.refname(record) == "CHROMOSOME_I"
+            @test SAM.position(record) == leftposition(record) == 2
+            @test SAM.rightposition(record) == rightposition(record) == 102
+            @test SAM.tempname(record) == seqname(record) == "SRR065390.14978392"
+            @test SAM.sequence(record) == sequence(record) == dna"CCTAGCCCTAACCCTAACCCTAACCCTAGCCTAAGCCTAAGCCTAAGCCTAAGCCTAAGCCTAAGCCTAAGCCTAAGCCTAAGCCTAAGCCTAAGCCTAA"
+            @test SAM.sequence(String, record)          ==    "CCTAGCCCTAACCCTAACCCTAACCCTAGCCTAAGCCTAAGCCTAAGCCTAAGCCTAAGCCTAAGCCTAAGCCTAAGCCTAAGCCTAAGCCTAAGCCTAA"
+            @test SAM.seqlength(record) == 100
+            @test SAM.quality(record)         == (b"#############################@B?8B?BA@@DDBCDDCBC@CDCDCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCC" .- 33)
+            @test SAM.quality(String, record) ==   "#############################@B?8B?BA@@DDBCDDCBC@CDCDCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCC"
+            @test SAM.flag(record) == 16
+            @test SAM.cigar(record) == "27M1D73M"
+            @test SAM.alignment(record) == Alignment([
                 AlignmentAnchor(  0,   1, OP_START),
                 AlignmentAnchor( 27,  28, OP_MATCH),
                 AlignmentAnchor( 27,  29, OP_DELETE),
                 AlignmentAnchor(100, 102, OP_MATCH)])
-            @test rec["XG"] == 1
-            @test rec["XM"] == 5
-            @test rec["XN"] == 0
-            @test rec["XO"] == 1
-            @test rec["AS"] == -18
-            @test rec["XS"] == -18
-            @test rec["YT"] == "UU"
+            @test record["XG"] == 1
+            @test record["XM"] == 5
+            @test record["XN"] == 0
+            @test record["XO"] == 1
+            @test record["AS"] == -18
+            @test record["XS"] == -18
+            @test record["YT"] == "UU"
             @test eof(reader)
             close(reader)
 
@@ -1151,9 +1151,9 @@ end
                     reader = open(SAM.Reader, filepath)
                     writer = SAM.Writer(io, header(reader))
                     records = SAM.Record[]
-                    for rec in reader
-                        push!(records, rec)
-                        write(writer, rec)
+                    for record in reader
+                        push!(records, record)
+                        write(writer, record)
                     end
                     close(reader)
                     close(writer)
@@ -1303,9 +1303,9 @@ end
                         BGZFStream(path, "w"),
                         BAM.header(reader, fillSQ=isempty(find(header(reader), "SQ"))))
                     records = BAM.Record[]
-                    for rec in reader
-                        push!(records, rec)
-                        write(writer, rec)
+                    for record in reader
+                        push!(records, record)
+                        write(writer, record)
                     end
                     close(reader)
                     close(writer)
