@@ -336,6 +336,9 @@ SAM is a text-based file format for representing sequence alignments.
 Bio.Align.SAM.Reader
 Bio.Align.SAM.header
 
+Bio.Align.SAM.Header
+Base.find(header::Bio.Align.SAM.Header, key::AbstractString)
+
 Bio.Align.SAM.Writer
 
 Bio.Align.SAM.MetaInfo
@@ -365,7 +368,7 @@ Bio.Align.SAM.quality
 Bio.Align.SAM.auxdata
 ```
 
-16-bit flags defined in the SAM specs are provided as flollows:
+This module provides 16-bit flags defined in the SAM specs:
 
 | Flag                      | Bit       | Description                                                        |
 | :------------------------ | :-------- | :----------------------------------------------------------------- |
@@ -389,15 +392,20 @@ Bio.Align.SAM.auxdata
 * Writer type: `BAM.Writer`
 * Element type: `BAM.Record`
 
-BAM is a binary counterpart of the SAM file format.
+BAM is a binary counterpart of the [SAM](@ref) file format.
 
 When writing data in the BAM file format, the underlying output stream needs to
 be wrapped with a `BGZFStream` object provided from
 [BGZFStreams.jl](https://github.com/BioJulia/BGZFStreams.jl).
 
+Flags and the header type are defined in the [SAM](@ref) module.
+
 ```@docs
 Bio.Align.BAM.Reader
+Bio.Align.BAM.header
+
 Bio.Align.BAM.Writer
+
 Bio.Align.BAM.Record
 Bio.Align.BAM.flag
 Bio.Align.BAM.ismapped

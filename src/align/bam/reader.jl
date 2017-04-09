@@ -45,16 +45,25 @@ function Base.show(io::IO, reader::Reader)
       print(io, "  number of contigs: ", length(reader.refseqnames))
 end
 
-function header(reader::Reader; fillSQ::Bool=false)
+"""
+    header(reader::Reader; fillSQ::Bool=false)::SAM.Header
+
+Get the header of `reader`.
+
+If `fillSQ` is `true`, this function fills missing "SQ" metainfo in the header.
+"""
+function header(reader::Reader; fillSQ::Bool=false)::SAM.Header
+    header = reader.header
     if fillSQ
         if !isempty(find(reader.header, "SQ"))
             throw(ArgumentError("SAM header already has SQ records"))
         end
+        header = copy(header)
         for (name, len) in zip(reader.refseqnames, reader.refseqlens)
-            push!(reader.header, SAM.MetaInfo("SQ", ["SN" => name, "LN" => len]))
+            push!(header, SAM.MetaInfo("SQ", ["SN" => name, "LN" => len]))
         end
     end
-    return reader.header
+    return header
 end
 
 function Bio.header(reader::Reader)

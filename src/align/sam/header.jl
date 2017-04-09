@@ -5,8 +5,17 @@ immutable Header
     metainfo::Vector{MetaInfo}
 end
 
+"""
+    SAM.Header()
+
+Create an empty header.
+"""
 function Header()
     return Header(MetaInfo[])
+end
+
+function Base.copy(header::Header)
+    return Header(header.metainfo)
 end
 
 function Base.eltype(::Type{Header})
@@ -29,7 +38,12 @@ function Base.next(header::Header, i)
     return header.metainfo[i], i + 1
 end
 
-function Base.find(header::Header, key::AbstractString)
+"""
+    find(header::Header, key::AbstractString)::Vector{MetaInfo}
+
+Find metainfo objects satisfying `SAM.tag(metainfo) == key`.
+"""
+function Base.find(header::Header, key::AbstractString)::Vector{MetaInfo}
     return filter(m -> isequalkey(m, key), header.metainfo)
 end
 
