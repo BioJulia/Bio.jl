@@ -4,6 +4,7 @@ using Base.Test
 
 using Bio: Seq, Var
 
+import BioSymbols
 using BufferedStreams
 using StatsBase
 using YAML
@@ -571,7 +572,7 @@ end
         for aa in alphabet(AminoAcid)
             @test encode(AminoAcidAlphabet, aa) === convert(UInt8, aa)
         end
-        @test_throws Seq.EncodeError encode(AminoAcidAlphabet, Seq.AA_INVALID)
+        @test_throws Seq.EncodeError encode(AminoAcidAlphabet, BioSymbols.AA_INVALID)
     end
 
     @testset "Decoder" begin
