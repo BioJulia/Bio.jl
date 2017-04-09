@@ -455,102 +455,78 @@ formats commonly used for this kind of task.
 
 SAM and BAM are the most popular file formats and have the same reading and
 writing interface as all other formats in Bio.jl (see [Reading and writing
-data](reading/)]):
+data](@ref) section). A typical code iterating over all records in a file looks
+like below:
 ```julia
-reader = open(BAMReader, "data.bam")  # same for SAM
+# import the SAM and BAM module
+using Bio.Align
+
+# open a BAM file
+reader = open(BAM.Reader, "data.bam")
+
+# iterate over BAM records
 for record in reader
-    # do something
+    # `record` is a BAM.Record object
+    if BAM.ismapped(record)
+        # print mapped position
+        println(BAM.refname(record), ':', BAM.position(record))
+    end
 end
+
+# close the BAM file
 close(reader)
 ```
 
-`SAMReader` and `BAMReader` implement the `header` function, which returns a
-`SAMHeader` object. This is conceptually a sequence of `SAMMetaInfo` objects
+Accessor functions are defined in `SAM` and `BAM` modules.  Lists of these
+functions to `SAM.Record` and `BAM.Record` are described in [SAM](@ref) and
+[BAM](@ref) sections, respectively.
+
+`SAM.Reader` and `BAM.Reader` implement the `header` function, which returns a
+`SAM.Header` object. This is conceptually a sequence of `SAM.MetaInfo` objects
 corresponding to header lines that start with '@' markers. To select
-`SAMMetaInfo` records with a specific tag, you can use the `find` function:
+`SAM.MetaInfo` records with a specific tag, you can use the `find` function:
 ```jlcon
-julia> reader = open(SAMReader, "data.sam");
+julia> reader = open(SAM.Reader, "data.sam");
 
 julia> find(header(reader), "SQ")
-7-element Array{Bio.Align.SAMMetaInfo,1}:
- Bio.Align.SAMMetaInfo:
+7-element Array{Bio.Align.SAM.MetaInfo,1}:
+ Bio.Align.SAM.MetaInfo:
     tag: SQ
   value: SN=Chr1 LN=30427671
- Bio.Align.SAMMetaInfo:
+ Bio.Align.SAM.MetaInfo:
     tag: SQ
   value: SN=Chr2 LN=19698289
- Bio.Align.SAMMetaInfo:
+ Bio.Align.SAM.MetaInfo:
     tag: SQ
   value: SN=Chr3 LN=23459830
- Bio.Align.SAMMetaInfo:
+ Bio.Align.SAM.MetaInfo:
     tag: SQ
   value: SN=Chr4 LN=18585056
- Bio.Align.SAMMetaInfo:
+ Bio.Align.SAM.MetaInfo:
     tag: SQ
   value: SN=Chr5 LN=26975502
- Bio.Align.SAMMetaInfo:
+ Bio.Align.SAM.MetaInfo:
     tag: SQ
   value: SN=chloroplast LN=154478
- Bio.Align.SAMMetaInfo:
+ Bio.Align.SAM.MetaInfo:
     tag: SQ
   value: SN=mitochondria LN=366924
 
 ```
 
-A `SAMMetaInfo` object can be created as follows:
+A `SAM.MetaInfo` object can be created as follows:
 ```jlcon
-julia> SAMMetaInfo("SQ", ["SN" => "chr1", "LN" => 1234])
-Bio.Align.SAMMetaInfo:
+julia> SAM.MetaInfo("SQ", ["SN" => "chr1", "LN" => 1234])
+Bio.Align.SAM.MetaInfo:
     tag: SQ
   value: SN=chr1 LN=1234
 
-julia> SAMMetaInfo("CO", "comment")
-Bio.Align.SAMMetaInfo:
+julia> SAM.MetaInfo("CO", "comment")
+Bio.Align.SAM.MetaInfo:
     tag: CO
   value: comment
 
 ```
-
-`SAMRecord` and `BAMRecord` support the following accessors:
-
-| Accessor         | Description                                    |
-| :--------------- | :--------------------------------------------- |
-| `refname`        | reference sequence name                        |
-| `leftposition`   | 1-based leftmost mapping position              |
-| `rightposition`  | 1-based rightmost mapping position             |
-| `refindex`       | 1-based reference sequence index (BAM only)    |
-| `nextrefname`    | `refname` of the mate/next read                |
-| `nextleftposition` | `leftposition` of the mate/next read         |
-| `nextrefindex`   | `refindex` of the mate/next read (BAM only)    |
-| `mappingquality` | mapping quality                                |
-| `flag`           | bitwise flag                                   |
-| `templatelength` | observed template length                       |
-| `seqname`        | template name                                  |
-| `cigar`          | CIGAR string                                   |
-| `cigar_rle`      | run-length encoded CIGAR operations (BAM only) |
-| `alignment`      | sequence alignment                             |
-| `sequence`       | DNA sequence                                   |
-| `seqlength`      | DNA sequence length                            |
-| `qualities`      | base qualities                                 |
-| `[<tag>]`        | value of an optional field with `tag`          |
-
-
-16-bit flags are defined in the SAM specification as follows:
-
-| Flag                      | Bit       | Description                                                        |
-| :------------------------ | :-------- | :----------------------------------------------------------------- |
-| `SAM_FLAG_PAIRED`         | `0x0001`  | template having multiple segments in sequencing                    |
-| `SAM_FLAG_PROPER_PAIR`    | `0x0002`  | each segment properly aligned according to the aligner             |
-| `SAM_FLAG_UNMAP`          | `0x0004`  | segment unmapped                                                   |
-| `SAM_FLAG_MUNMAP`         | `0x0008`  | next segment in the template unmapped                              |
-| `SAM_FLAG_REVERSE`        | `0x0010`  | SEQ being reverse complemented                                     |
-| `SAM_FLAG_MREVERSE`       | `0x0020`  | SEQ of the next segment in the template being reverse complemented |
-| `SAM_FLAG_READ1`          | `0x0040`  | the first segment in the template                                  |
-| `SAM_FLAG_READ2`          | `0x0080`  | the last segment in the template                                   |
-| `SAM_FLAG_SECONDARY`      | `0x0100`  | secondary alignment                                                |
-| `SAM_FLAG_QCFAIL`         | `0x0200`  | not passing filters, such as platform/vendor quality controls      |
-| `SAM_FLAG_DUP`            | `0x0400`  | PCR or optical duplicate                                           |
-| `SAM_FLAG_SUPPLEMENTARY`  | `0x0800`  | supplementary alignment                                            |
 
 
 ### Performance tips
@@ -558,10 +534,10 @@ Bio.Align.SAMMetaInfo:
 The size of a BAM file is often extremely large. The iterator interface
 mentioned above allocates an object for each record and that may be a bottleneck
 of reading data from a BAM file. In-place reading reuses a preallocated object
-for every record and no memory allocation happens in reading:
+for every record and less memory allocation happens in reading:
 ```julia
-reader = open(BAMReader, "data.bam")
-record = BAMRecord()
+reader = open(BAM.Reader, "data.bam")
+record = BAM.Record()
 while !eof(reader)
     read!(reader, record)
     # do something
@@ -572,7 +548,7 @@ Accessing optional fields will results in type instability in Julia, which has a
 significant negative impact on performance. If the user knows the type of a
 value in advance, specifying it as a type annotation will alleviate the problem:
 ```julia
-for record in open(BAMReader, "data.bam")
+for record in open(BAM.Reader, "data.bam")
     nm = record["NM"]::UInt8
     # do something
 end

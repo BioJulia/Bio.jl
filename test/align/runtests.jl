@@ -1015,8 +1015,8 @@ end
             metainfo = SAM.MetaInfo("CO", "some comment (parens)")
             @test isfilled(metainfo)
             @test contains(repr(metainfo), "CO")
-            @test metainfotag(metainfo) == "CO"
-            @test metainfoval(metainfo) == "some comment (parens)"
+            @test SAM.tag(metainfo) == "CO"
+            @test SAM.value(metainfo) == "some comment (parens)"
             @test metainfo == SAM.MetaInfo(b"@CO\tsome comment (parens)")
             @test_throws ArgumentError keys(metainfo)
             @test_throws ArgumentError values(metainfo)
@@ -1024,10 +1024,11 @@ end
             metainfo = SAM.MetaInfo("HD", ["VN" => "1.0", "SO" => "coordinate"])
             @test isfilled(metainfo)
             @test contains(repr(metainfo), "HD")
-            @test metainfotag(metainfo) == "HD"
-            @test metainfoval(metainfo) == "VN:1.0\tSO:coordinate"
+            @test SAM.tag(metainfo) == "HD"
+            @test SAM.value(metainfo) == "VN:1.0\tSO:coordinate"
             @test keys(metainfo) == ["VN", "SO"]
             @test values(metainfo) == ["1.0", "coordinate"]
+            @test SAM.keyvalues(metainfo) == ["VN" => "1.0", "SO" => "coordinate"]
             @test haskey(metainfo, "VN")
             @test haskey(metainfo, "SO")
             @test !haskey(metainfo, "GO")

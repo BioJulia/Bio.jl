@@ -29,7 +29,12 @@ function Bio.IO.stream(reader::Reader)
     return reader.state.stream
 end
 
-function header(reader::Reader)
+"""
+    header(reader::Reader)::Header
+
+Get the header of `reader`.
+"""
+function header(reader::Reader)::Header
     return reader.header
 end
 

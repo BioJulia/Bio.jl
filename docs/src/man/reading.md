@@ -334,7 +334,16 @@ SAM is a text-based file format for representing sequence alignments.
 
 ```@docs
 Bio.Align.SAM.Reader
+Bio.Align.SAM.header
+
 Bio.Align.SAM.Writer
+
+Bio.Align.SAM.MetaInfo
+Bio.Align.SAM.iscomment
+Bio.Align.SAM.tag
+Bio.Align.SAM.value
+Bio.Align.SAM.keyvalues
+
 Bio.Align.SAM.Record
 Bio.Align.SAM.flag
 Bio.Align.SAM.ismapped
@@ -355,6 +364,24 @@ Bio.Align.SAM.seqlength
 Bio.Align.SAM.quality
 Bio.Align.SAM.auxdata
 ```
+
+16-bit flags defined in the SAM specs are provided as flollows:
+
+| Flag                      | Bit       | Description                                                        |
+| :------------------------ | :-------- | :----------------------------------------------------------------- |
+| `SAM.FLAG_PAIRED`         | `0x0001`  | template having multiple segments in sequencing                    |
+| `SAM.FLAG_PROPER_PAIR`    | `0x0002`  | each segment properly aligned according to the aligner             |
+| `SAM.FLAG_UNMAP`          | `0x0004`  | segment unmapped                                                   |
+| `SAM.FLAG_MUNMAP`         | `0x0008`  | next segment in the template unmapped                              |
+| `SAM.FLAG_REVERSE`        | `0x0010`  | SEQ being reverse complemented                                     |
+| `SAM.FLAG_MREVERSE`       | `0x0020`  | SEQ of the next segment in the template being reverse complemented |
+| `SAM.FLAG_READ1`          | `0x0040`  | the first segment in the template                                  |
+| `SAM.FLAG_READ2`          | `0x0080`  | the last segment in the template                                   |
+| `SAM.FLAG_SECONDARY`      | `0x0100`  | secondary alignment                                                |
+| `SAM.FLAG_QCFAIL`         | `0x0200`  | not passing filters, such as platform/vendor quality controls      |
+| `SAM.FLAG_DUP`            | `0x0400`  | PCR or optical duplicate                                           |
+| `SAM.FLAG_SUPPLEMENTARY`  | `0x0800`  | supplementary alignment                                            |
+
 
 ### BAM
 

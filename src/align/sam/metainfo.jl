@@ -20,8 +20,71 @@ function MetaInfo(data::Vector{UInt8}=UInt8[])
     return metainfo
 end
 
-function MetaInfo(data::AbstractString)
-    return MetaInfo(convert(Vector{UInt8}, data))
+"""
+    MetaInfo(str::AbstractString)
+
+Create a SAM metainfo from `str`.
+
+# Examples
+
+    julia> SAM.MetaInfo("@CO\tsome comment")
+    Bio.Align.SAM.MetaInfo:
+        tag: CO
+      value: some comment
+
+    julia> SAM.MetaInfo("@SQ\tSN:chr1\tLN:12345")
+    Bio.Align.SAM.MetaInfo:
+        tag: SQ
+      value: SN=chr1 LN=12345
+
+"""
+function MetaInfo(str::AbstractString)
+    return MetaInfo(convert(Vector{UInt8}, str))
+end
+
+"""
+    MetaInfo(tag::AbstractString, value)
+
+Create a SAM metainfo with `tag` and `value`.
+
+`tag` is a two-byte ASCII string. If `tag` is `"CO"`, `value` must be a string;
+otherwise, `value` is an iterable object with key and value pairs.
+
+# Examples
+
+    julia> SAM.MetaInfo("CO", "some comment")
+    Bio.Align.SAM.MetaInfo:
+        tag: CO
+      value: some comment
+
+    julia> string(ans)
+    "@CO\tsome comment"
+
+    julia> SAM.MetaInfo("SQ", ["SN" => "chr1", "LN" => 12345])
+    Bio.Align.SAM.MetaInfo:
+        tag: SQ
+      value: SN=chr1 LN=12345
+
+    julia> string(ans)
+    "@SQ\tSN:chr1\tLN:12345"
+
+"""
+function MetaInfo(tag::AbstractString, value)
+    buf = IOBuffer()
+    if tag == "CO"  # comment
+        if !isa(value, AbstractString)
+            throw(ArgumentError("value must be a string"))
+        end
+        write(buf, "@CO\t", value)
+    elseif ismatch(r"[A-Z][A-Z]", tag)
+        print(buf, '@', tag)
+        for (key, val) in value
+            print(buf, '\t', key, ':', val)
+        end
+    else
+        throw(ArgumentError("tag must match r\"[A-Z][A-Z]\""))
+    end
+    return MetaInfo(takebuf_array(buf))
 end
 
 function initialize!(metainfo::MetaInfo)
@@ -47,24 +110,6 @@ function checkfilled(metainfo::MetaInfo)
     end
 end
 
-function MetaInfo(tag::AbstractString, value)
-    buf = IOBuffer()
-    if tag == "CO"  # comment
-        if !isa(value, AbstractString)
-            throw(ArgumentError("value must be a string"))
-        end
-        write(buf, "@CO\t", value)
-    elseif ismatch(r"[A-Z][A-Z]", tag)
-        print(buf, '@', tag)
-        for (key, val) in value
-            print(buf, '\t', key, ':', val)
-        end
-    else
-        throw(ArgumentError("tag must match r\"[A-Z][A-Z]\""))
-    end
-    return MetaInfo(takebuf_array(buf))
-end
-
 function Base.:(==)(metainfo1::MetaInfo, metainfo2::MetaInfo)
     if isfilled(metainfo1) == isfilled(metainfo2) == true
         r1 = datarange(metainfo1)
@@ -83,26 +128,79 @@ function isequalkey(metainfo::MetaInfo, key::AbstractString)
     return metainfo.data[metainfo.tag[1]] == k1 && metainfo.data[metainfo.tag[2]] == k2
 end
 
-function iscomment(metainfo::MetaInfo)
+function Base.show(io::IO, metainfo::MetaInfo)
+    print(io, summary(metainfo), ':')
+    if isfilled(metainfo)
+        println(io)
+        println(io, "    tag: ", tag(metainfo))
+          print(io, "  value:")
+        if !iscomment(metainfo)
+            for (key, val) in zip(keys(metainfo), values(metainfo))
+                print(io, ' ', key, '=', val)
+            end
+        else
+            print(io, ' ', value(metainfo))
+        end
+    else
+        print(io, " <not filled>")
+    end
+end
+
+function Base.print(io::IO, metainfo::MetaInfo)
+    write(io, metainfo)
+    return nothing
+end
+
+function Base.write(io::IO, metainfo::MetaInfo)
+    checkfilled(metainfo)
+    r = datarange(metainfo)
+    return unsafe_write(io, pointer(metainfo.data, first(r)), length(r))
+end
+
+
+# Accessor Functions
+# ------------------
+
+"""
+    iscomment(metainfo::MetaInfo)::Bool
+
+Test if `metainfo` is a comment (i.e. its tag is "CO").
+"""
+function iscomment(metainfo::MetaInfo)::Bool
     return isequalkey(metainfo, "CO")
 end
 
-function tag(metainfo::MetaInfo)
+"""
+    tag(metainfo::MetaInfo)::String
+
+Get the tag of `metainfo`.
+"""
+function tag(metainfo::MetaInfo)::String
     checkfilled(metainfo)
     return String(metainfo.data[metainfo.tag])
 end
 
-function value(metainfo::MetaInfo)
+"""
+    value(metainfo::MetaInfo)::String
+
+Get the value of `metainfo` as a string.
+"""
+function value(metainfo::MetaInfo)::String
     checkfilled(metainfo)
     return String(metainfo.data[metainfo.val])
 end
 
-function Bio.metainfotag(metainfo::MetaInfo)
-    return tag(metainfo)
-end
+"""
+    keyvalues(metainfo::MetaInfo)::Vector{Pair{String,String}}
 
-function Bio.metainfoval(metainfo::MetaInfo)
-    return value(metainfo)
+Get the values of `metainfo` as string pairs.
+"""
+function keyvalues(metainfo::MetaInfo)::Vector{Pair{String,String}}
+    checkfilled(metainfo)
+    if iscomment(metainfo)
+        throw(ArgumentError("not a dictionary"))
+    end
+    return Pair{String,String}[key => val for (key, val) in zip(keys(metainfo), values(metainfo))]
 end
 
 function Base.keys(metainfo::MetaInfo)
@@ -145,33 +243,4 @@ function findkey(metainfo::MetaInfo, key::AbstractString)
         end
     end
     return 0
-end
-
-function Base.show(io::IO, metainfo::MetaInfo)
-    print(io, summary(metainfo), ':')
-    if isfilled(metainfo)
-        println(io)
-        println(io, "    tag: ", tag(metainfo))
-          print(io, "  value:")
-        if !iscomment(metainfo)
-            for (key, val) in zip(keys(metainfo), values(metainfo))
-                print(io, ' ', key, '=', val)
-            end
-        else
-            print(io, ' ', value(metainfo))
-        end
-    else
-        print(io, " <not filled>")
-    end
-end
-
-function Base.print(io::IO, metainfo::MetaInfo)
-    write(io, metainfo)
-    return nothing
-end
-
-function Base.write(io::IO, metainfo::MetaInfo)
-    checkfilled(metainfo)
-    r = datarange(metainfo)
-    return unsafe_write(io, pointer(metainfo.data, first(r)), length(r))
 end
