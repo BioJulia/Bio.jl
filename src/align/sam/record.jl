@@ -140,18 +140,6 @@ function Base.write(io::IO, record::Record)
     return unsafe_write(io, pointer(record.data, first(r)), length(r))
 end
 
-function Base.:(==)(r1::Record, r2::Record)
-    if isfilled(r1) == isfilled(r2) == true
-        dr1 = datarange(r1)
-        dr2 = datarange(r2)
-        return (
-            length(dr1) == length(dr2) &&
-            compare_memory(r1.data, first(dr1), r2.data, first(dr2), length(dr1)) == 0)
-    else
-        return isfilled(r1) == isfilled(r2) == false
-    end
-end
-
 # TODO
 function Base.isless(rec1::Record, rec2::Record)
     # compared by the left-most position of an alignment

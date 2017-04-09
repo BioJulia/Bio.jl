@@ -1014,15 +1014,16 @@ end
 
             metainfo = SAM.MetaInfo("CO", "some comment (parens)")
             @test isfilled(metainfo)
+            @test string(metainfo) == "@CO\tsome comment (parens)"
             @test contains(repr(metainfo), "CO")
             @test SAM.tag(metainfo) == "CO"
             @test SAM.value(metainfo) == "some comment (parens)"
-            @test metainfo == SAM.MetaInfo(b"@CO\tsome comment (parens)")
             @test_throws ArgumentError keys(metainfo)
             @test_throws ArgumentError values(metainfo)
 
             metainfo = SAM.MetaInfo("HD", ["VN" => "1.0", "SO" => "coordinate"])
             @test isfilled(metainfo)
+            @test string(metainfo) == "@HD\tVN:1.0\tSO:coordinate"
             @test contains(repr(metainfo), "HD")
             @test SAM.tag(metainfo) == "HD"
             @test SAM.value(metainfo) == "VN:1.0\tSO:coordinate"
@@ -1034,7 +1035,6 @@ end
             @test !haskey(metainfo, "GO")
             @test metainfo["VN"] == "1.0"
             @test metainfo["SO"] == "coordinate"
-            @test metainfo == SAM.MetaInfo(b"@HD\tVN:1.0\tSO:coordinate")
             @test_throws KeyError metainfo["GO"]
         end
 
@@ -1055,9 +1055,6 @@ end
             @test !SAM.ismapped(record)
             @test repr(record) == "Bio.Align.SAM.Record: <not filled>"
             @test_throws ArgumentError SAM.flag(record)
-
-            record = SAM.Record("r001\t99\tchr1\t7\t30\t8M2I4M1D3M\t=\t37\t39\tTTAGATAAAGGATACTG\t*")
-            @test record == SAM.Record(b"r001\t99\tchr1\t7\t30\t8M2I4M1D3M\t=\t37\t39\tTTAGATAAAGGATACTG\t*")
 
             record = SAM.Record("r001\t99\tchr1\t7\t30\t8M2I4M1D3M\t=\t37\t39\tTTAGATAAAGGATACTG\t*")
             @test isfilled(record)
@@ -1094,7 +1091,7 @@ end
 
             # header
             h = header(reader)
-            @test find(header(reader), "SQ") == [SAM.MetaInfo(b"@SQ\tSN:CHROMOSOME_I\tLN:1009800")]
+            @test string.(find(header(reader), "SQ")) == ["@SQ\tSN:CHROMOSOME_I\tLN:1009800"]
 
             # first record
             rec = SAM.Record()
@@ -1136,6 +1133,17 @@ end
         end
 
         @testset "Round trip" begin
+            function compare_records(xs, ys)
+                if length(xs) != length(ys)
+                    return false
+                end
+                for (x, y) in zip(xs, ys)
+                    if x.data[x.filled] != y.data[y.filled]
+                        return false
+                    end
+                end
+                return true
+            end
             for specimen in YAML.load_file(joinpath(samdir, "index.yml"))
                 filepath = joinpath(samdir, specimen["filename"])
                 mktemp() do path, io
@@ -1149,11 +1157,7 @@ end
                     end
                     close(reader)
                     close(writer)
-
-                    # read again
-                    reader = open(SAM.Reader, path)
-                    @test collect(reader) == records
-                    close(reader)
+                    @test compare_records(open(collect, SAM.Reader, path), records)
                 end
             end
         end
@@ -1263,6 +1267,28 @@ end
             @test length(collect(BAM.Reader(open(joinpath(bamdir, "ce#2.bam"))))) == 2
         end
 
+        function compare_records(xs, ys)
+            if length(xs) != length(ys)
+                return false
+            end
+            for (x, y) in zip(xs, ys)
+                if !(
+                    x.block_size == y.block_size &&
+                    x.refid      == y.refid &&
+                    x.pos        == y.pos &&
+                    x.bin_mq_nl  == y.bin_mq_nl &&
+                    x.flag_nc    == y.flag_nc &&
+                    x.l_seq      == y.l_seq &&
+                    x.next_refid == y.next_refid &&
+                    x.next_pos   == y.next_pos &&
+                    x.tlen       == y.tlen &&
+                    x.data[1:BAM.data_size(x)] == y.data[1:BAM.data_size(y)])
+                    return false
+                end
+            end
+            return true
+        end
+
         @testset "Round trip" begin
             for specimen in YAML.load_file(joinpath(bamdir, "index.yml"))
                 filepath = joinpath(bamdir, specimen["filename"])
@@ -1283,11 +1309,7 @@ end
                     end
                     close(reader)
                     close(writer)
-
-                    # read again
-                    reader = open(BAM.Reader, path)
-                    @test collect(reader) == records
-                    close(reader)
+                    @test compare_records(open(collect, BAM.Reader, path), records)
                 end
             end
         end
@@ -1322,7 +1344,7 @@ end
                 end)
                 # indexed scan
                 actual = collect(eachoverlap(reader, refname, range))
-                @test actual == expected
+                @test compare_records(actual, expected)
             end
             close(reader)
 

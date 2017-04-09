@@ -82,18 +82,6 @@ function Base.isless(rec1::Record, rec2::Record)
     end
 end
 
-function Base.:(==)(rec1::Record, rec2::Record)
-    return (
-        rec1.refid      == rec2.refid      &&
-        rec1.pos        == rec2.pos        &&
-        rec1.bin_mq_nl  == rec2.bin_mq_nl  &&
-        rec1.flag_nc    == rec2.flag_nc    &&
-        rec1.l_seq      == rec2.l_seq      &&
-        rec1.next_refid == rec2.next_refid &&
-        rec1.next_pos   == rec2.next_pos   &&
-        rec1.tlen       == rec2.tlen)  # TODO: check data
-end
-
 function Base.show(io::IO, record::Record)
     print(io, summary(record), ':')
     if isfilled(record)

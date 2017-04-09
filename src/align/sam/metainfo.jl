@@ -110,16 +110,6 @@ function checkfilled(metainfo::MetaInfo)
     end
 end
 
-function Base.:(==)(metainfo1::MetaInfo, metainfo2::MetaInfo)
-    if isfilled(metainfo1) == isfilled(metainfo2) == true
-        r1 = datarange(metainfo1)
-        r2 = datarange(metainfo2)
-        return length(r1) == length(r2) && compare_memory(pointer(metainfo1.data, first(r1)), pointer(metainfo2.data, first(r2)), length(r1)) == 0
-    else
-        return isfilled(metainfo1) == isfilled(metainfo2) == false
-    end
-end
-
 function isequalkey(metainfo::MetaInfo, key::AbstractString)
     if !isfilled(metainfo) || sizeof(key) != 2
         return false
