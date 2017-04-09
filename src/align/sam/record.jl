@@ -74,37 +74,6 @@ function Base.convert(::Type{Record}, str::AbstractString)
     return Record(convert(Vector{UInt8}, str))
 end
 
-function initialize!(record::Record)
-    record.filled = 1:0
-    record.qname = 1:0
-    record.flag = 1:0
-    record.rname = 1:0
-    record.pos = 1:0
-    record.mapq = 1:0
-    record.cigar = 1:0
-    record.rnext = 1:0
-    record.pnext = 1:0
-    record.tlen = 1:0
-    record.seq = 1:0
-    record.qual = 1:0
-    empty!(record.fields)
-    return record
-end
-
-function isfilled(record::Record)
-    return !isempty(record.filled)
-end
-
-function datarange(record::Record)
-    return record.filled
-end
-
-function checkfilled(record::Record)
-    if !isfilled(record)
-        throw(ArgumentError("unfilled SAM record"))
-    end
-end
-
 function Base.show(io::IO, record::Record)
     print(io, summary(record), ':')
     if isfilled(record)
@@ -136,18 +105,7 @@ end
 
 function Base.write(io::IO, record::Record)
     checkfilled(record)
-    r = datarange(record)
-    return unsafe_write(io, pointer(record.data, first(r)), length(r))
-end
-
-# TODO
-function Base.isless(rec1::Record, rec2::Record)
-    # compared by the left-most position of an alignment
-    if rec1.name == rec2.name
-        return isless(rec1.pos, rec2.pos)
-    else
-        return isless(rec1.name, rec2.name)
-    end
+    return unsafe_write(io, pointer(record.data, first(record.filled)), length(record.filled))
 end
 
 function Base.copy(record::Record)
@@ -537,6 +495,10 @@ end
 # Bio Methods
 # -----------
 
+function Bio.isfilled(record::Record)
+    return !isempty(record.filled)
+end
+
 function Bio.seqname(record::Record)
     return tempname(record)
 end
@@ -572,6 +534,29 @@ end
 
 # Helper Functions
 # ----------------
+
+function initialize!(record::Record)
+    record.filled = 1:0
+    record.qname = 1:0
+    record.flag = 1:0
+    record.rname = 1:0
+    record.pos = 1:0
+    record.mapq = 1:0
+    record.cigar = 1:0
+    record.rnext = 1:0
+    record.pnext = 1:0
+    record.tlen = 1:0
+    record.seq = 1:0
+    record.qual = 1:0
+    empty!(record.fields)
+    return record
+end
+
+function checkfilled(record::Record)
+    if !isfilled(record)
+        throw(ArgumentError("unfilled SAM record"))
+    end
+end
 
 function findauxtag(record::Record, tag::AbstractString)
     checkfilled(record)

@@ -42,19 +42,6 @@ function Base.convert(::Type{Record}, data::Vector{UInt8})
     return record
 end
 
-# Return the size of the `.data` field.
-function data_size(record::Record)
-    if isfilled(record)
-        return record.block_size - FIXED_FIELDS_BYTES + sizeof(record.block_size)
-    else
-        return 0
-    end
-end
-
-function Bio.isfilled(record::Record)
-    return record.block_size != 0
-end
-
 function Base.copy(record::Record)
     copy = Record()
     copy.block_size = record.block_size
@@ -71,15 +58,6 @@ function Base.copy(record::Record)
         copy.reader = record.reader
     end
     return copy
-end
-
-function Base.isless(rec1::Record, rec2::Record)
-    # compared by left-most position of an alignment
-    if rec1.refid == rec2.refid
-        return isless(rec1.pos, rec2.pos)
-    else
-        return isless(rec1.refid, rec2.refid)
-    end
 end
 
 function Base.show(io::IO, record::Record)
@@ -480,6 +458,10 @@ end
 # Bio Methods
 # -----------
 
+function Bio.isfilled(record::Record)
+    return record.block_size != 0
+end
+
 function Bio.seqname(record::Record)
     return tempname(record)
 end
@@ -515,6 +497,15 @@ end
 
 # Helper Functions
 # ----------------
+
+# Return the size of the `.data` field.
+function data_size(record::Record)
+    if isfilled(record)
+        return record.block_size - FIXED_FIELDS_BYTES + sizeof(record.block_size)
+    else
+        return 0
+    end
+end
 
 function checkfilled(record::Record)
     if !isfilled(record)
