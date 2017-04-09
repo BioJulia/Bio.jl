@@ -9,7 +9,7 @@
 module RecordHelper
 
 function compare_memory(p1::Ptr, p2::Ptr, len::Integer)
-    return ccall(:memcmp, Cint, (Ptr{Void}, Ptr{Void}, Csize_t), p1, p2, n) % Int
+    return ccall(:memcmp, Cint, (Ptr{Void}, Ptr{Void}, Csize_t), p1, p2, len) % Int
 end
 
 function compare_memory(data1, offset1, data2, offset2, len)
