@@ -109,18 +109,18 @@ function Base.show(io::IO, record::Record)
     print(io, summary(record), ':')
     if isfilled(record)
         println(io)
-        println(io, "    sequence name: ", hasqname(record) ? qname(record) : "<missing>")
+        println(io, "    template name: ", hastempname(record) ? tempname(record) : "<missing>")
         println(io, "             flag: ", hasflag(record) ? flag(record) : "<missing>")
-        println(io, "        reference: ", hasrname(record) ? rname(record) : "<missing>")
-        println(io, "         position: ", haspos(record) ? pos(record) : "<missing>")
-        println(io, "  mapping quality: ", hasmapq(record) ? mapq(record) : "<missing>")
+        println(io, "        reference: ", hasrefname(record) ? refname(record) : "<missing>")
+        println(io, "         position: ", hasposition(record) ? position(record) : "<missing>")
+        println(io, "  mapping quality: ", hasmappingquality(record) ? mappingquality(record) : "<missing>")
         println(io, "            CIGAR: ", hascigar(record) ? cigar(record) : "<missing>")
-        println(io, "   next reference: ", hasrnext(record) ? rnext(record) : "<missing>")
-        println(io, "    next position: ", haspnext(record) ? pnext(record) : "<missing>")
-        println(io, "  template length: ", hastlen(record) ? tlen(record) : "<missing>")
-        println(io, "         sequence: ", hasseq(record) ? seq(String, record) : "<missing>")
-        println(io, "   base qualities: ", hasqual(record) ? qual(String, record) : "<missing>")
-          print(io, "  optional fields:")
+        println(io, "   next reference: ", hasnextrefname(record) ? nextrefname(record) : "<missing>")
+        println(io, "    next position: ", hasnextposition(record) ? nextposition(record) : "<missing>")
+        println(io, "  template length: ", hastemplength(record) ? templength(record) : "<missing>")
+        println(io, "         sequence: ", hassequence(record) ? sequence(String, record) : "<missing>")
+        println(io, "     base quality: ", hasquality(record) ? quality(String, record) : "<missing>")
+          print(io, "   auxiliary data:")
         for field in record.fields
             print(io, ' ', String(record.data[field]))
         end
@@ -178,39 +178,9 @@ function Base.copy(record::Record)
         copy(record.fields))
 end
 
-"""
-    ismapped(record::Record)::Bool
 
-Test if `record` is mapped.
-"""
-function ismapped(record::Record)::Bool
-    return isfilled(record) && (flag(record) & FLAG_UNMAP == 0)
-end
-
-"""
-    qname(record::Record)::String
-
-Get the query template name of `record`.
-"""
-function qname(record::Record)::String
-    checkfilled(record)
-    if ismissing(record, record.qname)
-        missingerror(:qname)
-    end
-    return String(record.data[record.qname])
-end
-
-function hasqname(record::Record)
-    return isfilled(record) && !ismissing(record, record.qname)
-end
-
-function Bio.seqname(record::Record)
-    return qname(record)
-end
-
-function Bio.hasseqname(record::Record)
-    return hasqname(record)
-end
+# Accessor Functions
+# ------------------
 
 """
     flag(record::Record)::UInt16
@@ -227,67 +197,121 @@ function hasflag(record::Record)
 end
 
 """
-    rname(record::Record)::String
+    ismapped(record::Record)::Bool
+
+Test if `record` is mapped.
+"""
+function ismapped(record::Record)::Bool
+    return isfilled(record) && (flag(record) & FLAG_UNMAP == 0)
+end
+
+"""
+    refname(record::Record)::String
 
 Get the reference sequence name of `record`.
 """
-function rname(record::Record)
+function refname(record::Record)
     checkfilled(record)
     if ismissing(record, record.rname)
-        missingerror(:rname)
+        missingerror(:refname)
     end
     return String(record.data[record.rname])
 end
 
-function hasrname(record::Record)
+function hasrefname(record::Record)
     return isfilled(record) && !ismissing(record, record.rname)
 end
 
 """
-    pos(record::Record)::Int
+    position(record::Record)::Int
 
 Get the 1-based leftmost mapping position of `record`.
 """
-function pos(record::Record)::Int
+function position(record::Record)::Int
     checkfilled(record)
     pos = unsafe_parse_decimal(Int, record.data, record.pos)
     if pos == 0
-        missingerror(:pos)
+        missingerror(:position)
     end
     return pos
 end
 
-function haspos(record::Record)
+function hasposition(record::Record)
     return isfilled(record) && (length(record.pos) != 1 || record.data[first(record.pos)] != UInt8('0'))
 end
 
-function Bio.leftposition(record::Record)
-    return pos(record)
+"""
+    rightposition(record::Record)::Int
+
+Get the 1-based rightmost mapping position of `record`.
+"""
+function rightposition(record::Record)
+    return position(record) + alignlength(record) - 1
 end
 
-function Bio.hasleftposition(record::Record)
-    return haspos(record)
-end
-
-function Bio.rightposition(record::Record)
-    return leftposition(record) + alignment_length(record) - 1
+function hasrightposition(record::Record)
+    return hasposition(record) && hasalignment(record)
 end
 
 """
-    mapq(record::Record)::UInt8
+    isnextmapped(record::Record)::Bool
+
+Test if the mate/next read of `record` is mapped.
+"""
+function isnextmapped(record::Record)::Bool
+    return isfilled(record) && (flag(record) & FLAG_MUNMAP == 0)
+end
+
+"""
+    nextrefname(record::Record)::String
+
+Get the reference name of the mate/next read of `record`.
+"""
+function nextrefname(record::Record)::String
+    checkfilled(record)
+    if ismissing(record, record.rnext)
+        missingerror(:nextrefname)
+    end
+    return String(record.data[record.rnext])
+end
+
+function hasnextrefname(record::Record)
+    return isfilled(record) && !ismissing(record, record.rnext)
+end
+
+"""
+    nextposition(record::Record)::Int
+
+Get the position of the mate/next read of `record`.
+"""
+function nextposition(record::Record)::Int
+    checkfilled(record)
+    pos = unsafe_parse_decimal(Int, record.data, record.pnext)
+    if pos == 0
+        missingerror(:nextposition)
+    end
+    return pos
+end
+
+function hasnextposition(record::Record)
+    return isfilled(record) && (length(record.pnext) != 1 || record.data[first(record.pnext)] != UInt8('0'))
+end
+
+"""
+    mappingquality(record::Record)::UInt8
 
 Get the mapping quality of `record`.
 """
-function mapq(record::Record)::UInt8
+function mappingquality(record::Record)::UInt8
     checkfilled(record)
     qual = unsafe_parse_decimal(UInt8, record.data, record.mapq)
     if qual == 0xff
-        missingerror(:mapq)
+        missingerror(:mappingquality)
     end
     return qual
 end
 
-function hasmapq(record::Record)
+function hasmappingquality(record::Record)
     return isfilled(record) && unsafe_parse_decimal(UInt8, record.data, record.mapq) != 0xff
 end
 
@@ -309,46 +333,71 @@ function hascigar(record::Record)
 end
 
 """
-    rnext(record::Record)::String
+    alignment(record::Record)::Bio.Align.Alignment
 
-Get the reference name of the mate/next read of `record`.
+Get the alignment of `record`.
 """
-function rnext(record::Record)::String
-    checkfilled(record)
-    if ismissing(record, record.rnext)
-        missingerror(:rnext)
+function alignment(record::Record)::Bio.Align.Alignment
+    if ismapped(record)
+        return Bio.Align.Alignment(cigar(record), 1, position(record))
+    else
+        return Bio.Align.Alignment(Bio.Align.AlignmentAnchor[])
     end
-    return String(record.data[record.rnext])
 end
 
-function hasrnext(record::Record)
-    return isfilled(record) && !ismissing(record, record.rnext)
+function hasalignment(record::Record)
+    return isfilled(record) && hascigar(record)
 end
 
 """
-    pnext(record::Record)::Int
+    alignlength(record::Record)::Int
 
-Get the position of the mate/next read of `record`.
+Get the alignment length of `record`.
 """
-function pnext(record::Record)::Int
-    checkfilled(record)
-    pos = unsafe_parse_decimal(Int, record.data, record.pnext)
-    if pos == 0
-        missingerror(:pnext)
+function alignlength(record::Record)::Int
+    if length(record.cigar) == 1 && record.data[first(record.cigar)] == UInt8('*')
+        return 0
     end
-    return pos
-end
-
-function haspnext(record::Record)
-    return isfilled(record) && (length(record.pnext) != 1 || record.data[first(record.pnext)] != UInt8('0'))
+    ret::Int = 0
+    len = 0  # operation length
+    for i in record.cigar
+        c = record.data[i]
+        if c ∈ UInt8('0'):UInt8('9')
+            len = len * 10 + (c - UInt8('0'))
+        else
+            op = convert(Bio.Align.Operation, Char(c))
+            if Bio.Align.ismatchop(op) || Bio.Align.isdeleteop(op)
+                ret += len
+                len = 0
+            end
+        end
+    end
+    return ret
 end
 
 """
-    tlen(record::Record)::Int
+    tempname(record::Record)::String
+
+Get the query template name of `record`.
+"""
+function tempname(record::Record)::String
+    checkfilled(record)
+    if ismissing(record, record.qname)
+        missingerror(:tempname)
+    end
+    return String(record.data[record.qname])
+end
+
+function hastempname(record::Record)
+    return isfilled(record) && !ismissing(record, record.qname)
+end
+
+"""
+    templength(record::Record)::Int
 
 Get the template length of `record`.
 """
-function tlen(record::Record)::Int
+function templength(record::Record)::Int
     checkfilled(record)
     len = unsafe_parse_decimal(Int, record.data, record.tlen)
     if len == 0
@@ -357,19 +406,19 @@ function tlen(record::Record)::Int
     return len
 end
 
-function hastlen(record::Record)
+function hastemplength(record::Record)
     return isfilled(record) && (length(record.tlen) != 1 || record.data[first(record.tlen)] != UInt8('0'))
 end
 
 """
-    seq(record::Record)::Bio.Seq.DNASequence
+    sequence(record::Record)::Bio.Seq.DNASequence
 
 Get the segment sequence of `record`.
 """
-function seq(record::Record)::Bio.Seq.DNASequence
+function sequence(record::Record)::Bio.Seq.DNASequence
     checkfilled(record)
     if ismissing(record, record.seq)
-        missingerror(:seq)
+        missingerror(:sequence)
     end
     seqlen = length(record.seq)
     ret = Bio.Seq.DNASequence(seqlen)
@@ -377,57 +426,17 @@ function seq(record::Record)::Bio.Seq.DNASequence
     return ret
 end
 
-function hasseq(record::Record)
+function hassequence(record::Record)
     return isfilled(record) && !ismissing(record, record.seq)
 end
-
-function Bio.sequence(record::Record)
-    return seq(record)
-end
-
-function Bio.hassequence(record::Record)
-    return hasseq(record)
-end
-
 """
-    seq(::Type{String}, record::Record)::String
+    sequence(::Type{String}, record::Record)::String
 
 Get the segment sequence of `record` as `String`.
 """
-function seq(::Type{String}, record::Record)::String
+function sequence(::Type{String}, record::Record)::String
     checkfilled(record)
     return String(record.data[record.seq])
-end
-
-"""
-    qual(record::Record)::Vector{UInt8}
-
-Get the Phred-scaled base quality of `record`.
-"""
-function qual(record::Record)::Vector{UInt8}
-    checkfilled(record)
-    if ismissing(record, record.qual)
-        missingerror(:qual)
-    end
-    qual = record.data[record.qual]
-    for i in 1:endof(qual)
-        @inbounds qual[i] -= 33
-    end
-    return qual
-end
-
-function hasqual(record::Record)
-    return isfilled(record) && !ismissing(record, record.qual)
-end
-
-"""
-    qual(::Type{String}, record::Record)::String
-
-Get the ASCII-encoded base quality of `record`.
-"""
-function qual(::Type{String}, record::Record)::String
-    checkfilled(record)
-    return String(record.data[record.qual])
 end
 
 """
@@ -443,34 +452,57 @@ function seqlength(record::Record)::Int
     return length(record.seq)
 end
 
-"""
-    alignment(record::Record)::Bio.Align.Alignment
+function hasseqlength(record::Record)
+    return isfilled(record) && !ismissing(record, record.seq)
+end
 
-Get the alignment of `record`.
 """
-function alignment(record::Record)::Bio.Align.Alignment
-    if ismapped(record)
-        return Bio.Align.Alignment(cigar(record), 1, pos(record))
-    else
-        return Bio.Align.Alignment(Bio.Align.AlignmentAnchor[])
+    quality(record::Record)::Vector{UInt8}
+
+Get the Phred-scaled base quality of `record`.
+"""
+function quality(record::Record)::Vector{UInt8}
+    checkfilled(record)
+    if ismissing(record, record.qual)
+        missingerror(:quality)
     end
+    qual = record.data[record.qual]
+    for i in 1:endof(qual)
+        @inbounds qual[i] -= 33
+    end
+    return qual
+end
+
+function hasquality(record::Record)
+    return isfilled(record) && !ismissing(record, record.qual)
+end
+
+"""
+    quality(::Type{String}, record::Record)::String
+
+Get the ASCII-encoded base quality of `record`.
+"""
+function quality(::Type{String}, record::Record)::String
+    checkfilled(record)
+    return String(record.data[record.qual])
+end
+
+"""
+    auxdata(record::Record)::Dict{String,Any}
+
+Get the auxiliary data (optional fields) of `record`.
+"""
+function auxdata(record::Record)::Dict{String,Any}
+    checkfilled(record)
+    return Dict(k => record[k] for k in keys(record))
 end
 
 function Base.haskey(record::Record, tag::AbstractString)
-    return findtag(record, tag) > 0
-end
-
-function Base.keys(record::Record)
-    checkfilled(record)
-    return [String(record.data[first(f):first(f)+1]) for f in record.fields]
-end
-
-function Base.values(record::Record)
-    return [record[k] for k in keys(record)]
+    return findauxtag(record, tag) > 0
 end
 
 function Base.getindex(record::Record, tag::AbstractString)
-    i = findtag(record, tag)
+    i = findauxtag(record, tag)
     if i == 0
         throw(KeyError(tag))
     end
@@ -502,7 +534,56 @@ function Base.getindex(record::Record, tag::AbstractString)
     end
 end
 
-function findtag(record::Record, tag::AbstractString)
+function Base.keys(record::Record)
+    checkfilled(record)
+    return [String(record.data[first(f):first(f)+1]) for f in record.fields]
+end
+
+function Base.values(record::Record)
+    return [record[k] for k in keys(record)]
+end
+
+
+# Bio Methods
+# -----------
+
+function Bio.seqname(record::Record)
+    return tempname(record)
+end
+
+function Bio.hasseqname(record::Record)
+    return hastempname(record)
+end
+
+function Bio.sequence(record::Record)
+    return sequence(record)
+end
+
+function Bio.hassequence(record::Record)
+    return hassequence(record)
+end
+
+function Bio.rightposition(record::Record)
+    return rightposition(record)
+end
+
+function Bio.hasrightposition(record::Record)
+    return hasrightposition(record)
+end
+
+function Bio.leftposition(record::Record)
+    return position(record)
+end
+
+function Bio.hasleftposition(record::Record)
+    return hasposition(record)
+end
+
+
+# Helper Functions
+# ----------------
+
+function findauxtag(record::Record, tag::AbstractString)
     checkfilled(record)
     if sizeof(tag) != 2
         return 0
@@ -515,32 +596,6 @@ function findtag(record::Record, tag::AbstractString)
         end
     end
     return 0
-end
-
-function optional_fields(record::Record)
-    return Dict(k => record[k] for k in keys(record))
-end
-
-# Return the length of alignment.
-function alignment_length(record::Record)
-    if length(record.cigar) == 1 && record.data[first(record.cigar)] == UInt8('*')
-        return 0
-    end
-    ret = 0
-    len = 0  # operation length
-    for i in record.cigar
-        c = record.data[i]
-        if c ∈ UInt8('0'):UInt8('9')
-            len = len * 10 + (c - UInt8('0'))
-        else
-            op = convert(Bio.Align.Operation, Char(c))
-            if Bio.Align.ismatchop(op) || Bio.Align.isdeleteop(op)
-                ret += len
-                len = 0
-            end
-        end
-    end
-    return ret
 end
 
 # r"[0-9]+" must match `data[range]`.

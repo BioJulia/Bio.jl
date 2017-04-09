@@ -5,9 +5,9 @@ module SAM
 
 import Automa
 import Automa.RegExp: @re_str
-import BufferedStreams
+import Bio: Bio, isfilled
 import Bio.Exceptions: missingerror
-importall Bio
+import BufferedStreams
 
 include("flags.jl")
 include("metainfo.jl")

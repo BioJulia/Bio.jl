@@ -1053,7 +1053,7 @@ end
             @test !isfilled(record)
             @test !SAM.ismapped(record)
             @test repr(record) == "Bio.Align.SAM.Record: <not filled>"
-            @test_throws ArgumentError SAM.qname(record)
+            @test_throws ArgumentError SAM.flag(record)
 
             record = SAM.Record("r001\t99\tchr1\t7\t30\t8M2I4M1D3M\t=\t37\t39\tTTAGATAAAGGATACTG\t*")
             @test record == SAM.Record(b"r001\t99\tchr1\t7\t30\t8M2I4M1D3M\t=\t37\t39\tTTAGATAAAGGATACTG\t*")
@@ -1062,28 +1062,28 @@ end
             @test isfilled(record)
             @test ismatch(r"^Bio.Align.SAM.Record:\n", repr(record))
             @test SAM.ismapped(record)
-            @test SAM.hasqname(record)
-            @test SAM.qname(record) == "r001"
+            @test SAM.hastempname(record)
+            @test SAM.tempname(record) == "r001"
             @test SAM.hasflag(record)
             @test SAM.flag(record) === UInt16(99)
-            @test SAM.hasrname(record)
-            @test SAM.rname(record) == "chr1"
-            @test SAM.haspos(record)
-            @test SAM.pos(record) === 7
-            @test SAM.hasmapq(record)
-            @test SAM.mapq(record) === UInt8(30)
+            @test SAM.hasrefname(record)
+            @test SAM.refname(record) == "chr1"
+            @test SAM.hasposition(record)
+            @test SAM.position(record) === 7
+            @test SAM.hasmappingquality(record)
+            @test SAM.mappingquality(record) === UInt8(30)
             @test SAM.hascigar(record)
             @test SAM.cigar(record) == "8M2I4M1D3M"
-            @test SAM.hasrnext(record)
-            @test SAM.rnext(record) == "="
-            @test SAM.haspnext(record)
-            @test SAM.pnext(record) === 37
-            @test SAM.hastlen(record)
-            @test SAM.tlen(record) === 39
-            @test SAM.hasseq(record)
-            @test SAM.seq(record) == dna"TTAGATAAAGGATACTG"
-            @test !SAM.hasqual(record)
-            @test_throws MissingFieldException SAM.qual(record)
+            @test SAM.hasnextrefname(record)
+            @test SAM.nextrefname(record) == "="
+            @test SAM.hasnextposition(record)
+            @test SAM.nextposition(record) === 37
+            @test SAM.hastemplength(record)
+            @test SAM.templength(record) === 39
+            @test SAM.hassequence(record)
+            @test SAM.sequence(record) == dna"TTAGATAAAGGATACTG"
+            @test !SAM.hasquality(record)
+            @test_throws MissingFieldException SAM.quality(record)
         end
 
         @testset "Reader" begin
@@ -1099,15 +1099,15 @@ end
             rec = SAM.Record()
             read!(reader, rec)
             @test SAM.ismapped(rec)
-            @test SAM.rname(rec) == "CHROMOSOME_I"
-            @test SAM.pos(rec) == leftposition(rec) == 2
-            @test rightposition(rec) == 102
-            @test SAM.qname(rec) == seqname(rec) == "SRR065390.14978392"
-            @test SAM.seq(rec) == sequence(rec) == dna"CCTAGCCCTAACCCTAACCCTAACCCTAGCCTAAGCCTAAGCCTAAGCCTAAGCCTAAGCCTAAGCCTAAGCCTAAGCCTAAGCCTAAGCCTAAGCCTAA"
-            @test SAM.seq(String, rec)          ==    "CCTAGCCCTAACCCTAACCCTAACCCTAGCCTAAGCCTAAGCCTAAGCCTAAGCCTAAGCCTAAGCCTAAGCCTAAGCCTAAGCCTAAGCCTAAGCCTAA"
+            @test SAM.refname(rec) == "CHROMOSOME_I"
+            @test SAM.position(rec) == leftposition(rec) == 2
+            @test SAM.rightposition(rec) == rightposition(rec) == 102
+            @test SAM.tempname(rec) == seqname(rec) == "SRR065390.14978392"
+            @test SAM.sequence(rec) == sequence(rec) == dna"CCTAGCCCTAACCCTAACCCTAACCCTAGCCTAAGCCTAAGCCTAAGCCTAAGCCTAAGCCTAAGCCTAAGCCTAAGCCTAAGCCTAAGCCTAAGCCTAA"
+            @test SAM.sequence(String, rec)          ==    "CCTAGCCCTAACCCTAACCCTAACCCTAGCCTAAGCCTAAGCCTAAGCCTAAGCCTAAGCCTAAGCCTAAGCCTAAGCCTAAGCCTAAGCCTAAGCCTAA"
             @test SAM.seqlength(rec) == 100
-            @test SAM.qual(rec)         == (b"#############################@B?8B?BA@@DDBCDDCBC@CDCDCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCC" .- 33)
-            @test SAM.qual(String, rec) ==   "#############################@B?8B?BA@@DDBCDDCBC@CDCDCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCC"
+            @test SAM.quality(rec)         == (b"#############################@B?8B?BA@@DDBCDDCBC@CDCDCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCC" .- 33)
+            @test SAM.quality(String, rec) ==   "#############################@B?8B?BA@@DDBCDDCBC@CDCDCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCC"
             @test SAM.flag(rec) == 16
             @test SAM.cigar(rec) == "27M1D73M"
             @test SAM.alignment(rec) == Alignment([
@@ -1197,7 +1197,7 @@ end
             record = BAM.Record()
             @test !isfilled(record)
             @test repr(record) == "Bio.Align.BAM.Record: <not filled>"
-            @test_throws ArgumentError BAM.refid(record)
+            @test_throws ArgumentError BAM.flag(record)
         end
 
         @testset "Reader" begin
@@ -1214,26 +1214,26 @@ end
             record = BAM.Record()
             read!(reader, record)
             @test BAM.ismapped(record)
-            @test BAM.rname(record) == "CHROMOSOME_I"
+            @test BAM.refname(record) == "CHROMOSOME_I"
             @test BAM.refid(record) === 1
             @test BAM.hasnextrefid(record)
             @test BAM.nextrefid(record) === 0
-            @test BAM.haspos(record) === hasleftposition(record) === true
-            @test BAM.pos(record) === leftposition(record) === 2
-            @test BAM.hasnextpos(record)
-            @test BAM.nextpos(record) === 0
+            @test BAM.hasposition(record) === hasleftposition(record) === true
+            @test BAM.position(record) === leftposition(record) === 2
+            @test BAM.hasnextposition(record)
+            @test BAM.nextposition(record) === 0
             @test rightposition(record) == 102
-            @test BAM.hasqname(record) === hasseqname(record) === true
-            @test BAM.qname(record) == seqname(record) == "SRR065390.14978392"
-            @test BAM.hasseq(record) === hassequence(record) === true
-            @test BAM.seq(record) == sequence(record) == dna"""
+            @test BAM.hastempname(record) === hasseqname(record) === true
+            @test BAM.tempname(record) == seqname(record) == "SRR065390.14978392"
+            @test BAM.hassequence(record) === hassequence(record) === true
+            @test BAM.sequence(record) == sequence(record) == dna"""
             CCTAGCCCTAACCCTAACCCTAACCCTAGCCTAAGCCTAAGCCTAAGCCT
             AAGCCTAAGCCTAAGCCTAAGCCTAAGCCTAAGCCTAAGCCTAAGCCTAA
             """
             @test BAM.seqlength(record) === 100
-            @test BAM.hasqual(record)
-            @test eltype(BAM.qual(record)) == UInt8
-            @test BAM.qual(record) == [Int(x) - 33 for x in "#############################@B?8B?BA@@DDBCDDCBC@CDCDCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCC"]
+            @test BAM.hasquality(record)
+            @test eltype(BAM.quality(record)) == UInt8
+            @test BAM.quality(record) == [Int(x) - 33 for x in "#############################@B?8B?BA@@DDBCDDCBC@CDCDCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCC"]
             @test BAM.flag(record) === UInt16(16)
             @test BAM.cigar(record) == "27M1D73M"
             @test BAM.alignment(record) == Alignment([

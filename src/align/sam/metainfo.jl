@@ -87,14 +87,22 @@ function iscomment(metainfo::MetaInfo)
     return isequalkey(metainfo, "CO")
 end
 
-function Bio.metainfotag(metainfo::MetaInfo)
+function tag(metainfo::MetaInfo)
     checkfilled(metainfo)
     return String(metainfo.data[metainfo.tag])
 end
 
-function Bio.metainfoval(metainfo::MetaInfo)
+function value(metainfo::MetaInfo)
     checkfilled(metainfo)
     return String(metainfo.data[metainfo.val])
+end
+
+function Bio.metainfotag(metainfo::MetaInfo)
+    return tag(metainfo)
+end
+
+function Bio.metainfoval(metainfo::MetaInfo)
+    return value(metainfo)
 end
 
 function Base.keys(metainfo::MetaInfo)
@@ -143,14 +151,14 @@ function Base.show(io::IO, metainfo::MetaInfo)
     print(io, summary(metainfo), ':')
     if isfilled(metainfo)
         println(io)
-        println(io, "    tag: ", metainfotag(metainfo))
+        println(io, "    tag: ", tag(metainfo))
           print(io, "  value:")
         if !iscomment(metainfo)
             for (key, val) in zip(keys(metainfo), values(metainfo))
                 print(io, ' ', key, '=', val)
             end
         else
-            print(io, ' ', metainfoval(metainfo))
+            print(io, ' ', value(metainfo))
         end
     else
         print(io, " <not filled>")

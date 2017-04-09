@@ -98,18 +98,18 @@ function Base.show(io::IO, record::Record)
     print(io, summary(record), ':')
     if isfilled(record)
         println(io)
-        println(io, "      sequence name: ", qname(record))
+        println(io, "      template name: ", tempname(record))
         println(io, "               flag: ", flag(record))
         println(io, "       reference ID: ", refid(record))
-        println(io, "           position: ", pos(record))
-        println(io, "    mapping quality: ", mapq(record))
+        println(io, "           position: ", position(record))
+        println(io, "    mapping quality: ", mappingquality(record))
         println(io, "              CIGAR: ", cigar(record))
         println(io, "  next reference ID: ", nextrefid(record))
-        println(io, "      next position: ", nextpos(record))
-        println(io, "    template length: ", tlen(record))
-        println(io, "           sequence: ", seq(record))
+        println(io, "      next position: ", nextposition(record))
+        println(io, "    template length: ", templength(record))
+        println(io, "           sequence: ", sequence(record))
         # TODO: pretty print base quality
-        println(io, "       base quality: ", qual(record))
+        println(io, "       base quality: ", quality(record))
           print(io, "     auxiliary data:")
         for field in keys(auxdata(record))
             print(io, ' ', field, '=', record[field])
@@ -121,6 +121,24 @@ end
 
 function Base.read!(reader::Reader, record::Record)
     return _read!(reader, record)
+end
+
+
+# Accessor Fuctions
+# -----------------
+
+"""
+    flag(record::Record)::UInt16
+
+Get the bitwise flag of `record`.
+"""
+function flag(record::Record)::UInt16
+    checkfilled(record)
+    return UInt16(record.flag_nc >> 16)
+end
+
+function hasflag(record::Record)
+    return isfilled(record)
 end
 
 """
@@ -151,6 +169,65 @@ function hasrefid(record::Record)
 end
 
 """
+    refname(record::Record)::String
+
+Get the reference sequence name of `record`.
+
+See also: `BAM.refid`
+"""
+function refname(record::Record)::String
+    checkfilled(record)
+    id = refid(record)
+    if id == 0
+        throw(ArgumentError("record is not mapped"))
+    elseif !isdefined(record, :reader)
+        throw(ArgumentError("reader is not defined"))
+    end
+    return record.reader.refseqnames[id]
+end
+
+function hasrefname(record::Record)
+    return hasrefid(record)
+end
+
+"""
+    position(record::Record)::Int
+
+Get the 1-based leftmost mapping position of `record`.
+"""
+function position(record::Record)::Int
+    checkfilled(record)
+    return record.pos + 1
+end
+
+function hasposition(record::Record)
+    return isfilled(record)
+end
+
+"""
+    rightposition(record::Record)::Int
+
+Get the 1-based rightmost mapping position of `record`.
+"""
+function rightposition(record::Record)::Int
+    checkfilled(record)
+    return Int32(position(record) + alignlength(record) - 1)
+end
+
+function hasrightposition(record::Record)
+    return isfilled(record) && ismapped(record)
+end
+
+"""
+    isnextmapped(record::Record)::Bool
+
+Test if the mate/next read of `record` is mapped.
+"""
+function isnextmapped(record::Record)::Bool
+    return isfilled(record) && (flag(record) & FLAG_MUNMAP == 0)
+end
+
+"""
     nextrefid(record::Record)::Int
 
 Get the next/mate reference sequence ID of `record`.
@@ -165,147 +242,65 @@ function hasnextrefid(record::Record)
 end
 
 """
-    rname(record::Record)::String
+    nextrefname(record::Record)::String
 
-Get the reference sequence name of `record`.
-
-See also: `BAM.refid`
+Get the reference name of the mate/next read of `record`.
 """
-function rname(record::Record)::String
+function nextrefname(record::Record)::String
     checkfilled(record)
-    id = refid(record)
+    id = nextrefid(record)
     if id == 0
-        throw(ArgumentError("record is not mapped"))
+        throw(ArgumentError("next record is not mapped"))
     elseif !isdefined(record, :reader)
         throw(ArgumentError("reader is not defined"))
     end
     return record.reader.refseqnames[id]
 end
 
-"""
-    pos(record::Record)::Int
-
-Get the 1-based leftmost mapping position of `record`.
-"""
-function pos(record::Record)::Int
-    checkfilled(record)
-    return record.pos + 1
-end
-
-function haspos(record::Record)
-    return isfilled(record)
-end
-
-function Bio.leftposition(record::Record)
-    return pos(record)
-end
-
-function Bio.hasleftposition(record::Record)
-    return haspos(record)
+function hasnextrefname(record::Record)
+    return isfilled(record) && isnextmapped(record)
 end
 
 """
-    nextpos(record::Record)::Int
+    nextposition(record::Record)::Int
 
 Get the 1-based leftmost mapping position of the next/mate read of `record`.
 """
-function nextpos(record::Record)::Int
+function nextposition(record::Record)::Int
     checkfilled(record)
     return record.next_pos + 1
 end
 
-function hasnextpos(record::Record)
+function hasnextposition(record::Record)
     return isfilled(record)
 end
 
 """
-    rpos(record::Record)::Int
-
-Get the 1-based rightmost mapping position of `record`.
-"""
-function rpos(record::Record)::Int
-    checkfilled(record)
-    return Int32(pos(record) + alignment_length(record) - 1)
-end
-
-function hasrpos(record::Record)
-    return isfilled(record) && ismapped(record)
-end
-
-function Bio.rightposition(record::Record)
-    return rpos(record)
-end
-
-function Bio.hasrightposition(record::Record)
-    return hasrpos(record)
-end
-
-function nextleftposition(record::Record)
-    return record.next_pos + 1
-end
-
-"""
-    mapq(record::Record)::UInt8
+    mappingquality(record::Record)::UInt8
 
 Get the mapping quality of `record`.
 """
-function mapq(record::Record)::UInt8
+function mappingquality(record::Record)::UInt8
     return UInt8((record.bin_mq_nl >> 8) & 0xff)
 end
 
-function hasmapq(record::Record)
+function hasmappingquality(record::Record)
     return isfilled(record)
 end
 
 """
-    flag(record::Record)::UInt16
+    cigar(record::Record)::String
 
-Get the bitwise flag of `record`.
+Get the CIGAR string of `record`.
+
+See also `BAM.cigar_rle`.
 """
-function flag(record::Record)::UInt16
-    checkfilled(record)
-    return UInt16(record.flag_nc >> 16)
-end
-
-function hasflag(record::Record)
-    return isfilled(record)
-end
-
-"""
-    tlen(record::Record)
-
-Get the template length of `record`.
-"""
-function tlen(record::Record)
-    checkfilled(record)
-    return record.tlen
-end
-
-function hastlen(record::Record)
-    return isfilled(record)
-end
-
-"""
-    qname(record::Record)::String
-
-Get the query template name of `record`.
-"""
-function qname(record::Record)::String
-    checkfilled(record)
-    # drop the last NUL character
-    return unsafe_string(pointer(record.data), max(seqname_length(record) - 1, 0))
-end
-
-function hasqname(record::Record)
-    return isfilled(record)
-end
-
-function Bio.seqname(record::Record)
-    return qname(record)
-end
-
-function Bio.hasseqname(record::Record)
-    return hasqname(record)
+function cigar(record::Record)::String
+    buf = IOBuffer()
+    for (op, len) in zip(cigar_rle(record)...)
+        print(buf, len, Char(op))
+    end
+    return takebuf_string(buf)
 end
 
 """
@@ -330,21 +325,6 @@ function cigar_rle(record::Record)
 end
 
 """
-    cigar(record::Record)::String
-
-Get the CIGAR string of `record`.
-
-See also `BAM.cigar_rle`.
-"""
-function cigar(record::Record)::String
-    buf = IOBuffer()
-    for (op, len) in zip(cigar_rle(record)...)
-        print(buf, len, Char(op))
-    end
-    return takebuf_string(buf)
-end
-
-"""
     alignment(record::Record)::Bio.Align.Alignment
 
 Get the alignment of `record`.
@@ -355,7 +335,7 @@ function alignment(record::Record)::Bio.Align.Alignment
         return Bio.Align.Alignment(Bio.Align.AlignmentAnchor[])
     end
     seqpos = 0
-    refpos = pos(record) - 1
+    refpos = position(record) - 1
     anchors = [Bio.Align.AlignmentAnchor(seqpos, refpos, Bio.Align.OP_START)]
     for (op, len) in zip(cigar_rle(record)...)
         if Bio.Align.ismatchop(op)
@@ -373,12 +353,63 @@ function alignment(record::Record)::Bio.Align.Alignment
     return Bio.Align.Alignment(anchors)
 end
 
+function hasalignment(record::Record)
+    return ismapped(record)
+end
+
 """
-    seq(record::Record)::Bio.Seq.DNASequence
+    alignlength(record::Record)::Int
+
+Get the alignment length of `record`.
+"""
+function alignlength(record::Record)::Int
+    offset = seqname_length(record)
+    length::Int = 0
+    for i in offset+1:4:offset+n_cigar_op(record)*4
+        x = unsafe_load(Ptr{UInt32}(pointer(record.data, i)))
+        op = Bio.Align.Operation(x & 0x0f)
+        if Bio.Align.ismatchop(op) || Bio.Align.isdeleteop(op)
+            length += x >> 4
+        end
+    end
+    return length
+end
+
+"""
+    tempname(record::Record)::String
+
+Get the query template name of `record`.
+"""
+function tempname(record::Record)::String
+    checkfilled(record)
+    # drop the last NUL character
+    return unsafe_string(pointer(record.data), max(seqname_length(record) - 1, 0))
+end
+
+function hastempname(record::Record)
+    return isfilled(record)
+end
+
+"""
+    templength(record::Record)::Int
+
+Get the template length of `record`.
+"""
+function templength(record::Record)::Int
+    checkfilled(record)
+    return record.tlen
+end
+
+function hastemplength(record::Record)
+    return isfilled(record)
+end
+
+"""
+    sequence(record::Record)::Bio.Seq.DNASequence
 
 Get the segment sequence of `record`.
 """
-function seq(record::Record)
+function sequence(record::Record)::Bio.Seq.DNASequence
     checkfilled(record)
     seqlen = seqlength(record)
     data = Vector{UInt64}(cld(seqlen, 16))
@@ -391,16 +422,8 @@ function seq(record::Record)
     return Bio.Seq.DNASequence(data, 1:seqlen, false)
 end
 
-function hasseq(record::Record)
+function hassequence(record::Record)
     return isfilled(record)
-end
-
-function Bio.sequence(record::Record)
-    return seq(record)
-end
-
-function Bio.hassequence(record::Record)
-    return hasseq(record)
 end
 
 """
@@ -413,19 +436,23 @@ function seqlength(record::Record)::Int
     return record.l_seq % Int
 end
 
+function hasseqlength(record::Record)
+    return isfilled(record)
+end
+
 """
-    qual(record::Record)::Vector{UInt8}
+    quality(record::Record)::Vector{UInt8}
 
 Get the base quality of  `record`.
 """
-function qual(record::Record)::Vector{UInt8}
+function quality(record::Record)::Vector{UInt8}
     checkfilled(record)
     seqlen = seqlength(record)
     offset = seqname_length(record) + n_cigar_op(record) * 4 + cld(seqlen, 2)
     return [reinterpret(Int8, record.data[i+offset]) for i in 1:seqlen]
 end
 
-function hasqual(record::Record)
+function hasquality(record::Record)
     return isfilled(record)
 end
 
@@ -453,37 +480,71 @@ function Base.haskey(record::Record, tag::AbstractString)
     return findauxtag(record.data, auxdata_position(record), UInt8(tag[1]), UInt8(tag[2])) > 0
 end
 
-function auxdata_position(record)
-    seqlen = seqlength(record)
-    return seqname_length(record) + n_cigar_op(record) * 4 + cld(seqlen, 2) + seqlen + 1
+function Base.keys(record::Record)
+    # TODO
 end
 
-# Return the length of alignment.
-function alignment_length(record::Record)
-    offset = seqname_length(record)
-    length::Int = 0
-    for i in offset+1:4:offset+n_cigar_op(record)*4
-        x = unsafe_load(Ptr{UInt32}(pointer(record.data, i)))
-        op = Bio.Align.Operation(x & 0x0f)
-        if Bio.Align.ismatchop(op) || Bio.Align.isdeleteop(op)
-            length += x >> 4
-        end
-    end
-    return length
+function Base.values(record::Record)
+    # TODO
 end
 
-# Return the length of the read name.
-function seqname_length(record)
-    return record.bin_mq_nl & 0xff
+
+# Bio Methods
+# -----------
+
+function Bio.seqname(record::Record)
+    return tempname(record)
 end
 
-# Return the number of CIGAR operations.
-function n_cigar_op(record)
-    return record.flag_nc & 0xffff
+function Bio.hasseqname(record::Record)
+    return hastempname(record)
 end
+
+function Bio.sequence(record::Record)
+    return sequence(record)
+end
+
+function Bio.hassequence(record::Record)
+    return hassequence(record)
+end
+
+function Bio.leftposition(record::Record)
+    return position(record)
+end
+
+function Bio.hasleftposition(record::Record)
+    return hasposition(record)
+end
+
+function Bio.rightposition(record::Record)
+    return rightposition(record)
+end
+
+function Bio.hasrightposition(record::Record)
+    return hasrightposition(record)
+end
+
+
+# Helper Functions
+# ----------------
 
 function checkfilled(record::Record)
     if !isfilled(record)
         throw(ArgumentError("unfilled BAM record"))
     end
+end
+
+function auxdata_position(record::Record)
+    seqlen = seqlength(record)
+    return seqname_length(record) + n_cigar_op(record) * 4 + cld(seqlen, 2) + seqlen + 1
+end
+
+# Return the length of the read name.
+function seqname_length(record::Record)
+    return record.bin_mq_nl & 0xff
+end
+
+# Return the number of CIGAR operations.
+function n_cigar_op(record::Record)
+    return record.flag_nc & 0xffff
 end

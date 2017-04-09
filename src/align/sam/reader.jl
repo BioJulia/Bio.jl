@@ -33,6 +33,10 @@ function header(reader::Reader)
     return reader.header
 end
 
+function Bio.header(reader::Reader)
+    return header(reader)
+end
+
 function Base.eltype(::Type{Reader})
     return Record
 end

@@ -76,5 +76,5 @@ function Base.next(::OverlapIterator, state)
 end
 
 function isoverlapping(record::Record, refid_::Integer, interval::UnitRange)
-    return refid(record) == refid_ && pos(record) ≤ last(interval) && rpos(record) ≥ first(interval)
+    return refid(record) == refid_ && position(record) ≤ last(interval) && rightposition(record) ≥ first(interval)
 end
