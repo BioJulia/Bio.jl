@@ -1248,6 +1248,8 @@ end
             @test record["AS"] == -18
             @test record["XS"] == -18
             @test record["YT"] == "UU"
+            @test keys(record) == ["XG","XM","XN","XO","AS","XS","YT"]
+            @test values(record) == [1, 5, 0, 1, -18, -18, "UU"]
             @test eof(reader)
             close(reader)
 

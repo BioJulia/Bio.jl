@@ -481,11 +481,11 @@ function Base.haskey(record::Record, tag::AbstractString)
 end
 
 function Base.keys(record::Record)
-    # TODO
+    return collect(keys(auxdata(record)))
 end
 
 function Base.values(record::Record)
-    # TODO
+    return [record[key] for key in keys(record)]
 end
 
 
