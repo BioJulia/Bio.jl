@@ -109,28 +109,41 @@ function random_interval(minstart, maxstop)
     return start:rand(start:maxstop)
 end
 
+# NOTE: Most tests related to biological symbols are located in BioSymbols.jl.
 @testset "Symbols" begin
     @testset "DNA" begin
         @test DNA_A === BioSymbols.DNA_A
-        @test DNA_C === BioSymbols.DNA_C
-        @test DNA_G === BioSymbols.DNA_G
-        @test DNA_T === BioSymbols.DNA_T
         @test ACGT  === BioSymbols.ACGT
         @test ACGTN === BioSymbols.ACGTN
+        @test typeof(DNA_A) === BioSymbols.DNA
     end
 
     @testset "RNA" begin
         @test RNA_A === BioSymbols.RNA_A
-        @test RNA_C === BioSymbols.RNA_C
-        @test RNA_G === BioSymbols.RNA_G
-        @test RNA_U === BioSymbols.RNA_U
         @test ACGU  === BioSymbols.ACGU
         @test ACGUN === BioSymbols.ACGUN
+        @test typeof(RNA_A) === BioSymbols.RNA
     end
 
     @testset "AminoAcid" begin
         @test AA_A === BioSymbols.AA_A
-        @test AA_R === BioSymbols.AA_R
+        @test typeof(AA_A) === BioSymbols.AminoAcid
+    end
+
+    @testset "Predicate functions" begin
+        @test iscompatible(DNA_A, DNA_N)
+        @test isambiguous(DNA_N)
+        @test iscertain(DNA_A)
+        @test isgap(DNA_Gap)
+        @test ispurine(DNA_A)
+        @test ispyrimidine(DNA_C)
+        @test isGC(DNA_G)
+    end
+
+    @testset "Misc. functions" begin
+        @test length(alphabet(DNA)) == 16
+        @test gap(DNA) === DNA_Gap
+        @test complement(DNA_A) === DNA_T
     end
 
     @testset "Encoder" begin
