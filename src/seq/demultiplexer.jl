@@ -202,7 +202,7 @@ function demultiplex(demultiplexer::Demultiplexer, seq::Sequence, linear_search_
     dist_min = typemax(Int)
     for (i, barcode) in enumerate(demultiplexer.barcodes)
         if demultiplexer.distance == :hamming
-            dist = hamming_distance(barcode, seq[1:length(barcode)])
+            dist = mismatches(barcode, seq[1:length(barcode)])
         elseif demultiplexer.distance == :levenshtein
             dist = sequencelevenshtein_distance(barcode, seq)
         else
@@ -225,7 +225,7 @@ function Base.getindex(demultiplexer::Demultiplexer, i::Integer)
     return demultiplexer.barcodes[i]
 end
 
-# Generate a list of sequences s.t. `hamming_distance(seq, seq′) == m`.
+# Generate a list of sequences s.t. `mismatches(seq, seq′) == m`.
 function hamming_circle(seq, m)
     if m == 0
         return [seq]
@@ -244,16 +244,6 @@ function hamming_circle(seq, m)
         end
     end
     return ret
-end
-
-# Calculate the Hamming distance between `seq1` and `seq2`.
-function hamming_distance(seq1, seq2)
-    @assert length(seq1) == length(seq2)
-    n = 0
-    for (x, y) in zip(seq1, seq2)
-        n += x != y
-    end
-    return n
 end
 
 # Generate a list of sequences s.t. `levenshtein_distance(seq, seq′) == m`.
