@@ -50,7 +50,6 @@ function parse_keyvals(s)
     return ret
 end
 
-include("flags.jl")
 include("metainfo.jl")
 include("header.jl")
 include("record.jl")

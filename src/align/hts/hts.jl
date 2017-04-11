@@ -8,6 +8,7 @@
 
 include("sam/sam.jl")
 include("bam/bam.jl")
+include("flags.jl")
 
 function Base.show(io::IO, rec::Union{SAMRecord,BAMRecord})
     name = seqname(rec)

@@ -125,7 +125,10 @@ export
     SAM_FLAG_QCFAIL,
     SAM_FLAG_DUP,
     SAM_FLAG_SUPPLEMENTARY,
-
+    hasflag,
+    decodeflag,
+    decomposeflag,
+    
     MissingFieldException
 
 import Automa

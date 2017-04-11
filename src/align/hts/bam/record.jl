@@ -70,9 +70,7 @@ end
 
 Return `true` if and only if `rec` is mapped to a reference sequence.
 """
-function ismapped(rec::BAMRecord)
-    return flag(rec) & SAM_FLAG_UNMAP == 0
-end
+ismapped(rec::BAMRecord) = !hasflag(rec,SAM_FLAG_UNMAP)
 
 """
     refindex(rec::BAMRecord)
