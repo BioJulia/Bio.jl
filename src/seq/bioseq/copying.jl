@@ -120,7 +120,7 @@ function encode_copy!{A<:Union{DNAAlphabet{4},RNAAlphabet{4}}}(
     end
 
     orphan!(dst)
-    charmap = A <: DNAAlphabet ? char_to_dna : char_to_rna
+    charmap = A <: DNAAlphabet ? BioSymbols.char_to_dna : BioSymbols.char_to_rna
     i = soff
     next = bitindex(dst, doff)
     stop = bitindex(dst, doff + len)

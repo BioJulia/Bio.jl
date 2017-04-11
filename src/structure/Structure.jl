@@ -9,6 +9,7 @@
 module Structure
 
 import Bio.Seq: AminoAcidSequence
+import BioSymbols
 importall Bio
 
 include("model.jl")

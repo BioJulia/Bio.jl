@@ -1468,13 +1468,13 @@ end
 function Bio.Seq.AminoAcidSequence{T <: AbstractResidue}(res::Vector{T})
     seq = Bio.Seq.AminoAcid[]
     for i in 1:length(res)
-        if haskey(Bio.Seq.threeletter_to_aa, resname(res[i]))
-            push!(seq, Bio.Seq.threeletter_to_aa[resname(res[i])])
+        if haskey(BioSymbols.threeletter_to_aa, resname(res[i]))
+            push!(seq, BioSymbols.threeletter_to_aa[resname(res[i])])
         else
-            push!(seq, Bio.Seq.AA_X)
+            push!(seq, BioSymbols.AA_X)
         end
         if i+1 <= length(res) && resnumber(res[i+1]) - resnumber(res[i]) > 1
-            append!(seq, [Bio.Seq.AA_Gap for _ in 1:(resnumber(res[i+1]) - resnumber(res[i]) - 1)])
+            append!(seq, [BioSymbols.AA_Gap for _ in 1:(resnumber(res[i+1]) - resnumber(res[i]) - 1)])
         end
     end
     return Bio.Seq.AminoAcidSequence(seq)
