@@ -42,16 +42,20 @@ end
 
 function Base.show(io::IO, reader::BAMReader)
     println(io, summary(reader), ":")
+    println(io, "  header keys: ", join(keys(reader.header), ", "))
       print(io, "  number of contigs: ", length(reader.refseqnames))
 end
 
-function header(reader::BAMReader; fillSQ::Bool=false)
+function header(reader::BAMReader, fillSQ::Bool=false)
     if fillSQ
-        if !isempty(find(reader.header, "SQ"))
-            throw(ArgumentError("SAM header already has SQ records"))
-        end
-        for (name, len) in zip(reader.refseqnames, reader.refseqlens)
-            push!(reader.header, SAMMetaInfo("SQ", ["SN" => name, "LN" => len]))
+        if haskey(reader.header, "SQ")
+            # TODO: check consistency
+        else
+            records = Dict{String,Any}[]
+            for (name, len) in zip(reader.refseqnames, reader.refseqlens)
+                push!(records, Dict("SN" => name, "LN" => len))
+            end
+            reader.header["SQ"] = records
         end
     end
     return reader.header
@@ -80,7 +84,7 @@ function init_bam_reader(input::IO)
 
     # SAM header
     textlen = read(stream, Int32)
-    samreader = SAMReader(IOBuffer(read(stream, UInt8, textlen)))
+    samheader = parse_samheader(read(stream, UInt8, textlen))
 
     # reference sequences
     refseqnames = String[]
@@ -97,7 +101,7 @@ function init_bam_reader(input::IO)
 
     reader = BAMReader(
         stream,
-        samreader.header,
+        samheader,
         isa(input, Pipe) ? BGZFStreams.VirtualOffset(0, 0) : BGZFStreams.virtualoffset(stream),
         refseqnames,
         refseqlens,

@@ -1,40 +1,49 @@
 # SAM Reader
-# ==========
+# =========
 
-"""
-    SAMReader(input::IO)
-
-Create a data reader of the SAM file format.
-
-# Arguments
-* `input`: data source
-"""
-type SAMReader <: Bio.IO.AbstractReader
+type Reader <: Bio.IO.AbstractReader
     state::Bio.Ragel.State
-    header::SAMHeader
+    header::Header
 
-    function SAMReader(input::BufferedStreams.BufferedInputStream)
-        reader = new(Bio.Ragel.State(sam_header_machine.start_state, input), SAMHeader())
+    function Reader(input::BufferedStreams.BufferedInputStream)
+        reader = new(Bio.Ragel.State(sam_header_machine.start_state, input), Header())
         readheader!(reader)
         reader.state.cs = sam_body_machine.start_state
         return reader
     end
 end
 
-function SAMReader(input::IO)
-    return SAMReader(BufferedStreams.BufferedInputStream(input))
+"""
+    SAM.Reader(input::IO)
+
+Create a data reader of the SAM file format.
+
+# Arguments
+* `input`: data source
+"""
+function Reader(input::IO)
+    return Reader(BufferedStreams.BufferedInputStream(input))
 end
 
-function Bio.IO.stream(reader::SAMReader)
+function Bio.IO.stream(reader::Reader)
     return reader.state.stream
 end
 
-function header(reader::SAMReader)
+"""
+    header(reader::Reader)::Header
+
+Get the header of `reader`.
+"""
+function header(reader::Reader)::Header
     return reader.header
 end
 
-function Base.eltype(::Type{SAMReader})
-    return SAMRecord
+function Bio.header(reader::Reader)
+    return header(reader)
+end
+
+function Base.eltype(::Type{Reader})
+    return Record
 end
 
 # file   = header . body
@@ -187,14 +196,14 @@ const sam_metainfo_actions = Dict(
     :mark2  => :(mark2 = p))
 eval(
     Bio.ReaderHelper.generate_index_function(
-        SAMMetaInfo,
+        MetaInfo,
         sam_metainfo_machine,
         :(mark1 = mark2 = offset = 0),
         sam_metainfo_actions))
 eval(
     Bio.ReaderHelper.generate_readheader_function(
-        SAMReader,
-        SAMMetaInfo,
+        Reader,
+        MetaInfo,
         sam_header_machine,
         :(mark1 = mark2 = offset = 0),
         merge(sam_metainfo_actions, Dict(
@@ -204,7 +213,7 @@ eval(
                 @assert isfilled(record)
                 push!(reader.header.metainfo, record)
                 Bio.ReaderHelper.ensure_margin!(stream)
-                record = SAMMetaInfo()
+                record = MetaInfo()
             end,
             :header => :(finish_header = true; @escape),
             :countline => :(linenum += 1),
@@ -236,13 +245,13 @@ const sam_record_actions = Dict(
     :mark         => :(mark = p))
 eval(
     Bio.ReaderHelper.generate_index_function(
-        SAMRecord,
+        Record,
         sam_record_machine,
         :(mark = offset = 0),
         sam_record_actions))
 eval(
     Bio.ReaderHelper.generate_read_function(
-        SAMReader,
+        Reader,
         sam_body_machine,
         :(mark = offset = 0),
         merge(sam_record_actions, Dict(

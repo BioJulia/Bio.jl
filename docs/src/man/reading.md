@@ -326,32 +326,108 @@ This has different reader interfaces from other file formats. Please consult the
 
 ### SAM
 
-* Reader type: `SAMReader`
-* Writer type: `SAMWriter{T<:IO}`
-* Element type: `SAMRecord`
+* Reader type: `SAM.Reader`
+* Writer type: `SAM.Writer`
+* Element type: `SAM.Record`
 
 SAM is a text-based file format for representing sequence alignments.
 
 ```@docs
-Bio.Align.SAMReader
-Bio.Align.SAMWriter
+Bio.Align.SAM.Reader
+Bio.Align.SAM.header
+
+Bio.Align.SAM.Header
+Base.find(header::Bio.Align.SAM.Header, key::AbstractString)
+
+Bio.Align.SAM.Writer
+
+Bio.Align.SAM.MetaInfo
+Bio.Align.SAM.iscomment
+Bio.Align.SAM.tag
+Bio.Align.SAM.value
+Bio.Align.SAM.keyvalues
+
+Bio.Align.SAM.Record
+Bio.Align.SAM.flag
+Bio.Align.SAM.ismapped
+Bio.Align.SAM.refname
+Bio.Align.SAM.position
+Bio.Align.SAM.rightposition
+Bio.Align.SAM.isnextmapped
+Bio.Align.SAM.nextrefname
+Bio.Align.SAM.nextposition
+Bio.Align.SAM.mappingquality
+Bio.Align.SAM.cigar
+Bio.Align.SAM.alignment
+Bio.Align.SAM.alignlength
+Bio.Align.SAM.tempname
+Bio.Align.SAM.templength
+Bio.Align.SAM.sequence
+Bio.Align.SAM.seqlength
+Bio.Align.SAM.quality
+Bio.Align.SAM.auxdata
 ```
+
+This module provides 16-bit flags defined in the SAM specs:
+
+| Flag                      | Bit       | Description                                                        |
+| :------------------------ | :-------- | :----------------------------------------------------------------- |
+| `SAM.FLAG_PAIRED`         | `0x0001`  | template having multiple segments in sequencing                    |
+| `SAM.FLAG_PROPER_PAIR`    | `0x0002`  | each segment properly aligned according to the aligner             |
+| `SAM.FLAG_UNMAP`          | `0x0004`  | segment unmapped                                                   |
+| `SAM.FLAG_MUNMAP`         | `0x0008`  | next segment in the template unmapped                              |
+| `SAM.FLAG_REVERSE`        | `0x0010`  | SEQ being reverse complemented                                     |
+| `SAM.FLAG_MREVERSE`       | `0x0020`  | SEQ of the next segment in the template being reverse complemented |
+| `SAM.FLAG_READ1`          | `0x0040`  | the first segment in the template                                  |
+| `SAM.FLAG_READ2`          | `0x0080`  | the last segment in the template                                   |
+| `SAM.FLAG_SECONDARY`      | `0x0100`  | secondary alignment                                                |
+| `SAM.FLAG_QCFAIL`         | `0x0200`  | not passing filters, such as platform/vendor quality controls      |
+| `SAM.FLAG_DUP`            | `0x0400`  | PCR or optical duplicate                                           |
+| `SAM.FLAG_SUPPLEMENTARY`  | `0x0800`  | supplementary alignment                                            |
+
 
 ### BAM
 
-* Reader type: `BAMReader`
-* Writer type: `BAMWriter`
-* Element type: `BAMRecord`
+* Reader type: `BAM.Reader`
+* Writer type: `BAM.Writer`
+* Element type: `BAM.Record`
 
-BAM is a binary counterpart of the SAM file format.
+BAM is a binary counterpart of the [SAM](@ref) file format.
 
 When writing data in the BAM file format, the underlying output stream needs to
 be wrapped with a `BGZFStream` object provided from
 [BGZFStreams.jl](https://github.com/BioJulia/BGZFStreams.jl).
 
+Flags and the header type are defined in the [SAM](@ref) module.
+
 ```@docs
-Bio.Align.BAMReader
-Bio.Align.BAMWriter
+Bio.Align.BAM.Reader
+Bio.Align.BAM.header
+
+Bio.Align.BAM.Writer
+
+Bio.Align.BAM.Record
+Bio.Align.BAM.flag
+Bio.Align.BAM.ismapped
+Bio.Align.BAM.refid
+Bio.Align.BAM.refname
+Bio.Align.BAM.position
+Bio.Align.BAM.rightposition
+Bio.Align.BAM.isnextmapped
+Bio.Align.BAM.nextrefid
+Bio.Align.BAM.nextrefname
+Bio.Align.BAM.nextposition
+Bio.Align.BAM.mappingquality
+Bio.Align.BAM.cigar
+Bio.Align.BAM.cigar_rle
+Bio.Align.BAM.alignment
+Bio.Align.BAM.alignlength
+Bio.Align.BAM.tempname
+Bio.Align.BAM.templength
+Bio.Align.BAM.sequence
+Bio.Align.BAM.seqlength
+Bio.Align.BAM.quality
+Bio.Align.BAM.auxdata
 ```
 
 

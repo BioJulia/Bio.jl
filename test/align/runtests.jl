@@ -5,6 +5,7 @@ using Base.Test
 using Bio
 using Bio.Seq
 using Bio.Align
+using Bio.Intervals
 using BGZFStreams
 using TestFunctions
 using YAML
@@ -1006,150 +1007,157 @@ end
     @testset "SAM" begin
         samdir = joinpath(dirname(@__FILE__), "..", "BioFmtSpecimens", "SAM")
 
-        @testset "SAMMetaInfo" begin
-            metainfo = SAMMetaInfo()
+        @testset "MetaInfo" begin
+            metainfo = SAM.MetaInfo()
             @test !isfilled(metainfo)
             @test contains(repr(metainfo), "not filled")
 
-            metainfo = SAMMetaInfo("CO", "some comment (parens)")
+            metainfo = SAM.MetaInfo("CO", "some comment (parens)")
             @test isfilled(metainfo)
+            @test string(metainfo) == "@CO\tsome comment (parens)"
             @test contains(repr(metainfo), "CO")
-            @test metainfotag(metainfo) == "CO"
-            @test metainfoval(metainfo) == "some comment (parens)"
-            @test metainfo == SAMMetaInfo(b"@CO\tsome comment (parens)")
+            @test SAM.tag(metainfo) == "CO"
+            @test SAM.value(metainfo) == "some comment (parens)"
             @test_throws ArgumentError keys(metainfo)
             @test_throws ArgumentError values(metainfo)
 
-            metainfo = SAMMetaInfo("HD", ["VN" => "1.0", "SO" => "coordinate"])
+            metainfo = SAM.MetaInfo("HD", ["VN" => "1.0", "SO" => "coordinate"])
             @test isfilled(metainfo)
+            @test string(metainfo) == "@HD\tVN:1.0\tSO:coordinate"
             @test contains(repr(metainfo), "HD")
-            @test metainfotag(metainfo) == "HD"
-            @test metainfoval(metainfo) == "VN:1.0\tSO:coordinate"
+            @test SAM.tag(metainfo) == "HD"
+            @test SAM.value(metainfo) == "VN:1.0\tSO:coordinate"
             @test keys(metainfo) == ["VN", "SO"]
             @test values(metainfo) == ["1.0", "coordinate"]
+            @test SAM.keyvalues(metainfo) == ["VN" => "1.0", "SO" => "coordinate"]
             @test haskey(metainfo, "VN")
             @test haskey(metainfo, "SO")
             @test !haskey(metainfo, "GO")
             @test metainfo["VN"] == "1.0"
             @test metainfo["SO"] == "coordinate"
-            @test metainfo == SAMMetaInfo(b"@HD\tVN:1.0\tSO:coordinate")
             @test_throws KeyError metainfo["GO"]
         end
 
-        @testset "SAMHeader" begin
-            header = SAMHeader()
+        @testset "Header" begin
+            header = SAM.Header()
             @test isempty(header)
-            push!(header, SAMMetaInfo("@HD\tVN:1.0\tSO:coordinate"))
+            push!(header, SAM.MetaInfo("@HD\tVN:1.0\tSO:coordinate"))
             @test !isempty(header)
             @test length(header) == 1
-            push!(header, SAMMetaInfo("@CO\tsome comment"))
+            push!(header, SAM.MetaInfo("@CO\tsome comment"))
             @test length(header) == 2
-            @test isa(collect(header), Vector{SAMMetaInfo})
+            @test isa(collect(header), Vector{SAM.MetaInfo})
         end
 
-        @testset "SAMRecord" begin
-            record = SAMRecord()
+        @testset "Record" begin
+            record = SAM.Record()
             @test !isfilled(record)
-            @test !ismapped(record)
-            @test_throws ArgumentError seqname(record)
+            @test !SAM.ismapped(record)
+            @test repr(record) == "Bio.Align.SAM.Record: <not filled>"
+            @test_throws ArgumentError SAM.flag(record)
 
-            record = SAMRecord("r001\t99\tchr1\t7\t30\t8M2I4M1D3M\t=\t37\t39\tTTAGATAAAGGATACTG\t*")
-            @test record == SAMRecord(b"r001\t99\tchr1\t7\t30\t8M2I4M1D3M\t=\t37\t39\tTTAGATAAAGGATACTG\t*")
-
-            record = SAMRecord("r001\t99\tchr1\t7\t30\t8M2I4M1D3M\t=\t37\t39\tTTAGATAAAGGATACTG\t*")
+            record = SAM.Record("r001\t99\tchr1\t7\t30\t8M2I4M1D3M\t=\t37\t39\tTTAGATAAAGGATACTG\t*")
             @test isfilled(record)
-            @test ismapped(record)
-            @test hasseqname(record)
-            @test seqname(record) == "r001"
-            @test hasflag(record)
-            @test flag(record) === UInt16(99)
-            @test hasrefname(record)
-            @test refname(record) == "chr1"
-            @test hasleftposition(record)
-            @test leftposition(record) === 7
-            @test hasmappingquality(record)
-            @test mappingquality(record) === UInt8(30)
-            @test hascigar(record)
-            @test cigar(record) == "8M2I4M1D3M"
-            @test hasnextrefname(record)
-            @test nextrefname(record) == "="
-            @test hasnextleftposition(record)
-            @test nextleftposition(record) === 37
-            @test hastemplatelength(record)
-            @test templatelength(record) === 39
-            @test hassequence(record)
-            @test sequence(record) == dna"TTAGATAAAGGATACTG"
-            @test !hasqualities(record)
-            @test_throws MissingFieldException qualities(record)
+            @test ismatch(r"^Bio.Align.SAM.Record:\n", repr(record))
+            @test SAM.ismapped(record)
+            @test SAM.hastempname(record)
+            @test SAM.tempname(record) == "r001"
+            @test SAM.hasflag(record)
+            @test SAM.flag(record) === UInt16(99)
+            @test SAM.hasrefname(record)
+            @test SAM.refname(record) == "chr1"
+            @test SAM.hasposition(record)
+            @test SAM.position(record) === 7
+            @test SAM.hasmappingquality(record)
+            @test SAM.mappingquality(record) === UInt8(30)
+            @test SAM.hascigar(record)
+            @test SAM.cigar(record) == "8M2I4M1D3M"
+            @test SAM.hasnextrefname(record)
+            @test SAM.nextrefname(record) == "="
+            @test SAM.hasnextposition(record)
+            @test SAM.nextposition(record) === 37
+            @test SAM.hastemplength(record)
+            @test SAM.templength(record) === 39
+            @test SAM.hassequence(record)
+            @test SAM.sequence(record) == dna"TTAGATAAAGGATACTG"
+            @test !SAM.hasquality(record)
+            @test_throws MissingFieldException SAM.quality(record)
         end
 
         @testset "Reader" begin
-            reader = open(SAMReader, joinpath(samdir, "ce#1.sam"))
-            @test isa(reader, SAMReader)
-            @test eltype(reader) === SAMRecord
+            reader = open(SAM.Reader, joinpath(samdir, "ce#1.sam"))
+            @test isa(reader, SAM.Reader)
+            @test eltype(reader) === SAM.Record
 
             # header
             h = header(reader)
-            @test find(header(reader), "SQ") == [SAMMetaInfo(b"@SQ\tSN:CHROMOSOME_I\tLN:1009800")]
+            @test string.(find(header(reader), "SQ")) == ["@SQ\tSN:CHROMOSOME_I\tLN:1009800"]
 
             # first record
-            rec = SAMRecord()
-            read!(reader, rec)
-            @test ismapped(rec)
-            @test refname(rec) == "CHROMOSOME_I"
-            @test leftposition(rec) == 2
-            @test rightposition(rec) == 102
-            @test seqname(rec) == "SRR065390.14978392"
-            @test sequence(rec)      == dna"CCTAGCCCTAACCCTAACCCTAACCCTAGCCTAAGCCTAAGCCTAAGCCTAAGCCTAAGCCTAAGCCTAAGCCTAAGCCTAAGCCTAAGCCTAAGCCTAA"
-            @test sequence(String, rec) == "CCTAGCCCTAACCCTAACCCTAACCCTAGCCTAAGCCTAAGCCTAAGCCTAAGCCTAAGCCTAAGCCTAAGCCTAAGCCTAAGCCTAAGCCTAAGCCTAA"
-            @test seqlength(rec) == 100
-            @test qualities(rec)       == (b"#############################@B?8B?BA@@DDBCDDCBC@CDCDCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCC" .- 33)
-            @test qualities(String, rec) == "#############################@B?8B?BA@@DDBCDDCBC@CDCDCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCC"
-            @test flag(rec) == 16
-            @test cigar(rec) == "27M1D73M"
-            @test alignment(rec) == Alignment([
+            record = SAM.Record()
+            read!(reader, record)
+            @test SAM.ismapped(record)
+            @test SAM.refname(record) == "CHROMOSOME_I"
+            @test SAM.position(record) == leftposition(record) == 2
+            @test SAM.rightposition(record) == rightposition(record) == 102
+            @test SAM.tempname(record) == seqname(record) == "SRR065390.14978392"
+            @test SAM.sequence(record) == sequence(record) == dna"CCTAGCCCTAACCCTAACCCTAACCCTAGCCTAAGCCTAAGCCTAAGCCTAAGCCTAAGCCTAAGCCTAAGCCTAAGCCTAAGCCTAAGCCTAAGCCTAA"
+            @test SAM.sequence(String, record)          ==    "CCTAGCCCTAACCCTAACCCTAACCCTAGCCTAAGCCTAAGCCTAAGCCTAAGCCTAAGCCTAAGCCTAAGCCTAAGCCTAAGCCTAAGCCTAAGCCTAA"
+            @test SAM.seqlength(record) == 100
+            @test SAM.quality(record)         == (b"#############################@B?8B?BA@@DDBCDDCBC@CDCDCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCC" .- 33)
+            @test SAM.quality(String, record) ==   "#############################@B?8B?BA@@DDBCDDCBC@CDCDCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCC"
+            @test SAM.flag(record) == 16
+            @test SAM.cigar(record) == "27M1D73M"
+            @test SAM.alignment(record) == Alignment([
                 AlignmentAnchor(  0,   1, OP_START),
                 AlignmentAnchor( 27,  28, OP_MATCH),
                 AlignmentAnchor( 27,  29, OP_DELETE),
                 AlignmentAnchor(100, 102, OP_MATCH)])
-            @test rec["XG"] == 1
-            @test rec["XM"] == 5
-            @test rec["XN"] == 0
-            @test rec["XO"] == 1
-            @test rec["AS"] == -18
-            @test rec["XS"] == -18
-            @test rec["YT"] == "UU"
+            @test record["XG"] == 1
+            @test record["XM"] == 5
+            @test record["XN"] == 0
+            @test record["XO"] == 1
+            @test record["AS"] == -18
+            @test record["XS"] == -18
+            @test record["YT"] == "UU"
             @test eof(reader)
             close(reader)
 
             # iterator
-            @test length(collect(open(SAMReader, joinpath(samdir, "ce#1.sam")))) == 1
-            @test length(collect(open(SAMReader, joinpath(samdir, "ce#2.sam")))) == 2
+            @test length(collect(open(SAM.Reader, joinpath(samdir, "ce#1.sam")))) == 1
+            @test length(collect(open(SAM.Reader, joinpath(samdir, "ce#2.sam")))) == 2
 
             # IOStream
-            @test length(collect(SAMReader(open(joinpath(samdir, "ce#1.sam"))))) == 1
-            @test length(collect(SAMReader(open(joinpath(samdir, "ce#2.sam"))))) == 2
+            @test length(collect(SAM.Reader(open(joinpath(samdir, "ce#1.sam"))))) == 1
+            @test length(collect(SAM.Reader(open(joinpath(samdir, "ce#2.sam"))))) == 2
         end
 
         @testset "Round trip" begin
+            function compare_records(xs, ys)
+                if length(xs) != length(ys)
+                    return false
+                end
+                for (x, y) in zip(xs, ys)
+                    if x.data[x.filled] != y.data[y.filled]
+                        return false
+                    end
+                end
+                return true
+            end
             for specimen in YAML.load_file(joinpath(samdir, "index.yml"))
                 filepath = joinpath(samdir, specimen["filename"])
                 mktemp() do path, io
                     # copy
-                    reader = open(SAMReader, filepath)
-                    writer = SAMWriter(io, header(reader))
-                    records = SAMRecord[]
-                    for rec in reader
-                        push!(records, rec)
-                        write(writer, rec)
+                    reader = open(SAM.Reader, filepath)
+                    writer = SAM.Writer(io, header(reader))
+                    records = SAM.Record[]
+                    for record in reader
+                        push!(records, record)
+                        write(writer, record)
                     end
                     close(reader)
                     close(writer)
-
-                    # read again
-                    reader = open(SAMReader, path)
-                    @test collect(reader) == records
-                    close(reader)
+                    @test compare_records(open(collect, SAM.Reader, path), records)
                 end
             end
         end
@@ -1158,101 +1166,127 @@ end
     @testset "BAM" begin
         bamdir = joinpath(dirname(@__FILE__), "..", "BioFmtSpecimens", "BAM")
 
+        @testset "AuxData" begin
+            auxdata = BAM.AuxData(UInt8[])
+            @test isempty(auxdata)
+
+            buf = IOBuffer()
+            write(buf, "NM", UInt8('s'), Int16(1))
+            auxdata = BAM.AuxData(takebuf_array(buf))
+            @test length(auxdata) == 1
+            @test auxdata["NM"] === Int16(1)
+            @test collect(auxdata) == ["NM" => Int16(1)]
+
+            buf = IOBuffer()
+            write(buf, "AS", UInt8('c'), Int8(-18))
+            write(buf, "NM", UInt8('s'), Int16(1))
+            write(buf, "XA", UInt8('f'), Float32(3.14))
+            write(buf, "XB", UInt8('Z'), "some text\0")
+            write(buf, "XC", UInt8('B'), UInt8('i'), Int32(3), Int32[10, -5, 8])
+            auxdata = BAM.AuxData(takebuf_array(buf))
+            @test length(auxdata) == 5
+            @test auxdata["AS"] === Int8(-18)
+            @test auxdata["NM"] === Int16(1)
+            @test auxdata["XA"] === Float32(3.14)
+            @test auxdata["XB"] == "some text"
+            @test auxdata["XC"] == Int32[10, -5, 8]
+            @test convert(Dict{String,Any}, auxdata) == Dict(
+                "AS" => Int8(-18),
+                "NM" => Int16(1),
+                "XA" => Float32(3.14),
+                "XB" => "some text",
+                "XC" => Int32[10, -5, 8])
+        end
+
         @testset "Record" begin
-            rec = BAMRecord()
-            @test !ismapped(rec)
-
-            # default values
-            @test refname(rec) == "*"
-            @test refindex(rec) == 0
-            @test leftposition(rec) == 0
-            @test rightposition(rec) == -1
-            @test mappingquality(rec) == 0
-            @test flag(rec) == SAM_FLAG_UNMAP
-            @test nextrefname(rec) == "*"
-            @test nextrefindex(rec) == 0
-            @test nextleftposition(rec) == 0
-            @test templatelength(rec) == 0
-            @test seqname(rec) == ""
-            @test cigar(rec) == ""
-            @test sequence(rec) == dna""
-            @test seqlength(rec) == 0
-            @test alignment(rec) == Alignment(AlignmentAnchor[])
-            @test qualities(rec) == UInt8[]
-            @test Align.alignment_length(rec) === 0
-
-            buf = IOBuffer()
-            show(buf, rec)
-            @test startswith(takebuf_string(buf), "Bio.Align.BAMRecord:")
-
-            buf = IOBuffer()
-            showcompact(buf, rec)
-            @test takebuf_string(buf) == "(empty name)\tunmapped"
-
-            # set & delete tags
-            rec = BAMRecord()
-            @test !haskey(rec, "MN")
-            rec["MN"] = 0x01
-            @test rec["MN"] === 0x01
-            @test haskey(rec, "MN")
-            @test !haskey(rec, "XY")
-            rec["XY"] = "foobar"
-            @test rec["XY"] == "foobar"
-            @test haskey(rec, "XY")
-            delete!(rec, "MN")
-            @test !haskey(rec, "MN")
+            record = BAM.Record()
+            @test !isfilled(record)
+            @test repr(record) == "Bio.Align.BAM.Record: <not filled>"
+            @test_throws ArgumentError BAM.flag(record)
         end
 
         @testset "Reader" begin
-            reader = open(BAMReader, joinpath(bamdir, "ce#1.bam"))
-            @test isa(reader, BAMReader)
-            @test eltype(reader) === BAMRecord
-            @test startswith(repr(reader), "Bio.Align.BAMReader{IOStream}:")
+            reader = open(BAM.Reader, joinpath(bamdir, "ce#1.bam"))
+            @test isa(reader, BAM.Reader)
+            @test eltype(reader) === BAM.Record
+            @test startswith(repr(reader), "Bio.Align.BAM.Reader{IOStream}:")
 
             # header
             h = header(reader)
-            @test isa(h, SAMHeader)
+            @test isa(h, SAM.Header)
 
             # first record
-            rec = BAMRecord()
-            read!(reader, rec)
-            @test ismapped(rec)
-            @test refname(rec) == "CHROMOSOME_I"
-            @test refindex(rec) == 1
-            @test leftposition(rec) == 2
-            @test rightposition(rec) == 102
-            @test seqname(rec) == "SRR065390.14978392"
-            @test sequence(rec) == dna"""
+            record = BAM.Record()
+            read!(reader, record)
+            @test BAM.ismapped(record)
+            @test BAM.refname(record) == "CHROMOSOME_I"
+            @test BAM.refid(record) === 1
+            @test BAM.hasnextrefid(record)
+            @test BAM.nextrefid(record) === 0
+            @test BAM.hasposition(record) === hasleftposition(record) === true
+            @test BAM.position(record) === leftposition(record) === 2
+            @test BAM.hasnextposition(record)
+            @test BAM.nextposition(record) === 0
+            @test rightposition(record) == 102
+            @test BAM.hastempname(record) === hasseqname(record) === true
+            @test BAM.tempname(record) == seqname(record) == "SRR065390.14978392"
+            @test BAM.hassequence(record) === hassequence(record) === true
+            @test BAM.sequence(record) == sequence(record) == dna"""
             CCTAGCCCTAACCCTAACCCTAACCCTAGCCTAAGCCTAAGCCTAAGCCT
             AAGCCTAAGCCTAAGCCTAAGCCTAAGCCTAAGCCTAAGCCTAAGCCTAA
             """
-            @test seqlength(rec) == 100
-            @test eltype(qualities(rec)) == Int8
-            @test qualities(rec) == [Int(x) - 33 for x in "#############################@B?8B?BA@@DDBCDDCBC@CDCDCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCC"]
-            @test flag(rec) == 16
-            @test cigar(rec) == "27M1D73M"
-            @test alignment(rec) == Alignment([
+            @test BAM.seqlength(record) === 100
+            @test BAM.hasquality(record)
+            @test eltype(BAM.quality(record)) == UInt8
+            @test BAM.quality(record) == [Int(x) - 33 for x in "#############################@B?8B?BA@@DDBCDDCBC@CDCDCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCC"]
+            @test BAM.flag(record) === UInt16(16)
+            @test BAM.cigar(record) == "27M1D73M"
+            @test BAM.alignment(record) == Alignment([
                 AlignmentAnchor(  0,   1, OP_START),
                 AlignmentAnchor( 27,  28, OP_MATCH),
                 AlignmentAnchor( 27,  29, OP_DELETE),
                 AlignmentAnchor(100, 102, OP_MATCH)])
-            @test rec["XG"] == 1
-            @test rec["XM"] == 5
-            @test rec["XN"] == 0
-            @test rec["XO"] == 1
-            @test rec["AS"] == -18
-            @test rec["XS"] == -18
-            @test rec["YT"] == "UU"
+            @test record["XG"] == 1
+            @test record["XM"] == 5
+            @test record["XN"] == 0
+            @test record["XO"] == 1
+            @test record["AS"] == -18
+            @test record["XS"] == -18
+            @test record["YT"] == "UU"
+            @test keys(record) == ["XG","XM","XN","XO","AS","XS","YT"]
+            @test values(record) == [1, 5, 0, 1, -18, -18, "UU"]
             @test eof(reader)
             close(reader)
 
             # iterator
-            @test length(collect(open(BAMReader, joinpath(bamdir, "ce#1.bam")))) == 1
-            @test length(collect(open(BAMReader, joinpath(bamdir, "ce#2.bam")))) == 2
+            @test length(collect(open(BAM.Reader, joinpath(bamdir, "ce#1.bam")))) == 1
+            @test length(collect(open(BAM.Reader, joinpath(bamdir, "ce#2.bam")))) == 2
 
             # IOStream
-            @test length(collect(BAMReader(open(joinpath(bamdir, "ce#1.bam"))))) == 1
-            @test length(collect(BAMReader(open(joinpath(bamdir, "ce#2.bam"))))) == 2
+            @test length(collect(BAM.Reader(open(joinpath(bamdir, "ce#1.bam"))))) == 1
+            @test length(collect(BAM.Reader(open(joinpath(bamdir, "ce#2.bam"))))) == 2
+        end
+
+        function compare_records(xs, ys)
+            if length(xs) != length(ys)
+                return false
+            end
+            for (x, y) in zip(xs, ys)
+                if !(
+                    x.block_size == y.block_size &&
+                    x.refid      == y.refid &&
+                    x.pos        == y.pos &&
+                    x.bin_mq_nl  == y.bin_mq_nl &&
+                    x.flag_nc    == y.flag_nc &&
+                    x.l_seq      == y.l_seq &&
+                    x.next_refid == y.next_refid &&
+                    x.next_pos   == y.next_pos &&
+                    x.tlen       == y.tlen &&
+                    x.data[1:BAM.data_size(x)] == y.data[1:BAM.data_size(y)])
+                    return false
+                end
+            end
+            return true
         end
 
         @testset "Round trip" begin
@@ -1261,42 +1295,38 @@ end
                 mktemp() do path, _
                     # copy
                     if contains(get(specimen, "tags", ""), "bai")
-                        reader = open(BAMReader, filepath, index=filepath * ".bai")
+                        reader = open(BAM.Reader, filepath, index=filepath * ".bai")
                     else
-                        reader = open(BAMReader, filepath)
+                        reader = open(BAM.Reader, filepath)
                     end
-                    writer = BAMWriter(
+                    writer = BAM.Writer(
                         BGZFStream(path, "w"),
-                        header(reader, fillSQ=isempty(find(header(reader), "SQ"))))
-                    records = BAMRecord[]
-                    for rec in reader
-                        push!(records, rec)
-                        write(writer, rec)
+                        BAM.header(reader, fillSQ=isempty(find(header(reader), "SQ"))))
+                    records = BAM.Record[]
+                    for record in reader
+                        push!(records, record)
+                        write(writer, record)
                     end
                     close(reader)
                     close(writer)
-
-                    # read again
-                    reader = open(BAMReader, path)
-                    @test collect(reader) == records
-                    close(reader)
+                    @test compare_records(open(collect, BAM.Reader, path), records)
                 end
             end
         end
 
         @testset "Random access" begin
             filepath = joinpath(bamdir, "GSE25840_GSM424320_GM06985_gencode_spliced.head.bam")
-            reader = open(BAMReader, filepath, index=filepath * ".bai")
+            reader = open(BAM.Reader, filepath, index=filepath * ".bai")
 
             # expected values are counted using samtools
             for (refname, interval, expected) in [
-                    ("chr1", 1000:10000,      21),
-                    ("chr1", 8000:10000,      20),
+                    ("chr1", 1_000:10000,      21),
+                    ("chr1", 8_000:10000,      20),
                     ("chr1", 766_000:800_000, 142),
                     ("chr1", 786_000:800_000, 1),
                     ("chr1", 796_000:800_000, 0)]
-                intsect = intersect(reader, refname, interval)
-                @test eltype(intsect) == BAMRecord
+                intsect = eachoverlap(reader, refname, interval)
+                @test eltype(intsect) == BAM.Record
                 @test count(_ -> true, intsect) == expected
                 # check that the intersection iterator is stateless
                 @test count(_ -> true, intsect) == expected
@@ -1309,18 +1339,18 @@ end
                 range = randrange(1:1_000_000)
                 seekstart(reader)
                 # linear scan
-                expected = collect(filter(reader) do rec
-                    isoverlapping(rec, refindex, range)
+                expected = collect(filter(reader) do record
+                    Bio.Align.BAM.isoverlapping(record, refindex, range)
                 end)
                 # indexed scan
-                actual = collect(intersect(reader, refname, range))
-                @test actual == expected
+                actual = collect(eachoverlap(reader, refname, range))
+                @test compare_records(actual, expected)
             end
             close(reader)
 
             filepath = joinpath(bamdir, "R_12h_D06.uniq.q40.bam")
-            reader = open(BAMReader, filepath, index=filepath * ".bai")
-            @test isempty(collect(intersect(reader, "chr19", 5823708:5846478)))
+            reader = open(BAM.Reader, filepath, index=filepath * ".bai")
+            @test isempty(collect(eachoverlap(reader, "chr19", 5823708:5846478)))
             close(reader)
         end
     end
