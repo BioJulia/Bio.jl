@@ -29,6 +29,7 @@ export
     DNA_N,
     DNA_Gap,
     ACGT,
+    ACGTN,
     RNA_A,
     RNA_C,
     RNA_G,
@@ -46,6 +47,8 @@ export
     RNA_N,
     RNA_Gap,
     ACGU,
+    ACGUN,
+    isGC,
     iscompatible,
     isambiguous,
     iscertain,
@@ -173,29 +176,10 @@ import Combinatorics
 import IndexableBitVectors
 import Iterators
 importall Bio
-
-"""
-    alphabet(typ)
-
-Return an iterator of symbols of `typ`.
-
-`typ` is one of `DNA`, `RNA`, or `AminoAcid`.
-"""
-function alphabet end
-
-"""
-    gap(typ)
-
-Return the gap symbol of `typ`.
-
-`typ` is one of `DNA`, `RNA`, `AminoAcid`, or `Char`.
-"""
-function gap end
+importall BioSymbols
 
 gap(::Type{Char}) = '-'
 
-include("nucleicacid.jl")
-include("aminoacid.jl")
 include("alphabet.jl")
 include("bitindex.jl")
 include("sequence.jl")

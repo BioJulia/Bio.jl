@@ -16,6 +16,8 @@ Bio.jl v0.5.0 Release Notes
 * Overloaded `Base.intersect` methods for intervals are removed. Use the `eachoverlap` function exported from `Bio.Intervals` instead ([#426]).
 * A reader for the ABIF format by Applied Biosystems is introduced ([#353]).
 * Newlines are removed by default when printing a long sequence ([#441]).
+* Definitions of biological symbols (`DNA`, `RNA` and `AminoAcid`) are moved to [BioSymbols.jl](https://github.com/BioJulia/BioSymbols.jl) and re-exported from `Bio.Seq` ([#443]).
+* Definitions of types and methods in Bio.Phylo have been moved to [Phylogenies.jl], and re-exported from Bio.Phylo ([#438]).
 
 [#138]: https://github.com/BioJulia/Bio.jl/pull/138
 [#291]: https://github.com/BioJulia/Bio.jl/issues/291
@@ -28,5 +30,7 @@ Bio.jl v0.5.0 Release Notes
 [#418]: https://github.com/BioJulia/Bio.jl/pull/418
 [#426]: https://github.com/BioJulia/Bio.jl/pull/426
 [#431]: https://github.com/BioJulia/Bio.jl/pull/431
+[#438]: https://github.com/BioJulia/Bio.jl/pull/438
 [#440]: https://github.com/BioJulia/Bio.jl/pull/440
 [#441]: https://github.com/BioJulia/Bio.jl/pull/441
+[#443]: https://github.com/BioJulia/Bio.jl/pull/443
