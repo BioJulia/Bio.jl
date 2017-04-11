@@ -273,3 +273,21 @@ function swap{T,k}(kmer::Kmer{T,k}, i, j)
     x = ((b >> i) $ (b >> j)) & UInt64(0x03)
     return Kmer{T,k}(b $ ((x << i) | (x << j)))
 end
+
+# String literal
+# --------------
+
+macro kmer_str(seq, flag)
+    if flag == "s"
+        return DNAKmer(remove_newlines(seq))
+    elseif flag == "d"
+        return quote
+            DNAKmer($(remove_newlines(seq)))
+        end
+    end
+    error("Invalid DNAKmer flag: '$(flag)'")
+end
+
+macro kmer_str(seq)
+    return DNAKmer(remove_newlines(seq))
+end
