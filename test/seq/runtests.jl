@@ -1688,7 +1688,6 @@ end
             # Test string literals
             @test kmer"ACTG" == convert(Kmer, DNASequence("ACTG"))
             @test isa(kmer"ACGT", DNAKmer{4})
-            @test_throws kmer"ACGNT"
         end
     end
 
