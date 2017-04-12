@@ -18,6 +18,8 @@ Bio.jl v0.5.0 Release Notes
 * Newlines are removed by default when printing a long sequence ([#441]).
 * Definitions of biological symbols (`DNA`, `RNA` and `AminoAcid`) are moved to [BioSymbols.jl](https://github.com/BioJulia/BioSymbols.jl) and re-exported from `Bio.Seq` ([#443]).
 * Definitions of types and methods in Bio.Phylo have been moved to [Phylogenies.jl], and re-exported from Bio.Phylo ([#438]).
+* Add a macro that enables writing kmers as string literals (`kmer"ACGT"`;
+  [#446])
 
 [#138]: https://github.com/BioJulia/Bio.jl/pull/138
 [#291]: https://github.com/BioJulia/Bio.jl/issues/291
@@ -34,3 +36,4 @@ Bio.jl v0.5.0 Release Notes
 [#440]: https://github.com/BioJulia/Bio.jl/pull/440
 [#441]: https://github.com/BioJulia/Bio.jl/pull/441
 [#443]: https://github.com/BioJulia/Bio.jl/pull/443
+[#446]: https://github.com/BioJulia/Bio.jl/pull/446
