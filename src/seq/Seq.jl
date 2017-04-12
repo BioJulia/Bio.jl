@@ -74,6 +74,7 @@ export
     @char_str,
     @biore_str,
     @prosite_str,
+    @kmer_str,
     matched,
     captured,
     alphabet,
