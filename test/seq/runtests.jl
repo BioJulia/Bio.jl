@@ -1684,6 +1684,10 @@ end
             # N is not allowed in Kmers
             @test_throws Exception DNAKmer("ACGTNACGT")
             @test_throws Exception RNAKmer("ACGUNACGU")
+
+            # Test string literals
+            @test kmer"ACTG" == convert(Kmer, DNASequence("ACTG"))
+            @test isa(kmer"ACGT", DNAKmer{4})
         end
     end
 

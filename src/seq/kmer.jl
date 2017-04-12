@@ -273,3 +273,10 @@ function swap{T,k}(kmer::Kmer{T,k}, i, j)
     x = ((b >> i) $ (b >> j)) & UInt64(0x03)
     return Kmer{T,k}(b $ ((x << i) | (x << j)))
 end
+
+# String literal
+# --------------
+
+macro kmer_str(seq)
+    return DNAKmer(remove_newlines(seq))
+end
