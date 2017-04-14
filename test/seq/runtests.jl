@@ -2749,6 +2749,20 @@ end
         IJN
         """
 
+        function test_records(rs1, rs2)
+            if length(rs1) != length(rs2)
+                return false
+            end
+            for (r1, r2) in zip(rs1, rs2)
+                if FASTQ.identifier(r1) != FASTQ.identifier(r2) ||
+                   FASTQ.sequence(r1)   != FASTQ.sequence(r2)   ||
+                   FASTQ.quality(r1)    != FASTQ.quality(r2)
+                    return false
+                end
+            end
+            return true
+        end
+
         function test_fastq_parse(filename, valid)
             # Reading from a stream
             stream = open(FASTQ.Reader, filename)
@@ -2770,44 +2784,39 @@ end
             while !eof(stream)
                 read!(stream, entry)
             end
+            close(stream)
 
             # Check round trip
             output = IOBuffer()
             writer = FASTQ.Writer(output)
             expected_entries = FASTQ.Record[]
-            for seqrec in open(FASTQ.Reader, filename)
-                write(writer, seqrec)
-                push!(expected_entries, seqrec)
+            for record in open(FASTQ.Reader, filename)
+                write(writer, record)
+                push!(expected_entries, record)
             end
             flush(writer)
 
             seekstart(output)
             read_entries = FASTQ.Record[]
-            for seqrec in FASTQ.Reader(output)
-                push!(read_entries, seqrec)
+            for record in FASTQ.Reader(output)
+                push!(read_entries, record)
             end
 
-            # TODO
-            #@test expected_entries == read_entries
-            return true
+            return test_records(expected_entries, read_entries)
         end
 
         get_bio_fmt_specimens()
         path = joinpath(dirname(@__FILE__), "..", "BioFmtSpecimens", "FASTQ")
         for specimen in YAML.load_file(joinpath(path, "index.yml"))
-            tags = get(specimen, "tags", "")
+            tags = split(get(specimen, "tags", ""))
             valid = get(specimen, "valid", true)
             # currently unsupported features
-            if contains(tags, "rna") || contains(tags, "gaps") ||
-               contains(tags, "comments") || contains(tags, "ambiguity")
+            if any(t ∈ tags for t in ["gaps", "rna", "comments", "linewrap"])
                 continue
             end
             filename = specimen["filename"]
             # TODO
             if filename == "example_dos.fastq"
-                continue
-            elseif filename ∈ ("longreads_original_sanger.fastq", "tricky.fastq", "wrapping_original_sanger.fastq")
-                # multiline
                 continue
             end
             #=
