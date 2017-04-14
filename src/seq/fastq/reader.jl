@@ -78,11 +78,12 @@ const record_machine, file_machine = (function ()
         cat(opt('\r'), lf)
     end
 
-    record = cat(header1, newline, sequence, newline, header2, newline, quality)
-    record.actions[:enter] = [:anchor]
-    record.actions[:exit]  = [:record]
+    record′ = cat(header1, newline, sequence, newline, header2, newline, quality)
+    record′.actions[:enter] = [:anchor]
+    record′.actions[:exit]  = [:record]
+    record = cat(record′, newline)
 
-    file = rep(cat(record, newline))
+    file = rep(record)
 
     return map(Automa.compile, (record, file))
 end)()

@@ -2749,6 +2749,25 @@ end
         IJN
         """
 
+        @testset "Record" begin
+            record = FASTQ.Record()
+            @test !isfilled(record)
+
+            record = FASTQ.Record("""
+            @SRR1238088.1.1 HWI-ST499:111:D0G94ACXX:1:1101:1173:2105
+            AAGCTCATGACCCGTCTTACCTACACCCTTGACGAGATCGAAGGA
+            +SRR1238088.1.1 HWI-ST499:111:D0G94ACXX:1:1101:1173:2105
+            @BCFFFDFHHHHHJJJIJIJJIJJJJJJJJIJJJJIIIJJJIJJJ
+            """)
+            @test isfilled(record)
+            @test FASTQ.identifier(record) == "SRR1238088.1.1"
+            @test FASTQ.description(record) == "HWI-ST499:111:D0G94ACXX:1:1101:1173:2105"
+            @test FASTQ.sequence(DNASequence, record) == dna"AAGCTCATGACCCGTCTTACCTACACCCTTGACGAGATCGAAGGA"
+            @test FASTQ.sequence(record) == dna"AAGCTCATGACCCGTCTTACCTACACCCTTGACGAGATCGAAGGA"
+            @test FASTQ.sequence(String, record) == "AAGCTCATGACCCGTCTTACCTACACCCTTGACGAGATCGAAGGA"
+            @test FASTQ.quality(record) == b"@BCFFFDFHHHHHJJJIJIJJIJJJJJJJJIJJJJIIIJJJIJJJ" .- 33
+        end
+
         function test_records(rs1, rs2)
             if length(rs1) != length(rs2)
                 return false
@@ -2838,7 +2857,8 @@ end
             @FAKE0001 Original version has PHRED scores from 0 to 93 inclusive (in that order)
             ACGTACGTACGTACGTACGTACGTACGTACGTACGTACGTACGTACGTACGTACGTACGTACGTACGTACGTACGTACGTACGTACGTACGTAC
             +
-            !"#\$%&'()*+,-./0123456789:;<=>?@ABCDEFGHIJKLMNOPQRSTUVWXYZ[\\]^_`abcdefghijklmnopqrstuvwxyz{|}~""")
+            !"#\$%&'()*+,-./0123456789:;<=>?@ABCDEFGHIJKLMNOPQRSTUVWXYZ[\\]^_`abcdefghijklmnopqrstuvwxyz{|}~
+            """)
 
             # the range is not enough in these encodings
             for encoding in (:solexa, :illumina13, :illumina15)
