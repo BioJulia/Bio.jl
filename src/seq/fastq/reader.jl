@@ -9,6 +9,11 @@ immutable Reader <: Bio.IO.AbstractReader
     end
 end
 
+"""
+    FASTQ.Reader(input::IO)
+
+Create a data reader of the FASTQ file format.
+"""
 function Reader(input::IO)
     return Reader(BufferedInputStream(input))
 end

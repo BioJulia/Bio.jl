@@ -161,10 +161,10 @@ FASTQ is a text-based file format for representing DNA sequences along with
 qualities for each base. A FASTQ file stores a list of sequence records in the
 following format:
 ```
-@{name} {description}?
+@{identifier} {description}?
 {sequence}
 +
-{qualities}
+{quality}
 ```
 
 Here is an example of one record from a FASTQ file:

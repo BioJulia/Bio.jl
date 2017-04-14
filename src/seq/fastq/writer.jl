@@ -10,6 +10,15 @@ function Bio.IO.stream(writer::Writer)
     return writer.output
 end
 
+"""
+    FASTQ.Writer(output::IO; quality_header=false)
+
+Create a data writer of the FASTQ file format.
+
+# Arguments
+* `output`: data sink
+* `quality_header=false`: output the title line at the third line just after '+'
+"""
 function Writer(output::IO; quality_header::Bool=false)
     return Writer(output, quality_header)
 end
