@@ -60,10 +60,10 @@ julia> DNA_Gap
 DNA_Gap
 
 julia> typeof(DNA_A)
-Bio.Seq.DNA
+BioSymbols.DNA
 
 julia> typeof(RNA_A)
-Bio.Seq.RNA
+BioSymbols.RNA
 
 ```
 
@@ -166,7 +166,7 @@ julia> AA_Term
 AA_Term
 
 julia> typeof(AA_A)
-Bio.Seq.AminoAcid
+BioSymbols.AminoAcid
 
 ```
 

@@ -22,17 +22,16 @@ julia> DNAKmer("ACGT")  # create a DNA 4-mer from a string
 DNA 4-mer:
 ACGT
 
-
-julia> kmer"AGCT" # DNA k-mers may also be written as literals
-DNA 4-mer:
-ACGT
-
 julia> RNAKmer("ACGU")  # create an RNA 4-mer from a string
 RNA 4-mer:
 ACGU
 
+julia> kmer"ACGT" # DNA k-mers may also be written as literals
+DNA 4-mer:
+ACGT
+
 julia> typeof(DNAKmer("ACGT"))
-Bio.Seq.Kmer{Bio.Seq.DNA,4}
+Bio.Seq.Kmer{BioSymbols.DNA,4}
 ```
 
 
