@@ -226,7 +226,7 @@ julia> convert(String, dna"TTANGTA")
 "TTANGTA"
 
 julia> convert(Vector{DNA}, dna"TTANGTA")
-7-element Array{Bio.Seq.DNA,1}:
+7-element Array{BioSymbols.DNA,1}:
  DNA_T
  DNA_T
  DNA_A
