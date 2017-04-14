@@ -9,6 +9,7 @@ Bio.jl v0.5.0 Release Notes
 * Computing genomic distances using the MASH algorithm is introduced ([#415]).
 * IO APIs are reorganized into submodules:
     * `Bio.Seq.FASTAReader` => `Bio.Seq.FASTA.Reader` ([#413]).
+    * `Bio.Seq.FASTQReader` => `Bio.Seq.FASTQ.Reader` ([#???]).
     * `Bio.Seq.TwoBitReader` => `Bio.Seq.TwoBit.Reader` ([#431]).
     * `Bio.Intervals.BEDReader` => `Bio.Intervals.BED.Reader` ([#418]).
     * `Bio.Align.SAMReader` => `Bio.Align.SAM.Reader` ([#440])

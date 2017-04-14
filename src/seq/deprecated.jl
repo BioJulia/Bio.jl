@@ -9,11 +9,14 @@ import Base.depwarn
 @deprecate_binding RNANucleotide RNA
 
 include("fasta_old/fasta.jl")
+include("fastq_old/fastq.jl")
 include("twobit_old/twobit.jl")
 
 export
     FASTAReader,
     FASTAWriter,
+    FASTQReader,
+    FASTQWriter,
     TwoBitReader,
     TwoBitWriter
 
@@ -79,7 +82,3 @@ function Base.getindex{T}(r::SymbolRange{T}, ir::UnitRange)
         return SymbolRange(r[first(ir)], r[last(ir)])
     end
 end
-
-
-immutable FASTQ <: Bio.IO.FileFormat end
-export FASTQ
