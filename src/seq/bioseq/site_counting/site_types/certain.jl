@@ -11,6 +11,20 @@ A `Certain` site describes a site where both of two aligned sites are not an
 ambiguity symbol or a gap.
 """
 immutable Certain <: Site end
+const CERTAIN = Certain()
+
+for alph in (DNAAlphabet, RNAAlphabet)
+    @eval begin
+        @inline function count_algorithm(s::Certain, a::BioSequence{$(alph){2}}, b::BioSequence{$(alph){2}})
+            return ALL
+        end
+        @inline function count_algorithm(s::Certain, a::BioSequence{$(alph){4}}, b::BioSequence{$(alph){4}})
+            return BITPAR
+        end
+    end
+end
+
+
 
 # Methods for the naive framework.
 # --------------------------------
@@ -35,12 +49,12 @@ considered, when counting pairwise mutations between sequences.
 
 **This is an internal method and should not be exported.**
 """
-@inline function create_nibble_mask(::Type{Certain}, x::UInt64)
-    return create_nibble_mask(enumerate_nibbles(x), 0x1111111111111111)
+@inline function nibble_mask(::Type{Certain}, x::UInt64)
+    return nibble_mask(enumerate_nibbles(x), 0x1111111111111111)
 end
 
 """
-    create_nibble_mask(::Type{Certain}, a::UInt64, b::UInt64)
+    nibble_mask(::Type{Certain}, a::UInt64, b::UInt64)
 
 Create a mask of the nibbles in two chunks of
 BioSequence{(DNA|RNA)Nucleotide{4}} data that represent sites that should be
@@ -48,8 +62,8 @@ considered during pairwise distance computation at a given nibble.
 
 **This is an internal method and should not be exported.**
 """
-@inline function create_nibble_mask(::Type{Certain}, a::UInt64, b::UInt64)
-    return create_nibble_mask(Certain, a) & create_nibble_mask(Certain, b)
+@inline function nibble_mask(::Type{Certain}, a::UInt64, b::UInt64)
+    return nibble_mask(Certain, a) & nibble_mask(Certain, b)
 end
 
 """
@@ -61,7 +75,10 @@ Such sites are defined as those with gaps or ambiguous characters in them.
 **This is an internal method and should not be exported.**
 """
 @inline function count_nibbles(::Type{Certain}, x::UInt64)
-    return count_one_nibbles(create_nibble_mask(Certain, x))
+    x = enumerate_nibbles(x)
+    x $= 0x1111111111111111
+    return count_zero_nibbles(x)
+    #return count_one_nibbles(create_nibble_mask(Certain, x))
 end
 
 """
@@ -73,5 +90,8 @@ Such sites are defined as those with gaps or ambiguous characters in them.
 **This is an internal method and should not be exported.**
 """
 @inline function count_nibbles(::Type{Certain}, a::UInt64, b::UInt64)
-    return count_one_nibbles(create_nibble_mask(Certain, a, b))
+    x = enumerate_nibbles(a) $ 0x1111111111111111
+    y = enumerate_nibbles(b) $ 0x1111111111111111
+    return count_zero_nibbles(x | y)
+    #return count_one_nibbles(create_nibble_mask(Certain, a, b))
 end

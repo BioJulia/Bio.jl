@@ -14,6 +14,7 @@ be different such that they constitute a transversion mutation: i.e. A<->C,
 A<->T, G<->T, G<->C.
 """
 immutable Transversion <: Mutation end
+const TRANSVERSION = Transversion()
 
 # Methods for the naive framework.
 # --------------------------------

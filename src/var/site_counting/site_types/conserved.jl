@@ -12,6 +12,7 @@ conserved. By definately conserved this means that the symbols of the site are
 non-ambiguity symbols, and they are the same symbol.
 """
 immutable Conserved <: Mutation end
+const CONSERVED = Conserved()
 
 # Methods for the naive framework.
 # --------------------------------

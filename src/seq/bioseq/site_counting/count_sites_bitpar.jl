@@ -1,5 +1,6 @@
+BC = BitparCount
 
-@generated function count_sites_bitpar{T<:Site,A}(::Type{T}, a::BioSequence{A}, b::BioSequence{A})
+@generated function Base.count{T<:Site,A<:Alphabet}(site::T, alg::BC, a::BioSequence{A}, b::BioSequence{A})
     n = bitsof(A)
     if n == 2
         count_func = :count_bitpairs
@@ -13,14 +14,14 @@
 
     quote
         if length(a) > length(b)
-            return count_sites_bitpar(T, b, a)
+            return count(site, alg, b, a)
         end
         @assert length(a) ≤ length(b)
 
         nexta = bitindex(a, 1)
         nextb = bitindex(b, 1)
         stopa = bitindex(a, endof(a) + 1)
-        counts = start_count(T)
+        counts = start_counter(T)
         spaces = 0
 
         # align reading position of `a.data` so that `offset(nexta) == 0`
@@ -34,7 +35,7 @@
             k = 64 - offset(nexta)
             m = mask(k)
             #println("x masked: $(hex(x & m)), y masked: $(hex(y & m))")
-            counts = update_count(counts, $count_func(T, x & m, y & m))
+            counts = update_counter(counts, $count_func(T, x & m, y & m))
             #println("Count: ", counts)
             if correct_endspace(T)
                 #println("N empty nibbles: ", nempty)
@@ -56,7 +57,7 @@
                 y = b.data[index(nextb)]
                 #println("x: $(hex(x))")
                 #println("y: $(hex(y))")
-                counts = update_count(counts, $count_func(T, x, y))
+                counts = update_counter(counts, $count_func(T, x, y))
                 #println("Count: ", counts)
                 nexta += 64
                 nextb += 64
@@ -71,7 +72,7 @@
                 m = mask(offs)
                 #println("x masked: $(hex(x & m))")
                 #println("y masked: $(hex(y & m))")
-                counts = update_count(counts, $count_func(T, x & m, y & m))
+                counts = update_counter(counts, $count_func(T, x & m, y & m))
                 #println("Count: ", counts)
                 if correct_endspace(T)
                     nempty = $n_nucs - div(offs, $n)
@@ -94,7 +95,7 @@
                 y = y >> offset(nextb) | z << (64 - offset(nextb))
 
                 #println("x: $(hex(x)), z: $(hex(z)), y: $(hex(y))")
-                counts = update_count(counts, $count_func(T, x, y))
+                counts = update_counter(counts, $count_func(T, x, y))
                 #println("Count: ", counts)
                 y = z
                 nexta += 64
@@ -112,7 +113,7 @@
                 offs = stopa - nexta
                 m = mask(offs)
                 #println("x masked: $(hex(x & m)), y masked: $(hex(y & m))")
-                counts = update_count(counts, $count_func(T, x & m, y & m))
+                counts = update_counter(counts, $count_func(T, x & m, y & m))
                 #println("Count: ", counts)
                 if correct_endspace(T)
                     nempty = $n_nucs - div(offs, $n)

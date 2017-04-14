@@ -11,6 +11,18 @@ An `Gap` site describes a site where either of two aligned sites are a
 gap symbol '-'.
 """
 immutable Gap <: Site end
+const GAP = Gap()
+
+for alph in (DNAAlphabet, RNAAlphabet)
+    @eval begin
+        @inline function count_algorithm(s::Gap, a::BioSequence{$(alph){2}}, b::BioSequence{$(alph){2}})
+            return NULL
+        end
+        @inline function count_algorithm(s::Gap, a::BioSequence{$(alph){4}}, b::BioSequence{$(alph){4}})
+            return BITPAR
+        end
+    end
+end
 
 # Methods for the naive framework.
 # --------------------------------
@@ -39,8 +51,8 @@ this mask.
 
 **This is an internal method and should not be exported.**
 """
-@inline function create_nibble_mask(::Type{Gap}, x::UInt64)
-    return create_nibble_mask(x, 0x0000000000000000)
+@inline function nibble_mask(::Type{Gap}, x::UInt64)
+    return nibble_mask(x, 0x0000000000000000)
 end
 
 """
@@ -55,8 +67,8 @@ this mask.
 
 **This is an internal method and should not be exported.**
 """
-@inline function create_nibble_mask(::Type{Gap}, a::UInt64, b::UInt64)
-    return create_nibble_mask(Gap, a) | create_nibble_mask(Gap, b)
+@inline function nibble_mask(::Type{Gap}, a::UInt64, b::UInt64)
+    return nibble_mask(Gap, a) | nibble_mask(Gap, b)
 end
 
 """

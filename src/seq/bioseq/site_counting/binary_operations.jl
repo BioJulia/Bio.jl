@@ -93,14 +93,14 @@ end
 # ------------------------
 
 """
-    create_nibble_mask(x::UInt64, value::UInt64)
+    nibble_mask(x::UInt64, value::UInt64)
 
 Create a mask for the nibbles (groups of four bits) in a 64 bit integer `x`
 that match a given value dictated by the pattern in `value`.
 
 **This is an internal method and should not be exported.**
 """
-@inline function create_nibble_mask(value::UInt64, x::UInt64)
+@inline function nibble_mask(value::UInt64, x::UInt64)
     # XOR with the desired values. So matching nibbles will be 0000.
     x $= value
     # Horizontally OR the nibbles.

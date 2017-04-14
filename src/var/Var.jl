@@ -17,9 +17,9 @@ import Bio.Seq:
     NucleicAcid,
     MinHashSketch,
     issite,
-    start_count,
-    out_type,
-    update_count,
+    start_counter,
+    counter_type,
+    update_counter,
     ispurine,
     ispyrimidine,
     BioSequence
@@ -36,11 +36,10 @@ importall Bio
 
 export
     # Site types
-    Mutation,
-    Conserved,
-    Mutated,
-    Transition,
-    Transversion,
+    CONSERVED,
+    MUTATED,
+    TRANSITION,
+    TRANSVERSION,
 
     # VCF and BCF
     VCF,
@@ -77,7 +76,7 @@ export
 
 # Bio.@reexport import Bio: isfilled, leftposition
 
-include("site_types/site_types.jl")
+include("site_counting/site_types/site_types.jl")
 include("distances/dist.jl")
 include("vcf/vcf.jl")
 include("bcf/bcf.jl")

@@ -13,6 +13,7 @@ In other words, the symbols must not be ambiguity symbols, and they must
 be different such that they constitute a transition mutation: i.e. A<->G, or C<->T.
 """
 immutable Transition <: Mutation end
+const TRANSITION = Transition()
 
 # Methods for the naive framework.
 # --------------------------------

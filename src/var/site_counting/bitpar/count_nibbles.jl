@@ -10,7 +10,7 @@ nucleotides are the same.
 **This is an internal method and should not be exported.**
 """
 @inline function create_nibble_mask(::Type{Conserved}, a::UInt64, b::UInt64)
-    certainmask = create_nibble_mask(Certain, a, b)
+    #certainmask = create_nibble_mask(Certain, a, b)
     return create_nibble_mask(a $ b, 0x0000000000000000) & certainmask
 end
 

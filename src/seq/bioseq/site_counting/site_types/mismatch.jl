@@ -11,6 +11,11 @@ A `Mismatch` site describes a site where two aligned nucleotides are not the
 same biological symbol.
 """
 immutable Mismatch <: Site end
+const MISMATCH = Mismatch()
+
+@inline function count_algorithm{A}(s::Mismatch, a::BioSequence{A}, b::BioSequence{A})
+    return BITPAR
+end
 
 # Methods for the naive framework.
 # --------------------------------
@@ -22,7 +27,7 @@ issite{T<:NucleicAcid}(::Type{Mismatch}, a::T, b::T) = a != b
 # --------------------------------------
 
 """
-    create_nibble_mask(::Type{Mismatch}, a::UInt64, b::UInt64)
+    nibble_mask(::Type{Mismatch}, a::UInt64, b::UInt64)
 
 Create a mask of the nibbles in two chunks of
 BioSequence{(DNA|RNA)Nucleotide{4}} data that represent sites where the biological
@@ -30,8 +35,8 @@ symbols are not the same.
 
 **This is an internal method and should not be exported.**
 """
-@inline function create_nibble_mask(::Type{Mismatch}, a::UInt64, b::UInt64)
-    return ~create_nibble_mask(Match, a, b)
+@inline function nibble_mask(::Type{Mismatch}, a::UInt64, b::UInt64)
+    return ~nibble_mask(Match, a, b)
 end
 
 """

@@ -1223,6 +1223,7 @@ end
 
     @testset "Site counting" begin
         @testset "Naive methods" begin
+            NC = NAIVE
 
             alphabets = (DNAAlphabet{4}, DNAAlphabet{2},
                          RNAAlphabet{4}, RNAAlphabet{2})
@@ -1238,36 +1239,38 @@ end
                 seqA, seqB = generate_possibilities_tester(alph)
 
                 # Test methods which work on single sequences.
-                @test Seq.count_sites_naive(Certain, seqA) == ifelse(istwobit, length(seqA), 49)
-                @test Seq.count_sites_naive(Certain, seqB) == ifelse(istwobit, length(seqB), 19)
-                @test Seq.count_sites_naive(Gap, seqA) == ifelse(istwobit, 0, 16)
-                @test Seq.count_sites_naive(Gap, seqB) == ifelse(istwobit, 0, 1)
-                @test Seq.count_sites_naive(Ambiguous, seqA) == ifelse(istwobit, 0, length(seqA) - 65)
-                @test Seq.count_sites_naive(Ambiguous, seqB) == ifelse(istwobit, 0, length(seqB) - 20)
+                @test count(CERTAIN, NC, seqA) == ifelse(istwobit, length(seqA), 49)
+                @test count(CERTAIN, NC, seqB) == ifelse(istwobit, length(seqB), 19)
+                @test count(GAP, NC, seqA) == ifelse(istwobit, 0, 16)
+                @test count(GAP, NC, seqB) == ifelse(istwobit, 0, 1)
+                @test count(AMBIGUOUS, NC, seqA) == ifelse(istwobit, 0, length(seqA) - 65)
+                @test count(AMBIGUOUS, NC, seqB) == ifelse(istwobit, 0, length(seqB) - 20)
 
                 # Test methods which work on two sequences.
                 # Test when sequences are of the same bitencoding.
 
-                @test Seq.count_sites_naive(Certain, seqA, seqB) == Seq.count_sites_naive(Certain, seqB, seqA) == 10
-                @test Seq.count_sites_naive(Gap, seqA, seqB) == Seq.count_sites_naive(Gap, seqB, seqA) == ifelse(istwobit, 0, 16)
-                @test Seq.count_sites_naive(Ambiguous, seqA, seqB) == Seq.count_sites_naive(Ambiguous, seqB, seqA) == ifelse(istwobit, 0, 121)
-                @test Seq.count_sites_naive(Match, seqA, seqB) == Seq.count_sites_naive(Match, seqB, seqA) == length(alphabet(alph))
-                @test Seq.count_sites_naive(Mismatch, seqA, seqB) == Seq.count_sites_naive(Mismatch, seqB, seqA) == (length(seqA) - length(alphabet(alph)))
+                @test count(CERTAIN, NC, seqA, seqB) == count(CERTAIN, NC, seqB, seqA) == 10
+                @test count(GAP, NC, seqA, seqB) == count(GAP, NC, seqB, seqA) == ifelse(istwobit, 0, 16)
+                @test count(AMBIGUOUS, NC, seqA, seqB) == count(AMBIGUOUS, NC, seqB, seqA) == ifelse(istwobit, 0, 121)
+                @test count(MATCH, NC, seqA, seqB) == count(MATCH, NC, seqB, seqA) == length(alphabet(alph))
+                @test count(MISMATCH, NC, seqA, seqB) == count(MISMATCH, NC, seqB, seqA) == (length(seqA) - length(alphabet(alph)))
             end
 
             # Test for when sequences are of different bitencodings.
             for alphs in [(DNAAlphabet{2}, DNAAlphabet{4}),
                           (RNAAlphabet{2}, RNAAlphabet{4})]
                 seqA, seqB = generate_possibilities_tester(alphs...)
-                @test Seq.count_sites_naive(Certain, seqA, seqB) == Seq.count_sites_naive(Certain, seqB, seqA) == 16
-                @test Seq.count_sites_naive(Gap, seqA, seqB) == Seq.count_sites_naive(Gap, seqB, seqA) == 4
-                @test Seq.count_sites_naive(Ambiguous, seqA, seqB) == Seq.count_sites_naive(Ambiguous, seqB, seqA) == 44
-                @test Seq.count_sites_naive(Match, seqA, seqB) == Seq.count_sites_naive(Match, seqB, seqA) == 4
-                @test Seq.count_sites_naive(Mismatch, seqA, seqB) == Seq.count_sites_naive(Mismatch, seqB, seqA) == 60
+                @test count(CERTAIN, NC, seqA, seqB) == count(CERTAIN, NC, seqB, seqA) == 16
+                @test count(GAP, NC, seqA, seqB) == count(GAP, NC, seqB, seqA) == 4
+                @test count(AMBIGUOUS, NC, seqA, seqB) == count(AMBIGUOUS, NC, seqB, seqA) == 44
+                @test count(MATCH, NC, seqA, seqB) == count(MATCH, NC, seqB, seqA) == 4
+                @test count(MISMATCH, NC, seqA, seqB) == count(MISMATCH, NC, seqB, seqA) == 60
             end
         end
 
         @testset "Bit parallel methods" begin
+            BC = BITPAR
+            NC = NAIVE
             # Having determined that naive counting algorithm is correct.
             # We can verify the bitparallel algorithm is correct by randomly
             # generating test-cases, and verifying the naive algorithm, and
@@ -1280,11 +1283,11 @@ end
                         seqB = random_seq(alph, rand(10:100))
                         subA = seqA[1:rand(10:length(seqA))]
                         subB = seqB[1:rand(10:length(seqB))]
-                        @test Seq.count_sites_bitpar(Mismatch, subA, subB) == Seq.count_sites_bitpar(Mismatch, subB, subA) == Seq.count_sites_naive(Mismatch, subA, subB)
-                        @test Seq.count_sites_bitpar(Match, subA, subB) == Seq.count_sites_bitpar(Match, subB, subA) == Seq.count_sites_naive(Match, subA, subB)
-                        @test Seq.count_sites_bitpar(Certain, subA, subB) == Seq.count_sites_bitpar(Certain, subB, subA) == Seq.count_sites_naive(Certain, subA, subB)
-                        @test Seq.count_sites_bitpar(Gap, subA, subB) == Seq.count_sites_bitpar(Gap, subB, subA) == Seq.count_sites_naive(Gap, subA, subB)
-                        @test Seq.count_sites_bitpar(Ambiguous, subA, subB) == Seq.count_sites_bitpar(Ambiguous, subB, subA) == Seq.count_sites_naive(Ambiguous, subA, subB)
+                        @test count(MISMATCH, BC, subA, subB) == count(MISMATCH, BC, subB, subA) == count(MISMATCH, NC, subA, subB)
+                        @test count(MATCH, BC, subA, subB) == count(MATCH, BC, subB, subA) == count(MATCH, NC, subA, subB)
+                        @test count(CERTAIN, BC, subA, subB) == count(CERTAIN, BC, subB, subA) == count(CERTAIN, NC, subA, subB)
+                        @test count(GAP, BC, subA, subB) == count(GAP, BC, subB, subA) == count(GAP, NC, subA, subB)
+                        @test count(AMBIGUOUS, BC, subA, subB) == count(AMBIGUOUS, BC, subB, subA) == count(AMBIGUOUS, NC, subA, subB)
                     end
                 end
             end
@@ -1297,8 +1300,8 @@ end
                         seqB = random_seq(alph, rand(10:100))
                         subA = seqA[1:rand(10:length(seqA))]
                         subB = seqB[1:rand(10:length(seqB))]
-                        @test Seq.count_sites_bitpar(Mismatch, subA, subB) == Seq.count_sites_bitpar(Mismatch, subB, subA) == Seq.count_sites_naive(Mismatch, subA, subB)
-                        @test Seq.count_sites_bitpar(Match, subA, subB) == Seq.count_sites_bitpar(Match, subB, subA) == Seq.count_sites_naive(Match, subA, subB)
+                        @test count(MISMATCH, BC, subA, subB) == count(MISMATCH, BC, subB, subA) == count(MISMATCH, NC, subA, subB)
+                        @test count(MATCH, BC, subA, subB) == count(MATCH, BC, subB, subA) == count(MATCH, NC, subA, subB)
                     end
                 end
             end
@@ -1311,35 +1314,35 @@ end
             rnaB = rna"AUCGCCUAA"
             for seqs in ((dnaA, dnaB), (rnaA, rnaB))
 
-                @test count(Certain, seqs[1], seqs[2], 3, 1) == [IntervalValue(1, 3, 3),
+                @test count(CERTAIN, seqs[1], seqs[2], 3, 1) == [IntervalValue(1, 3, 3),
                                                                  IntervalValue(2, 4, 3),
                                                                  IntervalValue(3, 5, 3),
                                                                  IntervalValue(4, 6, 3),
                                                                  IntervalValue(5, 7, 3),
                                                                  IntervalValue(6, 8, 2),
                                                                  IntervalValue(7, 9, 1)]
-                @test count(Ambiguous, seqs[1], seqs[2], 3, 1) == [IntervalValue(1, 3, 0),
+                @test count(AMBIGUOUS, seqs[1], seqs[2], 3, 1) == [IntervalValue(1, 3, 0),
                                                                    IntervalValue(2, 4, 0),
                                                                    IntervalValue(3, 5, 0),
                                                                    IntervalValue(4, 6, 0),
                                                                    IntervalValue(5, 7, 0),
                                                                    IntervalValue(6, 8, 0),
                                                                    IntervalValue(7, 9, 1)]
-                @test count(Gap, seqs[1], seqs[2], 3, 1) == [IntervalValue(1, 3, 0),
+                @test count(GAP, seqs[1], seqs[2], 3, 1) == [IntervalValue(1, 3, 0),
                                                              IntervalValue(2, 4, 0),
                                                              IntervalValue(3, 5, 0),
                                                              IntervalValue(4, 6, 0),
                                                              IntervalValue(5, 7, 0),
                                                              IntervalValue(6, 8, 1),
                                                              IntervalValue(7, 9, 1)]
-                @test count(Match, seqs[1], seqs[2], 3, 1) == [IntervalValue(1, 3, 3),
+                @test count(MATCH, seqs[1], seqs[2], 3, 1) == [IntervalValue(1, 3, 3),
                                                                IntervalValue(2, 4, 3),
                                                                IntervalValue(3, 5, 3),
                                                                IntervalValue(4, 6, 3),
                                                                IntervalValue(5, 7, 2),
                                                                IntervalValue(6, 8, 1),
                                                                IntervalValue(7, 9, 0)]
-                @test count(Mismatch, seqs[1], seqs[2], 3, 1) == [IntervalValue(1, 3, 0),
+                @test count(MISMATCH, seqs[1], seqs[2], 3, 1) == [IntervalValue(1, 3, 0),
                                                                   IntervalValue(2, 4, 0),
                                                                   IntervalValue(3, 5, 0),
                                                                   IntervalValue(4, 6, 0),
@@ -1355,11 +1358,11 @@ end
             answer_mismatch = PWM{Int, false}([0 2 1 3; 2 0 1 1; 1 1 0 2; 3 1 2 0])
             answer_match = PWM{Int, false}([0 6 7 5; 6 0 7 7; 7 7 0 6; 5 7 6 0])
             for i in (dnas, rnas)
-                @test count_pairwise(Mismatch, i...) == answer_mismatch
-                @test count_pairwise(Match, i...) == answer_match
-                @test count_pairwise(Certain, i...) == PWM{Int, false}([0 7 7 7; 7 0 7 8; 7 7 0 7; 7 8 7 0])
-                @test count_pairwise(Ambiguous, i...) == PWM{Int, false}([0 0 0 0; 0 0 0 0; 0 0 0 0; 0 0 0 0])
-                @test count_pairwise(Gap, i...) == PWM{Int, false}([0 1 1 1; 1 0 1 0; 1 1 0 1; 1 0 1 0])
+                @test count_pairwise(MISMATCH, i...) == answer_mismatch
+                @test count_pairwise(MATCH, i...) == answer_match
+                @test count_pairwise(CERTAIN, i...) == PWM{Int, false}([0 7 7 7; 7 0 7 8; 7 7 0 7; 7 8 7 0])
+                @test count_pairwise(AMBIGUOUS, i...) == PWM{Int, false}([0 0 0 0; 0 0 0 0; 0 0 0 0; 0 0 0 0])
+                @test count_pairwise(GAP, i...) == PWM{Int, false}([0 1 1 1; 1 0 1 0; 1 1 0 1; 1 0 1 0])
             end
         end
     end

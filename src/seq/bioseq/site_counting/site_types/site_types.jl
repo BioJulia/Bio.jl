@@ -9,15 +9,48 @@ An abstract type which you can inherit from to build on the site counting
 """
 abstract Site
 
-# Methods required for both the naieve and bitparallel framework.
-out_type{T<:Site}(::Type{T}) = Int
-start_count{T<:Site}(::Type{T}) = 0
+@inline function count_algorithm(s::Site, a::BioSequence, b::BioSequence)
+    return NAIVE
+end
 
-# Methods required for the naive framework.
-update_count(acc::Int, up::Bool) = acc + up
+# For a given site type you must define the following functions for the
+# generated function and method dispatch to work on:
 
-# Methods required for the bitparallel framework.
-update_count(acc::Int, up::Int) = acc + up
+# Methods required for both the naive and bitparallel algorithms.
+# ---------------------------------------------------------------
+
+# What will the output type of count(YOUR_SITE_TYPE, seqa, seqb), be?
+# Note that the type specified here, should have a Base.zero or start_counter
+# method defined for it.
+counter_type{T<:Site}(::Type{T}) = Int
+
+# How to start the count accumulator.
+# The default method is to use Base.zero on the `counter_type`, but you can overload
+# this.
+start_counter{T<:Site}(::Type{T}) = zero(counter_type(T))
+
+
+# Methods required for just the naive algorithm.
+# ----------------------------------------------
+
+# Methods to update the count when given the output of the `issite` method you
+# define for your site type.
+# The naieve algorithm loops over every site and applies the `issite` method,
+# typically yielding either `true` or `false`. But by defining your own
+# `start_count`, `update_count`, and `issite` methods this can be different.
+update_counter(acc::Int, up::Bool) = acc + up
+
+# Methods required for the bitparallel algorithm.
+# -----------------------------------------------
+
+# Methods to update the count when given the output of the `count_bitpairs`
+# and `count_nibbles` methods you define for your site type.
+# The bitparallel algorithm loops over whole words of binary data,
+# and applies the `count_bitpairs` method, typically yielding and integer.
+# But again, by defining your own `start_counter`, `update_counter` and
+# `count_bitpairs`
+update_counter(acc::Int, up::Int) = acc + up
+
 @inline correct_endspace{T<:Site}(::Type{T}) = false
 @inline endspace_correction(nspace::Int, count::Int) = count - nspace
 

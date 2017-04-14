@@ -11,6 +11,18 @@ An `Ambiguous` site describes a site where either of two aligned sites are an
 ambiguity symbol.
 """
 immutable Ambiguous <: Site end
+const AMBIGUOUS = Ambiguous()
+
+for alph in (DNAAlphabet, RNAAlphabet)
+    @eval begin
+        @inline function count_algorithm(s::Ambiguous, a::BioSequence{$(alph){2}}, b::BioSequence{$(alph){2}})
+            return NULL
+        end
+        @inline function count_algorithm(s::Ambiguous, a::BioSequence{$(alph){4}}, b::BioSequence{$(alph){4}})
+            return BITPAR
+        end
+    end
+end
 
 # Methods for the naive framework.
 # --------------------------------
@@ -27,19 +39,19 @@ end
 # --------------------------------------
 
 """
-    create_nibble_mask(::Type{Ambiguous}, x::UInt64)
+    nibble_mask(::Type{Ambiguous}, x::UInt64)
 
 Create a mask of the nibbles in a chunk of
 BioSequence{(DNA|RNA)Nucleotide{4}} data that represent ambiguous sites.
 
 **This is an internal method and should not be exported.**
 """
-@inline function create_nibble_mask(::Type{Ambiguous}, x::UInt64)
-    return ~create_nibble_mask(Certain, x) & ~create_nibble_mask(Indel, x)
+@inline function nibble_mask(::Type{Ambiguous}, x::UInt64)
+    return ~nibble_mask(Certain, x) & ~nibble_mask(Indel, x)
 end
 
 """
-    create_nibble_mask(::Type{Ambiguous}, a::UInt64, b::UInt64)
+    nibble_mask(::Type{Ambiguous}, a::UInt64, b::UInt64)
 
 Create a mask of the nibbles in two chunks of
 BioSequence{(DNA|RNA)Nucleotide{4}} data that represent sites where either or
@@ -47,8 +59,8 @@ both of the two chunks have an ambiguous nucleotide at a given nibble.
 
 **This is an internal method and should not be exported.**
 """
-@inline function create_nibble_mask(::Type{Ambiguous}, a::UInt64, b::UInt64)
-    return create_nibble_mask(Ambiguous, a) | create_nibble_mask(Ambiguous, b)
+@inline function nibble_mask(::Type{Ambiguous}, a::UInt64, b::UInt64)
+    return nibble_mask(Ambiguous, a) | nibble_mask(Ambiguous, b)
 end
 
 """
@@ -61,7 +73,7 @@ pairwise deletion.
 **This is an internal method and should not be exported.**
 """
 @inline function count_nibbles(::Type{Ambiguous}, x::UInt64)
-    return 16 - count_zero_nibbles(enumerate_nibbles(x) & 0xEEEEEEEEEEEEEEEE)
+    return count_nonzero_nibbles(enumerate_nibbles(x) & 0xEEEEEEEEEEEEEEEE)
 end
 
 """
@@ -74,5 +86,5 @@ pairwise deletion.
 **This is an internal method and should not be exported.**
 """
 @inline function count_nibbles(::Type{Ambiguous}, a::UInt64, b::UInt64)
-    return 16 - count_zero_nibbles((enumerate_nibbles(a) | enumerate_nibbles(b)) & 0xEEEEEEEEEEEEEEEE)
+    return count_nonzero_nibbles((enumerate_nibbles(a) | enumerate_nibbles(b)) & 0xEEEEEEEEEEEEEEEE)
 end
