@@ -2851,21 +2851,6 @@ end
             end
         end
 
-        @testset "specified sequence type" begin
-            input = IOBuffer("""
-            @foobar
-            TTCTAAATT
-            +
-            HHFHEHHDF
-            """)
-            for A in (DNAAlphabet{2}, DNAAlphabet{4})
-                seekstart(input)
-                record = first(FASTQReader{BioSequence{A}}(input))
-                @test record.name == "foobar"
-                @test typeof(record.seq) == BioSequence{A}
-            end
-        end
-
         @testset "fill ambiguous nucleotides" begin
             input = IOBuffer("""
             @seq1
