@@ -2834,25 +2834,20 @@ end
 
         @testset "invalid quality encoding" begin
             # Sanger full range (note escape characters before '$' and '\')
-            input = IOBuffer("""
+            record = FASTQ.Record("""
             @FAKE0001 Original version has PHRED scores from 0 to 93 inclusive (in that order)
             ACGTACGTACGTACGTACGTACGTACGTACGTACGTACGTACGTACGTACGTACGTACGTACGTACGTACGTACGTACGTACGTACGTACGTAC
             +
-            !"#\$%&'()*+,-./0123456789:;<=>?@ABCDEFGHIJKLMNOPQRSTUVWXYZ[\\]^_`abcdefghijklmnopqrstuvwxyz{|}~
-            """)
+            !"#\$%&'()*+,-./0123456789:;<=>?@ABCDEFGHIJKLMNOPQRSTUVWXYZ[\\]^_`abcdefghijklmnopqrstuvwxyz{|}~""")
 
             # the range is not enough in these encodings
             for encoding in (:solexa, :illumina13, :illumina15)
-                seekstart(input)
-                reader = FASTQReader(input, quality_encoding=encoding)
-                @test_throws Exception first(reader)
+                @test_throws ErrorException FASTQ.quality(record, encoding)
             end
 
             # the range is enough in these encodings
             for encoding in (:sanger, :illumina18)
-                seekstart(input)
-                reader = FASTQReader(input, quality_encoding=encoding)
-                @test metadata(first(reader)).quality == collect(0:93)
+                @test FASTQ.quality(record, encoding) == collect(0:93)
             end
         end
 

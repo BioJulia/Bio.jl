@@ -6,6 +6,7 @@ import Bio: Bio, isfilled
 import BufferedStreams
 import BufferedStreams: BufferedInputStream
 
+include("quality.jl")
 include("record.jl")
 include("reader.jl")
 include("writer.jl")
