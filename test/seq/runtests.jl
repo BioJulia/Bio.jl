@@ -2796,27 +2796,33 @@ end
         end
 
         function test_fastq_parse(filename, valid)
-            # Reading from a stream
-            stream = open(FASTQ.Reader, filename)
-            @test eltype(stream) == FASTQ.Record
+            # Reading from a reader
+            reader = open(FASTQ.Reader, filename)
+            @test eltype(reader) == FASTQ.Record
             if valid
-                for seqrec in stream end
+                for record in reader end
                 @test true  # no error
-                @test close(stream) === nothing
+                @test close(reader) === nothing
             else
                 @test_throws Exception begin
-                    for seqrec in stream end
+                    for record in reader end
                 end
                 return
             end
 
             # in-place parsing
-            stream = open(FASTQ.Reader, filename)
-            entry = eltype(stream)()
-            while !eof(stream)
-                read!(stream, entry)
+            reader = open(FASTQ.Reader, filename)
+            record = eltype(reader)()
+            try
+                while true
+                    read!(reader, record)
+                end
+            catch ex
+                close(reader)
+                if !isa(ex, EOFError)
+                    rethrow()
+                end
             end
-            close(stream)
 
             # Check round trip
             output = IOBuffer()
@@ -2847,17 +2853,6 @@ end
                 continue
             end
             filename = specimen["filename"]
-            # TODO
-            if filename == "example_dos.fastq"
-                continue
-            end
-            #=
-            qualenc = (
-                contains(filename, "_sanger") ? :sanger :
-                contains(filename, "_solexa") ? :solexa :
-                contains(filename, "_illumina") ? :illumina13 : :sanger)
-            test_fastq_parse(joinpath(path, filename), valid, qualenc)
-            =#
             test_fastq_parse(joinpath(path, filename), valid)
         end
 
