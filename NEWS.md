@@ -7,9 +7,10 @@ Bio.jl v0.5.0 Release Notes
 * Support GFF3 file format ([#138]).
 * Sequence names are ordered lexicographically by default ([#291]).
 * Computing genomic distances using the MASH algorithm is introduced ([#415]).
+* New FASTQ reader does not support multiline sequence and quality ([#448]).
 * IO APIs are reorganized into submodules:
     * `Bio.Seq.FASTAReader` => `Bio.Seq.FASTA.Reader` ([#413]).
-    * `Bio.Seq.FASTQReader` => `Bio.Seq.FASTQ.Reader` ([#???]).
+    * `Bio.Seq.FASTQReader` => `Bio.Seq.FASTQ.Reader` ([#448]).
     * `Bio.Seq.TwoBitReader` => `Bio.Seq.TwoBit.Reader` ([#431]).
     * `Bio.Intervals.BEDReader` => `Bio.Intervals.BED.Reader` ([#418]).
     * `Bio.Align.SAMReader` => `Bio.Align.SAM.Reader` ([#440])
@@ -38,3 +39,4 @@ Bio.jl v0.5.0 Release Notes
 [#441]: https://github.com/BioJulia/Bio.jl/pull/441
 [#443]: https://github.com/BioJulia/Bio.jl/pull/443
 [#446]: https://github.com/BioJulia/Bio.jl/pull/446
+[#448]: https://github.com/BioJulia/Bio.jl/pull/448
