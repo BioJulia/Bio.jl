@@ -2760,12 +2760,25 @@ end
             @BCFFFDFHHHHHJJJIJIJJIJJJJJJJJIJJJJIIIJJJIJJJ
             """)
             @test isfilled(record)
+            @test FASTQ.hasidentifier(record)
             @test FASTQ.identifier(record) == "SRR1238088.1.1"
+            @test FASTQ.hasdescription(record)
             @test FASTQ.description(record) == "HWI-ST499:111:D0G94ACXX:1:1101:1173:2105"
+            @test FASTQ.hassequence(record)
             @test FASTQ.sequence(DNASequence, record) == dna"AAGCTCATGACCCGTCTTACCTACACCCTTGACGAGATCGAAGGA"
             @test FASTQ.sequence(record) == dna"AAGCTCATGACCCGTCTTACCTACACCCTTGACGAGATCGAAGGA"
             @test FASTQ.sequence(String, record) == "AAGCTCATGACCCGTCTTACCTACACCCTTGACGAGATCGAAGGA"
+            @test FASTQ.hasquality(record)
             @test FASTQ.quality(record) == b"@BCFFFDFHHHHHJJJIJIJJIJJJJJJJJIJJJJIIIJJJIJJJ" .- 33
+
+            record = FASTQ.Record("""
+            @SRR1238088.1.1
+            AAGCTCATGACCCGTCTTACCTACACCCTTGACGAGATCGAAGGA
+            +
+            @BCFFFDFHHHHHJJJIJIJJIJJJJJJJJIJJJJIIIJJJIJJJ
+            """)
+            @test isfilled(record)
+            @test !FASTQ.hasdescription(record)
         end
 
         function test_records(rs1, rs2)
