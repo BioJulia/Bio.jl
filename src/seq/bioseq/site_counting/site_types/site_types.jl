@@ -22,13 +22,14 @@ end
 # What will the output type of count(YOUR_SITE_TYPE, seqa, seqb), be?
 # Note that the type specified here, should have a Base.zero or start_counter
 # method defined for it.
-counter_type{T<:Site}(::Type{T}) = Int
+counter_type(s::Site, seq::BioSequence) = Int
+counter_type(s::Site, a::BioSequence, b::BioSequence) = Int
 
 # How to start the count accumulator.
 # The default method is to use Base.zero on the `counter_type`, but you can overload
 # this.
-start_counter{T<:Site}(::Type{T}) = zero(counter_type(T))
-
+start_counter(s::Site, seq::BioSequence) = zero(counter_type(s, seq))
+start_counter(s::Site, a::BioSequence, b::BioSequence) = zero(counter_type(s, a, b))
 
 # Methods required for just the naive algorithm.
 # ----------------------------------------------
@@ -51,7 +52,7 @@ update_counter(acc::Int, up::Bool) = acc + up
 # `count_bitpairs`
 update_counter(acc::Int, up::Int) = acc + up
 
-@inline correct_endspace{T<:Site}(::Type{T}) = false
+@inline correct_endspace(s::Site) = false
 @inline endspace_correction(nspace::Int, count::Int) = count - nspace
 
 include("certain.jl")
