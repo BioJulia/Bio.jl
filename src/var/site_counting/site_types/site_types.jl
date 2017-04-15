@@ -7,8 +7,8 @@
 Base.zero(::Type{Tuple{Int,Int}}) = zero(Int), zero(Int)
 
 abstract Mutation <: Site
-start_counter{T<:Mutation}(::Type{T}) = 0, 0
-counter_type{T<:Mutation}(::Type{T}) = Tuple{Int,Int}
+start_counter(s::Mutation, a::BioSequence, b::BioSequence) = 0, 0
+counter_type(s::Mutation, a::BioSequence, b::BioSequence) = Tuple{Int,Int}
 update_counter(kacc::Int, cacc::Int, k::Bool, c::Bool) = kacc + k, cacc + c
 
 @inline function issite{T<:NucleicAcid,M<:Mutation}(::Type{M}, a::T, b::T)

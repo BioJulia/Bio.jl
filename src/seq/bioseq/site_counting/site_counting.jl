@@ -34,7 +34,7 @@ function Base.count{T<:Site}(s::T, a::BioSequence, b::BioSequence, width::Int, s
     len = min(length(a), length(b))
     ritr = StepRange(width, step, len)
     width -= 1
-    results = Vector{IntervalValue{Int,counter_type(T)}}(length(ritr))
+    results = Vector{IntervalValue{Int,counter_type(s, a, b)}}(length(ritr))
     r = 1
     @inbounds for i in ritr
         idx = (i - width):i
@@ -45,7 +45,7 @@ function Base.count{T<:Site}(s::T, a::BioSequence, b::BioSequence, width::Int, s
 end
 
 function count_pairwise{T<:Site,N}(s::T, seqs::Vararg{BioSequence,N})
-    counts = Vector{counter_type(T)}(Int((N * (N - 1)) / 2))
+    counts = Vector{counter_type(s, a, b)}(Int((N * (N - 1)) / 2))
     c = 1
     @inbounds for i in 1:N, j in (i + 1):N
         counts[c] = count(s, seqs[i], seqs[j])

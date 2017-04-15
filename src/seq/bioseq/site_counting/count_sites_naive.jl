@@ -8,7 +8,7 @@
 
 NC = NaiveCount
 
-@inline function Base.count(site::Site, alg::NC, a::BioSequence)
+@inline function Base.count{T<:Site}(site::T, alg::NC, a::BioSequence)
     k = start_counter(site, a)
     @inbounds for x in a
         k = update_counter(k..., issite(T, x)...)
@@ -16,7 +16,7 @@ NC = NaiveCount
     return k
 end
 
-@inline function Base.count(site::Site, alg::NC, a::BioSequence, b::BioSequence)
+@inline function Base.count{T<:Site}(site::T, alg::NC, a::BioSequence, b::BioSequence)
     k = start_counter(site, a, b)
     @inbounds for idx in 1:min(endof(a), endof(b))
         k = update_counter(k..., issite(T, a[idx], b[idx])...)

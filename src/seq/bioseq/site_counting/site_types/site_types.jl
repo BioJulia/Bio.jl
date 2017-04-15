@@ -52,9 +52,6 @@ update_counter(acc::Int, up::Bool) = acc + up
 # `count_bitpairs`
 update_counter(acc::Int, up::Int) = acc + up
 
-@inline correct_endspace(s::Site) = false
-@inline endspace_correction(nspace::Int, count::Int) = count - nspace
-
 include("certain.jl")
 include("ambiguous.jl")
 include("gap.jl")

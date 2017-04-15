@@ -1,16 +1,11 @@
 BC = BitparCount
 
+@inline correct_endspace{T<:Site,A<:Alphabet}(::Type{T}, ::Type{A}) = false
+@inline endspace_correction(nspace::Int, count::Int) = count - nspace
+
 @generated function Base.count{T<:Site,A<:Alphabet}(site::T, alg::BC, a::BioSequence{A}, b::BioSequence{A})
     n = bitsof(A)
-    if n == 2
-        count_func = :count_bitpairs
-        n_nucs = 32
-    elseif n == 4
-        count_func = :count_nibbles
-        n_nucs = 16
-    else
-        error("n (= $n) ∉ (2, 4)")
-    end
+    n_elems = div(64, n)
 
     quote
         if length(a) > length(b)
@@ -21,7 +16,7 @@ BC = BitparCount
         nexta = bitindex(a, 1)
         nextb = bitindex(b, 1)
         stopa = bitindex(a, endof(a) + 1)
-        counts = start_counter(T)
+        counts = start_counter(site, a, b)
         spaces = 0
 
         # align reading position of `a.data` so that `offset(nexta) == 0`
@@ -35,11 +30,11 @@ BC = BitparCount
             k = 64 - offset(nexta)
             m = mask(k)
             #println("x masked: $(hex(x & m)), y masked: $(hex(y & m))")
-            counts = update_counter(counts, $count_func(T, x & m, y & m))
+            counts = update_counter(counts, count_bitpar(T, A, x & m, y & m))
             #println("Count: ", counts)
-            if correct_endspace(T)
+            if correct_endspace(T, A)
                 #println("N empty nibbles: ", nempty)
-                nempty = $n_nucs - div(k, $n)
+                nempty = $n_elems - div(k, $n)
                 counts = endspace_correction(nempty, counts)
                 #println("Count, following empty correction: ", counts)
             end
@@ -57,7 +52,7 @@ BC = BitparCount
                 y = b.data[index(nextb)]
                 #println("x: $(hex(x))")
                 #println("y: $(hex(y))")
-                counts = update_counter(counts, $count_func(T, x, y))
+                counts = update_counter(counts, count_bitpar(T, A, x, y))
                 #println("Count: ", counts)
                 nexta += 64
                 nextb += 64
@@ -72,10 +67,10 @@ BC = BitparCount
                 m = mask(offs)
                 #println("x masked: $(hex(x & m))")
                 #println("y masked: $(hex(y & m))")
-                counts = update_counter(counts, $count_func(T, x & m, y & m))
+                counts = update_counter(counts, count_bitpar(T, A, x & m, y & m))
                 #println("Count: ", counts)
-                if correct_endspace(T)
-                    nempty = $n_nucs - div(offs, $n)
+                if correct_endspace(T, A)
+                    nempty = $n_elems - div(offs, $n)
                     #println("N empty nibbles: ", nempty)
                     counts = endspace_correction(nempty, counts)
                     #println("Count, following empty correction: ", counts)
@@ -95,7 +90,7 @@ BC = BitparCount
                 y = y >> offset(nextb) | z << (64 - offset(nextb))
 
                 #println("x: $(hex(x)), z: $(hex(z)), y: $(hex(y))")
-                counts = update_counter(counts, $count_func(T, x, y))
+                counts = update_counter(counts, count_bitpar(T, A, x, y))
                 #println("Count: ", counts)
                 y = z
                 nexta += 64
@@ -113,10 +108,10 @@ BC = BitparCount
                 offs = stopa - nexta
                 m = mask(offs)
                 #println("x masked: $(hex(x & m)), y masked: $(hex(y & m))")
-                counts = update_counter(counts, $count_func(T, x & m, y & m))
+                counts = update_counter(counts, count_bitpar(T, A, x & m, y & m))
                 #println("Count: ", counts)
-                if correct_endspace(T)
-                    nempty = $n_nucs - div(offs, $n)
+                if correct_endspace(T, A)
+                    nempty = $n_elems - div(offs, $n)
                     #println("N empty nibbles: ", nempty)
                     counts = endspace_correction(nempty, counts)
                     #println("Count, following empty correction: ", counts)

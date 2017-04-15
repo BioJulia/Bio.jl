@@ -26,32 +26,14 @@ issite{T<:NucleicAcid}(::Type{Mismatch}, a::T, b::T) = a != b
 # Methods for the bitparallel framework.
 # --------------------------------------
 
-"""
-    nibble_mask(::Type{Mismatch}, a::UInt64, b::UInt64)
+for A in (DNAAlphabet, RNAAlphabet)
+    @eval begin
+        @inline function count_bitpar(::Type{Mismatch}, ::Type{$A{4}}, a::UInt64, b::UInt64)
+            return count_nonzero_nibbles(a $ b)
+        end
 
-Create a mask of the nibbles in two chunks of
-BioSequence{(DNA|RNA)Nucleotide{4}} data that represent sites where the biological
-symbols are not the same.
-
-**This is an internal method and should not be exported.**
-"""
-@inline function nibble_mask(::Type{Mismatch}, a::UInt64, b::UInt64)
-    return ~nibble_mask(Match, a, b)
-end
-
-"""
-    count_nibbles(::Type{Mismatch}, a::UInt64, b::UInt64)
-An _internal_ function, _not for export_, which will count the number of
-matching symbols between two chunks of BioSequence{(DNA|RNA)Nucleotide{4}} data.
-**Note:** This function will consider unused chunks of ints not yet used by the
-BioSequence as matching gap characters, and so this needs to be taken into
-account by calling functions.
-**This is an internal method and should not be exported.**
-"""
-@inline function count_nibbles(::Type{Mismatch}, a::UInt64, b::UInt64)
-    return count_nonzero_nibbles(a $ b)
-end
-
-@inline function count_bitpairs(::Type{Mismatch}, x::UInt64, y::UInt64)
-    return count_nonzero_bitpairs(x $ y)
+        @inline function count_bitpar(::Type{Mismatch}, ::Type{$A{2}}, a::UInt64, b::UInt64)
+            return count_nonzero_bitpairs(x $ y)
+        end
+    end
 end

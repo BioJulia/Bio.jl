@@ -13,17 +13,6 @@ ambiguity symbol.
 immutable Ambiguous <: Site end
 const AMBIGUOUS = Ambiguous()
 
-for alph in (DNAAlphabet, RNAAlphabet)
-    @eval begin
-        @inline function count_algorithm(s::Ambiguous, a::BioSequence{$(alph){2}}, b::BioSequence{$(alph){2}})
-            return NULL
-        end
-        @inline function count_algorithm(s::Ambiguous, a::BioSequence{$(alph){4}}, b::BioSequence{$(alph){4}})
-            return BITPAR
-        end
-    end
-end
-
 # Methods for the naive framework.
 # --------------------------------
 
@@ -37,6 +26,26 @@ end
 
 # Methods for the bitparallel framework.
 # --------------------------------------
+
+for A in (DNAAlphabet, RNAAlphabet)
+    @eval begin
+        @inline function count_algorithm(s::Ambiguous, a::BioSequence{$A{2}}, b::BioSequence{$A{2}})
+            return NULL
+        end
+
+        @inline function count_algorithm(s::Ambiguous, a::BioSequence{$A{4}}, b::BioSequence{$A{4}})
+            return BITPAR
+        end
+
+        @inline function count_bitpar(::Type{Ambiguous}, ::Type{$A{4}}, x::UInt64)
+            return count_nonzero_nibbles(enumerate_nibbles(x) & 0xEEEEEEEEEEEEEEEE)
+        end
+
+        @inline function count_bitpar(::Type{Ambiguous}, ::Type{$A{4}}, a::UInt64, b::UInt64)
+            return count_nonzero_nibbles((enumerate_nibbles(a) | enumerate_nibbles(b)) & 0xEEEEEEEEEEEEEEEE)
+        end
+    end
+end
 
 """
     nibble_mask(::Type{Ambiguous}, x::UInt64)
@@ -61,30 +70,4 @@ both of the two chunks have an ambiguous nucleotide at a given nibble.
 """
 @inline function nibble_mask(::Type{Ambiguous}, a::UInt64, b::UInt64)
     return nibble_mask(Ambiguous, a) | nibble_mask(Ambiguous, b)
-end
-
-"""
-    count_nibbles(::Type{Ambiguous}, x::UInt64)
-Count the number of
-ambiguous sites in a chunk of BioSequence{(DNA|RNA)Nucleotide{4}} data.
-Ambiuous sites are defined as those with more than one bit set.
-Note here gap - 0000 - then is not ambiguous, even though it is a candidate for
-pairwise deletion.
-**This is an internal method and should not be exported.**
-"""
-@inline function count_nibbles(::Type{Ambiguous}, x::UInt64)
-    return count_nonzero_nibbles(enumerate_nibbles(x) & 0xEEEEEEEEEEEEEEEE)
-end
-
-"""
-    count_nibbles(::Type{Ambiguous}, a::UInt64, b::UInt64)
-Count the number of sites in two aligned chunks of
-BioSequence{(DNA|RNA)Nucleotide{4}} data which contain ambiguous characters.
-Ambiuous sites are defined as those with more than one bit set.
-Note here gap - 0000 - then is not ambiguous, even though it is a candidate for
-pairwise deletion.
-**This is an internal method and should not be exported.**
-"""
-@inline function count_nibbles(::Type{Ambiguous}, a::UInt64, b::UInt64)
-    return count_nonzero_nibbles((enumerate_nibbles(a) | enumerate_nibbles(b)) & 0xEEEEEEEEEEEEEEEE)
 end

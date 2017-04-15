@@ -13,17 +13,6 @@ gap symbol '-'.
 immutable Gap <: Site end
 const GAP = Gap()
 
-for alph in (DNAAlphabet, RNAAlphabet)
-    @eval begin
-        @inline function count_algorithm(s::Gap, a::BioSequence{$(alph){2}}, b::BioSequence{$(alph){2}})
-            return NULL
-        end
-        @inline function count_algorithm(s::Gap, a::BioSequence{$(alph){4}}, b::BioSequence{$(alph){4}})
-            return BITPAR
-        end
-    end
-end
-
 # Methods for the naive framework.
 # --------------------------------
 
@@ -38,7 +27,28 @@ end
 # Methods for the bitparallel framework.
 # --------------------------------------
 
-@inline correct_endspace(::Type{Gap}) = true
+@inline correct_endspace{A<:Alphabet}(::Type{Gap}, ::Type{A}) = true
+
+for A in (DNAAlphabet, RNAAlphabet)
+    @eval begin
+        @inline function count_algorithm(s::Gap, a::BioSequence{$A{2}}, b::BioSequence{$A{2}})
+            return NULL
+        end
+
+        @inline function count_algorithm(s::Gap, a::BioSequence{$A{4}}, b::BioSequence{$A{4}})
+            return BITPAR
+        end
+
+        @inline function count_bitpar(::Type{Gap}, ::Type{$A{4}}, x::UInt64)
+            return count_zero_nibbles(x)
+        end
+
+        @inline function count_bitpar(::Type{Gap}, ::Type{$A{4}}, a::UInt64, b::UInt64)
+            # Count the gaps in a, count the gaps in b, subtract the number of shared gaps.
+            return count_zero_nibbles(a) + count_zero_nibbles(b) - count_zero_nibbles(a | b)
+        end
+    end
+end
 
 """
     create_nibble_mask(::Type{Gap}, x::UInt64)
@@ -69,31 +79,4 @@ this mask.
 """
 @inline function nibble_mask(::Type{Gap}, a::UInt64, b::UInt64)
     return nibble_mask(Gap, a) | nibble_mask(Gap, b)
-end
-
-"""
-    count_nibbles(::Type{Gap}, x::UInt64)
-Count the number of gap sites in a chunk of BioSequence{(DNA|RNA)Nucleotide{4}}
-data.
-Note that gap sites and empty unused segments of a UInt64 are both 0000, and so
-furthur checking of this result would be required in higher level calling
-functions.
-**This is an internal method and should not be exported.**
-"""
-@inline function count_nibbles(::Type{Gap}, x::UInt64)
-    return count_zero_nibbles(x)
-end
-
-"""
-    count_nibbles(::Type{Gap}, a::UInt64, b::UInt64)
-Count the number of sites in two aligned chunks of
-BioSequence{(DNA|RNA)Nucleotide{4}} data which contain gap characters.
-Note that gap sites and empty unused segments of a UInt64 are both 0000, and so
-furthur checking of this result would be required in higher level calling
-functions.
-**This is an internal method and should not be exported.**
-"""
-@inline function count_nibbles(::Type{Gap}, a::UInt64, b::UInt64)
-    # Count the gaps in a, count the gaps in b, subtract the number of shared gaps.
-    return count_nibbles(Gap, a) + count_nibbles(Gap, b) - count_nibbles(Gap, a | b)
 end
