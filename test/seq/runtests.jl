@@ -109,7 +109,6 @@ function random_interval(minstart, maxstop)
     return start:rand(start:maxstop)
 end
 
-#=
 # NOTE: Most tests related to biological symbols are located in BioSymbols.jl.
 @testset "Symbols" begin
     @testset "DNA" begin
@@ -2516,10 +2515,8 @@ end
     @test rec != rec3
     @test rec == copy(rec)
 end
-=#
 
 @testset "Reading and Writing" begin
-    #=
     @testset "FASTA" begin
         @testset "Record" begin
             record = FASTA.Record()
@@ -2710,7 +2707,6 @@ end
             end
         end
     end
-    =#
 
     @testset "FASTQ" begin
         @test isa(FASTQSeqRecord("1", dna"AA", Int8[10, 11]), FASTQSeqRecord{DNASequence})
@@ -2895,7 +2891,6 @@ end
         end
     end
 
-    #=
     @testset "2bit" begin
         buffer = IOBuffer()
         writer = TwoBit.Writer(buffer, ["chr1", "chr2"])
@@ -2984,7 +2979,6 @@ end
             end
         end
     end
-    =#
 end
 
 @testset "Quality scores" begin
