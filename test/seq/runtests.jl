@@ -2861,9 +2861,6 @@ end
             test_fastq_parse(joinpath(path, filename), valid)
         end
 
-        # invalid quality encoding
-        @test_throws ArgumentError FASTQReader(IOBuffer(""), quality_encoding=:julia)
-
         @testset "invalid quality encoding" begin
             # Sanger full range (note escape characters before '$' and '\')
             record = FASTQ.Record("""
@@ -2891,15 +2888,15 @@ end
             +
             BBBB##AAAA##
             """)
-            @test first(FASTQReader(input, fill_ambiguous=nothing)).seq == dna"ACGTNRACGTNR"
+            @test FASTQ.sequence(first(FASTQ.Reader(input, fill_ambiguous=nothing))) == dna"ACGTNRACGTNR"
             seekstart(input)
-            @test first(FASTQReader(input, fill_ambiguous=DNA_A)).seq == dna"ACGTAAACGTAA"
+            @test FASTQ.sequence(first(FASTQ.Reader(input, fill_ambiguous=DNA_A)))   == dna"ACGTAAACGTAA"
             seekstart(input)
-            @test first(FASTQReader(input, fill_ambiguous=DNA_G)).seq == dna"ACGTGGACGTGG"
+            @test FASTQ.sequence(first(FASTQ.Reader(input, fill_ambiguous=DNA_G)))   == dna"ACGTGGACGTGG"
             seekstart(input)
-            @test first(FASTQReader(input, fill_ambiguous=DNA_N)).seq == dna"ACGTNNACGTNN"
+            @test FASTQ.sequence(first(FASTQ.Reader(input, fill_ambiguous=DNA_N)))   == dna"ACGTNNACGTNN"
             seekstart(input)
-            @test first(FASTQReader{BioSequence{DNAAlphabet{2}}}(input, fill_ambiguous=DNA_A)).seq == dna"ACGTAAACGTAA"
+            @test FASTQ.sequence(BioSequence{DNAAlphabet{2}}, first(FASTQ.Reader(input, fill_ambiguous=DNA_A))) == dna"ACGTAAACGTAA"
         end
     end
 

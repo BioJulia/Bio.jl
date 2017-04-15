@@ -3,19 +3,29 @@
 
 immutable Reader <: Bio.IO.AbstractReader
     state::Bio.Ragel.State
+    seq_transform::Nullable{Function}
 
-    function Reader(input::BufferedInputStream)
-        return new(Bio.Ragel.State(file_machine.start_state, input))
+    function Reader(input::BufferedInputStream, seq_transform)
+        return new(Bio.Ragel.State(file_machine.start_state, input), seq_transform)
     end
 end
 
 """
-    FASTQ.Reader(input::IO)
+    FASTQ.Reader(input::IO; fill_ambiguous=nothing)
 
 Create a data reader of the FASTQ file format.
+
+# Arguments
+* `input`: data source
+* `fill_ambiguous=nothing`: fill ambiguous symbols with the given symbol
 """
-function Reader(input::IO)
-    return Reader(BufferedInputStream(input))
+function Reader(input::IO; fill_ambiguous=nothing)
+    if fill_ambiguous === nothing
+        seq_transform = nothing
+    else
+        seq_transform = generate_fill_ambiguous(fill_ambiguous)
+    end
+    return Reader(BufferedInputStream(input), seq_transform)
 end
 
 function Base.eltype(::Type{Reader})
@@ -24,6 +34,20 @@ end
 
 function Bio.IO.stream(reader::Reader)
     return reader.state.stream
+end
+
+function generate_fill_ambiguous(symbol::BioSymbols.DNA)
+    certain = map(UInt8, ('A', 'C', 'G', 'T', 'a', 'c', 'g', 't'))
+    # return transform function
+    return function (data, range)
+        fill = convert(UInt8, convert(Char, symbol))
+        for i in range
+            if data[i] ∉ certain
+                data[i] = fill
+            end
+        end
+        return data
+    end
 end
 
 # NOTE: This does not support line-wraps within sequence and quality.
@@ -139,6 +163,9 @@ eval(
                 end
                 Bio.ReaderHelper.resize_and_copy!(record.data, data, Bio.ReaderHelper.upanchor!(stream):p-1)
                 record.filled = (offset+1:p-1) - offset
+                if !isnull(reader.seq_transform)
+                    get(reader.seq_transform)(record.data, record.sequence)
+                end
                 found_record = true
                 @escape
             end,
