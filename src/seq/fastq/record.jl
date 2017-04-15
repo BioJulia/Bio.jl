@@ -221,6 +221,22 @@ function hasquality(record::Record)
     return isfilled(record)
 end
 
+function Bio.seqname(record::Record)
+    return identifier(record)
+end
+
+function Bio.hasseqname(record::Record)
+    return hasidentifier(record)
+end
+
+function Bio.sequence(record::Record)
+    return sequence(record)
+end
+
+function Bio.hassequence(record::Record)
+    return hassequence(record)
+end
+
 
 # Helper functions
 # ----------------
