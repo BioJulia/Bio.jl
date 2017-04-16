@@ -75,18 +75,18 @@ record = eltype(stream)()
 
 A FASTA file will be created as follows:
 ```julia
-writer = open(FASTAWriter, "out.fa")
-write(writer, FASTASeqRecord("seq1", dna"ACGTN"))
-write(writer, FASTASeqRecord("seq2", dna"TTATA", "AT rich"))
+writer = open(FASTA.Writer, "out.fa")
+write(writer, FASTA.Record("seq1", dna"ACGTN"))
+write(writer, FASTA.Record("seq2", "AT rich", dna"TTATA"))
 close(writer)
 ```
 
 Another way is using Julia's do-block syntax, which closes the data file after
 finished writing:
 ```julia
-open(FASTAWriter, "out.fa") do writer
-    write(writer, FASTASeqRecord("seq1", dna"ACGTN"))
-    write(writer, FASTASeqRecord("seq2", dna"TTATA", "AT rich"))
+open(FASTA.Writer, "out.fa") do writer
+    write(writer, FASTA.Record("seq1", dna"ACGTN"))
+    write(writer, FASTA.Record("seq2", "AT rich", dna"TTATA"))
 end
 ```
 

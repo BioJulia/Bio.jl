@@ -50,6 +50,37 @@ function Record(str::AbstractString)
     return convert(Record, convert(Vector{UInt8}, str))
 end
 
+"""
+    FASTQ.Record(identifier, sequence, quality; offset=33)
+
+Create a FASTQ record from `identifier`, `sequence` and `quality`.
+"""
+function Record(identifier::AbstractString, sequence, quality::Vector; offset=33)
+    return Record(identifier, nothing, sequence, quality, offset=33)
+end
+
+"""
+    FASTQ.Record(identifier, description, sequence, quality; offset=33)
+
+Create a FASTQ record from `identifier`, `description`, `sequence` and `quality`.
+"""
+function Record(identifier::AbstractString, description::Union{AbstractString,Void}, sequence, quality::Vector; offset=33)
+    if length(sequence) != length(quality)
+        throw(ArgumentError("the length of sequence doesn't match the length of quality"))
+    end
+    buf = IOBuffer()
+    print(buf, '@', identifier)
+    if description != nothing
+        print(buf, ' ', description)
+    end
+    print(buf, '\n')
+    print(buf, sequence, '\n')
+    print(buf, "+\n")
+    ascii_quality = convert(Vector{UInt8}, quality + offset)
+    write(buf, ascii_quality, '\n')
+    return Record(takebuf_array(buf))
+end
+
 function Base.convert(::Type{Record}, str::AbstractString)
     return convert(Record, convert(Vector{UInt8}, str))
 end

@@ -2709,14 +2709,14 @@ end
     end
 
     @testset "FASTQ" begin
-        @test isa(FASTQSeqRecord("1", dna"AA", Int8[10, 11]), FASTQSeqRecord{DNASequence})
-        @test isa(FASTQSeqRecord("1", dna"AA", Int8[10, 11], "desc."), FASTQSeqRecord{DNASequence})
-        @test_throws ArgumentError FASTQSeqRecord("1", dna"AA", Int8[10])
+        @test isa(FASTQ.Record("1", dna"AA", UInt8[10, 11]), FASTQ.Record)
+        @test isa(FASTQ.Record("1", "desc.", dna"AA", UInt8[10, 11]), FASTQ.Record)
+        @test_throws ArgumentError FASTQ.Record("1", dna"AA", UInt8[10])
 
         output = IOBuffer()
-        writer = FASTQWriter(output)
-        write(writer, FASTQSeqRecord("1", dna"AN", Int8[11, 25]))
-        write(writer, FASTQSeqRecord("2", dna"TGA", Int8[40, 41, 45], "high quality"))
+        writer = FASTQ.Writer(output)
+        write(writer, FASTQ.Record("1", dna"AN", UInt8[11, 25]))
+        write(writer, FASTQ.Record("2", "high quality", dna"TGA", UInt8[40, 41, 45]))
         flush(writer)
         @test takebuf_string(output) == """
         @1
@@ -2730,9 +2730,9 @@ end
         """
 
         output = IOBuffer()
-        writer = FASTQWriter(output, quality_header=true)
-        write(writer, FASTQSeqRecord("1", dna"AN", Int8[11, 25]))
-        write(writer, FASTQSeqRecord("2", dna"TGA", Int8[40, 41, 45], "high quality"))
+        writer = FASTQ.Writer(output, quality_header=true)
+        write(writer, FASTQ.Record("1", dna"AN", UInt8[11, 25]))
+        write(writer, FASTQ.Record("2", "high quality", dna"TGA", UInt8[40, 41, 45]))
         flush(writer)
         @test takebuf_string(output) == """
         @1

@@ -15,8 +15,10 @@ include("twobit_old/twobit.jl")
 export
     FASTAReader,
     FASTAWriter,
+    FASTASeqRecord,
     FASTQReader,
     FASTQWriter,
+    FASTQSeqRecord,
     TwoBitReader,
     TwoBitWriter
 
