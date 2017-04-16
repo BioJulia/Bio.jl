@@ -153,18 +153,18 @@ Bio.Seq.FASTA.sequence
 
 ### FASTQ
 
-* Reader type: `FASTQReader{S<:Sequence}`
-* Writer type: `FASTQWriter{T<:IO}`
-* Element type: `SeqRecord{S,FASTQMetadata}` (alias: `FASTQSeqRecord{S}`)
+* Reader type: `FASTQ.Reader`
+* Writer type: `FASTQ.Writer`
+* Element type: `FASTQ.Record`
 
 FASTQ is a text-based file format for representing DNA sequences along with
 qualities for each base. A FASTQ file stores a list of sequence records in the
 following format:
 ```
-@{name} {description}?
+@{identifier} {description}?
 {sequence}
 +
-{qualities}
+{quality}
 ```
 
 Here is an example of one record from a FASTQ file:
@@ -178,15 +178,15 @@ tcagTTAAGATGGGAT
 To read a file containing such records, one could use:
 ```julia
 # The default base quality encoding is Sanger.
-reader = open(FASTQReader, "reads.fastq")
+reader = open(FASTQ.Reader, "reads.fastq")
 for record in reader
     # do something
 end
 close(reader)
 
 # If performance is important, in-place reading will be much faster.
-reader = open(FASTQReader, "reads.fastq")
-record = FASTQSeqRecord{DNASequence}()
+reader = open(FASTQ.Reader, "reads.fastq")
+record = FASTQ.Record()
 while !eof(reader)
     read!(reader, record)
     # do something
@@ -195,8 +195,13 @@ close(reader)
 ```
 
 ```@docs
-Bio.Seq.FASTQReader
-Bio.Seq.FASTQWriter
+Bio.Seq.FASTQ.Reader
+Bio.Seq.FASTQ.Writer
+Bio.Seq.FASTQ.Record
+Bio.Seq.FASTQ.identifier
+Bio.Seq.FASTQ.description
+Bio.Seq.FASTQ.sequence
+Bio.Seq.FASTQ.quality
 ```
 
 

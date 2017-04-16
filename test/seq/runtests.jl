@@ -2745,71 +2745,116 @@ end
         IJN
         """
 
-        function test_fastq_parse(filename, valid, encoding)
-            # Reading from a stream
-            stream = open(FASTQReader, filename, quality_encoding=encoding)
-            @test eltype(stream) == FASTQSeqRecord{DNASequence}
+        @testset "Record" begin
+            record = FASTQ.Record()
+            @test !isfilled(record)
+
+            record = FASTQ.Record("""
+            @SRR1238088.1.1 HWI-ST499:111:D0G94ACXX:1:1101:1173:2105
+            AAGCTCATGACCCGTCTTACCTACACCCTTGACGAGATCGAAGGA
+            +SRR1238088.1.1 HWI-ST499:111:D0G94ACXX:1:1101:1173:2105
+            @BCFFFDFHHHHHJJJIJIJJIJJJJJJJJIJJJJIIIJJJIJJJ
+            """)
+            @test isfilled(record)
+            @test FASTQ.hasidentifier(record) == hasseqname(record) == true
+            @test FASTQ.identifier(record) == seqname(record) == "SRR1238088.1.1"
+            @test FASTQ.hasdescription(record)
+            @test FASTQ.description(record) == "HWI-ST499:111:D0G94ACXX:1:1101:1173:2105"
+            @test FASTQ.hassequence(record) == hassequence(record) == true
+            @test FASTQ.sequence(DNASequence, record) == dna"AAGCTCATGACCCGTCTTACCTACACCCTTGACGAGATCGAAGGA"
+            @test FASTQ.sequence(record) == sequence(record) == dna"AAGCTCATGACCCGTCTTACCTACACCCTTGACGAGATCGAAGGA"
+            @test FASTQ.sequence(String, record) == "AAGCTCATGACCCGTCTTACCTACACCCTTGACGAGATCGAAGGA"
+            @test FASTQ.hasquality(record)
+            @test FASTQ.quality(record) == b"@BCFFFDFHHHHHJJJIJIJJIJJJJJJJJIJJJJIIIJJJIJJJ" .- 33
+
+            record = FASTQ.Record("""
+            @SRR1238088.1.1
+            AAGCTCATGACCCGTCTTACCTACACCCTTGACGAGATCGAAGGA
+            +
+            @BCFFFDFHHHHHJJJIJIJJIJJJJJJJJIJJJJIIIJJJIJJJ
+            """)
+            @test isfilled(record)
+            @test !FASTQ.hasdescription(record)
+        end
+
+        function test_records(rs1, rs2)
+            if length(rs1) != length(rs2)
+                return false
+            end
+            for (r1, r2) in zip(rs1, rs2)
+                if FASTQ.identifier(r1) != FASTQ.identifier(r2) ||
+                   FASTQ.sequence(r1)   != FASTQ.sequence(r2)   ||
+                   FASTQ.quality(r1)    != FASTQ.quality(r2)
+                    return false
+                end
+            end
+            return true
+        end
+
+        function test_fastq_parse(filename, valid)
+            # Reading from a reader
+            reader = open(FASTQ.Reader, filename)
+            @test eltype(reader) == FASTQ.Record
             if valid
-                for seqrec in stream end
+                for record in reader end
                 @test true  # no error
-                @test close(stream) === nothing
+                @test close(reader) === nothing
             else
                 @test_throws Exception begin
-                    for seqrec in stream end
+                    for record in reader end
                 end
                 return
             end
 
             # in-place parsing
-            stream = open(FASTQReader, filename, quality_encoding=encoding)
-            entry = eltype(stream)()
-            while !eof(stream)
-                read!(stream, entry)
+            reader = open(FASTQ.Reader, filename)
+            record = eltype(reader)()
+            try
+                while true
+                    read!(reader, record)
+                end
+            catch ex
+                close(reader)
+                if !isa(ex, EOFError)
+                    rethrow()
+                end
             end
 
             # Check round trip
             output = IOBuffer()
-            writer = FASTQWriter(output, quality_encoding=encoding)
-            expected_entries = Any[]
-            for seqrec in open(FASTQReader, filename, quality_encoding=encoding)
-                write(writer, seqrec)
-                push!(expected_entries, seqrec)
+            writer = FASTQ.Writer(output)
+            expected_entries = FASTQ.Record[]
+            for record in open(FASTQ.Reader, filename)
+                write(writer, record)
+                push!(expected_entries, record)
             end
             flush(writer)
 
             seekstart(output)
-            read_entries = Any[]
-            for seqrec in FASTQReader(output, quality_encoding=encoding)
-                push!(read_entries, seqrec)
+            read_entries = FASTQ.Record[]
+            for record in FASTQ.Reader(output)
+                push!(read_entries, record)
             end
 
-            @test expected_entries == read_entries
+            return test_records(expected_entries, read_entries)
         end
 
         get_bio_fmt_specimens()
         path = joinpath(dirname(@__FILE__), "..", "BioFmtSpecimens", "FASTQ")
         for specimen in YAML.load_file(joinpath(path, "index.yml"))
-            tags = get(specimen, "tags", "")
+            tags = split(get(specimen, "tags", ""))
             valid = get(specimen, "valid", true)
             # currently unsupported features
-            if contains(tags, "rna") || contains(tags, "gaps") ||
-               contains(tags, "comments") || contains(tags, "ambiguity")
+            if any(t ∈ tags for t in ["gaps", "rna", "comments", "linewrap"])
                 continue
             end
             filename = specimen["filename"]
-            qualenc = (
-                contains(filename, "_sanger") ? :sanger :
-                contains(filename, "_solexa") ? :solexa :
-                contains(filename, "_illumina") ? :illumina13 : :sanger)
-            test_fastq_parse(joinpath(path, filename), valid, qualenc)
+            test_fastq_parse(joinpath(path, filename), valid)
         end
-
-        # invalid quality encoding
-        @test_throws ArgumentError FASTQReader(IOBuffer(""), quality_encoding=:julia)
 
         @testset "invalid quality encoding" begin
             # Sanger full range (note escape characters before '$' and '\')
-            input = IOBuffer("""
+            record = FASTQ.Record("""
             @FAKE0001 Original version has PHRED scores from 0 to 93 inclusive (in that order)
             ACGTACGTACGTACGTACGTACGTACGTACGTACGTACGTACGTACGTACGTACGTACGTACGTACGTACGTACGTACGTACGTACGTACGTAC
             +
@@ -2818,31 +2863,12 @@ end
 
             # the range is not enough in these encodings
             for encoding in (:solexa, :illumina13, :illumina15)
-                seekstart(input)
-                reader = FASTQReader(input, quality_encoding=encoding)
-                @test_throws Exception first(reader)
+                @test_throws ErrorException FASTQ.quality(record, encoding)
             end
 
             # the range is enough in these encodings
             for encoding in (:sanger, :illumina18)
-                seekstart(input)
-                reader = FASTQReader(input, quality_encoding=encoding)
-                @test metadata(first(reader)).quality == collect(0:93)
-            end
-        end
-
-        @testset "specified sequence type" begin
-            input = IOBuffer("""
-            @foobar
-            TTCTAAATT
-            +
-            HHFHEHHDF
-            """)
-            for A in (DNAAlphabet{2}, DNAAlphabet{4})
-                seekstart(input)
-                record = first(FASTQReader{BioSequence{A}}(input))
-                @test record.name == "foobar"
-                @test typeof(record.seq) == BioSequence{A}
+                @test FASTQ.quality(record, encoding) == collect(0:93)
             end
         end
 
@@ -2853,15 +2879,15 @@ end
             +
             BBBB##AAAA##
             """)
-            @test first(FASTQReader(input, fill_ambiguous=nothing)).seq == dna"ACGTNRACGTNR"
+            @test FASTQ.sequence(first(FASTQ.Reader(input, fill_ambiguous=nothing))) == dna"ACGTNRACGTNR"
             seekstart(input)
-            @test first(FASTQReader(input, fill_ambiguous=DNA_A)).seq == dna"ACGTAAACGTAA"
+            @test FASTQ.sequence(first(FASTQ.Reader(input, fill_ambiguous=DNA_A)))   == dna"ACGTAAACGTAA"
             seekstart(input)
-            @test first(FASTQReader(input, fill_ambiguous=DNA_G)).seq == dna"ACGTGGACGTGG"
+            @test FASTQ.sequence(first(FASTQ.Reader(input, fill_ambiguous=DNA_G)))   == dna"ACGTGGACGTGG"
             seekstart(input)
-            @test first(FASTQReader(input, fill_ambiguous=DNA_N)).seq == dna"ACGTNNACGTNN"
+            @test FASTQ.sequence(first(FASTQ.Reader(input, fill_ambiguous=DNA_N)))   == dna"ACGTNNACGTNN"
             seekstart(input)
-            @test first(FASTQReader{BioSequence{DNAAlphabet{2}}}(input, fill_ambiguous=DNA_A)).seq == dna"ACGTAAACGTAA"
+            @test FASTQ.sequence(BioSequence{DNAAlphabet{2}}, first(FASTQ.Reader(input, fill_ambiguous=DNA_A))) == dna"ACGTAAACGTAA"
         end
     end
 

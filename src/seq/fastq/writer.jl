@@ -1,67 +1,53 @@
-# Writer
-# ======
+# FASTQ Writer
+# ============
+
+immutable Writer <: Bio.IO.AbstractWriter
+    output::IO
+    quality_header::Bool
+end
+
+function Bio.IO.stream(writer::Writer)
+    return writer.output
+end
 
 """
-    FASTQWriter(output::IO; quality_header=false, quality_encoding=:sanger)
+    FASTQ.Writer(output::IO; quality_header=false)
 
 Create a data writer of the FASTQ file format.
 
 # Arguments
 * `output`: data sink
 * `quality_header=false`: output the title line at the third line just after '+'
-* `quality_encoding=:sanger`: encoding of base qualities; see `FASTQReader` for available values
 """
-type FASTQWriter{T<:IO} <: Bio.IO.AbstractWriter
-    output::T
-
-    # write sequence name and description header at the third line
-    quality_header::Bool
-
-    # quality encoding used for writing
-    quality_encoding::QualityEncoding
+function Writer(output::IO; quality_header::Bool=false)
+    return Writer(output, quality_header)
 end
 
-function Bio.IO.stream(writer::FASTQWriter)
-    return writer.output
-end
-
-function FASTQWriter(output::IO;
-                     quality_header::Bool=false,
-                     quality_encoding::Symbol=:sanger)
-    return FASTQWriter(output, quality_header, sym2qualenc(quality_encoding))
-end
-
-function Base.write(writer::FASTQWriter, seqrec::FASTQSeqRecord)
+function Base.write(writer::Writer, record::Record)
+    checkfilled(record)
     output = writer.output
     n = 0
-
-    # header
-    n += write(output, '@', seqrec.name)
-    if !isempty(seqrec.metadata.description)
-        n += write(output, ' ', seqrec.metadata.description)
-    end
-    n += write(output, '\n')
-
     # sequence
-    for x in seqrec.seq
-        n += write(output, Char(x))
+    n += write(output, '@')
+    n += unsafe_write(output, pointer(record.data, first(record.identifier)), length(record.identifier))
+    if hasdescription(record)
+        n += write(output, ' ')
+        n += unsafe_write(output, pointer(record.data, first(record.description)), length(record.description))
     end
     n += write(output, '\n')
-
-    # (optional) identifier and description
+    n += unsafe_write(output, pointer(record.data, first(record.sequence)), length(record.sequence))
+    n += write(output, '\n')
+    # quality
     n += write(output, '+')
     if writer.quality_header
-        n += write(output, seqrec.name)
-        if !isempty(seqrec.metadata.description)
-            n += write(output, ' ', seqrec.metadata.description)
+        n += unsafe_write(output, pointer(record.data, first(record.identifier)), length(record.identifier))
+        if hasdescription(record)
+            n += write(output, ' ')
+            n += unsafe_write(output, pointer(record.data, first(record.description)), length(record.description))
         end
     end
     n += write(output, '\n')
-
-    for q in seqrec.metadata.quality
-        n += write(output, Char(q + ascii_offset(writer.quality_encoding)))
-    end
+    n += unsafe_write(output, pointer(record.data, first(record.quality)), length(record.quality))
     n += write(output, '\n')
-
     return n
 end
