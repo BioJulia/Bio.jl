@@ -4,6 +4,10 @@ import Base.depwarn
 # Bio.jl v0.4
 # -----------
 
+include("bbi_old/bbi.jl")
+
+export BigBedReader, BigBedWriter
+
 # TODO: any way to deprecate intersect?
 #@deprecate Base.intersect(bb::BigBedReader, query::Interval)                       eachoverlap(bb, query)
 #@deprecate Base.intersect{T}(a::IntervalCollection{T}, b::Interval)                eachoverlap(a, b)
@@ -304,11 +308,3 @@ function Base.done{S,T,SS,TS,U,V}(it::IntervalStreamIntersectIterator{S,T,SS,TS}
                                   state::IntervalStreamIntersectIteratorState{U,V})
     return state.a_buffer_pos > length(it.a_buffer)
 end
-
-
-# Bio.jl v0.3
-# -----------
-
-immutable BigWig <: Bio.IO.FileFormat end
-immutable BigBed <: Bio.IO.FileFormat end
-export BigWig, BigBed

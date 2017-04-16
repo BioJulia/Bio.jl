@@ -12,11 +12,7 @@
 # This file is a part of BioJulia.
 # License is MIT: https://github.com/BioJulia/Bio.jl/blob/master/LICENSE.md
 
-module BBI
-
-include("header.jl")
-include("summary.jl")
-include("btree.jl")
-include("rtree.jl")
-
-end
+include("types.jl")
+include("reader.jl")
+include("writer.jl")
+include("intersection.jl")
