@@ -298,6 +298,20 @@ in the FASTA file format.
 ```@docs
 Bio.Intervals.GFF3.Reader
 Bio.Intervals.GFF3.Writer
+Bio.Intervals.GFF3.Record
+Bio.Intervals.GFF3.isfeature
+Bio.Intervals.GFF3.isdirective
+Bio.Intervals.GFF3.iscomment
+Bio.Intervals.GFF3.seqid
+Bio.Intervals.GFF3.source
+Bio.Intervals.GFF3.featuretype
+Bio.Intervals.GFF3.seqstart
+Bio.Intervals.GFF3.seqend
+Bio.Intervals.GFF3.score
+Bio.Intervals.GFF3.strand
+Bio.Intervals.GFF3.phase
+Bio.Intervals.GFF3.attributes
+Bio.Intervals.GFF3.content
 ```
 
 
