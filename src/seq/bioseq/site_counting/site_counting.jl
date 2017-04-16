@@ -12,43 +12,38 @@ immutable BitparCount <: CountAlgorithm end
 immutable NoneCount <: CountAlgorithm end
 immutable AllCount <: CountAlgorithm end
 
-const NAIVE = NaiveCount()
-const BITPAR = BitparCount()
-const NONE = NoneCount()
-const ALL = AllCount()
-
 include("binary_operations.jl")
 include("site_types/site_types.jl")
 include("count_sites_naive.jl")
 include("count_sites_bitpar.jl")
 
-@inline function Base.count{T<:Site}(s::T, a::BioSequence)
-    return count(s, NAIVE, a)
+@inline function Base.count{S<:Site}(::Type{S}, a::BioSequence)
+    return count(S, NaiveCount, a)
 end
 
-@inline function Base.count{T<:Site}(s::T, a::BioSequence, b::BioSequence)
-    return count(s, NAIVE, a, b)
+@inline function Base.count{S<:Site}(::Type{S}, a::BioSequence, b::BioSequence)
+    return count(S, NaiveCount, a, b)
 end
 
-function Base.count{T<:Site}(s::T, a::BioSequence, b::BioSequence, width::Int, step::Int)
+function Base.count{S<:Site,A<:Alphabet,B<:Alphabet}(::Type{S}, a::BioSequence{A}, b::BioSequence{B}, width::Int, step::Int)
     len = min(length(a), length(b))
     ritr = StepRange(width, step, len)
     width -= 1
-    results = Vector{IntervalValue{Int,counter_type(s, a, b)}}(length(ritr))
+    results = Vector{IntervalValue{Int,counter_type(S, A, B)}}(length(ritr))
     r = 1
     @inbounds for i in ritr
         idx = (i - width):i
-        results[r] = IntervalValue(first(idx), last(idx), count(s, a[idx], b[idx]))
+        results[r] = IntervalValue(first(idx), last(idx), count(S, a[idx], b[idx]))
         r += 1
     end
     return results
 end
 
-function count_pairwise{T<:Site,N}(s::T, seqs::Vararg{BioSequence,N})
-    counts = Vector{counter_type(s, a, b)}(Int((N * (N - 1)) / 2))
+function count_pairwise{S<:Site,N}(::Type{S}, seqs::Vararg{BioSequence,N})
+    counts = Vector{counter_type(S, a, b)}(Int((N * (N - 1)) / 2))
     c = 1
     @inbounds for i in 1:N, j in (i + 1):N
-        counts[c] = count(s, seqs[i], seqs[j])
+        counts[c] = count(S, seqs[i], seqs[j])
         c += 1
     end
     return PairwiseListMatrix(counts, false)

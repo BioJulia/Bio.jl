@@ -10,6 +10,7 @@
 module Var
 
 import Bio.Seq:
+    Alphabet,
     Site,
     Certain,
     Match,
@@ -36,10 +37,10 @@ importall Bio
 
 export
     # Site types
-    CONSERVED,
-    MUTATED,
-    TRANSITION,
-    TRANSVERSION,
+    Conserved,
+    Mutated,
+    Transition,
+    Transversion,
 
     # VCF and BCF
     VCF,

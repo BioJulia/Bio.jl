@@ -11,7 +11,6 @@ An `Gap` site describes a site where either of two aligned sites are a
 gap symbol '-'.
 """
 immutable Gap <: Site end
-const GAP = Gap()
 
 # Methods for the naive framework.
 # --------------------------------

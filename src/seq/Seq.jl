@@ -166,15 +166,11 @@ export
     MinHashSketch,
     minhash,
     Site,
-    CERTAIN,
-    AMBIGUOUS,
-    GAP,
-    MATCH,
-    MISMATCH,
-    NAIVE,
-    BITPAR,
-    ALL,
-    NONE,
+    Certain,
+    Ambiguous,
+    Gap,
+    Match,
+    Mismatch,
     count_pairwise
 
 import Automa

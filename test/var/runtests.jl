@@ -37,6 +37,7 @@ end
         @testset "Naive methods" begin
 
             alphabets = (DNAAlphabet{4}, DNAAlphabet{2}, RNAAlphabet{4}, RNAAlphabet{2})
+            NC = Seq.NaiveCount
 
             for alph in alphabets
 
@@ -49,10 +50,10 @@ end
 
                 # Test when sequences are of the same bitencoding.
 
-                @test count(MUTATED, NAIVE, seqA, seqB) == count(MUTATED, NAIVE, seqB, seqA) == (6, 10)
-                @test count(CONSERVED, NAIVE, seqA, seqB) == count(CONSERVED, NAIVE, seqB, seqA) == (4, 10)
-                @test count(TRANSITION, NAIVE, seqA, seqB) == count(TRANSITION, NAIVE, seqB, seqA) == (2, 10)
-                @test count(TRANSVERSION, NAIVE, seqA, seqB) == count(TRANSVERSION, NAIVE, seqB, seqA) == (4, 10)
+                @test count(Mutated, NC, seqA, seqB) == count(Mutated, NC, seqB, seqA) == (6, 10)
+                @test count(Conserved, NC, seqA, seqB) == count(Conserved, NC, seqB, seqA) == (4, 10)
+                @test count(Transition, NC, seqA, seqB) == count(Transition, NC, seqB, seqA) == (2, 10)
+                @test count(Transversion, NC, seqA, seqB) == count(Transversion, NC, seqB, seqA) == (4, 10)
             end
 
             # Test for when sequences are of different bitencodings.
@@ -60,10 +61,10 @@ end
                           (RNAAlphabet{2}, RNAAlphabet{4})]
                 seqA, seqB = generate_possibilities_tester(alphs...)
 
-                @test count(MUTATED, NAIVE, seqA, seqB) == count(MUTATED, NAIVE, seqB, seqA) == (12, 16)
-                @test count(CONSERVED, NAIVE, seqA, seqB) == count(CONSERVED, NAIVE, seqB, seqA) == (4, 16)
-                @test count(TRANSITION, NAIVE, seqA, seqB) == count(TRANSITION, NAIVE, seqB, seqA) == (4, 16)
-                @test count(TRANSVERSION, NAIVE, seqA, seqB) == count(TRANSVERSION, NAIVE, seqB, seqA) == (8, 16)
+                @test count(Mutated, NC, seqA, seqB) == count(Mutated, NC, seqB, seqA) == (12, 16)
+                @test count(Conserved, NC, seqA, seqB) == count(Conserved, NC, seqB, seqA) == (4, 16)
+                @test count(Transition, NC, seqA, seqB) == count(Transition, NC, seqB, seqA) == (4, 16)
+                @test count(Transversion, NC, seqA, seqB) == count(Transversion, NC, seqB, seqA) == (8, 16)
             end
         end
 

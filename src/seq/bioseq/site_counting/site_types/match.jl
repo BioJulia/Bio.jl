@@ -11,7 +11,6 @@ A `Match` site describes a site where two aligned nucleotides are the
 same biological symbol.
 """
 immutable Match <: Site end
-const MATCH = Match()
 
 @inline function count_algorithm{A<:Union{DNAAlphabet,RNAAlphabet}}(s::Match, a::BioSequence{A}, b::BioSequence{A})
     return BITPAR

@@ -11,7 +11,6 @@ An `Ambiguous` site describes a site where either of two aligned sites are an
 ambiguity symbol.
 """
 immutable Ambiguous <: Site end
-const AMBIGUOUS = Ambiguous()
 
 # Methods for the naive framework.
 # --------------------------------

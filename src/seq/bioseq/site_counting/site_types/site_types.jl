@@ -22,14 +22,14 @@ end
 # What will the output type of count(YOUR_SITE_TYPE, seqa, seqb), be?
 # Note that the type specified here, should have a Base.zero or start_counter
 # method defined for it.
-counter_type(s::Site, seq::BioSequence) = Int
-counter_type(s::Site, a::BioSequence, b::BioSequence) = Int
+counter_type{S<:Site,A<:Alphabet}(::Type{S}, ::Type{A}) = Int
+counter_type{S<:Site,A<:Alphabet,B<:Alphabet}(::Type{S}, ::Type{A}, ::Type{B}) = Int
 
 # How to start the count accumulator.
 # The default method is to use Base.zero on the `counter_type`, but you can overload
 # this.
-start_counter(s::Site, seq::BioSequence) = zero(counter_type(s, seq))
-start_counter(s::Site, a::BioSequence, b::BioSequence) = zero(counter_type(s, a, b))
+start_counter{S<:Site,A<:Alphabet}(::Type{S}, ::Type{A}) = zero(counter_type(S, A))
+start_counter{S<:Site,A<:Alphabet,B<:Alphabet}(::Type{S}, ::Type{A}, ::Type{B}) = zero(counter_type(S, A, B))
 
 # Methods required for just the naive algorithm.
 # ----------------------------------------------

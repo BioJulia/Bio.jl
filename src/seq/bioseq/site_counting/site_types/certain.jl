@@ -11,7 +11,6 @@ A `Certain` site describes a site where both of two aligned sites are not an
 ambiguity symbol or a gap.
 """
 immutable Certain <: Site end
-const CERTAIN = Certain()
 
 # Methods for the naive framework.
 # --------------------------------

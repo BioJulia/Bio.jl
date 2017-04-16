@@ -11,7 +11,6 @@ A `Mismatch` site describes a site where two aligned nucleotides are not the
 same biological symbol.
 """
 immutable Mismatch <: Site end
-const MISMATCH = Mismatch()
 
 @inline function count_algorithm{A}(s::Mismatch, a::BioSequence{A}, b::BioSequence{A})
     return BITPAR
