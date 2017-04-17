@@ -69,9 +69,7 @@ function Base.start(reader::Reader)
     # dummy header and record
     header = SectionHeader(0, 0, 0, 0, 0, 0, 0, 0)
     record = Record()
-    state = IteratorState(Libz.ZlibInflateInputStream(reader.stream), false, header, record, section_count, 0, 0, 0)
-    advance!(state)
-    return state
+    return IteratorState(Libz.ZlibInflateInputStream(reader.stream), false, header, record, section_count, 0, 0, 0)
 end
 
 function Base.done(reader::Reader, state)

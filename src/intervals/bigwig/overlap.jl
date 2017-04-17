@@ -43,9 +43,7 @@ function Base.start(iter::OverlapIterator)
     stream = Libz.ZlibInflateInputStream(iter.reader.stream)
     header = SectionHeader(0, 0, 0, 0, 0, 0, 0, 0)
     record = Record()
-    state = OverlapIteratorState(stream, false, header, record, offsets, 1, 0, 0)
-    advance!(iter, state)
-    return state
+    return OverlapIteratorState(stream, false, header, record, offsets, 1, 0, 0)
 end
 
 function Base.done(iter::OverlapIterator, state::OverlapIteratorState)
