@@ -150,9 +150,9 @@ function Base.show(io::IO, record::Record)
             println(io)
             println(io, "       seqid: ", hasseqid(record) ? seqid(record) : "<missing>")
             println(io, "      source: ", hassource(record) ? source(record) : "<missing>")
-            println(io, "        type: ", hastype_(record) ? type_(record) : "<missing>")
-            println(io, "       start: ", hasleftposition(record) ? leftposition(record) : "<missing>")
-            println(io, "         end: ", hasrightposition(record) ? rightposition(record) : "<missing>")
+            println(io, "        type: ", hasfeaturetype(record) ? featuretype(record) : "<missing>")
+            println(io, "       start: ", hasseqstart(record) ? seqstart(record) : "<missing>")
+            println(io, "         end: ", hasseqend(record) ? seqend(record) : "<missing>")
             println(io, "       score: ", hasscore(record) ? score(record) : "<missing>")
             println(io, "      strand: ", hasstrand(record) ? strand(record) : "<missing>")
             println(io, "       phase: ", hasphase(record) ? phase(record) : "<missing>")
@@ -221,7 +221,7 @@ end
 """
     seqid(record::Record)::String
 
-Get the sequence id of `record`.
+Get the sequence ID of `record`.
 """
 function seqid(record::Record)
     checkfilled(record)
@@ -263,29 +263,29 @@ function hassource(record::Record)
 end
 
 """
-    type_(record::Record)::String
+    featuretype(record::Record)::String
 
 Get the type of `record`.
 """
-function type_(record::Record)
+function featuretype(record::Record)
     checkfilled(record)
     checkkind(record, :feature)
     if ismissing(record, record.type_)
-        missingerror(:type_)
+        missingerror(:featuretype)
     end
     return decode(String(record.data[record.type_]))
 end
 
-function hastype_(record::Record)
+function hasfeaturetype(record::Record)
     return record.kind == :feature && !ismissing(record, record.type_)
 end
 
 """
-    start(record::Record)::Int
+    seqstart(record::Record)::Int
 
 Get the start coordinate of `record`.
 """
-function start(record::Record)
+function seqstart(record::Record)
     checkfilled(record)
     checkkind(record, :feature)
     if ismissing(record, record.start)
@@ -294,42 +294,42 @@ function start(record::Record)
     return unsafe_parse_decimal(Int, record.data, record.start)
 end
 
-function hasstart(record::Record)
+function hasseqstart(record::Record)
     return record.kind == :feature && !ismissing(record, record.start)
 end
 
 function Bio.leftposition(record::Record)
-    return start(record)
+    return seqstart(record)
 end
 
 function Bio.hasleftposition(record::Record)
-    return hasstart(record)
+    return hasseqstart(record)
 end
 
 """
-    end_(record::Record)::Int
+    seqend(record::Record)::Int
 
 Get the end coordinate of `record`.
 """
-function end_(record::Record)
+function seqend(record::Record)
     checkfilled(record)
     checkkind(record, :feature)
     if ismissing(record, record.end_)
-        missingerror(:end_)
+        missingerror(:end)
     end
     return unsafe_parse_decimal(Int, record.data, record.end_)
 end
 
-function hasend_(record::Record)
+function hasseqend(record::Record)
     return record.kind == :feature && !ismissing(record, record.end_)
 end
 
 function Bio.rightposition(record::Record)
-    return end_(record)
+    return seqend(record)
 end
 
 function Bio.hasrightposition(record::Record)
-    return hasend_(record)
+    return hasseqend(record)
 end
 
 """
