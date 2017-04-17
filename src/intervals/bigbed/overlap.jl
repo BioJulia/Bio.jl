@@ -16,7 +16,7 @@ function Base.iteratorsize(::Type{OverlapIterator})
     return Base.SizeUnknown()
 end
 
-function eachoverlap(reader::Reader, interval::Bio.Intervals.Interval)
+function Bio.Intervals.eachoverlap(reader::Reader, interval::Bio.Intervals.Interval)
     if haskey(reader.chroms, interval.seqname)
         id, _ = reader.chroms[interval.seqname]
     else
@@ -42,7 +42,7 @@ function Base.start(iter::OverlapIterator)
         Bio.Ragel.State(
             data_machine.start_state,
             Libz.ZlibInflateInputStream(iter.reader.stream, reset_on_end=false)),
-        isempty(offsets), Record(), offsets, 1)
+        isempty(offsets), Record(), offsets, isempty(offsets) ? 1 : 2)
 end
 
 function Base.done(iter::OverlapIterator, state::OverlapIteratorState)
@@ -56,18 +56,18 @@ end
 
 function advance!(iter::OverlapIterator, state::OverlapIteratorState)
     while true
-        while eof(state.state.stream) && state.current_offset ≤ endof(state.offsets)
-            offset = state.offsets[state.current_offset]
-            seek(iter.reader.stream, offset)
+        while state.current_offset ≤ endof(state.offsets) && eof(state.state.stream)
+            seek(iter.reader.stream, state.offsets[state.current_offset])
             state.state = Bio.Ragel.State(data_machine.start_state, Libz.ZlibInflateInputStream(iter.reader.stream, reset_on_end=false))
             state.current_offset += 1
         end
-        if state.done || (eof(state.state.stream) && state.current_offset > endof(state.offsets))
+        if state.done || (state.current_offset > endof(state.offsets) && eof(state.state.stream))
             state.done = true
             return state
         end
 
         _read!(iter.reader, state.state, state.record)
+        state.record.reader = iter.reader
         if overlaps(state.record, iter.chromid, iter.chromstart, iter.chromend)
             return state
         end

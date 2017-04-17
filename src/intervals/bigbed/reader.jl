@@ -2,23 +2,30 @@
 # =============
 
 immutable Reader <: Bio.IO.AbstractReader
-    stream::BufferedStreams.BufferedInputStream
+    #stream::BufferedStreams.BufferedInputStream
+    stream::IO
     header::BBI.Header
     summary::BBI.TotalSummary
     btree::BBI.BTree
     rtree::BBI.RTree
+    # chrom name => (ID, length)
     chroms::Dict{String,Tuple{UInt32,Int}}
+    # chrom ID => name
+    chrom_names::Dict{UInt8,String}
 end
 
 function Base.eltype(::Type{Reader})
     return Record
 end
 
+#=
 function Reader(stream::IO)
     return Reader(BufferedStreams.BufferedInputStream(stream))
 end
+=#
 
-function Reader(stream::BufferedStreams.BufferedInputStream)
+#function Reader(stream::BufferedStreams.BufferedInputStream)
+function Reader(stream::IO)
     # read header
     header = read(stream, BBI.Header)
     if header.magic != BBI.BED_MAGIC
@@ -32,7 +39,8 @@ function Reader(stream::BufferedStreams.BufferedInputStream)
     btree = BBI.BTree(stream, header.chromosome_tree_offset)
     rtree = BBI.RTree(stream, header.full_index_offset)
     chroms = Dict(name => (id, Int(len)) for (name, id, len) in BBI.chromlist(btree))
-    return Reader(stream, header, summary, btree, rtree, chroms)
+    chrom_names = Dict(id => name for (name, (id, len)) in chroms)
+    return Reader(stream, header, summary, btree, rtree, chroms, chrom_names)
 end
 
 const data_machine = (function ()
@@ -162,7 +170,18 @@ type Record
     blockcount::UnitRange{Int}
     blocksizes::Vector{UnitRange{Int}}
     blockstarts::Vector{UnitRange{Int}}
-    # reader?
+    # reader
+    reader::Reader
+
+    function Record(chromid, chromstart, chromend,
+                    data, filled, ncols,
+                    name, score, strand, thickstart, thickend,
+                    itemrgb, blockcount, blocksizes, blockstarts)
+        return new(chromid, chromstart, chromend,
+                   data, filled, ncols,
+                   name, score, strand, thickstart, thickend,
+                   itemrgb, blockcount, blocksizes, blockstarts)
+    end
 end
 
 eval(
@@ -188,16 +207,16 @@ function Base.start(reader::Reader)
     seek(reader.stream, reader.header.full_data_offset)
     # this is defined as UInt32 in the spces but actually UInt64
     record_count = read(reader.stream, UInt64)
-    record = Record()
     datastream = Libz.ZlibInflateInputStream(reader.stream)
     parser_state = Bio.Ragel.State(data_machine.start_state, datastream)
-    return IteratorState(parser_state, false, record, record_count, 0)
+    return IteratorState(parser_state, false, Record(), record_count, 0)
 end
 
 function Base.done(reader::Reader, state::IteratorState)
     if state.current_record < state.n_records
         @assert !state.done
         _read!(reader, state.state, state.record)
+        state.record.reader = reader
         state.current_record += 1
     else
         state.done = true

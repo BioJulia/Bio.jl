@@ -7,15 +7,16 @@ function Record()
     return Record(
         # chromid, chromstart, chromend
         0, 0, 0,
-        UInt8[], 1:0,
-        0,
+        # data, filled range, #columns
+        UInt8[], 1:0, 0,
+        # indexes
         1:0, 1:0, 0,
         1:0, 1:0, 1:0,
         1:0, UnitRange{Int}[], UnitRange{Int}[])
 end
 
 function Base.copy(record::Record)
-    return Record(
+    copy = Record(
         record.chromid,
         record.chromstart,
         record.chromend,
@@ -29,8 +30,12 @@ function Base.copy(record::Record)
         record.thickend,
         record.itemrgb,
         record.blockcount,
-        copy(record.blocksizes),
-        copy(record.blockstarts))
+        Base.copy(record.blocksizes),
+        Base.copy(record.blockstarts))
+    if isdefined(record, :reader)
+        copy.reader = record.reader
+    end
+    return copy
 end
 
 function initialize!(record::Record)
@@ -59,7 +64,7 @@ function Base.show(io::IO, record::Record)
     print(io, summary(record), ':')
     if isfilled(record)
         println(io)
-        println(io, "   chromosome: ", chromid(record))
+        println(io, "   chromosome: ", chrom(record))
         println(io, "        start: ", chromstart(record))
           print(io, "          end: ", chromend(record))
         if hasname(record)
@@ -104,16 +109,41 @@ end
 # Accessor functions
 # ------------------
 
-function chromid(record::Record)::Int
+"""
+    chromid(record::Record)::UInt32
+
+Get the chromosome ID of `record`.
+"""
+function chromid(record::Record)::UInt32
     checkfilled(record)
-    return record.chromid + 1
+    return record.chromid
 end
 
+"""
+    chrom(record::Record)::String
+
+Get the chromosome name of `record`.
+"""
+function chrom(record::Record)::String
+    checkfilled(record)
+    return record.reader.chrom_names[chromid(record)]
+end
+
+"""
+    chromstart(record::Record)::Int
+
+Get the start position of `record`.
+"""
 function chromstart(record::Record)::Int
     checkfilled(record)
     return record.chromstart + 1
 end
 
+"""
+    chromend(record::Record)::Int
+
+Get the end position of `record`.
+"""
 function chromend(record::Record)::Int
     checkfilled(record)
     return record.chromend % Int
