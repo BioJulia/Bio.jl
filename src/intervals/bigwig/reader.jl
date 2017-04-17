@@ -2,7 +2,7 @@
 # =============
 
 immutable Reader <: Bio.IO.AbstractReader
-    stream::BufferedStreams.BufferedInputStream
+    stream::IO
     header::BBI.Header
     summary::BBI.TotalSummary
     btree::BBI.BTree
@@ -17,11 +17,14 @@ function Base.eltype(::Type{Reader})
     return Record
 end
 
-function Reader(stream::IO)
-    return Reader(BufferedStreams.BufferedInputStream(stream))
-end
+"""
+    BigWig.Reader(stream::IO)
 
-function Reader(stream::BufferedStreams.BufferedInputStream)
+Create a reader for bigWig file format.
+
+Note that `stream` must be seekable.
+"""
+function Reader(stream::IO)
     # read header
     header = read(stream, BBI.Header)
     if header.magic != BBI.WIG_MAGIC

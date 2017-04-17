@@ -102,6 +102,7 @@ The following table summarizes supported file formats.
 | .2bit       | `TwoBit` | `Bio.Seq`       | <http://genome.ucsc.edu/FAQ/FAQformat.html#format7>                         |
 | BED         | `BED`    | `Bio.Intervals` | <https://genome.ucsc.edu/FAQ/FAQformat.html#format1>                        |
 | GFF3        | `GFF3`   | `Bio.Intervals` | <https://github.com/The-Sequence-Ontology/Specifications/blob/master/gff3.md> |
+| bigWig      | `BigWig` | `Bio.Intervals` | <https://doi.org/10.1093/bioinformatics/btq351>                             |
 | bigBed      | `BigBed` | `Bio.Intervals` | <https://doi.org/10.1093/bioinformatics/btq351>                             |
 | PDB         | `PDB`    | `Bio.Structure` | <http://www.wwpdb.org/documentation/file-format-content/format33/v3.3.html> |
 | SAM         | `SAM`    | `Bio.Align`     | <https://samtools.github.io/hts-specs/SAMv1.pdf>                            |
@@ -319,20 +320,50 @@ Bio.Intervals.GFF3.attributes
 Bio.Intervals.GFF3.content
 ```
 
+### bigWig
+
+* Reader type: `BigWig.Reader`
+* Element type: `BigWig.Record`
+
+bigWig is a binary file format for associating a floating point number with each
+base in the genome. bigWig files are indexed to quickly fetch specific regions.
+
+```@docs
+Bio.Intervals.BigWig.Reader
+Bio.Intervals.BigWig.Record
+Bio.Intervals.BigWig.chrom
+Bio.Intervals.BigWig.chromid
+Bio.Intervals.BigWig.chromstart
+Bio.Intervals.BigWig.chromend
+Bio.Intervals.BigWig.value
+```
+
 
 ### bigBed
 
-* Reader type: `BigBedReader`
-* Writer type: `BigBedWriter{T<:IO}`
-* Element type: `Interval{BEDMetadata}` (alias: `BEDInterval`)
+* Reader type: `BigBed.Reader`
+* Element type: `BigBed.Record`
 
-BigBed is a binary file format for representing genomic annotations and often
-created from BED files. The bigBed files are indexed to quickly fetch specific
+bigBed is a binary file format for representing genomic annotations and often
+created from BED files. bigBed files are indexed to quickly fetch specific
 regions.
 
 ```@docs
-Bio.Intervals.BigBedReader
-Bio.Intervals.BigBedWriter
+Bio.Intervals.BigBed.Reader
+Bio.Intervals.BigBed.Record
+Bio.Intervals.BigBed.chrom
+Bio.Intervals.BigBed.chromid
+Bio.Intervals.BigBed.chromstart
+Bio.Intervals.BigBed.chromend
+Bio.Intervals.BigBed.name
+Bio.Intervals.BigBed.score
+Bio.Intervals.BigBed.strand
+Bio.Intervals.BigBed.thickstart
+Bio.Intervals.BigBed.thickend
+Bio.Intervals.BigBed.itemrgb
+Bio.Intervals.BigBed.blockcount
+Bio.Intervals.BigBed.blocksizes
+Bio.Intervals.BigBed.blockstarts
 ```
 
 

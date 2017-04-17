@@ -2,7 +2,6 @@
 # =============
 
 immutable Reader <: Bio.IO.AbstractReader
-    #stream::BufferedStreams.BufferedInputStream
     stream::IO
     header::BBI.Header
     summary::BBI.TotalSummary
@@ -18,13 +17,13 @@ function Base.eltype(::Type{Reader})
     return Record
 end
 
-#=
-function Reader(stream::IO)
-    return Reader(BufferedStreams.BufferedInputStream(stream))
-end
-=#
+"""
+    BigBed.Reader(stream::IO)
 
-#function Reader(stream::BufferedStreams.BufferedInputStream)
+Create a reader for bigBed file format.
+
+Note that `stream` must be seekable.
+"""
 function Reader(stream::IO)
     # read header
     header = read(stream, BBI.Header)

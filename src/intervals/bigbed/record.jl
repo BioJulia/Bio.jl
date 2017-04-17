@@ -3,6 +3,11 @@
 
 # type Record is defined in reader.jl.
 
+"""
+    BigBed.Record()
+
+Create an unfilled bigBed record.
+"""
 function Record()
     return Record(
         # chromid, chromstart, chromend
