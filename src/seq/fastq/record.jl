@@ -56,7 +56,7 @@ end
 Create a FASTQ record from `identifier`, `sequence` and `quality`.
 """
 function Record(identifier::AbstractString, sequence, quality::Vector; offset=33)
-    return Record(identifier, nothing, sequence, quality, offset=33)
+    return Record(identifier, nothing, sequence, quality, offset=offset)
 end
 
 """
