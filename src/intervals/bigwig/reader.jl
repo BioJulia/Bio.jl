@@ -9,6 +9,8 @@ immutable Reader <: Bio.IO.AbstractReader
     rtree::BBI.RTree
     # chrom name => (ID, length)
     chroms::Dict{String,Tuple{UInt32,Int}}
+    # ID => chrom name
+    chrom_names::Dict{UInt32,String}
 end
 
 function Base.eltype(::Type{Reader})
@@ -33,7 +35,8 @@ function Reader(stream::BufferedStreams.BufferedInputStream)
     btree = BBI.BTree(stream, header.chromosome_tree_offset)
     rtree = BBI.RTree(stream, header.full_index_offset)
     chroms = Dict(name => (id, Int(len)) for (name, id, len) in BBI.chromlist(btree))
-    return Reader(stream, header, summary, btree, rtree, chroms)
+    chrom_names = Dict(id => name for (name, (id, _)) in chroms)
+    return Reader(stream, header, summary, btree, rtree, chroms, chrom_names)
 end
 
 
@@ -41,10 +44,15 @@ end
 # ------
 
 type Record
-    header::Nullable{SectionHeader}
     chromstart::UInt32
     chromend::UInt32
     value::Float32
+    header::SectionHeader
+    reader::Reader
+
+    function Record(chromstart, chromend, value)
+        return new(chromstart, chromend, value)
+    end
 end
 
 
@@ -66,22 +74,21 @@ function Base.start(reader::Reader)
     seek(reader.stream, reader.header.full_data_offset)
     # this is defined as UInt32 in the spces but actually UInt64
     section_count = read(reader.stream, UInt64)
-    # dummy header and record
+    # dummy header
     header = SectionHeader(0, 0, 0, 0, 0, 0, 0, 0)
-    record = Record()
-    return IteratorState(Libz.ZlibInflateInputStream(reader.stream), false, header, record, section_count, 0, 0, 0)
+    return IteratorState(Libz.ZlibInflateInputStream(reader.stream), false, header, Record(), section_count, 0, 0, 0)
 end
 
 function Base.done(reader::Reader, state)
-    advance!(state)
+    advance!(reader, state)
     return state.done
 end
 
 function Base.next(reader::Reader, state)
-    return state.record, state
+    return copy(state.record), state
 end
 
-function advance!(state::IteratorState)
+function advance!(reader::Reader, state::IteratorState)
     # find a section that has at least one record
     while state.current_section < state.n_sections && state.current_record == state.n_records
         state.header = read(state.stream, SectionHeader)
@@ -93,9 +100,14 @@ function advance!(state::IteratorState)
         state.done = true
         return state
     end
-    @assert !state.done
 
     # read a new record
+    _read!(reader, state, state.record)
+    return state
+end
+
+function _read!(reader::Reader, state, record::Record)
+    @assert !state.done
     header = state.header
     if isbedgraph(header)
         chromstart = read(state.stream, UInt32)
@@ -110,7 +122,11 @@ function advance!(state::IteratorState)
         throw(ArgumentError("invalid data type"))
     end
     value = read(state.stream, Float32)
-    state.record = Record(header, chromstart, chromend, value)
+    record.chromstart = chromstart
+    record.chromend = chromend
+    record.value = value
+    record.header = header
+    record.reader = reader
     state.current_record += 1
-    return state
+    return record
 end

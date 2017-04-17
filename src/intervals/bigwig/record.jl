@@ -3,26 +3,36 @@
 
 # type Record is defined in reader.jl.
 
+"""
+    BigWig.Record()
+
+Create an unfilled bigWig record.
+"""
 function Record()
-    return Record(Nullable{SectionHeader}(), 0, 0, NaN32)
+    return Record(0, 0, NaN32)
 end
 
 function Bio.isfilled(record::Record)
-    return !isnull(record.header)
+    return isdefined(record, :reader)
 end
 
 function Base.copy(record::Record)
-    return Record(record.header, record.chromstart, record.chromend, record.value)
+    copy = Record(record.chromstart, record.chromend, record.value)
+    copy.header = record.header
+    if isdefined(record, :reader)
+        copy.reader = record.reader
+    end
+    return copy
 end
 
 function Base.show(io::IO, record::Record)
     print(io, summary(record), ':')
     if isfilled(record)
         println(io)
-        println(io, "  chromosome ID: ", chromid(record))
-        println(io, "          start: ", chromstart(record))
-        println(io, "            end: ", chromend(record))
-          print(io, "          value: ", value(record))
+        println(io, "  chromosome: ", chrom(record))
+        println(io, "       start: ", chromstart(record))
+        println(io, "         end: ", chromend(record))
+          print(io, "       value: ", value(record))
     else
         print(io, " <not filled>")
     end
@@ -33,13 +43,23 @@ end
 # ------------------
 
 """
-    chromid(record::Record)::Int
+    chromid(record::Record)::UInt32
 
 Get the chromosome ID of `record`.
 """
-function chromid(record::Record)::Int
+function chromid(record::Record)::UInt32
     checkfilled(record)
-    return get(record.header).chrom_id + 1
+    return record.header.chrom_id
+end
+
+"""
+    chrom(record::Record)::String
+
+Get the chromosome name of `record`.
+"""
+function chrom(record::Record)::String
+    checkfilled(record)
+    return record.reader.chrom_names[chromid(record)]
 end
 
 """
