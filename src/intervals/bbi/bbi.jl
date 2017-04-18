@@ -10,5 +10,6 @@ include("header.jl")
 include("summary.jl")
 include("btree.jl")
 include("rtree.jl")
+include("zoom.jl")
 
 end

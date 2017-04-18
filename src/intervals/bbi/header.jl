@@ -27,11 +27,3 @@ function Base.read(io::IO, ::Type{Header})
         read(io, UInt16), read(io, UInt16), read(io, UInt64),
         read(io, UInt64), read(io, UInt32), read(io, UInt64))
 end
-
-# Supplemental Table 6.
-immutable ZoomHeader
-    reduction_level::UInt32
-    reserved::UInt32
-    data_offset::UInt64
-    index_offset::UInt64
-end
