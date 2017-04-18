@@ -4,6 +4,7 @@
 immutable Reader <: Bio.IO.AbstractReader
     stream::IO
     header::BBI.Header
+    zooms::Vector{BBI.Zoom}
     summary::BBI.TotalSummary
     btree::BBI.BTree
     rtree::BBI.RTree
@@ -32,6 +33,10 @@ function Reader(stream::IO)
     elseif header.version < 3
         error("not a supported version of BigBed")
     end
+    # read zoom objects
+    zoom_headers = Vector{BBI.ZoomHeader}(header.zoom_levels)
+    read!(stream, zoom_headers)
+    zooms = [BBI.Zoom(stream, h) for h in zoom_headers]
     # read summary, B tree, and R tree
     seek(stream, header.total_summary_offset)
     summary = read(stream, BBI.TotalSummary)
@@ -39,7 +44,7 @@ function Reader(stream::IO)
     rtree = BBI.RTree(stream, header.full_index_offset)
     chroms = Dict(name => (id, Int(len)) for (name, id, len) in BBI.chromlist(btree))
     chrom_names = Dict(id => name for (name, (id, len)) in chroms)
-    return Reader(stream, header, summary, btree, rtree, chroms, chrom_names)
+    return Reader(stream, header, zooms, summary, btree, rtree, chroms, chrom_names)
 end
 
 const data_machine = (function ()
