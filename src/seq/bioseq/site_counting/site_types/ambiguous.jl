@@ -16,11 +16,11 @@ immutable Ambiguous <: Site end
 # --------------------------------
 
 "Test whether a nucleic acid in a sequence is ambiguous."
-issite{T<:NucleicAcid}(::Type{Ambiguous}, a::T) = isambiguous(a)
+issite(::Type{Ambiguous}, a::BioSequence, idx) = isambiguous(a[idx])
 
 "Test whether a nucleotide site of two aligned sequences has ambiguities."
-@inline function issite{T<:NucleicAcid}(::Type{Ambiguous}, a::T, b::T)
-    return issite(Ambiguous, a) | issite(Ambiguous, b)
+@inline function issite(::Type{Ambiguous}, a::BioSequence, b::BioSequence, idx)
+    return issite(Ambiguous, a, idx) | issite(Ambiguous, b, idx)
 end
 
 # Methods for the bitparallel framework.

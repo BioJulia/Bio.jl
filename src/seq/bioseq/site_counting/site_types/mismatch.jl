@@ -12,15 +12,18 @@ same biological symbol.
 """
 immutable Mismatch <: Site end
 
-@inline function count_algorithm{A}(s::Mismatch, a::BioSequence{A}, b::BioSequence{A})
-    return BITPAR
+for A in (DNAAlphabet, RNAAlphabet)
+    @eval begin
+        count_algorithm(::Type{Mismatch}, a::BioSequence{$A{4}}, b::BioSequence{$A{4}}) = BITPAR
+        count_algorithm(::Type{Mismatch}, a::BioSequence{$A{2}}, b::BioSequence{$A{2}}) = BITPAR
+    end
 end
 
 # Methods for the naive framework.
 # --------------------------------
 
 "Test whether a nucleotide site of two aligned sequences, constitutes a mismatch."
-issite{T<:NucleicAcid}(::Type{Mismatch}, a::T, b::T) = a != b
+issite(::Type{Mismatch}, a::BioSequence, b::BioSequence, idx) = a[idx] != b[idx]
 
 # Methods for the bitparallel framework.
 # --------------------------------------

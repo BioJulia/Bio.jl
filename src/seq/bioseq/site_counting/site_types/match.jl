@@ -20,7 +20,7 @@ end
 # --------------------------------
 
 "Test whether a nucleotide site of two aligned sequences, constitutes a match."
-issite{T<:NucleicAcid}(::Type{Match}, a::T, b::T) = a == b
+issite(::Type{Match}, a::BioSequence, b::BioSequence, idx) = a[idx] == b[idx]
 
 # Methods for the bitparallel framework.
 # --------------------------------------

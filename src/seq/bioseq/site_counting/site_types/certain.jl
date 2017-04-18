@@ -16,12 +16,17 @@ immutable Certain <: Site end
 # --------------------------------
 
 "Test whether a nucleic acid in a sequence is certain."
-issite{T<:NucleicAcid}(::Type{Certain}, a::T) = iscertain(a)
+issite(::Type{Certain}, a::BioSequence, idx) = iscertain(a[idx])
 
 "Test whether a nucleotide site of two aligned sequences has two certain NucleicAcids."
-@inline function issite{T<:NucleicAcid}(::Type{Certain}, a::T, b::T)
-    return issite(Certain, a) & issite(Certain, b)
+@inline function issite(::Type{Certain}, a::BioSequence, b::BioSequence, idx)
+    return issite(Certain, a, idx) & issite(Certain, b, idx)
 end
+
+
+
+
+
 
 # Methods for the bitparallel framework.
 # --------------------------------------

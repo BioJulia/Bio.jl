@@ -15,13 +15,18 @@ immutable Gap <: Site end
 # Methods for the naive framework.
 # --------------------------------
 
-"Test whether a nucleic acid in a sequence is a gap character."
-issite{T<:NucleicAcid}(::Type{Gap}, a::T) = isgap(a)
+"Test whether a position in a sequence is a gap character."
+issite(::Type{Gap}, a::BioSequence, idx) = isgap(a[idx])
 
-"Test whether a nucleotide site of two aligned sequences has gap characters."
-@inline function issite{T<:NucleicAcid}(::Type{Gap}, a::T, b::T)
-    return issite(Gap, a) | issite(Gap, b)
+"Test whether a position in two aligned sequences has gap characters."
+@inline function issite(::Type{Gap}, a::BioSequence, b::BioSequence, idx)
+    return issite(Gap, a, idx) | issite(Gap, b, idx)
 end
+
+
+
+
+
 
 # Methods for the bitparallel framework.
 # --------------------------------------
