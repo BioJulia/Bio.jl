@@ -5,7 +5,7 @@ immutable Reader <: Bio.IO.AbstractReader
     stream::IO
     header::BBI.Header
     zooms::Vector{BBI.Zoom}
-    summary::BBI.TotalSummary
+    summary::BBI.Summary
     btree::BBI.BTree
     rtree::BBI.RTree
     # chrom name => (ID, length)
@@ -39,7 +39,7 @@ function Reader(stream::IO)
     zooms = [BBI.Zoom(stream, h) for h in zoom_headers]
     # read summary, B tree, and R tree
     seek(stream, header.total_summary_offset)
-    summary = read(stream, BBI.TotalSummary)
+    summary = read(stream, BBI.Summary)
     btree = BBI.BTree(stream, header.chromosome_tree_offset)
     rtree = BBI.RTree(stream, header.full_index_offset)
     chroms = Dict(name => (id, Int(len)) for (name, id, len) in BBI.chromlist(btree))
