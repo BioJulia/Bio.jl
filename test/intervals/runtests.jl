@@ -643,12 +643,17 @@ end
         get_bio_fmt_specimens()
         function check_gff3_parse(filename)
             # Reading from a stream
+            num_intervals = 0
             for interval in GFF3.Reader(open(filename))
+                num_intervals += 1
             end
 
             # Reading from a regular file
             for interval in open(GFF3.Reader, filename)
             end
+
+            collection = IntervalCollection(open(GFF3.Reader, filename))
+            @test length(collection) == num_intervals
 
             # in-place parsing
             stream = open(GFF3.Reader, filename)

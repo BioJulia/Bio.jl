@@ -63,8 +63,8 @@ function Base.close(reader::Reader)
 end
 
 function Bio.Intervals.IntervalCollection(reader::Reader)
-    intervals = collect(Interval{Record}, reader)
-    return IntervalCollection(intervals, true)
+    intervals = collect(Bio.Intervals.Interval{Record}, reader)
+    return Bio.Intervals.IntervalCollection(intervals, true)
 end
 
 
