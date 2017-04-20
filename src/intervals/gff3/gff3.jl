@@ -9,6 +9,7 @@ import BufferedStreams
 import Bio.Exceptions: missingerror
 import URIParser
 importall Bio
+import Bio.Intervals: Interval, IntervalCollection
 
 include("record.jl")
 include("reader.jl")
