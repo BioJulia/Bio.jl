@@ -69,6 +69,8 @@ function Bio.rightposition(i::Interval)
     return i.last
 end
 
+Base.length(i::Interval) = i.last -  i.first + 1
+
 IntervalTrees.first(i::Interval) = i.first
 IntervalTrees.last(i::Interval) = i.last
 

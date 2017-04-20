@@ -179,6 +179,11 @@ end
         i2 = Interval("chr2", 5692667, 5701385, STRAND_POS, "SOX11")
         @test i1 == i2
     end
+
+    @testset "length" begin
+        i = Interval("chr1", 10, 20)
+        @test length(i) == 10
+    end
 end
 
 @testset "IntervalCollection" begin
