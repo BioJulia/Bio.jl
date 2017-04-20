@@ -11,19 +11,19 @@ module Var
 
 import Bio.Seq:
     Alphabet,
-    Site,
+    DNAAlphabet,
+    RNAAlphabet,
+    BioSequence,
     Certain,
     Match,
     Mismatch,
-    NucleicAcid,
-    MinHashSketch,
-    issite,
-    start_counter,
     counter_type,
+    start_counter,
     update_counter,
+    issite,
     ispurine,
     ispyrimidine,
-    BioSequence
+    MinHashSketch
 import PairwiseListMatrices: PairwiseListMatrix
 import Bio.Exceptions: MissingFieldException, missingerror
 import Bio.Windows: eachwindow, EachWindowIterator, SeqWinItr

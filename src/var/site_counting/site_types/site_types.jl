@@ -4,22 +4,27 @@
 # This file is a part of BioJulia.
 # License is MIT: https://github.com/BioJulia/Bio.jl/blob/master/LICENSE.md
 
+abstract Mutation <: Bio.Seq.Site
+
 Base.zero(::Type{Tuple{Int,Int}}) = zero(Int), zero(Int)
-
-abstract Mutation <: Site
-
-counter_type{M<:Mutation,A<:Alphabet,B<:Alphabet}(::Type{M}, ::Type{A}, ::Type{B}) = Tuple{Int,Int}
 
 update_counter(kacc::Int, cacc::Int, k::Bool, c::Bool) = kacc + k, cacc + c
 
-@inline function issite{T<:NucleicAcid,M<:Mutation}(::Type{M}, a::T, b::T)
-    k = ischange(M, a, b)
-    c = issite(Certain, a, b)
+@inline function issite{M<:Mutation}(::Type{M}, a::BioSequence, b::BioSequence, idx)
+    k = ischange(M, a, b, idx)
+    c = issite(Certain, a, b, idx)
     return k & c, c
 end
 
-@inline function count_nibbles{}()
-
+for A in (DNAAlphabet, RNAAlphabet)
+    @eval begin
+        counter_type{M<:Mutation}(::Type{M}, ::Type{$A{2}}, ::Type{$A{4}}) = Tuple{Int,Int}
+        counter_type{M<:Mutation}(::Type{M}, ::Type{$A{4}}, ::Type{$A{2}}) = Tuple{Int,Int}
+        counter_type{M<:Mutation}(::Type{M}, ::Type{$A{4}}, ::Type{$A{4}}) = Tuple{Int,Int}
+        @inline function issite{M<:Mutation}(::Type{M}, a::BioSequence{$A{2}}, b::BioSequence{$A{2}}, idx)
+            return ischange(M, a, b, idx)
+        end
+    end
 end
 
 include("conserved.jl")

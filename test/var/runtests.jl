@@ -32,42 +32,42 @@ for alph in (:DNAAlphabet, :RNAAlphabet)
     end
 end
 
-@testset "Var" begin#=
-    @testset "Site counting" begin
-        @testset "Naive methods" begin
 
-            alphabets = (DNAAlphabet{4}, DNAAlphabet{2}, RNAAlphabet{4}, RNAAlphabet{2})
-            NC = Seq.NaiveCount
+@testset "Site counting" begin
+    @testset "Naive methods" begin
 
-            for alph in alphabets
+        alphabets = (DNAAlphabet{4}, DNAAlphabet{2}, RNAAlphabet{4}, RNAAlphabet{2})
+        NC = Seq.NaiveCount
 
-                # Answers to these tests were worked out manually to verify count_sites_naive was working.
-                # seqA and seqB contain all possible observations of sites.
+        for alph in alphabets
 
-                istwobit = Seq.bitsof(alph) == 2
+            # Answers to these tests were worked out manually to verify count_sites_naive was working.
+            # seqA and seqB contain all possible observations of sites.
 
-                seqA, seqB = generate_possibilities_tester(alph)
+            istwobit = Seq.bitsof(alph) == 2
 
-                # Test when sequences are of the same bitencoding.
+            seqA, seqB = generate_possibilities_tester(alph)
 
-                @test count(Mutated, NC, seqA, seqB) == count(Mutated, NC, seqB, seqA) == (6, 10)
-                @test count(Conserved, NC, seqA, seqB) == count(Conserved, NC, seqB, seqA) == (4, 10)
-                @test count(Transition, NC, seqA, seqB) == count(Transition, NC, seqB, seqA) == (2, 10)
-                @test count(Transversion, NC, seqA, seqB) == count(Transversion, NC, seqB, seqA) == (4, 10)
-            end
+            # Test when sequences are of the same bitencoding.
 
-            # Test for when sequences are of different bitencodings.
-            for alphs in [(DNAAlphabet{2}, DNAAlphabet{4}),
-                          (RNAAlphabet{2}, RNAAlphabet{4})]
-                seqA, seqB = generate_possibilities_tester(alphs...)
-
-                @test count(Mutated, NC, seqA, seqB) == count(Mutated, NC, seqB, seqA) == (12, 16)
-                @test count(Conserved, NC, seqA, seqB) == count(Conserved, NC, seqB, seqA) == (4, 16)
-                @test count(Transition, NC, seqA, seqB) == count(Transition, NC, seqB, seqA) == (4, 16)
-                @test count(Transversion, NC, seqA, seqB) == count(Transversion, NC, seqB, seqA) == (8, 16)
-            end
+            @test count(Mutated, NC, seqA, seqB) == count(Mutated, NC, seqB, seqA) == ifelse(istwobit, 6, (6, 10))
+            @test count(Conserved, NC, seqA, seqB) == count(Conserved, NC, seqB, seqA) == ifelse(istwobit, 4, (4, 10))
+            @test count(Transition, NC, seqA, seqB) == count(Transition, NC, seqB, seqA) == ifelse(istwobit, 2, (2, 10))
+            @test count(Transversion, NC, seqA, seqB) == count(Transversion, NC, seqB, seqA) == ifelse(istwobit, 4, (4, 10))
         end
 
+        # Test for when sequences are of different bitencodings.
+        for alphs in [(DNAAlphabet{2}, DNAAlphabet{4}),
+                      (RNAAlphabet{2}, RNAAlphabet{4})]
+            seqA, seqB = generate_possibilities_tester(alphs...)
+
+            @test count(Mutated, NC, seqA, seqB) == count(Mutated, NC, seqB, seqA) == (12, 16)
+            @test count(Conserved, NC, seqA, seqB) == count(Conserved, NC, seqB, seqA) == (4, 16)
+            @test count(Transition, NC, seqA, seqB) == count(Transition, NC, seqB, seqA) == (4, 16)
+            @test count(Transversion, NC, seqA, seqB) == count(Transversion, NC, seqB, seqA) == (8, 16)
+        end
+    end
+        #=
 
 
         @testset "Pairwise methods" begin

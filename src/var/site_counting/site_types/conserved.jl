@@ -17,9 +17,7 @@ const CONSERVED = Conserved()
 # Methods for the naive framework.
 # --------------------------------
 
-@inline function ischange{T<:NucleicAcid}(::Type{Conserved}, a::T, b::T)
-    return issite(Match, a, b)
-end
+ischange(::Type{Conserved}, a::BioSequence, b::BioSequence, idx) = issite(Match, a, b, idx)
 
 # Methods for the bitparallel framework.
 # --------------------------------------

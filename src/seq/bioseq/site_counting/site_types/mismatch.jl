@@ -35,7 +35,7 @@ for A in (DNAAlphabet, RNAAlphabet)
         end
 
         @inline function count_bitpar(::Type{Mismatch}, ::Type{$A{2}}, a::UInt64, b::UInt64)
-            return count_nonzero_bitpairs(x $ y)
+            return count_nonzero_bitpairs(a $ b)
         end
     end
 end

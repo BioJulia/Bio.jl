@@ -17,9 +17,8 @@ const MUTATED = Mutated()
 # Methods for the naive framework.
 # --------------------------------
 
-@inline function ischange{T<:NucleicAcid}(::Type{Mutated}, a::T, b::T)
-    return issite(Mismatch, a, b)
-end
+ischange(::Type{Mutated}, a::BioSequence, b::BioSequence, idx) = issite(Mismatch, a, b, idx)
+
 
 # Methods for the bitparallel framework.
 # --------------------------------------

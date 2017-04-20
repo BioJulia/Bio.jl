@@ -1293,7 +1293,7 @@ end
             end
 
             @testset "2 bit encoding" begin
-                alphabets = (DNAAlphabet{4}, RNAAlphabet{4})
+                alphabets = (DNAAlphabet{2}, RNAAlphabet{2})
                 for alph in alphabets
                     for _ in 1:50
                         seqA = random_seq(alph, rand(10:100))
@@ -1351,7 +1351,7 @@ end
                                                                   IntervalValue(7, 9, 3)]
             end
         end
-
+#=
         @testset "Pairwise methods" begin
             dnas = [dna"ATCGCCA-", dna"ATCGCCTA", dna"ATCGCCT-", dna"GTCGCCTA"]
             rnas = [rna"AUCGCCA-", rna"AUCGCCUA", rna"AUCGCCU-", rna"GUCGCCUA"]
@@ -1365,6 +1365,7 @@ end
                 @test count_pairwise(Gap, i...) == PWM{Int, false}([0 1 1 1; 1 0 1 0; 1 1 0 1; 1 0 1 0])
             end
         end
+=#
     end
 
     @testset "GC content" begin
