@@ -125,6 +125,14 @@ Bulding `IntervalCollections` in one shot like this should be preferred when
 it's convenient or speed in an issue.
 
 
+`IntervalCollection`s can also be build directly from a genome annotation file,
+here in GFF3 format:
+
+```julia
+rdr = open(GFF3.Reader, "some_genome.gff3")
+features = IntervalCollection(rdr)
+```
+
 ## Intersection
 
 There are number of `eachoverlap` function in the Intervals module. They follow
@@ -162,7 +170,7 @@ intervals, and parsers over interval file formats. This allows for a very
 general notion of intersection.
 
 ```julia
-for (x, y) in eachoverlap(open(BEDReader, "x_features.bed"), open(BEDReader, "y_features.bed"))
+for (x, y) in eachoverlap(open(BED.Reader, "x_features.bed"), open(BED.Reader, "y_features.bed"))
     println("Intersection found between ", x, " and ", y)
 end
 ```
