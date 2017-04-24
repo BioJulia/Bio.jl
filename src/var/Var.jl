@@ -21,6 +21,7 @@ import Bio.Seq:
     start_counter,
     update_counter,
     issite,
+    count_bitpar,
     ispurine,
     ispyrimidine,
     MinHashSketch

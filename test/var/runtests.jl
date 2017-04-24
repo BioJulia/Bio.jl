@@ -67,6 +67,39 @@ end
             @test count(Transversion, NC, seqA, seqB) == count(Transversion, NC, seqB, seqA) == (8, 16)
         end
     end
+
+    @testset "Bit parallel methods" begin
+    #=
+        @testset "4 bit encoding" begin
+            alphabets = (DNAAlphabet{4}, RNAAlphabet{4})
+            for alph in alphabets
+                for _ in 1:50
+                    seqA = random_seq(alph, rand(10:100))
+                    seqB = random_seq(alph, rand(10:100))
+                    subA = seqA[1:rand(10:length(seqA))]
+                    subB = seqB[1:rand(10:length(seqB))]
+                    @test count(Mutation, BC, subA, subB) == count(Mutation, BC, subB, subA) == count(Mutation, NC, subA, subB)
+                end
+            end
+        end
+        =#
+
+        @testset "2 bit encoding" begin
+            NC = Seq.NaiveCount
+            BC = Seq.BitparCount
+            alphabets = (DNAAlphabet{2}, RNAAlphabet{2})
+            for alph in alphabets
+                for _ in 1:50
+                    seqA = random_seq(alph, rand(10:100))
+                    seqB = random_seq(alph, rand(10:100))
+                    subA = seqA[1:rand(10:length(seqA))]
+                    subB = seqB[1:rand(10:length(seqB))]
+                    @test count(Mutated, BC, subA, subB) == count(Mutated, BC, subB, subA) == count(Mutated, NC, subA, subB)
+                end
+            end
+        end
+
+    end
         #=
 
 
