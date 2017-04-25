@@ -80,6 +80,7 @@ end
                     subA = seqA[1:rand(10:length(seqA))]
                     subB = seqB[1:rand(10:length(seqB))]
                     @test count(Mutated, BC, subA, subB) == count(Mutated, BC, subB, subA) == count(Mutated, NC, subA, subB)
+                    @test count(Conserved, BC, subA, subB) == count(Conserved, BC, subB, subA) == count(Conserved, NC, subA, subB)
                 end
             end
         end
@@ -95,6 +96,7 @@ end
                     subA = seqA[1:rand(10:length(seqA))]
                     subB = seqB[1:rand(10:length(seqB))]
                     @test count(Mutated, BC, subA, subB) == count(Mutated, BC, subB, subA) == count(Mutated, NC, subA, subB)
+                    @test count(Conserved, BC, subA, subB) == count(Conserved, BC, subB, subA) == count(Conserved, NC, subA, subB)
                 end
             end
         end
