@@ -11,7 +11,7 @@ NC = NaiveCount
 @inline function Base.count{S<:Site,A<:Alphabet}(::Type{S}, ::Type{NC}, a::BioSequence{A})
     k = start_counter(S, A)
     @inbounds for x in eachindex(a)
-        k = update_counter(k..., issite(S, a, x)...)
+        k = update_counter(k, issite(S, a, x))
     end
     return k
 end
@@ -19,7 +19,7 @@ end
 @inline function Base.count{S<:Site,A<:Alphabet,B<:Alphabet}(::Type{S}, ::Type{NC}, a::BioSequence{A}, b::BioSequence{B})
     k = start_counter(S, A, B)
     @inbounds for idx in 1:min(endof(a), endof(b))
-        k = update_counter(k..., issite(S, a, b, idx)...)
+        k = update_counter(k, issite(S, a, b, idx))
     end
     return k
 end

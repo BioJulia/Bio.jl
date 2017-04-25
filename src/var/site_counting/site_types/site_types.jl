@@ -8,7 +8,9 @@ abstract Mutation <: Bio.Seq.Site
 
 Base.zero(::Type{Tuple{Int,Int}}) = zero(Int), zero(Int)
 
-update_counter(kacc::Int, cacc::Int, k::Bool, c::Bool) = kacc + k, cacc + c
+@inline function update_counter{T<:Union{Int,Bool}}(acc::Tuple{Int,Int}, up::Tuple{T,T})
+    return (acc[1] + up[1]), (acc[2] + up[2])
+end
 
 @inline function issite{M<:Mutation}(::Type{M}, a::BioSequence, b::BioSequence, idx)
     k = ischange(M, a, b, idx)
