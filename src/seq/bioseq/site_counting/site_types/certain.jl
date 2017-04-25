@@ -23,11 +23,6 @@ issite(::Type{Certain}, a::BioSequence, idx) = iscertain(a[idx])
     return issite(Certain, a, idx) & issite(Certain, b, idx)
 end
 
-
-
-
-
-
 # Methods for the bitparallel framework.
 # --------------------------------------
 
@@ -55,28 +50,10 @@ for A in (DNAAlphabet, RNAAlphabet)
     end
 end
 
-"""
-    create_nibble_mask(::Type{Certain}, x::UInt64)
-
-Create a mask of the nibbles in a chunk of
-BioSequence{(DNA|RNA)Nucleotide{4}} data that represent sites that should be
-considered, when counting pairwise mutations between sequences.
-
-**This is an internal method and should not be exported.**
-"""
 @inline function nibble_mask(::Type{Certain}, x::UInt64)
     return nibble_mask(enumerate_nibbles(x), 0x1111111111111111)
 end
 
-"""
-    nibble_mask(::Type{Certain}, a::UInt64, b::UInt64)
-
-Create a mask of the nibbles in two chunks of
-BioSequence{(DNA|RNA)Nucleotide{4}} data that represent sites that should be
-considered during pairwise distance computation at a given nibble.
-
-**This is an internal method and should not be exported.**
-"""
 @inline function nibble_mask(::Type{Certain}, a::UInt64, b::UInt64)
     return nibble_mask(Certain, a) & nibble_mask(Certain, b)
 end
