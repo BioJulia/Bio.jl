@@ -14,20 +14,24 @@ import Bio.Seq:
     DNAAlphabet,
     RNAAlphabet,
     BioSequence,
+    MinHashSketch,
+    # Methods required for extending Seq's site counting.
+    count_nonzero_nibbles,
+    count_one_nibbles,
+    nibble_mask,
     Certain,
-    Match,
     Mismatch,
+    Match,
     counter_type,
     start_counter,
     update_counter,
-    nibble_mask,
-    count_nonzero_nibbles,
-    count_one_nibbles,
     issite,
-    count_bitpar,
     ispurine,
     ispyrimidine,
-    MinHashSketch
+    count_bitpar,
+    correct_emptyspace
+
+
 import PairwiseListMatrices: PairwiseListMatrix
 import Bio.Exceptions: MissingFieldException, missingerror
 import Bio.Windows: eachwindow, EachWindowIterator, SeqWinItr
