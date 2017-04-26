@@ -1,7 +1,7 @@
 BC = BitparCount
 
-@inline correct_endspace{T<:Site,A<:Alphabet}(::Type{T}, ::Type{A}) = false
-@inline endspace_correction(nspace::Int, count::Int) = count - nspace
+@inline correct_emptyspace{T<:Site,A<:Alphabet}(::Type{T}, ::Type{A}) = false
+@inline emptyspace_correction(nempty::Int, count::Int) = count - nempty
 
 @generated function Base.count{S<:Site,A<:Alphabet}(::Type{S}, ::Type{BC}, a::BioSequence{A}, b::BioSequence{A})
     n = bitsof(A)
@@ -32,10 +32,10 @@ BC = BitparCount
             #println("x masked: $(hex(x & m)), y masked: $(hex(y & m))")
             counts = update_counter(counts, count_bitpar(S, A, x & m, y & m))
             #println("Count: ", counts)
-            if correct_endspace(S, A)
+            if correct_emptyspace(S, A)
                 #println("N empty nibbles: ", nempty)
                 nempty = $n_elems - div(k, $n)
-                counts = endspace_correction(nempty, counts)
+                counts = emptyspace_correction(nempty, counts)
                 #println("Count, following empty correction: ", counts)
             end
             nexta += k
@@ -69,10 +69,10 @@ BC = BitparCount
                 #println("y masked: $(hex(y & m))")
                 counts = update_counter(counts, count_bitpar(S, A, x & m, y & m))
                 #println("Count: ", counts)
-                if correct_endspace(S, A)
+                if correct_emptyspace(S, A)
                     nempty = $n_elems - div(offs, $n)
                     #println("N empty nibbles: ", nempty)
-                    counts = endspace_correction(nempty, counts)
+                    counts = emptyspace_correction(nempty, counts)
                     #println("Count, following empty correction: ", counts)
                 end
                 #println("Done aligned tail.")
@@ -110,10 +110,10 @@ BC = BitparCount
                 #println("x masked: $(hex(x & m)), y masked: $(hex(y & m))")
                 counts = update_counter(counts, count_bitpar(S, A, x & m, y & m))
                 #println("Count: ", counts)
-                if correct_endspace(S, A)
+                if correct_emptyspace(S, A)
                     nempty = $n_elems - div(offs, $n)
                     #println("N empty nibbles: ", nempty)
-                    counts = endspace_correction(nempty, counts)
+                    counts = emptyspace_correction(nempty, counts)
                     #println("Count, following empty correction: ", counts)
                 end
                 #println("Done unaligned tail.")

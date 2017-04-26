@@ -25,7 +25,7 @@ issite(::Type{Match}, a::BioSequence, b::BioSequence, idx) = a[idx] == b[idx]
 # Methods for the bitparallel framework.
 # --------------------------------------
 
-@inline correct_endspace{A<:Alphabet}(::Type{Match}, ::Type{A}) = true
+@inline correct_emptyspace{A<:Alphabet}(::Type{Match}, ::Type{A}) = true
 
 for A in (DNAAlphabet, RNAAlphabet)
     @eval begin

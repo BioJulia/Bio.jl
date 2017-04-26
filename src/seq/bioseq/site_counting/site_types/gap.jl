@@ -31,7 +31,7 @@ end
 # Methods for the bitparallel framework.
 # --------------------------------------
 
-@inline correct_endspace{A<:Alphabet}(::Type{Gap}, ::Type{A}) = true
+@inline correct_emptyspace{A<:Alphabet}(::Type{Gap}, ::Type{A}) = true
 
 for A in (DNAAlphabet, RNAAlphabet)
     @eval begin

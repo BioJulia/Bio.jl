@@ -24,6 +24,7 @@ ischange(::Type{Conserved}, a::BioSequence, b::BioSequence, idx) = issite(Match,
 for A in (DNAAlphabet, RNAAlphabet)
     @eval begin
         @inline count_bitpar(::Type{Conserved}, ::Type{$A{2}}, a::UInt64, b::UInt64) = count_bitpar(Match, $A{2}, a, b)
+        @inline correct_emptyspace(::Type{Conserved}, ::Type{$A{2}}) = true
 
         @inline function count_bitpar(::Type{Conserved}, ::Type{$A{4}}, a::UInt64, b::UInt64)
             k, c = count_bitpar(Mutated, $A{4}, a, b)
