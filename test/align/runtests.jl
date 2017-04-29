@@ -1318,6 +1318,9 @@ end
             filepath = joinpath(bamdir, "GSE25840_GSM424320_GM06985_gencode_spliced.head.bam")
             reader = open(BAM.Reader, filepath, index=filepath * ".bai")
 
+            @test isa(eachoverlap(reader, "chr1", 1:100), BAM.OverlapIterator)
+            @test isa(eachoverlap(reader, Interval("chr1", 1, 100)), BAM.OverlapIterator)
+
             # expected values are counted using samtools
             for (refname, interval, expected) in [
                     ("chr1", 1_000:10000,      21),
