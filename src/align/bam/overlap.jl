@@ -16,11 +16,11 @@ function Base.eltype{T}(::Type{OverlapIterator{T}})
 end
 
 function Bio.Intervals.eachoverlap(reader::Reader, interval::Bio.Intervals.Interval)
-    return eachoverlap(reader, interval.seqname, interval.first:interval.last)
+    return Bio.Intervals.eachoverlap(reader, interval.seqname, interval.first:interval.last)
 end
 
 function Bio.Intervals.eachoverlap(reader::Reader, refname::AbstractString, interval::UnitRange)
-    return OverlapIterator(reader, refname, interval)
+    return OverlapIterator(reader, String(refname), interval)
 end
 
 
