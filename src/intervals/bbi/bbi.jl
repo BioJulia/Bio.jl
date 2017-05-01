@@ -6,10 +6,13 @@
 
 module BBI
 
+import Bio: Mem
+
 include("header.jl")
 include("summary.jl")
 include("btree.jl")
 include("rtree.jl")
+include("section.jl")
 include("zoom.jl")
 
 end

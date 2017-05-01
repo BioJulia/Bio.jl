@@ -1,4 +1,4 @@
-# BBI R Tree
+# BBI R-Tree
 # ==========
 
 const RTREE_MAGIC = 0x2468ACE0
@@ -17,11 +17,30 @@ immutable RTreeHeader
     reserved::UInt32
 end
 
+function Base.write(io::IO, header::RTreeHeader)
+    return write(
+        io,
+        header.magic,
+        header.block_size,
+        header.item_count,
+        header.start_chrom_ix,
+        header.start_base,
+        header.end_chrom_ix,
+        header.end_base,
+        header.end_file_offset,
+        header.items_per_slot,
+        header.reserved)
+end
+
 # Supplemental Table 15.
 immutable RTreeNode
     isleaf::UInt8
     reserved::UInt8
     count::UInt16
+end
+
+function Base.write(io::IO, node::RTreeNode)
+    return write(io, node.isleaf, node.reserved, node.count)
 end
 
 function isleaf(node::RTreeNode)
@@ -114,4 +133,51 @@ function overlaps(chromid, chromstart, chromend, start_chrom_id, start_chrom_sta
     else
         return true
     end
+end
+
+
+function write_rtree(stream::IO, summaries::Vector{SectionSummary})
+    blocksize = 16
+    offset = position(stream)
+    if isempty(summaries)
+        header = RTreeHeader(
+            RTREE_MAGIC,
+            blocksize,
+            0, 0, 0, 0, 0,
+            offset, 0, 0)
+    else
+        header = RTreeHeader(
+            RTREE_MAGIC,
+            blocksize,
+            count_chroms(summaries),
+            summaries[1].chromid,
+            summaries[1].chromstart,
+            summaries[end].chromid,
+            summaries[end].chromend,
+            offset,
+            0,  # how do we set items_per_slot?
+            0   # reserved
+        )
+    end
+    # TODO: use internal nodes to reduce data read
+    n = 0
+    n += write(stream, header)
+    node = RTreeNode(0x01, 0x00, length(summaries))
+    n += write(stream, node)
+    for s in summaries
+        n += write(
+            stream,
+            s.chromid,
+            s.chromstart,
+            s.chromid,
+            s.chromend,
+            s.offset,
+            # datasize?
+            0)
+    end
+    return n
+end
+
+function count_chroms(summaries::Vector{SectionSummary})
+    return length(Set(s.chromid for s in summaries))
 end

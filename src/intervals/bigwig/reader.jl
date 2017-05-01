@@ -117,13 +117,13 @@ end
 function _read!(reader::Reader, state, record::Record)
     @assert !state.done
     header = state.header
-    if isbedgraph(header)
+    if isbedgraph(header.data_type)
         chromstart = read(state.stream, UInt32)
         chromend   = read(state.stream, UInt32)
-    elseif isvarstep(header)
+    elseif isvarstep(header.data_type)
         chromstart = read(state.stream, UInt32)
         chromend   = chromstart + header.item_span
-    elseif isfixedstep(header)
+    elseif isfixedstep(header.data_type)
         chromstart = (state.current_record == 0 ? header.chrom_start : state.record.chromstart) + header.item_step
         chromend   = chromstart + header.item_span
     else

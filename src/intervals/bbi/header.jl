@@ -27,3 +27,14 @@ function Base.read(io::IO, ::Type{Header})
         read(io, UInt16), read(io, UInt16), read(io, UInt64),
         read(io, UInt64), read(io, UInt32), read(io, UInt64))
 end
+
+function Base.write(stream::IO, header::Header)
+    return write(
+        stream,
+        header.magic, header.version, header.zoom_levels,
+        header.chromosome_tree_offset, header.full_data_offset,
+        header.full_index_offset, header.field_count,
+        header.defined_field_count, header.auto_sql_offset,
+        header.total_summary_offset, header.uncompress_buf_size,
+        header.reserved)
+end

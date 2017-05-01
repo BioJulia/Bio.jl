@@ -1,4 +1,4 @@
-# BBI B+ Tree
+# BBI B+-Tree
 # ===========
 
 const BTREE_MAGIC = 0x78CA8C91
@@ -13,11 +13,22 @@ immutable BTreeHeader
     reserved::UInt64
 end
 
+function Base.write(stream::IO, header::BTreeHeader)
+    return write(
+        stream,
+        header.magic,    header.block_size, header.key_size,
+        header.val_size, header.item_count, header.reserved)
+end
+
 # Supplemental Table 9.
 immutable BTreeNode
     isleaf::UInt8
     reserved::UInt8
     count::UInt16
+end
+
+function Base.write(stream::IO, node::BTreeNode)
+    return write(stream, node.isleaf, node.reserved, node.count)
 end
 
 function isleaf(node::BTreeNode)
@@ -43,7 +54,7 @@ function BTree(stream::IO, offset::Integer)
     if magic != BTREE_MAGIC
         error("invalid B+-tree magic bytes")
     end
-    return BTree(stream, offset, BTreeHeader(magic, read32(), read32(), read32(), read64(), read64()))
+    return BTree(stream, UInt64(offset), BTreeHeader(magic, read32(), read32(), read32(), read64(), read64()))
 end
 
 # Load the chromosome list.
@@ -72,4 +83,30 @@ function chromlist(tree::BTree)
         end
     end
     return list
+end
+
+function write_btree(stream::IO, chromlist::Vector{Tuple{String,UInt32,UInt32}})
+    # This function stores all chromosomes in the root node as a leaf because it
+    # is simple to implement.
+    blksize = length(chromlist)
+    keysize = maximum(sizeof(name) for (name, _) in chromlist)
+    valsize = 8
+    n = 0
+
+    # write header
+    n += write(stream, BTreeHeader(BTREE_MAGIC, blksize, keysize, valsize, length(chromlist), 0))
+
+    # write the root node format
+    n += write(stream, BTreeNode(0x01, 0x00, length(chromlist)))
+
+    # write the root node
+    key = Vector{UInt8}(keysize)
+    for (name, id, len) in sort(chromlist, by=x->x[1])  # sort by name
+        fill!(key, 0x00)
+        @assert sizeof(name) ≤ keysize
+        Mem.copy(key, name, sizeof(name))
+        n += write(stream, key, id, len)
+    end
+
+    return n
 end

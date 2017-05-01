@@ -17,6 +17,7 @@ import Libz
 
 include("header.jl")
 include("reader.jl")
+include("writer.jl")
 include("record.jl")
 include("overlap.jl")
 

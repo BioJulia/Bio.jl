@@ -13,16 +13,28 @@ immutable SectionHeader
     item_count::UInt16
 end
 
-function isbedgraph(header::SectionHeader)
-    return header.data_type == 0x01
+function isbedgraph(datatype::UInt8)
+    return datatype == 0x01
 end
 
-function isvarstep(header::SectionHeader)
-    return header.data_type == 0x02
+function isvarstep(datatype::UInt8)
+    return datatype == 0x02
 end
 
-function isfixedstep(header::SectionHeader)
-    return header.data_type == 0x03
+function isfixedstep(datatype::UInt8)
+    return datatype == 0x03
+end
+
+function encode_datatype(datatype::Symbol)
+    if datatype == :bedgraph
+        return 0x01
+    elseif datatype == :varstep
+        return 0x02
+    elseif datatype == :fixedstep
+        return 0x03
+    else
+        throw(ArgumentError("invalid data type: $(datatype)"))
+    end
 end
 
 function Base.read(io::IO, ::Type{SectionHeader})
@@ -30,4 +42,12 @@ function Base.read(io::IO, ::Type{SectionHeader})
         read(io, UInt32), read(io, UInt32), read(io, UInt32),
         read(io, UInt32), read(io, UInt32),
         read(io, UInt8),  read(io, UInt8),  read(io, UInt16))
+end
+
+function Base.write(stream::IO, header::SectionHeader)
+    return write(
+        stream,
+        header.chrom_id, header.chrom_start, header.chrom_end,
+        header.item_step, header.item_span, header.data_type,
+        header.reserved, header.item_count)
 end
