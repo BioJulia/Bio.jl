@@ -151,7 +151,7 @@ function write_impl(writer::Writer, chromid::UInt32, chromstart::UInt32, chromen
     end
 
     # write data to the buffer
-    n = write(state.buffer, chromstart, chromstart, chromend, 0x00)
+    n = write(state.buffer, chromid, chromstart, chromend, 0x00)
     state.chromend = max(state.chromend, chromend)
 
     # update last record info
