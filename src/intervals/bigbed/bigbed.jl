@@ -15,6 +15,8 @@ import Automa.RegExp: @re_str
 import Bio: Bio, isfilled
 import Bio.Intervals: BBI, BED, Interval
 import BufferedStreams
+import ColorTypes
+import FixedPointNumbers: N0f8
 import Libz
 
 include("reader.jl")

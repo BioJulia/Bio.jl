@@ -186,23 +186,38 @@ function write_optionals(stream::IO, optionals::Tuple)
         print(stream, '\t', optionals[3])
     end
     if n ≥ 4  # thickstart
-        print(stream, '\t', optionals[4])
+        print(stream, '\t', optionals[4] - 1)
     end
     if n ≥ 5  # thickend
         print(stream, '\t', optionals[5])
     end
     if n ≥ 6  # itemrgb
-        print(stream, '\t', optionals[6])
+        print(stream, '\t')
+        print_rgb(stream, optionals[6])
     end
     if n ≥ 7  # blockcount
         print(stream, '\t', optionals[7])
     end
     if n ≥ 8  # blocksizes
-        print(stream, '\t', optionals[8])
+        print(stream, '\t')
+        for x in optionals[8]
+            print(stream, x, ',')
+        end
     end
     if n ≥ 9  # blockstarts
-        print(stream, '\t', optionals[9])
+        print(stream, '\t')
+        for x in optionals[9]
+            print(stream, x - 1, ',')
+        end
     end
+end
+
+function print_rgb(stream::IO, rgb::ColorTypes.RGB)
+    print_rgb(stream, convert(ColorTypes.RGB{N0f8}, rgb))
+end
+
+function print_rgb(stream::IO, rgb::ColorTypes.RGB{N0f8})
+    print(stream, reinterpret(UInt8, rgb.r), ',', reinterpret(UInt8, rgb.g), ',', reinterpret(UInt8, rgb.b))
 end
 
 function start_section!(writer::Writer, chromid::UInt32, chromstart::UInt32, chromend::UInt32)
