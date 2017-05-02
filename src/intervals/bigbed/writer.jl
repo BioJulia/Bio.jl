@@ -20,6 +20,7 @@ type WriterState
     recordbuffer::IOBuffer
 
     # global state
+    nfields::Int
     finished_chrom_ids::Set{UInt32}
     summaries::Vector{BBI.SectionSummary}
 
@@ -34,7 +35,7 @@ type WriterState
             # record buffer
             IOBuffer(),
             # global info
-            Set{UInt32}(), BBI.SectionSummary[])
+            0, Set{UInt32}(), BBI.SectionSummary[])
     end
 end
 
@@ -117,8 +118,8 @@ function Base.close(writer::Writer)
         writer.chrom_tree_offset,
         writer.data_offset,
         data_index_offset,
-        3,  # field count (0 for bigWig)
-        3,  # predefined field count (0 for bigWig?)
+        state.nfields,
+        state.nfields,  # predefined field count (should be same as above?)
         0,  # autoSQL offset (0 for bigWig?)
         writer.summary_offset,
         writer.uncompressed_buffer_size,
@@ -141,12 +142,18 @@ end
 
 function write_impl(writer::Writer, chromid::UInt32, chromstart::UInt32, chromend::UInt32, optionals::Tuple)
     # check consistency of new record
+    state = writer.state
     if chromstart ≥ chromend
         throw(ArgumentError("non-positive interval"))
     end
+    if state.nfields == 0
+        # infer the number of fields from the first record
+        state.nfields = 3 + length(optionals)
+    elseif state.nfields != 3 + length(optionals)
+        throw(ArgumentError("inconsistent field counts"))
+    end
 
     # write record to record buffer in order to estimate the section buffer size
-    state = writer.state
     truncate(state.recordbuffer, 0)
     write(state.recordbuffer, chromid, chromstart, chromend)
     write_optionals(state.recordbuffer, optionals)
