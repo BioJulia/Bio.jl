@@ -16,6 +16,9 @@ type WriterState
     buffer::IOBuffer
     intervals::Vector{Interval{Void}}
 
+    # record buffer
+    recordbuffer::IOBuffer
+
     # global state
     finished_chrom_ids::Set{UInt32}
     summaries::Vector{BBI.SectionSummary}
@@ -28,6 +31,8 @@ type WriterState
             0, 0,
             # section state
             false, IOBuffer(), Interval{Void}[],
+            # record buffer
+            IOBuffer(),
             # global info
             Set{UInt32}(), BBI.SectionSummary[])
     end
@@ -86,11 +91,11 @@ function Writer(stream::IO, chromlist::Vector)
         WriterState())
 end
 
-#function Base.write(writer::Writer, record::Tuple{String,Integer,Integer,Vararg})
-function Base.write(writer::Writer, record::Tuple{String,Integer,Integer})
+function Base.write(writer::Writer, record::Tuple{String,Integer,Integer,Vararg})
     chromname, chromstart, chromend = record
+    optionals = Base.tail(Base.tail(Base.tail(record)))
     chromid, _ = writer.chroms[chromname]
-    return write_impl(writer, chromid, UInt32(chromstart - 1), UInt32(chromend))
+    return write_impl(writer, chromid, UInt32(chromstart - 1), UInt32(chromend), optionals)
 end
 
 function Base.close(writer::Writer)
@@ -134,15 +139,19 @@ function Base.close(writer::Writer)
     return
 end
 
-function write_impl(writer::Writer, chromid::UInt32, chromstart::UInt32, chromend::UInt32)
+function write_impl(writer::Writer, chromid::UInt32, chromstart::UInt32, chromend::UInt32, optionals::Tuple)
     # check consistency of new record
     if chromstart ≥ chromend
         throw(ArgumentError("non-positive interval"))
     end
 
-    # TODO: fix
+    # write record to record buffer in order to estimate the section buffer size
     state = writer.state
-    if state.started && (chromid != state.chromid || position(state.buffer) ≥ writer.uncompressed_buffer_size - sizeof(UInt32) * 3)
+    truncate(state.recordbuffer, 0)
+    write(state.recordbuffer, chromid, chromstart, chromend)
+    write_optionals(state.recordbuffer, optionals)
+    write(state.recordbuffer, 0x00)
+    if state.started && (chromid != state.chromid || position(state.buffer) + position(state.recordbuffer) > writer.uncompressed_buffer_size)
         finish_section!(writer)
     end
 
@@ -151,7 +160,8 @@ function write_impl(writer::Writer, chromid::UInt32, chromstart::UInt32, chromen
     end
 
     # write data to the buffer
-    n = write(state.buffer, chromid, chromstart, chromend, 0x00)
+    seekstart(state.recordbuffer)
+    n = write(state.buffer, state.recordbuffer)
     state.chromend = max(state.chromend, chromend)
 
     # update last record info
@@ -161,6 +171,38 @@ function write_impl(writer::Writer, chromid::UInt32, chromstart::UInt32, chromen
     push!(state.intervals, Interval(writer.chromnames[chromid], chromstart + 1, chromend))
 
     return n
+end
+
+# Write optional fields to stream.
+function write_optionals(stream::IO, optionals::Tuple)
+    n = length(optionals)
+    if n ≥ 1  # name
+        print(stream, optionals[1])
+    end
+    if n ≥ 2  # score
+        print(stream, '\t', optionals[2])
+    end
+    if n ≥ 3  # strand
+        print(stream, '\t', optionals[3])
+    end
+    if n ≥ 4  # thickstart
+        print(stream, '\t', optionals[4])
+    end
+    if n ≥ 5  # thickend
+        print(stream, '\t', optionals[5])
+    end
+    if n ≥ 6  # itemrgb
+        print(stream, '\t', optionals[6])
+    end
+    if n ≥ 7  # blockcount
+        print(stream, '\t', optionals[7])
+    end
+    if n ≥ 8  # blocksizes
+        print(stream, '\t', optionals[8])
+    end
+    if n ≥ 9  # blockstarts
+        print(stream, '\t', optionals[9])
+    end
 end
 
 function start_section!(writer::Writer, chromid::UInt32, chromstart::UInt32, chromend::UInt32)
