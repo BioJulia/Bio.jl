@@ -1,45 +1,33 @@
-# BigWig Writer
+# BigBed Writer
 # =============
 
 type WriterState
     # section info
-    datatype::UInt8
     chromid::UInt32
     chromstart::UInt32
     chromend::UInt32
-    itemstep::UInt32
-    itemspan::UInt32
 
     # last record info
     last_chrom_start::UInt32
     last_chrom_end::UInt32
 
-    # section summary
-    count::UInt64
-    coverage::UInt32
-    minval::Float32
-    maxval::Float32
-    sumval::Float32
-    sumsqval::Float32
-
     # section state
     started::Bool
     buffer::IOBuffer
+    intervals::Vector{Interval{Void}}
 
     # global state
     finished_chrom_ids::Set{UInt32}
     summaries::Vector{BBI.SectionSummary}
 
-    function WriterState(datatype::Symbol)
+    function WriterState()
         return new(
             # section info
-            encode_datatype(datatype), 0, 0, 0, 0, 0,
+            0, 0, 0,
             # last record info
             0, 0,
-            # section summary
-            0, 0, 0.0, 0.0, 0.0, 0.0,
-            # section data
-            false, IOBuffer(),
+            # section state
+            false, IOBuffer(), Interval{Void}[],
             # global info
             Set{UInt32}(), BBI.SectionSummary[])
     end
@@ -59,6 +47,9 @@ immutable Writer <: Bio.IO.AbstractWriter
 
     # chrom name => (ID, length)
     chroms::Dict{String,Tuple{UInt32,UInt32}}
+
+    # chrom ID => name
+    chromnames::Dict{UInt32,String}
 
     # mutable state
     state::WriterState
@@ -91,13 +82,15 @@ function Writer(stream::IO, chromlist::Vector)
         chrom_tree_offset,
         data_offset,
         Dict(name => (id, len) for (name, id, len) in chromlist_with_id),
-        WriterState(:bedgraph))
+        Dict(id => name for (name, id, len) in chromlist_with_id),
+        WriterState())
 end
 
-function Base.write(writer::Writer, record::Tuple{String,Integer,Integer,Real})
-    chromname, chromstart, chromend, value = record
+#function Base.write(writer::Writer, record::Tuple{String,Integer,Integer,Vararg})
+function Base.write(writer::Writer, record::Tuple{String,Integer,Integer})
+    chromname, chromstart, chromend = record
     chromid, _ = writer.chroms[chromname]
-    return write_impl(writer, chromid, UInt32(chromstart - 1), UInt32(chromend), Float32(value))
+    return write_impl(writer, chromid, UInt32(chromstart - 1), UInt32(chromend))
 end
 
 function Base.close(writer::Writer)
@@ -106,21 +99,21 @@ function Base.close(writer::Writer)
         finish_section!(writer)
     end
 
-    # write R-tree
+    # write data index
     stream = writer.stream
     data_index_offset = position(stream)
     BBI.write_rtree(writer.stream, state.summaries)
 
     # fill header
     header = BBI.Header(
-        BBI.WIG_MAGIC,
+        BBI.BED_MAGIC,
         3,  # version
         0,  # zoom level
         writer.chrom_tree_offset,
         writer.data_offset,
         data_index_offset,
-        0,  # field count (0 for bigWig)
-        0,  # predefined field count (0 for bigWig?)
+        3,  # field count (0 for bigWig)
+        3,  # predefined field count (0 for bigWig?)
         0,  # autoSQL offset (0 for bigWig?)
         writer.summary_offset,
         writer.uncompressed_buffer_size,
@@ -135,51 +128,37 @@ function Base.close(writer::Writer)
 
     # fill data count
     seek(stream, writer.data_offset)
-    write(stream, UInt64(length(state.summaries)))
+    write(stream, foldl(+, UInt64(0), s.count for s in state.summaries))
 
     close(stream)
     return
 end
 
-function write_impl(writer::Writer, chromid::UInt32, chromstart::UInt32, chromend::UInt32, value::Float32)
+function write_impl(writer::Writer, chromid::UInt32, chromstart::UInt32, chromend::UInt32)
     # check consistency of new record
     if chromstart ≥ chromend
         throw(ArgumentError("non-positive interval"))
     end
 
+    # TODO: fix
     state = writer.state
     if state.started && (chromid != state.chromid || position(state.buffer) ≥ writer.uncompressed_buffer_size - sizeof(UInt32) * 3)
         finish_section!(writer)
     end
 
-    n = 0
     if !state.started
-        n += start_section!(writer, chromid, chromstart, chromend)
+        start_section!(writer, chromid, chromstart, chromend)
     end
 
     # write data to the buffer
-    if isbedgraph(state.datatype)
-        n += write(state.buffer, chromstart, chromend, value)
-    elseif isvarstep(state.datatype)
-        n += write(state.buffer, chromstart, value)
-    elseif isfixedstep(state.datatype)
-        n += write(state.buffer, value)
-    else
-        assert(false)
-    end
+    n = write(state.buffer, chromstart, chromstart, chromend, 0x00)
     state.chromend = max(state.chromend, chromend)
 
     # update last record info
     state.last_chrom_start = chromstart
     state.last_chrom_end = chromend
 
-    # udpate section summary
-    state.count += 1
-    state.coverage += chromend - chromstart
-    state.minval = min(state.minval, value)
-    state.maxval = max(state.maxval, value)
-    state.sumval += value
-    state.sumsqval += value^2
+    push!(state.intervals, Interval(writer.chromnames[chromid], chromstart + 1, chromend))
 
     return n
 end
@@ -194,52 +173,28 @@ function start_section!(writer::Writer, chromid::UInt32, chromstart::UInt32, chr
     state.chromid = chromid
     state.chromstart = chromstart
     state.chromend = chromend
-    if isfixedstep(state.datatype) || isvarstep(state.datatype)
-        # inter the span from the first record
-        state.itemspan = chromend - chromstart
-    end
 
     # initialize last record info
     state.last_chrom_start = 0
     state.last_chrom_end = 0
 
-    # initialize section summary
-    state.count = 0
-    state.coverage = 0
-    state.minval = Inf32
-    state.maxval = -Inf32
-    state.sumval = 0.0f0
-    state.sumsqval = 0.0f0
-
-    # write dummy section header (filled later)
-    n = write_zeros(state.buffer, sizeof(SectionHeader))
+    # set flag
     state.started = true
-    return n
+    empty!(state.intervals)
+    return
 end
 
 function finish_section!(writer::Writer)
     state = writer.state
 
-    # fill section header
-    seekstart(state.buffer)
-    write(
-        state.buffer,
-        SectionHeader(
-            state.chromid,
-            state.chromstart,
-            state.chromend,
-            state.itemstep,
-            state.itemspan,
-            state.datatype,
-            0x00,  # reserved
-            state.count))
-
-    # write compressed section
+    # write compressed data
     data = takebuf_array(state.buffer)
     offset = position(writer.stream)
     write(writer.stream, Libz.compress(data))
 
     # record section summary
+    count, cov, minval, maxval, sumval, sumsqval = compute_section_summary(state.intervals)
+    #@show count, cov, minval, maxval, sumval, sumsqval
     push!(
         state.summaries,
         BBI.SectionSummary(
@@ -247,14 +202,31 @@ function finish_section!(writer::Writer)
             state.chromstart,
             state.chromend,
             offset,
-            state.count,
-            state.coverage,
-            state.minval,
-            state.maxval,
-            state.sumval,
-            state.sumsqval))
+            count,
+            cov,
+            minval,
+            maxval,
+            sumval,
+            sumsqval))
     state.started = false
     return
+end
+
+function compute_section_summary(intervals::Vector{Interval{Void}})
+    cov = 0
+    minval = Inf
+    maxval = -Inf
+    sumval = sumsqval = 0.0
+    for range in Bio.Intervals.coverage(intervals)
+        depth = range.metadata
+        size = range.last - range.first + 1
+        cov += size
+        minval = min(minval, depth)
+        maxval = max(maxval, depth)
+        sumval += depth * size
+        sumsqval += depth^2 * size
+    end
+    return length(intervals), cov, minval, maxval, sumval, sumsqval
 end
 
 function write_zeros(stream::IO, n::Integer)
