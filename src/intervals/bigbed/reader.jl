@@ -37,6 +37,7 @@ function Reader(input::IO)
     zoom_headers = Vector{BBI.ZoomHeader}(header.zoom_levels)
     read!(input, zoom_headers)
     zooms = [BBI.Zoom(input, h) for h in zoom_headers]
+    sort!(zooms, by=z->z.header.reduction_level)
     # read summary, B tree, and R tree
     seek(input, header.total_summary_offset)
     summary = read(input, BBI.Summary)

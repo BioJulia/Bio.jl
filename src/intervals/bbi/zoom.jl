@@ -9,9 +9,9 @@ immutable ZoomHeader
     index_offset::UInt64
 end
 
-function Base.read(io::IO, ::Type{ZoomHeader})
-    u32() = read(io, UInt32)
-    u64() = read(io, UInt64)
+function Base.read(stream::IO, ::Type{ZoomHeader})
+    u32() = read(stream, UInt32)
+    u64() = read(stream, UInt64)
     return ZoomHeader(u32(), u32(), u64(), u64())
 end
 
@@ -36,15 +36,37 @@ immutable ZoomData
     sumsqval::Float32
 end
 
-function Base.read(io::IO, ::Type{ZoomData})
-    u32() = read(io, UInt32)
-    f32() = read(io, Float32)
+function Base.read(stream::IO, ::Type{ZoomData})
+    u32() = read(stream, UInt32)
+    f32() = read(stream, Float32)
     return ZoomData(
         u32(), u32(), u32(), u32(),
         f32(), f32(), f32(), f32())
 end
 
-function find_zoom_data(zoom::Zoom, chromid::UInt32, chromstart::UInt32, chromend::UInt32)
+# Get regional statistics using the zoom data.
+function zoomstats(zoom::Zoom, chromid::UInt32, chromstart::UInt32, chromend::UInt32)
+    data = find_overlapping_zoomdata(zoom, chromid, chromstart, chromend)
+    if isempty(data)
+        return ZoomData(chromid, chromstart, chromend, 0, NaN32, NaN32, NaN32, NaN32)
+    end
+    count = UInt32(0)
+    minval = Inf32
+    maxval = -Inf32
+    sumval = 0.0f0
+    sumsqval = 0.0f0
+    for d in data
+        # TODO: should this be normalized by effective length?
+        count += d.count
+        minval = min(minval, d.minval)
+        maxval = max(maxval, d.maxval)
+        sumval += d.sumval
+        sumsqval += d.sumsqval
+    end
+    return ZoomData(chromid, chromstart, chromend, count, minval, maxval, sumval, sumsqval)
+end
+
+function find_overlapping_zoomdata(zoom::Zoom, chromid::UInt32, chromstart::UInt32, chromend::UInt32)
     nodes = find_overlapping_nodes(zoom.rtree, chromid, chromstart, chromend)
     stream = zoom.rtree.stream
     ret = ZoomData[]
@@ -63,6 +85,16 @@ function find_zoom_data(zoom::Zoom, chromid::UInt32, chromstart::UInt32, chromen
     return ret
 end
 
-function compare_intervals(data::ZoomData, interval::Tuple{UInt32,UInt32,UInt32})
-    # TODO
+function compare_intervals(data::ZoomData, interval::NTuple{3,UInt32})
+    chromid, chromstart, chromend = interval
+    if data.chromid < chromid || (data.chromid == chromid && data.chromend ≤ chromstart)
+        # strictly left
+        return -1
+    elseif data.chromid > chromid || (data.chromid == chromid && data.chromstart ≥ chromend)
+        # strictly right
+        return +1
+    else
+        # overlapping
+        return 0
+    end
 end
