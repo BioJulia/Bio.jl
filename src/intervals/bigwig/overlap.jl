@@ -31,18 +31,18 @@ type OverlapIteratorState
     done::Bool
     header::SectionHeader
     record::Record
-    offsets::Vector{UInt64}
-    current_offset::Int
+    nodes::Vector{BBI.RTreeLeafNode}
+    current_node::Int
     n_records::UInt16
     current_record::UInt16
 end
 
 function Base.start(iter::OverlapIterator)
-    offsets = BBI.find_overlapping_data_offsets(iter.reader.rtree, iter.chromid, iter.chromstart, iter.chromend)
+    nodes = BBI.find_overlapping_nodes(iter.reader.rtree, iter.chromid, iter.chromstart, iter.chromend)
     # dummy header
     stream = Libz.ZlibInflateInputStream(iter.reader.stream)
     header = SectionHeader(0, 0, 0, 0, 0, 0, 0, 0)
-    return OverlapIteratorState(stream, false, header, Record(), offsets, 1, 0, 0)
+    return OverlapIteratorState(stream, false, header, Record(), nodes, 1, 0, 0)
 end
 
 function Base.done(iter::OverlapIterator, state::OverlapIteratorState)
@@ -57,16 +57,16 @@ end
 function advance!(iter::OverlapIterator, state::OverlapIteratorState)
     while true
         # find a section that has at least one record
-        while state.current_record == state.n_records && state.current_offset ≤ endof(state.offsets)
-            offset = state.offsets[state.current_offset]
-            seek(iter.reader.stream, offset)
+        while state.current_record == state.n_records && state.current_node ≤ endof(state.nodes)
+            node = state.nodes[state.current_node]
+            seek(iter.reader.stream, node.data_offset)
             state.stream = Libz.ZlibInflateInputStream(iter.reader.stream)
             state.header = read(state.stream, SectionHeader)
-            state.current_offset += 1
+            state.current_node += 1
             state.n_records = state.header.item_count
             state.current_record = 0
         end
-        if state.current_record == state.n_records && state.current_offset > endof(state.offsets)
+        if state.current_record == state.n_records && state.current_node > endof(state.nodes)
             state.done = true
             return state
         end

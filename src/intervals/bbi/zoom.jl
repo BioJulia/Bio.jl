@@ -26,14 +26,14 @@ end
 
 # Supplemental Table 19.
 immutable ZoomData
-    chrom_id::UInt32
-    chrom_start::UInt32
-    chrom_end::UInt32
-    valid_count::UInt32
-    min::Float32
-    max::Float32
-    sum::Float32
-    ssq::Float32
+    chromid::UInt32
+    chromstart::UInt32
+    chromend::UInt32
+    count::UInt32
+    minval::Float32
+    maxval::Float32
+    sumval::Float32
+    sumsqval::Float32
 end
 
 function Base.read(io::IO, ::Type{ZoomData})
@@ -42,4 +42,27 @@ function Base.read(io::IO, ::Type{ZoomData})
     return ZoomData(
         u32(), u32(), u32(), u32(),
         f32(), f32(), f32(), f32())
+end
+
+function find_zoom_data(zoom::Zoom, chromid::UInt32, chromstart::UInt32, chromend::UInt32)
+    nodes = find_overlapping_nodes(zoom.rtree, chromid, chromstart, chromend)
+    stream = zoom.rtree.stream
+    ret = ZoomData[]
+    for node in nodes
+        seek(stream, node.data_offset)
+        while position(stream) < node.data_offset + node.data_size
+            data = read(stream, ZoomData)
+            c = compare_intervals(data, (chromid, chromstart, chromend))
+            if c == 0  # overlap
+                push!(ret, data)
+            elseif c > 0
+                break
+            end
+        end
+    end
+    return ret
+end
+
+function compare_intervals(data::ZoomData, interval::Tuple{UInt32,UInt32,UInt32})
+    # TODO
 end

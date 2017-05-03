@@ -114,10 +114,11 @@ function RTree(stream::IO, offset::Integer)
             read32(), read32(), read64(), read32(), read32()))
 end
 
-function find_overlapping_data_offsets(tree::RTree, chromid::UInt32, chromstart::UInt32, chromend::UInt32)
-    root_offset = tree.offset + sizeof(RTreeHeader) % UInt64
+# Find overlapping leaf nodes.
+function find_overlapping_nodes(tree::RTree, chromid::UInt32, chromstart::UInt32, chromend::UInt32)
+    root_offset = tree.offset + (sizeof(RTreeHeader) % UInt64)
     stack = [root_offset]
-    ret = UInt64[]
+    ret = RTreeLeafNode[]
     while !isempty(stack)
         offset = pop!(stack)
         seek(tree.stream, offset)
@@ -130,8 +131,16 @@ function find_overlapping_data_offsets(tree::RTree, chromid::UInt32, chromstart:
             if overlaps(chromid, chromstart, chromend, start_chrom_id, start_chrom_start, end_chrom_id, end_chrom_end)
                 offset = read(tree.stream, UInt64)
                 if isleaf(node)
-                    push!(ret, offset)
-                    skip(tree.stream, 8)  # skip data_size
+                    datasize = read(tree.stream, UInt64)
+                    push!(
+                        ret,
+                        RTreeLeafNode(
+                            start_chrom_id,
+                            start_chrom_start,
+                            end_chrom_id,
+                            end_chrom_end,
+                            offset,
+                            datasize))
                 else
                     push!(stack, offset)
                 end
@@ -140,7 +149,8 @@ function find_overlapping_data_offsets(tree::RTree, chromid::UInt32, chromstart:
             end
         end
     end
-    sort!(ret)
+    # Leaves may be already sorted?
+    sort!(ret, by=n->n.data_offset)
     return ret
 end
 
