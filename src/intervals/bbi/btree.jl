@@ -112,6 +112,11 @@ function write_btree(stream::IO, chromlist::Vector{Tuple{String,UInt32,UInt32}})
 end
 
 # Add a unique ID for each chromosome; chromlist is a tuple of (chrom name, chrom length).
-function add_chrom_ids{T<:Integer}(chromlist::Vector{Tuple{String,T}})
+function add_chrom_ids(chromlist::Vector{Tuple{String,UInt32}})
+    chromlist = sort(chromlist, by=first)  # sort by chromosome name
     return [(name, UInt32(id - 1), UInt32(len)) for (id, (name, len)) in enumerate(chromlist)]
+end
+
+function add_chrom_ids(chromlist)
+    return add_chrom_ids([(String(name), UInt32(len)) for (name, len) in chromlist])
 end
