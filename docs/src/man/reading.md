@@ -323,6 +323,7 @@ Bio.Intervals.GFF3.content
 ### bigWig
 
 * Reader type: `BigWig.Reader`
+* Writer type: `BigWig.Writer`
 * Element type: `BigWig.Record`
 
 bigWig is a binary file format for associating a floating point number with each
@@ -330,6 +331,7 @@ base in the genome. bigWig files are indexed to quickly fetch specific regions.
 
 ```@docs
 Bio.Intervals.BigWig.Reader
+Bio.Intervals.BigWig.Writer
 Bio.Intervals.BigWig.Record
 Bio.Intervals.BigWig.chrom
 Bio.Intervals.BigWig.chromid
@@ -342,6 +344,7 @@ Bio.Intervals.BigWig.value
 ### bigBed
 
 * Reader type: `BigBed.Reader`
+* Writre type: `BigBed.Writer`
 * Element type: `BigBed.Record`
 
 bigBed is a binary file format for representing genomic annotations and often
@@ -350,6 +353,7 @@ regions.
 
 ```@docs
 Bio.Intervals.BigBed.Reader
+Bio.Intervals.BigBed.Writer
 Bio.Intervals.BigBed.Record
 Bio.Intervals.BigBed.chrom
 Bio.Intervals.BigBed.chromid

@@ -64,28 +64,50 @@ immutable Writer <: Bio.IO.AbstractWriter
     state::WriterState
 end
 
-function Writer(stream::IO, chromlist::Vector)
+"""
+    BigWig.Writer(output::IO, chromlist)
+
+Create a data writer of the bigWig file format.
+
+Arguments
+---------
+
+* `output`: data sink
+* `chromlist`: chromosome list with length
+
+Examples
+--------
+
+```julia
+output = open("data.bw", "w")
+writer = BigWig.Writer(output, [("chr1", 12345), ("chr2", 9100)])
+write(writer, ("chr1", 501, 600, 1.0))
+write(writer, ("chr2", 301, 450, 3.0))
+close(writer)
+```
+"""
+function Writer(output::IO, chromlist::Union{AbstractVector,Associative})
     # write dummy header (filled later)
-    write_zeros(stream, sizeof(BBI.Header))
+    write_zeros(output, sizeof(BBI.Header))
 
     # TODO: write zoom header
-    write_zeros(stream, 0)
+    write_zeros(output, 0)
 
     # write dummy total summary (filled later)
-    summary_offset = position(stream)
-    write_zeros(stream, sizeof(BBI.Summary))
+    summary_offset = position(output)
+    write_zeros(output, sizeof(BBI.Summary))
 
     # write chromosome B+-tree
-    chrom_tree_offset = position(stream)
+    chrom_tree_offset = position(output)
     chromlist_with_id = BBI.add_chrom_ids(chromlist)
-    BBI.write_btree(stream, chromlist_with_id)
+    BBI.write_btree(output, chromlist_with_id)
 
     # write dummy data count (filled later)
-    data_offset = position(stream)
-    write_zeros(stream, sizeof(UInt64))
+    data_offset = position(output)
+    write_zeros(output, sizeof(UInt64))
 
     return Writer(
-        stream,
+        output,
         64 * 2^10,
         summary_offset,
         chrom_tree_offset,

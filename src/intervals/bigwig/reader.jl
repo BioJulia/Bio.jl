@@ -19,15 +19,15 @@ function Base.eltype(::Type{Reader})
 end
 
 """
-    BigWig.Reader(stream::IO)
+    BigWig.Reader(input::IO)
 
 Create a reader for bigWig file format.
 
-Note that `stream` must be seekable.
+Note that `input` must be seekable.
 """
-function Reader(stream::IO)
+function Reader(input::IO)
     # read header
-    header = read(stream, BBI.Header)
+    header = read(input, BBI.Header)
     if header.magic != BBI.WIG_MAGIC
         error("invalid bigWig magic")
     elseif header.version < 3
@@ -35,16 +35,16 @@ function Reader(stream::IO)
     end
     # read zoom objects
     zoom_headers = Vector{BBI.ZoomHeader}(header.zoom_levels)
-    read!(stream, zoom_headers)
-    zooms = [BBI.Zoom(stream, h) for h in zoom_headers]
+    read!(input, zoom_headers)
+    zooms = [BBI.Zoom(input, h) for h in zoom_headers]
     # read summary, B tree, and R tree
-    seek(stream, header.total_summary_offset)
-    summary = read(stream, BBI.Summary)
-    btree = BBI.BTree(stream, header.chromosome_tree_offset)
-    rtree = BBI.RTree(stream, header.full_index_offset)
+    seek(input, header.total_summary_offset)
+    summary = read(input, BBI.Summary)
+    btree = BBI.BTree(input, header.chromosome_tree_offset)
+    rtree = BBI.RTree(input, header.full_index_offset)
     chroms = Dict(name => (id, Int(len)) for (name, id, len) in BBI.chromlist(btree))
     chrom_names = Dict(id => name for (name, (id, _)) in chroms)
-    return Reader(stream, header, zooms, summary, btree, rtree, chroms, chrom_names)
+    return Reader(input, header, zooms, summary, btree, rtree, chroms, chrom_names)
 end
 
 
