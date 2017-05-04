@@ -38,7 +38,7 @@ type OverlapIteratorState
 end
 
 function Base.start(iter::OverlapIterator)
-    nodes = BBI.find_overlapping_nodes(iter.reader.rtree, iter.chromid, iter.chromstart, iter.chromend)
+    nodes = BBI.find_overlapping_nodes(iter.reader.index, iter.chromid, iter.chromstart, iter.chromend)
     # dummy header
     stream = Libz.ZlibInflateInputStream(iter.reader.stream)
     header = SectionHeader(0, 0, 0, 0, 0, 0, 0, 0)

@@ -6,12 +6,12 @@ immutable Reader <: Bio.IO.AbstractReader
     header::BBI.Header
     zooms::Vector{BBI.Zoom}
     summary::BBI.Summary
-    btree::BBI.BTree
-    rtree::BBI.RTree
     # chrom name => (ID, length)
     chroms::Dict{String,Tuple{UInt32,Int}}
     # ID => chrom name
     chrom_names::Dict{UInt32,String}
+    # data index
+    index::BBI.RTree
 end
 
 function Base.eltype(::Type{Reader})
@@ -42,10 +42,10 @@ function Reader(input::IO)
     seek(input, header.total_summary_offset)
     summary = read(input, BBI.Summary)
     btree = BBI.BTree(input, header.chromosome_tree_offset)
-    rtree = BBI.RTree(input, header.full_index_offset)
     chroms = Dict(name => (id, Int(len)) for (name, id, len) in BBI.chromlist(btree))
     chrom_names = Dict(id => name for (name, (id, _)) in chroms)
-    return Reader(input, header, zooms, summary, btree, rtree, chroms, chrom_names)
+    index = BBI.RTree(input, header.full_index_offset)
+    return Reader(input, header, zooms, summary, chroms, chrom_names, index)
 end
 
 
@@ -138,4 +138,120 @@ function _read!(reader::Reader, state, record::Record)
     record.reader = reader
     state.current_record += 1
     return record
+end
+
+
+# Statistics
+# ----------
+
+"""
+    coverage(reader, chrom, chromstart, chromend; usezoom=false)::Int
+
+Compute the coverage of values in `[chromstart, chromend]` of `chrom`.
+
+If `usezoom` is `true`, this function tries to use precomputed statistics (zoom)
+in the file.  This is often faster but not exact in most cases.
+"""
+function coverage(reader::Reader, chrom::AbstractString, chromstart::Integer, chromend::Integer; usezoom=false)::Int
+    chromid = reader.chroms[chrom][1]
+    chromstart -= 1
+    if usezoom
+        zoom = BBI.find_best_zoom(reader.zooms, UInt32(chromend - chromstart))
+        if !isnull(zoom)
+            return BBI.coverage(get(zoom), chromid, UInt32(chromstart), UInt32(chromend))
+        end
+    end
+    return exact_coverage(reader, chromid, UInt32(chromstart), UInt32(chromend))
+end
+
+function exact_coverage(reader::Reader, chromid::UInt32, chromstart::UInt32, chromend::UInt32)
+    cov::Int = 0
+    for record in OverlapIterator(reader, chromid, chromstart, chromend)
+        cov += BBI.coverage2((record.chromstart, record.chromend), (chromstart, chromend))
+    end
+    return cov
+end
+
+"""
+    mean(reader::Reader, chrom, chromstart, chromend; usezoom=false)::Float32
+
+Compute the mean of values in `[chromstart, chromend]` of `chrom`.
+
+This function returns `NaN32` if there are no data in that range. See `coverage`
+for the `usezoom` keyword argument.
+"""
+function mean(reader::Reader, chrom::AbstractString, chromstart::Integer, chromend::Integer; usezoom=false)::Float32
+    chromid = reader.chroms[chrom][1]
+    chromstart -= 1
+    if usezoom
+        zoom = BBI.find_best_zoom(reader.zooms, UInt32(chromend - chromstart))
+        if !isnull(zoom)
+            return BBI.mean(get(zoom), chromid, UInt32(chromstart), UInt32(chromend))
+        end
+    end
+    return exact_mean(reader, chromid, UInt32(chromstart), UInt32(chromend))
+end
+
+function exact_mean(reader, chromid::UInt32, chromstart::UInt32, chromend::UInt32)
+    # compute size-weighted mean
+    sum = 0.0f0
+    size = 0
+    for record in OverlapIterator(reader, chromid, chromstart, chromend)
+        cov = BBI.coverage2((record.chromstart, record.chromend), (chromstart, chromend))
+        sum += record.value * cov
+        size += cov
+    end
+    return sum / size
+end
+
+"""
+    minimum(reader::Reader, chrom, chromstart, chromend; usezoom=false)::Float32
+
+Compute the minimum of values in `[chromstart, chromend]` of `chrom`.
+
+This function returns `NaN32` if there are no data in that range. See `coverage`
+for the `usezoom` keyword argument.
+"""
+function minimum(reader::Reader, chrom::AbstractString, chromstart::Integer, chromend::Integer; usezoom=false)::Float32
+    chromid = reader.chroms[chrom][1]
+    chromstart -= 1
+    if usezoom
+        zoom = BBI.find_best_zoom(reader.zooms, UInt32(chromend - chromstart))
+        if !isnull(zoom)
+            return BBI.minimum(get(zoom), chromid, UInt32(chromstart), UInt32(chromend))
+        end
+    end
+    return exact_extrema(reader, chromid, UInt32(chromstart), UInt32(chromend))[1]
+end
+
+"""
+    maximum(reader::Reader, chrom, chromstart, chromend; usezoom=false)::Float32
+
+Compute the maximum of values in `[chromstart, chromend]` of `chrom`.
+
+This function returns `NaN32` if there are no data in that range. See `coverage`
+for the `usezoom` keyword argument.
+"""
+function maximum(reader::Reader, chrom::AbstractString, chromstart::Integer, chromend::Integer; usezoom=false)::Float32
+    chromid = reader.chroms[chrom][1]
+    chromstart -= 1
+    if usezoom
+        zoom = BBI.find_best_zoom(reader.zooms, UInt32(chromend - chromstart))
+        if !isnull(zoom)
+            return BBI.maximum(get(zoom), chromid, UInt32(chromstart), UInt32(chromend))
+        end
+    end
+    return exact_extrema(reader, chromid, UInt32(chromstart), UInt32(chromend))[2]
+end
+
+function exact_extrema(reader::Reader, chromid::UInt32, chromstart::UInt32, chromend::UInt32)
+    minval = +Inf32
+    maxval = -Inf32
+    defined = false
+    for record in OverlapIterator(reader, chromid, chromstart, chromend)
+        minval = min(minval, record.value)
+        maxval = max(maxval, record.value)
+        defined = true
+    end
+    return defined ? (minval, maxval) : (NaN32, NaN32)
 end

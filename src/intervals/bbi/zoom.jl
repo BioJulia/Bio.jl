@@ -44,28 +44,6 @@ function Base.read(stream::IO, ::Type{ZoomData})
         f32(), f32(), f32(), f32())
 end
 
-# Get regional statistics using the zoom data.
-function zoomstats(zoom::Zoom, chromid::UInt32, chromstart::UInt32, chromend::UInt32)
-    data = find_overlapping_zoomdata(zoom, chromid, chromstart, chromend)
-    if isempty(data)
-        return ZoomData(chromid, chromstart, chromend, 0, NaN32, NaN32, NaN32, NaN32)
-    end
-    count = UInt32(0)
-    minval = Inf32
-    maxval = -Inf32
-    sumval = 0.0f0
-    sumsqval = 0.0f0
-    for d in data
-        # TODO: should this be normalized by effective length?
-        count += d.count
-        minval = min(minval, d.minval)
-        maxval = max(maxval, d.maxval)
-        sumval += d.sumval
-        sumsqval += d.sumsqval
-    end
-    return ZoomData(chromid, chromstart, chromend, count, minval, maxval, sumval, sumsqval)
-end
-
 function find_overlapping_zoomdata(zoom::Zoom, chromid::UInt32, chromstart::UInt32, chromend::UInt32)
     nodes = find_overlapping_nodes(zoom.rtree, chromid, chromstart, chromend)
     stream = zoom.rtree.stream
@@ -99,4 +77,65 @@ function compare_intervals(data::ZoomData, interval::NTuple{3,UInt32})
         # overlapping
         return 0
     end
+end
+
+
+# Statistics
+# ----------
+
+function coverage(zoom::Zoom, chromid::UInt32, chromstart::UInt32, chromend::UInt32)
+    count::UInt32 = 0
+    if chromstart ≥ chromend  # empty range
+        return count
+    end
+    data = find_overlapping_zoomdata(zoom, chromid, chromstart, chromend)
+    for d in data
+        cov = coverage2((d.chromstart, d.chromend), (chromstart, chromend))
+        count += round(UInt32, d.count * cov / (d.chromend - d.chromstart))
+    end
+    return count
+end
+
+function mean(zoom::Zoom, chromid::UInt32, chromstart::UInt32, chromend::UInt32)
+    data = find_overlapping_zoomdata(zoom, chromid, chromstart, chromend)
+    sum = 0.0f0
+    size = 0
+    for d in data
+        cov = coverage2((d.chromstart, d.chromend), (chromstart, chromend))
+        sum += (d.sumval * cov) / (d.chromend - d.chromstart)
+        size += cov
+    end
+    return sum / size
+end
+
+function minimum(zoom::Zoom, chromid::UInt32, chromstart::UInt32, chromend::UInt32)
+    data = find_overlapping_zoomdata(zoom, chromid, chromstart, chromend)
+    return isempty(data) ? NaN32 : foldl((x, d) -> min(x, d.minval), +Inf32, data)
+end
+
+function maximum(zoom::Zoom, chromid::UInt32, chromstart::UInt32, chromend::UInt32)
+    data = find_overlapping_zoomdata(zoom, chromid, chromstart, chromend)
+    return isempty(data) ? NaN32 : foldl((x, d) -> max(x, d.maxval), -Inf32, data)
+end
+
+# Find the best zoom level for a given size.
+function find_best_zoom(zooms::Vector{Zoom}, size::UInt32)::Nullable{Zoom}
+    # NOTE: This assumes zooms are sorted by reduction_level.
+    halfsize = div(size, 2)
+    i = 0
+    while i ≤ endof(zooms) && zooms[i+1].header.reduction_level ≤ halfsize
+        i += 1
+    end
+    if i == 0
+        return Nullable{Zoom}()
+    else
+        return Nullable(zooms[i])
+    end
+end
+
+# Compute the nubmer of overlapping bases of [x1, x2) and [y1, y2).
+function coverage2(x::NTuple{2,UInt32}, y::NTuple{2,UInt32})
+    x1, x2 = x
+    y1, y2 = y
+    return max(UInt32(0), min(x2, y2) - max(x1, y1))
 end
