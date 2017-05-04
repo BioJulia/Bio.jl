@@ -12,6 +12,7 @@
 module BBI
 
 import Bio: Mem
+import Libz
 
 include("header.jl")
 include("summary.jl")

@@ -274,13 +274,12 @@ function finish_section!(writer::Writer)
     state = writer.state
 
     # write compressed data
-    data = takebuf_array(state.buffer)
+    data = Libz.compress(takebuf_array(state.buffer))
     offset = position(writer.stream)
-    write(writer.stream, Libz.compress(data))
+    write(writer.stream, data)
 
     # record section summary
     count, cov, minval, maxval, sumval, sumsqval = compute_section_summary(state.intervals)
-    #@show count, cov, minval, maxval, sumval, sumsqval
     push!(
         state.summaries,
         BBI.SectionSummary(
@@ -288,6 +287,7 @@ function finish_section!(writer::Writer)
             state.chromstart,
             state.chromend,
             offset,
+            sizeof(data),
             count,
             cov,
             minval,

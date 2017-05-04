@@ -36,8 +36,9 @@ immutable SectionSummary
     chromstart::UInt32
     chromend::UInt32
 
-    # file offset to data
+    # file offset to data and its size
     offset::UInt64
+    datasize::UInt64
 
     # data summary
     count::UInt64

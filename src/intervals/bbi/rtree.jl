@@ -172,8 +172,12 @@ immutable InMemoryRTree
     end_chromid::UInt32
     end_chromend::UInt32
     children::Vector{InMemoryRTree}
-    isleaf::Bool
     offset::UInt64
+    datasize::UInt64
+end
+
+function isleaf(rtree::InMemoryRTree)
+    return rtree.offset == 1
 end
 
 function InMemoryRTree(children::Vector{InMemoryRTree})
@@ -188,8 +192,7 @@ function InMemoryRTree(children::Vector{InMemoryRTree})
         children[end].end_chromid,
         chromend,
         children,
-        false,
-        0)
+        0, 0)
 end
 
 function write_rtree(stream::IO, summaries::Vector{SectionSummary})
@@ -213,16 +216,19 @@ function write_rtree(stream::IO, summaries::Vector{SectionSummary})
     # write R-tree recursively
     function rec(node, offset)
         # compute the size of node
-        nodesize = sizeof(RTreeNodeFormat) + (node.isleaf ? sizeof(RTreeLeafNode) : sizeof(RTreeInternalNode)) * length(node.children)
+        nodesize = sizeof(RTreeNodeFormat) + (isleaf(node) ? sizeof(RTreeLeafNode) : sizeof(RTreeInternalNode)) * length(node.children)
 
         # write children
         offsets = UInt64[]
+        datasizes = UInt64[]
         child_offset = offset + nodesize
         for child in node.children
-            if node.isleaf
+            if isleaf(node)
                 push!(offsets, child.offset)
+                push!(datasizes, child.datasize)
             else
                 push!(offsets, child_offset)
+                push!(datasizes, UInt64(0))
                 child_offset = rec(child, child_offset)
             end
         end
@@ -231,25 +237,28 @@ function write_rtree(stream::IO, summaries::Vector{SectionSummary})
         truncate(stream, child_offset)  # This is necessary to assert `position(stream) == offset` after seeking.
         seek(stream, offset)
         @assert position(stream) == offset
-        write(stream, RTreeNodeFormat(node.isleaf ? 0x01 : 0x00, 0x00, length(node.children)))
+        write(stream, RTreeNodeFormat(isleaf(node) ? 0x01 : 0x00, 0x00, length(node.children)))
         for i in 1:endof(node.children)
             child = node.children[i]
-            if node.isleaf
-                datasize = 0
-                write(stream,
-                      RTreeLeafNode(child.start_chromid,
-                                    child.start_chromstart,
-                                    child.end_chromid,
-                                    child.end_chromend,
-                                    offsets[i],
-                                    datasize))
+            if isleaf(node)
+                write(
+                    stream,
+                    RTreeLeafNode(
+                        child.start_chromid,
+                        child.start_chromstart,
+                        child.end_chromid,
+                        child.end_chromend,
+                        offsets[i],
+                        datasizes[i]))
             else
-                write(stream,
-                      RTreeInternalNode(child.start_chromid,
-                                        child.start_chromstart,
-                                        child.end_chromid,
-                                        child.end_chromend,
-                                        offsets[i]))
+                write(
+                    stream,
+                    RTreeInternalNode(
+                        child.start_chromid,
+                        child.start_chromstart,
+                        child.end_chromid,
+                        child.end_chromend,
+                        offsets[i]))
             end
         end
 
@@ -276,10 +285,10 @@ function build_inmemory_rtree(summaries::Vector{SectionSummary}, blocksize::Int)
                 end_chromend = summaries[1].chromend
                 for s in summaries
                     end_chromend = max(end_chromend, s.chromend)
-                    push!(children, InMemoryRTree(s.chromid, s.chromstart, s.chromid, s.chromend, InMemoryRTree[], false, s.offset))
+                    push!(children, InMemoryRTree(s.chromid, s.chromstart, s.chromid, s.chromend, InMemoryRTree[], s.offset, s.datasize))
                 end
             end
-            return InMemoryRTree(start_chromid, start_chromstart, end_chromid, end_chromend, children, true, 0)
+            return InMemoryRTree(start_chromid, start_chromstart, end_chromid, end_chromend, children, 1, 0)
         else
             d = cld(length(summaries), blocksize)
             children = InMemoryRTree[]

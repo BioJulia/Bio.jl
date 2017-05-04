@@ -257,9 +257,9 @@ function finish_section!(writer::Writer)
             state.count))
 
     # write compressed section
-    data = takebuf_array(state.buffer)
+    data = Libz.compress(takebuf_array(state.buffer))
     offset = position(writer.stream)
-    write(writer.stream, Libz.compress(data))
+    write(writer.stream, data)
 
     # record section summary
     push!(
@@ -269,6 +269,7 @@ function finish_section!(writer::Writer)
             state.chromstart,
             state.chromend,
             offset,
+            sizeof(data),
             state.count,
             state.coverage,
             state.minval,

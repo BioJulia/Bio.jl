@@ -72,8 +72,10 @@ function find_overlapping_zoomdata(zoom::Zoom, chromid::UInt32, chromstart::UInt
     ret = ZoomData[]
     for node in nodes
         seek(stream, node.data_offset)
-        while position(stream) < node.data_offset + node.data_size
-            data = read(stream, ZoomData)
+        # TODO: lazy decompression
+        datastream = IOBuffer(Libz.decompress(read(stream, node.data_size)))
+        while !eof(datastream)
+            data = read(datastream, ZoomData)
             c = compare_intervals(data, (chromid, chromstart, chromend))
             if c == 0  # overlap
                 push!(ret, data)
