@@ -207,7 +207,7 @@ function write_impl(writer::Writer, chromid::UInt32, chromstart::UInt32, chromen
     state.count += 1
     bin = div(chromstart, writer.binsize)
     binstart = bin * writer.binsize
-    cov = coverage2((chromstart, chromend), (binstart, binstart + writer.binsize))
+    cov = BBI.coverage2((chromstart, chromend), (binstart, binstart + writer.binsize))
     state.coverage[bin+1] += cov
     state.minval[bin+1] = min(state.minval[bin+1], value)
     state.maxval[bin+1] = max(state.maxval[bin+1], value)
@@ -288,13 +288,6 @@ function finish_section!(writer::Writer)
             sizeof(data)))
     state.started = false
     return
-end
-
-# Compute the nubmer of overlapping bases of [x1, x2) and [y1, y2).
-function coverage2(x::NTuple{2,UInt32}, y::NTuple{2,UInt32})
-    x1, x2 = x
-    y1, y2 = y
-    return max(UInt32(0), min(x2, y2) - max(x1, y1))
 end
 
 function write_zeros(stream::IO, n::Integer)
