@@ -9,18 +9,18 @@ type WriterState
     chromend::UInt32
     itemstep::UInt32
     itemspan::UInt32
+    count::UInt64
 
     # last record info
     last_chrom_start::UInt32
     last_chrom_end::UInt32
 
-    # section summary
-    count::UInt64
-    coverage::UInt32
-    minval::Float32
-    maxval::Float32
-    sumval::Float32
-    sumsqval::Float32
+    # zoom info
+    coverage::Vector{UInt32}
+    minval::Vector{Float32}
+    maxval::Vector{Float32}
+    sumval::Vector{Float32}
+    sumsqval::Vector{Float32}
 
     # section state
     started::Bool
@@ -33,11 +33,11 @@ type WriterState
     function WriterState(datatype::Symbol)
         return new(
             # section info
-            encode_datatype(datatype), 0, 0, 0, 0, 0,
+            encode_datatype(datatype), 0, 0, 0, 0, 0, 0,
             # last record info
             0, 0,
-            # section summary
-            0, 0, 0.0, 0.0, 0.0, 0.0,
+            # zoom info
+            UInt32[], Float32[], Float32[], Float32[], Float32[],
             # section data
             false, IOBuffer(),
             # global info
@@ -49,6 +49,9 @@ immutable Writer <: Bio.IO.AbstractWriter
     # output stream
     stream::IO
 
+    # the size of the smallest zoom in base
+    binsize::UInt32
+
     # maximum size of uncompressed buffer
     uncompressed_buffer_size::UInt64
 
@@ -59,6 +62,9 @@ immutable Writer <: Bio.IO.AbstractWriter
 
     # chrom name => (ID, length)
     chroms::Dict{String,Tuple{UInt32,UInt32}}
+
+    # chrom ID => length
+    chromlens::Dict{UInt32,UInt32}
 
     # mutable state
     state::WriterState
@@ -108,11 +114,13 @@ function Writer(output::IO, chromlist::Union{AbstractVector,Associative})
 
     return Writer(
         output,
+        128,  # binsize
         64 * 2^10,
         summary_offset,
         chrom_tree_offset,
         data_offset,
         Dict(name => (id, len) for (name, id, len) in chromlist_with_id),
+        Dict(id => len for (name, id, len) in chromlist_with_id),
         WriterState(:bedgraph))
 end
 
@@ -195,13 +203,18 @@ function write_impl(writer::Writer, chromid::UInt32, chromstart::UInt32, chromen
     state.last_chrom_start = chromstart
     state.last_chrom_end = chromend
 
-    # udpate section summary
+    # udpate zoom info
     state.count += 1
-    state.coverage += chromend - chromstart
-    state.minval = min(state.minval, value)
-    state.maxval = max(state.maxval, value)
-    state.sumval += value
-    state.sumsqval += value^2
+    bin = div(chromstart, writer.binsize)
+    binstart = bin * writer.binsize
+    cov = coverage((chromstart, chromend), (binstart, binstart + writer.binsize))
+    state.coverage[bin+1] += cov
+    state.minval[bin+1] = min(state.minval[bin+1], value)
+    state.maxval[bin+1] = max(state.maxval[bin+1], value)
+    # TODO: is this correct?
+    meanval = value * writer.binsize / cov  # mean value per bin
+    state.sumval[bin+1] += meanval
+    state.sumsqval[bin+1] += meanval^2
 
     return n
 end
@@ -220,18 +233,21 @@ function start_section!(writer::Writer, chromid::UInt32, chromstart::UInt32, chr
         # inter the span from the first record
         state.itemspan = chromend - chromstart
     end
+    state.count = 0
 
     # initialize last record info
     state.last_chrom_start = 0
     state.last_chrom_end = 0
 
-    # initialize section summary
-    state.count = 0
-    state.coverage = 0
-    state.minval = Inf32
-    state.maxval = -Inf32
-    state.sumval = 0.0f0
-    state.sumsqval = 0.0f0
+    # initialize zoom info
+    bincount = cld(writer.chromlens[chromid], writer.binsize)
+    state.coverage = zeros(UInt32, bincount)
+    state.minval = Vector{Float32}(bincount)
+    fill!(state.minval, Inf32)
+    state.maxval = Vector{Float32}(bincount)
+    fill!(state.maxval, -Inf32)
+    state.sumval = zeros(Float32, bincount)
+    state.sumsqval = zeros(Float32, bincount)
 
     # write dummy section header (filled later)
     n = write_zeros(state.buffer, sizeof(SectionHeader))
@@ -269,15 +285,23 @@ function finish_section!(writer::Writer)
             state.chromstart,
             state.chromend,
             offset,
-            sizeof(data),
-            state.count,
-            state.coverage,
-            state.minval,
-            state.maxval,
-            state.sumval,
-            state.sumsqval))
+            sizeof(data)))
+            #sizeof(data),
+            #state.count,
+            #state.coverage,
+            #state.minval,
+            #state.maxval,
+            #state.sumval,
+            #state.sumsqval))
     state.started = false
     return
+end
+
+# Compute the nubmer of overlapping bases of [x1, x2) and [y1, y2).
+function coverage(x::NTuple{2,UInt32}, y::NTuple{2,UInt32})
+    x1, x2 = x
+    y1, y2 = y
+    return max(UInt32(0), min(x2, y2) - max(x1, y1))
 end
 
 function write_zeros(stream::IO, n::Integer)

@@ -41,12 +41,12 @@ immutable SectionSummary
     datasize::UInt64
 
     # data summary
-    count::UInt64
-    covered::UInt64
-    minval::Float64
-    maxval::Float64
-    sumval::Float64
-    sumsqval::Float64
+    #count::UInt64
+    #covered::UInt64
+    #minval::Float64
+    #maxval::Float64
+    #sumval::Float64
+    #sumsqval::Float64
 end
 
 function compute_total_sumamry(summaries::Vector{SectionSummary})
@@ -59,12 +59,12 @@ function compute_total_sumamry(summaries::Vector{SectionSummary})
     maxval = -Inf
     sumval = 0.0
     sumsqval = 0.0
-    for summary in summaries
-        covered += summary.covered
-        minval = min(minval, summary.minval)
-        maxval = max(maxval, summary.maxval)
-        sumval += summary.maxval
-        sumsqval += summary.sumsqval
-    end
+    #for summary in summaries
+    #    covered += summary.covered
+    #    minval = min(minval, summary.minval)
+    #    maxval = max(maxval, summary.maxval)
+    #    sumval += summary.maxval
+    #    sumsqval += summary.sumsqval
+    #end
     return Summary(covered, minval, maxval, sumval, sumsqval)
 end

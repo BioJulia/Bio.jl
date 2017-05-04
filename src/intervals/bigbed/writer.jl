@@ -21,6 +21,7 @@ type WriterState
 
     # global state
     nfields::Int
+    count::UInt64
     finished_chrom_ids::Set{UInt32}
     summaries::Vector{BBI.SectionSummary}
 
@@ -35,7 +36,7 @@ type WriterState
             # record buffer
             IOBuffer(),
             # global info
-            0, Set{UInt32}(), BBI.SectionSummary[])
+            0, 0, Set{UInt32}(), BBI.SectionSummary[])
     end
 end
 
@@ -156,7 +157,7 @@ function Base.close(writer::Writer)
 
     # fill data count
     seek(stream, writer.data_offset)
-    write(stream, foldl(+, UInt64(0), s.count for s in state.summaries))
+    write(stream, state.count)
 
     close(stream)
     return
@@ -192,6 +193,7 @@ function write_impl(writer::Writer, chromid::UInt32, chromstart::UInt32, chromen
     seekstart(state.recordbuffer)
     n = write(state.buffer, state.recordbuffer)
     state.chromend = max(state.chromend, chromend)
+    state.count += 1
 
     # update last record info
     state.last_chrom_start = chromstart
@@ -287,13 +289,14 @@ function finish_section!(writer::Writer)
             state.chromstart,
             state.chromend,
             offset,
-            sizeof(data),
-            count,
-            cov,
-            minval,
-            maxval,
-            sumval,
-            sumsqval))
+            sizeof(data)))
+            #sizeof(data),
+            #count,
+            #cov,
+            #minval,
+            #maxval,
+            #sumval,
+            #sumsqval))
     state.started = false
     return
 end
