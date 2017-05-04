@@ -20,5 +20,6 @@ include("reader.jl")
 include("writer.jl")
 include("record.jl")
 include("overlap.jl")
+include("stats.jl")
 
 end
