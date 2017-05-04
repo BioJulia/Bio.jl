@@ -171,9 +171,17 @@ immutable InMemoryRTree
     start_chromstart::UInt32
     end_chromid::UInt32
     end_chromend::UInt32
-    children::Vector{InMemoryRTree}
     offset::UInt64
     datasize::UInt64
+    children::Vector{InMemoryRTree}
+
+    function InMemoryRTree(start_chromid, start_chromstart, end_chromid, end_chromend, offset, datasize, children=nothing)
+        if children == nothing
+            return new(start_chromid, start_chromstart, end_chromid, end_chromend, offset, datasize)
+        else
+            return new(start_chromid, start_chromstart, end_chromid, end_chromend, offset, datasize, children)
+        end
+    end
 end
 
 function isleaf(rtree::InMemoryRTree)
@@ -191,8 +199,8 @@ function InMemoryRTree(children::Vector{InMemoryRTree})
         children[1].start_chromstart,
         children[end].end_chromid,
         chromend,
-        children,
-        0, 0)
+        0, 0,
+        children)
 end
 
 function write_rtree(stream::IO, summaries::Vector{SectionSummary})
@@ -285,10 +293,10 @@ function build_inmemory_rtree(summaries::Vector{SectionSummary}, blocksize::Int)
                 end_chromend = summaries[1].chromend
                 for s in summaries
                     end_chromend = max(end_chromend, s.chromend)
-                    push!(children, InMemoryRTree(s.chromid, s.chromstart, s.chromid, s.chromend, InMemoryRTree[], s.offset, s.datasize))
+                    push!(children, InMemoryRTree(s.chromid, s.chromstart, s.chromid, s.chromend, s.offset, s.datasize))
                 end
             end
-            return InMemoryRTree(start_chromid, start_chromstart, end_chromid, end_chromend, children, 1, 0)
+            return InMemoryRTree(start_chromid, start_chromstart, end_chromid, end_chromend, 1, 0, children)
         else
             d = cld(length(summaries), blocksize)
             children = InMemoryRTree[]
