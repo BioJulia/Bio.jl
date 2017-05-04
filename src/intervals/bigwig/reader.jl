@@ -192,7 +192,7 @@ function mean(reader::Reader, chrom::AbstractString, chromstart::Integer, chrome
     return exact_mean(reader, chromid, UInt32(chromstart), UInt32(chromend))
 end
 
-function exact_mean(reader, chromid::UInt32, chromstart::UInt32, chromend::UInt32)
+function exact_mean(reader::Reader, chromid::UInt32, chromstart::UInt32, chromend::UInt32)
     # compute size-weighted mean
     sum = 0.0f0
     size = 0
@@ -254,4 +254,29 @@ function exact_extrema(reader::Reader, chromid::UInt32, chromstart::UInt32, chro
         defined = true
     end
     return defined ? (minval, maxval) : (NaN32, NaN32)
+end
+
+function std(reader::Reader, chrom::AbstractString, chromstart::Integer, chromend::Integer; usezoom=false)::Float32
+    chromid = reader.chroms[chrom][1]
+    chromstart -= 1
+    if usezoom
+        zoom = BBI.find_best_zoom(reader.zooms, UInt32(chromend - chromstart))
+        if !isnull(zoom)
+            return BBI.std(get(zoom), chromid, UInt32(chromstart), UInt32(chromend))
+        end
+    end
+    return exact_std(reader, chromid, UInt32(chromstart), UInt32(chromend))
+end
+
+function exact_std(reader::Reader, chromid::UInt32, chromstart::UInt32, chromend::UInt32)
+    sum = 0.0f0
+    ssq = 0.0f0
+    size = 0
+    for record in OverlapIterator(reader, chromid, chromstart, chromend)
+        cov = BBI.coverage2((record.chromstart, record.chromend), (chromstart, chromend))
+        sum += record.value * cov
+        ssq += record.value^2 * cov
+        size += cov
+    end
+    return sqrt((ssq - sum^2 / size) / (size - 1))
 end

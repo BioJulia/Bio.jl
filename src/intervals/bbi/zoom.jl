@@ -118,6 +118,20 @@ function maximum(zoom::Zoom, chromid::UInt32, chromstart::UInt32, chromend::UInt
     return isempty(data) ? NaN32 : foldl((x, d) -> max(x, d.maxval), -Inf32, data)
 end
 
+function std(zoom::Zoom, chromid::UInt32, chromstart::UInt32, chromend::UInt32)
+    data = find_overlapping_zoomdata(zoom, chromid, chromstart, chromend)
+    sum = 0.0f0
+    ssq = 0.0f0
+    size = 0
+    for d in data
+        cov = coverage2((d.chromstart, d.chromend), (chromstart, chromend))
+        sum += (d.sumval * cov) / (d.chromend - d.chromstart)
+        ssq += (d.sumsqval * cov) / (d.chromend - d.chromstart)
+        size += cov
+    end
+    return sqrt((ssq - sum^2 / size) / (size - 1))
+end
+
 # Find the best zoom level for a given size.
 function find_best_zoom(zooms::Vector{Zoom}, size::UInt32)::Nullable{Zoom}
     # NOTE: This assumes zooms are sorted by reduction_level.
