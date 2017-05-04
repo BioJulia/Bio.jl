@@ -236,7 +236,6 @@ function write_rtree(stream::IO, summaries::Vector{SectionSummary})
                 push!(datasizes, child.datasize)
             else
                 push!(offsets, child_offset)
-                push!(datasizes, UInt64(0))
                 child_offset = rec(child, child_offset)
             end
         end
