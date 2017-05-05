@@ -47,6 +47,9 @@ immutable Writer <: Bio.IO.AbstractWriter
     # output stream
     stream::IO
 
+    # zoom level
+    zoomlevel::Int
+
     # maximum size of uncompressed buffer
     uncompressed_buffer_size::UInt64
 
@@ -68,8 +71,10 @@ immutable Writer <: Bio.IO.AbstractWriter
     zoombuffer::BBI.ZoomBuffer
 end
 
+const ZOOM_SCALE = 4
+
 """
-    BigWig.Writer(output::IO, chromlist)
+    BigWig.Writer(output::IO, chromlist; binsize=64)
 
 Create a data writer of the bigWig file format.
 
@@ -78,6 +83,7 @@ Arguments
 
 * `output`: data sink
 * `chromlist`: chromosome list with length
+* `binsize=64`: size of a zoom with the highest resolution
 
 Examples
 --------
@@ -90,12 +96,16 @@ write(writer, ("chr2", 301, 450, 3.0))
 close(writer)
 ```
 """
-function Writer(output::IO, chromlist::Union{AbstractVector,Associative})
+function Writer(output::IO, chromlist::Union{AbstractVector,Associative};
+                binsize::Integer=64)
     # write dummy header (filled later)
     write_zeros(output, sizeof(BBI.Header))
 
-    # TODO: write zoom header
-    write_zeros(output, 0)
+    # write dummy zoom headers (filled later)
+    chromlist_with_id = BBI.add_chrom_ids(chromlist)
+    maxlen = Base.maximum(x[3] for x in chromlist_with_id)
+    zoomlevel = BBI.determine_zoomlevel(maxlen, binsize, ZOOM_SCALE)
+    write_zeros(output, sizeof(BBI.ZoomHeader) * zoomlevel)
 
     # write dummy total summary (filled later)
     summary_offset = position(output)
@@ -103,7 +113,6 @@ function Writer(output::IO, chromlist::Union{AbstractVector,Associative})
 
     # write chromosome B+-tree
     chrom_tree_offset = position(output)
-    chromlist_with_id = BBI.add_chrom_ids(chromlist)
     BBI.write_btree(output, chromlist_with_id)
 
     # write dummy data count (filled later)
@@ -111,13 +120,13 @@ function Writer(output::IO, chromlist::Union{AbstractVector,Associative})
     write_zeros(output, sizeof(UInt64))
 
     # initialize zoom buffer (use temporary file?)
-    binsize = 64
     max_block_size = 64 * 2^10
     chromlens = Dict(id => len for (name, id, len) in chromlist_with_id)
     zoombuffer = BBI.ZoomBuffer(chromlens, binsize, max_block_size)
 
     return Writer(
         output,
+        zoomlevel,
         max_block_size,
         summary_offset,
         chrom_tree_offset,
@@ -173,7 +182,13 @@ function Base.close(writer::Writer)
 
     # write zoom
     seekend(stream)
-    BBI.write_zoom(stream, writer.zoombuffer, 2, 4)
+    zoomheaders = BBI.write_zoom(stream, writer.zoombuffer, writer.zoomlevel, ZOOM_SCALE)
+
+    # fill zoom headers
+    seek(stream, sizeof(BBI.Header))
+    for zheader in zoomheaders
+        write(stream, zheader)
+    end
 
     close(stream)
     return

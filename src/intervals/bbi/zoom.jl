@@ -5,8 +5,8 @@
 immutable ZoomHeader
     reduction_level::UInt32
     reserved::UInt32
-    data_offset::UInt64
-    index_offset::UInt64
+    dataoffset::UInt64
+    indexoffset::UInt64
 end
 
 function Base.read(stream::IO, ::Type{ZoomHeader})
@@ -15,13 +15,22 @@ function Base.read(stream::IO, ::Type{ZoomHeader})
     return ZoomHeader(u32(), u32(), u64(), u64())
 end
 
+function Base.write(stream::IO, header::ZoomHeader)
+    return write(
+        stream,
+        header.reduction_level,
+        header.reserved,
+        header.dataoffset,
+        header.indexoffset)
+end
+
 immutable Zoom{T<:IO}
     header::ZoomHeader
     rtree::RTree{T}
 end
 
 function Zoom(stream::IO, header::ZoomHeader)
-    return Zoom(header, RTree(stream, header.index_offset))
+    return Zoom(header, RTree(stream, header.indexoffset))
 end
 
 # Supplemental Table 19.
@@ -161,6 +170,17 @@ function coverage2(x::NTuple{2,UInt32}, y::NTuple{2,UInt32})
     return max(UInt32(0), min(x2, y2) - max(x1, y1))
 end
 
+function determine_zoomlevel(len::Integer, binsize::Integer, scale::Integer)
+    if binsize < 0 || scale < 1
+        return 0
+    end
+    level = 1
+    while binsize * scale^level < len
+        level += 1
+    end
+    return level
+end
+
 
 # Zoom Buffer
 # -----------
@@ -196,6 +216,9 @@ type ZoomBuffer
     stream2::IOStream
     tmpdir::String
 
+    # number of zoom records written in stream1
+    count::Int
+
     function ZoomBuffer(chromlens, binsize, max_block_size)
         tmpdir = mktempdir()
         try
@@ -209,7 +232,8 @@ type ZoomBuffer
                 Block[],
                 UInt32[], Float32[], Float32[], Float32[], Float32[],
                 false,
-                stream1, stream2, tmpdir)
+                stream1, stream2, tmpdir,
+                0)
             finalizer(buffer, buffer -> rm(buffer.tmpdir; force=true, recursive=true))
             return buffer
         catch
@@ -275,6 +299,7 @@ function write_buffered_data(buffer::ZoomBuffer)
                 buffer.max[i],
                 buffer.sum[i],
                 buffer.ssq[i]))
+        buffer.count += 1
     end
     buffer.buffered = false
     return
@@ -284,12 +309,16 @@ function write_zoom(output::IO, buffer::ZoomBuffer, nlevels::Int, scale::Int)
     if buffer.buffered
         write_buffered_data(buffer)
     end
-    for _ in 1:nlevels
-        write_zoom_impl(output, buffer, nlevels, scale)
+    headers = ZoomHeader[]
+    for l in 1:nlevels
+        binsize = buffer.binsize * scale^(l - 1)
+        dataoffset, indexoffset = write_zoom_impl(output, buffer, scale)
+        push!(headers, ZoomHeader(binsize, 0, dataoffset, indexoffset))
     end
+    return headers
 end
 
-function write_zoom_impl(output::IO, buffer::ZoomBuffer, nlevels::Int, scale::Int)
+function write_zoom_impl(output::IO, buffer::ZoomBuffer, scale::Int)
     lo = (typemax(UInt32), typemax(UInt32))
     up = (typemin(UInt32), typemin(UInt32))
     blocks = Block[]
@@ -298,9 +327,13 @@ function write_zoom_impl(output::IO, buffer::ZoomBuffer, nlevels::Int, scale::In
     higher = ZoomData[]
     seekstart(buffer.stream1)
     # stream2 is now empty
-    #@show position(buffer.stream2) eof(buffer.stream2)
     @assert position(buffer.stream2) == 0 && eof(buffer.stream2)
 
+    # TODO: Is this correct?
+    dataoffset = position(output)
+    write(output, UInt32(buffer.count))
+
+    buffer.count = 0
     while !eof(buffer.stream1)
         data = read(buffer.stream1, ZoomData)
 
@@ -322,6 +355,7 @@ function write_zoom_impl(output::IO, buffer::ZoomBuffer, nlevels::Int, scale::In
         # create higher-level zoom
         if length(higher) == scale || (!isempty(higher) && data.chromid != higher[1].chromid)
             write(buffer.stream2, aggregate(higher))
+            buffer.count += 1
             empty!(higher)
         end
         push!(higher, data)
@@ -338,13 +372,15 @@ function write_zoom_impl(output::IO, buffer::ZoomBuffer, nlevels::Int, scale::In
     end
 
     # write zoom index
+    indexoffset = position(output)
     write_rtree(output, blocks)
 
     # swap the temporary files
     buffer.stream1, buffer.stream2 = buffer.stream2, buffer.stream1
     seekstart(buffer.stream2)
     truncate(buffer.stream2, 0)
-    return
+
+    return dataoffset, indexoffset
 end
 
 function aggregate(data::Vector{ZoomData})
