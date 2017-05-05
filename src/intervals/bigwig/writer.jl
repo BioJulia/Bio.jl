@@ -113,7 +113,8 @@ function Writer(output::IO, chromlist::Union{AbstractVector,Associative})
     # initialize zoom buffer (use temporary file?)
     binsize = 64
     max_block_size = 64 * 2^10
-    zoombuffer = BBI.ZoomBuffer(IOBuffer(), chromlist_with_id, binsize, max_block_size)
+    chromlens = Dict(id => len for (name, id, len) in chromlist_with_id)
+    zoombuffer = BBI.ZoomBuffer(chromlens, binsize, max_block_size)
 
     return Writer(
         output,
@@ -122,7 +123,7 @@ function Writer(output::IO, chromlist::Union{AbstractVector,Associative})
         chrom_tree_offset,
         data_offset,
         Dict(name => (id, len) for (name, id, len) in chromlist_with_id),
-        Dict(id => len for (name, id, len) in chromlist_with_id),
+        chromlens,
         WriterState(:bedgraph),
         zoombuffer)
 end
@@ -172,7 +173,7 @@ function Base.close(writer::Writer)
 
     # write zoom
     seekend(stream)
-    #BBI.write_zoom(stream, writer.zoombuffer)
+    BBI.write_zoom(stream, writer.zoombuffer, 2, 4)
 
     close(stream)
     return

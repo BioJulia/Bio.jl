@@ -29,11 +29,11 @@ immutable ZoomData
     chromid::UInt32
     chromstart::UInt32
     chromend::UInt32
-    count::UInt32
-    minval::Float32
-    maxval::Float32
-    sumval::Float32
-    sumsqval::Float32
+    cov::UInt32
+    min::Float32
+    max::Float32
+    sum::Float32
+    ssq::Float32
 end
 
 function Base.read(stream::IO, ::Type{ZoomData})
@@ -47,14 +47,8 @@ end
 function Base.write(stream::IO, data::ZoomData)
     return write(
         stream,
-        data.chromid,
-        data.chromstart,
-        data.chromend,
-        data.count,
-        data.minval,
-        data.maxval,
-        data.sumval,
-        data.sumsqval)
+        data.chromid, data.chromstart, data.chromend,
+        data.cov, data.min, data.max, data.sum, data.ssq)
 end
 
 function find_overlapping_zoomdata(zoom::Zoom, chromid::UInt32, chromstart::UInt32, chromend::UInt32)
@@ -104,7 +98,7 @@ function coverage(zoom::Zoom, chromid::UInt32, chromstart::UInt32, chromend::UIn
     data = find_overlapping_zoomdata(zoom, chromid, chromstart, chromend)
     for d in data
         cov = coverage2((d.chromstart, d.chromend), (chromstart, chromend))
-        count += round(UInt32, d.count * cov / (d.chromend - d.chromstart))
+        count += round(UInt32, d.cov * cov / (d.chromend - d.chromstart))
     end
     return count
 end
@@ -115,7 +109,7 @@ function mean(zoom::Zoom, chromid::UInt32, chromstart::UInt32, chromend::UInt32)
     size = 0
     for d in data
         cov = coverage2((d.chromstart, d.chromend), (chromstart, chromend))
-        sum += (d.sumval * cov) / (d.chromend - d.chromstart)
+        sum += (d.sum * cov) / (d.chromend - d.chromstart)
         size += cov
     end
     return sum / size
@@ -123,12 +117,12 @@ end
 
 function minimum(zoom::Zoom, chromid::UInt32, chromstart::UInt32, chromend::UInt32)
     data = find_overlapping_zoomdata(zoom, chromid, chromstart, chromend)
-    return isempty(data) ? NaN32 : foldl((x, d) -> min(x, d.minval), +Inf32, data)
+    return isempty(data) ? NaN32 : foldl((x, d) -> min(x, d.min), +Inf32, data)
 end
 
 function maximum(zoom::Zoom, chromid::UInt32, chromstart::UInt32, chromend::UInt32)
     data = find_overlapping_zoomdata(zoom, chromid, chromstart, chromend)
-    return isempty(data) ? NaN32 : foldl((x, d) -> max(x, d.maxval), -Inf32, data)
+    return isempty(data) ? NaN32 : foldl((x, d) -> max(x, d.max), -Inf32, data)
 end
 
 function std(zoom::Zoom, chromid::UInt32, chromstart::UInt32, chromend::UInt32)
@@ -138,8 +132,8 @@ function std(zoom::Zoom, chromid::UInt32, chromstart::UInt32, chromend::UInt32)
     size = 0
     for d in data
         cov = coverage2((d.chromstart, d.chromend), (chromstart, chromend))
-        sum += (d.sumval * cov) / (d.chromend - d.chromstart)
-        ssq += (d.sumsqval * cov) / (d.chromend - d.chromstart)
+        sum += (d.sum * cov) / (d.chromend - d.chromstart)
+        ssq += (d.ssq * cov) / (d.chromend - d.chromstart)
         size += cov
     end
     return sqrt((ssq - sum^2 / size) / (size - 1))
@@ -172,9 +166,6 @@ end
 # -----------
 
 type ZoomBuffer
-    # output stream
-    stream::IO
-
     # chrom ID => length
     chromlens::Dict{UInt32,UInt32}
 
@@ -197,27 +188,42 @@ type ZoomBuffer
     sum::Vector{Float32}
     ssq::Vector{Float32}
 
-    # flag whether the zoom statistics are written to the output stream
-    written::Bool
-end
+    # flag whether the zoom statistics are buffered
+    buffered::Bool
 
-function ZoomBuffer(stream, chromlist, binsize, uncompressed_buffer_size)
-    return ZoomBuffer(
-        stream,
-        Dict(id => len for (name, id, len) in chromlist),
-        binsize,
-        fld(uncompressed_buffer_size, sizeof(ZoomData)),
-        typemax(UInt32),
-        Block[],
-        UInt32[], Float32[], Float32[], Float32[], Float32[],
-        true)
+    # temporary files for data and directory
+    stream1::IOStream
+    stream2::IOStream
+    tmpdir::String
+
+    function ZoomBuffer(chromlens, binsize, max_block_size)
+        tmpdir = mktempdir()
+        try
+            stream1 = mktemp(tmpdir)[2]
+            stream2 = mktemp(tmpdir)[2]
+            buffer = new(
+                chromlens,
+                binsize,
+                div(max_block_size, sizeof(ZoomData)),
+                typemax(UInt32),
+                Block[],
+                UInt32[], Float32[], Float32[], Float32[], Float32[],
+                false,
+                stream1, stream2, tmpdir)
+            finalizer(buffer, buffer -> rm(buffer.tmpdir; force=true, recursive=true))
+            return buffer
+        catch
+            rm(tmpdir; recursive=true)
+            rethrow()
+        end
+    end
 end
 
 function add_value!(buffer::ZoomBuffer, chromid::UInt32, chromstart::UInt32, chromend::UInt32, value::Float32)
     if buffer.chromid == typemax(UInt32)
         init_buffer!(buffer, chromid)
     elseif chromid != buffer.chromid
-        write_buffer(buffer)
+        write_buffered_data(buffer)
         init_buffer!(buffer, chromid)
     end
     @assert chromid == buffer.chromid
@@ -232,12 +238,12 @@ function add_value!(buffer::ZoomBuffer, chromid::UInt32, chromstart::UInt32, chr
         buffer.sum[bin1] += value   * cov
         buffer.ssq[bin1] += value^2 * cov
     end
-    buffer.written = false
+    buffer.buffered = true
     return buffer
 end
 
 function init_buffer!(buffer::ZoomBuffer, chromid::UInt32)
-    @assert buffer.written == true
+    @assert !buffer.buffered
     nbins = cld(buffer.chromlens[chromid], buffer.binsize)
     resize!(buffer.cov, nbins)
     fill!(buffer.cov, 0)
@@ -253,62 +259,112 @@ function init_buffer!(buffer::ZoomBuffer, chromid::UInt32)
     return buffer
 end
 
-function write_buffer(buffer::ZoomBuffer)
+function write_buffered_data(buffer::ZoomBuffer)
     @assert buffer.chromid != typemax(UInt32)
-    # write zoom data
-    nbins = length(buffer.cov)
-    binsize = buffer.binsize
-    dataperblock = buffer.dataperblock
-    for i in 1:cld(nbins, dataperblock)
-        blockbuf = IOBuffer()
-        binstart = (i-1)*dataperblock
-        binend = min(i*dataperblock, nbins)
-        for bin in binstart:binend-1
-            chromstart = bin * binsize
-            bin1 = bin + 1
-            write(
-                blockbuf,
-                ZoomData(
-                    buffer.chromid,
-                    chromstart,
-                    chromstart + binsize,
-                    buffer.cov[bin1],
-                    buffer.min[bin1],
-                    buffer.max[bin1],
-                    buffer.sum[bin1],
-                    buffer.ssq[bin1]))
-        end
-        lo = (buffer.chromid, binstart * binsize)
-        up = (buffer.chromid, binend * binsize)
-        data = Libz.compress(takebuf_array(blockbuf))
-        push!(buffer.blocks, Block(lo, up, position(buffer.stream), sizeof(data)))
-        write(buffer.stream, data)
+    # write zoom data to a temporary file
+    for i in 1:endof(buffer.cov)
+        chromstart = (i - 1) * buffer.binsize
+        write(
+            buffer.stream1,
+            ZoomData(
+                buffer.chromid,
+                chromstart,
+                chromstart + buffer.binsize,
+                buffer.cov[i],
+                buffer.min[i],
+                buffer.max[i],
+                buffer.sum[i],
+                buffer.ssq[i]))
     end
-    buffer.written = true
+    buffer.buffered = false
     return
 end
 
-# Write zoom data to `output` from `buffer`.
-function write_zoom(output::IO, buffer::ZoomBuffer)
-    if !buffer.written
-        write_buffer(buffer)
+function write_zoom(output::IO, buffer::ZoomBuffer, nlevels::Int, scale::Int)
+    if buffer.buffered
+        write_buffered_data(buffer)
     end
-    @assert buffer.written
+    for _ in 1:nlevels
+        write_zoom_impl(output, buffer, nlevels, scale)
+    end
+end
 
-    # adjust offsets in blocks to output
-    offset = position(output)
-    blocks′ = similar(buffer.blocks)
-    for i in 1:endof(buffer.blocks)
-        block = buffer.blocks[i]
-        blocks′[i] = Block(block.lo, block.up, block.offset + offset, block.size)
+function write_zoom_impl(output::IO, buffer::ZoomBuffer, nlevels::Int, scale::Int)
+    lo = (typemax(UInt32), typemax(UInt32))
+    up = (typemin(UInt32), typemin(UInt32))
+    blocks = Block[]
+    tmpbuf = IOBuffer()
+    blocksize = 0
+    higher = ZoomData[]
+    seekstart(buffer.stream1)
+    # stream2 is now empty
+    #@show position(buffer.stream2) eof(buffer.stream2)
+    @assert position(buffer.stream2) == 0 && eof(buffer.stream2)
+
+    while !eof(buffer.stream1)
+        data = read(buffer.stream1, ZoomData)
+
+        # write data
+        write(tmpbuf, data)
+        lo = min(lo, (data.chromid, data.chromstart))
+        up = max(up, (data.chromid, data.chromend))
+        blocksize += 1
+        if blocksize == buffer.dataperblock
+            compressed = Libz.compress(takebuf_array(tmpbuf))
+            push!(blocks, Block(lo, up, position(output), sizeof(compressed)))
+            write(output, compressed)
+            lo = (typemax(UInt32), typemax(UInt32))
+            up = (typemin(UInt32), typemin(UInt32))
+            truncate(tmpbuf, 0)
+            blocksize = 0
+        end
+
+        # create higher-level zoom
+        if length(higher) == scale || (!isempty(higher) && data.chromid != higher[1].chromid)
+            write(buffer.stream2, aggregate(higher))
+            empty!(higher)
+        end
+        push!(higher, data)
     end
 
-    # write zoom data
-    seekstart(buffer.stream)
-    write(output, buffer.stream)
+    # write remaining data and zoom if any
+    if blocksize > 0
+        compressed = Libz.compress(takebuf_array(tmpbuf))
+        push!(blocks, Block(lo, up, position(output), sizeof(compressed)))
+        write(output, compressed)
+    end
+    if !isempty(higher)
+        write(buffer.stream2, aggregate(higher))
+    end
 
-    # write R-tree index
-    write_rtree(output, blocks′)
+    # write zoom index
+    write_rtree(output, blocks)
 
+    # swap the temporary files
+    buffer.stream1, buffer.stream2 = buffer.stream2, buffer.stream1
+    seekstart(buffer.stream2)
+    truncate(buffer.stream2, 0)
     return
+end
+
+function aggregate(data::Vector{ZoomData})
+    @assert !isempty(data)
+    # assumes data are sorted, adjacent, and non-overlapping
+    cov = data[1].cov
+    min = data[1].min
+    max = data[1].max
+    sum = data[1].sum
+    ssq = data[1].ssq
+    for i in 2:endof(data)
+        cov += data[i].cov
+        min = Base.min(min, data[i].min)
+        max = Base.max(max, data[i].max)
+        sum += data[i].sum
+        ssq += data[i].ssq
+    end
+    return ZoomData(
+        data[1].chromid,
+        data[1].chromstart,
+        data[end].chromend,
+        cov, min, max, sum, ssq)
 end
