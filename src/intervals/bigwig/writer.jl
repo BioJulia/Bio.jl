@@ -15,20 +15,18 @@ type WriterState
     last_chrom_start::UInt32
     last_chrom_end::UInt32
 
-    # zoom info
-    coverage::Vector{UInt32}
-    minval::Vector{Float32}
-    maxval::Vector{Float32}
-    sumval::Vector{Float32}
-    sumsqval::Vector{Float32}
-
     # section state
     started::Bool
     buffer::IOBuffer
 
-    # global state
+    # global state and stats
+    blocks::Vector{BBI.Block}
     finished_chrom_ids::Set{UInt32}
-    summaries::Vector{BBI.SectionSummary}
+    cov::UInt32
+    min::Float32
+    max::Float32
+    sum::Float32
+    ssq::Float32
 
     function WriterState(datatype::Symbol)
         return new(
@@ -37,20 +35,17 @@ type WriterState
             # last record info
             0, 0,
             # zoom info
-            UInt32[], Float32[], Float32[], Float32[], Float32[],
             # section data
             false, IOBuffer(),
             # global info
-            Set{UInt32}(), BBI.SectionSummary[])
+            BBI.Block[], Set{UInt32}(),
+            0, +Inf32, -Inf32, 0.0f0, 0.0f0)
     end
 end
 
 immutable Writer <: Bio.IO.AbstractWriter
     # output stream
     stream::IO
-
-    # the size of the smallest zoom in base
-    binsize::UInt32
 
     # maximum size of uncompressed buffer
     uncompressed_buffer_size::UInt64
@@ -68,6 +63,9 @@ immutable Writer <: Bio.IO.AbstractWriter
 
     # mutable state
     state::WriterState
+
+    # zoom buffer
+    zoombuffer::BBI.ZoomBuffer
 end
 
 """
@@ -112,16 +110,21 @@ function Writer(output::IO, chromlist::Union{AbstractVector,Associative})
     data_offset = position(output)
     write_zeros(output, sizeof(UInt64))
 
+    # initialize zoom buffer (use temporary file?)
+    binsize = 64
+    max_block_size = 64 * 2^10
+    zoombuffer = BBI.ZoomBuffer(IOBuffer(), chromlist_with_id, binsize, max_block_size)
+
     return Writer(
         output,
-        128,  # binsize
-        64 * 2^10,
+        max_block_size,
         summary_offset,
         chrom_tree_offset,
         data_offset,
         Dict(name => (id, len) for (name, id, len) in chromlist_with_id),
         Dict(id => len for (name, id, len) in chromlist_with_id),
-        WriterState(:bedgraph))
+        WriterState(:bedgraph),
+        zoombuffer)
 end
 
 function Base.write(writer::Writer, record::Tuple{String,Integer,Integer,Real})
@@ -139,7 +142,7 @@ function Base.close(writer::Writer)
     # write R-tree
     stream = writer.stream
     data_index_offset = position(stream)
-    BBI.write_rtree(writer.stream, state.summaries)
+    BBI.write_rtree(writer.stream, state.blocks)
 
     # fill header
     header = BBI.Header(
@@ -161,11 +164,15 @@ function Base.close(writer::Writer)
 
     # fill summary
     seek(stream, writer.summary_offset)
-    write(stream, BBI.compute_total_sumamry(state.summaries))
+    write(stream, BBI.Summary(state.cov, state.min, state.max, state.sum, state.ssq))
 
     # fill data count
     seek(stream, writer.data_offset)
-    write(stream, UInt64(length(state.summaries)))
+    write(stream, UInt64(length(state.blocks)))
+
+    # write zoom
+    seekend(stream)
+    #BBI.write_zoom(stream, writer.zoombuffer)
 
     close(stream)
     return
@@ -198,23 +205,22 @@ function write_impl(writer::Writer, chromid::UInt32, chromstart::UInt32, chromen
         assert(false)
     end
     state.chromend = max(state.chromend, chromend)
+    state.count += 1
 
     # update last record info
     state.last_chrom_start = chromstart
     state.last_chrom_end = chromend
 
     # udpate zoom info
-    state.count += 1
-    bin = div(chromstart, writer.binsize)
-    binstart = bin * writer.binsize
-    cov = BBI.coverage2((chromstart, chromend), (binstart, binstart + writer.binsize))
-    state.coverage[bin+1] += cov
-    state.minval[bin+1] = min(state.minval[bin+1], value)
-    state.maxval[bin+1] = max(state.maxval[bin+1], value)
-    # TODO: is this correct?
-    meanval = value * writer.binsize / cov  # mean value per bin
-    state.sumval[bin+1] += meanval
-    state.sumsqval[bin+1] += meanval^2
+    BBI.add_value!(writer.zoombuffer, chromid, chromstart, chromend, value)
+
+    # update global stats
+    size = chromend - chromstart
+    state.cov += size
+    state.min = min(state.min, value)
+    state.max = max(state.max, value)
+    state.sum += value   * size
+    state.ssq += value^2 * size
 
     return n
 end
@@ -238,16 +244,6 @@ function start_section!(writer::Writer, chromid::UInt32, chromstart::UInt32, chr
     # initialize last record info
     state.last_chrom_start = 0
     state.last_chrom_end = 0
-
-    # initialize zoom info
-    bincount = cld(writer.chromlens[chromid], writer.binsize)
-    state.coverage = zeros(UInt32, bincount)
-    state.minval = Vector{Float32}(bincount)
-    fill!(state.minval, Inf32)
-    state.maxval = Vector{Float32}(bincount)
-    fill!(state.maxval, -Inf32)
-    state.sumval = zeros(Float32, bincount)
-    state.sumsqval = zeros(Float32, bincount)
 
     # write dummy section header (filled later)
     n = write_zeros(state.buffer, sizeof(SectionHeader))
@@ -277,15 +273,10 @@ function finish_section!(writer::Writer)
     offset = position(writer.stream)
     write(writer.stream, data)
 
-    # record section summary
+    # record block
     push!(
-        state.summaries,
-        BBI.SectionSummary(
-            state.chromid,
-            state.chromstart,
-            state.chromend,
-            offset,
-            sizeof(data)))
+        state.blocks,
+        BBI.Block((state.chromid, state.chromstart), (state.chromid, state.chromend), offset, sizeof(data)))
     state.started = false
     return
 end

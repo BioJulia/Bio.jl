@@ -19,11 +19,16 @@ type WriterState
     # record buffer
     recordbuffer::IOBuffer
 
-    # global state
+    # global state and stats
+    blocks::Vector{BBI.Block}
+    finished_chrom_ids::Set{UInt32}
     nfields::Int
     count::UInt64
-    finished_chrom_ids::Set{UInt32}
-    summaries::Vector{BBI.SectionSummary}
+    cov::UInt32
+    min::Float32
+    max::Float32
+    sum::Float32
+    ssq::Float32
 
     function WriterState()
         return new(
@@ -36,7 +41,8 @@ type WriterState
             # record buffer
             IOBuffer(),
             # global info
-            0, 0, Set{UInt32}(), BBI.SectionSummary[])
+            BBI.Block[], Set{UInt32}(), 0, 0,
+            0, +Inf32, -Inf32, 0.0f0, 0.0f0)
     end
 end
 
@@ -60,6 +66,9 @@ immutable Writer <: Bio.IO.AbstractWriter
 
     # mutable state
     state::WriterState
+
+    # zoom buffer
+    zoombuffer::BBI.ZoomBuffer
 end
 
 """
@@ -104,15 +113,21 @@ function Writer(output::IO, chromlist::Union{AbstractVector,Associative})
     data_offset = position(output)
     write_zeros(output, sizeof(UInt64))
 
+    # initialize zoom buffer (use temporary file?)
+    binsize = 64
+    max_block_size = 64 * 2^10
+    zoombuffer = BBI.ZoomBuffer(IOBuffer(), chromlist_with_id, binsize, max_block_size)
+
     return Writer(
         output,
-        64 * 2^10,
+        max_block_size,
         summary_offset,
         chrom_tree_offset,
         data_offset,
         Dict(name => (id, len) for (name, id, len) in chromlist_with_id),
         Dict(id => name for (name, id, len) in chromlist_with_id),
-        WriterState())
+        WriterState(),
+        zoombuffer)
 end
 
 function Base.write(writer::Writer, record::Tuple{String,Integer,Integer,Vararg})
@@ -131,7 +146,7 @@ function Base.close(writer::Writer)
     # write data index
     stream = writer.stream
     data_index_offset = position(stream)
-    BBI.write_rtree(writer.stream, state.summaries)
+    BBI.write_rtree(writer.stream, state.blocks)
 
     # fill header
     header = BBI.Header(
@@ -153,11 +168,15 @@ function Base.close(writer::Writer)
 
     # fill summary
     seek(stream, writer.summary_offset)
-    write(stream, BBI.compute_total_sumamry(state.summaries))
+    write(stream, BBI.Summary(state.cov, state.min, state.max, state.sum, state.ssq))
 
     # fill data count
     seek(stream, writer.data_offset)
     write(stream, state.count)
+
+    # write zoom
+    seekend(stream)
+    #BBI.write_zoom(stream, writer.zoombuffer)
 
     close(stream)
     return
@@ -193,7 +212,6 @@ function write_impl(writer::Writer, chromid::UInt32, chromstart::UInt32, chromen
     seekstart(state.recordbuffer)
     n = write(state.buffer, state.recordbuffer)
     state.chromend = max(state.chromend, chromend)
-    state.count += 1
 
     # update last record info
     state.last_chrom_start = chromstart
@@ -280,23 +298,20 @@ function finish_section!(writer::Writer)
     offset = position(writer.stream)
     write(writer.stream, data)
 
-    # record section summary
-    count, cov, minval, maxval, sumval, sumsqval = compute_section_summary(state.intervals)
+    # record block
     push!(
-        state.summaries,
-        BBI.SectionSummary(
-            state.chromid,
-            state.chromstart,
-            state.chromend,
-            offset,
-            sizeof(data)))
-            #sizeof(data),
-            #count,
-            #cov,
-            #minval,
-            #maxval,
-            #sumval,
-            #sumsqval))
+        state.blocks,
+        BBI.Block((state.chromid, state.chromstart), (state.chromid, state.chromend), offset, sizeof(data)))
+
+    # update global stats
+    count, cov, min, max, sum, ssq = compute_section_summary(state.intervals)
+    state.count += count
+    state.cov += cov
+    state.min = Base.min(state.min, min)
+    state.max = Base.max(state.max, max)
+    state.sum += sum
+    state.ssq += ssq
+
     state.started = false
     return
 end

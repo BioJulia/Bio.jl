@@ -8,25 +8,33 @@ immutable RTreeHeader
     magic::UInt32
     block_size::UInt32
     item_count::UInt64
-    start_chrom_ix::UInt32
-    start_base::UInt32
-    end_chrom_ix::UInt32
-    end_base::UInt32
+    lo::NTuple{2,UInt32}
+    up::NTuple{2,UInt32}
     end_file_offset::UInt64
     items_per_slot::UInt32
     reserved::UInt32
 end
 
-function Base.write(io::IO, header::RTreeHeader)
+function Base.read(stream::IO, ::Type{RTreeHeader})
+    return RTreeHeader(
+        read(stream, UInt32),
+        read(stream, UInt32),
+        read(stream, UInt64),
+        readbound(stream),
+        readbound(stream),
+        read(stream, UInt64),
+        read(stream, UInt32),
+        read(stream, UInt32))
+end
+
+function Base.write(stream::IO, header::RTreeHeader)
     return write(
-        io,
+        stream,
         header.magic,
         header.block_size,
         header.item_count,
-        header.start_chrom_ix,
-        header.start_base,
-        header.end_chrom_ix,
-        header.end_base,
+        header.lo[1], header.lo[2],
+        header.up[1], header.up[2],
         header.end_file_offset,
         header.items_per_slot,
         header.reserved)
@@ -53,42 +61,50 @@ end
 
 # Supplemental Table 16.
 immutable RTreeLeafNode
-    start_chrom_ix::UInt32
-    start_base::UInt32
-    end_chrom_ix::UInt32
-    end_base::UInt32
-    data_offset::UInt64
-    data_size::UInt64
+    lo::NTuple{2,UInt32}
+    up::NTuple{2,UInt32}
+    offset::UInt64
+    size::UInt64
 end
 
 function Base.write(stream::IO, node::RTreeLeafNode)
     return write(
         stream,
-        node.start_chrom_ix,
-        node.start_base,
-        node.end_chrom_ix,
-        node.end_base,
-        node.data_offset,
-        node.data_size)
+        node.lo[1], node.lo[2],
+        node.up[1], node.up[2],
+        node.offset, node.size)
 end
 
 # Supplemental Table 17
 immutable RTreeInternalNode
-    start_chrom_ix::UInt32
-    start_base::UInt32
-    end_chrom_ix::UInt32
-    end_base::UInt32
-    data_offset::UInt64
+    lo::NTuple{2,UInt32}
+    up::NTuple{2,UInt32}
+    offset::UInt64
 end
 
 function Base.write(stream::IO, node::RTreeInternalNode)
     return write(
         stream,
-        node.start_chrom_ix,
-        node.start_base,
-        node.end_chrom_ix,
-        node.end_base,
-        node.data_offset)
+        node.lo[1], node.lo[2],
+        node.up[1], node.up[2],
+        node.offset)
+end
+
+
+# TODO: Merge this with RTreeLeafNode and SectionSummary
+# Data block indexed by R-tree (0-origin, left-closed and right-open).
+immutable Block
+    # lower bound of genomic interval (chromid, chromstart)
+    lo::Tuple{UInt32,UInt32}
+
+    # upper bound of genomic interval (chromid, chromend)
+    up::Tuple{UInt32,UInt32}
+
+    # offset to data block
+    offset::UInt64
+
+    # size of data block (likely compressed, disk dize)
+    size::UInt64
 end
 
 # disk-serialized R tree
@@ -99,19 +115,12 @@ immutable RTree{T<:IO}
 end
 
 function RTree(stream::IO, offset::Integer)
-    read32() = read(stream, UInt32)
-    read64() = read(stream, UInt64)
     seek(stream, offset)
-    magic = read32()
-    if magic != RTREE_MAGIC
+    header = read(stream, RTreeHeader)
+    if header.magic != RTREE_MAGIC
         error("invalid R tree magic bytes")
     end
-    return RTree(
-        stream,
-        offset,
-        RTreeHeader(
-            magic,    read32(), read64(), read32(), read32(),
-            read32(), read32(), read64(), read32(), read32()))
+    return RTree(stream, offset, header)
 end
 
 # Find overlapping leaf nodes.
@@ -124,23 +133,13 @@ function find_overlapping_nodes(tree::RTree, chromid::UInt32, chromstart::UInt32
         seek(tree.stream, offset)
         node = read(tree.stream, RTreeNodeFormat)
         for i in 1:node.count
-            start_chrom_id = read(tree.stream, UInt32)
-            start_chrom_start = read(tree.stream, UInt32)
-            end_chrom_id = read(tree.stream, UInt32)
-            end_chrom_end = read(tree.stream, UInt32)
-            if overlaps(chromid, chromstart, chromend, start_chrom_id, start_chrom_start, end_chrom_id, end_chrom_end)
+            lo = readbound(tree.stream)
+            up = readbound(tree.stream)
+            if overlaps(chromid, chromstart, chromend, lo, up)
                 offset = read(tree.stream, UInt64)
                 if isleaf(node)
                     datasize = read(tree.stream, UInt64)
-                    push!(
-                        ret,
-                        RTreeLeafNode(
-                            start_chrom_id,
-                            start_chrom_start,
-                            end_chrom_id,
-                            end_chrom_end,
-                            offset,
-                            datasize))
+                    push!(ret, RTreeLeafNode(lo, up, offset, datasize))
                 else
                     push!(stack, offset)
                 end
@@ -150,15 +149,15 @@ function find_overlapping_nodes(tree::RTree, chromid::UInt32, chromstart::UInt32
         end
     end
     # Leaves may be already sorted?
-    sort!(ret, by=n->n.data_offset)
+    sort!(ret, by=n->n.offset)
     return ret
 end
 
-function overlaps(chromid, chromstart, chromend, start_chrom_id, start_chrom_start, end_chrom_id, end_chrom_end)
-    if chromid < start_chrom_id || (chromid == start_chrom_id && chromend ≤ start_chrom_start)
+function overlaps(chromid, chromstart, chromend, lo, up)
+    if chromid < lo[1] || (chromid == lo[1] && chromend ≤ lo[2])
         # query is strictly left
         return false
-    elseif chromid > end_chrom_id || (chromid == end_chrom_id && chromstart ≥ end_chrom_end)
+    elseif chromid > up[1] || (chromid == up[1] && chromstart ≥ up[2])
         # query is strictly right
         return false
     else
@@ -167,19 +166,17 @@ function overlaps(chromid, chromstart, chromend, start_chrom_id, start_chrom_sta
 end
 
 immutable InMemoryRTree
-    start_chromid::UInt32
-    start_chromstart::UInt32
-    end_chromid::UInt32
-    end_chromend::UInt32
+    lo::NTuple{2,UInt32}
+    up::NTuple{2,UInt32}
     offset::UInt64
-    datasize::UInt64
+    size::UInt64
     children::Vector{InMemoryRTree}
 
-    function InMemoryRTree(start_chromid, start_chromstart, end_chromid, end_chromend, offset, datasize, children=nothing)
+    function InMemoryRTree(lo, up, offset, size, children=nothing)
         if children == nothing
-            return new(start_chromid, start_chromstart, end_chromid, end_chromend, offset, datasize)
+            return new(lo, up, offset, size)
         else
-            return new(start_chromid, start_chromstart, end_chromid, end_chromend, offset, datasize, children)
+            return new(lo, up, offset, size, children)
         end
     end
 end
@@ -190,31 +187,26 @@ end
 
 function InMemoryRTree(children::Vector{InMemoryRTree})
     @assert !isempty(children)
-    chromend = children[1].end_chromend
-    for i in 2:endof(children)
-        chromend = max(chromend, children[i].end_chromend)
-    end
+    # TODO: assert this
+    #@assert issorted(n.lo for n in children)
     return InMemoryRTree(
-        children[1].start_chromid,
-        children[1].start_chromstart,
-        children[end].end_chromid,
-        chromend,
+        #children[1].lo,
+        Base.minimum(n.lo for n in children),
+        Base.maximum(n.up for n in children),
         0, 0,
         children)
 end
 
-function write_rtree(stream::IO, summaries::Vector{SectionSummary})
+function write_rtree(stream::IO, blocks::Vector{Block})
     blocksize = 64
     items_per_slot = 1
-    root = build_inmemory_rtree(summaries, blocksize)
+    root = build_inmemory_rtree(blocks, blocksize)
     header = RTreeHeader(
         RTREE_MAGIC,
         blocksize,
-        root.end_chromid - root.start_chromid + 1,
-        root.start_chromid,
-        root.start_chromstart,
-        root.end_chromid,
-        root.end_chromend,
+        root.up[1] - root.lo[1] + 1,
+        root.lo,
+        root.up,
         position(stream),
         items_per_slot,
         # reserved
@@ -233,7 +225,7 @@ function write_rtree(stream::IO, summaries::Vector{SectionSummary})
         for child in node.children
             if isleaf(node)
                 push!(offsets, child.offset)
-                push!(datasizes, child.datasize)
+                push!(datasizes, child.size)
             else
                 push!(offsets, child_offset)
                 child_offset = rec(child, child_offset)
@@ -248,24 +240,9 @@ function write_rtree(stream::IO, summaries::Vector{SectionSummary})
         for i in 1:endof(node.children)
             child = node.children[i]
             if isleaf(node)
-                write(
-                    stream,
-                    RTreeLeafNode(
-                        child.start_chromid,
-                        child.start_chromstart,
-                        child.end_chromid,
-                        child.end_chromend,
-                        offsets[i],
-                        datasizes[i]))
+                write(stream, RTreeLeafNode(child.lo, child.up, offsets[i], datasizes[i]))
             else
-                write(
-                    stream,
-                    RTreeInternalNode(
-                        child.start_chromid,
-                        child.start_chromstart,
-                        child.end_chromid,
-                        child.end_chromend,
-                        offsets[i]))
+                write(stream, RTreeInternalNode(child.lo, child.up, offsets[i]))
             end
         end
 
@@ -277,34 +254,38 @@ function write_rtree(stream::IO, summaries::Vector{SectionSummary})
 end
 
 # Build an in-memory B-Tree from leaves to root (bottom-up).
-function build_inmemory_rtree(summaries::Vector{SectionSummary}, blocksize::Int)
-    function rec(summaries)
-        if length(summaries) ≤ blocksize
+function build_inmemory_rtree(blocks::Vector{Block}, blocksize::Int)
+    if !issorted(blocks, by=b->b.lo)
+        blocks = sort(blocks, by=b->b.lo)
+    end
+    function rec(blocks)
+        if length(blocks) ≤ blocksize
             # store indexes in leaves
             children = InMemoryRTree[]
-            if isempty(summaries)
-                start_chromid = end_chromid = UInt32(0)
-                start_chromstart = end_chromend = UInt32(0)
+            if isempty(blocks)
+                lo = up = (UInt32(0), UInt32(0))
             else
-                start_chromid = summaries[1].chromid
-                start_chromstart = summaries[1].chromstart
-                end_chromid = summaries[end].chromid
-                end_chromend = summaries[1].chromend
-                for s in summaries
-                    end_chromend = max(end_chromend, s.chromend)
-                    push!(children, InMemoryRTree(s.chromid, s.chromstart, s.chromid, s.chromend, s.offset, s.datasize))
+                lo = blocks[1].lo
+                up = blocks[1].up
+                for block in blocks
+                    up = max(up, block.up)
+                    push!(children, InMemoryRTree(block.lo, block.up, block.offset, block.size))
                 end
             end
-            return InMemoryRTree(start_chromid, start_chromstart, end_chromid, end_chromend, 1, 0, children)
+            return InMemoryRTree(lo, up, 1, 0, children)
         else
-            d = cld(length(summaries), blocksize)
+            d = cld(length(blocks), blocksize)
             children = InMemoryRTree[]
             for i in 1:blocksize
-                idx = (i-1)*d+1:min(i*d,endof(summaries))
-                push!(children, rec(view(summaries, idx)))
+                idx = (i-1)*d+1:min(i*d,endof(blocks))
+                push!(children, rec(view(blocks, idx)))
             end
             return InMemoryRTree(children)
         end
     end
-    return rec(view(summaries, 1:endof(summaries)))
+    return rec(view(blocks, 1:endof(blocks)))
+end
+
+function readbound(stream::IO)
+    return read(stream, UInt32), read(stream, UInt32)
 end

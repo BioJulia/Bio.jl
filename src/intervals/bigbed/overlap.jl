@@ -36,7 +36,7 @@ end
 function Base.start(iter::OverlapIterator)
     nodes = BBI.find_overlapping_nodes(iter.reader.rtree, iter.chromid, iter.chromstart, iter.chromend)
     if !isempty(nodes)
-        seek(iter.reader.stream, nodes[1].data_offset)
+        seek(iter.reader.stream, nodes[1].offset)
     end
     return OverlapIteratorState(
         Bio.Ragel.State(

@@ -59,7 +59,7 @@ function advance!(iter::OverlapIterator, state::OverlapIteratorState)
         # find a section that has at least one record
         while state.current_record == state.n_records && state.current_node ≤ endof(state.nodes)
             node = state.nodes[state.current_node]
-            seek(iter.reader.stream, node.data_offset)
+            seek(iter.reader.stream, node.offset)
             state.stream = Libz.ZlibInflateInputStream(iter.reader.stream)
             state.header = read(state.stream, SectionHeader)
             state.current_node += 1
