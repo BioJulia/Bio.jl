@@ -200,9 +200,9 @@ function Base.close(writer::Writer)
 end
 
 function write_impl(writer::Writer, chromid::UInt32, chromstart::UInt32, chromend::UInt32, optionals::Tuple)
+    # infer the number of fields from the first record
     state = writer.state
     if state.nfields == 0
-        # infer the number of fields from the first record
         state.nfields = 3 + length(optionals)
     end
 
@@ -214,10 +214,10 @@ function write_impl(writer::Writer, chromid::UInt32, chromstart::UInt32, chromen
     write(state.recordbuffer, chromid, chromstart, chromend)
     write_optionals(state.recordbuffer, optionals)
     write(state.recordbuffer, 0x00)
+
     if state.started && (chromid != state.chromid || position(state.buffer) + position(state.recordbuffer) > writer.uncompressed_buffer_size)
         finish_section!(writer)
     end
-
     if !state.started
         start_section!(writer, chromid, chromstart, chromend)
     end
