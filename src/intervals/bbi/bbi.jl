@@ -21,6 +21,7 @@ include("rtree.jl")
 include("section.jl")
 include("zoom.jl")
 
+# TODO: Move this to Libz.jl.
 function compress!(dst::Vector{UInt8}, src::Vector{UInt8})::UInt64
     len = Ref(Culong(length(dst)))
     code = ccall(
@@ -33,10 +34,5 @@ function compress!(dst::Vector{UInt8}, src::Vector{UInt8})::UInt64
     end
     return len[]
 end
-
-#=
-function decompress()
-end
-=#
 
 end
