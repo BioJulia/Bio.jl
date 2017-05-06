@@ -15,6 +15,8 @@ immutable RTreeHeader
     reserved::UInt32
 end
 
+const RTREE_HEADER_SIZE = 48
+
 function Base.read(stream::IO, ::Type{RTreeHeader})
     return RTreeHeader(
         read(stream, UInt32),
@@ -47,6 +49,8 @@ immutable RTreeNodeFormat
     count::UInt16
 end
 
+const RTREE_NODE_FORMAT_SIZE = 4
+
 function Base.write(io::IO, node::RTreeNodeFormat)
     return write(io, node.isleaf, node.reserved, node.count)
 end
@@ -67,6 +71,8 @@ immutable RTreeLeafNode
     size::UInt64
 end
 
+const RTREE_LEAF_NODE_SIZE = 32
+
 function Base.write(stream::IO, node::RTreeLeafNode)
     return write(
         stream,
@@ -81,6 +87,8 @@ immutable RTreeInternalNode
     up::NTuple{2,UInt32}
     offset::UInt64
 end
+
+const RTREE_INTERNAL_NODE_SIZE = 32
 
 function Base.write(stream::IO, node::RTreeInternalNode)
     return write(
@@ -125,7 +133,7 @@ end
 
 # Find overlapping leaf nodes.
 function find_overlapping_nodes(tree::RTree, chromid::UInt32, chromstart::UInt32, chromend::UInt32)
-    root_offset = tree.offset + (sizeof(RTreeHeader) % UInt64)
+    root_offset = tree.offset + (RTREE_HEADER_SIZE % UInt64)
     stack = [root_offset]
     ret = RTreeLeafNode[]
     while !isempty(stack)
@@ -216,7 +224,7 @@ function write_rtree(stream::IO, blocks::Vector{Block})
     # write R-tree recursively
     function rec(node, offset)
         # compute the size of node
-        nodesize = sizeof(RTreeNodeFormat) + (isleaf(node) ? sizeof(RTreeLeafNode) : sizeof(RTreeInternalNode)) * length(node.children)
+        nodesize = RTREE_NODE_FORMAT_SIZE + (isleaf(node) ? RTREE_LEAF_NODE_SIZE : RTREE_INTERNAL_NODE_SIZE) * length(node.children)
 
         # write children
         offsets = UInt64[]

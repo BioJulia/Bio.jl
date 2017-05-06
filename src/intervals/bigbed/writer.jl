@@ -102,17 +102,17 @@ close(writer)
 function Writer(output::IO, chromlist::Union{AbstractVector,Associative};
                 binsize::Integer=64)
     # write dummy header (filled later)
-    write_zeros(output, sizeof(BBI.Header))
+    write_zeros(output, BBI.HEADER_SIZE)
 
     # write dummy zoom headers (filled later)
     chromlist_with_id = BBI.add_chrom_ids(chromlist)
     maxlen = Base.maximum(x[3] for x in chromlist_with_id)
     zoomlevel = BBI.determine_zoomlevel(maxlen, binsize, ZOOM_SCALE)
-    write_zeros(output, sizeof(BBI.ZoomHeader) * zoomlevel)
+    write_zeros(output, BBI.ZOOM_HEADER_SIZE * zoomlevel)
 
     # write dummy total summary (filled later)
     summary_offset = position(output)
-    write_zeros(output, sizeof(BBI.Summary))
+    write_zeros(output, BBI.SUMMARY_SIZE)
 
     # write chromosome B+-tree
     chrom_tree_offset = position(output)
@@ -189,7 +189,7 @@ function Base.close(writer::Writer)
     zoomheaders = BBI.write_zoom(stream, writer.zoombuffer, writer.zoomlevel, ZOOM_SCALE)
 
     # fill zoom headers
-    seek(stream, sizeof(BBI.Header))
+    seek(stream, BBI.HEADER_SIZE)
     for zheader in zoomheaders
         write(stream, zheader)
     end

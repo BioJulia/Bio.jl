@@ -9,6 +9,8 @@ immutable ZoomHeader
     indexoffset::UInt64
 end
 
+const ZOOM_HEADER_SIZE = 24
+
 function Base.read(stream::IO, ::Type{ZoomHeader})
     u32() = read(stream, UInt32)
     u64() = read(stream, UInt64)

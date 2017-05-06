@@ -13,6 +13,8 @@ immutable SectionHeader
     item_count::UInt16
 end
 
+const SECTION_HEADER_SIZE = 24
+
 function isbedgraph(datatype::UInt8)
     return datatype == 0x01
 end

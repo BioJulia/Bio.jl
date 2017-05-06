@@ -20,6 +20,8 @@ immutable Header
     reserved::UInt64
 end
 
+const HEADER_SIZE = 64
+
 function Base.read(io::IO, ::Type{Header})
     return Header(
         read(io, UInt32), read(io, UInt16), read(io, UInt16),

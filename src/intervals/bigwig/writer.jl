@@ -47,8 +47,8 @@ immutable Writer <: Bio.IO.AbstractWriter
     # output stream
     stream::IO
 
-    # zoom level
-    zoomlevel::Int
+    # number of zoom levels
+    zoomlevels::Int
 
     # maximum size of uncompressed buffer
     uncompressed_buffer_size::UInt64
@@ -99,17 +99,17 @@ close(writer)
 function Writer(output::IO, chromlist::Union{AbstractVector,Associative};
                 binsize::Integer=64)
     # write dummy header (filled later)
-    write_zeros(output, sizeof(BBI.Header))
+    write_zeros(output, BBI.HEADER_SIZE)
 
     # write dummy zoom headers (filled later)
     chromlist_with_id = BBI.add_chrom_ids(chromlist)
     maxlen = Base.maximum(x[3] for x in chromlist_with_id)
-    zoomlevel = BBI.determine_zoomlevel(maxlen, binsize, ZOOM_SCALE)
-    write_zeros(output, sizeof(BBI.ZoomHeader) * zoomlevel)
+    zoomlevels = BBI.determine_zoomlevel(maxlen, binsize, ZOOM_SCALE)
+    write_zeros(output, BBI.ZOOM_HEADER_SIZE * zoomlevels)
 
     # write dummy total summary (filled later)
     summary_offset = position(output)
-    write_zeros(output, sizeof(BBI.Summary))
+    write_zeros(output, BBI.SUMMARY_SIZE)
 
     # write chromosome B+-tree
     chrom_tree_offset = position(output)
@@ -126,7 +126,7 @@ function Writer(output::IO, chromlist::Union{AbstractVector,Associative};
 
     return Writer(
         output,
-        zoomlevel,
+        zoomlevels,
         max_block_size,
         summary_offset,
         chrom_tree_offset,
@@ -158,7 +158,7 @@ function Base.close(writer::Writer)
     header = BBI.Header(
         BBI.WIG_MAGIC,
         3,  # version
-        0,  # zoom level
+        writer.zoomlevels,
         writer.chrom_tree_offset,
         writer.data_offset,
         data_index_offset,
@@ -182,10 +182,11 @@ function Base.close(writer::Writer)
 
     # write zoom
     seekend(stream)
-    zoomheaders = BBI.write_zoom(stream, writer.zoombuffer, writer.zoomlevel, ZOOM_SCALE)
+    zoomheaders = BBI.write_zoom(stream, writer.zoombuffer, writer.zoomlevels, ZOOM_SCALE)
+    @assert length(zoomheaders) == writer.zoomlevels
 
     # fill zoom headers
-    seek(stream, sizeof(BBI.Header))
+    seek(stream, BBI.HEADER_SIZE)
     for zheader in zoomheaders
         write(stream, zheader)
     end
@@ -262,7 +263,7 @@ function start_section!(writer::Writer, chromid::UInt32, chromstart::UInt32, chr
     state.last_chrom_end = 0
 
     # write dummy section header (filled later)
-    n = write_zeros(state.buffer, sizeof(SectionHeader))
+    n = write_zeros(state.buffer, SECTION_HEADER_SIZE)
     state.started = true
     return n
 end

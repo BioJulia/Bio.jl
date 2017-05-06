@@ -10,6 +10,8 @@ immutable Summary
     sum_squares::Float64
 end
 
+const SUMMARY_SIZE = 40
+
 function Base.read(io::IO, ::Type{Summary})
     return Summary(
         read(io, UInt64),
