@@ -172,7 +172,8 @@ function coverage2(x::NTuple{2,UInt32}, y::NTuple{2,UInt32})
     return max(UInt32(0), min(x2, y2) - max(x1, y1))
 end
 
-function determine_zoomlevel(len::Integer, binsize::Integer, scale::Integer)
+# Determine the minimum number of zoom levels that covers `len`.
+function determine_zoomlevels(len::Integer, binsize::Integer, scale::Integer)
     if binsize < 0 || scale < 1
         return 0
     end

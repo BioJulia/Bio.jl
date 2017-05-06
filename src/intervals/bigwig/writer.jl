@@ -104,7 +104,7 @@ function Writer(output::IO, chromlist::Union{AbstractVector,Associative};
     # write dummy zoom headers (filled later)
     chromlist_with_id = BBI.add_chrom_ids(chromlist)
     maxlen = Base.maximum(x[3] for x in chromlist_with_id)
-    zoomlevels = BBI.determine_zoomlevel(maxlen, binsize, ZOOM_SCALE)
+    zoomlevels = BBI.determine_zoomlevels(maxlen, binsize, ZOOM_SCALE)
     write_zeros(output, BBI.ZOOM_HEADER_SIZE * zoomlevels)
 
     # write dummy total summary (filled later)

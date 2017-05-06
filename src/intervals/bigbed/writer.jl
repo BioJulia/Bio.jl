@@ -50,8 +50,8 @@ immutable Writer <: Bio.IO.AbstractWriter
     # output stream
     stream::IO
 
-    # zoom level
-    zoomlevel::Int
+    # number of zoom levels
+    zoomlevels::Int
 
     # maximum size of uncompressed buffer
     uncompressed_buffer_size::UInt64
@@ -107,8 +107,8 @@ function Writer(output::IO, chromlist::Union{AbstractVector,Associative};
     # write dummy zoom headers (filled later)
     chromlist_with_id = BBI.add_chrom_ids(chromlist)
     maxlen = Base.maximum(x[3] for x in chromlist_with_id)
-    zoomlevel = BBI.determine_zoomlevel(maxlen, binsize, ZOOM_SCALE)
-    write_zeros(output, BBI.ZOOM_HEADER_SIZE * zoomlevel)
+    zoomlevels = BBI.determine_zoomlevels(maxlen, binsize, ZOOM_SCALE)
+    write_zeros(output, BBI.ZOOM_HEADER_SIZE * zoomlevels)
 
     # write dummy total summary (filled later)
     summary_offset = position(output)
@@ -129,7 +129,7 @@ function Writer(output::IO, chromlist::Union{AbstractVector,Associative};
 
     return Writer(
         output,
-        zoomlevel,
+        zoomlevels,
         max_block_size,
         summary_offset,
         chrom_tree_offset,
@@ -162,7 +162,7 @@ function Base.close(writer::Writer)
     header = BBI.Header(
         BBI.BED_MAGIC,
         3,  # version
-        0,  # zoom level
+        writer.zoomlevels,
         writer.chrom_tree_offset,
         writer.data_offset,
         data_index_offset,
@@ -186,7 +186,7 @@ function Base.close(writer::Writer)
 
     # write zoom
     seekend(stream)
-    zoomheaders = BBI.write_zoom(stream, writer.zoombuffer, writer.zoomlevel, ZOOM_SCALE)
+    zoomheaders = BBI.write_zoom(stream, writer.zoombuffer, writer.zoomlevels, ZOOM_SCALE)
 
     # fill zoom headers
     seek(stream, BBI.HEADER_SIZE)
