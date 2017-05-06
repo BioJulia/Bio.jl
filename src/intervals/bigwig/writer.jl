@@ -74,7 +74,7 @@ end
 const ZOOM_SCALE = 4
 
 """
-    BigWig.Writer(output::IO, chromlist; binsize=64)
+    BigWig.Writer(output::IO, chromlist; binsize=64, datatype=:bedgraph)
 
 Create a data writer of the bigWig file format.
 
@@ -84,6 +84,7 @@ Arguments
 * `output`: data sink
 * `chromlist`: chromosome list with length
 * `binsize=64`: size of a zoom with the highest resolution
+* `datatype=:bedgraph`: encoding of values (`:bedgraph`, `:varstep` or `:fixedstep`)
 
 Examples
 --------
@@ -97,7 +98,7 @@ close(writer)
 ```
 """
 function Writer(output::IO, chromlist::Union{AbstractVector,Associative};
-                binsize::Integer=64)
+                binsize::Integer=64, datatype::Symbol=:bedgraph)
     # write dummy header (filled later)
     write_zeros(output, BBI.HEADER_SIZE)
 
@@ -133,7 +134,7 @@ function Writer(output::IO, chromlist::Union{AbstractVector,Associative};
         data_offset,
         Dict(name => (id, len) for (name, id, len) in chromlist_with_id),
         chromlens,
-        WriterState(:bedgraph),
+        WriterState(datatype),
         zoombuffer)
 end
 
@@ -202,6 +203,11 @@ function write_impl(writer::Writer, chromid::UInt32, chromstart::UInt32, chromen
     end
 
     state = writer.state
+    if isfixedstep(state.datatype) && state.itemstep == 0 && state.count == 1
+        # infer the step from the first and second records
+        state.itemstep = chromstart - state.last_chrom_start
+    end
+
     if state.started && (chromid != state.chromid || position(state.buffer) ≥ writer.uncompressed_buffer_size - sizeof(UInt32) * 3)
         finish_section!(writer)
     end

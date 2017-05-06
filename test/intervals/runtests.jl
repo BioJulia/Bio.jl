@@ -798,6 +798,54 @@ end
         @test BigWig.chromstart(records[1]) === 50
         @test BigWig.chromend(records[1]) === 100
         @test BigWig.value(records[1]) === 3.14f0
+
+        # bedgraph (default)
+        buffer = IOBuffer()
+        data = buffer.data
+        writer = BigWig.Writer(buffer, [("chr1", 1000)]; datatype=:bedgraph)
+        write(writer, ("chr1",  1, 10, 0.0))
+        write(writer, ("chr1", 15, 15, 1.0))
+        write(writer, ("chr1", 90, 99, 2.0))
+        close(writer)
+        reader = BigWig.Reader(IOBuffer(data))
+        records = collect(reader)
+        @test length(records) == 3
+        @test BigWig.chrom.(records) == ["chr1", "chr1", "chr1"]
+        @test BigWig.chromstart.(records) == [1, 15, 90]
+        @test BigWig.chromend.(records) == [10, 15, 99]
+        @test BigWig.value.(records) == [0.0, 1.0, 2.0]
+
+        # varstep
+        buffer = IOBuffer()
+        data = buffer.data
+        writer = BigWig.Writer(buffer, [("chr1", 1000)]; datatype=:varstep)
+        write(writer, ("chr1",  1, 10, 0.0))
+        write(writer, ("chr1", 15, 24, 1.0))
+        write(writer, ("chr1", 90, 99, 2.0))
+        close(writer)
+        reader = BigWig.Reader(IOBuffer(data))
+        records = collect(reader)
+        @test length(records) == 3
+        @test BigWig.chrom.(records) == ["chr1", "chr1", "chr1"]
+        @test BigWig.chromstart.(records) == [1, 15, 90]
+        @test BigWig.chromend.(records) == [10, 24, 99]
+        @test BigWig.value.(records) == [0.0, 1.0, 2.0]
+
+        # fixedstep
+        buffer = IOBuffer()
+        data = buffer.data
+        writer = BigWig.Writer(buffer, [("chr1", 1000)]; datatype=:fixedstep)
+        write(writer, ("chr1",  1,  5, 0.0))
+        write(writer, ("chr1", 11, 15, 1.0))
+        write(writer, ("chr1", 21, 25, 2.0))
+        close(writer)
+        reader = BigWig.Reader(IOBuffer(data))
+        records = collect(reader)
+        @test length(records) == 3
+        @test BigWig.chrom.(records) == ["chr1", "chr1", "chr1"]
+        @test BigWig.chromstart.(records) == [1, 11, 21]
+        @test BigWig.chromend.(records) == [5, 15, 25]
+        @test BigWig.value.(records) == [0.0, 1.0, 2.0]
     end
 
     @testset "large" begin

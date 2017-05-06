@@ -125,7 +125,7 @@ function _read!(reader::Reader, state, record::Record)
         chromstart = read(state.stream, UInt32)
         chromend   = chromstart + header.item_span
     elseif isfixedstep(header.data_type)
-        chromstart = (state.current_record == 0 ? header.chrom_start : state.record.chromstart) + header.item_step
+        chromstart = state.current_record == 0 ? header.chrom_start : state.record.chromstart + header.item_step
         chromend   = chromstart + header.item_span
     else
         throw(ArgumentError("invalid data type"))
