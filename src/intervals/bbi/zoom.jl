@@ -76,7 +76,7 @@ function find_overlapping_zoomdata(zoom::Zoom, chromid::UInt32, chromstart::UInt
         datastream = IOBuffer(zoom.data[1:size])
         while !eof(datastream)
             data = read(datastream, ZoomData)
-            c = compare_intervals(data, (chromid, chromstart, chromend))
+            c = compare_intervals((data.chromid, data.chromstart, data.chromend), (chromid, chromstart, chromend))
             if c == 0  # overlap
                 push!(ret, data)
             elseif c > 0
@@ -87,12 +87,11 @@ function find_overlapping_zoomdata(zoom::Zoom, chromid::UInt32, chromstart::UInt
     return ret
 end
 
-function compare_intervals(data::ZoomData, interval::NTuple{3,UInt32})
-    chromid, chromstart, chromend = interval
-    if data.chromid < chromid || (data.chromid == chromid && data.chromend ≤ chromstart)
+function compare_intervals(x::NTuple{3,UInt32}, y::NTuple{3,UInt32})
+    if x[1] < y[1] || (x[1] == y[1] && x[3] ≤ y[2])
         # strictly left
         return -1
-    elseif data.chromid > chromid || (data.chromid == chromid && data.chromstart ≥ chromend)
+    elseif x[1] > y[1] || (x[1] == y[1] && x[2] ≥ y[3])
         # strictly right
         return +1
     else

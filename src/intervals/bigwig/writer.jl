@@ -4,16 +4,16 @@
 type WriterState
     # section info
     datatype::UInt8
+    count::UInt64
     chromid::UInt32
     chromstart::UInt32
     chromend::UInt32
     itemstep::UInt32
     itemspan::UInt32
-    count::UInt64
 
-    # last record info
-    last_chrom_start::UInt32
-    last_chrom_end::UInt32
+    # previous record info
+    chromstart_prev::UInt32
+    chromend_prev::UInt32
 
     # section state
     started::Bool
@@ -197,24 +197,21 @@ function Base.close(writer::Writer)
 end
 
 function write_impl(writer::Writer, chromid::UInt32, chromstart::UInt32, chromend::UInt32, value::Float32)
-    # check consistency of new record
-    if chromstart ≥ chromend
-        throw(ArgumentError("non-positive interval"))
-    end
-
+    n = 0
     state = writer.state
-    if isfixedstep(state.datatype) && state.itemstep == 0 && state.count == 1
-        # infer the step from the first and second records
-        state.itemstep = chromstart - state.last_chrom_start
-    end
-
     if state.started && (chromid != state.chromid || position(state.buffer) ≥ writer.uncompressed_buffer_size - sizeof(UInt32) * 3)
         finish_section!(writer)
     end
-
-    n = 0
     if !state.started
         n += start_section!(writer, chromid, chromstart, chromend)
+    end
+
+    # check new record
+    check_interval(state, chromid, chromstart, chromend)
+
+    # infer the step size from the first and second records
+    if isfixedstep(state.datatype) && state.count == 1
+        state.itemstep = chromstart - state.chromstart_prev
     end
 
     # write data to the buffer
@@ -227,17 +224,13 @@ function write_impl(writer::Writer, chromid::UInt32, chromstart::UInt32, chromen
     else
         assert(false)
     end
-    state.chromend = max(state.chromend, chromend)
+
+    # update state
     state.count += 1
+    state.chromend = max(state.chromend, chromend)
+    state.chromstart_prev = chromstart
+    state.chromend_prev = chromend
 
-    # update last record info
-    state.last_chrom_start = chromstart
-    state.last_chrom_end = chromend
-
-    # udpate zoom info
-    BBI.add_value!(writer.zoombuffer, chromid, chromstart, chromend, value)
-
-    # update global stats
     size = chromend - chromstart
     state.cov += size
     state.min = min(state.min, value)
@@ -245,7 +238,25 @@ function write_impl(writer::Writer, chromid::UInt32, chromstart::UInt32, chromen
     state.sum += value   * size
     state.ssq += value^2 * size
 
+    BBI.add_value!(writer.zoombuffer, chromid, chromstart, chromend, value)
+
     return n
+end
+
+function check_interval(state::WriterState, chromid::UInt32, chromstart::UInt32, chromend::UInt32)
+    if chromstart ≥ chromend
+        throw(ArgumentError("empty interval"))
+    elseif BBI.compare_intervals((chromid, chromstart, chromend), (state.chromid, state.chromstart_prev, state.chromend_prev)) != 1
+        throw(ArgumentError("disordered intervals"))
+    elseif isvarstep(state.datatype) && chromend - chromstart != state.itemspan
+        throw(ArgumentError("inconsistent interval span"))
+    elseif isfixedstep(state.datatype)
+        if chromend - chromstart != state.itemspan
+            throw(ArgumentError("inconsistent interval span"))
+        elseif state.count > 1 && chromstart - state.chromstart_prev != state.itemstep
+            throw(ArgumentError("inconsistent intreval step"))
+        end
+    end
 end
 
 function start_section!(writer::Writer, chromid::UInt32, chromstart::UInt32, chromend::UInt32)
@@ -265,8 +276,8 @@ function start_section!(writer::Writer, chromid::UInt32, chromstart::UInt32, chr
     state.count = 0
 
     # initialize last record info
-    state.last_chrom_start = 0
-    state.last_chrom_end = 0
+    state.chromstart_prev = 0
+    state.chromend_prev = 0
 
     # write dummy section header (filled later)
     seekstart(state.buffer)
