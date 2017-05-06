@@ -57,7 +57,7 @@ end
 function advance!(iter::OverlapIterator, state::OverlapIteratorState)
     while true
         while state.current_block ≤ endof(state.blocks) && eof(state.state.stream)
-            seek(iter.reader.stream, state.blocks[state.current_block])
+            seek(iter.reader.stream, state.blocks[state.current_block].offset)
             state.state = Bio.Ragel.State(data_machine.start_state, Libz.ZlibInflateInputStream(iter.reader.stream, reset_on_end=false))
             state.current_block += 1
         end
