@@ -47,6 +47,8 @@ immutable ZoomData
     ssq::Float32
 end
 
+const ZOOM_DATA_SIZE = 32
+
 function Base.read(stream::IO, ::Type{ZoomData})
     u32() = read(stream, UInt32)
     f32() = read(stream, Float32)
@@ -195,8 +197,8 @@ type ZoomBuffer
     # bin size of zoom
     binsize::UInt32
 
-    # number of data per block
-    dataperblock::Int
+    # maximum size of uncompressed buffer
+    uncompressed_buffer_size::UInt64
 
     # current chromosome (typemax(UInt32) for undefined)
     chromid::UInt32
@@ -230,7 +232,7 @@ type ZoomBuffer
             buffer = new(
                 chromlens,
                 binsize,
-                div(max_block_size, sizeof(ZoomData)),
+                max_block_size,
                 typemax(UInt32),
                 Block[],
                 UInt32[], Float32[], Float32[], Float32[], Float32[],
@@ -328,6 +330,8 @@ function write_zoom_impl(output::IO, buffer::ZoomBuffer, scale::Int)
     tmpbuf = IOBuffer()
     blocksize = 0
     higher = ZoomData[]
+    compressed = Vector{UInt8}(div(buffer.uncompressed_buffer_size * 11, 10))
+    dataperblock = div(buffer.uncompressed_buffer_size, ZOOM_DATA_SIZE)
     seekstart(buffer.stream1)
     # stream2 is now empty
     @assert position(buffer.stream2) == 0 && eof(buffer.stream2)
@@ -345,10 +349,10 @@ function write_zoom_impl(output::IO, buffer::ZoomBuffer, scale::Int)
         lo = min(lo, (data.chromid, data.chromstart))
         up = max(up, (data.chromid, data.chromend))
         blocksize += 1
-        if blocksize == buffer.dataperblock
-            compressed = Libz.compress(takebuf_array(tmpbuf))
-            push!(blocks, Block(lo, up, position(output), sizeof(compressed)))
-            write(output, compressed)
+        if blocksize == dataperblock
+            datasize = compress!(compressed, takebuf_array(tmpbuf))
+            push!(blocks, Block(lo, up, position(output), datasize))
+            unsafe_write(output, pointer(compressed), datasize)
             lo = (typemax(UInt32), typemax(UInt32))
             up = (typemin(UInt32), typemin(UInt32))
             truncate(tmpbuf, 0)
@@ -366,9 +370,9 @@ function write_zoom_impl(output::IO, buffer::ZoomBuffer, scale::Int)
 
     # write remaining data and zoom if any
     if blocksize > 0
-        compressed = Libz.compress(takebuf_array(tmpbuf))
-        push!(blocks, Block(lo, up, position(output), sizeof(compressed)))
-        write(output, compressed)
+        datasize = compress!(compressed, takebuf_array(tmpbuf))
+        push!(blocks, Block(lo, up, position(output), datasize))
+        unsafe_write(output, pointer(compressed), datasize)
     end
     if !isempty(higher)
         write(buffer.stream2, aggregate(higher))

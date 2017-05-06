@@ -18,6 +18,7 @@ type WriterState
     # section state
     started::Bool
     buffer::IOBuffer
+    compressed::Vector{UInt8}
 
     # global state and stats
     blocks::Vector{BBI.Block}
@@ -34,9 +35,8 @@ type WriterState
             encode_datatype(datatype), 0, 0, 0, 0, 0, 0,
             # last record info
             0, 0,
-            # zoom info
             # section data
-            false, IOBuffer(),
+            false, IOBuffer(), UInt8[],
             # global info
             BBI.Block[], Set{UInt32}(),
             0, +Inf32, -Inf32, 0.0f0, 0.0f0)
@@ -263,9 +263,12 @@ function start_section!(writer::Writer, chromid::UInt32, chromstart::UInt32, chr
     state.last_chrom_end = 0
 
     # write dummy section header (filled later)
-    n = write_zeros(state.buffer, SECTION_HEADER_SIZE)
+    seekstart(state.buffer)
+    truncate(state.buffer, SECTION_HEADER_SIZE)
+    seek(state.buffer, SECTION_HEADER_SIZE)
+    resize!(state.compressed, div(writer.uncompressed_buffer_size * 11, 10))
     state.started = true
-    return n
+    return SECTION_HEADER_SIZE
 end
 
 function finish_section!(writer::Writer)
@@ -286,16 +289,14 @@ function finish_section!(writer::Writer)
             state.count))
 
     # write compressed section
-    #data = Libz.compress(takebuf_array(state.buffer))
-    data = BBI.compress(takebuf_array(state.buffer))
+    datasize = BBI.compress!(state.compressed, takebuf_array(state.buffer))
     offset = position(writer.stream)
-    write(writer.stream, data)
-    @show sizeof(data)
+    unsafe_write(writer.stream, pointer(state.compressed), datasize)
 
     # record block
     push!(
         state.blocks,
-        BBI.Block((state.chromid, state.chromstart), (state.chromid, state.chromend), offset, sizeof(data)))
+        BBI.Block((state.chromid, state.chromstart), (state.chromid, state.chromend), offset, datasize))
     state.started = false
     return
 end

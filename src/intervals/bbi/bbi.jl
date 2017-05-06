@@ -21,17 +21,17 @@ include("rtree.jl")
 include("section.jl")
 include("zoom.jl")
 
-function compress(data::Vector{UInt8})
-    out = Vector{UInt8}(max(length(data), 66 * 1024))
-    len = Ref(Culong(length(out)))
-    r = ccall((:compress, Libz.zlib),
-          Cint,
-          (Ptr{Void}, Ref{Culong}, Ptr{Void}, Culong),
-        out, len, data, length(data))
-    if r != Libz.Z_OK
-        error(r)
+function compress!(dst::Vector{UInt8}, src::Vector{UInt8})::UInt64
+    len = Ref(Culong(length(dst)))
+    code = ccall(
+        (:compress, Libz.zlib),
+        Cint,
+        (Ptr{Void}, Ref{Culong}, Ptr{Void}, Culong),
+        dst, len, src, sizeof(src))
+    if code != Libz.Z_OK
+        Libz.zerror(code)
     end
-    return out[1:len[]]
+    return len[]
 end
 
 #=
