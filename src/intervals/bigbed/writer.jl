@@ -8,8 +8,8 @@ type WriterState
     chromend::UInt32
 
     # last record info
-    last_chrom_start::UInt32
-    last_chrom_end::UInt32
+    chromstart_prev::UInt32
+    chromend_prev::UInt32
 
     # section state
     started::Bool
@@ -200,17 +200,14 @@ function Base.close(writer::Writer)
 end
 
 function write_impl(writer::Writer, chromid::UInt32, chromstart::UInt32, chromend::UInt32, optionals::Tuple)
-    # check consistency of new record
     state = writer.state
-    if chromstart ≥ chromend
-        throw(ArgumentError("non-positive interval"))
-    end
     if state.nfields == 0
         # infer the number of fields from the first record
         state.nfields = 3 + length(optionals)
-    elseif state.nfields != 3 + length(optionals)
-        throw(ArgumentError("inconsistent field counts"))
     end
+
+    # check new record
+    check_interval(state, chromid, chromstart, chromend, optionals)
 
     # write record to record buffer in order to estimate the section buffer size
     truncate(state.recordbuffer, 0)
@@ -228,15 +225,25 @@ function write_impl(writer::Writer, chromid::UInt32, chromstart::UInt32, chromen
     # write data to the buffer
     seekstart(state.recordbuffer)
     n = write(state.buffer, state.recordbuffer)
-    state.chromend = max(state.chromend, chromend)
 
-    # update last record info
-    state.last_chrom_start = chromstart
-    state.last_chrom_end = chromend
+    # update state
+    state.chromend = max(state.chromend, chromend)
+    state.chromstart_prev = chromstart
+    state.chromend_prev = chromend
 
     push!(state.intervals, Interval(writer.chromnames[chromid], chromstart + 1, chromend))
 
     return n
+end
+
+function check_interval(state::WriterState, chromid::UInt32, chromstart::UInt32, chromend::UInt32, optionals::Tuple)
+    if chromstart ≥ chromend
+        throw(ArgumentError("empty interval"))
+    elseif chromid < state.chromid || (chromid == state.chromid && chromstart < state.chromstart_prev)
+        throw(ArgumentError("disordered intervals"))
+    elseif state.nfields != 3 + length(optionals)
+        throw(ArgumentError("inconsistent field counts"))
+    end
 end
 
 # Write optional fields to stream.
@@ -298,8 +305,8 @@ function start_section!(writer::Writer, chromid::UInt32, chromstart::UInt32, chr
     state.chromend = chromend
 
     # initialize last record info
-    state.last_chrom_start = 0
-    state.last_chrom_end = 0
+    state.chromstart_prev = 0
+    state.chromend_prev = 0
 
     # initialize data buffer
     truncate(state.buffer, 0)
