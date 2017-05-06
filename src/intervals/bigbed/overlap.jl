@@ -27,6 +27,7 @@ end
 
 type OverlapIteratorState
     state::Bio.Ragel.State
+    data::Vector{UInt8}
     done::Bool
     record::Record
     blocks::Vector{BBI.Block}
@@ -34,6 +35,7 @@ type OverlapIteratorState
 end
 
 function Base.start(iter::OverlapIterator)
+    data = Vector{UInt8}(iter.reader.header.uncompress_buf_size)
     blocks = BBI.find_overlapping_blocks(iter.reader.rtree, iter.chromid, iter.chromstart, iter.chromend)
     if !isempty(blocks)
         seek(iter.reader.stream, blocks[1].offset)
@@ -42,6 +44,7 @@ function Base.start(iter::OverlapIterator)
         Bio.Ragel.State(
             data_machine.start_state,
             Libz.ZlibInflateInputStream(iter.reader.stream, reset_on_end=false)),
+        data,
         isempty(blocks), Record(), blocks, isempty(blocks) ? 1 : 2)
 end
 
@@ -57,8 +60,10 @@ end
 function advance!(iter::OverlapIterator, state::OverlapIteratorState)
     while true
         while state.current_block ≤ endof(state.blocks) && eof(state.state.stream)
-            seek(iter.reader.stream, state.blocks[state.current_block].offset)
-            state.state = Bio.Ragel.State(data_machine.start_state, Libz.ZlibInflateInputStream(iter.reader.stream, reset_on_end=false))
+            block = state.blocks[state.current_block]
+            seek(iter.reader.stream, block.offset)
+            size = BBI.uncompress!(state.data, read(iter.reader.stream, block.size))
+            state.state = Bio.Ragel.State(data_machine.start_state, BufferedStreams.BufferedInputStream(state.data[1:size]))
             state.current_block += 1
         end
         if state.done || (state.current_block > endof(state.blocks) && eof(state.state.stream))

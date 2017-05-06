@@ -29,10 +29,12 @@ end
 immutable Zoom{T<:IO}
     header::ZoomHeader
     rtree::RTree{T}
+    # preallocated ZoomData buffer
+    data::Vector{UInt8}
 end
 
-function Zoom(stream::IO, header::ZoomHeader)
-    return Zoom(header, RTree(stream, header.indexoffset))
+function Zoom(stream::IO, header::ZoomHeader, maxsize::Integer)
+    return Zoom(header, RTree(stream, header.indexoffset), Vector{UInt8}(maxsize))
 end
 
 # Supplemental Table 19.
@@ -70,8 +72,8 @@ function find_overlapping_zoomdata(zoom::Zoom, chromid::UInt32, chromstart::UInt
     ret = ZoomData[]
     for block in blocks
         seek(stream, block.offset)
-        # TODO: lazy decompression
-        datastream = IOBuffer(Libz.decompress(read(stream, block.size)))
+        size = uncompress!(zoom.data, read(stream, block.size))
+        datastream = IOBuffer(zoom.data[1:size])
         while !eof(datastream)
             data = read(datastream, ZoomData)
             c = compare_intervals(data, (chromid, chromstart, chromend))

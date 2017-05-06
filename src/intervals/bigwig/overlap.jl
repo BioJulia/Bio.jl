@@ -28,6 +28,7 @@ end
 type OverlapIteratorState
     # inflating data stream
     stream::IOBuffer
+    data::Vector{UInt8}
     done::Bool
     header::SectionHeader
     record::Record
@@ -38,10 +39,11 @@ type OverlapIteratorState
 end
 
 function Base.start(iter::OverlapIterator)
+    data = Vector{UInt8}(iter.reader.header.uncompress_buf_size)
     blocks = BBI.find_overlapping_blocks(iter.reader.index, iter.chromid, iter.chromstart, iter.chromend)
     # dummy header
     header = SectionHeader(0, 0, 0, 0, 0, 0, 0, 0)
-    return OverlapIteratorState(IOBuffer(), false, header, Record(), blocks, 1, 0, 0)
+    return OverlapIteratorState(IOBuffer(), data, false, header, Record(), blocks, 1, 0, 0)
 end
 
 function Base.done(iter::OverlapIterator, state::OverlapIteratorState)
@@ -59,8 +61,8 @@ function advance!(iter::OverlapIterator, state::OverlapIteratorState)
         while state.current_record == state.n_records && state.current_block ≤ endof(state.blocks)
             block = state.blocks[state.current_block]
             seek(iter.reader.stream, block.offset)
-            data = read(iter.reader.stream, block.size)
-            state.stream = IOBuffer(Libz.decompress(data))
+            size = BBI.uncompress!(state.data, read(iter.reader.stream, block.size))
+            state.stream = IOBuffer(state.data[1:size])
             state.header = read(state.stream, SectionHeader)
             state.current_block += 1
             state.n_records = state.header.item_count

@@ -289,14 +289,14 @@ function finish_section!(writer::Writer)
             state.count))
 
     # write compressed section
-    datasize = BBI.compress!(state.compressed, takebuf_array(state.buffer))
+    size = BBI.compress!(state.compressed, takebuf_array(state.buffer))
     offset = position(writer.stream)
-    unsafe_write(writer.stream, pointer(state.compressed), datasize)
+    unsafe_write(writer.stream, pointer(state.compressed), size)
 
     # record block
     push!(
         state.blocks,
-        BBI.Block((state.chromid, state.chromstart), (state.chromid, state.chromend), offset, datasize))
+        BBI.Block((state.chromid, state.chromstart), (state.chromid, state.chromend), offset, size))
     state.started = false
     return
 end

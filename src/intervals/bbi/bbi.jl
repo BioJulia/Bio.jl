@@ -20,19 +20,6 @@ include("btree.jl")
 include("rtree.jl")
 include("section.jl")
 include("zoom.jl")
-
-# TODO: Move this to Libz.jl.
-function compress!(dst::Vector{UInt8}, src::Vector{UInt8})::UInt64
-    len = Ref(Culong(length(dst)))
-    code = ccall(
-        (:compress, Libz.zlib),
-        Cint,
-        (Ptr{Void}, Ref{Culong}, Ptr{Void}, Culong),
-        dst, len, src, sizeof(src))
-    if code != Libz.Z_OK
-        Libz.zerror(code)
-    end
-    return len[]
-end
+include("compress.jl")
 
 end
