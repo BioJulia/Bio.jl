@@ -120,7 +120,7 @@ function Writer(output::IO, chromlist::Union{AbstractVector,Associative};
     write_zeros(output, sizeof(UInt64))
 
     # initialize zoom buffer (use temporary file?)
-    max_block_size = 64 * 2^10
+    max_block_size = 16 * 2^10
     chromlens = Dict(id => len for (name, id, len) in chromlist_with_id)
     zoombuffer = BBI.ZoomBuffer(chromlens, binsize, max_block_size)
 
