@@ -63,13 +63,13 @@ function Base.write(stream::IO, data::ZoomData)
 end
 
 function find_overlapping_zoomdata(zoom::Zoom, chromid::UInt32, chromstart::UInt32, chromend::UInt32)
-    nodes = find_overlapping_nodes(zoom.rtree, chromid, chromstart, chromend)
+    blocks = find_overlapping_blocks(zoom.rtree, chromid, chromstart, chromend)
     stream = zoom.rtree.stream
     ret = ZoomData[]
-    for node in nodes
-        seek(stream, node.offset)
+    for block in blocks
+        seek(stream, block.offset)
         # TODO: lazy decompression
-        datastream = IOBuffer(Libz.decompress(read(stream, node.size)))
+        datastream = IOBuffer(Libz.decompress(read(stream, block.size)))
         while !eof(datastream)
             data = read(datastream, ZoomData)
             c = compare_intervals(data, (chromid, chromstart, chromend))

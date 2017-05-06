@@ -131,11 +131,11 @@ function RTree(stream::IO, offset::Integer)
     return RTree(stream, offset, header)
 end
 
-# Find overlapping leaf nodes.
-function find_overlapping_nodes(tree::RTree, chromid::UInt32, chromstart::UInt32, chromend::UInt32)
+# Find overlapping blocks.
+function find_overlapping_blocks(tree::RTree, chromid::UInt32, chromstart::UInt32, chromend::UInt32)
     root_offset = tree.offset + (RTREE_HEADER_SIZE % UInt64)
     stack = [root_offset]
-    ret = RTreeLeafNode[]
+    ret = Block[]
     while !isempty(stack)
         offset = pop!(stack)
         seek(tree.stream, offset)
@@ -147,7 +147,7 @@ function find_overlapping_nodes(tree::RTree, chromid::UInt32, chromstart::UInt32
                 offset = read(tree.stream, UInt64)
                 if isleaf(node)
                     datasize = read(tree.stream, UInt64)
-                    push!(ret, RTreeLeafNode(lo, up, offset, datasize))
+                    push!(ret, Block(lo, up, offset, datasize))
                 else
                     push!(stack, offset)
                 end

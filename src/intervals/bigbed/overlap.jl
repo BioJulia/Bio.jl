@@ -29,20 +29,20 @@ type OverlapIteratorState
     state::Bio.Ragel.State
     done::Bool
     record::Record
-    nodes::Vector{BBI.RTreeLeafNode}
-    current_node::Int
+    blocks::Vector{BBI.Block}
+    current_block::Int
 end
 
 function Base.start(iter::OverlapIterator)
-    nodes = BBI.find_overlapping_nodes(iter.reader.rtree, iter.chromid, iter.chromstart, iter.chromend)
-    if !isempty(nodes)
-        seek(iter.reader.stream, nodes[1].offset)
+    blocks = BBI.find_overlapping_blocks(iter.reader.rtree, iter.chromid, iter.chromstart, iter.chromend)
+    if !isempty(blocks)
+        seek(iter.reader.stream, blocks[1].offset)
     end
     return OverlapIteratorState(
         Bio.Ragel.State(
             data_machine.start_state,
             Libz.ZlibInflateInputStream(iter.reader.stream, reset_on_end=false)),
-        isempty(nodes), Record(), nodes, isempty(nodes) ? 1 : 2)
+        isempty(blocks), Record(), blocks, isempty(blocks) ? 1 : 2)
 end
 
 function Base.done(iter::OverlapIterator, state::OverlapIteratorState)
@@ -56,12 +56,12 @@ end
 
 function advance!(iter::OverlapIterator, state::OverlapIteratorState)
     while true
-        while state.current_node ≤ endof(state.nodes) && eof(state.state.stream)
-            seek(iter.reader.stream, state.nodes[state.current_node])
+        while state.current_block ≤ endof(state.blocks) && eof(state.state.stream)
+            seek(iter.reader.stream, state.blocks[state.current_block])
             state.state = Bio.Ragel.State(data_machine.start_state, Libz.ZlibInflateInputStream(iter.reader.stream, reset_on_end=false))
-            state.current_node += 1
+            state.current_block += 1
         end
-        if state.done || (state.current_node > endof(state.nodes) && eof(state.state.stream))
+        if state.done || (state.current_block > endof(state.blocks) && eof(state.state.stream))
             state.done = true
             return state
         end
