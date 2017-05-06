@@ -14,6 +14,7 @@ type WriterState
     # section state
     started::Bool
     buffer::IOBuffer
+    compressed::Vector{UInt8}
     intervals::Vector{Interval{Void}}
 
     # record buffer
@@ -37,7 +38,7 @@ type WriterState
             # last record info
             0, 0,
             # section state
-            false, IOBuffer(), Interval{Void}[],
+            false, IOBuffer(), UInt8[], Interval{Void}[],
             # record buffer
             IOBuffer(),
             # global info
@@ -300,6 +301,10 @@ function start_section!(writer::Writer, chromid::UInt32, chromstart::UInt32, chr
     state.last_chrom_start = 0
     state.last_chrom_end = 0
 
+    # initialize data buffer
+    truncate(state.buffer, 0)
+    resize!(state.compressed, div(writer.uncompressed_buffer_size * 11, 10))
+
     # set flag
     state.started = true
     empty!(state.intervals)
@@ -310,14 +315,14 @@ function finish_section!(writer::Writer)
     state = writer.state
 
     # write compressed data
-    data = Libz.compress(takebuf_array(state.buffer))
+    datasize = BBI.compress!(state.compressed, takebuf_array(state.buffer))
     offset = position(writer.stream)
-    write(writer.stream, data)
+    unsafe_write(writer.stream, pointer(state.compressed), datasize)
 
     # record block
     push!(
         state.blocks,
-        BBI.Block((state.chromid, state.chromstart), (state.chromid, state.chromend), offset, sizeof(data)))
+        BBI.Block((state.chromid, state.chromstart), (state.chromid, state.chromend), offset, datasize))
 
     # update global stats
     count, cov, min, max, sum, ssq = compute_section_summary(state.intervals)
