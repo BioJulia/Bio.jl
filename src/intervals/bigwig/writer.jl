@@ -286,9 +286,11 @@ function finish_section!(writer::Writer)
             state.count))
 
     # write compressed section
-    data = Libz.compress(takebuf_array(state.buffer))
+    #data = Libz.compress(takebuf_array(state.buffer))
+    data = BBI.compress(takebuf_array(state.buffer))
     offset = position(writer.stream)
     write(writer.stream, data)
+    @show sizeof(data)
 
     # record block
     push!(
