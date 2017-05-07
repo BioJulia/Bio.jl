@@ -76,6 +76,18 @@ function chrom(record::Record)::String
     return record.reader.chrom_names[chromid(record)]
 end
 
+function haschrom(record::Record)
+    return isfilled(record)
+end
+
+function Bio.seqname(record::Record)
+    return chrom(record)
+end
+
+function Bio.hasseqname(record::Record)
+    return haschrom(record)
+end
+
 """
     chromstart(record::Record)::Int
 
@@ -84,6 +96,18 @@ Get the start position of `record`.
 function chromstart(record::Record)::Int
     checkfilled(record)
     return record.chromstart + 1
+end
+
+function haschromstart(record::Record)
+    return isfilled(record)
+end
+
+function Bio.leftposition(record::Record)
+    return chromstart(record)
+end
+
+function Bio.hasleftposition(record::Record)
+    return haschromstart(record)
 end
 
 """
@@ -96,6 +120,18 @@ function chromend(record::Record)::Int
     return record.chromend % Int
 end
 
+function haschromend(record::Record)
+    return isfilled(record)
+end
+
+function Bio.rightposition(record::Record)
+    return chromend(record)
+end
+
+function Bio.hasrightposition(record::Record)
+    return haschromend(record)
+end
+
 """
     value(record::Record)::Float32
 
@@ -104,6 +140,10 @@ Get the value of `record`.
 function value(record::Record)::Float32
     checkfilled(record)
     return record.value
+end
+
+function hasvalue(record::Record)
+    return isfilled(record)
 end
 
 function checkfilled(record::Record)

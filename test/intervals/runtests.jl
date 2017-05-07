@@ -794,9 +794,13 @@ end
         reader = BigWig.Reader(IOBuffer(data))
         records = collect(reader)
         @test length(records) == 1
-        @test BigWig.chrom(records[1]) == "chr1"
-        @test BigWig.chromstart(records[1]) === 50
-        @test BigWig.chromend(records[1]) === 100
+        @test BigWig.haschrom(records[1]) === hasseqname(records[1]) === true
+        @test BigWig.chrom(records[1]) == seqname(records[1]) == "chr1"
+        @test BigWig.haschromstart(records[1]) === hasleftposition(records[1]) === true
+        @test BigWig.chromstart(records[1]) === leftposition(records[1]) === 50
+        @test BigWig.haschromend(records[1]) === hasrightposition(records[1]) === true
+        @test BigWig.chromend(records[1]) === rightposition(records[1]) === 100
+        @test BigWig.hasvalue(records[1])
         @test BigWig.value(records[1]) === 3.14f0
         @test startswith(repr(records[1]), "Bio.Intervals.BigWig.Record:\n")
         interval = convert(Interval, records[1])
