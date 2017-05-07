@@ -75,47 +75,56 @@ function Bio.isfilled(record::Record)
 end
 
 function Base.show(io::IO, record::Record)
-    print(io, summary(record), ':')
-    if isfilled(record)
-        println(io)
-        println(io, "   chromosome: ", chrom(record))
-        println(io, "        start: ", chromstart(record))
-          print(io, "          end: ", chromend(record))
-        if hasname(record)
-            println(io)
-            print(io, "         name: ", name(record))
-        end
-        if hasscore(record)
-            println(io)
-            print(io, "        score: ", score(record))
-        end
-        if hasstrand(record)
-            println(io)
-            print(io, "       strand: ", strand(record))
-        end
-        if hasthickstart(record)
-            println(io)
-            print(io, "  thick start: ", thickstart(record))
-        end
-        if hasthickend(record)
-            println(io)
-            print(io, "    thick end: ", thickend(record))
-        end
-        if hasitemrgb(record)
-            println(io)
-            print(io, "     item RGB: ", itemrgb(record))
-        end
-        if hasblockcount(record)
-            bcount = blockcount(record)
-            println(io)
-            print(io, "  block count: ", bcount)
-            for (i, (bsize, bstart)) in enumerate(zip(blocksizes(record), blockstarts(record)))
-                println(io)
-                print(io, "      [$i]: size=$(bsize), start=$(bstart)")
-            end
+    if get(io, :compact, false)
+        if isfilled(record)
+            # TODO: more fields
+            print(io, chrom(record), ':', chromstart(record), '-', chromend(record))
+        else
+            print(io, "<not filled>")
         end
     else
-        print(io, " <not filled>")
+        print(io, summary(record), ':')
+        if isfilled(record)
+            println(io)
+            println(io, "   chromosome: ", chrom(record))
+            println(io, "        start: ", chromstart(record))
+              print(io, "          end: ", chromend(record))
+            if hasname(record)
+                println(io)
+                print(io, "         name: ", name(record))
+            end
+            if hasscore(record)
+                println(io)
+                print(io, "        score: ", score(record))
+            end
+            if hasstrand(record)
+                println(io)
+                print(io, "       strand: ", strand(record))
+            end
+            if hasthickstart(record)
+                println(io)
+                print(io, "  thick start: ", thickstart(record))
+            end
+            if hasthickend(record)
+                println(io)
+                print(io, "    thick end: ", thickend(record))
+            end
+            if hasitemrgb(record)
+                println(io)
+                print(io, "     item RGB: ", itemrgb(record))
+            end
+            if hasblockcount(record)
+                bcount = blockcount(record)
+                println(io)
+                print(io, "  block count: ", bcount)
+                for (i, (bsize, bstart)) in enumerate(zip(blocksizes(record), blockstarts(record)))
+                    println(io)
+                    print(io, "      [$i]: size=$(bsize), start=$(bstart)")
+                end
+            end
+        else
+            print(io, " <not filled>")
+        end
     end
 end
 
@@ -143,6 +152,18 @@ function chrom(record::Record)::String
     return record.reader.chrom_names[chromid(record)]
 end
 
+function haschrom(record::Record)
+    return isfilled(record)
+end
+
+function Bio.seqname(record::Record)
+    return chrom(record)
+end
+
+function Bio.hasseqname(record::Record)
+    return haschrom(record)
+end
+
 """
     chromstart(record::Record)::Int
 
@@ -153,6 +174,18 @@ function chromstart(record::Record)::Int
     return record.chromstart + 1
 end
 
+function haschromstart(record::Record)
+    return isfilled(record)
+end
+
+function Bio.leftposition(record::Record)
+    return chromstart(record)
+end
+
+function Bio.hasleftposition(record::Record)
+    return haschromstart(record)
+end
+
 """
     chromend(record::Record)::Int
 
@@ -161,6 +194,18 @@ Get the end position of `record`.
 function chromend(record::Record)::Int
     checkfilled(record)
     return record.chromend % Int
+end
+
+function haschromend(record::Record)
+    return isfilled(record)
+end
+
+function Bio.rightposition(record::Record)
+    return chromend(record)
+end
+
+function Bio.hasrightposition(record::Record)
+    return haschromend(record)
 end
 
 """
@@ -335,9 +380,12 @@ function optionals(record::Record)::Vector{String}
     checkfilled(record)
     ret = String[]
     p = 13
-    p_end = search(record.data, '\0', p)
-    while p < p_end
-        p_delim = find(record.data, '\t', p)
+    p_end = last(record.filled)
+    while p ≤ p_end
+        p_delim = search(record.data, '\t', p)
+        if p_delim == 0
+            p_delim = p_end + 1
+        end
         push!(ret, String(record.data[p:p_delim-1]))
         p = p_delim + 1
     end

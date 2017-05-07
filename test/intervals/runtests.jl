@@ -955,6 +955,41 @@ end
         @test BigBed.chromstart(records[1]) === 50
         @test BigBed.chromend(records[1]) === 100
         @test BigBed.name(records[1]) == "name1"
+        @test !BigBed.hasscore(records[1])
+
+        buffer = IOBuffer()
+        data = buffer.data
+        writer = BigBed.Writer(buffer, [("chr1", 1000)])
+        write(writer, ("chr1", 1, 100, "some name", 100, '+', 10, 90, RGB(0.5, 0.1, 0.2), 2, [4, 10], [10, 20]))
+        close(writer)
+        reader = BigBed.Reader(IOBuffer(data))
+        records = collect(reader)
+        @test length(records) == 1
+        @test BigBed.haschrom(records[1]) === hasseqname(records[1]) === true
+        @test BigBed.chrom(records[1]) == seqname(records[1]) == "chr1"
+        @test BigBed.haschromstart(records[1]) === hasleftposition(records[1]) === true
+        @test BigBed.chromstart(records[1]) === leftposition(records[1]) === 1
+        @test BigBed.haschromend(records[1]) === hasrightposition(records[1]) === true
+        @test BigBed.chromend(records[1]) === rightposition(records[1]) === 100
+        @test BigBed.hasname(records[1])
+        @test BigBed.name(records[1]) == "some name"
+        @test BigBed.hasscore(records[1])
+        @test BigBed.score(records[1]) === 100
+        @test BigBed.hasstrand(records[1])
+        @test BigBed.strand(records[1]) === STRAND_POS
+        @test BigBed.hasthickstart(records[1])
+        @test BigBed.thickstart(records[1]) === 10
+        @test BigBed.hasthickend(records[1])
+        @test BigBed.thickend(records[1]) === 90
+        @test BigBed.hasitemrgb(records[1])
+        #@test BigBed.itemrgb(records[1]) == RGB(0.5, 0.1, 0.2)
+        BigBed.itemrgb(records[1])
+        @test BigBed.hasblockcount(records[1])
+        @test BigBed.blockcount(records[1]) === 2
+        @test BigBed.hasblocksizes(records[1])
+        @test BigBed.blocksizes(records[1]) == [4, 10]
+        @test BigBed.hasblockstarts(records[1])
+        @test BigBed.blockstarts(records[1]) == [10, 20]
     end
 
     @testset "large" begin
