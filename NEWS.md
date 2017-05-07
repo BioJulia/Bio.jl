@@ -5,6 +5,7 @@ Bio.jl v0.5.0 Release Notes
 * Support VCF and BCF file formats ([#378]).
 * Support APIs for Entrez Programming Utilities ([#350]).
 * Support GFF3 file format ([#138]).
+* Support BigWig file format ([#352], [#452]).
 * Sequence names are ordered lexicographically by default ([#291]).
 * Computing genomic distances using the MASH algorithm is introduced ([#415]).
 * New FASTQ reader does not support multiline sequence and quality ([#448]).
@@ -13,6 +14,7 @@ Bio.jl v0.5.0 Release Notes
     * `Bio.Seq.FASTQReader` => `Bio.Seq.FASTQ.Reader` ([#448]).
     * `Bio.Seq.TwoBitReader` => `Bio.Seq.TwoBit.Reader` ([#431]).
     * `Bio.Intervals.BEDReader` => `Bio.Intervals.BED.Reader` ([#418]).
+    * `Bio.Intervals.BigBedReader` => `Bio.Intervals.BigBed.Reader` ([#452])
     * `Bio.Align.SAMReader` => `Bio.Align.SAM.Reader` ([#440])
     * `Bio.Align.BAMReader` => `Bio.Align.BAM.Reader` ([#440])
 * Overloaded `Base.intersect` methods for intervals are removed. Use the `eachoverlap` function exported from `Bio.Intervals` instead ([#426]).
@@ -26,6 +28,7 @@ Bio.jl v0.5.0 Release Notes
 [#138]: https://github.com/BioJulia/Bio.jl/pull/138
 [#291]: https://github.com/BioJulia/Bio.jl/issues/291
 [#350]: https://github.com/BioJulia/Bio.jl/pull/350
+[#352]: https://github.com/BioJulia/Bio.jl/issues/352
 [#353]: https://github.com/BioJulia/Bio.jl/pull/353
 [#378]: https://github.com/BioJulia/Bio.jl/pull/378
 [#391]: https://github.com/BioJulia/Bio.jl/issues/391
@@ -40,3 +43,4 @@ Bio.jl v0.5.0 Release Notes
 [#443]: https://github.com/BioJulia/Bio.jl/pull/443
 [#446]: https://github.com/BioJulia/Bio.jl/pull/446
 [#448]: https://github.com/BioJulia/Bio.jl/pull/448
+[#452]: https://github.com/BioJulia/Bio.jl/pull/452
