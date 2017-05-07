@@ -12,6 +12,16 @@ function Record()
     return Record(0, 0, NaN32)
 end
 
+function Base.convert(::Type{Bio.Intervals.Interval}, record::Record)
+    return Bio.Intervals.Interval(
+        chrom(record), chromstart(record), chromend(record),
+        Bio.Interval.STRAND_BOTH, value(record))
+end
+
+function Base.convert(::Type{Bio.Intervals.Interval{Record}}, record::Record)
+    return convert(Bio.Intervals.Interval, record)
+end
+
 function Bio.isfilled(record::Record)
     return isdefined(record, :reader)
 end

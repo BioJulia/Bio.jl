@@ -20,6 +20,15 @@ function Record()
         1:0, UnitRange{Int}[], UnitRange{Int}[])
 end
 
+function Base.convert(::Type{Bio.Intervals.Interval}, record::Record)
+    s = hasstrand(record) ? strand(record) : Bio.Intervals.STRAND_BOTH
+    return Bio.Intervals.Interval(chrom(record), chromstart(record), chromend(record), s, record)
+end
+
+function Base.convert(::Type{Bio.Intervals.Interval{Record}}, record::Record)
+    return convert(Bio.Intervals.Interval, record)
+end
+
 function Base.copy(record::Record)
     copy = Record(
         record.chromid,

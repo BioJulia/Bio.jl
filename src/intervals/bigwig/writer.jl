@@ -140,8 +140,13 @@ end
 
 function Base.write(writer::Writer, record::Tuple{String,Integer,Integer,Real})
     chromname, chromstart, chromend, value = record
-    chromid, _ = writer.chroms[chromname]
+    chromid = writer.chroms[chromname][1]
     return write_impl(writer, chromid, UInt32(chromstart - 1), UInt32(chromend), Float32(value))
+end
+
+function Base.write{T<:Real}(writer::Writer, interval::Bio.Intervals.Interval{T})
+    chromid = writer.chroms[interval.seqname][1]
+    return write_impl(writer, chromid, UInt32(interval.first - 1), UInt32(interval.last), Float32(interval.metadata))
 end
 
 function Base.close(writer::Writer)

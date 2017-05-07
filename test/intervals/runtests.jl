@@ -1006,6 +1006,30 @@ end
             end
         end
     end
+
+    @testset "overlap" begin
+        chromlen = 1_000_000
+        srand(1234)
+        chroms = ["one", "two", "three", "four", "five"]
+        intervals = IntervalCollection(
+             [Interval(i.seqname, i.first, i.last)
+             for i in random_intervals(chroms, chromlen, 10_000)], true)
+
+        buffer = IOBuffer()
+        data = buffer.data
+        writer = BigBed.Writer(buffer, [(chrom, chromlen) for chrom in chroms])
+        for i in intervals
+            write(writer, i)
+        end
+        close(writer)
+
+        reader = BigBed.Reader(IOBuffer(data))
+        queries = random_intervals(chroms, chromlen, 1000)
+        triplet(x::Interval) = String(x.seqname), x.first, x.last
+        triplet(x::BigBed.Record) = BigBed.chrom(x), BigBed.chromstart(x), BigBed.chromend(x)
+        @test all(triplet.(collect(eachoverlap(intervals, q))) == triplet.(collect(eachoverlap(reader, q))) for q in queries)
+        close(reader)
+    end
 end
 
 #=
