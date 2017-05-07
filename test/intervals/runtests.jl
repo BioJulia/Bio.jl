@@ -956,6 +956,7 @@ end
         @test BigBed.chromend(records[1]) === 100
         @test BigBed.name(records[1]) == "name1"
         @test !BigBed.hasscore(records[1])
+        @test BigBed.optionals(records[1]) == ["name1"]
 
         buffer = IOBuffer()
         data = buffer.data
@@ -982,14 +983,14 @@ end
         @test BigBed.hasthickend(records[1])
         @test BigBed.thickend(records[1]) === 90
         @test BigBed.hasitemrgb(records[1])
-        #@test BigBed.itemrgb(records[1]) == RGB(0.5, 0.1, 0.2)
-        BigBed.itemrgb(records[1])
+        @test BigBed.itemrgb(records[1]) === convert(RGB{N0f8}, RGB(0.5, 0.1, 0.2))
         @test BigBed.hasblockcount(records[1])
         @test BigBed.blockcount(records[1]) === 2
         @test BigBed.hasblocksizes(records[1])
         @test BigBed.blocksizes(records[1]) == [4, 10]
         @test BigBed.hasblockstarts(records[1])
         @test BigBed.blockstarts(records[1]) == [10, 20]
+        @test BigBed.optionals(records[1]) == ["some name", "100", "+", "9", "90", "128,26,51", "2", "4,10,", "9,19,"]
     end
 
     @testset "large" begin
