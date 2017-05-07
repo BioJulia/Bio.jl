@@ -303,9 +303,7 @@ end
 
 function start_section!(writer::Writer, chromid::UInt32, chromstart::UInt32, chromend::UInt32)
     state = writer.state
-    if state.started
-        error("unfinished section")
-    end
+    @assert !state.started
 
     # initialize section info
     state.chromid = chromid
