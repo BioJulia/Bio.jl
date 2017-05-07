@@ -317,6 +317,24 @@ function hasblockstarts(record::Record)
     return record.ncols ≥ 12
 end
 
+"""
+    optionals(record::Record)::Vector{String}
+
+Get optional fields as strings.
+"""
+function optionals(record::Record)::Vector{String}
+    checkfilled(record)
+    ret = String[]
+    p = 13
+    p_end = search(record.data, '\0', p)
+    while p < p_end
+        p_delim = find(record.data, '\t', p)
+        push!(ret, String(record.data[p:p_delim-1]))
+        p = p_delim + 1
+    end
+    return ret
+end
+
 function checkfilled(record::Record)
     if !isfilled(record)
         throw(ArgumentError("unfilled bigBed record"))

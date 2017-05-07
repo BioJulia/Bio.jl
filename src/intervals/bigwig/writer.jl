@@ -196,6 +196,10 @@ function Base.close(writer::Writer)
     return
 end
 
+function Bio.IO.stream(writer::Writer)
+    return writer.stream
+end
+
 function write_impl(writer::Writer, chromid::UInt32, chromstart::UInt32, chromend::UInt32, value::Float32)
     n = 0
     state = writer.state

@@ -884,6 +884,42 @@ end
             end
         end
     end
+
+    @testset "round trip" begin
+        function test_round_trip(filepath)
+            reader = open(BigWig.Reader, filepath)
+            buffer = IOBuffer()
+            data = buffer.data
+            writer = BigWig.Writer(buffer, BigWig.chromlist(reader))
+            original = []
+            for record in reader
+                t = (BigWig.chrom(record), BigWig.chromstart(record), BigWig.chromend(record), BigWig.value(record))
+                write(writer, t)
+                push!(original, t)
+            end
+            close(writer)
+            close(reader)
+
+            reader = BigWig.Reader(IOBuffer(data))
+            copy = []
+            for record in reader
+                t = (BigWig.chrom(record), BigWig.chromstart(record), BigWig.chromend(record), BigWig.value(record))
+                push!(copy, t)
+            end
+            close(reader)
+
+            @test original == copy
+        end
+
+        dir = joinpath(dirname(@__FILE__), "..", "BioFmtSpecimens", "BBI")
+        for specimen in YAML.load_file(joinpath(dir, "index.yml"))
+            valid = get(specimen, "valid", true)
+            bigwig = "bigwig" ∈ split(specimen["tags"])
+            if valid && bigwig
+                test_round_trip(joinpath(dir, specimen["filename"]))
+            end
+        end
+    end
 end
 
 @testset "BigBed" begin
@@ -933,6 +969,42 @@ end
         @test length(records) == 10_000 + n
         records = collect(eachoverlap(reader, Interval("chr1", 50_001, 50_165)))
         @test length(records) == 17
+    end
+
+    @testset "round trip" begin
+        function test_round_trip(filepath)
+            reader = open(BigBed.Reader, filepath)
+            buffer = IOBuffer()
+            data = buffer.data
+            writer = BigBed.Writer(buffer, BigBed.chromlist(reader))
+            original = []
+            for record in reader
+                t = (BigBed.chrom(record), BigBed.chromstart(record), BigBed.chromend(record), BigBed.optionals(record)...)
+                write(writer, t)
+                push!(original, t)
+            end
+            close(writer)
+            close(reader)
+
+            reader = BigBed.Reader(IOBuffer(data))
+            copy = []
+            for record in reader
+                t = (BigBed.chrom(record), BigBed.chromstart(record), BigBed.chromend(record), BigBed.optionals(record)...)
+                push!(copy, t)
+            end
+            close(reader)
+
+            @test original == copy
+        end
+
+        dir = joinpath(dirname(@__FILE__), "..", "BioFmtSpecimens", "BBI")
+        for specimen in YAML.load_file(joinpath(dir, "index.yml"))
+            valid = get(specimen, "valid", true)
+            bigbed = "bigbed" ∈ split(specimen["tags"])
+            if valid && bigbed
+                test_round_trip(joinpath(dir, specimen["filename"]))
+            end
+        end
     end
 end
 

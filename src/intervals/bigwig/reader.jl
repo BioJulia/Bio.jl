@@ -18,6 +18,10 @@ function Base.eltype(::Type{Reader})
     return Record
 end
 
+function Bio.IO.stream(reader::Reader)
+    return reader.stream
+end
+
 """
     BigWig.Reader(input::IO)
 
@@ -46,6 +50,15 @@ function Reader(input::IO)
     chrom_names = Dict(id => name for (name, (id, _)) in chroms)
     index = BBI.RTree(input, header.full_index_offset)
     return Reader(input, header, zooms, summary, chroms, chrom_names, index)
+end
+
+"""
+    chromlist(reader::BigWig.Reader)::Vector{Tuple{String,Int}}
+
+Get the `(name, length)` pairs of chromosomes/contigs.
+"""
+function chromlist(reader::Reader)::Vector{Tuple{String,Int}}
+    return sort!([(name, Int(len)) for (name, (id, len)) in reader.chroms], by=x->x[1])
 end
 
 

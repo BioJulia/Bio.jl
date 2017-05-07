@@ -199,6 +199,10 @@ function Base.close(writer::Writer)
     return
 end
 
+function Bio.IO.stream(writer::Writer)
+    return writer.stream
+end
+
 function write_impl(writer::Writer, chromid::UInt32, chromstart::UInt32, chromend::UInt32, optionals::Tuple)
     # infer the number of fields from the first record
     state = writer.state
@@ -237,9 +241,8 @@ function write_impl(writer::Writer, chromid::UInt32, chromstart::UInt32, chromen
 end
 
 function check_interval(state::WriterState, chromid::UInt32, chromstart::UInt32, chromend::UInt32, optionals::Tuple)
-    if chromstart ≥ chromend
-        throw(ArgumentError("empty interval"))
-    elseif chromid < state.chromid || (chromid == state.chromid && chromstart < state.chromstart_prev)
+    # NOTE: BigBed allows empty intervals.
+    if chromid < state.chromid || (chromid == state.chromid && chromstart < state.chromstart_prev)
         throw(ArgumentError("disordered intervals"))
     elseif state.nfields != 3 + length(optionals)
         throw(ArgumentError("inconsistent field counts"))
