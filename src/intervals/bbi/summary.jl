@@ -42,16 +42,3 @@ immutable SectionSummary
     offset::UInt64
     datasize::UInt64
 end
-
-function compute_total_sumamry(summaries::Vector{SectionSummary})
-    if isempty(summaries)
-        return Summary(0, NaN, NaN, 0.0, 0.0)
-    end
-    # NOTE: These values are the depth of coverage for bigBed.
-    covered = UInt64(0)
-    minval = Inf
-    maxval = -Inf
-    sumval = 0.0
-    sumsqval = 0.0
-    return Summary(covered, minval, maxval, sumval, sumsqval)
-end
