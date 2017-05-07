@@ -368,6 +368,7 @@ Bio.Intervals.BigBed.itemrgb
 Bio.Intervals.BigBed.blockcount
 Bio.Intervals.BigBed.blocksizes
 Bio.Intervals.BigBed.blockstarts
+Bio.Intervals.BigBed.optionals
 ```
 
 
