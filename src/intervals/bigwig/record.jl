@@ -15,7 +15,7 @@ end
 function Base.convert(::Type{Bio.Intervals.Interval}, record::Record)
     return Bio.Intervals.Interval(
         chrom(record), chromstart(record), chromend(record),
-        Bio.Interval.STRAND_BOTH, value(record))
+        Bio.Intervals.STRAND_BOTH, value(record))
 end
 
 function Base.convert(::Type{Bio.Intervals.Interval{Record}}, record::Record)
@@ -36,15 +36,19 @@ function Base.copy(record::Record)
 end
 
 function Base.show(io::IO, record::Record)
-    print(io, summary(record), ':')
-    if isfilled(record)
-        println(io)
-        println(io, "  chromosome: ", chrom(record))
-        println(io, "       start: ", chromstart(record))
-        println(io, "         end: ", chromend(record))
-          print(io, "       value: ", value(record))
+    if get(io, :compact, false)
+        print(io, chrom(record), ':', chromstart(record), '-', chromend(record), "  ", value(record))
     else
-        print(io, " <not filled>")
+        print(io, summary(record), ':')
+        if isfilled(record)
+            println(io)
+            println(io, "  chromosome: ", chrom(record))
+            println(io, "       start: ", chromstart(record))
+            println(io, "         end: ", chromend(record))
+              print(io, "       value: ", value(record))
+        else
+            print(io, " <not filled>")
+        end
     end
 end
 

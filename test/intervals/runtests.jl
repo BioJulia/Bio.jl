@@ -798,6 +798,12 @@ end
         @test BigWig.chromstart(records[1]) === 50
         @test BigWig.chromend(records[1]) === 100
         @test BigWig.value(records[1]) === 3.14f0
+        @test startswith(repr(records[1]), "Bio.Intervals.BigWig.Record:\n")
+        interval = convert(Interval, records[1])
+        @test seqname(interval) == "chr1"
+        @test leftposition(interval) === 50
+        @test rightposition(interval) === 100
+        @test metadata(interval) === 3.14f0
 
         # bedgraph (default)
         buffer = IOBuffer()
