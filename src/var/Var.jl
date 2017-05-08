@@ -31,6 +31,13 @@ import Bio.Seq:
     count_bitpar,
     correct_emptyspace
 
+    import Twiddle: enumerate_nibbles,
+        nibble_mask,
+        count_zero_nibbles,
+        count_nonzero_nibbles,
+        count_one_nibbles,
+        count_zero_bitpairs,
+        count_nonzero_bitpairs
 
 import PairwiseListMatrices: PairwiseListMatrix
 import Bio.Exceptions: MissingFieldException, missingerror

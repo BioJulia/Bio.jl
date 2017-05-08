@@ -1,35 +1,6 @@
-## Conserved sites
-
-"""
-    create_nibble_mask(::Type{Conserved}, a::UInt64, b::UInt64)
-
-Create a mask of the nibbles in two chunks of
-BioSequence{(DNA|RNA)Nucleotide{4}} data that represent sites where the encoded
-nucleotides are the same.
-
-**This is an internal method and should not be exported.**
-"""
-@inline function create_nibble_mask(::Type{Conserved}, a::UInt64, b::UInt64)
-    #certainmask = create_nibble_mask(Certain, a, b)
-    return create_nibble_mask(a $ b, 0x0000000000000000) & certainmask
-end
 
 
 ## Mutated sites
-
-"""
-    create_nibble_mask(::Type{Mutated}, a::UInt64, b::UInt64)
-
-Create a mask of the nibbles in two chunks of
-BioSequence{(DNA|RNA)Nucleotide{4}} data that represent sites where the encoded
-nucleotides are different.
-
-**This is an internal method and should not be exported.**
-"""
-@inline function create_nibble_mask(::Type{Mutated}, a::UInt64, b::UInt64)
-    certainmask = create_nibble_mask(Certain, a, b)
-    return (~create_nibble_mask(a $ b, 0x0000000000000000)) & certainmask
-end
 
 """
     create_nibble_mask(::Type{Transition}, a::UInt64, b::UInt64)
@@ -66,37 +37,9 @@ end
 
 
 
-
-
-
-## Conserved sites
-
-"""
-    count_nibbles(::Type{Conserved}, a::UInt64, b::UInt64)
-An _internal_ function, _not for export_, which will count the number of
-Conserved between two chunks of BioSequence{(DNA|RNA)Nucleotide{4}} data.
-**Note:** Ambiguous cases or cases with gaps are ignored and not counted as
-Conserved. For example, 'A' and 'R', or 'A' and '-' will not be counted.
-**This is an internal method and should not be exported.**
-"""
-@inline function count_nibbles(::Type{Conserved}, a::UInt64, b::UInt64)
-    return count_one_nibbles(create_nibble_mask(Conserved, a, b))
-end
-
-
 ## Mutated sites
 
-"""
-    count_nibbles(::Type{Mutated}, a::UInt64, b::UInt64)
-An _internal_ function, _not for export_, which will count the number of
-any mutations between two chunks of BioSequence{(DNA|RNA)Nucleotide{4}} data.
-**Note:** Ambiguous cases or cases with gaps are ignored and not counted as
-mutated. For example, 'A' and 'R', or 'A' and '-' will not be counted.
-**This is an internal method and should not be exported.**
-"""
-@inline function count_nibbles(::Type{Mutated}, a::UInt64, b::UInt64)
-    return count_one_nibbles(create_nibble_mask(Mutated, a, b))
-end
+
 
 """
     count_nibbles(::Type{Transition}, a::UInt64, b::UInt64)

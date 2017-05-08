@@ -12,7 +12,6 @@ immutable BitparCount <: CountAlgorithm end
 immutable NoneCount <: CountAlgorithm end
 immutable AllCount <: CountAlgorithm end
 
-include("binary_operations.jl")
 include("site_types/site_types.jl")
 include("count_sites_naive.jl")
 include("count_sites_bitpar.jl")

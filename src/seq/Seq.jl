@@ -184,6 +184,12 @@ import IndexableBitVectors
 import Iterators
 import IntervalTrees: IntervalValue
 import PairwiseListMatrices: PairwiseListMatrix
+import Twiddle: enumerate_nibbles,
+    nibble_mask,
+    count_zero_nibbles,
+    count_nonzero_nibbles,
+    count_zero_bitpairs,
+    count_nonzero_bitpairs
 importall Bio
 importall BioSymbols
 
