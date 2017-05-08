@@ -305,91 +305,91 @@
 <p><a id='Exact-search-1'></a></p>
 <h2 id="exact-search">Exact search</h2>
 <p>Exact search functions search for an occurrence of the query symbol or sequence. Four functions, <code>search</code>, <code>searchindex</code>, <code>rsearch</code>, and <code>rsearchindex</code> are available:</p>
-<div class="codehilite"><pre><span></span><span class="gp">julia&gt;</span> <span class="n">seq</span> <span class="o">=</span> <span class="n">dna</span><span class="s">&quot;ACAGCGTAGCT&quot;</span><span class="p">;</span>
+<div class="codehilite"><pre><span></span>julia&gt; seq = dna&quot;ACAGCGTAGCT&quot;;
 
-<span class="gp">julia&gt;</span> <span class="n">search</span><span class="p">(</span><span class="n">seq</span><span class="p">,</span> <span class="n">DNA_G</span><span class="p">)</span>  <span class="c"># search a query symbol</span>
-<span class="go">4:4</span>
+julia&gt; search(seq, DNA_G)  # search a query symbol
+4:4
 
-<span class="gp">julia&gt;</span> <span class="n">query</span> <span class="o">=</span> <span class="n">dna</span><span class="s">&quot;AGC&quot;</span><span class="p">;</span>
+julia&gt; query = dna&quot;AGC&quot;;
 
-<span class="gp">julia&gt;</span> <span class="n">search</span><span class="p">(</span><span class="n">seq</span><span class="p">,</span> <span class="n">query</span><span class="p">)</span>  <span class="c"># search a query sequence</span>
-<span class="go">3:5</span>
+julia&gt; search(seq, query)  # search a query sequence
+3:5
 
-<span class="gp">julia&gt;</span> <span class="n">searchindex</span><span class="p">(</span><span class="n">seq</span><span class="p">,</span> <span class="n">query</span><span class="p">)</span>
-<span class="go">3</span>
+julia&gt; searchindex(seq, query)
+3
 
-<span class="gp">julia&gt;</span> <span class="n">rsearch</span><span class="p">(</span><span class="n">seq</span><span class="p">,</span> <span class="n">query</span><span class="p">)</span>  <span class="c"># similar to `search` but in the reverse direction</span>
-<span class="go">8:10</span>
+julia&gt; rsearch(seq, query)  # similar to `search` but in the reverse direction
+8:10
 
-<span class="gp">julia&gt;</span> <span class="n">rsearchindex</span><span class="p">(</span><span class="n">seq</span><span class="p">,</span> <span class="n">query</span><span class="p">)</span>  <span class="c"># similar to `searchindex` but in the reverse direction</span>
-<span class="go">8</span>
+julia&gt; rsearchindex(seq, query)  # similar to `searchindex` but in the reverse direction
+8
 </pre></div>
 
 
 <p>These search functions take ambiguous symbols into account. That is, if two symbols are compatible (e.g. <code>DNA_A</code> and <code>DNA_N</code>), they match when searching an occurrence. In the following example, 'N' is a wild card that matches any symbols:</p>
-<div class="codehilite"><pre><span></span><span class="gp">julia&gt;</span> <span class="n">search</span><span class="p">(</span><span class="n">dna</span><span class="s">&quot;ACNT&quot;</span><span class="p">,</span> <span class="n">DNA_N</span><span class="p">)</span>  <span class="c"># &#39;A&#39; matches &#39;N&#39;</span>
-<span class="go">1:1</span>
+<div class="codehilite"><pre><span></span>julia&gt; search(dna&quot;ACNT&quot;, DNA_N)  # &#39;A&#39; matches &#39;N&#39;
+1:1
 
-<span class="gp">julia&gt;</span> <span class="n">search</span><span class="p">(</span><span class="n">dna</span><span class="s">&quot;ACNT&quot;</span><span class="p">,</span> <span class="n">dna</span><span class="s">&quot;CGT&quot;</span><span class="p">)</span>  <span class="c"># &#39;N&#39; matches &#39;G&#39;</span>
-<span class="go">2:4</span>
+julia&gt; search(dna&quot;ACNT&quot;, dna&quot;CGT&quot;)  # &#39;N&#39; matches &#39;G&#39;
+2:4
 
-<span class="gp">julia&gt;</span> <span class="n">search</span><span class="p">(</span><span class="n">dna</span><span class="s">&quot;ACGT&quot;</span><span class="p">,</span> <span class="n">dna</span><span class="s">&quot;CNT&quot;</span><span class="p">)</span>  <span class="c"># &#39;G&#39; matches &#39;N&#39;</span>
-<span class="go">2:4</span>
+julia&gt; search(dna&quot;ACGT&quot;, dna&quot;CNT&quot;)  # &#39;G&#39; matches &#39;N&#39;
+2:4
 </pre></div>
 
 
 <p>The exact sequence search needs preprocessing phase of query sequence before searching phase. This would be enough fast for most search applications. But when searching a query sequence to large amounts of target sequences, caching the result of preprocessing may save time. The <code>ExactSearchQuery</code> creates such a preprocessed query object and is applicable to the search functions:</p>
-<div class="codehilite"><pre><span></span><span class="gp">julia&gt;</span> <span class="n">query</span> <span class="o">=</span> <span class="n">ExactSearchQuery</span><span class="p">(</span><span class="n">dna</span><span class="s">&quot;ATT&quot;</span><span class="p">);</span>
+<div class="codehilite"><pre><span></span>julia&gt; query = ExactSearchQuery(dna&quot;ATT&quot;);
 
-<span class="gp">julia&gt;</span> <span class="n">search</span><span class="p">(</span><span class="n">dna</span><span class="s">&quot;ATTTATT&quot;</span><span class="p">,</span> <span class="n">query</span><span class="p">)</span>
-<span class="go">1:3</span>
+julia&gt; search(dna&quot;ATTTATT&quot;, query)
+1:3
 
-<span class="gp">julia&gt;</span> <span class="n">rsearch</span><span class="p">(</span><span class="n">dna</span><span class="s">&quot;ATTTATT&quot;</span><span class="p">,</span> <span class="n">query</span><span class="p">)</span>
-<span class="go">5:7</span>
+julia&gt; rsearch(dna&quot;ATTTATT&quot;, query)
+5:7
 </pre></div>
 
 
 <p><a id='Approximate-search-1'></a></p>
 <h2 id="approximate-search">Approximate search</h2>
 <p>The approximate search is similar to the exact search but allows a specific number of errors. That is, it tries to find a subsequence of the target sequence within a specific <a href="https://en.wikipedia.org/wiki/Levenshtein_distance">Levenshtein distance</a> of the query sequence:</p>
-<div class="codehilite"><pre><span></span><span class="gp">julia&gt;</span> <span class="n">seq</span> <span class="o">=</span> <span class="n">dna</span><span class="s">&quot;ACAGCGTAGCT&quot;</span><span class="p">;</span>
+<div class="codehilite"><pre><span></span><span class="s s-Atom">julia</span><span class="o">&gt;</span> <span class="s s-Atom">seq</span> <span class="o">=</span> <span class="s s-Atom">dna</span><span class="s2">&quot;ACAGCGTAGCT&quot;</span><span class="p">;</span>
 
-<span class="gp">julia&gt;</span> <span class="n">approxsearch</span><span class="p">(</span><span class="n">seq</span><span class="p">,</span> <span class="n">dna</span><span class="s">&quot;AGGG&quot;</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span>  <span class="c"># nothing matches with no errors</span>
-<span class="go">0:-1</span>
+<span class="s s-Atom">julia</span><span class="o">&gt;</span> <span class="nf">approxsearch</span><span class="p">(</span><span class="s s-Atom">seq</span><span class="p">,</span> <span class="s s-Atom">dna</span><span class="s2">&quot;AGGG&quot;</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span>  <span class="s s-Atom">#</span> <span class="s s-Atom">nothing</span> <span class="s s-Atom">matches</span> <span class="s s-Atom">with</span> <span class="s s-Atom">no</span> <span class="s s-Atom">errors</span>
+<span class="mi">0</span><span class="p">:-</span><span class="mi">1</span>
 
-<span class="gp">julia&gt;</span> <span class="n">approxsearch</span><span class="p">(</span><span class="n">seq</span><span class="p">,</span> <span class="n">dna</span><span class="s">&quot;AGGG&quot;</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span>  <span class="c"># seq[3:5] matches with one error</span>
-<span class="go">3:6</span>
+<span class="s s-Atom">julia</span><span class="o">&gt;</span> <span class="nf">approxsearch</span><span class="p">(</span><span class="s s-Atom">seq</span><span class="p">,</span> <span class="s s-Atom">dna</span><span class="s2">&quot;AGGG&quot;</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span>  <span class="s s-Atom">#</span> <span class="s s-Atom">seq</span><span class="p">[</span><span class="mi">3</span><span class="s s-Atom">:</span><span class="mi">5</span><span class="p">]</span> <span class="s s-Atom">matches</span> <span class="s s-Atom">with</span> <span class="s s-Atom">one</span> <span class="s s-Atom">error</span>
+<span class="mi">3</span><span class="s s-Atom">:</span><span class="mi">6</span>
 
-<span class="gp">julia&gt;</span> <span class="n">approxsearch</span><span class="p">(</span><span class="n">seq</span><span class="p">,</span> <span class="n">dna</span><span class="s">&quot;AGGG&quot;</span><span class="p">,</span> <span class="mi">2</span><span class="p">)</span>  <span class="c"># seq[1:4] matches with two errors</span>
-<span class="go">1:4</span>
+<span class="s s-Atom">julia</span><span class="o">&gt;</span> <span class="nf">approxsearch</span><span class="p">(</span><span class="s s-Atom">seq</span><span class="p">,</span> <span class="s s-Atom">dna</span><span class="s2">&quot;AGGG&quot;</span><span class="p">,</span> <span class="mi">2</span><span class="p">)</span>  <span class="s s-Atom">#</span> <span class="s s-Atom">seq</span><span class="p">[</span><span class="mi">1</span><span class="s s-Atom">:</span><span class="mi">4</span><span class="p">]</span> <span class="s s-Atom">matches</span> <span class="s s-Atom">with</span> <span class="s s-Atom">two</span> <span class="s s-Atom">errors</span>
+<span class="mi">1</span><span class="s s-Atom">:</span><span class="mi">4</span>
 </pre></div>
 
 
 <p>Like the exact search functions, four kinds of functions (<code>approxsearch</code>, <code>approxsearchindex</code>, <code>approxrsearch</code>, and <code>approxrsearchindex</code>) are available:</p>
-<div class="codehilite"><pre><span></span><span class="gp">julia&gt;</span> <span class="n">seq</span> <span class="o">=</span> <span class="n">dna</span><span class="s">&quot;ACAGCGTAGCT&quot;</span><span class="p">;</span> <span class="n">pat</span> <span class="o">=</span> <span class="n">dna</span><span class="s">&quot;AGGG&quot;</span><span class="p">;</span>
+<div class="codehilite"><pre><span></span>julia&gt; seq = dna&quot;ACAGCGTAGCT&quot;; pat = dna&quot;AGGG&quot;;
 
-<span class="gp">julia&gt;</span> <span class="n">approxsearch</span><span class="p">(</span><span class="n">seq</span><span class="p">,</span> <span class="n">pat</span><span class="p">,</span> <span class="mi">2</span><span class="p">)</span>        <span class="c"># return the range (forward)</span>
-<span class="go">1:4</span>
+julia&gt; approxsearch(seq, pat, 2)        # return the range (forward)
+1:4
 
-<span class="gp">julia&gt;</span> <span class="n">approxsearchindex</span><span class="p">(</span><span class="n">seq</span><span class="p">,</span> <span class="n">pat</span><span class="p">,</span> <span class="mi">2</span><span class="p">)</span>   <span class="c"># return the starting index (forward)</span>
-<span class="go">1</span>
+julia&gt; approxsearchindex(seq, pat, 2)   # return the starting index (forward)
+1
 
-<span class="gp">julia&gt;</span> <span class="n">approxrsearch</span><span class="p">(</span><span class="n">seq</span><span class="p">,</span> <span class="n">pat</span><span class="p">,</span> <span class="mi">2</span><span class="p">)</span>       <span class="c"># return the range (backward)</span>
-<span class="go">8:11</span>
+julia&gt; approxrsearch(seq, pat, 2)       # return the range (backward)
+8:11
 
-<span class="gp">julia&gt;</span> <span class="n">approxrsearchindex</span><span class="p">(</span><span class="n">seq</span><span class="p">,</span> <span class="n">pat</span><span class="p">,</span> <span class="mi">2</span><span class="p">)</span>  <span class="c"># return the starting index (backward)</span>
-<span class="go">8</span>
+julia&gt; approxrsearchindex(seq, pat, 2)  # return the starting index (backward)
+8
 </pre></div>
 
 
 <p>Preprocessing can be cached in an <code>ApproximateSearchQuery</code> object:</p>
-<div class="codehilite"><pre><span></span><span class="gp">julia&gt;</span> <span class="n">query</span> <span class="o">=</span> <span class="n">ApproximateSearchQuery</span><span class="p">(</span><span class="n">dna</span><span class="s">&quot;AGGG&quot;</span><span class="p">);</span>
+<div class="codehilite"><pre><span></span>julia&gt; query = ApproximateSearchQuery(dna&quot;AGGG&quot;);
 
-<span class="gp">julia&gt;</span> <span class="n">approxsearch</span><span class="p">(</span><span class="n">dna</span><span class="s">&quot;AAGAGG&quot;</span><span class="p">,</span> <span class="n">query</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span>
-<span class="go">2:5</span>
+julia&gt; approxsearch(dna&quot;AAGAGG&quot;, query, 1)
+2:5
 
-<span class="gp">julia&gt;</span> <span class="n">approxsearch</span><span class="p">(</span><span class="n">dna</span><span class="s">&quot;ACTACGT&quot;</span><span class="p">,</span> <span class="n">query</span><span class="p">,</span> <span class="mi">2</span><span class="p">)</span>
-<span class="go">4:6</span>
+julia&gt; approxsearch(dna&quot;ACTACGT&quot;, query, 2)
+4:6
 </pre></div>
 
 
@@ -398,17 +398,17 @@
 <p>Query patterns can be described in regular expressions. The syntax supports a subset of Perl and PROSITE's notation.</p>
 <p>The Perl-like syntax starts with <code>biore</code> (<strong>bio</strong>logical <strong>re</strong>gular expression) and ends with a symbol option: "dna", "rna" or "aa". For example, <code>biore"A+"dna</code> is a regular expression for DNA sequences and <code>biore"A+"aa</code> is for amino acid sequences. The symbol options can be abbreviated to its first character: "d", "r" or "a", respectively.</p>
 <p>Here are examples of using the regular expression for <code>BioSequence</code>s:</p>
-<div class="codehilite"><pre><span></span><span class="gp">julia&gt;</span> <span class="n">match</span><span class="p">(</span><span class="n">biore</span><span class="s">&quot;A+C*&quot;</span><span class="n">dna</span><span class="p">,</span> <span class="n">dna</span><span class="s">&quot;AAAACC&quot;</span><span class="p">)</span>
-<span class="go">Nullable{Bio.Seq.RE.RegexMatch{Bio.Seq.BioSequence{Bio.Seq.DNAAlphabet{4}}}}(RegexMatch(&quot;AAAACC&quot;))</span>
+<div class="codehilite"><pre><span></span>julia&gt; match(biore&quot;A+C*&quot;dna, dna&quot;AAAACC&quot;)
+Nullable{Bio.Seq.RE.RegexMatch{Bio.Seq.BioSequence{Bio.Seq.DNAAlphabet{4}}}}(RegexMatch(&quot;AAAACC&quot;))
 
-<span class="gp">julia&gt;</span> <span class="n">match</span><span class="p">(</span><span class="n">biore</span><span class="s">&quot;A+C*&quot;</span><span class="n">d</span><span class="p">,</span> <span class="n">dna</span><span class="s">&quot;AAAACC&quot;</span><span class="p">)</span>
-<span class="go">Nullable{Bio.Seq.RE.RegexMatch{Bio.Seq.BioSequence{Bio.Seq.DNAAlphabet{4}}}}(RegexMatch(&quot;AAAACC&quot;))</span>
+julia&gt; match(biore&quot;A+C*&quot;d, dna&quot;AAAACC&quot;)
+Nullable{Bio.Seq.RE.RegexMatch{Bio.Seq.BioSequence{Bio.Seq.DNAAlphabet{4}}}}(RegexMatch(&quot;AAAACC&quot;))
 
-<span class="gp">julia&gt;</span> <span class="n">ismatch</span><span class="p">(</span><span class="n">biore</span><span class="s">&quot;A+C*&quot;</span><span class="n">dna</span><span class="p">,</span> <span class="n">dna</span><span class="s">&quot;AAC&quot;</span><span class="p">)</span>
-<span class="go">true</span>
+julia&gt; ismatch(biore&quot;A+C*&quot;dna, dna&quot;AAC&quot;)
+true
 
-<span class="gp">julia&gt;</span> <span class="n">ismatch</span><span class="p">(</span><span class="n">biore</span><span class="s">&quot;A+C*&quot;</span><span class="n">dna</span><span class="p">,</span> <span class="n">dna</span><span class="s">&quot;C&quot;</span><span class="p">)</span>
-<span class="go">false</span>
+julia&gt; ismatch(biore&quot;A+C*&quot;dna, dna&quot;C&quot;)
+false
 </pre></div>
 
 
@@ -476,23 +476,23 @@
 </tbody>
 </table>
 <p><code>eachmatch</code>, <code>matchall</code>, and <code>search</code> are also defined like usual strings:</p>
-<div class="codehilite"><pre><span></span><span class="gp">julia&gt;</span> <span class="n">matchall</span><span class="p">(</span><span class="n">biore</span><span class="s">&quot;TATA*?&quot;</span><span class="n">d</span><span class="p">,</span> <span class="n">dna</span><span class="s">&quot;TATTATAATTA&quot;</span><span class="p">)</span>  <span class="c"># overlap (default)</span>
-<span class="go">4-element Array{Bio.Seq.BioSequence{Bio.Seq.DNAAlphabet{4}},1}:</span>
-<span class="go"> TAT  </span>
-<span class="go"> TAT  </span>
-<span class="go"> TATA</span>
-<span class="go"> TATAA</span>
+<div class="codehilite"><pre><span></span>julia&gt; matchall(biore&quot;TATA*?&quot;d, dna&quot;TATTATAATTA&quot;)  # overlap (default)
+4-element Array{Bio.Seq.BioSequence{Bio.Seq.DNAAlphabet{4}},1}:
+ TAT  
+ TAT  
+ TATA
+ TATAA
 
-<span class="gp">julia&gt;</span> <span class="n">matchall</span><span class="p">(</span><span class="n">biore</span><span class="s">&quot;TATA*&quot;</span><span class="n">d</span><span class="p">,</span> <span class="n">dna</span><span class="s">&quot;TATTATAATTA&quot;</span><span class="p">,</span> <span class="kc">false</span><span class="p">)</span>  <span class="c"># no overlap</span>
-<span class="go">2-element Array{Bio.Seq.BioSequence{Bio.Seq.DNAAlphabet{4}},1}:</span>
-<span class="go"> TAT  </span>
-<span class="go"> TATAA</span>
+julia&gt; matchall(biore&quot;TATA*&quot;d, dna&quot;TATTATAATTA&quot;, false)  # no overlap
+2-element Array{Bio.Seq.BioSequence{Bio.Seq.DNAAlphabet{4}},1}:
+ TAT  
+ TATAA
 
-<span class="gp">julia&gt;</span> <span class="n">search</span><span class="p">(</span><span class="n">dna</span><span class="s">&quot;TATTATAATTA&quot;</span><span class="p">,</span> <span class="n">biore</span><span class="s">&quot;TATA*&quot;</span><span class="n">d</span><span class="p">)</span>
-<span class="go">1:3</span>
+julia&gt; search(dna&quot;TATTATAATTA&quot;, biore&quot;TATA*&quot;d)
+1:3
 
-<span class="gp">julia&gt;</span> <span class="n">search</span><span class="p">(</span><span class="n">dna</span><span class="s">&quot;TATTATAATTA&quot;</span><span class="p">,</span> <span class="n">biore</span><span class="s">&quot;TATA*&quot;</span><span class="n">d</span><span class="p">,</span> <span class="mi">2</span><span class="p">)</span>
-<span class="go">4:8</span>
+julia&gt; search(dna&quot;TATTATAATTA&quot;, biore&quot;TATA*&quot;d, 2)
+4:8
 </pre></div>
 
 
@@ -502,41 +502,41 @@
 <li>Whitespaces are ignored (e.g. <code>biore"A C G"d</code> is equivalent to <code>biore"ACG"d</code>).</li>
 </ul>
 <p>The PROSITE notation is described in <a href="http://prosite.expasy.org/scanprosite/scanprosite_doc.html">ScanProsite - user manual</a>. The syntax supports almost all notations including the extended syntax. The PROSITE notation starts with <code>prosite</code> prefix and no symbol option is needed because it always describes patterns of amino acid sequences:</p>
-<div class="codehilite"><pre><span></span><span class="gp">julia&gt;</span> <span class="n">match</span><span class="p">(</span><span class="n">prosite</span><span class="s">&quot;[AC]-x-V-x(4)-{ED}&quot;</span><span class="p">,</span> <span class="n">aa</span><span class="s">&quot;CPVPQARG&quot;</span><span class="p">)</span>
-<span class="go">Nullable{Bio.Seq.RE.RegexMatch{Bio.Seq.BioSequence{Bio.Seq.AminoAcidAlphabet}}}(RegexMatch(&quot;CPVPQARG&quot;))</span>
+<div class="codehilite"><pre><span></span>julia&gt; match(prosite&quot;[AC]-x-V-x(4)-{ED}&quot;, aa&quot;CPVPQARG&quot;)
+Nullable{Bio.Seq.RE.RegexMatch{Bio.Seq.BioSequence{Bio.Seq.AminoAcidAlphabet}}}(RegexMatch(&quot;CPVPQARG&quot;))
 
-<span class="gp">julia&gt;</span> <span class="n">match</span><span class="p">(</span><span class="n">prosite</span><span class="s">&quot;[AC]xVx(4){ED}&quot;</span><span class="p">,</span> <span class="n">aa</span><span class="s">&quot;CPVPQARG&quot;</span><span class="p">)</span>
-<span class="go">Nullable{Bio.Seq.RE.RegexMatch{Bio.Seq.BioSequence{Bio.Seq.AminoAcidAlphabet}}}(RegexMatch(&quot;CPVPQARG&quot;))</span>
+julia&gt; match(prosite&quot;[AC]xVx(4){ED}&quot;, aa&quot;CPVPQARG&quot;)
+Nullable{Bio.Seq.RE.RegexMatch{Bio.Seq.BioSequence{Bio.Seq.AminoAcidAlphabet}}}(RegexMatch(&quot;CPVPQARG&quot;))
 </pre></div>
 
 
 <p><a id='Sequence-composition-1'></a></p>
 <h2 id="sequence-composition">Sequence composition</h2>
 <p>Sequence composition can be easily calculated using the <code>composition</code> function:</p>
-<div class="codehilite"><pre><span></span><span class="gp">julia&gt;</span> <span class="n">comp</span> <span class="o">=</span> <span class="n">composition</span><span class="p">(</span><span class="n">dna</span><span class="s">&quot;ACGAG&quot;</span><span class="p">)</span>
-<span class="go">DNA Composition:</span>
-<span class="go">  DNA_Gap =&gt; 0</span>
-<span class="go">  DNA_A   =&gt; 2</span>
-<span class="go">  DNA_C   =&gt; 1</span>
-<span class="go">  DNA_M   =&gt; 0</span>
-<span class="go">  DNA_G   =&gt; 2</span>
-<span class="go">  DNA_R   =&gt; 0</span>
-<span class="go">  DNA_S   =&gt; 0</span>
-<span class="go">  DNA_V   =&gt; 0</span>
-<span class="go">  DNA_T   =&gt; 0</span>
-<span class="go">  DNA_W   =&gt; 0</span>
-<span class="go">  DNA_Y   =&gt; 0</span>
-<span class="go">  DNA_H   =&gt; 0</span>
-<span class="go">  DNA_K   =&gt; 0</span>
-<span class="go">  DNA_D   =&gt; 0</span>
-<span class="go">  DNA_B   =&gt; 0</span>
-<span class="go">  DNA_N   =&gt; 0</span>
+<div class="codehilite"><pre><span></span>julia&gt; comp = composition(dna&quot;ACGAG&quot;)
+DNA Composition:
+  DNA_Gap =&gt; 0
+  DNA_A   =&gt; 2
+  DNA_C   =&gt; 1
+  DNA_M   =&gt; 0
+  DNA_G   =&gt; 2
+  DNA_R   =&gt; 0
+  DNA_S   =&gt; 0
+  DNA_V   =&gt; 0
+  DNA_T   =&gt; 0
+  DNA_W   =&gt; 0
+  DNA_Y   =&gt; 0
+  DNA_H   =&gt; 0
+  DNA_K   =&gt; 0
+  DNA_D   =&gt; 0
+  DNA_B   =&gt; 0
+  DNA_N   =&gt; 0
 
-<span class="gp">julia&gt;</span> <span class="n">comp</span><span class="p">[</span><span class="n">DNA_A</span><span class="p">]</span>
-<span class="go">2</span>
+julia&gt; comp[DNA_A]
+2
 
-<span class="gp">julia&gt;</span> <span class="n">comp</span><span class="p">[</span><span class="n">DNA_T</span><span class="p">]</span>
-<span class="go">0</span>
+julia&gt; comp[DNA_T]
+0
 </pre></div>
 
 
@@ -558,13 +558,13 @@
 
 
 <p><code>composition</code> is also applicable to a <em>k</em>-mer iterator:</p>
-<div class="codehilite"><pre><span></span><span class="gp">julia&gt;</span> <span class="n">comp</span> <span class="o">=</span> <span class="n">composition</span><span class="p">(</span><span class="n">each</span><span class="p">(</span><span class="n">DNAKmer</span><span class="p">{</span><span class="mi">4</span><span class="p">},</span> <span class="n">dna</span><span class="s">&quot;ACGT&quot;</span><span class="o">^</span><span class="mi">100</span><span class="p">));</span>
+<div class="codehilite"><pre><span></span>julia&gt; comp = composition(each(DNAKmer{4}, dna&quot;ACGT&quot;^100));
 
-<span class="gp">julia&gt;</span> <span class="n">comp</span><span class="p">[</span><span class="n">DNAKmer</span><span class="p">(</span><span class="s">&quot;ACGT&quot;</span><span class="p">)]</span>
-<span class="go">100</span>
+julia&gt; comp[DNAKmer(&quot;ACGT&quot;)]
+100
 
-<span class="gp">julia&gt;</span> <span class="n">comp</span><span class="p">[</span><span class="n">DNAKmer</span><span class="p">(</span><span class="s">&quot;CGTA&quot;</span><span class="p">)]</span>
-<span class="go">99</span>
+julia&gt; comp[DNAKmer(&quot;CGTA&quot;)]
+99
 </pre></div></div>
         
     </div>

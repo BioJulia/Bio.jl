@@ -285,20 +285,20 @@
 <h2 id="nucleic-acid-k-mers">Nucleic acid k-mers</h2>
 <p>A common strategy to simplify the analysis of sequence data is to operate or short k-mers, for size fixed size <code>k</code>. These can be packed into machine integers allowing extremely efficient code. The <code>Bio.Seq</code> module has built in support for representing short sequences in 64-bit integers. Besides being fixed length, <code>Kmer</code> types, unlike other sequence types cannot contain ambiguous symbols like 'N'.</p>
 <p>The <code>Kmer{T,k}</code> type parameterized on symbol type (<code>T</code>, either <code>DNA</code>, or <code>RNA</code>) and size <code>k</code>. For ease of writing code, two type aliases for each nucleotide type are defined and named as <code>DNAKmer{k}</code> and <code>RNAKmer{k}</code>:</p>
-<div class="codehilite"><pre><span></span><span class="gp">julia&gt;</span> <span class="n">DNAKmer</span><span class="p">(</span><span class="s">&quot;ACGT&quot;</span><span class="p">)</span>  <span class="c"># create a DNA 4-mer from a string</span>
-<span class="go">DNA 4-mer:</span>
-<span class="go">ACGT</span>
+<div class="codehilite"><pre><span></span>julia&gt; DNAKmer(&quot;ACGT&quot;)  # create a DNA 4-mer from a string
+DNA 4-mer:
+ACGT
 
-<span class="gp">julia&gt;</span> <span class="n">RNAKmer</span><span class="p">(</span><span class="s">&quot;ACGU&quot;</span><span class="p">)</span>  <span class="c"># create an RNA 4-mer from a string</span>
-<span class="go">RNA 4-mer:</span>
-<span class="go">ACGU</span>
+julia&gt; RNAKmer(&quot;ACGU&quot;)  # create an RNA 4-mer from a string
+RNA 4-mer:
+ACGU
 
-<span class="gp">julia&gt;</span> <span class="n">kmer</span><span class="s">&quot;ACGT&quot;</span> <span class="c"># DNA k-mers may also be written as literals</span>
-<span class="go">DNA 4-mer:</span>
-<span class="go">ACGT</span>
+julia&gt; kmer&quot;ACGT&quot; # DNA k-mers may also be written as literals
+DNA 4-mer:
+ACGT
 
-<span class="gp">julia&gt;</span> <span class="n">typeof</span><span class="p">(</span><span class="n">DNAKmer</span><span class="p">(</span><span class="s">&quot;ACGT&quot;</span><span class="p">))</span>
-<span class="go">Bio.Seq.Kmer{BioSymbols.DNA,4}</span>
+julia&gt; typeof(DNAKmer(&quot;ACGT&quot;))
+Bio.Seq.Kmer{BioSymbols.DNA,4}
 </pre></div>
 
 
@@ -323,7 +323,7 @@ end
 </pre></div>
 
 
-<p><a target='_blank' href='https://github.com/BioJulia/Bio.jl/tree/d8c6f47eead3ce16bd17a8d50d063bd679f55a7c/src/seq/eachkmer.jl#L15-L33' class='documenter-source'>source</a><br></p>
+<p><a target='_blank' href='https://github.com/BioJulia/Bio.jl/tree/40e412169807569625b320c6cb2315464c542775/src/seq/eachkmer.jl#L15-L33' class='documenter-source'>source</a><br></p>
 <p><a id='Bio.Seq.canonical' href='#Bio.Seq.canonical'>#</a>
 <strong><code>Bio.Seq.canonical</code></strong> &mdash; <em>Function</em>.</p>
 <div class="codehilite"><pre><span></span>canonical(kmer::Kmer)
@@ -332,7 +332,7 @@ end
 
 <p>Return the canonical k-mer of <code>x</code>.</p>
 <p>A canonical k-mer is the numerical lesser of a k-mer and its reverse complement. This is useful in hashing/counting k-mers in data that is not strand specific, and thus observing k-mer is equivalent to observing its reverse complement.</p>
-<p><a target='_blank' href='https://github.com/BioJulia/Bio.jl/tree/d8c6f47eead3ce16bd17a8d50d063bd679f55a7c/src/seq/kmer.jl#L172-L180' class='documenter-source'>source</a><br></p>
+<p><a target='_blank' href='https://github.com/BioJulia/Bio.jl/tree/40e412169807569625b320c6cb2315464c542775/src/seq/kmer.jl#L172-L180' class='documenter-source'>source</a><br></p>
 <p><a id='Bio.Seq.neighbors' href='#Bio.Seq.neighbors'>#</a>
 <strong><code>Bio.Seq.neighbors</code></strong> &mdash; <em>Function</em>.</p>
 <div class="codehilite"><pre><span></span>neighbors(kmer::Kmer)
@@ -340,7 +340,7 @@ end
 
 
 <p>Return an iterator through k-mers neighboring <code>kmer</code> on a de Bruijn graph.</p>
-<p><a target='_blank' href='https://github.com/BioJulia/Bio.jl/tree/d8c6f47eead3ce16bd17a8d50d063bd679f55a7c/src/seq/kmer.jl#L203-L207' class='documenter-source'>source</a><br></p></div>
+<p><a target='_blank' href='https://github.com/BioJulia/Bio.jl/tree/40e412169807569625b320c6cb2315464c542775/src/seq/kmer.jl#L203-L207' class='documenter-source'>source</a><br></p></div>
         
     </div>
 

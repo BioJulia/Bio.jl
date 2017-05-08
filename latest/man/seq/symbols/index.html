@@ -417,32 +417,32 @@
 </table>
 <p><a href="http://www.insdc.org/documents/feature_table.html#7.4.1">http://www.insdc.org/documents/feature_table.html#7.4.1</a></p>
 <p>Symbols are accessible as constants with <code>DNA_</code> or <code>RNA_</code> prefix:</p>
-<div class="codehilite"><pre><span></span><span class="gp">julia&gt;</span> <span class="n">DNA_A</span>
-<span class="go">DNA_A</span>
+<div class="codehilite"><pre><span></span>julia&gt; DNA_A
+DNA_A
 
-<span class="gp">julia&gt;</span> <span class="n">DNA_T</span>
-<span class="go">DNA_T</span>
+julia&gt; DNA_T
+DNA_T
 
-<span class="gp">julia&gt;</span> <span class="n">RNA_U</span>
-<span class="go">RNA_U</span>
+julia&gt; RNA_U
+RNA_U
 
-<span class="gp">julia&gt;</span> <span class="n">DNA_Gap</span>
-<span class="go">DNA_Gap</span>
+julia&gt; DNA_Gap
+DNA_Gap
 
-<span class="gp">julia&gt;</span> <span class="n">typeof</span><span class="p">(</span><span class="n">DNA_A</span><span class="p">)</span>
-<span class="go">BioSymbols.DNA</span>
+julia&gt; typeof(DNA_A)
+BioSymbols.DNA
 
-<span class="gp">julia&gt;</span> <span class="n">typeof</span><span class="p">(</span><span class="n">RNA_A</span><span class="p">)</span>
-<span class="go">BioSymbols.RNA</span>
+julia&gt; typeof(RNA_A)
+BioSymbols.RNA
 </pre></div>
 
 
 <p>Symbols can be constructed by converting regular characters:</p>
-<div class="codehilite"><pre><span></span><span class="gp">julia&gt;</span> <span class="n">convert</span><span class="p">(</span><span class="n">DNA</span><span class="p">,</span> <span class="sc">&#39;C&#39;</span><span class="p">)</span>
-<span class="go">DNA_C</span>
+<div class="codehilite"><pre><span></span>julia&gt; convert(DNA, &#39;C&#39;)
+DNA_C
 
-<span class="gp">julia&gt;</span> <span class="n">convert</span><span class="p">(</span><span class="n">DNA</span><span class="p">,</span> <span class="sc">&#39;C&#39;</span><span class="p">)</span> <span class="o">===</span> <span class="n">DNA_C</span>
-<span class="go">true</span>
+julia&gt; convert(DNA, &#39;C&#39;) === DNA_C
+true
 </pre></div>
 
 
@@ -474,26 +474,26 @@
 </tbody>
 </table>
 <p>The next examples demonstrate bit operations of DNA:</p>
-<div class="codehilite"><pre><span></span><span class="gp">julia&gt;</span> <span class="n">bits</span><span class="p">(</span><span class="n">reinterpret</span><span class="p">(</span><span class="kt">UInt8</span><span class="p">,</span> <span class="n">DNA_A</span><span class="p">))</span>
-<span class="go">&quot;00000001&quot;</span>
+<div class="codehilite"><pre><span></span>julia&gt; bits(reinterpret(UInt8, DNA_A))
+&quot;00000001&quot;
 
-<span class="gp">julia&gt;</span> <span class="n">bits</span><span class="p">(</span><span class="n">reinterpret</span><span class="p">(</span><span class="kt">UInt8</span><span class="p">,</span> <span class="n">DNA_G</span><span class="p">))</span>
-<span class="go">&quot;00000100&quot;</span>
+julia&gt; bits(reinterpret(UInt8, DNA_G))
+&quot;00000100&quot;
 
-<span class="gp">julia&gt;</span> <span class="n">bits</span><span class="p">(</span><span class="n">reinterpret</span><span class="p">(</span><span class="kt">UInt8</span><span class="p">,</span> <span class="n">DNA_R</span><span class="p">))</span>
-<span class="go">&quot;00000101&quot;</span>
+julia&gt; bits(reinterpret(UInt8, DNA_R))
+&quot;00000101&quot;
 
-<span class="gp">julia&gt;</span> <span class="n">bits</span><span class="p">(</span><span class="n">reinterpret</span><span class="p">(</span><span class="kt">UInt8</span><span class="p">,</span> <span class="n">DNA_B</span><span class="p">))</span>
-<span class="go">&quot;00001110&quot;</span>
+julia&gt; bits(reinterpret(UInt8, DNA_B))
+&quot;00001110&quot;
 
-<span class="gp">julia&gt;</span> <span class="o">~</span><span class="n">DNA_A</span>
-<span class="go">DNA_B</span>
+julia&gt; ~DNA_A
+DNA_B
 
-<span class="gp">julia&gt;</span> <span class="n">DNA_A</span> <span class="o">|</span> <span class="n">DNA_G</span>
-<span class="go">DNA_R</span>
+julia&gt; DNA_A | DNA_G
+DNA_R
 
-<span class="gp">julia&gt;</span> <span class="n">DNA_R</span> <span class="o">&amp;</span> <span class="n">DNA_B</span>
-<span class="go">DNA_G</span>
+julia&gt; DNA_R &amp; DNA_B
+DNA_G
 </pre></div>
 
 
@@ -653,26 +653,26 @@
 </table>
 <p><a href="http://www.insdc.org/documents/feature_table.html#7.4.3">http://www.insdc.org/documents/feature_table.html#7.4.3</a></p>
 <p>Symbols are accessible as constants with <code>AA_</code> prefix:</p>
-<div class="codehilite"><pre><span></span><span class="gp">julia&gt;</span> <span class="n">AA_A</span>
-<span class="go">AA_A</span>
+<div class="codehilite"><pre><span></span>julia&gt; AA_A
+AA_A
 
-<span class="gp">julia&gt;</span> <span class="n">AA_Q</span>
-<span class="go">AA_Q</span>
+julia&gt; AA_Q
+AA_Q
 
-<span class="gp">julia&gt;</span> <span class="n">AA_Term</span>
-<span class="go">AA_Term</span>
+julia&gt; AA_Term
+AA_Term
 
-<span class="gp">julia&gt;</span> <span class="n">typeof</span><span class="p">(</span><span class="n">AA_A</span><span class="p">)</span>
-<span class="go">BioSymbols.AminoAcid</span>
+julia&gt; typeof(AA_A)
+BioSymbols.AminoAcid
 </pre></div>
 
 
 <p>Symbols can be constructed by converting regular characters:</p>
-<div class="codehilite"><pre><span></span><span class="gp">julia&gt;</span> <span class="n">convert</span><span class="p">(</span><span class="n">AminoAcid</span><span class="p">,</span> <span class="sc">&#39;A&#39;</span><span class="p">)</span>
-<span class="go">AA_A</span>
+<div class="codehilite"><pre><span></span>julia&gt; convert(AminoAcid, &#39;A&#39;)
+AA_A
 
-<span class="gp">julia&gt;</span> <span class="n">convert</span><span class="p">(</span><span class="n">AminoAcid</span><span class="p">,</span> <span class="sc">&#39;P&#39;</span><span class="p">)</span> <span class="o">===</span> <span class="n">AA_P</span>
-<span class="go">true</span>
+julia&gt; convert(AminoAcid, &#39;P&#39;) === AA_P
+true
 </pre></div>
 
 
@@ -686,11 +686,11 @@
 
 <p>Get all symbols of <code>type</code>.</p>
 <p><strong>Examples</strong></p>
-<div class="codehilite"><pre><span></span><span class="gp">julia&gt;</span> <span class="n">alphabet</span><span class="p">(</span><span class="n">DNA</span><span class="p">)</span>
-<span class="go">(DNA_Gap,DNA_A,DNA_C,DNA_M,DNA_G,DNA_R,DNA_S,DNA_V,DNA_T,DNA_W,DNA_Y,DNA_H,DNA_K,DNA_D,DNA_B,DNA_N)</span>
+<div class="codehilite"><pre><span></span>julia&gt; alphabet(DNA)
+(DNA_Gap,DNA_A,DNA_C,DNA_M,DNA_G,DNA_R,DNA_S,DNA_V,DNA_T,DNA_W,DNA_Y,DNA_H,DNA_K,DNA_D,DNA_B,DNA_N)
 
-<span class="gp">julia&gt;</span> <span class="n">issorted</span><span class="p">(</span><span class="n">alphabet</span><span class="p">(</span><span class="n">DNA</span><span class="p">))</span>
-<span class="go">true</span>
+julia&gt; issorted(alphabet(DNA))
+true
 </pre></div>
 
 
@@ -703,8 +703,8 @@
 
 <p>Return the gap value of <code>type</code>.</p>
 <p><strong>Examples</strong></p>
-<div class="codehilite"><pre><span></span><span class="gp">julia&gt;</span> <span class="n">gap</span><span class="p">(</span><span class="n">DNA</span><span class="p">)</span>
-<span class="go">DNA_Gap</span>
+<div class="codehilite"><pre><span></span>julia&gt; gap(DNA)
+DNA_Gap
 </pre></div>
 
 
@@ -718,17 +718,17 @@
 <p>Test if <code>x</code> and <code>y</code> are compatible with each other (i.e. <code>x</code> and <code>y</code> can be the same symbol).</p>
 <p><code>x</code> and <code>y</code> must be the same type (<code>DNA</code>, <code>RNA</code> or <code>AminoAcid</code>).</p>
 <p><strong>Examples</strong></p>
-<div class="codehilite"><pre><span></span><span class="gp">julia&gt;</span> <span class="n">iscompatible</span><span class="p">(</span><span class="n">DNA_A</span><span class="p">,</span> <span class="n">DNA_A</span><span class="p">)</span>
-<span class="go">true</span>
+<div class="codehilite"><pre><span></span>julia&gt; iscompatible(DNA_A, DNA_A)
+true
 
-<span class="gp">julia&gt;</span> <span class="n">iscompatible</span><span class="p">(</span><span class="n">DNA_C</span><span class="p">,</span> <span class="n">DNA_N</span><span class="p">)</span>  <span class="c"># DNA_N can be DNA_C</span>
-<span class="go">true</span>
+julia&gt; iscompatible(DNA_C, DNA_N)  # DNA_N can be DNA_C
+true
 
-<span class="gp">julia&gt;</span> <span class="n">iscompatible</span><span class="p">(</span><span class="n">DNA_C</span><span class="p">,</span> <span class="n">DNA_R</span><span class="p">)</span>  <span class="c"># DNA_R (A or G) cannot be DNA_C</span>
-<span class="go">false</span>
+julia&gt; iscompatible(DNA_C, DNA_R)  # DNA_R (A or G) cannot be DNA_C
+false
 
-<span class="gp">julia&gt;</span> <span class="n">iscompatible</span><span class="p">(</span><span class="n">AA_A</span><span class="p">,</span> <span class="n">AA_X</span><span class="p">)</span>    <span class="c"># AA_X can be AA_A</span>
-<span class="go">true</span>
+julia&gt; iscompatible(AA_A, AA_X)    # AA_X can be AA_A
+true
 </pre></div>
 
 
