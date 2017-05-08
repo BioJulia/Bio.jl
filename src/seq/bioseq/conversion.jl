@@ -1,10 +1,22 @@
-# Convert
-# =======
+# Conversion & Promotion
+# ======================
 #
 # Conversion methods for biological sequences.
 #
 # This file is a part of BioJulia.
 # License is MIT: https://github.com/BioJulia/Bio.jl/blob/master/LICENSE.md
+
+# Promotion
+# ---------
+
+for alph in (DNAAlphabet, RNAAlphabet)
+    @eval function Base.promote_rule{A<:$alph,B<:$alph}(::Type{BioSequence{A}}, ::Type{BioSequence{B}})
+        return BioSequence{promote_rule(A,B)}
+    end
+end
+
+# Conversion
+# ----------
 
 # Conversion between sequences of different alphabet size.
 for A in [DNAAlphabet, RNAAlphabet]

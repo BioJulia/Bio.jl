@@ -25,7 +25,7 @@ The following table summarizes common sequence types that are defined in the
 
 Parameterized definition of the `BioSequence{A}` type is for the purpose of
 unifying the data structure and operations of any symbol type. In most cases,
-users don't have to care about it and can use type aliases listed above.
+users don't have to care about it and can use *type aliases* listed above.
 However, the alphabet type fixes the internal memory encoding and plays an
 important role when optimizing performance of a program
 (see [Using a more compact sequence representation](@ref) section for low-memory

@@ -42,7 +42,7 @@ Void alphabet (internal use only).
 """
 immutable VoidAlphabet <: Alphabet end
 
-typealias NucleicAcidAlphabet Union{DNAAlphabet,RNAAlphabet}
+typealias NucleicAcidAlphabets Union{DNAAlphabet,RNAAlphabet}
 
 """
 The number of bits to represent the alphabet.
@@ -76,6 +76,14 @@ alphabet(::Type{AminoAcidAlphabet}) = alphabet(AminoAcid)
 alphabet(::Type{CharAlphabet}) = typemin(Char):typemax(Char)
 alphabet(::Type{VoidAlphabet}) = nothing
 
+# Promotion of Alphabets
+# ----------------------
+
+for alph in (DNAAlphabet, RNAAlphabet)
+    @eval function Base.promote_rule{A<:$alph,B<:$alph}(::Type{A}, ::Type{B})
+        return $alph{max(bitsof(A),bitsof(B))}
+    end
+end
 
 # Encoders & Decoders
 # -------------------
