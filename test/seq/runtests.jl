@@ -347,6 +347,17 @@ end
         EncodeError = Seq.EncodeError
         @test_throws EncodeError convert(BioSequence{DNAAlphabet{2}}, dna"AN")
         @test_throws EncodeError convert(BioSequence{RNAAlphabet{2}}, rna"AN")
+
+        # test promotion
+        a = BioSequence{DNAAlphabet{2}}("ATCG")
+        b = BioSequence{DNAAlphabet{4}}("ATCG")
+        c = BioSequence{RNAAlphabet{2}}("AUCG")
+        d = BioSequence{RNAAlphabet{4}}("AUCG")
+
+        @test typeof(promote(a, b)) == Tuple{BioSequence{DNAAlphabet{4}},BioSequence{DNAAlphabet{4}}}
+        @test typeof(promote(c, d)) == Tuple{BioSequence{RNAAlphabet{4}},BioSequence{RNAAlphabet{4}}}
+        @test typeof(promote(a, d)) == Tuple{BioSequence{DNAAlphabet{2}},BioSequence{RNAAlphabet{4}}}
+        @test typeof(promote(a, b, d)) == Tuple{BioSequence{DNAAlphabet{2}},BioSequence{DNAAlphabet{4}},BioSequence{RNAAlphabet{4}}}
     end
 
     @testset "Conversion between RNA and DNA" begin
