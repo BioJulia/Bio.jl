@@ -140,13 +140,15 @@ export
     FASTQ,
     TwoBit,
     AbifReader,
+
+    # Alphabets
     Alphabet,
     DNAAlphabet,
     RNAAlphabet,
     NucleicAcidAlphabets,
     AminoAcidAlphabet,
     CharAlphabet,
-    NucleicAcidAlphabet,
+
     ExactSearchQuery,
     ApproximateSearchQuery,
     approxsearch,
