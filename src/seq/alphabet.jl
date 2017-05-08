@@ -80,8 +80,8 @@ alphabet(::Type{VoidAlphabet}) = nothing
 # ----------------------
 
 for alph in (DNAAlphabet, RNAAlphabet)
-    @eval function Base.promote_rule{A,B}(::Type{$alph{A}}, ::Type{$alph{B}})
-        return $alph{max(A,B)}
+    @eval function Base.promote_rule{A<:$alph,B<:$alph}(::Type{A}, ::Type{B})
+        return $alph{max(bitsof(A),bitsof(B))}
     end
 end
 
