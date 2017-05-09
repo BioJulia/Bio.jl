@@ -102,15 +102,15 @@ function maximum(reader::Reader, chrom::AbstractString, chromstart::Integer, chr
 end
 
 function exact_extrema(reader::Reader, chromid::UInt32, chromstart::UInt32, chromend::UInt32)
-    minval = +Inf32
-    maxval = -Inf32
+    min = +Inf32
+    max = -Inf32
     defined = false
     for record in OverlapIterator(reader, chromid, chromstart, chromend)
-        minval = min(minval, record.value)
-        maxval = max(maxval, record.value)
+        min = Base.min(min, record.value)
+        max = Base.max(max, record.value)
         defined = true
     end
-    return defined ? (minval, maxval) : (NaN32, NaN32)
+    return defined ? (min, max) : (NaN32, NaN32)
 end
 
 """

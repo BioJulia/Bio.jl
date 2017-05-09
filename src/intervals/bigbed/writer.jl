@@ -351,19 +351,20 @@ end
 
 function compute_section_summary(intervals::Vector{Interval{Void}})
     cov = 0
-    minval = Inf
-    maxval = -Inf
-    sumval = sumsqval = 0.0
+    min = Inf
+    max = -Inf
+    sum = 0.0
+    ssq = 0.0
     for range in Bio.Intervals.coverage(intervals)
         depth = range.metadata
         size = range.last - range.first + 1
         cov += size
-        minval = min(minval, depth)
-        maxval = max(maxval, depth)
-        sumval += depth * size
-        sumsqval += depth^2 * size
+        min = Base.min(min, depth)
+        max = Base.max(max, depth)
+        sum += depth   * size
+        ssq += depth^2 * size
     end
-    return length(intervals), cov, minval, maxval, sumval, sumsqval
+    return length(intervals), cov, min, max, sum, ssq
 end
 
 function write_zeros(stream::IO, n::Integer)

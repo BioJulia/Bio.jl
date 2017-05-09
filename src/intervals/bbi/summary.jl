@@ -3,11 +3,16 @@
 
 # Supplemental Table 7.
 immutable Summary
-    bases_covered::UInt64
-    min_val::Float64
-    max_val::Float64
-    sum_data::Float64
-    sum_squares::Float64
+    # base coverage
+    cov::UInt64
+    # minimum value
+    min::Float64
+    # maximum value
+    max::Float64
+    # sum of values
+    sum::Float64
+    # sum of squared values
+    ssq::Float64
 end
 
 const SUMMARY_SIZE = 40
@@ -22,11 +27,11 @@ end
 function Base.write(stream::IO, summary::Summary)
     return write(
         stream,
-        summary.bases_covered,
-        summary.min_val,
-        summary.max_val,
-        summary.sum_data,
-        summary.sum_squares)
+        summary.cov,
+        summary.min,
+        summary.max,
+        summary.sum,
+        summary.ssq)
 end
 
 
