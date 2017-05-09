@@ -6,12 +6,12 @@ immutable Reader <: Bio.IO.AbstractReader
     header::BBI.Header
     zooms::Vector{BBI.Zoom}
     summary::BBI.Summary
-    btree::BBI.BTree
-    rtree::BBI.RTree
     # chrom name => (ID, length)
     chroms::Dict{String,Tuple{UInt32,Int}}
     # chrom ID => name
     chrom_names::Dict{UInt8,String}
+    # data index
+    index::BBI.RTree
 end
 
 function Base.eltype(::Type{Reader})
@@ -45,11 +45,11 @@ function Reader(input::IO)
     # read summary, B tree, and R tree
     seek(input, header.total_summary_offset)
     summary = read(input, BBI.Summary)
-    btree = BBI.BTree(input, header.chromosome_tree_offset)
-    rtree = BBI.RTree(input, header.full_index_offset)
-    chroms = Dict(name => (id, Int(len)) for (name, id, len) in BBI.chromlist(btree))
+    chromindex = BBI.BTree(input, header.chromosome_tree_offset)
+    chroms = Dict(name => (id, Int(len)) for (name, id, len) in BBI.chromlist(chromindex))
     chrom_names = Dict(id => name for (name, (id, len)) in chroms)
-    return Reader(input, header, zooms, summary, btree, rtree, chroms, chrom_names)
+    index = BBI.RTree(input, header.full_index_offset)
+    return Reader(input, header, zooms, summary, chroms, chrom_names, index)
 end
 
 """

@@ -36,7 +36,7 @@ end
 
 function Base.start(iter::OverlapIterator)
     data = Vector{UInt8}(iter.reader.header.uncompress_buf_size)
-    blocks = BBI.find_overlapping_blocks(iter.reader.rtree, iter.chromid, iter.chromstart, iter.chromend)
+    blocks = BBI.find_overlapping_blocks(iter.reader.index, iter.chromid, iter.chromstart, iter.chromend)
     if !isempty(blocks)
         seek(iter.reader.stream, blocks[1].offset)
     end
