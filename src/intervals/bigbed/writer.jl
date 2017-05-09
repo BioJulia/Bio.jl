@@ -147,9 +147,14 @@ function Base.write(writer::Writer, record::Tuple{String,Integer,Integer,Vararg}
     return write_impl(writer, chromid, UInt32(chromstart - 1), UInt32(chromend), optionals)
 end
 
-function Base.write(writer::Writer, interval::Bio.Intervals.Interval)
+function Base.write(writer::Writer, interval::Bio.Intervals.Interval{Void})
     chromid = writer.chroms[interval.seqname][1]
-    return write_impl(writer, chromid, UInt32(interval.first - 1), UInt32(interval.last), ())  # TODO: metadata
+    return write_impl(writer, chromid, UInt32(interval.first - 1), UInt32(interval.last), ())
+end
+
+function Base.write{T<:Tuple}(writer::Writer, interval::Bio.Intervals.Interval{T})
+    chromid = writer.chroms[interval.seqname][1]
+    return write_impl(writer, chromid, UInt32(interval.first - 1), UInt32(interval.last), interval.metadata...)
 end
 
 function Base.close(writer::Writer)
