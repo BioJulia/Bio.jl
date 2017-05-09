@@ -882,7 +882,7 @@ end
         @test length(records) == 17
         @testset for bin in [1, 5, 10, 51, 300]
             for scale in 1:2
-                binsize_scaled = binsize * BigWig.ZOOM_SCALE^(scale-1)
+                binsize_scaled = binsize * BigWig.ZOOM_SCALE_FACTOR^(scale-1)
                 chromstart = (bin - 1) * binsize_scaled + 1
                 chromend = bin * binsize_scaled
                 @test BigWig.coverage(reader, "chr1", chromstart, chromend; usezoom=false) == BigWig.coverage(reader, "chr1", chromstart, chromend; usezoom=true)

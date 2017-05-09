@@ -22,7 +22,6 @@ type WriterState
 
     # global state and stats
     blocks::Vector{BBI.Block}
-    finished_chrom_ids::Set{UInt32}
     cov::UInt32
     min::Float32
     max::Float32
@@ -38,7 +37,7 @@ type WriterState
             # section data
             false, IOBuffer(), UInt8[],
             # global info
-            BBI.Block[], Set{UInt32}(),
+            BBI.Block[],
             0, +Inf32, -Inf32, 0.0f0, 0.0f0)
     end
 end
@@ -51,7 +50,7 @@ immutable Writer <: Bio.IO.AbstractWriter
     zoomlevels::Int
 
     # maximum size of uncompressed buffer
-    uncompressed_buffer_size::UInt64
+    max_buffer_size::UInt64
 
     # file offsets
     summary_offset::UInt64
@@ -71,7 +70,7 @@ immutable Writer <: Bio.IO.AbstractWriter
     zoombuffer::BBI.ZoomBuffer
 end
 
-const ZOOM_SCALE = 4
+const ZOOM_SCALE_FACTOR = 4
 
 """
     BigWig.Writer(output::IO, chromlist; binsize=64, datatype=:bedgraph)
@@ -105,7 +104,7 @@ function Writer(output::IO, chromlist::Union{AbstractVector,Associative};
     # write dummy zoom headers (filled later)
     chromlist_with_id = BBI.add_chrom_ids(chromlist)
     maxlen = Base.maximum(x[3] for x in chromlist_with_id)
-    zoomlevels = BBI.determine_zoomlevels(maxlen, binsize, ZOOM_SCALE)
+    zoomlevels = BBI.determine_zoomlevels(maxlen, binsize, ZOOM_SCALE_FACTOR)
     write_zeros(output, BBI.ZOOM_HEADER_SIZE * zoomlevels)
 
     # write dummy total summary (filled later)
@@ -172,7 +171,7 @@ function Base.close(writer::Writer)
         0,  # predefined field count (0 for bigWig?)
         0,  # autoSQL offset (0 for bigWig?)
         writer.summary_offset,
-        writer.uncompressed_buffer_size,
+        writer.max_buffer_size,
         0   # reserved
     )
     seekstart(stream)
@@ -188,7 +187,7 @@ function Base.close(writer::Writer)
 
     # write zoom
     seekend(stream)
-    zoomheaders = BBI.write_zoom(stream, writer.zoombuffer, writer.zoomlevels, ZOOM_SCALE)
+    zoomheaders = BBI.write_zoom(stream, writer.zoombuffer, writer.zoomlevels, ZOOM_SCALE_FACTOR)
     @assert length(zoomheaders) == writer.zoomlevels
 
     # fill zoom headers
@@ -208,7 +207,7 @@ end
 function write_impl(writer::Writer, chromid::UInt32, chromstart::UInt32, chromend::UInt32, value::Float32)
     n = 0
     state = writer.state
-    if state.started && (chromid != state.chromid || position(state.buffer) ≥ writer.uncompressed_buffer_size - sizeof(UInt32) * 3)
+    if state.started && (chromid != state.chromid || position(state.buffer) ≥ writer.max_buffer_size - sizeof(UInt32) * 3)
         finish_section!(writer)
     end
     if !state.started
@@ -290,7 +289,7 @@ function start_section!(writer::Writer, chromid::UInt32, chromstart::UInt32, chr
     seekstart(state.buffer)
     truncate(state.buffer, SECTION_HEADER_SIZE)
     seek(state.buffer, SECTION_HEADER_SIZE)
-    resize!(state.compressed, div(writer.uncompressed_buffer_size * 11, 10))
+    resize!(state.compressed, div(writer.max_buffer_size * 11, 10))
     state.started = true
     return SECTION_HEADER_SIZE
 end

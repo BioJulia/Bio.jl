@@ -199,7 +199,7 @@ type ZoomBuffer
     binsize::UInt32
 
     # maximum size of uncompressed buffer
-    uncompressed_buffer_size::UInt64
+    max_buffer_size::UInt64
 
     # current chromosome (typemax(UInt32) for undefined)
     chromid::UInt32
@@ -331,8 +331,8 @@ function write_zoom_impl(output::IO, buffer::ZoomBuffer, scale::Int)
     tmpbuf = IOBuffer()
     blocksize = 0
     higher = ZoomData[]
-    compressed = Vector{UInt8}(div(buffer.uncompressed_buffer_size * 11, 10))
-    dataperblock = div(buffer.uncompressed_buffer_size, ZOOM_DATA_SIZE)
+    compressed = Vector{UInt8}(div(buffer.max_buffer_size * 11, 10))
+    dataperblock = div(buffer.max_buffer_size, ZOOM_DATA_SIZE)
     seekstart(buffer.stream1)
     # stream2 is now empty
     @assert position(buffer.stream2) == 0 && eof(buffer.stream2)

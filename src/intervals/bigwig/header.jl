@@ -3,14 +3,14 @@
 
 # Supplemental Table 13.
 immutable SectionHeader
-    chrom_id::UInt32
-    chrom_start::UInt32
-    chrom_end::UInt32
-    item_step::UInt32
-    item_span::UInt32
-    data_type::UInt8
+    chromid::UInt32
+    chromstart::UInt32
+    chromend::UInt32
+    itemstep::UInt32
+    itemspan::UInt32
+    datatype::UInt8
     reserved::UInt8
-    item_count::UInt16
+    itemcount::UInt16
 end
 
 const SECTION_HEADER_SIZE = 24
@@ -49,7 +49,7 @@ end
 function Base.write(stream::IO, header::SectionHeader)
     return write(
         stream,
-        header.chrom_id, header.chrom_start, header.chrom_end,
-        header.item_step, header.item_span, header.data_type,
-        header.reserved, header.item_count)
+        header.chromid, header.chromstart, header.chromend,
+        header.itemstep, header.itemspan, header.datatype,
+        header.reserved, header.itemcount)
 end

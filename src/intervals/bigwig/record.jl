@@ -63,7 +63,7 @@ Get the chromosome ID of `record`.
 """
 function chromid(record::Record)::UInt32
     checkfilled(record)
-    return record.header.chrom_id
+    return record.header.chromid
 end
 
 """

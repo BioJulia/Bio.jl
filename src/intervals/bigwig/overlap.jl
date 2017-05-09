@@ -65,7 +65,7 @@ function advance!(iter::OverlapIterator, state::OverlapIteratorState)
             state.stream = IOBuffer(state.data[1:size])
             state.header = read(state.stream, SectionHeader)
             state.current_block += 1
-            state.n_records = state.header.item_count
+            state.n_records = state.header.itemcount
             state.current_record = 0
         end
         if state.current_record == state.n_records && state.current_block > endof(state.blocks)
@@ -82,5 +82,5 @@ function advance!(iter::OverlapIterator, state::OverlapIteratorState)
 end
 
 function overlaps(record::Record, chromid::UInt32, chromstart::UInt32, chromend::UInt32)
-    return record.header.chrom_id == chromid && !(record.chromend ≤ chromstart || record.chromstart ≥ chromend)
+    return record.header.chromid == chromid && !(record.chromend ≤ chromstart || record.chromstart ≥ chromend)
 end

@@ -115,7 +115,7 @@ function advance!(reader::Reader, state::IteratorState)
     while state.current_section < state.n_sections && state.current_record == state.n_records
         state.header = read(state.stream, SectionHeader)
         state.current_section += 1
-        state.n_records = state.header.item_count
+        state.n_records = state.header.itemcount
         state.current_record = 0
     end
     if state.current_record == state.n_records
@@ -131,15 +131,15 @@ end
 function _read!(reader::Reader, state, record::Record)
     @assert !state.done
     header = state.header
-    if isbedgraph(header.data_type)
+    if isbedgraph(header.datatype)
         chromstart = read(state.stream, UInt32)
         chromend   = read(state.stream, UInt32)
-    elseif isvarstep(header.data_type)
+    elseif isvarstep(header.datatype)
         chromstart = read(state.stream, UInt32)
-        chromend   = chromstart + header.item_span
-    elseif isfixedstep(header.data_type)
-        chromstart = state.current_record == 0 ? header.chrom_start : state.record.chromstart + header.item_step
-        chromend   = chromstart + header.item_span
+        chromend   = chromstart + header.itemspan
+    elseif isfixedstep(header.datatype)
+        chromstart = state.current_record == 0 ? header.chromstart : state.record.chromstart + header.itemstep
+        chromend   = chromstart + header.itemspan
     else
         throw(ArgumentError("invalid data type"))
     end
