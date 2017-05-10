@@ -1,18 +1,25 @@
-# BBI
-# ===
+# BBI - Shared Parts of bigWig and bigBed
+# =======================================
 #
-# The BigBed format is documented in
-#   Kent, W. James, et al. "BigWig and BigBed: # enabling browsing of large
-#   distributed datasets." Bioinformatics 26.17 (2010): 2204-2207.
-#
-# The low level details are documented in a series of tables in the supplement
-# of that paper. The immutable types defined below are exactly the data layout
-# described in those tables. They are labeled with the table they correspand to.
+# Detailed description of bigWig and bigBed file formats are found in the paper
+# and its supplement:
+# https://doi.org/10.1093/bioinformatics/btq351
+# https://www.ncbi.nlm.nih.gov/pmc/articles/PMC2922891/bin/supp_btq351_bbiSuppFINAL.doc
 #
 # This file is a part of BioJulia.
 # License is MIT: https://github.com/BioJulia/Bio.jl/blob/master/LICENSE.md
 
-include("types.jl")
-include("reader.jl")
-include("writer.jl")
-include("intersection.jl")
+module BBI
+
+import Bio: Mem
+import Libz
+
+include("header.jl")
+include("summary.jl")
+include("btree.jl")
+include("rtree.jl")
+include("section.jl")
+include("zoom.jl")
+include("compress.jl")
+
+end

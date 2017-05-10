@@ -31,8 +31,6 @@ export
     BEDWriter,
     BEDMetadata,
     BEDInterval,
-    BigBedReader,
-    BigBedWriter,
     GFF3,
     GFF3Reader,
     GFF3Metadata,
@@ -40,6 +38,8 @@ export
     hasfasta,
     getfasta,
     directives,
+    BigBed,
+    BigWig,
     Tabix,
     overlapchunks,
     tryread!,
@@ -68,6 +68,8 @@ include("index/index.jl")
 include("bed/bed.jl")
 include("bed_old/bed.jl")
 include("bbi/bbi.jl")
+include("bigbed/bigbed.jl")
+include("bigwig/bigwig.jl")
 include("gff3/gff3.jl")
 
 include("deprecated.jl")
