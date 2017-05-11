@@ -11,7 +11,7 @@
 module BigWig
 
 import Bio: Bio, isfilled
-import Bio.Intervals: BBI
+import Bio.Intervals: BBI, Interval
 import BufferedStreams
 import Libz
 

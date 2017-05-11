@@ -61,6 +61,39 @@ function chromlist(reader::Reader)::Vector{Tuple{String,Int}}
     return sort!([(name, Int(len)) for (name, (id, len)) in reader.chroms], by=x->x[1])
 end
 
+"""
+    values(reader::BigWig.Reader, interval::Interval)::Vector{Float32}
+
+Get a vector of values within `interval` from `reader`.
+
+This function fills missing values with `NaN32`.
+"""
+function values(reader::Reader, interval::Interval)
+    return values(reader, interval.seqname, interval.first:interval.last)
+end
+
+"""
+    values(reader::BigWig.Reader, chrom::AbstractString, range::UnitRange)::Vector{Float32}
+
+Get a vector of values within `range` of `chrom` from `reader`.
+
+This function fills missing values with `NaN32`.
+"""
+function values(reader::Reader, chrom::AbstractString, range::UnitRange)::Vector{Float32}
+    values = Vector{Float32}(length(range))
+    if isempty(range)
+        return values
+    end
+    fill!(values, NaN32)
+    offset = first(range) - 1
+    for record in Bio.Intervals.eachoverlap(reader, Interval(chrom, first(range), last(range)))
+        rstart = clamp(record.chromstart+1-offset, 1, endof(values))
+        rend = clamp(record.chromend-offset, 1, endof(values))
+        values[rstart:rend] = record.value
+    end
+    return values
+end
+
 
 # Record
 # ------

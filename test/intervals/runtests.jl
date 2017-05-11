@@ -813,6 +813,11 @@ end
         @test leftposition(interval) === 50
         @test rightposition(interval) === 100
         @test metadata(interval) === 3.14f0
+        @test all(isnan(BigWig.values(reader, "chr1", 1:49)))
+        @test BigWig.values(reader, "chr1", 50:51) == [3.14f0, 3.14f0]
+        @test BigWig.values(reader, "chr1", 99:100) == [3.14f0, 3.14f0]
+        @test all(isnan(BigWig.values(reader, "chr1", 101:200)))
+        @test BigWig.values(reader, Interval("chr1", 55, 56)) == [3.14f0, 3.14f0]
 
         # bedgraph (default)
         buffer = IOBuffer()
