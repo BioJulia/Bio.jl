@@ -170,14 +170,17 @@ end
         @test leftposition(i) == 10
         @test rightposition(i) == 20
         @test strand(i) == STRAND_BOTH
+        @test i == Interval("chr1", 10:20)
 
         i1 = Interval("chr1", 10, 20, '+')
         i2 = Interval("chr1", 10, 20, STRAND_POS)
         @test i1 == i2
+        @test i1 == Interval("chr1", 10:20, '+')
 
         i1 = Interval("chr2", 5692667, 5701385, '+',        "SOX11")
         i2 = Interval("chr2", 5692667, 5701385, STRAND_POS, "SOX11")
         @test i1 == i2
+        @test i1 == Interval("chr2", 5692667:5701385, '+', "SOX11")
     end
 end
 

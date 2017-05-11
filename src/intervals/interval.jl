@@ -34,6 +34,11 @@ function Interval(seqname::AbstractString, first::Integer, last::Integer,
     return Interval{Void}(seqname, first, last, strand, nothing)
 end
 
+function Interval{T<:Integer}(seqname::AbstractString, range::UnitRange{T},
+                              strand::Union{Strand,Char}=STRAND_BOTH, metadata=nothing)
+    return Interval(seqname, first(range), last(range), strand, metadata)
+end
+
 function Base.copy{T}(interval::Interval{T})
     return Interval{T}(copy(interval.seqname), interval.first, interval.last,
                        interval.strand, copy(interval.metadata))
