@@ -331,6 +331,8 @@ base in the genome. bigWig files are indexed to quickly fetch specific regions.
 
 ```@docs
 Bio.Intervals.BigWig.Reader
+Bio.Intervals.BigWig.chromlist
+Bio.Intervals.BigWig.values
 Bio.Intervals.BigWig.Writer
 Bio.Intervals.BigWig.Record
 Bio.Intervals.BigWig.chrom
@@ -353,6 +355,7 @@ regions.
 
 ```@docs
 Bio.Intervals.BigBed.Reader
+Bio.Intervals.BigBed.chromlist
 Bio.Intervals.BigBed.Writer
 Bio.Intervals.BigBed.Record
 Bio.Intervals.BigBed.chrom

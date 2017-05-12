@@ -16,7 +16,7 @@ function Base.iteratorsize(::Type{OverlapIterator})
     return Base.SizeUnknown()
 end
 
-function Bio.Intervals.eachoverlap(reader::Reader, interval::Bio.Intervals.Interval)
+function Bio.Intervals.eachoverlap(reader::Reader, interval::Interval)
     if haskey(reader.chroms, interval.seqname)
         id, _ = reader.chroms[interval.seqname]
     else
