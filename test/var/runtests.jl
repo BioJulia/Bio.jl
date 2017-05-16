@@ -32,7 +32,7 @@ for alph in (:DNAAlphabet, :RNAAlphabet)
     end
 end
 
-
+#=
 @testset "Site counting" begin
     @testset "Naive methods" begin
 
@@ -102,7 +102,7 @@ end
         end
 
     end
-        #=
+        
 
 
         @testset "Pairwise methods" begin
@@ -172,9 +172,9 @@ end
             @test a.sketch == sort(a.sketch)
         end
     end
-    =#
-end
 
+end
+=#
 #=
 @testset "Distance Computation" begin
 

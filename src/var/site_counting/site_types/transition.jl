@@ -29,3 +29,18 @@ end
 
 # Methods for the bitparallel framework.
 # --------------------------------------
+
+for A in (DNAAlphabet, RNAAlphabet)
+    @eval begin
+        @inline function count_bitpar(::Type{Transition}, ::Type{$A{4}}, a::UInt64, b::UInt64)
+            m = nibble_mask(Certain, a, b)
+            d = (a $ b) & m
+            remcount = count_zero_nibbles(d) # Count of the identical nucleotides.
+            tve = count_one_nibbles(nibble_mask(0x9999999999999999, d)) # Count the 1001 transversion edge case.
+            d &= (d >> 1)
+            d &= 0x7777777777777777
+            tvc = count_ones(d)
+            tve += (16 - tvc - remcount)
+        end
+    end
+end

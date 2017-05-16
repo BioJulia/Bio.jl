@@ -111,29 +111,6 @@ function random_interval(minstart, maxstop)
     return start:rand(start:maxstop)
 end
 
-function generate_possibilities_tester{A<:Union{DNAAlphabet{4}, DNAAlphabet{2}, RNAAlphabet{4}, RNAAlphabet{2}}}(::Type{A})
-    symbols = alphabet(A)
-    arra = Vector{eltype(A)}()
-    arrb = Vector{eltype(A)}()
-    for i in 1:length(symbols), j in i:length(symbols)
-        push!(arra, symbols[i])
-        push!(arrb, symbols[j])
-    end
-    return BioSequence{A}(arra), BioSequence{A}(arrb)
-end
-
-for alph in (:DNAAlphabet, :RNAAlphabet)
-    @eval function generate_possibilities_tester(::Type{$alph{2}}, ::Type{$alph{4}})
-        arra = Vector{eltype($alph)}()
-        arrb = Vector{eltype($alph)}()
-        for i in alphabet($alph{2}), j in alphabet($alph{4})
-            push!(arra, i)
-            push!(arrb, j)
-        end
-        return BioSequence{$alph{2}}(arra), BioSequence{$alph{4}}(arrb)
-    end
-end
-
 # NOTE: Most tests related to biological symbols are located in BioSymbols.jl.
 @testset "Symbols" begin
     @testset "DNA" begin
@@ -1222,98 +1199,219 @@ end
     end
 
     @testset "Site counting" begin
-        @testset "Naive methods" begin
-            NC = Seq.NaiveCount
 
-            alphabets = (DNAAlphabet{4}, DNAAlphabet{2},
-                         RNAAlphabet{4}, RNAAlphabet{2})
+        dna_alphabets = (DNAAlphabet{4}, DNAAlphabet{2})
+        rna_alphabets = (RNAAlphabet{4}, RNAAlphabet{2})
 
-            for alph in alphabets
+        @testset "Specific count methods" begin
 
+            function generate_possibilities_tester{A<:NucleicAcidAlphabets}(::Type{A})
+                symbols = alphabet(A)
+                arra = Vector{eltype(A)}()
+                arrb = Vector{eltype(A)}()
+                for i in 1:length(symbols), j in i:length(symbols)
+                    push!(arra, symbols[i])
+                    push!(arrb, symbols[j])
+                end
+                return BioSequence{A}(arra), BioSequence{A}(arrb)
+            end
+
+            for alphset in (dna_alphabets, rna_alphabets)
                 # Answers to these tests were worked out manually to verify
-                # count_sites_naive was working correctly.
+                # counting is working correctly.
                 # seqA and seqB contain all possible observations of sites.
 
-                istwobit = Seq.bitsof(alph) == 2
+                # 4 bit encoded sequences
+                seqA, seqB = generate_possibilities_tester(alphset[1])
+                @test count(Certain, seqA, seqB) == count(Certain, seqB, seqA) == 10
+                @test count(Gap, seqA, seqB) == count(Gap, seqB, seqA) == 16
+                @test count(Ambiguous, seqA, seqB) == count(Ambiguous, seqB, seqA) == 121
+                @test count(Match, seqA, seqB) == count(Match, seqB, seqA) == length(alphabet(alphset[1]))
+                @test count(Mismatch, seqA, seqB) == count(Mismatch, seqB, seqA) == (length(seqA) - length(alphabet(alphset[1])))
 
-                seqA, seqB = generate_possibilities_tester(alph)
-
-                # Test methods which work on single sequences.
-                @test count(Certain, NC, seqA) == ifelse(istwobit, length(seqA), 49)
-                @test count(Certain, NC, seqB) == ifelse(istwobit, length(seqB), 19)
-                @test count(Gap, NC, seqA) == ifelse(istwobit, 0, 16)
-                @test count(Gap, NC, seqB) == ifelse(istwobit, 0, 1)
-                @test count(Ambiguous, NC, seqA) == ifelse(istwobit, 0, length(seqA) - 65)
-                @test count(Ambiguous, NC, seqB) == ifelse(istwobit, 0, length(seqB) - 20)
-
-                # Test methods which work on two sequences.
-                # Test when sequences are of the same bitencoding.
-
-                @test count(Certain, NC, seqA, seqB) == count(Certain, NC, seqB, seqA) == 10
-                @test count(Gap, NC, seqA, seqB) == count(Gap, NC, seqB, seqA) == ifelse(istwobit, 0, 16)
-                @test count(Ambiguous, NC, seqA, seqB) == count(Ambiguous, NC, seqB, seqA) == ifelse(istwobit, 0, 121)
-                @test count(Match, NC, seqA, seqB) == count(Match, NC, seqB, seqA) == length(alphabet(alph))
-                @test count(Mismatch, NC, seqA, seqB) == count(Mismatch, NC, seqB, seqA) == (length(seqA) - length(alphabet(alph)))
-            end
-
-            # Test for when sequences are of different bitencodings.
-            for alphs in [(DNAAlphabet{2}, DNAAlphabet{4}),
-                          (RNAAlphabet{2}, RNAAlphabet{4})]
-                seqA, seqB = generate_possibilities_tester(alphs...)
-                @test count(Certain, NC, seqA, seqB) == count(Certain, NC, seqB, seqA) == 16
-                @test count(Gap, NC, seqA, seqB) == count(Gap, NC, seqB, seqA) == 4
-                @test count(Ambiguous, NC, seqA, seqB) == count(Ambiguous, NC, seqB, seqA) == 44
-                @test count(Match, NC, seqA, seqB) == count(Match, NC, seqB, seqA) == 4
-                @test count(Mismatch, NC, seqA, seqB) == count(Mismatch, NC, seqB, seqA) == 60
+                # 2 bit encoded sequences
+                seqA, seqB = generate_possibilities_tester(alphset[2])
+                @test count(Certain, seqA, seqB) == count(Certain, seqB, seqA) == 10
+                @test count(Gap, seqA, seqB) == count(Gap, seqB, seqA) == 0
+                @test count(Ambiguous, seqA, seqB) == count(Ambiguous, seqB, seqA) == 0
+                @test count(Match, seqA, seqB) == count(Match, seqB, seqA) == length(alphabet(alphset[2]))
+                @test count(Mismatch, seqA, seqB) == count(Mismatch, seqB, seqA) == (length(seqA) - length(alphabet(alphset[2])))
             end
         end
 
-        @testset "Bit parallel methods" begin
-            BC = Seq.BitparCount
-            NC = Seq.NaiveCount
-            # Having determined that naive counting algorithm is correct.
-            # We can verify the bitparallel algorithm is correct by randomly
-            # generating test-cases, and verifying the naive algorithm, and
-            # the bitparallel algorithm give the same answer.
-            @testset "4 bit encoding" begin
-                alphabets = (DNAAlphabet{4}, RNAAlphabet{4})
-                for alph in alphabets
-                    for _ in 1:50
-                        seqA = random_seq(alph, rand(10:100))
-                        seqB = random_seq(alph, rand(10:100))
-                        subA = seqA[1:rand(10:length(seqA))]
-                        subB = seqB[1:rand(10:length(seqB))]
-                        @test count(Mismatch, BC, subA, subB) == count(Mismatch, BC, subB, subA) == count(Mismatch, NC, subA, subB)
-                        @test count(Match, BC, subA, subB) == count(Match, BC, subB, subA) == count(Match, NC, subA, subB)
-                        @test count(Certain, BC, subA, subB) == count(Certain, BC, subB, subA) == count(Certain, NC, subA, subB)
-                        @test count(Gap, BC, subA, subB) == count(Gap, BC, subB, subA) == count(Gap, NC, subA, subB)
-                        @test count(Ambiguous, BC, subA, subB) == count(Ambiguous, BC, subB, subA) == count(Ambiguous, NC, subA, subB)
+        @testset "Randomized tests" begin
+
+            # A test counting function which is naive.
+            @inline function testcount{P<:Seq.Position}(::Type{P}, a::BioSequence, b::BioSequence)
+                k = 0
+                @inbounds for idx in 1:min(endof(a), endof(b))
+                    k += issite(P, a, b, idx)
+                end
+                return k
+            end
+            issite(::Type{Ambiguous}, a::BioSequence, idx) = isambiguous(a[idx])
+            @inline function issite(::Type{Ambiguous}, a::BioSequence, b::BioSequence, idx)
+                return issite(Ambiguous, a, idx) | issite(Ambiguous, b, idx)
+            end
+            issite(::Type{Certain}, a::BioSequence, idx) = iscertain(a[idx])
+            @inline function issite(::Type{Certain}, a::BioSequence, b::BioSequence, idx)
+                return issite(Certain, a, idx) & issite(Certain, b, idx)
+            end
+            issite(::Type{Gap}, a::BioSequence, idx) = isgap(a[idx])
+            @inline function issite(::Type{Gap}, a::BioSequence, b::BioSequence, idx)
+                return issite(Gap, a, idx) | issite(Gap, b, idx)
+            end
+            issite(::Type{Match}, a::BioSequence, b::BioSequence, idx) = a[idx] == b[idx]
+            issite(::Type{Mismatch}, a::BioSequence, b::BioSequence, idx) = a[idx] != b[idx]
+
+            # Randomized tests get performed with a naive counting function
+            # which is intuitive and works, but that is nowhere near as quick.
+
+            function testcounting{S<:Site}(::Type{S}, a, b)
+                @test count(S, a, b) == count(S, b, a) == testcount(S, a, b)
+            end
+
+            function testforencs(a::Int, b::Int, subset::Bool)
+                for alphabet in (DNAAlphabet, RNAAlphabet)
+                    for _ in  1:50
+                        println("TESTING SEQUENCES:")
+                        seqA = random_seq(alphabet{a}, rand(10:100))
+                        seqB = random_seq(alphabet{b}, rand(10:100))
+                        println("A seq: ", seqA)
+                        println("B seq: ", seqB)
+                        println("A length: ", length(seqA))
+                        println("B length: ", length(seqB))
+                        sa = seqA
+                        sb = seqB
+                        if subset
+                            intA = random_interval(1, length(seqA))
+                            intB = random_interval(1, length(seqB))
+                            subA = seqA[intA]
+                            subB = seqB[intB]
+                            println("A subset: ", intA)
+                            println("B subset: ", intB)
+                            println("A subseq: ", subA)
+                            println("B subseq: ", subB)
+                            sa = subA
+                            sb = subB
+                        end
+                        println("Testing Mismatch")
+                        testcounting(Mismatch, sa, sb)
+                        println("Testing Match")
+                        testcounting(Match, sa, sb)
+                        println("Testing Certain")
+                        testcounting(Certain, sa, sb)
+                        println("Testing Gap")
+                        testcounting(Gap, sa, sb)
+                        println("Testing Ambiguous")
+                        testcounting(Ambiguous, sa, sb)
                     end
                 end
             end
 
-            @testset "2 bit encoding" begin
-                alphabets = (DNAAlphabet{2}, RNAAlphabet{2})
-                for alph in alphabets
-                    for _ in 1:50
-                        seqA = random_seq(alph, rand(10:100))
-                        seqB = random_seq(alph, rand(10:100))
-                        subA = seqA[1:rand(10:length(seqA))]
-                        subB = seqB[1:rand(10:length(seqB))]
-                        @test count(Mismatch, BC, subA, subB) == count(Mismatch, BC, subB, subA) == count(Mismatch, NC, subA, subB)
-                        @test count(Match, BC, subA, subB) == count(Match, BC, subB, subA) == count(Match, NC, subA, subB)
-                    end
+            @testset "Testing 4-bit seq pairs" begin
+                @testset "Full random sequences" begin
+                    testforencs(4, 4, false)
+                end
+                @testset "Subset random sequences" begin
+                    testforencs(4, 4, true)
                 end
             end
         end
-
+#=
         @testset "Windowed methods" begin
             dnaA = dna"ATCGCCA-M"
             dnaB = dna"ATCGCCTAA"
             rnaA = rna"AUCGCCA-M"
             rnaB = rna"AUCGCCUAA"
-            for seqs in ((dnaA, dnaB), (rnaA, rnaB))
 
+            for seqs in ((dnaA, dnaB), (rnaA, rnaB))
+                @test count(Certain, seqs[1], seqs[2], 3, 1) == [IntervalValue(1, 3, 3),
+                                                                 IntervalValue(2, 4, 3),
+                                                                 IntervalValue(3, 5, 3),
+                                                                 IntervalValue(4, 6, 3),
+                                                                 IntervalValue(5, 7, 3),
+                                                                 IntervalValue(6, 8, 2),
+                                                                 IntervalValue(7, 9, 1)]
+                @test count(Ambiguous, seqs[1], seqs[2], 3, 1) == [IntervalValue(1, 3, 0),
+                                                                   IntervalValue(2, 4, 0),
+                                                                   IntervalValue(3, 5, 0),
+                                                                   IntervalValue(4, 6, 0),
+                                                                   IntervalValue(5, 7, 0),
+                                                                   IntervalValue(6, 8, 0),
+                                                                   IntervalValue(7, 9, 1)]
+                @test count(Gap, seqs[1], seqs[2], 3, 1) == [IntervalValue(1, 3, 0),
+                                                             IntervalValue(2, 4, 0),
+                                                             IntervalValue(3, 5, 0),
+                                                             IntervalValue(4, 6, 0),
+                                                             IntervalValue(5, 7, 0),
+                                                             IntervalValue(6, 8, 1),
+                                                             IntervalValue(7, 9, 1)]
+                @test count(Match, seqs[1], seqs[2], 3, 1) == [IntervalValue(1, 3, 3),
+                                                               IntervalValue(2, 4, 3),
+                                                               IntervalValue(3, 5, 3),
+                                                               IntervalValue(4, 6, 3),
+                                                               IntervalValue(5, 7, 2),
+                                                               IntervalValue(6, 8, 1),
+                                                               IntervalValue(7, 9, 0)]
+                @test count(Mismatch, seqs[1], seqs[2], 3, 1) == [IntervalValue(1, 3, 0),
+                                                                  IntervalValue(2, 4, 0),
+                                                                  IntervalValue(3, 5, 0),
+                                                                  IntervalValue(4, 6, 0),
+                                                                  IntervalValue(5, 7, 1),
+                                                                  IntervalValue(6, 8, 2),
+                                                                  IntervalValue(7, 9, 3)]
+            end
+
+            dnaA = BioSequence{DNAAlphabet{2}}("ATCGCCATT")
+            dnaB = BioSequence{DNAAlphabet{2}}("ATCGCCTAA")
+            rnaA = BioSequence{RNAAlphabet{2}}("AUCGCCAUU")
+            rnaB = BioSequence{RNAAlphabet{2}}("AUCGCCUAA")
+
+            for seqs in ((dnaA, dnaB), (rnaA, rnaB))
+                @test count(Certain, seqs[1], seqs[2], 3, 1) == [IntervalValue(1, 3, 3),
+                                                                 IntervalValue(2, 4, 3),
+                                                                 IntervalValue(3, 5, 3),
+                                                                 IntervalValue(4, 6, 3),
+                                                                 IntervalValue(5, 7, 3),
+                                                                 IntervalValue(6, 8, 3),
+                                                                 IntervalValue(7, 9, 3)]
+                @test count(Ambiguous, seqs[1], seqs[2], 3, 1) == [IntervalValue(1, 3, 0),
+                                                                   IntervalValue(2, 4, 0),
+                                                                   IntervalValue(3, 5, 0),
+                                                                   IntervalValue(4, 6, 0),
+                                                                   IntervalValue(5, 7, 0),
+                                                                   IntervalValue(6, 8, 0),
+                                                                   IntervalValue(7, 9, 0)]
+                @test count(Gap, seqs[1], seqs[2], 3, 1) == [IntervalValue(1, 3, 0),
+                                                             IntervalValue(2, 4, 0),
+                                                             IntervalValue(3, 5, 0),
+                                                             IntervalValue(4, 6, 0),
+                                                             IntervalValue(5, 7, 0),
+                                                             IntervalValue(6, 8, 0),
+                                                             IntervalValue(7, 9, 0)]
+                @test count(Match, seqs[1], seqs[2], 3, 1) == [IntervalValue(1, 3, 3),
+                                                               IntervalValue(2, 4, 3),
+                                                               IntervalValue(3, 5, 3),
+                                                               IntervalValue(4, 6, 3),
+                                                               IntervalValue(5, 7, 2),
+                                                               IntervalValue(6, 8, 1),
+                                                               IntervalValue(7, 9, 0)]
+                @test count(Mismatch, seqs[1], seqs[2], 3, 1) == [IntervalValue(1, 3, 0),
+                                                                  IntervalValue(2, 4, 0),
+                                                                  IntervalValue(3, 5, 0),
+                                                                  IntervalValue(4, 6, 0),
+                                                                  IntervalValue(5, 7, 1),
+                                                                  IntervalValue(6, 8, 2),
+                                                                  IntervalValue(7, 9, 3)]
+            end
+
+            dnaA = dna"ATCGCCA-M"
+            dnaB = BioSequence{DNAAlphabet{2}}("ATCGCCTAA")
+            rnaA = rna"AUCGCCA-M"
+            rnaB = BioSequence{RNAAlphabet{2}}("AUCGCCUAA")
+
+            for seqs in ((dnaA, dnaB), (rnaA, rnaB))
                 @test count(Certain, seqs[1], seqs[2], 3, 1) == [IntervalValue(1, 3, 3),
                                                                  IntervalValue(2, 4, 3),
                                                                  IntervalValue(3, 5, 3),
@@ -1351,6 +1449,8 @@ end
                                                                   IntervalValue(7, 9, 3)]
             end
         end
+        =#
+
 #=
         @testset "Pairwise methods" begin
             dnas = [dna"ATCGCCA-", dna"ATCGCCTA", dna"ATCGCCT-", dna"GTCGCCTA"]
