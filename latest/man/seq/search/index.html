@@ -541,19 +541,19 @@ julia&gt; comp[DNA_T]
 
 
 <p>To accumulate composition statistics of multiple sequences, <code>merge!</code> can be used as follows:</p>
-<div class="codehilite"><pre><span></span><span class="n">julia</span><span class="o">&gt;</span> <span class="c"># initiaize an empty composition counter</span>
-       <span class="n">comp</span> <span class="o">=</span> <span class="n">composition</span><span class="p">(</span><span class="n">dna</span><span class="s">&quot;&quot;</span><span class="p">);</span>
-<span class="n">ERROR</span><span class="o">:</span> <span class="kt">UndefVarError</span><span class="o">:</span> <span class="nd">@dna_str</span> <span class="n">not</span> <span class="n">defined</span>
+<div class="codehilite"><pre><span></span>julia&gt; # initiaize an empty composition counter
+       comp = composition(dna&quot;&quot;);
+ERROR: UndefVarError: @dna_str not defined
 
-<span class="n">julia</span><span class="o">&gt;</span> <span class="c"># iterate over sequences and accumulate composition statistics into `comp`</span>
-       <span class="k">for</span> <span class="n">seq</span> <span class="kp">in</span> <span class="n">seqs</span>
-           <span class="n">merge!</span><span class="p">(</span><span class="n">comp</span><span class="p">,</span> <span class="n">composition</span><span class="p">(</span><span class="n">seq</span><span class="p">))</span>
-       <span class="k">end</span>
-<span class="n">ERROR</span><span class="o">:</span> <span class="kt">UndefVarError</span><span class="o">:</span> <span class="n">seqs</span> <span class="n">not</span> <span class="n">defined</span>
+julia&gt; # iterate over sequences and accumulate composition statistics into `comp`
+       for seq in seqs
+           merge!(comp, composition(seq))
+       end
+ERROR: UndefVarError: seqs not defined
 
-<span class="n">julia</span><span class="o">&gt;</span> <span class="c"># or functional programming style in one line</span>
-       <span class="n">foldl</span><span class="p">((</span><span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">merge</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">composition</span><span class="p">(</span><span class="n">y</span><span class="p">)),</span> <span class="n">composition</span><span class="p">(</span><span class="n">dna</span><span class="s">&quot;&quot;</span><span class="p">),</span> <span class="n">seqs</span><span class="p">)</span>
-<span class="n">ERROR</span><span class="o">:</span> <span class="kt">UndefVarError</span><span class="o">:</span> <span class="nd">@dna_str</span> <span class="n">not</span> <span class="n">defined</span>
+julia&gt; # or functional programming style in one line
+       foldl((x, y) -&gt; merge(x, composition(y)), composition(dna&quot;&quot;), seqs)
+ERROR: UndefVarError: @dna_str not defined
 </pre></div>
 
 
