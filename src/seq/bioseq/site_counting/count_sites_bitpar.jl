@@ -52,37 +52,44 @@
 
             println("x: ", hex(x), "\ny: ", hex(y))
 
-            # Here it is assumed that there is something to go and get from
+            # Here it was assumed that there is something to go and get from
             # the next chunk of `b`, yet that may not be true.
             # We know that if this is not true of `b`, then it is certainly not
             # true of `a`.
-            println("stopb - nextb >= 64: ", stopb - nextb, " ", stopb - nextb > 64)
-            if offset(nextb) > offset(nexta) && (stopb - nextb) > 64
+            # We check if the end of the sequence is not contained in the same
+            # integer like so: `64 - offset(nextb) < stopb - nextb`.
+            #
+            # This edge case was found and accounted for by Ben Ward @Ward9250.
+            # Ask this maintainer for more information.
+            println("64 - offset(nextb): ", 64 - offset(nextb))
+            println("stopb - nextb: ", stopb - nextb)
+            println("64 - offset(nextb) < stopb - nextb: ", 64 - offset(nextb) < stopb - nextb)
+            if offset(nextb) > offset(nexta) && 64 - offset(nextb) < stopb - nextb
                 y |= b.data[index(nextb) + 1] << (64 - offset(nextb))
                 println("Modified y: ", hex(y))
             end
 
             # Here we need to check something, we need to check if the
-            # head of `a` we are currently aligning contains the entirity of
-            # the sequence or subsequence.
-            # Because if the end of seq/subseq `a` comes before the end of this
-            # head integer, it's something we need to take into account of when
-            # we mask x and y.
+            # integer of `a` we are currently aligning contains the end of
+            # seq/subseq `a`. Because if so it's something we need to take into
+            # account of when we mask x and y.
             #
-            # In other words if stopa - nexta < 64, we know seq or subseq a's
-            # data ends before the end of this data chunk, and so the mask
-            # used needs to be defined to account for this: mask(stopa - nexta),
-            # otherwise the mask simply needs to be mask(64 - offset(nexta)).
+            # In other words if `64 - offset(nexta) > stopa - nexta, we know
+            # seq or subseq a's data ends before the end of this data chunk,
+            # and so the mask used needs to be defined to account for this:
+            # `mask(stopa - nexta)`, otherwise the mask simply needs to be
+            # `mask(64 - offset(nexta))`.
             #
             # This edge case was found and accounted for by Ben Ward @Ward9250.
-            # As this maintainer for more information.
+            # Ask this maintainer for more information.
             println("stopa and nexta stuff:")
-            println("stopa - nexta < 64: ", stopa - nexta < 64)
+            println("64 - offset(nexta): ", 64 - offset(nexta))
             println("stopa - nexta: ", stopa - nexta)
+            println("64 - offset(nexta) > stopa - nexta: ", 64 - offset(nexta) > stopa - nexta)
             println("stopa based mask: ", hex(mask(stopa - nexta)))
             println("64 - offset based mask: ", hex(mask(64 - offset(nexta))))
 
-            k = ifelse(stopa - nexta < 64, stopa - nexta, 64 - offset(nexta))
+            k = ifelse(64 - offset(nexta) > stopa - nexta, stopa - nexta, 64 - offset(nexta))
             println("k: ", k)
             m = mask(k)
             println("mask used: ", hex(m))
@@ -96,6 +103,9 @@
                 counts = bp_emptyspace_correction(nempty, counts)
                 println("counts: ", counts)
             end
+            # Here we move our current position markers by k, meaning they move
+            # to either, A). The next integer, or B). The end of the sequence if
+            # it is in the current integer.
             nexta += k
             nextb += k
             println("Index A: ", index(nexta), ", Offset A: ", offset(nexta))
