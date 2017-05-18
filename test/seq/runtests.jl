@@ -1326,7 +1326,20 @@ end
                     testforencs(2, 2, true)
                 end
             end
+
+            @testset "Testing mixed bit seq pairs" begin
+                @testset "Full random sequences" begin
+                    testforencs(4, 2, false)
+                    testforencs(2, 4, false)
+                end
+                @testset"Subset random sequences" begin
+                testforencs(4, 2, true)
+                testforencs(2, 4, true)
+                end
+            end
         end
+
+
 #=
         @testset "Windowed methods" begin
             dnaA = dna"ATCGCCA-M"
