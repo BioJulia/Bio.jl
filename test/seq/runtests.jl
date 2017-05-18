@@ -1332,9 +1332,9 @@ end
                     testforencs(4, 2, false)
                     testforencs(2, 4, false)
                 end
-                @testset"Subset random sequences" begin
-                testforencs(4, 2, true)
-                testforencs(2, 4, true)
+                @testset "Subset random sequences" begin
+                    testforencs(4, 2, true)
+                    testforencs(2, 4, true)
                 end
             end
         end
