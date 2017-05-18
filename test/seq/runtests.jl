@@ -1317,6 +1317,15 @@ end
                     testforencs(4, 4, true)
                 end
             end
+
+            @testset "Testing 2-bit seq pairs" begin
+                @testset "Full random sequences" begin
+                    testforencs(2, 2, false)
+                end
+                @testset "Subset random sequences" begin
+                    testforencs(2, 2, true)
+                end
+            end
         end
 #=
         @testset "Windowed methods" begin
