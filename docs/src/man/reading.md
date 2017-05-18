@@ -408,6 +408,7 @@ Bio.Align.SAM.keyvalues
 Bio.Align.SAM.Record
 Bio.Align.SAM.flag
 Bio.Align.SAM.ismapped
+Bio.Align.SAM.isprimary
 Bio.Align.SAM.refname
 Bio.Align.SAM.position
 Bio.Align.SAM.rightposition
@@ -467,6 +468,7 @@ Bio.Align.BAM.Writer
 Bio.Align.BAM.Record
 Bio.Align.BAM.flag
 Bio.Align.BAM.ismapped
+Bio.Align.BAM.isprimary
 Bio.Align.BAM.refid
 Bio.Align.BAM.refname
 Bio.Align.BAM.position
