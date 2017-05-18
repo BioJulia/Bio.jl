@@ -112,8 +112,19 @@ end
 
 Test if `record` is mapped.
 """
-function ismapped(record::Record)
+function ismapped(record::Record)::Bool
     return flag(record) & SAM.FLAG_UNMAP == 0
+end
+
+"""
+    isprimary(record::Record)::Bool
+
+Test if `record` is a primary line of the read.
+
+This is equivalent to `flag(record) & 0x900 == 0`.
+"""
+function isprimary(record::Record)::Bool
+    return flag(record) & 0x900 == 0
 end
 
 """

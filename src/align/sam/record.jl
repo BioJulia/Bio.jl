@@ -154,6 +154,17 @@ function ismapped(record::Record)::Bool
 end
 
 """
+    isprimary(record::Record)::Bool
+
+Test if `record` is a primary line of the read.
+
+This is equivalent to `flag(record) & 0x900 == 0`.
+"""
+function isprimary(record::Record)::Bool
+    return flag(record) & 0x900 == 0
+end
+
+"""
     refname(record::Record)::String
 
 Get the reference sequence name of `record`.
