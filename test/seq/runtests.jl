@@ -1338,141 +1338,6 @@ end
                 end
             end
         end
-
-
-#=
-        @testset "Windowed methods" begin
-            dnaA = dna"ATCGCCA-M"
-            dnaB = dna"ATCGCCTAA"
-            rnaA = rna"AUCGCCA-M"
-            rnaB = rna"AUCGCCUAA"
-
-            for seqs in ((dnaA, dnaB), (rnaA, rnaB))
-                @test count(Certain, seqs[1], seqs[2], 3, 1) == [IntervalValue(1, 3, 3),
-                                                                 IntervalValue(2, 4, 3),
-                                                                 IntervalValue(3, 5, 3),
-                                                                 IntervalValue(4, 6, 3),
-                                                                 IntervalValue(5, 7, 3),
-                                                                 IntervalValue(6, 8, 2),
-                                                                 IntervalValue(7, 9, 1)]
-                @test count(Ambiguous, seqs[1], seqs[2], 3, 1) == [IntervalValue(1, 3, 0),
-                                                                   IntervalValue(2, 4, 0),
-                                                                   IntervalValue(3, 5, 0),
-                                                                   IntervalValue(4, 6, 0),
-                                                                   IntervalValue(5, 7, 0),
-                                                                   IntervalValue(6, 8, 0),
-                                                                   IntervalValue(7, 9, 1)]
-                @test count(Gap, seqs[1], seqs[2], 3, 1) == [IntervalValue(1, 3, 0),
-                                                             IntervalValue(2, 4, 0),
-                                                             IntervalValue(3, 5, 0),
-                                                             IntervalValue(4, 6, 0),
-                                                             IntervalValue(5, 7, 0),
-                                                             IntervalValue(6, 8, 1),
-                                                             IntervalValue(7, 9, 1)]
-                @test count(Match, seqs[1], seqs[2], 3, 1) == [IntervalValue(1, 3, 3),
-                                                               IntervalValue(2, 4, 3),
-                                                               IntervalValue(3, 5, 3),
-                                                               IntervalValue(4, 6, 3),
-                                                               IntervalValue(5, 7, 2),
-                                                               IntervalValue(6, 8, 1),
-                                                               IntervalValue(7, 9, 0)]
-                @test count(Mismatch, seqs[1], seqs[2], 3, 1) == [IntervalValue(1, 3, 0),
-                                                                  IntervalValue(2, 4, 0),
-                                                                  IntervalValue(3, 5, 0),
-                                                                  IntervalValue(4, 6, 0),
-                                                                  IntervalValue(5, 7, 1),
-                                                                  IntervalValue(6, 8, 2),
-                                                                  IntervalValue(7, 9, 3)]
-            end
-
-            dnaA = BioSequence{DNAAlphabet{2}}("ATCGCCATT")
-            dnaB = BioSequence{DNAAlphabet{2}}("ATCGCCTAA")
-            rnaA = BioSequence{RNAAlphabet{2}}("AUCGCCAUU")
-            rnaB = BioSequence{RNAAlphabet{2}}("AUCGCCUAA")
-
-            for seqs in ((dnaA, dnaB), (rnaA, rnaB))
-                @test count(Certain, seqs[1], seqs[2], 3, 1) == [IntervalValue(1, 3, 3),
-                                                                 IntervalValue(2, 4, 3),
-                                                                 IntervalValue(3, 5, 3),
-                                                                 IntervalValue(4, 6, 3),
-                                                                 IntervalValue(5, 7, 3),
-                                                                 IntervalValue(6, 8, 3),
-                                                                 IntervalValue(7, 9, 3)]
-                @test count(Ambiguous, seqs[1], seqs[2], 3, 1) == [IntervalValue(1, 3, 0),
-                                                                   IntervalValue(2, 4, 0),
-                                                                   IntervalValue(3, 5, 0),
-                                                                   IntervalValue(4, 6, 0),
-                                                                   IntervalValue(5, 7, 0),
-                                                                   IntervalValue(6, 8, 0),
-                                                                   IntervalValue(7, 9, 0)]
-                @test count(Gap, seqs[1], seqs[2], 3, 1) == [IntervalValue(1, 3, 0),
-                                                             IntervalValue(2, 4, 0),
-                                                             IntervalValue(3, 5, 0),
-                                                             IntervalValue(4, 6, 0),
-                                                             IntervalValue(5, 7, 0),
-                                                             IntervalValue(6, 8, 0),
-                                                             IntervalValue(7, 9, 0)]
-                @test count(Match, seqs[1], seqs[2], 3, 1) == [IntervalValue(1, 3, 3),
-                                                               IntervalValue(2, 4, 3),
-                                                               IntervalValue(3, 5, 3),
-                                                               IntervalValue(4, 6, 3),
-                                                               IntervalValue(5, 7, 2),
-                                                               IntervalValue(6, 8, 1),
-                                                               IntervalValue(7, 9, 0)]
-                @test count(Mismatch, seqs[1], seqs[2], 3, 1) == [IntervalValue(1, 3, 0),
-                                                                  IntervalValue(2, 4, 0),
-                                                                  IntervalValue(3, 5, 0),
-                                                                  IntervalValue(4, 6, 0),
-                                                                  IntervalValue(5, 7, 1),
-                                                                  IntervalValue(6, 8, 2),
-                                                                  IntervalValue(7, 9, 3)]
-            end
-
-            dnaA = dna"ATCGCCA-M"
-            dnaB = BioSequence{DNAAlphabet{2}}("ATCGCCTAA")
-            rnaA = rna"AUCGCCA-M"
-            rnaB = BioSequence{RNAAlphabet{2}}("AUCGCCUAA")
-
-            for seqs in ((dnaA, dnaB), (rnaA, rnaB))
-                @test count(Certain, seqs[1], seqs[2], 3, 1) == [IntervalValue(1, 3, 3),
-                                                                 IntervalValue(2, 4, 3),
-                                                                 IntervalValue(3, 5, 3),
-                                                                 IntervalValue(4, 6, 3),
-                                                                 IntervalValue(5, 7, 3),
-                                                                 IntervalValue(6, 8, 2),
-                                                                 IntervalValue(7, 9, 1)]
-                @test count(Ambiguous, seqs[1], seqs[2], 3, 1) == [IntervalValue(1, 3, 0),
-                                                                   IntervalValue(2, 4, 0),
-                                                                   IntervalValue(3, 5, 0),
-                                                                   IntervalValue(4, 6, 0),
-                                                                   IntervalValue(5, 7, 0),
-                                                                   IntervalValue(6, 8, 0),
-                                                                   IntervalValue(7, 9, 1)]
-                @test count(Gap, seqs[1], seqs[2], 3, 1) == [IntervalValue(1, 3, 0),
-                                                             IntervalValue(2, 4, 0),
-                                                             IntervalValue(3, 5, 0),
-                                                             IntervalValue(4, 6, 0),
-                                                             IntervalValue(5, 7, 0),
-                                                             IntervalValue(6, 8, 1),
-                                                             IntervalValue(7, 9, 1)]
-                @test count(Match, seqs[1], seqs[2], 3, 1) == [IntervalValue(1, 3, 3),
-                                                               IntervalValue(2, 4, 3),
-                                                               IntervalValue(3, 5, 3),
-                                                               IntervalValue(4, 6, 3),
-                                                               IntervalValue(5, 7, 2),
-                                                               IntervalValue(6, 8, 1),
-                                                               IntervalValue(7, 9, 0)]
-                @test count(Mismatch, seqs[1], seqs[2], 3, 1) == [IntervalValue(1, 3, 0),
-                                                                  IntervalValue(2, 4, 0),
-                                                                  IntervalValue(3, 5, 0),
-                                                                  IntervalValue(4, 6, 0),
-                                                                  IntervalValue(5, 7, 1),
-                                                                  IntervalValue(6, 8, 2),
-                                                                  IntervalValue(7, 9, 3)]
-            end
-        end
-        =#
-
 #=
         @testset "Pairwise methods" begin
             dnas = [dna"ATCGCCA-", dna"ATCGCCTA", dna"ATCGCCT-", dna"GTCGCCTA"]
@@ -1487,7 +1352,144 @@ end
                 @test count_pairwise(Gap, i...) == PWM{Int, false}([0 1 1 1; 1 0 1 0; 1 1 0 1; 1 0 1 0])
             end
         end
-=#
+        =#
+
+        @testset "Windowed methods" begin
+            @testset "4-bit encoded sequences" begin
+                dnaA = dna"ATCGCCA-M"
+                dnaB = dna"ATCGCCTAA"
+                rnaA = rna"AUCGCCA-M"
+                rnaB = rna"AUCGCCUAA"
+
+                for seqs in ((dnaA, dnaB), (rnaA, rnaB))
+                    @test count(Certain, seqs[1], seqs[2], 3, 1) == [IntervalValue(1, 3, 3),
+                                                                     IntervalValue(2, 4, 3),
+                                                                     IntervalValue(3, 5, 3),
+                                                                     IntervalValue(4, 6, 3),
+                                                                     IntervalValue(5, 7, 3),
+                                                                     IntervalValue(6, 8, 2),
+                                                                     IntervalValue(7, 9, 1)]
+                    @test count(Ambiguous, seqs[1], seqs[2], 3, 1) == [IntervalValue(1, 3, 0),
+                                                                       IntervalValue(2, 4, 0),
+                                                                       IntervalValue(3, 5, 0),
+                                                                       IntervalValue(4, 6, 0),
+                                                                       IntervalValue(5, 7, 0),
+                                                                       IntervalValue(6, 8, 0),
+                                                                       IntervalValue(7, 9, 1)]
+                    @test count(Gap, seqs[1], seqs[2], 3, 1) == [IntervalValue(1, 3, 0),
+                                                                 IntervalValue(2, 4, 0),
+                                                                 IntervalValue(3, 5, 0),
+                                                                 IntervalValue(4, 6, 0),
+                                                                 IntervalValue(5, 7, 0),
+                                                                 IntervalValue(6, 8, 1),
+                                                                 IntervalValue(7, 9, 1)]
+                    @test count(Match, seqs[1], seqs[2], 3, 1) == [IntervalValue(1, 3, 3),
+                                                                   IntervalValue(2, 4, 3),
+                                                                   IntervalValue(3, 5, 3),
+                                                                   IntervalValue(4, 6, 3),
+                                                                   IntervalValue(5, 7, 2),
+                                                                   IntervalValue(6, 8, 1),
+                                                                   IntervalValue(7, 9, 0)]
+                    @test count(Mismatch, seqs[1], seqs[2], 3, 1) == [IntervalValue(1, 3, 0),
+                                                                      IntervalValue(2, 4, 0),
+                                                                      IntervalValue(3, 5, 0),
+                                                                      IntervalValue(4, 6, 0),
+                                                                      IntervalValue(5, 7, 1),
+                                                                      IntervalValue(6, 8, 2),
+                                                                      IntervalValue(7, 9, 3)]
+                end
+            end
+            @testset "2-bit encoded sequences" begin
+                dnaA = BioSequence{DNAAlphabet{2}}("ATCGCCATT")
+                dnaB = BioSequence{DNAAlphabet{2}}("ATCGCCTAA")
+                rnaA = BioSequence{RNAAlphabet{2}}("AUCGCCAUU")
+                rnaB = BioSequence{RNAAlphabet{2}}("AUCGCCUAA")
+
+                for seqs in ((dnaA, dnaB), (rnaA, rnaB))
+                    @test count(Certain, seqs[1], seqs[2], 3, 1) == [IntervalValue(1, 3, 3),
+                                                                     IntervalValue(2, 4, 3),
+                                                                     IntervalValue(3, 5, 3),
+                                                                     IntervalValue(4, 6, 3),
+                                                                     IntervalValue(5, 7, 3),
+                                                                     IntervalValue(6, 8, 3),
+                                                                     IntervalValue(7, 9, 3)]
+                    @test count(Ambiguous, seqs[1], seqs[2], 3, 1) == [IntervalValue(1, 3, 0),
+                                                                       IntervalValue(2, 4, 0),
+                                                                       IntervalValue(3, 5, 0),
+                                                                       IntervalValue(4, 6, 0),
+                                                                       IntervalValue(5, 7, 0),
+                                                                       IntervalValue(6, 8, 0),
+                                                                       IntervalValue(7, 9, 0)]
+                    @test count(Gap, seqs[1], seqs[2], 3, 1) == [IntervalValue(1, 3, 0),
+                                                                 IntervalValue(2, 4, 0),
+                                                                 IntervalValue(3, 5, 0),
+                                                                 IntervalValue(4, 6, 0),
+                                                                 IntervalValue(5, 7, 0),
+                                                                 IntervalValue(6, 8, 0),
+                                                                 IntervalValue(7, 9, 0)]
+                    @test count(Match, seqs[1], seqs[2], 3, 1) == [IntervalValue(1, 3, 3),
+                                                                   IntervalValue(2, 4, 3),
+                                                                   IntervalValue(3, 5, 3),
+                                                                   IntervalValue(4, 6, 3),
+                                                                   IntervalValue(5, 7, 2),
+                                                                   IntervalValue(6, 8, 1),
+                                                                   IntervalValue(7, 9, 0)]
+                    @test count(Mismatch, seqs[1], seqs[2], 3, 1) == [IntervalValue(1, 3, 0),
+                                                                      IntervalValue(2, 4, 0),
+                                                                      IntervalValue(3, 5, 0),
+                                                                      IntervalValue(4, 6, 0),
+                                                                      IntervalValue(5, 7, 1),
+                                                                      IntervalValue(6, 8, 2),
+                                                                      IntervalValue(7, 9, 3)]
+                end
+            end
+            @testset "Mixed encodings" begin
+                dnaA = dna"ATCGCCA-M"
+                dnaB = BioSequence{DNAAlphabet{2}}("ATCGCCTAA")
+                rnaA = rna"AUCGCCA-M"
+                rnaB = BioSequence{RNAAlphabet{2}}("AUCGCCUAA")
+
+                for seqs in ((dnaA, dnaB), (rnaA, rnaB))
+                    @test count(Certain, seqs[1], seqs[2], 3, 1) == [IntervalValue(1, 3, 3),
+                                                                     IntervalValue(2, 4, 3),
+                                                                     IntervalValue(3, 5, 3),
+                                                                     IntervalValue(4, 6, 3),
+                                                                     IntervalValue(5, 7, 3),
+                                                                     IntervalValue(6, 8, 2),
+                                                                     IntervalValue(7, 9, 1)]
+                    @test count(Ambiguous, seqs[1], seqs[2], 3, 1) == [IntervalValue(1, 3, 0),
+                                                                       IntervalValue(2, 4, 0),
+                                                                       IntervalValue(3, 5, 0),
+                                                                       IntervalValue(4, 6, 0),
+                                                                       IntervalValue(5, 7, 0),
+                                                                       IntervalValue(6, 8, 0),
+                                                                       IntervalValue(7, 9, 1)]
+                    @test count(Gap, seqs[1], seqs[2], 3, 1) == [IntervalValue(1, 3, 0),
+                                                                 IntervalValue(2, 4, 0),
+                                                                 IntervalValue(3, 5, 0),
+                                                                 IntervalValue(4, 6, 0),
+                                                                 IntervalValue(5, 7, 0),
+                                                                 IntervalValue(6, 8, 1),
+                                                                 IntervalValue(7, 9, 1)]
+                    @test count(Match, seqs[1], seqs[2], 3, 1) == [IntervalValue(1, 3, 3),
+                                                                   IntervalValue(2, 4, 3),
+                                                                   IntervalValue(3, 5, 3),
+                                                                   IntervalValue(4, 6, 3),
+                                                                   IntervalValue(5, 7, 2),
+                                                                   IntervalValue(6, 8, 1),
+                                                                   IntervalValue(7, 9, 0)]
+                    @test count(Mismatch, seqs[1], seqs[2], 3, 1) == [IntervalValue(1, 3, 0),
+                                                                      IntervalValue(2, 4, 0),
+                                                                      IntervalValue(3, 5, 0),
+                                                                      IntervalValue(4, 6, 0),
+                                                                      IntervalValue(5, 7, 1),
+                                                                      IntervalValue(6, 8, 2),
+                                                                      IntervalValue(7, 9, 3)]
+                end
+            end
+        end
+
+
     end
 
     @testset "GC content" begin
