@@ -45,12 +45,12 @@ function Composition(seq::AminoAcidSequence)
     return Composition{AminoAcid}(counts)
 end
 
-function Composition{T,k}(iter::EachKmerIterator{T,k})
-    counts = zeros(Int, 4^k)
+function Composition{T<:Kmer}(iter::EachKmerIterator{T})
+    counts = zeros(Int, 4^kmersize(T))
     for (_, x) in iter
         counts[convert(UInt64, x) + 1] += 1
     end
-    return Composition{Kmer{T,k}}(counts)
+    return Composition{T}(counts)
 end
 
 """
