@@ -7,9 +7,10 @@
 # License is MIT: https://github.com/BioJulia/Bio.jl/blob/master/LICENSE.md
 
 # Iterate through every k-mer in a nucleotide sequence
-immutable EachKmerIterator{T,K,S<:Sequence}
+immutable EachKmerIterator{T<:Kmer,S<:Sequence}
     seq::S
     step::Int
+    start::Int
 end
 
 """
@@ -39,85 +40,80 @@ function each{T,K}(::Type{Kmer{T,K}}, seq::Sequence, step::Integer=1)
     elseif step < 1
         throw(ArgumentError("step size must be positive"))
     end
-    return EachKmerIterator{T,K,typeof(seq)}(seq, step)
+    return EachKmerIterator{Kmer{T,K},typeof(seq)}(seq, step, 1)
 end
 
 eachkmer{A<:DNAAlphabet}(seq::BioSequence{A}, K::Integer, step::Integer=1) = each(DNAKmer{Int(K)}, seq, step)
 eachkmer{A<:RNAAlphabet}(seq::BioSequence{A}, K::Integer, step::Integer=1) = each(RNAKmer{Int(K)}, seq, step)
 eachkmer(seq::ReferenceSequence, K::Integer, step::Integer=1) = each(DNAKmer{Int(K)}, seq, step)
 
-Base.eltype{T,k,S}(::Type{EachKmerIterator{T,k,S}}) = Tuple{Int,Kmer{T,k}}
+Base.eltype{T,S}(::Type{EachKmerIterator{T,S}}) = Tuple{Int,T}
 
-function Base.iteratorsize{T,k,S}(::Type{EachKmerIterator{T,k,S}})
+function Base.iteratorsize{T,S}(::Type{EachKmerIterator{T,S}})
     return Base.SizeUnknown()
 end
 
-@inline function Base.start{T,K}(it::EachKmerIterator{T,K})
-    nextn = find_next_ambiguous(it.seq, first(it.seq.part))
-    pair = Nullable{Tuple{Int,Kmer{T,K}}}()
-    pair, nextn = nextkmer(Kmer{T,K}, it.seq, 1, it.step, nextn, pair)
-    return pair, nextn
-end
-
-@inline function Base.done{T,K}(::EachKmerIterator{T,K}, state)
-    return isnull(state[1])
-end
-
-@inline function Base.next{T,K}(it::EachKmerIterator{T,K}, state)
-    pair, nextn = state
-    from, kmer = get(pair)
-    return (from, kmer), nextkmer(Kmer{T,K}, it.seq, from + it.step, it.step, nextn, pair)
-end
-
-@inline function nextkmer{T,K}(::Type{Kmer{T,K}}, seq, i, step, nextn, kmer)
-    # find a position from which we can extract at least K unambiguous nucleotides
-    from = i
-    while nextn > 0 && nextn - from < K
-        from = nextn + 1
-        # align `from` since it must be a multiple of `step`
-        r = rem(from - 1, step)
-        if r > 0
-            from += step - r
+function Base.start{T}(it::EachKmerIterator{T})
+    k = kmersize(T)
+    pos = it.start
+    kmer::UInt64 = 0
+    while pos + k - 1 ≤ endof(it.seq)
+        kmer, ok = extract_kmer_impl(it.seq, pos, k)
+        if ok
+            break
         end
-        nextn = find_next_ambiguous(seq, from)
+        pos += it.step
     end
-    if endof(seq) - from + 1 < K
-        # no available kmer
-        return Nullable{Tuple{Int,Kmer{T,K}}}(), nextn
-    end
-
-    newkmer = extract_kmer(Kmer{T,K}, seq, from, kmer)
-
-    # update `nextn` for the next iteration if needed
-    if nextn > 0 && nextn < from + step
-        nextn = find_next_ambiguous(seq, from)
-    end
-
-    return Nullable((from, newkmer)), nextn
+    return pos, kmer
 end
 
-@inline function extract_kmer{K,T}(::Type{Kmer{T,K}}, seq, from, pair)
-    if isnull(pair) || get(pair)[1] + K - 1 < from
-        # the last kmer doesn't overlap the extracting one
-        x = UInt64(0)
-        for k in 1:K
-            nt = inbounds_getindex(seq, from + k - 1)
-            x = x << 2 | trailing_zeros(nt)
+@inline function Base.done{T}(it::EachKmerIterator{T}, state)
+    return state[1] + kmersize(T) - 1 > endof(it.seq)
+end
+
+@inline function Base.next{T}(it::EachKmerIterator{T}, state)
+    k = kmersize(T)
+    pos, kmer = state
+    pos += it.step
+    has_ambiguous = false
+
+    # faster path: return the next overlapping kmer if possible
+    if it.step < k && pos + k - 1 ≤ endof(it.seq)
+        offset = k - it.step
+        if it.step == 1
+            nt = inbounds_getindex(it.seq, pos+offset)
+            kmer = kmer << 2 | trailing_zeros(nt)
+            has_ambiguous |= isambiguous(nt)
+        else
+            for i in 1:it.step
+                nt = inbounds_getindex(it.seq, pos+i-1+offset)
+                kmer = kmer << 2 | trailing_zeros(nt)
+                has_ambiguous |= isambiguous(nt)
+            end
         end
-    else
-        pos, kmer = get(pair)
-        # |<-K->|
-        # -------
-        #     -------
-        # ^   ^
-        # pos from
-        n = from - pos
-        from += K - n
-        x = UInt64(kmer)
-        for k in 1:n
-            nt = inbounds_getindex(seq, from + k - 1)
-            x = x << 2 | trailing_zeros(nt)
+        if !has_ambiguous
+            return (state[1], convert(T, state[2])), (pos, kmer)
         end
     end
-    return Kmer{T,K}(x)
+    
+    # fallback
+    while pos + k - 1 ≤ endof(it.seq)
+        kmer, ok = extract_kmer_impl(it.seq, pos, k)
+        if ok
+            break
+        end
+        pos += it.step
+    end
+    return (state[1], convert(T, state[2])), (pos, kmer)
+end
+
+function extract_kmer_impl(seq, from, k)
+    kmer::UInt64 = 0
+    has_ambiguous = false
+    for i in 1:k
+        nt = inbounds_getindex(seq, from+i-1)
+        kmer = kmer << 2 | trailing_zeros(nt)
+        has_ambiguous |= isambiguous(nt)
+    end
+    return kmer, !has_ambiguous
 end

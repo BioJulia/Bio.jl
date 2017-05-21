@@ -121,7 +121,9 @@ alphabet{k}(::Type{RNAKmer{k}}) = (RNA_A, RNA_C, RNA_G, RNA_U)
 
 Base.hash(x::Kmer, h::UInt) = hash(UInt64(x), h)
 
-Base.length{T,K}(x::Kmer{T, K}) = K
+kmersize{T,k}(::Type{Kmer{T,k}}) = k
+kmersize(kmer::Kmer) = kmersize(typeof(kmer))
+Base.length{T,K}(x::Kmer{T, K}) = kmersize(x)
 Base.eltype{T,k}(::Type{Kmer{T,k}}) = T
 
 @inline function inbounds_getindex{T,K}(x::Kmer{T,K}, i::Integer)
