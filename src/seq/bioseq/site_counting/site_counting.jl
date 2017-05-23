@@ -153,12 +153,12 @@ end
 # Specific count_pairwise methods
 # -------------------------------
 
-function count_pairwise{S<:Site,A<:NucleicAcidAlphabets,N}(::Type{S}, seqs::Vararg{BioSequence{A},N})
+function count_pairwise{P<:Position,A<:NucleicAcidAlphabets,N}(::Type{P}, seqs::Vararg{BioSequence{A},N})
     @assert N >= 2 "At least two sequences are required."
-    counts = Vector{counter_type(S, seqs[1], seqs[2])}(Int((N * (N - 1)) / 2))
+    counts = Vector{bp_counter_type(P, A)}(Int((N * (N - 1)) / 2))
     c = 1
     @inbounds for i in 1:N, j in (i + 1):N
-        counts[c] = count(S, seqs[i], seqs[j])
+        counts[c] = count(P, seqs[i], seqs[j])
         c += 1
     end
     return PairwiseListMatrix(counts, false)
