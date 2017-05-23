@@ -1274,13 +1274,15 @@ end
             function testforencs(a::Int, b::Int, subset::Bool)
                 for alphabet in (DNAAlphabet, RNAAlphabet)
                     for _ in  1:50
-                        println("TESTING SEQUENCES:")
+                        #println("TESTING SEQUENCES:")
                         seqA = random_seq(alphabet{a}, rand(10:100))
                         seqB = random_seq(alphabet{b}, rand(10:100))
+                        #=
                         println("A seq: ", seqA)
                         println("B seq: ", seqB)
                         println("A length: ", length(seqA))
                         println("B length: ", length(seqB))
+                        =#
                         sa = seqA
                         sb = seqB
                         if subset
@@ -1288,22 +1290,24 @@ end
                             intB = random_interval(1, length(seqB))
                             subA = seqA[intA]
                             subB = seqB[intB]
+                            #=
                             println("A subset: ", intA)
                             println("B subset: ", intB)
                             println("A subseq: ", subA)
                             println("B subseq: ", subB)
+                            =#
                             sa = subA
                             sb = subB
                         end
-                        println("Testing Mismatch")
+                        #println("Testing Mismatch")
                         testcounting(Mismatch, sa, sb)
-                        println("Testing Match")
+                        #println("Testing Match")
                         testcounting(Match, sa, sb)
-                        println("Testing Certain")
+                        #println("Testing Certain")
                         testcounting(Certain, sa, sb)
-                        println("Testing Gap")
+                        #println("Testing Gap")
                         testcounting(Gap, sa, sb)
-                        println("Testing Ambiguous")
+                        #println("Testing Ambiguous")
                         testcounting(Ambiguous, sa, sb)
                     end
                 end
