@@ -488,6 +488,66 @@ Translation Tables:
 
 <http://www.ncbi.nlm.nih.gov/Taxonomy/taxonomyhome.html/index.cgi?chapter=cgencodes>
 
+### Site counting
+
+Bio.Seq extends the `Base.count` method to provide some useful utilities for
+counting the number of sites in biological sequences.
+
+#### Site types
+
+Different types of site can be counted. Each of these types is a concrete
+subtype of the abstract type `Site`:
+
+```@docs
+Certain
+Gap
+Ambiguous
+Match
+Mismatch
+```
+
+#### `Base.count` methods
+
+The count method can be used with two sequences and a concrete subtype of
+`Site`:
+
+```jldoctest
+julia> count(Match, dna"ATCGATCG", dna"AAGGTTCG")
+5
+```
+
+By providing a `window` and `step` size, counting can be done from within
+a sliding window:
+
+```jldoctest
+julia> count(Match, dna"ATCGATCG", dna"AAGGTTCG", 3, 1)
+6-element Array{IntervalTrees.IntervalValue{Int64,Int64},1}:
+ IntervalTrees.IntervalValue{Int64,Int64}
+(1,3) => 1
+ IntervalTrees.IntervalValue{Int64,Int64}
+(2,4) => 1
+ IntervalTrees.IntervalValue{Int64,Int64}
+(3,5) => 1
+ IntervalTrees.IntervalValue{Int64,Int64}
+(4,6) => 2
+ IntervalTrees.IntervalValue{Int64,Int64}
+(5,7) => 2
+ IntervalTrees.IntervalValue{Int64,Int64}
+(6,8) => 3
+```
+
+#### The `pairwise_count` function
+Counting can also be done on a set of sequences in a pairwise manner with the
+`count_pairwise` function:
+
+```jldoctest
+julia> count_pairwise(Match, dna"ATCGCCA-", dna"ATCGCCTA", dna"ATCGCCT-", dna"GTCGCCTA")
+4×4 PairwiseListMatrices.PairwiseListMatrix{Int64,false}:
+ 0  6  7  5
+ 6  0  7  7
+ 7  7  0  6
+ 5  7  6  0
+```
 
 ### Iteration
 

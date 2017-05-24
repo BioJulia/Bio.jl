@@ -168,17 +168,37 @@ end
 # General, non-specific Base.count methods
 # ----------------------------------------
 
+"""
+    Base.count{S<:Site}(::Type{S}, a::BioSequence, b::BioSequence)
+
+Count the number of sites of type `S`, between two sequences a and b.
+"""
 @inline function Base.count{S<:Site}(::Type{S}, a::BioSequence, b::BioSequence)
     seqs = promote(a, b)
-    println("Promoting: ", typeof(seqs))
     return count(S, seqs...)
 end
 
+"""
+    Base.count{S<:Site}(::Type{S}, a::BioSequence, b::BioSequence, width::Int, step::Int)
+
+Count the number of sites of type `S`, between two sequences a and b, using a
+sliding window of a given `width`, and `step`.
+The `width` and `step` must be provided as number of base pairs.
+"""
 function Base.count{S<:Site}(::Type{S}, a::BioSequence, b::BioSequence, width::Int, step::Int)
     seqs = promote(a, b)
     return count(S, seqs..., width, step)
 end
 
+"""
+    count_pairwise{S<:Site,N}(::Type{S}, seqs::Vararg{BioSequence,N})
+
+Count the number of sites of type `S`, between each possible pair of the sequences
+provided (`seqs`).
+
+This returns a PairwiseListMatrix object contining the output for each pairwise
+operation.
+"""
 function count_pairwise{S<:Site,N}(::Type{S}, seqs::Vararg{BioSequence,N})
     seqs = promote(seqs...)
     return count_pairwise(S, seqs...)
