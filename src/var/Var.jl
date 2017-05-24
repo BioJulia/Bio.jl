@@ -9,7 +9,36 @@
 
 module Var
 
-using Bio.Seq
+import Bio.Seq:
+    Alphabet,
+    DNAAlphabet,
+    RNAAlphabet,
+    BioSequence,
+    MinHashSketch,
+    # Methods required for extending Seq's site counting.
+    count_nonzero_nibbles,
+    count_one_nibbles,
+    nibble_mask,
+    Certain,
+    Mismatch,
+    Match,
+    counter_type,
+    start_counter,
+    update_counter,
+    issite,
+    ispurine,
+    ispyrimidine,
+    count_bitpar,
+    correct_emptyspace
+
+    import Twiddle: enumerate_nibbles,
+        nibble_mask,
+        count_zero_nibbles,
+        count_nonzero_nibbles,
+        count_one_nibbles,
+        count_zero_bitpairs,
+        count_nonzero_bitpairs
+
 import PairwiseListMatrices: PairwiseListMatrix
 import Bio.Exceptions: MissingFieldException, missingerror
 import Bio.Windows: eachwindow, EachWindowIterator, SeqWinItr
@@ -23,18 +52,10 @@ importall Bio
 
 export
     # Site types
-    Certain,
-    Ambiguous,
-    Gap,
-    Match,
-    Mismatch,
     Conserved,
     Mutated,
     Transition,
     Transversion,
-    # Site counting methods
-    count_sites_naive,
-    count_sites,
 
     # VCF and BCF
     VCF,
@@ -65,12 +86,14 @@ export
     genotype,
 
     MissingFieldException,
-    mashdistance
+    mashdistance,
+    distance,
+    Proportion
 
 # Bio.@reexport import Bio: isfilled, leftposition
 
-include("site_counting/site_counting.jl")
-#include("distances.jl")
+include("site_counting/site_types/site_types.jl")
+include("distances/dist.jl")
 include("vcf/vcf.jl")
 include("bcf/bcf.jl")
 include("mash.jl")

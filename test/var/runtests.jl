@@ -9,15 +9,6 @@ using IntervalTrees: IntervalValue
 import BufferedStreams: BufferedInputStream
 import YAML
 
-typealias PWM PairwiseListMatrix
-
-function generate_testcase{A<:Union{DNAAlphabet{4}, DNAAlphabet{2}, RNAAlphabet{4}, RNAAlphabet{2}}}(::Type{A}, len::Int)
-    a = [convert(Char, i)  for i in alphabet(A)]
-    probs = Vector{Float64}(length(a))
-    fill!(probs, 1 / length(a))
-    return BioSequence{A}(random_seq(len, a, probs))
-end
-
 function generate_possibilities_tester{A<:Union{DNAAlphabet{4}, DNAAlphabet{2}, RNAAlphabet{4}, RNAAlphabet{2}}}(::Type{A})
     symbols = alphabet(A)
     arra = Vector{eltype(A)}()
@@ -41,84 +32,99 @@ for alph in (:DNAAlphabet, :RNAAlphabet)
     end
 end
 
-@testset "Var" begin
-    @testset "Site counting and identification" begin
-        @testset "Naive methods" begin
+#=
+@testset "Site counting" begin
+    @testset "Naive methods" begin
 
-            alphabets = (DNAAlphabet{4}, DNAAlphabet{2}, RNAAlphabet{4}, RNAAlphabet{2})
+        alphabets = (DNAAlphabet{4}, DNAAlphabet{2}, RNAAlphabet{4}, RNAAlphabet{2})
+        NC = Seq.NaiveCount
 
+        for alph in alphabets
+
+            # Answers to these tests were worked out manually to verify count_sites_naive was working.
+            # seqA and seqB contain all possible observations of sites.
+
+            istwobit = Seq.bitsof(alph) == 2
+
+            seqA, seqB = generate_possibilities_tester(alph)
+
+            # Test when sequences are of the same bitencoding.
+
+            @test count(Mutated, NC, seqA, seqB) == count(Mutated, NC, seqB, seqA) == ifelse(istwobit, 6, (6, 10))
+            @test count(Conserved, NC, seqA, seqB) == count(Conserved, NC, seqB, seqA) == ifelse(istwobit, 4, (4, 10))
+            @test count(Transition, NC, seqA, seqB) == count(Transition, NC, seqB, seqA) == ifelse(istwobit, 2, (2, 10))
+            @test count(Transversion, NC, seqA, seqB) == count(Transversion, NC, seqB, seqA) == ifelse(istwobit, 4, (4, 10))
+        end
+
+        # Test for when sequences are of different bitencodings.
+        for alphs in [(DNAAlphabet{2}, DNAAlphabet{4}),
+                      (RNAAlphabet{2}, RNAAlphabet{4})]
+            seqA, seqB = generate_possibilities_tester(alphs...)
+
+            @test count(Mutated, NC, seqA, seqB) == count(Mutated, NC, seqB, seqA) == (12, 16)
+            @test count(Conserved, NC, seqA, seqB) == count(Conserved, NC, seqB, seqA) == (4, 16)
+            @test count(Transition, NC, seqA, seqB) == count(Transition, NC, seqB, seqA) == (4, 16)
+            @test count(Transversion, NC, seqA, seqB) == count(Transversion, NC, seqB, seqA) == (8, 16)
+        end
+    end
+
+    @testset "Bit parallel methods" begin
+        @testset "4 bit encoding" begin
+            NC = Seq.NaiveCount
+            BC = Seq.BitparCount
+            alphabets = (DNAAlphabet{4}, RNAAlphabet{4})
             for alph in alphabets
-
-                # Answers to these tests were worked out manually to verify count_sites_naive was working.
-                # seqA and seqB contain all possible observations of sites.
-
-                istwobit = Seq.bitsof(alph) == 2
-
-                seqA, seqB = generate_possibilities_tester(alph)
-
-                # Test methods which work on single sequences.
-                @test count_sites_naive(Certain, seqA) == ifelse(istwobit, length(seqA), 49)
-                @test count_sites_naive(Certain, seqB) == ifelse(istwobit, length(seqB), 19)
-                @test count_sites_naive(Gap, seqA) == ifelse(istwobit, 0, 16)
-                @test count_sites_naive(Gap, seqB) == ifelse(istwobit, 0, 1)
-                @test count_sites_naive(Ambiguous, seqA) == ifelse(istwobit, 0, length(seqA) - 65)
-                @test count_sites_naive(Ambiguous, seqB) == ifelse(istwobit, 0, length(seqB) - 20)
-
-                # Test methods which work on two sequences.
-                # Test when sequences are of the same bitencoding.
-
-                @test count_sites_naive(Certain, seqA, seqB) == count_sites_naive(Certain, seqB, seqA) == 10
-                @test count_sites_naive(Gap, seqA, seqB) == count_sites_naive(Gap, seqB, seqA) == ifelse(istwobit, 0, 16)
-                @test count_sites_naive(Ambiguous, seqA, seqB) == count_sites_naive(Ambiguous, seqB, seqA) == ifelse(istwobit, 0, 121)
-                @test count_sites_naive(Match, seqA, seqB) == count_sites_naive(Match, seqB, seqA) == length(alphabet(alph))
-                @test count_sites_naive(Mismatch, seqA, seqB) == count_sites_naive(Mismatch, seqB, seqA) == (length(seqA) - length(alphabet(alph)))
-
-                @test count_sites_naive(Mutated, seqA, seqB) == count_sites_naive(Mutated, seqB, seqA) == (6, ifelse(istwobit, 0, 126))
-                @test count_sites_naive(Conserved, seqA, seqB) == count_sites_naive(Conserved, seqB, seqA) == (4, ifelse(istwobit, 0, 126))
-                @test count_sites_naive(Transition, seqA, seqB) == count_sites_naive(Transition, seqB, seqA) == (2, ifelse(istwobit, 0, 126))
-                @test count_sites_naive(Transversion, seqA, seqB) == count_sites_naive(Transversion, seqB, seqA) == (4, ifelse(istwobit, 0, 126))
-            end
-
-            # Test for when sequences are of different bitencodings.
-            for alphs in [(DNAAlphabet{2}, DNAAlphabet{4}),
-                          (RNAAlphabet{2}, RNAAlphabet{4})]
-                seqA, seqB = generate_possibilities_tester(alphs...)
-                @test count_sites_naive(Certain, seqA, seqB) == count_sites_naive(Certain, seqB, seqA) == 16
-                @test count_sites_naive(Gap, seqA, seqB) == count_sites_naive(Gap, seqB, seqA) == 4
-                @test count_sites_naive(Ambiguous, seqA, seqB) == count_sites_naive(Ambiguous, seqB, seqA) == 44
-                @test count_sites_naive(Match, seqA, seqB) == count_sites_naive(Match, seqB, seqA) == 4
-                @test count_sites_naive(Mismatch, seqA, seqB) == count_sites_naive(Mismatch, seqB, seqA) == 60
-
-                @test count_sites_naive(Mutated, seqA, seqB) == count_sites_naive(Mutated, seqB, seqA) == (12, 48)
-                @test count_sites_naive(Conserved, seqA, seqB) == count_sites_naive(Conserved, seqB, seqA) == (4, 48)
-                @test count_sites_naive(Transition, seqA, seqB) == count_sites_naive(Transition, seqB, seqA) == (4, 48)
-                @test count_sites_naive(Transversion, seqA, seqB) == count_sites_naive(Transversion, seqB, seqA) == (8, 48)
+                for _ in 1:50
+                    seqA = random_seq(alph, rand(10:100))
+                    seqB = random_seq(alph, rand(10:100))
+                    subA = seqA[1:rand(10:length(seqA))]
+                    subB = seqB[1:rand(10:length(seqB))]
+                    @test count(Mutated, BC, subA, subB) == count(Mutated, BC, subB, subA) == count(Mutated, NC, subA, subB)
+                    @test count(Conserved, BC, subA, subB) == count(Conserved, BC, subB, subA) == count(Conserved, NC, subA, subB)
+                end
             end
         end
 
-        @testset "Pairwise methods" begin
-            dnas = [dna"ATCGCCA-", dna"ATCGCCTA", dna"ATCGCCT-", dna"GTCGCCTA"]
-            rnas = [rna"AUCGCCA-", rna"AUCGCCUA", rna"AUCGCCU-", rna"GUCGCCUA"]
-            answer_mismatch = PWM{Int, false}([0 2 1 3; 2 0 1 1; 1 1 0 2; 3 1 2 0])
-            answer_match = PWM{Int, false}([0 6 7 5; 6 0 7 7; 7 7 0 6; 5 7 6 0])
-            for i in (dnas, rnas)
-                @test count_sites(Mismatch, i) == answer_mismatch
-                @test count_sites(Match, i) == answer_match
-                @test count_sites(Certain, i) == PWM{Int, false}([0 7 7 7; 7 0 7 8; 7 7 0 7; 7 8 7 0])
-                @test count_sites(Ambiguous, i) == PWM{Int, false}([0 0 0 0; 0 0 0 0; 0 0 0 0; 0 0 0 0])
-                @test count_sites(Gap, i) == PWM{Int, false}([0 1 1 1; 1 0 1 0; 1 1 0 1; 1 0 1 0])
-                ambigs = PWM{Int, false}([0 1 1 1; 1 0 1 0; 1 1 0 1; 1 0 1 0])
-                @test count_sites(Conserved, i) == (PWM{Int, false}([0 6 6 5; 6 0 7 7; 6 7 0 6; 5 7 6 0]), ambigs)
-                @test count_sites(Mutated, i) == (PWM{Int, false}([0 1 1 2; 1 0 0 1; 1 0 0 1; 2 1 1 0]), ambigs)
+        @testset "2 bit encoding" begin
+            NC = Seq.NaiveCount
+            BC = Seq.BitparCount
+            alphabets = (DNAAlphabet{2}, RNAAlphabet{2})
+            for alph in alphabets
+                for _ in 1:50
+                    seqA = random_seq(alph, rand(10:100))
+                    seqB = random_seq(alph, rand(10:100))
+                    subA = seqA[1:rand(10:length(seqA))]
+                    subB = seqB[1:rand(10:length(seqB))]
+                    @test count(Mutated, BC, subA, subB) == count(Mutated, BC, subB, subA) == count(Mutated, NC, subA, subB)
+                    @test count(Conserved, BC, subA, subB) == count(Conserved, BC, subB, subA) == count(Conserved, NC, subA, subB)
+                end
             end
+        end
 
-            a = minhash(dnas[1], 4, 3)
-            b = minhash(dnas[2], 4, 3)
-            @test_approx_eq_eps mashdistance(a, b) 0.2745 1e-3
-            @test mashdistance(a, a) == 0
-            @test a.sketch == sort(a.sketch)
+    end
+        
 
 
+        @testset "Pairwise methods" begin
+            dnas = [dna"ATCGCCA-",
+                    dna"ATCGCCTA",
+                    dna"ATCGCCT-",
+                    dna"GTCGCCTA"]
+
+            rnas = [rna"AUCGCCA-",
+                    rna"AUCGCCUA",
+                    rna"AUCGCCU-",
+                    rna"GUCGCCUA"]
+
+            for i in (dnas, rnas)
+                @test count_pairwise(CONSERVED, i...) == PairwiseListMatrix([(6,7), (6,7), (5,7), (7,7), (7,8), (6,7)], false)
+
+                @test count_pairwise(MUTATED, i...) == PairwiseListMatrix([(1,7), (1,7), (2,7), (0,7), (1,8), (1,7)], false)
+
+                @test count_pairwise(TRANSITION, i...) == PairwiseListMatrix([(0,7), (0,7), (1,7), (0,7), (1,8), (1,7)], false)
+
+                @test count_pairwise(TRANSVERSION, i...) == PairwiseListMatrix([(1,7), (1,7), (1,7), (0,7), (0,8), (0,7)], false)
+            end
         end
 
         @testset "Windowed methods" begin
@@ -126,108 +132,49 @@ end
             dnaB = dna"ATCGCCTAA"
             rnaA = rna"AUCGCCA-M"
             rnaB = rna"AUCGCCUAA"
-            matches = [3, 3, 3, 3, 2, 1, 0]
-            idxes = [1:3, 2:4, 3:5, 4:6, 5:7, 6:8, 7:9]
             for seqs in ((dnaA, dnaB), (rnaA, rnaB))
-                @test count_sites(Certain, seqs[1], seqs[2], 3, 1) == [IntervalValue(1, 3, 3),
-                                                                       IntervalValue(2, 4, 3),
-                                                                       IntervalValue(3, 5, 3),
-                                                                       IntervalValue(4, 6, 3),
-                                                                       IntervalValue(5, 7, 3),
-                                                                       IntervalValue(6, 8, 2),
-                                                                       IntervalValue(7, 9, 1)]
-                @test count_sites(Ambiguous, seqs[1], seqs[2], 3, 1) == [IntervalValue(1, 3, 0),
-                                                                         IntervalValue(2, 4, 0),
-                                                                         IntervalValue(3, 5, 0),
-                                                                         IntervalValue(4, 6, 0),
-                                                                         IntervalValue(5, 7, 0),
-                                                                         IntervalValue(6, 8, 0),
-                                                                         IntervalValue(7, 9, 1)]
-                @test count_sites(Gap, seqs[1], seqs[2], 3, 1) == [IntervalValue(1, 3, 0),
-                                                                   IntervalValue(2, 4, 0),
-                                                                   IntervalValue(3, 5, 0),
-                                                                   IntervalValue(4, 6, 0),
-                                                                   IntervalValue(5, 7, 0),
-                                                                   IntervalValue(6, 8, 1),
-                                                                   IntervalValue(7, 9, 1)]
-                @test count_sites(Match, seqs[1], seqs[2], 3, 1) == [IntervalValue(1, 3, 3),
-                                                                     IntervalValue(2, 4, 3),
-                                                                     IntervalValue(3, 5, 3),
-                                                                     IntervalValue(4, 6, 3),
-                                                                     IntervalValue(5, 7, 2),
-                                                                     IntervalValue(6, 8, 1),
-                                                                     IntervalValue(7, 9, 0)]
-                @test count_sites(Mismatch, seqs[1], seqs[2], 3, 1) == [IntervalValue(1, 3, 0),
-                                                                        IntervalValue(2, 4, 0),
-                                                                        IntervalValue(3, 5, 0),
-                                                                        IntervalValue(4, 6, 0),
-                                                                        IntervalValue(5, 7, 1),
-                                                                        IntervalValue(6, 8, 2),
-                                                                        IntervalValue(7, 9, 3)]
-
-                @test count_sites(Conserved, seqs[1], seqs[2], 3, 1) == ([IntervalValue(1, 3, 3),
-                                                                          IntervalValue(2, 4, 3),
-                                                                          IntervalValue(3, 5, 3),
-                                                                          IntervalValue(4, 6, 3),
-                                                                          IntervalValue(5, 7, 2),
-                                                                          IntervalValue(6, 8, 1),
-                                                                          IntervalValue(7, 9, 0)],
-                                                                         [IntervalValue(1, 3, 0),
-                                                                          IntervalValue(2, 4, 0),
-                                                                          IntervalValue(3, 5, 0),
-                                                                          IntervalValue(4, 6, 0),
-                                                                          IntervalValue(5, 7, 0),
-                                                                          IntervalValue(6, 8, 1),
-                                                                          IntervalValue(7, 9, 2)])
-                @test count_sites(Mutated, seqs[1], seqs[2], 3, 1) == ([IntervalValue(1, 3, 0),
-                                                                        IntervalValue(2, 4, 0),
-                                                                        IntervalValue(3, 5, 0),
-                                                                        IntervalValue(4, 6, 0),
-                                                                        IntervalValue(5, 7, 1),
-                                                                        IntervalValue(6, 8, 1),
-                                                                        IntervalValue(7, 9, 1)],
-                                                                       [IntervalValue(1, 3, 0),
-                                                                        IntervalValue(2, 4, 0),
-                                                                        IntervalValue(3, 5, 0),
-                                                                        IntervalValue(4, 6, 0),
-                                                                        IntervalValue(5, 7, 0),
-                                                                        IntervalValue(6, 8, 1),
-                                                                        IntervalValue(7, 9, 2)])
-                @test count_sites(Transition, seqs[1], seqs[2], 3, 1) == ([IntervalValue(1, 3, 0),
-                                                                           IntervalValue(2, 4, 0),
-                                                                           IntervalValue(3, 5, 0),
-                                                                           IntervalValue(4, 6, 0),
-                                                                           IntervalValue(5, 7, 0),
-                                                                           IntervalValue(6, 8, 0),
-                                                                           IntervalValue(7, 9, 0)],
-                                                                          [IntervalValue(1, 3, 0),
-                                                                           IntervalValue(2, 4, 0),
-                                                                           IntervalValue(3, 5, 0),
-                                                                           IntervalValue(4, 6, 0),
-                                                                           IntervalValue(5, 7, 0),
-                                                                           IntervalValue(6, 8, 1),
-                                                                           IntervalValue(7, 9, 2)])
-                @test count_sites(Transversion, seqs[1], seqs[2], 3, 1) == ([IntervalValue(1, 3, 0),
-                                                                           IntervalValue(2, 4, 0),
-                                                                           IntervalValue(3, 5, 0),
-                                                                           IntervalValue(4, 6, 0),
-                                                                           IntervalValue(5, 7, 1),
-                                                                           IntervalValue(6, 8, 1),
-                                                                           IntervalValue(7, 9, 1)],
-                                                                          [IntervalValue(1, 3, 0),
-                                                                           IntervalValue(2, 4, 0),
-                                                                           IntervalValue(3, 5, 0),
-                                                                           IntervalValue(4, 6, 0),
-                                                                           IntervalValue(5, 7, 0),
-                                                                           IntervalValue(6, 8, 1),
-                                                                           IntervalValue(7, 9, 2)])
+                @test count(CONSERVED, seqs[1], seqs[2], 3, 1) == [IntervalValue(1, 3, (3,3)),
+                                                                   IntervalValue(2, 4, (3,3)),
+                                                                   IntervalValue(3, 5, (3,3)),
+                                                                   IntervalValue(4, 6, (3,3)),
+                                                                   IntervalValue(5, 7, (2,3)),
+                                                                   IntervalValue(6, 8, (1,2)),
+                                                                   IntervalValue(7, 9, (0,1))]
+                @test count(MUTATED, seqs[1], seqs[2], 3, 1) == [IntervalValue(1, 3, (0,3)),
+                                                                 IntervalValue(2, 4, (0,3)),
+                                                                 IntervalValue(3, 5, (0,3)),
+                                                                 IntervalValue(4, 6, (0,3)),
+                                                                 IntervalValue(5, 7, (1,3)),
+                                                                 IntervalValue(6, 8, (1,2)),
+                                                                 IntervalValue(7, 9, (1,1))]
+                @test count(TRANSITION, seqs[1], seqs[2], 3, 1) == [IntervalValue(1, 3, (0,3)),
+                                                                    IntervalValue(2, 4, (0,3)),
+                                                                    IntervalValue(3, 5, (0,3)),
+                                                                    IntervalValue(4, 6, (0,3)),
+                                                                    IntervalValue(5, 7, (0,3)),
+                                                                    IntervalValue(6, 8, (0,2)),
+                                                                    IntervalValue(7, 9, (0,1))]
+                @test count(TRANSVERSION, seqs[1], seqs[2], 3, 1) == [IntervalValue(1, 3, (0,3)),
+                                                                      IntervalValue(2, 4, (0,3)),
+                                                                      IntervalValue(3, 5, (0,3)),
+                                                                      IntervalValue(4, 6, (0,3)),
+                                                                      IntervalValue(5, 7, (1,3)),
+                                                                      IntervalValue(6, 8, (1,2)),
+                                                                      IntervalValue(7, 9, (1,1))]
             end
         end
 
+        @testset "MASH distances" begin
+            a = minhash(dna"ATCGCCA-", 4, 3)
+            b = minhash(dna"ATCGCCTA", 4, 3)
+            @test_approx_eq_eps mashdistance(a, b) 0.2745 1e-3
+            @test mashdistance(a, a) == 0
+            @test a.sketch == sort(a.sketch)
+        end
     end
+
 end
-
-
+=#
 #=
 @testset "Distance Computation" begin
 
@@ -319,7 +266,6 @@ end
     @test round(distance(Kimura80, dnas2)[2][1], 3) == 1
     @test round(distance(Kimura80, m2)[1][1], 3) == 1.648
     @test round(distance(Kimura80, m2)[2][1], 3) == 1
-
 end
 =#
 
