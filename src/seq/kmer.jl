@@ -97,6 +97,8 @@ function make_kmer{T,K}(::Type{Kmer{T,K}}, seq)
         nt = convert(T, c)
         if isambiguous(nt)
             error("A K-mer cannot contain an ambiguous nucleotide in its sequence")
+        elseif isgap(nt)
+            error("A K-mer cannot contain a gap in its sequence")
         end
         x = (x << 2) | UInt64(trailing_zeros(nt))
     end
