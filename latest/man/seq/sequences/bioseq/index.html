@@ -626,13 +626,13 @@ AAT
 
 
 <p>Make a complement sequence of <code>seq</code> in place.</p>
-<p><a target='_blank' href='https://github.com/BioJulia/Bio.jl/tree/9aa60c5b557154f99d99e94076747295970dc12e/src/seq/bioseq/transformations.jl#L215-L219' class='documenter-source'>source</a><br></p>
+<p><a target='_blank' href='https://github.com/BioJulia/Bio.jl/tree/31bc1ccc334b77d16649f17ba31f496b51550cf4/src/seq/bioseq/transformations.jl#L215-L219' class='documenter-source'>source</a><br></p>
 <div class="codehilite"><pre><span></span>complement!(seq)
 </pre></div>
 
 
 <p>Transform <code>seq</code> into it's complement.</p>
-<p><a target='_blank' href='https://github.com/BioJulia/Bio.jl/tree/9aa60c5b557154f99d99e94076747295970dc12e/src/seq/bioseq/transformations.jl#L231-L235' class='documenter-source'>source</a><br></p>
+<p><a target='_blank' href='https://github.com/BioJulia/Bio.jl/tree/31bc1ccc334b77d16649f17ba31f496b51550cf4/src/seq/bioseq/transformations.jl#L231-L235' class='documenter-source'>source</a><br></p>
 <p><a id='Bio.Seq.reverse_complement!' href='#Bio.Seq.reverse_complement!'>#</a>
 <strong><code>Bio.Seq.reverse_complement!</code></strong> &mdash; <em>Function</em>.</p>
 <div class="codehilite"><pre><span></span>reverse_complement!(seq)
@@ -641,7 +641,7 @@ AAT
 
 <p>Make a reversed complement sequence of <code>seq</code> in place.</p>
 <p>Ambiguous nucleotides are left as-is.</p>
-<p><a target='_blank' href='https://github.com/BioJulia/Bio.jl/tree/9aa60c5b557154f99d99e94076747295970dc12e/src/seq/bioseq/transformations.jl#L259-L265' class='documenter-source'>source</a><br></p>
+<p><a target='_blank' href='https://github.com/BioJulia/Bio.jl/tree/31bc1ccc334b77d16649f17ba31f496b51550cf4/src/seq/bioseq/transformations.jl#L259-L265' class='documenter-source'>source</a><br></p>
 <div class="codehilite"><pre><span></span>julia&gt; seq = dna&quot;ACG&quot;
 3nt DNA Sequence:
 ACG
@@ -680,12 +680,12 @@ ACGTAT
 
 <p>Translate an <code>RNASequence</code> to an <code>AminoAcidSequence</code>.</p>
 <p>Translation uses genetic code <code>code</code> to map codons to amino acids. See <code>ncbi_trans_table</code> for available genetic codes. If codons in the given RNA sequence cannot determine a unique amino acid, they will be translated to <code>AA_X</code> if <code>allow_ambiguous_codons</code> is <code>true</code> and otherwise result in an error.</p>
-<p><a target='_blank' href='https://github.com/BioJulia/Bio.jl/tree/9aa60c5b557154f99d99e94076747295970dc12e/src/seq/geneticcode.jl#L311-L321' class='documenter-source'>source</a><br></p>
+<p><a target='_blank' href='https://github.com/BioJulia/Bio.jl/tree/31bc1ccc334b77d16649f17ba31f496b51550cf4/src/seq/geneticcode.jl#L311-L321' class='documenter-source'>source</a><br></p>
 <p><a id='Bio.Seq.ncbi_trans_table' href='#Bio.Seq.ncbi_trans_table'>#</a>
 <strong><code>Bio.Seq.ncbi_trans_table</code></strong> &mdash; <em>Constant</em>.</p>
 <p>Genetic code list of NCBI.</p>
 <p>The standard genetic code is <code>ncbi_trans_table[1]</code> and others can be shown by <code>show(ncbi_trans_table)</code>. For more details, consult the next link: http://www.ncbi.nlm.nih.gov/Taxonomy/taxonomyhome.html/index.cgi?chapter=cgencodes.</p>
-<p><a target='_blank' href='https://github.com/BioJulia/Bio.jl/tree/9aa60c5b557154f99d99e94076747295970dc12e/src/seq/geneticcode.jl#L90-L97' class='documenter-source'>source</a><br></p>
+<p><a target='_blank' href='https://github.com/BioJulia/Bio.jl/tree/31bc1ccc334b77d16649f17ba31f496b51550cf4/src/seq/geneticcode.jl#L90-L97' class='documenter-source'>source</a><br></p>
 <div class="codehilite"><pre><span></span>julia&gt; ncbi_trans_table
 Translation Tables:
   1. The Standard Code (standard_genetic_code)
@@ -719,23 +719,23 @@ Translation Tables:
 <p><a id='Bio.Seq.Certain' href='#Bio.Seq.Certain'>#</a>
 <strong><code>Bio.Seq.Certain</code></strong> &mdash; <em>Type</em>.</p>
 <p>A <code>Certain</code> site describes a site where both of two aligned sites are not an ambiguity symbol or a gap.</p>
-<p><a target='_blank' href='https://github.com/BioJulia/Bio.jl/tree/9aa60c5b557154f99d99e94076747295970dc12e/src/seq/bioseq/site_counting/site_counting.jl#L16-L19' class='documenter-source'>source</a><br></p>
+<p><a target='_blank' href='https://github.com/BioJulia/Bio.jl/tree/31bc1ccc334b77d16649f17ba31f496b51550cf4/src/seq/bioseq/site_counting/site_counting.jl#L16-L19' class='documenter-source'>source</a><br></p>
 <p><a id='Bio.Seq.Gap' href='#Bio.Seq.Gap'>#</a>
 <strong><code>Bio.Seq.Gap</code></strong> &mdash; <em>Type</em>.</p>
 <p>An <code>Gap</code> site describes a site where either of two aligned sites are a gap symbol '-'.</p>
-<p><a target='_blank' href='https://github.com/BioJulia/Bio.jl/tree/9aa60c5b557154f99d99e94076747295970dc12e/src/seq/bioseq/site_counting/site_counting.jl#L22-L25' class='documenter-source'>source</a><br></p>
+<p><a target='_blank' href='https://github.com/BioJulia/Bio.jl/tree/31bc1ccc334b77d16649f17ba31f496b51550cf4/src/seq/bioseq/site_counting/site_counting.jl#L22-L25' class='documenter-source'>source</a><br></p>
 <p><a id='Bio.Seq.Ambiguous' href='#Bio.Seq.Ambiguous'>#</a>
 <strong><code>Bio.Seq.Ambiguous</code></strong> &mdash; <em>Type</em>.</p>
 <p>An <code>Ambiguous</code> site describes a site where either of two aligned sites are an ambiguity symbol.</p>
-<p><a target='_blank' href='https://github.com/BioJulia/Bio.jl/tree/9aa60c5b557154f99d99e94076747295970dc12e/src/seq/bioseq/site_counting/site_counting.jl#L28-L31' class='documenter-source'>source</a><br></p>
+<p><a target='_blank' href='https://github.com/BioJulia/Bio.jl/tree/31bc1ccc334b77d16649f17ba31f496b51550cf4/src/seq/bioseq/site_counting/site_counting.jl#L28-L31' class='documenter-source'>source</a><br></p>
 <p><a id='Bio.Seq.Match' href='#Bio.Seq.Match'>#</a>
 <strong><code>Bio.Seq.Match</code></strong> &mdash; <em>Type</em>.</p>
 <p>A <code>Match</code> site describes a site where two aligned nucleotides are the same biological symbol.</p>
-<p><a target='_blank' href='https://github.com/BioJulia/Bio.jl/tree/9aa60c5b557154f99d99e94076747295970dc12e/src/seq/bioseq/site_counting/site_counting.jl#L34-L37' class='documenter-source'>source</a><br></p>
+<p><a target='_blank' href='https://github.com/BioJulia/Bio.jl/tree/31bc1ccc334b77d16649f17ba31f496b51550cf4/src/seq/bioseq/site_counting/site_counting.jl#L34-L37' class='documenter-source'>source</a><br></p>
 <p><a id='Bio.Seq.Mismatch' href='#Bio.Seq.Mismatch'>#</a>
 <strong><code>Bio.Seq.Mismatch</code></strong> &mdash; <em>Type</em>.</p>
 <p>A <code>Mismatch</code> site describes a site where two aligned nucleotides are not the same biological symbol.</p>
-<p><a target='_blank' href='https://github.com/BioJulia/Bio.jl/tree/9aa60c5b557154f99d99e94076747295970dc12e/src/seq/bioseq/site_counting/site_counting.jl#L40-L43' class='documenter-source'>source</a><br></p>
+<p><a target='_blank' href='https://github.com/BioJulia/Bio.jl/tree/31bc1ccc334b77d16649f17ba31f496b51550cf4/src/seq/bioseq/site_counting/site_counting.jl#L40-L43' class='documenter-source'>source</a><br></p>
 <p><a id='Base.count-methods-1'></a></p>
 <h4 id="basecount-methods"><code>Base.count</code> methods</h4>
 <p>The count method can be used with two sequences and a concrete subtype of <code>Site</code>:</p>
