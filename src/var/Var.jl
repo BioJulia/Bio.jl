@@ -9,36 +9,24 @@
 
 module Var
 
+import BioSymbols: ispurine, ispyrimidine
 import Bio.Seq:
     Alphabet,
     DNAAlphabet,
     RNAAlphabet,
     BioSequence,
     MinHashSketch,
-    # Methods required for extending Seq's site counting.
-    count_nonzero_nibbles,
-    count_one_nibbles,
-    nibble_mask,
     Certain,
     Mismatch,
-    Match,
-    counter_type,
-    start_counter,
-    update_counter,
-    issite,
-    ispurine,
-    ispyrimidine,
-    count_bitpar,
-    correct_emptyspace
-
-    import Twiddle: enumerate_nibbles,
-        nibble_mask,
-        count_zero_nibbles,
-        count_nonzero_nibbles,
-        count_one_nibbles,
-        count_zero_bitpairs,
-        count_nonzero_bitpairs
-
+    Match
+import Twiddle:
+    enumerate_nibbles,
+    nibble_mask,
+    count_zero_nibbles,
+    count_nonzero_nibbles,
+    count_one_nibbles,
+    count_zero_bitpairs,
+    count_nonzero_bitpairs
 import PairwiseListMatrices: PairwiseListMatrix
 import Bio.Exceptions: MissingFieldException, missingerror
 import Bio.Windows: eachwindow, EachWindowIterator, SeqWinItr
