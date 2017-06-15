@@ -12,4 +12,4 @@ using Reexport
 
 @reexport using Phylogenies
 
-end # module Phylo
+end # module Bio.Phylo
