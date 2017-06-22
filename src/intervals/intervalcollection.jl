@@ -34,6 +34,8 @@
 
 # Aliases for types of IntervalTrees.jl (IC: Interval Collection).
 typealias ICTree{T}                             IntervalTrees.IntervalBTree{Int64,Interval{T},64}
+typealias ICInternalNode{T}                     IntervalTrees.InternalNode{Int64,Interval{T},64}
+typealias ICLeafNode{T}                         IntervalTrees.LeafNode{Int64,Interval{T},64}
 typealias ICTreeIteratorState{T}                IntervalTrees.IntervalBTreeIteratorState{Int64,Interval{T},64}
 typealias ICTreeIntersection{T}                 IntervalTrees.Intersection{Int64,Interval{T},64}
 typealias ICTreeIntersectionIterator{S,T}       IntervalTrees.IntersectionIterator{Int64,Interval{S},64,Interval{T},64}
@@ -146,6 +148,65 @@ function Base.:(==){T}(a::IntervalCollection{T}, b::IntervalCollection{T})
         end
     end
     return true
+end
+
+
+"""
+Return the first interval with the same start, end, and strand as the query.
+
+Throws a KeyError if there is no such interval.
+"""
+function Base.findfirst(ic::IntervalCollection, key::Interval)
+    entry = _findfirst(ic, key)
+    if isnull(entry)
+        throw(KeyError(key))
+    end
+    return get(entry)
+end
+
+
+"""
+Return true if the interval collectios has at least one exactly matching interval.
+"""
+function Base.haskey(ic::IntervalCollection, key::Interval)
+    return !isnull(_findfirst(ic, key))
+end
+
+
+function _findfirst{T}(ic::IntervalCollection{T}, key::Interval)
+    if haskey(ic.trees, key.seqname)
+        return _findfirst(ic.trees[key.seqname].root, key)
+    else
+        return Nullable{Interval{T}}()
+    end
+end
+
+function _findfirst{T,S}(t::ICInternalNode{T}, key::Interval{S})
+    i = IntervalTrees.findidx(t, key)
+    if i <= length(t) - 1 && key >= t.keys[i]
+        return _findfirst(t.children[i+1], key)
+    else
+        return _findfirst(t.children[i], key)
+    end
+end
+
+
+function _findfirst{T,S}(t::ICLeafNode{T}, key::Interval{S})
+    i = IntervalTrees.findidx(t, key)
+    while 1 <= i <= length(t) &&
+          first(t.keys[i]) == first(key) &&
+          last(t.keys[i]) == last(key)
+        if t.entries[i].strand == key.strand
+            return Nullable(t.entries[i])
+        end
+        i += 1
+        if i > length(t) && !isnull(t.right)
+            t = get(t.right)
+            i = 1
+        end
+    end
+
+    return Nullable{Interval{T}}()
 end
 
 

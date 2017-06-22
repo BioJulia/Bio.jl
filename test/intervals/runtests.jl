@@ -229,6 +229,31 @@ end
     end
 
 
+    @testset "Query" begin
+        n = 1000
+        srand(1234)
+        maxend = 1000000
+        intervals = random_intervals(["one", "two", "three"], maxend, n)
+        ic = IntervalCollection{Int}()
+        for interval in intervals
+            push!(ic, interval)
+        end
+
+        key = Interval{Int}("four", 1, 1, STRAND_NA, 0)
+        @test haskey(ic, key) == false
+        @test_throws KeyError findfirst(ic, key)
+
+        key = Interval{Int}("one", maxend + 1, maxend + 2, STRAND_NA, 0)
+        @test haskey(ic, key) == false
+        @test_throws KeyError findfirst(ic, key)
+
+        @test all([haskey(ic, key) for key in intervals]) == true
+        results = [findfirst(ic, key) for key in intervals]
+        @test all([results[i].first == intervals[i].first && results[i].last == intervals[i].last
+                   for i in 1:length(intervals)]) == true
+    end
+
+
     @testset "Show" begin
         ic = IntervalCollection{Int}()
         show(DevNull, ic)
