@@ -154,6 +154,9 @@ for a in intervals_a, b in intervals_b
 end
 ```
 
+Exact matches, respecting strand, can be found using `findfirst`, and their
+presence tested with `haskey`.
+
 
 ## Interval streams
 
