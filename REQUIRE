@@ -10,13 +10,13 @@ Combinatorics
 Distributions
 EzXML 0.2
 GenomicFeatures
+GeneticVariation
 IndexableBitVectors 0.1.1
 IntervalTrees 0.2
 JSON
 Libz 0.2
-LightGraphs
 Requests
 URIParser
-PairwiseListMatrices
 Reexport
 Phylogenies
+PairwiseListMatrices
