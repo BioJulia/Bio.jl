@@ -806,13 +806,13 @@ end
                 """)
 
                 testaln("""
-                 ACGT
+                 ACGT  
                 AACGTTT
                  ^^^^
                 """)
 
                 testaln("""
-                  AC-GT
+                  AC-GT  
                 AAACTGTTT
                 """)
             end
