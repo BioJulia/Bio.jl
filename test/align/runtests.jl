@@ -812,7 +812,7 @@ end
                 """)
 
                 testaln("""
-                  AC-GT
+                  AC-GT  
                 AAACTGTTT
                 """)
             end
