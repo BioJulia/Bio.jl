@@ -806,7 +806,7 @@ end
                 """)
 
                 testaln("""
-                 ACGT
+                 ACGT  
                 AACGTTT
                  ^^^^
                 """)
