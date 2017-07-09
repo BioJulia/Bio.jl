@@ -2,6 +2,7 @@ export
     PDB,
     PDBParseError,
     downloadpdb,
+    downloadmultiplepdb,
     spaceatomname,
     pdbline,
     writepdb
@@ -76,6 +77,16 @@ function downloadpdb(pdbid::AbstractString, out_filepath::AbstractString="$pdbid
     end    
 end
 
+
+"""
+Downloads a list of PDB files from the RCSB PDB. If the keyword 
+argument `pdb_dir` is set the PDB files are downloaded to the specify directory
+"""
+function downloadmultiplepdb(pdbidlist::AbstractArray{String,1}; pdb_dir::AbstractString="")
+    for pdbid in pdbidlist
+        downloadpdb(pdbid, pdb_dir=pdb_dir)
+    end
+end
 
 function Base.read(input::IO,
             ::Type{PDB};
