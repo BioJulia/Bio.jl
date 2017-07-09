@@ -1,6 +1,7 @@
 export
     PDB,
     PDBParseError,
+    getallpdbentries,
     downloadpdb,
     downloadmultiplepdb,
     spaceatomname,
@@ -27,6 +28,28 @@ function Base.showerror(io::IO, e::PDBParseError)
             e.line_number,
             " of file:\n",
             e.line)
+end
+
+
+"""
+Returns a list of all PDB entries in RCSB PDB
+"""
+function getallpdbentries()
+    pdbidlist = Array{String,1}()
+    download("ftp://ftp.wwpdb.org/pub/pdb/derived_data/index/entries.idx","entries.idx")
+    open("entries.idx") do input
+        # Skips the first two lines as it contains headers
+        linecount = 1
+        for line in eachline(input)
+            if linecount > 2
+                # The first 4 characters in the line is the PDB ID
+                push!(pdbidlist,line[1:4])
+            end
+            linecount +=1
+        end
+    end
+    rm("entries.idx")
+    return pdbidlist
 end
 
 
