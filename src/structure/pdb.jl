@@ -4,6 +4,7 @@ export
     getallpdbentries,
     downloadpdb,
     downloadmultiplepdb,
+    downloadentirepdb,
     spaceatomname,
     pdbline,
     writepdb
@@ -109,6 +110,15 @@ function downloadmultiplepdb(pdbidlist::AbstractArray{String,1}; pdb_dir::Abstra
     for pdbid in pdbidlist
         downloadpdb(pdbid, pdb_dir=pdb_dir)
     end
+end
+
+
+"""
+Downloads the entire PDB files available in the RCSB PDB. If the keyword 
+argument `pdb_dir` is set the PDB files are downloaded to the specify directory
+"""
+function downloadentirepdb(;pdb_dir::AbstractString="")
+    downloadmultiplepdb(getallpdbentries(), pdb_dir=pdb_dir)
 end
 
 function Base.read(input::IO,
