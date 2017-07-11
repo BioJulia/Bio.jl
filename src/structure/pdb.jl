@@ -2,6 +2,8 @@ export
     PDB,
     PDBParseError,
     getallpdbentries,
+    getstatuslist,
+    getrecentchanges,
     downloadpdb,
     downloadmultiplepdb,
     downloadentirepdb,
@@ -55,50 +57,66 @@ end
 
 
 """
+Returns a list of all PDB entries in RCSB PDB
+"""
+function getstatuslist(url::AbstractString)
+    statuslist = Array{String,1}()
+    filename = split(url,"/")[end]
+    download(url, filename)
+    open(filename) do input
+        for line in eachline(input)
+            # The first 4 characters in the line is the PDB ID
+            push!(statuslist,line[1:4])
+        end
+    end
+    rm(filename)
+    return statuslist
+end
+
+
+"""
+Returns a list of all PDB entries in RCSB PDB
+"""
+function getrecentchanges()
+    addedlist = Array{String,1}()
+    modifiedlist = Array{String,1}()
+    addedlist = getstatuslist("ftp://ftp.wwpdb.org/pub/pdb/data/status/latest/added.pdb")
+    modifiedlist = getstatuslist("ftp://ftp.wwpdb.org/pub/pdb/data/status/latest/modified.pdb")  
+    return addedlist, modifiedlist
+end
+
+
+"""
 Download a PDB file or biological assembly from the RCSB PDB. By default
 downloads the PDB file; if the keyword argument `ba_number` is set the
 biological assembly with that number will be downloaded; if the keyword 
 argument `pdb_dir` is set the PDB file is downloaded to the specify directory
 """
-function downloadpdb(pdbid::AbstractString, out_filepath::AbstractString="$pdbid.pdb"; pdb_dir::AbstractString="", ba_number::Integer=0)
+function downloadpdb(pdbid::AbstractString, out_filepath::AbstractString="$pdbid.pdb"; pdb_dir::AbstractString=pwd(), ba_number::Integer=0)
     # Check PDB ID is 4 characters long and only consits of alphanumeric characters
     if length(pdbid) != 4 || ismatch(r"[^a-zA-Z0-9]", pdbid)
         throw(ArgumentError("Not a valid PDB ID: \"$pdbid\""))
+    end 
+    # Check if directory exists in filesystem
+    if !isdir(pdb_dir) 
+        throw(ArgumentError("Directory does not exist : \"$pdb_dir\""))
     end
-    if pdb_dir==""
-        if ispath(out_filepath)
-            println("PDB Exists : ",pdbid)
+    # Download the PDB file only if it does not exist in the "pdb_dir" 
+    if ispath(joinpath(pdb_dir,out_filepath))
+        println("PDB Exists : ",pdbid)
+    else
+        # Temporarily change directory to "pdb_dir" to download the PDB file and revert back to the current working directory 
+        working_dir = pwd()
+        cd(pdb_dir)
+        println("Downloading PDB : ",pdbid)
+        if ba_number == 0
+            download("http://www.rcsb.org/pdb/files/$pdbid.pdb", out_filepath)
         else
-            println("Downloading PDB : ",pdbid)
-            if ba_number == 0
-                download("http://www.rcsb.org/pdb/files/$pdbid.pdb", out_filepath)
-            else
-                # Will download error page if ba_number is too high
-                download("http://www.rcsb.org/pdb/files/$pdbid.pdb$ba_number", out_filepath)
-            end
+            # Will download error page if ba_number is too high
+            download("http://www.rcsb.org/pdb/files/$pdbid.pdb$ba_number", out_filepath)
         end
-    else       
-        # Check if directory exists in filesystem
-        if !isdir(pdb_dir) 
-            throw(ArgumentError("Directory does not exist : \"$pdb_dir\""))
-        end
-        # Download the PDB file only if it does not exist in the "pdb_dir" 
-        if ispath(joinpath(pdb_dir,out_filepath))
-            println("PDB Exists : ",pdbid)
-        else
-            # Temporarily change directory to "pdb_dir" to download the PDB file and revert back to the current working directory 
-            working_dir = pwd()
-            cd(pdb_dir)
-            println("Downloading PDB : ",pdbid)
-            if ba_number == 0
-                download("http://www.rcsb.org/pdb/files/$pdbid.pdb", out_filepath)
-            else
-                # Will download error page if ba_number is too high
-                download("http://www.rcsb.org/pdb/files/$pdbid.pdb$ba_number", out_filepath)
-            end
-            cd(working_dir)
-        end           
-    end    
+        cd(working_dir)
+    end           
 end
 
 
@@ -106,7 +124,7 @@ end
 Downloads a list of PDB files from the RCSB PDB. If the keyword 
 argument `pdb_dir` is set the PDB files are downloaded to the specify directory
 """
-function downloadmultiplepdb(pdbidlist::AbstractArray{String,1}; pdb_dir::AbstractString="")
+function downloadmultiplepdb(pdbidlist::AbstractArray{String,1}; pdb_dir::AbstractString=pwd())
     for pdbid in pdbidlist
         downloadpdb(pdbid, pdb_dir=pdb_dir)
     end
@@ -117,7 +135,7 @@ end
 Downloads the entire PDB files available in the RCSB PDB. If the keyword 
 argument `pdb_dir` is set the PDB files are downloaded to the specify directory
 """
-function downloadentirepdb(;pdb_dir::AbstractString="")
+function downloadentirepdb(;pdb_dir::AbstractString=pwd())
     downloadmultiplepdb(getallpdbentries(), pdb_dir=pdb_dir)
 end
 
