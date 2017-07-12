@@ -57,7 +57,8 @@ end
 
 
 """
-Returns a list of all PDB entries in RCSB PDB
+Retrieves a list of pdb codes in the weekly pdb status file from the given URL. 
+Used by getrecentchanges().
 """
 function getstatuslist(url::AbstractString)
     statuslist = Array{String,1}()
@@ -75,7 +76,7 @@ end
 
 
 """
-Returns a list of all PDB entries in RCSB PDB
+Returns two lists of the newest weekly files (added,modified)
 """
 function getrecentchanges()
     addedlist = Array{String,1}()
