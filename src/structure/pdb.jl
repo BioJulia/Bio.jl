@@ -91,9 +91,11 @@ end
 Download a PDB file or biological assembly from the RCSB PDB. By default
 downloads the PDB file; if the keyword argument `ba_number` is set the
 biological assembly with that number will be downloaded; if the keyword 
-argument `pdb_dir` is set the PDB file is downloaded to the specify directory
+argument `pdb_dir` is set the PDB file is downloaded to the specify directory; 
+if the keyword argument `overwrite` is set `true`, then it will overwirte the PDB file
+if exists in the `pdb_dir`
 """
-function downloadpdb(pdbid::AbstractString, out_filepath::AbstractString="$pdbid.pdb"; pdb_dir::AbstractString=pwd(), ba_number::Integer=0)
+function downloadpdb(pdbid::AbstractString, out_filepath::AbstractString="$pdbid.pdb"; pdb_dir::AbstractString=pwd(), overwrite::Bool=false, ba_number::Integer=0)
     # Check PDB ID is 4 characters long and only consits of alphanumeric characters
     if length(pdbid) != 4 || ismatch(r"[^a-zA-Z0-9]", pdbid)
         throw(ArgumentError("Not a valid PDB ID: \"$pdbid\""))
@@ -103,7 +105,7 @@ function downloadpdb(pdbid::AbstractString, out_filepath::AbstractString="$pdbid
         throw(ArgumentError("Directory does not exist : \"$pdb_dir\""))
     end
     # Download the PDB file only if it does not exist in the "pdb_dir" 
-    if ispath(joinpath(pdb_dir,out_filepath))
+    if ispath(joinpath(pdb_dir,out_filepath)) && !overwrite
         println("PDB Exists : ",pdbid)
     else
         # Temporarily change directory to "pdb_dir" to download the PDB file and revert back to the current working directory 
@@ -125,9 +127,9 @@ end
 Downloads a list of PDB files from the RCSB PDB. If the keyword 
 argument `pdb_dir` is set the PDB files are downloaded to the specify directory
 """
-function downloadmultiplepdb(pdbidlist::AbstractArray{String,1}; pdb_dir::AbstractString=pwd())
+function downloadmultiplepdb(pdbidlist::AbstractArray{String,1}; pdb_dir::AbstractString=pwd(), overwrite::Bool=false)
     for pdbid in pdbidlist
-        downloadpdb(pdbid, pdb_dir=pdb_dir)
+        downloadpdb(pdbid, pdb_dir=pdb_dir, overwrite=overwrite)
     end
 end
 
@@ -136,8 +138,8 @@ end
 Downloads the entire PDB files available in the RCSB PDB. If the keyword 
 argument `pdb_dir` is set the PDB files are downloaded to the specify directory
 """
-function downloadentirepdb(;pdb_dir::AbstractString=pwd())
-    downloadmultiplepdb(getallpdbentries(), pdb_dir=pdb_dir)
+function downloadentirepdb(;pdb_dir::AbstractString=pwd(), overwrite::Bool=false)
+    downloadmultiplepdb(getallpdbentries(), pdb_dir=pdb_dir, overwrite=overwrite)
 end
 
 function Base.read(input::IO,
