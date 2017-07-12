@@ -7,6 +7,7 @@ export
     downloadpdb,
     downloadmultiplepdb,
     downloadentirepdb,
+    updatepdb,
     spaceatomname,
     pdbline,
     writepdb
@@ -144,6 +145,17 @@ if exists in the `pdb_dir`
 """
 function downloadentirepdb(;pdb_dir::AbstractString=pwd(), overwrite::Bool=false)
     downloadmultiplepdb(getallpdbentries(), pdb_dir=pdb_dir, overwrite=overwrite)
+end
+
+
+"""
+Update your local copy of the PDB files. It gets the weekly lists of new and 
+modified pdb entries and automatically downloads those PDB files to the `pdb_dir`
+If the keyword argument `pdb_dir` is set the PDB files are downloaded to the specify directory;
+"""
+function updatepdb(;pdb_dir::AbstractString=pwd())
+    addedlist, modifiedlist = getrecentchanges()
+    downloadmultiplepdb(vcat(addedlist,modifiedlist), pdb_dir=pdb_dir, overwrite=true)
 end
 
 function Base.read(input::IO,
