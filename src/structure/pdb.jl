@@ -38,7 +38,7 @@ end
 
 
 """
-Returns a list of all PDB entries in RCSB PDB
+Returns a list of all PDB entries in RCSB PDB server
 """
 function getallpdbentries()
     pdbidlist = Array{String,1}()
@@ -91,7 +91,7 @@ end
 
 
 """
-Returns a list of all obsolete entries ever in the PDB
+Returns a list of all obsolete entries ever in the RCSB PDB server
 """
 function getallobsolete()
     obsoletelist = Array{String,1}()
@@ -114,7 +114,7 @@ end
 
 
 """
-Download a PDB file or biological assembly from the RCSB PDB. By default
+Download a PDB file or biological assembly from the RCSB PDB server. By default
 downloads the PDB file to current working directory; if the keyword argument `ba_number` is set the
 biological assembly with that number will be downloaded; if the keyword 
 argument `pdb_dir` is set the PDB file is downloaded to the specified directory; 
@@ -151,7 +151,7 @@ end
 
 
 """
-Downloads a list of PDB files from the RCSB PDB. If the keyword 
+Downloads a list of PDB files from the RCSB PDB server. If the keyword 
 argument `pdb_dir` is set the PDB files are downloaded to the specified directory;
 if the keyword argument `overwrite` is set `true`, then it will overwrite the PDB file
 if exists in the `pdb_dir`
@@ -164,7 +164,7 @@ end
 
 
 """
-Downloads the entire PDB files available in the RCSB PDB. If the keyword 
+Downloads the entire PDB files available in the RCSB PDB server. If the keyword 
 argument `pdb_dir` is set the PDB files are downloaded to the specified directory;
 if the keyword argument `overwrite` is set `true`, then it will overwrite the PDB file
 if exists in the `pdb_dir`
@@ -186,7 +186,7 @@ end
 
 
 """
-Download all obsolete PDB files from RCSB PDB not present in the local obsolete PDB directory;
+Download all obsolete PDB files from RCSB PDB server not present in the local obsolete PDB directory;
 If the keyword argument `obsolete_dir` is set the PDB files are downloaded to the specified directory;
 """
 function downloadallobsoletepdb(;obsolete_dir::AbstractString=pwd())
