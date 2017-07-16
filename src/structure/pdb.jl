@@ -114,9 +114,9 @@ end
 
 """
 Download a PDB file or biological assembly from the RCSB PDB. By default
-downloads the PDB file; if the keyword argument `ba_number` is set the
+downloads the PDB file to current working directory; if the keyword argument `ba_number` is set the
 biological assembly with that number will be downloaded; if the keyword 
-argument `pdb_dir` is set the PDB file is downloaded to the specify directory; 
+argument `pdb_dir` is set the PDB file is downloaded to the specified directory; 
 if the keyword argument `overwrite` is set `true`, then it will overwrite the PDB file
 if exists in the `pdb_dir`
 """
@@ -125,9 +125,10 @@ function downloadpdb(pdbid::AbstractString, out_filepath::AbstractString="$pdbid
     if length(pdbid) != 4 || ismatch(r"[^a-zA-Z0-9]", pdbid)
         throw(ArgumentError("Not a valid PDB ID: \"$pdbid\""))
     end 
-    # Check if directory exists in filesystem
+    # Check and create directory if it does not exists in filesystem
     if !isdir(pdb_dir) 
-        throw(ArgumentError("Directory does not exist : \"$pdb_dir\""))
+        println("Creating PDB directory : \"$pdb_dir\"")
+        mkpath(pdb_dir)
     end
     # Download the PDB file only if it does not exist in the "pdb_dir" 
     if ispath(joinpath(pdb_dir,out_filepath)) && !overwrite
@@ -150,7 +151,7 @@ end
 
 """
 Downloads a list of PDB files from the RCSB PDB. If the keyword 
-argument `pdb_dir` is set the PDB files are downloaded to the specify directory;
+argument `pdb_dir` is set the PDB files are downloaded to the specified directory;
 if the keyword argument `overwrite` is set `true`, then it will overwrite the PDB file
 if exists in the `pdb_dir`
 """
@@ -163,7 +164,7 @@ end
 
 """
 Downloads the entire PDB files available in the RCSB PDB. If the keyword 
-argument `pdb_dir` is set the PDB files are downloaded to the specify directory;
+argument `pdb_dir` is set the PDB files are downloaded to the specified directory;
 if the keyword argument `overwrite` is set `true`, then it will overwrite the PDB file
 if exists in the `pdb_dir`
 """
@@ -175,7 +176,7 @@ end
 """
 Update your local copy of the PDB files. It gets the weekly lists of new and 
 modified pdb entries and automatically downloads those PDB files to the `pdb_dir`
-If the keyword argument `pdb_dir` is set the PDB files are downloaded to the specify directory;
+If the keyword argument `pdb_dir` is set the PDB files are downloaded to the specified directory;
 """
 function updatepdb(;pdb_dir::AbstractString=pwd())
     addedlist, modifiedlist = getrecentchanges()
