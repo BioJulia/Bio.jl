@@ -4,6 +4,7 @@ export
     getallpdbentries,
     getstatuslist,
     getrecentchanges,
+    getallobsolete,
     downloadpdb,
     downloadmultiplepdb,
     downloadentirepdb,
@@ -85,6 +86,29 @@ function getrecentchanges()
     addedlist = getstatuslist("ftp://ftp.wwpdb.org/pub/pdb/data/status/latest/added.pdb")
     modifiedlist = getstatuslist("ftp://ftp.wwpdb.org/pub/pdb/data/status/latest/modified.pdb")  
     return addedlist, modifiedlist
+end
+
+
+"""
+Returns a list of all obsolete entries ever in the PDB
+"""
+function getallobsolete()
+    obsoletelist = Array{String,1}()
+    download("ftp://ftp.wwpdb.org/pub/pdb/data/status/obsolete.dat", "obsolete.dat")
+    open("obsolete.dat") do input
+        for line in eachline(input)
+            if line[1:6] == "OBSLTE"
+                pdbid = line[21:24]
+                # Check PDB ID is 4 characters long and only consits of alphanumeric characters
+                if length(pdbid) != 4 || ismatch(r"[^a-zA-Z0-9]", pdbid)
+                    throw(ArgumentError("Not a valid PDB ID: \"$pdbid\""))
+                end
+                push!(obsoletelist,pdbid)
+            end
+        end
+    end
+    rm("obsolete.dat")
+    return obsoletelist
 end
 
 
