@@ -9,6 +9,7 @@ export
     downloadmultiplepdb,
     downloadentirepdb,
     updatepdb,
+    downloadallobsoletepdb,
     spaceatomname,
     pdbline,
     writepdb
@@ -175,12 +176,22 @@ end
 
 """
 Update your local copy of the PDB files. It gets the weekly lists of new and 
-modified pdb entries and automatically downloads those PDB files to the `pdb_dir`
+modified pdb entries and automatically downloads those PDB files to the `pdb_dir`;
 If the keyword argument `pdb_dir` is set the PDB files are downloaded to the specified directory;
 """
 function updatepdb(;pdb_dir::AbstractString=pwd())
     addedlist, modifiedlist = getrecentchanges()
     downloadmultiplepdb(vcat(addedlist,modifiedlist), pdb_dir=pdb_dir, overwrite=true)
+end
+
+
+"""
+Download all obsolete PDB files from RCSB PDB not present in the local obsolete PDB directory;
+If the keyword argument `obsolete_dir` is set the PDB files are downloaded to the specified directory;
+"""
+function downloadallobsoletepdb(;obsolete_dir::AbstractString=pwd())
+    obsoletelist = getallobsolete()
+    downloadmultiplepdb(obsoletelist, pdb_dir=obsolete_dir)
 end
 
 function Base.read(input::IO,
