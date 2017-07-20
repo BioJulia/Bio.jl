@@ -1,8 +1,6 @@
 # all test targets
 available_targets = [
-    "align",
     "intervals",
-    "seq",
     "var",
     "services",
     "structure",

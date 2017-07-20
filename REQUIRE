@@ -1,6 +1,7 @@
 julia 0.5
 Automa 0.1
 BGZFStreams 0.1
+BioAlignments 0.1
 BioSymbols 1.1
 BioSequences 0.6
 BufferedStreams 0.3
