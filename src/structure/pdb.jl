@@ -79,14 +79,16 @@ end
 
 
 """
-Returns two lists of the newest weekly files (added,modified)
+Returns three lists of the newest weekly files (added,modified,obsolete)
 """
 function getrecentchanges()
     addedlist = Array{String,1}()
     modifiedlist = Array{String,1}()
+    obsoletelist = Array{String,1}()
     addedlist = getstatuslist("ftp://ftp.wwpdb.org/pub/pdb/data/status/latest/added.pdb")
     modifiedlist = getstatuslist("ftp://ftp.wwpdb.org/pub/pdb/data/status/latest/modified.pdb")  
-    return addedlist, modifiedlist
+    obsoletelist = getstatuslist("ftp://ftp.wwpdb.org/pub/pdb/data/status/latest/obsolete.pdb")  
+    return addedlist, modifiedlist, obsoletelist
 end
 
 
@@ -121,14 +123,17 @@ argument `pdb_dir` is set the PDB file is downloaded to the specified directory;
 if the keyword argument `overwrite` is set `true`, then it will overwrite the PDB file
 if exists in the `pdb_dir`
 """
-function downloadpdb(pdbid::AbstractString, out_filepath::AbstractString="$pdbid.pdb"; pdb_dir::AbstractString=pwd(), overwrite::Bool=false, ba_number::Integer=0)
+function downloadpdb(pdbid::AbstractString, out_filepath::AbstractString="$pdbid.pdb"; pdb_dir::AbstractString=pwd(), obsolete::Bool=false, overwrite::Bool=false, ba_number::Integer=0)
     # Check PDB ID is 4 characters long and only consits of alphanumeric characters
     if length(pdbid) != 4 || ismatch(r"[^a-zA-Z0-9]", pdbid)
         throw(ArgumentError("Not a valid PDB ID: \"$pdbid\""))
     end 
+    if obsolete
+        pdb_dir = joinpath(pdb_dir,"obsolete")
+    end
     # Check and create directory if it does not exists in filesystem
     if !isdir(pdb_dir) 
-        println("Creating PDB directory : \"$pdb_dir\"")
+        println("Creating directory : \"$pdb_dir\"")
         mkpath(pdb_dir)
     end
     # Download the PDB file only if it does not exist in the "pdb_dir" 
@@ -156,9 +161,9 @@ argument `pdb_dir` is set the PDB files are downloaded to the specified director
 if the keyword argument `overwrite` is set `true`, then it will overwrite the PDB file
 if exists in the `pdb_dir`
 """
-function downloadmultiplepdb(pdbidlist::AbstractArray{String,1}; pdb_dir::AbstractString=pwd(), overwrite::Bool=false)
+function downloadmultiplepdb(pdbidlist::AbstractArray{String,1}; pdb_dir::AbstractString=pwd(), obsolete::Bool=false, overwrite::Bool=false)
     for pdbid in pdbidlist
-        downloadpdb(pdbid, pdb_dir=pdb_dir, overwrite=overwrite)
+        downloadpdb(pdbid, pdb_dir=pdb_dir, obsolete=obsolete, overwrite=overwrite)
     end
 end
 
@@ -175,13 +180,28 @@ end
 
 
 """
-Update your local copy of the PDB files. It gets the weekly lists of new and 
-modified pdb entries and automatically downloads those PDB files to the `pdb_dir`;
+Update your local copy of the PDB files. It gets the weekly lists of new, 
+modified and obsolete pdb entries and automatically downloads those PDB files to the `pdb_dir`;
 If the keyword argument `pdb_dir` is set the PDB files are downloaded to the specified directory;
 """
 function updatepdb(;pdb_dir::AbstractString=pwd())
-    addedlist, modifiedlist = getrecentchanges()
-    downloadmultiplepdb(vcat(addedlist,modifiedlist), pdb_dir=pdb_dir, overwrite=true)
+    addedlist, modifiedlist, obsoletelist = getrecentchanges()
+    #downloadmultiplepdb(vcat(addedlist,modifiedlist), pdb_dir=pdb_dir, overwrite=true)
+    obsolete_dir=joinpath(pdb_dir,"obsolete")
+    for pdbid in obsoletelist
+        oldfile = joinpath(pdb_dir,"$pdbid.pdb")
+        newfile = joinpath(obsolete_dir, "$pdbid.pdb")
+        if isfile(oldfile)
+            if !isdir(obsolete_dir)
+                mkpath(obsolete_dir)
+            end
+            mv(oldfile,newfile)
+        elseif isfile(newfile)
+            println("Obsolete file $pdbid is already moved")
+        else
+            println("Obsolete file $pdbid is missing")
+        end
+    end
 end
 
 
