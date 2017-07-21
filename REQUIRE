@@ -1,7 +1,7 @@
 julia 0.5
 Automa 0.1
 BGZFStreams 0.1
-BioAlignments 0.1
+BioAlignments
 BioSymbols 1.1
 BioSequences 0.6
 BufferedStreams 0.3
@@ -9,6 +9,7 @@ ColorTypes 0.2
 Combinatorics
 Distributions
 EzXML 0.2
+GenomicFeatures
 IndexableBitVectors 0.1.1
 IntervalTrees 0.2
 Iterators
