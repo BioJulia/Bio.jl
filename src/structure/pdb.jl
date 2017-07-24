@@ -42,6 +42,7 @@ Returns a list of all PDB entries in RCSB PDB server
 """
 function getallpdbentries()
     pdbidlist = Array{String,1}()
+    info("Fetching list of PDB Entries from RCSB PDB Server...")
     download("ftp://ftp.wwpdb.org/pub/pdb/derived_data/index/entries.idx","entries.idx")
     open("entries.idx") do input
         # Skips the first two lines as it contains headers
@@ -66,6 +67,7 @@ Used by getrecentchanges().
 function getstatuslist(url::AbstractString)
     statuslist = Array{String,1}()
     filename = split(url,"/")[end]
+    info("Fetching weekly status file $filename from RCSB Server...")
     download(url, filename)
     open(filename) do input
         for line in eachline(input)
@@ -97,6 +99,7 @@ Returns a list of all obsolete entries ever in the RCSB PDB server
 """
 function getallobsolete()
     obsoletelist = Array{String,1}()
+    info("Fetching list of all obsolete PDB Entries from RCSB PDB Server...")
     download("ftp://ftp.wwpdb.org/pub/pdb/data/status/obsolete.dat", "obsolete.dat")
     open("obsolete.dat") do input
         for line in eachline(input)
@@ -133,17 +136,17 @@ function downloadpdb(pdbid::AbstractString, out_filepath::AbstractString="$pdbid
     end
     # Check and create directory if it does not exists in filesystem
     if !isdir(pdb_dir) 
-        println("Creating directory : \"$pdb_dir\"")
+        info("Creating directory : $pdb_dir")
         mkpath(pdb_dir)
     end
     # Download the PDB file only if it does not exist in the "pdb_dir" 
     if ispath(joinpath(pdb_dir,out_filepath)) && !overwrite
-        println("PDB Exists : ",pdbid)
+        info("PDB Exists : $pdbid")
     else
         # Temporarily change directory to "pdb_dir" to download the PDB file and revert back to the current working directory 
         working_dir = pwd()
         cd(pdb_dir)
-        println("Downloading PDB : ",pdbid)
+        info("Downloading PDB : $pdbid")
         if ba_number == 0
             download("http://www.rcsb.org/pdb/files/$pdbid.pdb", out_filepath)
         else
@@ -162,9 +165,16 @@ if the keyword argument `overwrite` is set `true`, then it will overwrite the PD
 if exists in the `pdb_dir`
 """
 function downloadmultiplepdb(pdbidlist::AbstractArray{String,1}; pdb_dir::AbstractString=pwd(), obsolete::Bool=false, overwrite::Bool=false)
+    failedlist::AbstractArray{string,1} = []
     for pdbid in pdbidlist
-        downloadpdb(pdbid, pdb_dir=pdb_dir, obsolete=obsolete, overwrite=overwrite)
+        try
+            downloadpdb(pdbid, pdb_dir=pdb_dir, obsolete=obsolete, overwrite=overwrite)
+        catch
+            warn("Error Downloading PDB : $pdbid")
+            push!(failedlist,pdbid)
+        end
     end
+    warn(length(failedlist)," PDB Failed to download : ", failedlist)
 end
 
 
@@ -186,7 +196,7 @@ If the keyword argument `pdb_dir` is set the PDB files are downloaded to the spe
 """
 function updatepdb(;pdb_dir::AbstractString=pwd())
     addedlist, modifiedlist, obsoletelist = getrecentchanges()
-    #downloadmultiplepdb(vcat(addedlist,modifiedlist), pdb_dir=pdb_dir, overwrite=true)
+    downloadmultiplepdb(vcat(addedlist,modifiedlist), pdb_dir=pdb_dir, overwrite=true)
     obsolete_dir=joinpath(pdb_dir,"obsolete")
     for pdbid in obsoletelist
         oldfile = joinpath(pdb_dir,"$pdbid.pdb")
@@ -197,9 +207,9 @@ function updatepdb(;pdb_dir::AbstractString=pwd())
             end
             mv(oldfile,newfile)
         elseif isfile(newfile)
-            println("Obsolete file $pdbid is already moved")
+            info("PDB $pdbid is already moved to the obsolete directory")
         else
-            println("Obsolete file $pdbid is missing")
+            info("Obsolete PDB $pdbid is missing")
         end
     end
 end
