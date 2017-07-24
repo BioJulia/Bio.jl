@@ -311,7 +311,7 @@ end
     @test VCF.haspos(record)
     @test VCF.pos(record) == 302
     @test !VCF.hasid(record)
-    @test_throws MissingFieldException VCF.id(record)
+    @test_throws Var.MissingFieldException VCF.id(record)
     @test VCF.hasref(record)
     @test VCF.ref(record) == "T"
     @test VCF.hasalt(record)
@@ -319,10 +319,10 @@ end
     @test VCF.hasqual(record)
     @test VCF.qual(record) == 999
     @test !VCF.hasfilter(record)
-    @test_throws MissingFieldException VCF.filter(record)
+    @test_throws Var.MissingFieldException VCF.filter(record)
     @test VCF.infokeys(record) == String[]
     @test !VCF.hasinfo(record)
-    @test_throws MissingFieldException VCF.info(record)
+    @test_throws Var.MissingFieldException VCF.info(record)
     @test VCF.hasformat(record)
     @test VCF.format(record) == ["GT"]
 
