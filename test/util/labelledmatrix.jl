@@ -2,6 +2,8 @@ module TestLSM
 
 using Base.Test
 
+using TestFunctions
+
 using Bio.Util
 
 @testset "LabelledSquareMatrices" begin
@@ -26,10 +28,10 @@ using Bio.Util
     # This matrix has heaps of extra spaces in the road, to try and trip up the
     # parser.
 
-       A  B  C 
+       A  B  C
     A 1 2          4
-    B  2  1  2   
-    C  4  2  1  
+    B  2  1  2
+    C  4  2  1
     """
 
     float_matrix = """\
@@ -100,6 +102,8 @@ using Bio.Util
     @testset "bad_matricies" for mat in bad_matricies
         @test_throws Exception readlsm(IOBuffer(mat))
     end
+
+    get_bio_fmt_specimens()
 
     @testset "files" for (fname, expected) in file_matricies
         fname = joinpath(dirname(@__FILE__), "..", "BioFmtSpecimens", "LSM", fname)
