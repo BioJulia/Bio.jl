@@ -102,7 +102,7 @@ end
         end
 
     end
-        
+
 
 
         @testset "Pairwise methods" begin
@@ -271,17 +271,17 @@ end
 
 @testset "VCF" begin
     metainfo = VCF.MetaInfo()
-    @test !isfilled(metainfo)
+    @test !Var.isfilled(metainfo)
     @test ismatch(r"^Bio.Var.VCF.MetaInfo: <not filled>", repr(metainfo))
     @test_throws ArgumentError metainfotag(metainfo)
 
     metainfo = VCF.MetaInfo(b"##source=foobar1234")
-    @test isfilled(metainfo)
+    @test Var.isfilled(metainfo)
     @test metainfotag(metainfo) == "source"
     @test metainfoval(metainfo) == "foobar1234"
 
     metainfo = VCF.MetaInfo("##source=foobar1234")
-    @test isfilled(metainfo)
+    @test Var.isfilled(metainfo)
     @test metainfotag(metainfo) == "source"
     @test metainfoval(metainfo) == "foobar1234"
 
@@ -300,12 +300,12 @@ end
     @test metainfoval(metainfo) == """<ID=DP,Number=1,Type=Integer,Description="Total Depth">"""
 
     record = VCF.Record()
-    @test !isfilled(record)
+    @test !Var.isfilled(record)
     @test ismatch(r"^Bio.Var.VCF.Record: <not filled>", repr(record))
     @test_throws ArgumentError VCF.chrom(record)
 
     record = VCF.Record("20\t302\t.\tT\tTA\t999\t.\t.\tGT")
-    @test isfilled(record)
+    @test Var.isfilled(record)
     @test VCF.haschrom(record)
     @test VCF.chrom(record) == "20"
     @test VCF.haspos(record)
@@ -331,7 +331,7 @@ end
     @test_throws ArgumentError VCF.Record(b"")
 
     record = VCF.Record(b".\t.\t.\t.\t.\t.\t.\t.\t")
-    @test isfilled(record)
+    @test Var.isfilled(record)
     @test !VCF.haschrom(record)
     @test !VCF.haspos(record)
     @test !VCF.hasid(record)
@@ -549,7 +549,7 @@ end
 
 @testset "BCF" begin
     record = BCF.Record()
-    @test !isfilled(record)
+    @test !Var.isfilled(record)
     @test ismatch(r"^Bio.Var.BCF.Record: <not filled>", repr(record))
     @test_throws ArgumentError BCF.chrom(record)
 
