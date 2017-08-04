@@ -1,16 +1,17 @@
 export
     PDB,
     PDBParseError,
-    getallpdbentries,
-    getstatuslist,
-    getrecentchanges,
-    getallobsolete,
+    pdbentrylist,
+    pdbstatuslist,
+    pdbrecentchanges,
+    pdbobsoletelist,
     downloadpdb,
     downloadmultiplepdb,
     downloadentirepdb,
-    updatepdb,
+    updatelocalpdb,
     downloadallobsoletepdb,
     retrievepdb,
+    readpdb,
     spaceatomname,
     pdbline,
     writepdb
@@ -41,11 +42,12 @@ end
 """
 Returns a list of all PDB entries from RCSB PDB server
 """
-function getallpdbentries()
-    pdbidlist = Array{String,1}()
+function pdbentrylist()
+    pdbidlist = String[]
     info("Fetching list of all PDB Entries from RCSB PDB Server...")
-    download("ftp://ftp.wwpdb.org/pub/pdb/derived_data/index/entries.idx","entries.idx")
-    open("entries.idx") do input
+    tempfilepath = tempname()
+    download("ftp://ftp.wwpdb.org/pub/pdb/derived_data/index/entries.idx",tempfilepath)
+    open(tempfilepath) do input
         # Skips the first two lines as it contains headers
         linecount = 1
         for line in eachline(input)
@@ -56,40 +58,41 @@ function getallpdbentries()
             linecount +=1
         end
     end
-    rm("entries.idx")
     return pdbidlist
 end
 
 
 """
-Returns a list of pdb codes in the weekly pdb status file from the given URL. 
+Returns a list of PDB codes in the weekly PDB status file from the given URL;
+Argument `url` must specify the URL of any weekly status file from RCSB Server.
 """
-function getstatuslist(url::AbstractString)
-    statuslist = Array{String,1}()
+function pdbstatuslist(url::AbstractString)
+    statuslist = String[]
     filename = split(url,"/")[end]
     info("Fetching weekly status file $filename from RCSB Server...")
-    download(url, filename)
-    open(filename) do input
+    tempfilepath = tempname()
+    download(url, tempfilepath)
+    open(tempfilepath) do input
         for line in eachline(input)
             # The first 4 characters in the line is the PDB ID
             push!(statuslist,line[1:4])
         end
     end
-    rm(filename)
     return statuslist
 end
 
 
 """
-Returns three lists of the newest weekly files (added,modified,obsolete) from RCSB PDB Server
+Returns three lists of the newest weekly files (added,modified,obsolete)
+from RCSB PDB Server
 """
-function getrecentchanges()
-    addedlist = Array{String,1}()
-    modifiedlist = Array{String,1}()
-    obsoletelist = Array{String,1}()
-    addedlist = getstatuslist("ftp://ftp.wwpdb.org/pub/pdb/data/status/latest/added.pdb")
-    modifiedlist = getstatuslist("ftp://ftp.wwpdb.org/pub/pdb/data/status/latest/modified.pdb")  
-    obsoletelist = getstatuslist("ftp://ftp.wwpdb.org/pub/pdb/data/status/latest/obsolete.pdb")  
+function pdbrecentchanges()
+    addedlist = String[]
+    modifiedlist = String[]
+    obsoletelist = String[]
+    addedlist = pdbstatuslist("ftp://ftp.wwpdb.org/pub/pdb/data/status/latest/added.pdb")
+    modifiedlist = pdbstatuslist("ftp://ftp.wwpdb.org/pub/pdb/data/status/latest/modified.pdb")  
+    obsoletelist = pdbstatuslist("ftp://ftp.wwpdb.org/pub/pdb/data/status/latest/obsolete.pdb")  
     return addedlist, modifiedlist, obsoletelist
 end
 
@@ -97,11 +100,12 @@ end
 """
 Returns a list of all obsolete entries ever in the RCSB PDB server
 """
-function getallobsolete()
-    obsoletelist = Array{String,1}()
+function pdbobsoletelist()
+    obsoletelist = String[]
     info("Fetching list of all obsolete PDB Entries from RCSB PDB Server...")
-    download("ftp://ftp.wwpdb.org/pub/pdb/data/status/obsolete.dat", "obsolete.dat")
-    open("obsolete.dat") do input
+    tempfilepath = tempname()
+    download("ftp://ftp.wwpdb.org/pub/pdb/data/status/obsolete.dat", tempfilepath)
+    open(tempfilepath) do input
         for line in eachline(input)
             # Check if its an obsolete pdb entry and not headers
             if line[1:6] == "OBSLTE"
@@ -115,7 +119,6 @@ function getallobsolete()
             end
         end
     end
-    rm("obsolete.dat")
     return obsoletelist
 end
 
@@ -123,12 +126,16 @@ end
 """
 Download a PDB file or biological assembly from the RCSB PDB server. 
 By default downloads the PDB file to current working directory; 
-if the keyword argument `ba_number` is set the biological assembly with that number will be downloaded; 
-if the keyword argument `pdb_dir` is set the PDB file is downloaded to the specified directory; 
-if the keyword argument `obsolete` is set `true`, the PDB file is downloaded into the obsolete directory inside `pdb_dir`;
-if the keyword argument `overwrite` is set `true`, then it will overwrite the PDB file if it exists in the `pdb_dir`;
+if the keyword argument `ba_number` is set the biological assembly with that
+number will be downloaded; 
+if the keyword argument `pdb_dir` is set the PDB file is downloaded to the
+specified directory; 
+if the keyword argument `obsolete` is set `true`, the PDB file is downloaded
+into the obsolete directory inside `pdb_dir`;
+if the keyword argument `overwrite` is set `true`, then it will overwrite the
+PDB file if it exists in the `pdb_dir`;
 """
-function downloadpdb(pdbid::AbstractString, out_filepath::AbstractString="$pdbid.pdb"; pdb_dir::AbstractString=pwd(), obsolete::Bool=false, overwrite::Bool=false, ba_number::Integer=0)
+function downloadpdb(pdbid::AbstractString; pdb_dir::AbstractString=pwd(), obsolete::Bool=false, overwrite::Bool=false, ba_number::Integer=0)
     # Check PDB ID is 4 characters long and only consits of alphanumeric characters
     if length(pdbid) != 4 || ismatch(r"[^a-zA-Z0-9]", pdbid)
         throw(ArgumentError("Not a valid PDB ID: \"$pdbid\""))
@@ -143,21 +150,18 @@ function downloadpdb(pdbid::AbstractString, out_filepath::AbstractString="$pdbid
         info("Creating directory : $pdb_dir")
         mkpath(pdb_dir)
     end
-    # Download the PDB file only if it does not exist in the "pdb_dir" and when "overwrite" is false
-    if ispath(joinpath(pdb_dir,out_filepath)) && !overwrite
+    pdbpath = joinpath(pdb_dir,"$pdbid.pdb")
+    # Download the PDB file only if it does not exist in the "pdb_dir" and when "overwrite" is true
+    if ispath(pdbpath) && !overwrite
         info("PDB Exists : $pdbid")
     else
-        # Temporarily change directory to "pdb_dir" to download the PDB file and revert back to the current working directory 
-        working_dir = pwd()
-        cd(pdb_dir)
         info("Downloading PDB : $pdbid")
         if ba_number == 0
-            download("http://www.rcsb.org/pdb/files/$pdbid.pdb", out_filepath)
+            download("http://www.rcsb.org/pdb/files/$pdbid.pdb", pdbpath)
         else
             # Will download error page if ba_number is too high
-            download("http://www.rcsb.org/pdb/files/$pdbid.pdb$ba_number", out_filepath)
+            download("http://www.rcsb.org/pdb/files/$pdbid.pdb$ba_number", pdbpath)
         end
-        cd(working_dir)
     end           
 end
 
@@ -165,12 +169,15 @@ end
 """
 Downloads a list of PDB files from the RCSB PDB server. 
 By default downloads the PDB files to current working directory; 
-if the keyword argument `pdb_dir` is set the PDB files are downloaded to the specified directory;
-if the keyword argument `obsolete` is set `true`, the PDB files are downloaded into the obsolete directory inside `pdb_dir`;
-if the keyword argument `overwrite` is set `true`, then it will overwrite the PDB file if it exists in the `pdb_dir`;
+if the keyword argument `pdb_dir` is set the PDB files are downloaded to the
+specified directory;
+if the keyword argument `obsolete` is set `true`, the PDB files are downloaded
+into the obsolete directory inside `pdb_dir`;
+if the keyword argument `overwrite` is set `true`, then it will overwrite the
+PDB file if it exists in the `pdb_dir`;
 """
 function downloadmultiplepdb(pdbidlist::AbstractArray{String,1}; pdb_dir::AbstractString=pwd(), obsolete::Bool=false, overwrite::Bool=false)
-    failedlist = Array{String,1}()
+    failedlist = String[]
     for pdbid in pdbidlist
         try
             downloadpdb(pdbid, pdb_dir=pdb_dir, obsolete=obsolete, overwrite=overwrite)
@@ -179,29 +186,37 @@ function downloadmultiplepdb(pdbidlist::AbstractArray{String,1}; pdb_dir::Abstra
             push!(failedlist,pdbid)
         end
     end
-    warn(length(failedlist)," PDB file failed to download : ", failedlist)
+    if length(failedlist) > 0
+        warn(length(failedlist)," PDB file failed to download : ", failedlist)
+    end
 end
 
 
 """
 Downloads the entire PDB files available in the RCSB PDB server. 
 By default downloads the PDB files to current working directory; 
-if the keyword argument `pdb_dir` is set the PDB files are downloaded to the specified directory;
-if the keyword argument `overwrite` is set `true`, then it will overwrite the PDB file if exists in the `pdb_dir`
+if the keyword argument `pdb_dir` is set the PDB files are downloaded to the
+specified directory;
+if the keyword argument `overwrite` is set `true`, then it will overwrite the
+PDB file if exists in the `pdb_dir`
 """
 function downloadentirepdb(;pdb_dir::AbstractString=pwd(), overwrite::Bool=false)
     # Get the list of all pdb entries from RCSB PDB Server using getallpdbentries() and downloads them
-    downloadmultiplepdb(getallpdbentries(), pdb_dir=pdb_dir, overwrite=overwrite)
+    info("About to download more than 132000 PDB files. Make sure to have enough disk space! It will take long time to download all PDB files!")
+    info("You can stop it anytime and call the function again to resume downloading")
+    downloadmultiplepdb(pdbentrylist(), pdb_dir=pdb_dir, overwrite=overwrite)
 end
 
 
 """
 Updates your local copy of the PDB files. It gets the weekly lists of new, 
-modified and obsolete pdb entries and automatically downloads those PDB files to the `pdb_dir`;
-if the keyword argument `pdb_dir` is set the PDB files in the specified directory are updated;
+modified and obsolete PDB entries and automatically downloads those PDB files
+to the `pdb_dir`;
+if the keyword argument `pdb_dir` is set the PDB files in the specified
+directory are updated;
 """
-function updatepdb(;pdb_dir::AbstractString=pwd())
-    addedlist, modifiedlist, obsoletelist = getrecentchanges()
+function updatelocalpdb(;pdb_dir::AbstractString=pwd())
+    addedlist, modifiedlist, obsoletelist = pdbrecentchanges()
     # download the newly added and modified pdb files 
     downloadmultiplepdb(vcat(addedlist,modifiedlist), pdb_dir=pdb_dir, overwrite=true)
     # set the obsolete directory to be inside pdb_dir
@@ -227,23 +242,29 @@ end
 
 
 """
-Download all obsolete PDB files from RCSB PDB server not present in the local obsolete PDB directory;
-if the keyword argument `obsolete_dir` is set the obsolete PDB files are downloaded to the specified directory;
+Download all obsolete PDB files from RCSB PDB server not present in the local 
+obsolete PDB directory;
+if the keyword argument `obsolete_dir` is set the obsolete PDB files are 
+downloaded to the specified directory;
 """
 function downloadallobsoletepdb(;obsolete_dir::AbstractString=pwd())
     # Get all obsolete PDB files in RCSB PDB Server using getallobsolete() and download them
-    obsoletelist = getallobsolete()
+    obsoletelist = pdbobsoletelist()
     downloadmultiplepdb(obsoletelist, pdb_dir=obsolete_dir)
 end
 
 
 """
-Download a PDB file or biological assembly from the RCSB PDB server and reads it. 
+Download and read the PDB file or biological assembly from the RCSB PDB server.
 By default downloads the PDB file to current working directory; 
-if the keyword argument `ba_number` is set the biological assembly with that number will be downloaded; 
-if the keyword argument `pdb_dir` is set the PDB file is downloaded to the specified directory; 
-if the keyword argument `obsolete` is set `true`, the PDB file is downloaded into the obsolete directory inside `pdb_dir`;
-if the keyword argument `overwrite` is set `true`, then it will overwrite the PDB file if it exists in the `pdb_dir`;
+if the keyword argument `ba_number` is set the biological assembly with that 
+number will be downloaded; 
+if the keyword argument `pdb_dir` is set the PDB file is downloaded to the 
+specified directory; 
+if the keyword argument `obsolete` is set `true`, the PDB file is downloaded 
+into the obsolete directory inside `pdb_dir`;
+if the keyword argument `overwrite` is set `true`, then it will overwrite the
+PDB file if it exists in the `pdb_dir`;
 """
 function retrievepdb(pdbid::AbstractString;
             pdb_dir::AbstractString=pwd(),
@@ -253,6 +274,7 @@ function retrievepdb(pdbid::AbstractString;
             structure_name::AbstractString="$pdbid.pdb",
             kwargs...)
     downloadpdb(pdbid, pdb_dir=pdb_dir, obsolete=obsolete, overwrite=overwrite, ba_number=ba_number)
+    info("Parsing the PDB file...")
     if obsolete
         # if obsolete is set true, the PDB file will downloaded to obsolete directory inside "pdb_dir"
         filepath = joinpath(pdb_dir,"obsolete","$pdbid.pdb")
@@ -261,6 +283,31 @@ function retrievepdb(pdbid::AbstractString;
     end
     open(filepath, "r") do input
         read(input, PDB; structure_name=structure_name, kwargs...)
+    end
+end
+
+"""
+Read the PDB file based on PDB ID and PDB directory specified.
+if the keyword argument `pdb_dir` is set the PDB file is read from the 
+specified directory; 
+Keyword argument `structure_name` is used for representing the PDB structure
+when parsing the file. 
+if the keyword argument `remove_disorder` is set true, then disordered atoms 
+wont be parsed
+if the keyword argument `read_std_atoms` is set false, then standard 
+ATOM records wont be parsed
+if the keyword argument `read_het_atoms` is set false, then hetro 
+HETATOM records wont be parsed
+"""
+function readpdb(pdbid::AbstractString;
+            pdb_dir::AbstractString=pwd(),
+            structure_name::AbstractString="$pdbid.pdb",
+            remove_disorder::Bool=false,
+            read_std_atoms::Bool=true,
+            read_het_atoms::Bool=true)
+    filepath = joinpath(pdb_dir,"$pdbid.pdb")
+    open(filepath, "r") do input
+        read(input, PDB; structure_name=structure_name, remove_disorder=remove_disorder, read_std_atoms=read_std_atoms, read_het_atoms=read_het_atoms)
     end
 end
 
@@ -321,17 +368,6 @@ function Base.read(filepath::AbstractString,
     end
 end
 
-# Read PDB file based on PDB ID and pdb_dir. 
-function Base.read(pdbid::AbstractString,
-            ::Type{PDB};
-            pdb_dir::AbstractString=pwd(),
-            structure_name::AbstractString="$pdbid.pdb",
-            kwargs...)
-    filepath = joinpath(pdb_dir,"$pdbid.pdb")
-    open(filepath, "r") do input
-        read(input, PDB; structure_name=structure_name, kwargs...)
-    end
-end
 
 # Constructor from PDB ATOM/HETATM line
 AtomRecord(pdb_line::String, line_n::Integer=1) = AtomRecord(
