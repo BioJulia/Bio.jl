@@ -6,7 +6,6 @@ export
     pdbrecentchanges,
     pdbobsoletelist,
     downloadpdb,
-    downloadmultiplepdb,
     downloadentirepdb,
     updatelocalpdb,
     downloadallobsoletepdb,
@@ -176,7 +175,7 @@ into the obsolete directory inside `pdb_dir`;
 if the keyword argument `overwrite` is set `true`, then it will overwrite the
 PDB file if it exists in the `pdb_dir`;
 """
-function downloadmultiplepdb(pdbidlist::AbstractArray{String,1}; pdb_dir::AbstractString=pwd(), obsolete::Bool=false, overwrite::Bool=false)
+function downloadpdb(pdbidlist::AbstractArray{String,1}; pdb_dir::AbstractString=pwd(), obsolete::Bool=false, overwrite::Bool=false)
     failedlist = String[]
     for pdbid in pdbidlist
         try
@@ -204,7 +203,7 @@ function downloadentirepdb(;pdb_dir::AbstractString=pwd(), overwrite::Bool=false
     # Get the list of all pdb entries from RCSB PDB Server using getallpdbentries() and downloads them
     info("About to download more than 132000 PDB files. Make sure to have enough disk space! It will take long time to download all PDB files!")
     info("You can stop it anytime and call the function again to resume downloading")
-    downloadmultiplepdb(pdbentrylist(), pdb_dir=pdb_dir, overwrite=overwrite)
+    downloadpdb(pdbentrylist(), pdb_dir=pdb_dir, overwrite=overwrite)
 end
 
 
@@ -218,7 +217,7 @@ directory are updated;
 function updatelocalpdb(;pdb_dir::AbstractString=pwd())
     addedlist, modifiedlist, obsoletelist = pdbrecentchanges()
     # download the newly added and modified pdb files 
-    downloadmultiplepdb(vcat(addedlist,modifiedlist), pdb_dir=pdb_dir, overwrite=true)
+    downloadpdb(vcat(addedlist,modifiedlist), pdb_dir=pdb_dir, overwrite=true)
     # set the obsolete directory to be inside pdb_dir
     obsolete_dir=joinpath(pdb_dir,"obsolete")
     for pdbid in obsoletelist
@@ -250,7 +249,7 @@ downloaded to the specified directory;
 function downloadallobsoletepdb(;obsolete_dir::AbstractString=pwd())
     # Get all obsolete PDB files in RCSB PDB Server using getallobsolete() and download them
     obsoletelist = pdbobsoletelist()
-    downloadmultiplepdb(obsoletelist, pdb_dir=obsolete_dir)
+    downloadpdb(obsoletelist, pdb_dir=obsolete_dir)
 end
 
 
