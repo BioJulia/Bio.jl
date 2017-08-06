@@ -2,6 +2,7 @@ export
     PDB,
     PDBXML,
     mmCIF,
+    MMTF,
     PDBParseError,
     pdbentrylist,
     pdbstatuslist,
@@ -17,11 +18,14 @@ export
     pdbline,
     writepdb
 
+using BufferedStreams
+using Libz 
 
 "Protein Data Bank (PDB) file formats."
 immutable PDB <: Bio.IO.FileFormat end
 immutable PDBXML <: Bio.IO.FileFormat end
 immutable mmCIF <: Bio.IO.FileFormat end
+immutable MMTF <: Bio.IO.FileFormat end
 
 "Error arising from parsing a Protein Data Bank (PDB) file."
 type PDBParseError <: Exception
@@ -138,8 +142,8 @@ if the keyword argument `overwrite` is set `true`, then it will overwrite the
 PDB file if it exists in the `pdb_dir`;
 """
 function downloadpdb(pdbid::AbstractString; pdb_dir::AbstractString=pwd(), file_format::Type=PDB, obsolete::Bool=false, overwrite::Bool=false, ba_number::Integer=0)
-    # A Dict mapping the type to their file extensions
-    pdbextension = Dict{Type,String}( PDB => ".pdb", PDBXML => ".xml", mmCIF => ".cif")
+     # A Dict mapping the type to their file extensions
+    pdbextension = Dict{Type,String}( PDB => ".pdb", PDBXML => ".xml", mmCIF => ".cif", MMTF => ".mmtf")
     # Check PDB ID is 4 characters long and only consits of alphanumeric characters
     if length(pdbid) != 4 || ismatch(r"[^a-zA-Z0-9]", pdbid)
         throw(ArgumentError("Not a valid PDB ID: \"$pdbid\""))
@@ -154,29 +158,48 @@ function downloadpdb(pdbid::AbstractString; pdb_dir::AbstractString=pwd(), file_
         info("Creating directory : $pdb_dir")
         mkpath(pdb_dir)
     end
-    pdbpath = joinpath(pdb_dir,"$pdbid"*pdbextension[file_format])
+    archivefilepath = tempname()
+    # The PDB file name will end with the ba_number when downloading biological assembly
+    pdbpath = ba_number==0 ? joinpath(pdb_dir,"$pdbid"*pdbextension[file_format]) : joinpath(pdb_dir,"$pdbid"*pdbextension[file_format]*"$ba_number")
     # Download the PDB file only if it does not exist in the "pdb_dir" and when "overwrite" is true
     if ispath(pdbpath) && !overwrite
         info("PDB Exists : $pdbid")
     else
         info("Downloading PDB : $pdbid")
-        if ba_number == 0
-            download("http://files.rcsb.org/download/$pdbid"*pdbextension[file_format], pdbpath)
-        else
-            # Will download error page if ba_number is too high
+        if ba_number == 0            
+            if file_format == PDB || file_format == PDBXML || file_format == mmCIF
+                download("http://files.rcsb.org/download/$pdbid"*pdbextension[file_format]*".gz", archivefilepath)
+            elseif file_format == MMTF
+                # MMTF is downloaded in uncompressed form, thus directly stored in pdbpath
+                download("http://mmtf.rcsb.org/v1.0/full/$pdbid", pdbpath)
+            else
+                warn("Invalid PDB file format!")
+            end
+        else            
             if file_format == PDB
-                download("http://files.rcsb.org/download/$pdbid"*pdbextension[file_format]*"$ba_number", pdbpath)
+                download("http://files.rcsb.org/download/$pdbid"*pdbextension[file_format]*"$ba_number.gz",archivefilepath)
             elseif file_format == mmCIF
-                download("http://files.rcsb.org/download/$pdbid-assembly$ba_number"*pdbextension[file_format], pdbpath)
+                download("http://files.rcsb.org/download/$pdbid-assembly$ba_number"*pdbextension[file_format]*".gz", archivefilepath)
             else
                 warn("Biological Assembly is available only in PDB and mmCIF formats!")
             end
         end
+        # Extract the downloaded compressed PDB file
+        if ispath(archivefilepath) && file_format != MMTF
+            open(pdbpath,"w") do output
+                for line in eachline(open(archivefilepath) |> ZlibInflateInputStream)
+                    println(output, line)
+                end
+            end
+        end
+        # check if PDB file is downloaded and extracted properly
+        if !ispath(pdbpath) || filesize(pdbpath)==0
+            # If the file size is 0, its deleted. force=true ensures error is not thrown when file does not exists
+            rm(pdbpath, force=true)
+            throw(ErrorException("Error downloading PDB : $pdbid"))
+        end       
+
     end
-    # To Verify if the file is downloaded succssfully, as no exception is triggerred when the file is not available in server
-    if !ispath(pdbpath)
-        throw(ErrorException("Error downloading PDB : $pdbid"))
-    end       
 end
 
 
@@ -216,9 +239,10 @@ PDB file if exists in the `pdb_dir`
 """
 function downloadentirepdb(;pdb_dir::AbstractString=pwd(), file_format::Type=PDB, overwrite::Bool=false)
     # Get the list of all pdb entries from RCSB PDB Server using getallpdbentries() and downloads them
-    info("About to download more than 132000 PDB files. Make sure to have enough disk space! It will take long time to download all PDB files!")
+    pdblist = pdbentrylist()
+    info("About to download "*length(pdblist)*" PDB files. Make sure to have enough disk space and time!")
     info("You can stop it anytime and call the function again to resume downloading")
-    downloadpdb(pdbentrylist(), pdb_dir=pdb_dir, overwrite=overwrite, file_format=file_format)
+    downloadpdb(pdblist, pdb_dir=pdb_dir, overwrite=overwrite, file_format=file_format)
 end
 
 
@@ -231,7 +255,7 @@ directory are updated;
 """
 function updatelocalpdb(;pdb_dir::AbstractString=pwd(), file_format::Type=PDB)
     # A Dict mapping the type to their file extensions
-    pdbextension = Dict{Type,String}( PDB => ".pdb", PDBXML => ".xml", mmCIF => ".cif")
+    pdbextension = Dict{Type,String}( PDB => ".pdb", PDBXML => ".xml", mmCIF => ".cif", MMTF => ".mmtf")
     addedlist, modifiedlist, obsoletelist = pdbrecentchanges()
     # download the newly added and modified pdb files 
     downloadpdb(vcat(addedlist,modifiedlist), pdb_dir=pdb_dir, overwrite=true, file_format=file_format)
@@ -297,7 +321,8 @@ function retrievepdb(pdbid::AbstractString;
     else    
         filepath = joinpath(pdb_dir,"$pdbid.pdb")
     end
-    open(filepath, "r") do input
+    pdbpath = ba_number == 0 ? filepath : filepath*"$ba_number"
+    open(pdbpath, "r") do input
         read(input, PDB; structure_name=structure_name, kwargs...)
     end
 end
@@ -317,12 +342,14 @@ HETATOM records wont be parsed
 """
 function readpdb(pdbid::AbstractString;
             pdb_dir::AbstractString=pwd(),
+            ba_number::Integer=0,
             structure_name::AbstractString="$pdbid.pdb",
             remove_disorder::Bool=false,
             read_std_atoms::Bool=true,
             read_het_atoms::Bool=true)
     filepath = joinpath(pdb_dir,"$pdbid.pdb")
-    open(filepath, "r") do input
+    pdbpath = ba_number == 0 ? filepath : filepath*"$ba_number"
+    open(pdbpath, "r") do input
         read(input, PDB; structure_name=structure_name, remove_disorder=remove_disorder, read_std_atoms=read_std_atoms, read_het_atoms=read_het_atoms)
     end
 end
