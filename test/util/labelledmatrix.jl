@@ -122,7 +122,7 @@ using Bio.Util
 
     @testset "all_subst_matrices" for fname in all_subst_matrices
         # Check that we can parse all matrices under the alignm module
-        fname = joinpath(dirname(@__FILE__), "..", "..", "src", "align", "data", "submat", fname)
+        fname = joinpath(Pkg.dir("BioAlignments"), "src", "data", "submat", fname)
         m, l = readlsm(Int64, fname)
         @test eltype(m) === Int64
     end
