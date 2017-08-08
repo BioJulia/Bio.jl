@@ -155,6 +155,7 @@ if the keyword argument `overwrite` is set `true`, then it will overwrite the
 PDB file if it exists in the `pdb_dir`.
 """
 function downloadpdb(pdbid::AbstractString; pdb_dir::AbstractString=pwd(), file_format::Type=PDB, obsolete::Bool=false, overwrite::Bool=false, ba_number::Integer=0)
+    pdbid = uppercase(pdbid)
     # Check PDB ID is 4 characters long and only consits of alphanumeric characters
     if length(pdbid) != 4 || ismatch(r"[^a-zA-Z0-9]", pdbid)
         throw(ArgumentError("Not a valid PDB ID: \"$pdbid\""))
@@ -169,17 +170,19 @@ function downloadpdb(pdbid::AbstractString; pdb_dir::AbstractString=pwd(), file_
         info("Creating directory : $pdb_dir")
         mkpath(pdb_dir)
     end
-    archivefilepath = tempname()
-    # The PDB file name will end with the ba_number when downloading biological assembly
+    # Standard file name format for PDB and biological assembly
     if ba_number==0
         pdbpath = joinpath(pdb_dir,"$pdbid"*pdbextension[file_format])
     else
-        pdbpath = joinpath(pdb_dir,"$pdbid"*pdbextension[file_format]*"$ba_number")
+        pdbpath = joinpath(pdb_dir,"$pdbid"*"_ba"*"$ba_number"*pdbextension[file_format])
     end
     # Download the PDB file only if it does not exist in the "pdb_dir" and when "overwrite" is true
     if ispath(pdbpath) && !overwrite
         info("PDB Exists : $pdbid")
     else
+        # Temporary location to download compressed PDB file.
+        archivefilepath = tempname()
+        # Download the compressed PDB file to the temporary location
         info("Downloading PDB : $pdbid")
         if ba_number == 0            
             if file_format == PDB || file_format == PDBXML || file_format == mmCIF
@@ -203,18 +206,21 @@ function downloadpdb(pdbid::AbstractString; pdb_dir::AbstractString=pwd(), file_
         if ispath(archivefilepath) && filesize(archivefilepath) > 0 && file_format != MMTF           
             input = open(archivefilepath) |> ZlibInflateInputStream
             open(pdbpath,"w") do output
-                for line in eachline(input)
-                    println(output, line)
+                for line in eachline(input, chomp=false)
+                    print(output, line)
                 end
             end
             close(input)
         end
-        # Verify if the PDB file is downloaded without any error
+        # Verify if the PDB file is downloaded and extracted without any error
         if !ispath(pdbpath) || filesize(pdbpath)==0
             throw(ErrorException("Error downloading PDB : $pdbid"))
         end
+        # Remove the temporary compressd PDB file downloaded to clear up space
+        if ispath(archivefilepath)
+            rm(archivefilepath)
+        end
     end
-    rm(archivefilepath)
 end
 
 
@@ -228,18 +234,18 @@ into the obsolete directory inside `pdb_dir`;
 if the keyword argument `overwrite` is set `true`, then it will overwrite the
 PDB file if it exists in the `pdb_dir`.
 """
-function downloadpdb(pdbidlist::Array{String,1}; pdb_dir::AbstractString=pwd(), file_format::Type=PDB, obsolete::Bool=false, overwrite::Bool=false)
+function downloadpdb(pdbidlist::Array{String,1}; kwargs...)
     failedlist = String[]
-    for pdbid in pdbidlist
+    for pdbid in pdbidlist      
         try
-            downloadpdb(pdbid, pdb_dir=pdb_dir, obsolete=obsolete, overwrite=overwrite, file_format=file_format)
+            downloadpdb(pdbid; kwargs...)
         catch
             warn("Error downloading PDB : $pdbid")
             push!(failedlist,pdbid)
         end
     end
     if length(failedlist) > 0
-        warn(length(failedlist)," PDB file failed to download : ", failedlist)
+        warn(length(failedlist)," PDB files failed to download : ", failedlist)
     end
 end
 
@@ -255,7 +261,7 @@ PDB file if exists in the `pdb_dir`.
 function downloadentirepdb(;pdb_dir::AbstractString=pwd(), file_format::Type=PDB, overwrite::Bool=false)
     # Get the list of all pdb entries from RCSB PDB Server using getallpdbentries() and downloads them
     pdblist = pdbentrylist()
-    info("About to download "*length(pdblist)*" PDB files. Make sure to have enough disk space and time!")
+    info("About to download "*string(length(pdblist))*" PDB files. Make sure to have enough disk space and time!")
     info("You can stop it anytime and call the function again to resume downloading")
     downloadpdb(pdblist, pdb_dir=pdb_dir, overwrite=overwrite, file_format=file_format)
 end
@@ -353,8 +359,13 @@ function readpdb(pdbid::AbstractString;
             ba_number::Integer=0,
             structure_name::AbstractString="$pdbid.pdb",
             kwargs...)
-    filepath = joinpath(pdb_dir,"$pdbid.pdb")
-    pdbpath = ba_number == 0 ? filepath : filepath*"$ba_number"
+    pdbid = uppercase(pdbid)
+    # Standard file name format for PDB and biological assembly
+    if ba_number==0
+        pdbpath = joinpath(pdb_dir,"$pdbid.pdb")
+    else
+        pdbpath = joinpath(pdb_dir,"$pdbid"*"_ba"*"$ba_number.pdb")
+    end
     read(pdbpath, PDB; structure_name=structure_name, kwargs...)
 end
 
