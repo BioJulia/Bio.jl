@@ -55,24 +55,27 @@ function pdbentrylist()
     pdbidlist = String[]
     info("Fetching list of all PDB Entries from RCSB PDB Server...")
     tempfilepath = tempname()
-    download("ftp://ftp.wwpdb.org/pub/pdb/derived_data/index/entries.idx",tempfilepath)
-    open(tempfilepath) do input
-        # Skips the first two lines as it contains headers
-        linecount = 1
-        for line in eachline(input)
-            if linecount > 2
-                # The first 4 characters in the line is the PDB ID
-                pdbid = uppercase(line[1:4])
-                # Check PDB ID is 4 characters long and only consits of alphanumeric characters
-                if length(pdbid) != 4 || ismatch(r"[^a-zA-Z0-9]", pdbid)
-                    throw(ArgumentError("Not a valid PDB ID: \"$pdbid\""))
+    try
+        download("ftp://ftp.wwpdb.org/pub/pdb/derived_data/index/entries.idx",tempfilepath)
+        open(tempfilepath) do input
+            # Skips the first two lines as it contains headers
+            linecount = 1
+            for line in eachline(input)
+                if linecount > 2
+                    # The first 4 characters in the line is the PDB ID
+                    pdbid = uppercase(line[1:4])
+                    # Check PDB ID is 4 characters long and only consits of alphanumeric characters
+                    if !ismatch(r"^[a-zA-Z0-9]{4}$", pdbid)
+                        throw(ArgumentError("Not a valid PDB ID: \"$pdbid\""))
+                    end
+                    push!(pdbidlist,pdbid)
                 end
-                push!(pdbidlist,pdbid)
+                linecount +=1
             end
-            linecount +=1
         end
+    finally
+        rm(tempfilepath, force=true)
     end
-    rm(tempfilepath)
     return pdbidlist
 end
 
@@ -86,19 +89,22 @@ function pdbstatuslist(url::AbstractString)
     filename = split(url,"/")[end]
     info("Fetching weekly status file $filename from RCSB Server...")
     tempfilepath = tempname()
-    download(url, tempfilepath)
-    open(tempfilepath) do input
-        for line in eachline(input)
-            # The first 4 characters in the line is the PDB ID
-            pdbid = uppercase(line[1:4])
-            # Check PDB ID is 4 characters long and only consits of alphanumeric characters
-            if length(pdbid) != 4 || ismatch(r"[^a-zA-Z0-9]", pdbid)
-                throw(ArgumentError("Not a valid PDB ID: \"$pdbid\""))
+    try
+        download(url, tempfilepath)
+        open(tempfilepath) do input
+            for line in eachline(input)
+                # The first 4 characters in the line is the PDB ID
+                pdbid = uppercase(line[1:4])
+                # Check PDB ID is 4 characters long and only consits of alphanumeric characters
+                if !ismatch(r"^[a-zA-Z0-9]{4}$", pdbid)
+                    throw(ArgumentError("Not a valid PDB ID: \"$pdbid\""))
+                end
+                push!(statuslist,pdbid)
             end
-            push!(statuslist,pdbid)
         end
+    finally
+        rm(tempfilepath, force=true)
     end
-    rm(tempfilepath)
     return statuslist
 end
 
@@ -122,22 +128,25 @@ function pdbobsoletelist()
     obsoletelist = String[]
     info("Fetching list of all obsolete PDB Entries from RCSB PDB Server...")
     tempfilepath = tempname()
-    download("ftp://ftp.wwpdb.org/pub/pdb/data/status/obsolete.dat", tempfilepath)
-    open(tempfilepath) do input
-        for line in eachline(input)
-            # Check if its an obsolete pdb entry and not headers
-            if line[1:6] == "OBSLTE"
-                # The 21st to 24th characters in obsolete pdb entry has the pdb id
-                pdbid = uppercase(line[21:24])
-                # Check PDB ID is 4 characters long and only consits of alphanumeric characters
-                if length(pdbid) != 4 || ismatch(r"[^a-zA-Z0-9]", pdbid)
-                    throw(ArgumentError("Not a valid PDB ID: \"$pdbid\""))
+    try
+        download("ftp://ftp.wwpdb.org/pub/pdb/data/status/obsolete.dat", tempfilepath)
+        open(tempfilepath) do input
+            for line in eachline(input)
+                # Check if its an obsolete pdb entry and not headers
+                if line[1:6] == "OBSLTE"
+                    # The 21st to 24th characters in obsolete pdb entry has the pdb id
+                    pdbid = uppercase(line[21:24])
+                    # Check PDB ID is 4 characters long and only consits of alphanumeric characters
+                    if !ismatch(r"^[a-zA-Z0-9]{4}$", pdbid)
+                        throw(ArgumentError("Not a valid PDB ID: \"$pdbid\""))
+                    end
+                    push!(obsoletelist,pdbid)
                 end
-                push!(obsoletelist,pdbid)
             end
         end
+    finally
+        rm(tempfilepath, force=true)
     end
-    rm(tempfilepath)
     return obsoletelist
 end
 
@@ -157,7 +166,7 @@ PDB file if it exists in the `pdb_dir`.
 function downloadpdb(pdbid::AbstractString; pdb_dir::AbstractString=pwd(), file_format::Type=PDB, obsolete::Bool=false, overwrite::Bool=false, ba_number::Integer=0)
     pdbid = uppercase(pdbid)
     # Check PDB ID is 4 characters long and only consits of alphanumeric characters
-    if length(pdbid) != 4 || ismatch(r"[^a-zA-Z0-9]", pdbid)
+    if !ismatch(r"^[a-zA-Z0-9]{4}$", pdbid)
         throw(ArgumentError("Not a valid PDB ID: \"$pdbid\""))
     end 
     # Check if the PDB file is marked as obsolete
@@ -177,48 +186,49 @@ function downloadpdb(pdbid::AbstractString; pdb_dir::AbstractString=pwd(), file_
         pdbpath = joinpath(pdb_dir,"$pdbid"*"_ba"*"$ba_number"*pdbextension[file_format])
     end
     # Download the PDB file only if it does not exist in the "pdb_dir" and when "overwrite" is true
-    if ispath(pdbpath) && !overwrite
+    if isfile(pdbpath) && !overwrite
         info("PDB Exists : $pdbid")
     else
         # Temporary location to download compressed PDB file.
         archivefilepath = tempname()
-        # Download the compressed PDB file to the temporary location
-        info("Downloading PDB : $pdbid")
-        if ba_number == 0            
-            if file_format == PDB || file_format == PDBXML || file_format == mmCIF
-                download("http://files.rcsb.org/download/$pdbid"*pdbextension[file_format]*".gz", archivefilepath)
-            elseif file_format == MMTF
-                # MMTF is downloaded in uncompressed form, thus directly stored in pdbpath
-                download("http://mmtf.rcsb.org/v1.0/full/$pdbid", pdbpath)
-            else
-                warn("Invalid PDB file format!")
-            end
-        else            
-            if file_format == PDB
-                download("http://files.rcsb.org/download/$pdbid"*pdbextension[file_format]*"$ba_number.gz",archivefilepath)
-            elseif file_format == mmCIF
-                download("http://files.rcsb.org/download/$pdbid-assembly$ba_number"*pdbextension[file_format]*".gz", archivefilepath)
-            else
-                warn("Biological Assembly is available only in PDB and mmCIF formats!")
-            end
-        end
-        # Verify if the compressed PDB file is downloaded properly and extract it. For MMTF no extraction is needed
-        if ispath(archivefilepath) && filesize(archivefilepath) > 0 && file_format != MMTF           
-            input = open(archivefilepath) |> ZlibInflateInputStream
-            open(pdbpath,"w") do output
-                for line in eachline(input, chomp=false)
-                    print(output, line)
+        try
+            # Download the compressed PDB file to the temporary location
+            info("Downloading PDB : $pdbid")
+            if ba_number == 0            
+                if file_format == PDB || file_format == PDBXML || file_format == mmCIF
+                    download("http://files.rcsb.org/download/$pdbid"*pdbextension[file_format]*".gz", archivefilepath)
+                elseif file_format == MMTF
+                    # MMTF is downloaded in uncompressed form, thus directly stored in pdbpath
+                    download("http://mmtf.rcsb.org/v1.0/full/$pdbid", pdbpath)
+                else
+                    throw(ArgumentError("Invalid PDB file format!"))
+                end
+            else            
+                if file_format == PDB
+                    download("http://files.rcsb.org/download/$pdbid"*pdbextension[file_format]*"$ba_number.gz",archivefilepath)
+                elseif file_format == mmCIF
+                    download("http://files.rcsb.org/download/$pdbid-assembly$ba_number"*pdbextension[file_format]*".gz", archivefilepath)
+                else
+                    throw(ArgumentError("Biological Assembly is available only in PDB and mmCIF formats!"))
                 end
             end
-            close(input)
-        end
-        # Verify if the PDB file is downloaded and extracted without any error
-        if !ispath(pdbpath) || filesize(pdbpath)==0
-            throw(ErrorException("Error downloading PDB : $pdbid"))
-        end
-        # Remove the temporary compressd PDB file downloaded to clear up space
-        if ispath(archivefilepath)
-            rm(archivefilepath)
+            # Verify if the compressed PDB file is downloaded properly and extract it. For MMTF no extraction is needed
+            if isfile(archivefilepath) && filesize(archivefilepath) > 0 && file_format != MMTF           
+                input = open(archivefilepath) |> ZlibInflateInputStream
+                open(pdbpath,"w") do output
+                    for line in eachline(input, chomp=false)
+                        print(output, line)
+                    end
+                end
+                close(input)
+            end
+            # Verify if the PDB file is downloaded and extracted without any error
+            if !isfile(pdbpath) || filesize(pdbpath)==0
+                throw(ErrorException("Error downloading PDB : $pdbid"))
+            end
+        finally
+            # Remove the temporary compressd PDB file downloaded to clear up space
+            rm(archivefilepath, force=true)
         end
     end
 end
@@ -261,7 +271,7 @@ PDB file if exists in the `pdb_dir`.
 function downloadentirepdb(;pdb_dir::AbstractString=pwd(), file_format::Type=PDB, overwrite::Bool=false)
     # Get the list of all pdb entries from RCSB PDB Server using getallpdbentries() and downloads them
     pdblist = pdbentrylist()
-    info("About to download "*string(length(pdblist))*" PDB files. Make sure to have enough disk space and time!")
+    info("About to download $(length(pdblist)) PDB files. Make sure to have enough disk space and time!")
     info("You can stop it anytime and call the function again to resume downloading")
     downloadpdb(pdblist, pdb_dir=pdb_dir, overwrite=overwrite, file_format=file_format)
 end
