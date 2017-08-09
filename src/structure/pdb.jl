@@ -216,8 +216,8 @@ function downloadpdb(pdbid::AbstractString; pdb_dir::AbstractString=pwd(), file_
             if isfile(archivefilepath) && filesize(archivefilepath) > 0 && file_format != MMTF           
                 input = open(archivefilepath) |> ZlibInflateInputStream
                 open(pdbpath,"w") do output
-                    for line in eachline(input, chomp=false)
-                        print(output, line)
+                    for line in eachline(input)
+                        println(output, chomp(line))
                     end
                 end
                 close(input)
