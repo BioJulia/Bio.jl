@@ -187,6 +187,23 @@ function omegaangle(res::AbstractResidue, res_prev::AbstractResidue)
 end
 
 """
+Calculate the omega angle in radians for a residue in a `Chain`. Arguments are
+the chain and the first residue index (where atoms "N" and "CA" are taken
+from). The next residue is at pos + 1 (where atom "CA" and "C" iares required).
+"""
+function omegaangle(chain::Chain, pos::Int64)
+    if !(string(pos) in keys(chain.residues))
+        throw(ArgumentError("$pos is an invalid index"))
+    elseif !(string(pos + 1) in keys(chain.residues))
+        throw(ArgumentError("$(pos + 1) is an invalid index"))
+    end
+
+    res = chain[pos]
+    res_next = chain[pos + 1]
+    return omegaangle(res, res_next)
+end
+
+"""
 Calculate the phi angle in radians for an `AbstractResidue`. Arguments are the
 residue (atoms "N", "CA" and "C" required) and the previous residue (atom "C"
 required).
@@ -202,6 +219,23 @@ function phiangle(res::AbstractResidue, res_prev::AbstractResidue)
         throw(ArgumentError("Atom with atom name \"C\" not found in residue"))
     end
     return dihedralangle(res_prev["C"], res["N"], res["CA"], res["C"])
+end
+
+"""
+Calculate the phi angle in radians for a residue in a `Chain`. Arguments are
+the chain and the first residue index (where atoms "N", "CA" and "C" are taken
+from). The next residue is at pos + 1 (where atom "N" is required).
+"""
+function phiangle(chain::Chain, pos::Int64)
+    if !(string(pos) in keys(chain.residues))
+        throw(ArgumentError("$pos is an invalid index"))
+    elseif !(string(pos + 1) in keys(chain.residues))
+        throw(ArgumentError("$(pos + 1) is an invalid index"))
+    end
+
+    res = chain[pos]
+    res_next = chain[pos + 1]
+    return phiangle(res, res_next)
 end
 
 """
@@ -222,6 +256,22 @@ function psiangle(res::AbstractResidue, res_next::AbstractResidue)
     return dihedralangle(res["N"], res["CA"], res["C"], res_next["N"])
 end
 
+"""
+Calculate the psi angle in radians for a residue in a `Chain`. Arguments are
+the chain and the first residue index (where atoms "N", "CA" and "C" are taken
+from). The next residue is at pos + 1 (where atom "N" is required).
+"""
+function psiangle(chain::Chain, pos::Int64)
+    if !(string(pos) in keys(chain.residues))
+        throw(ArgumentError("$pos is an invalid index"))
+    elseif !(string(pos + 1) in keys(chain.residues))
+        throw(ArgumentError("$(pos + 1) is an invalid index"))
+    end
+
+    res = chain[pos]
+    res_next = chain[pos + 1]
+    return psiangle(res, res_next)
+end
 
 """
 Calculate the `Vector`s of phi and psi angles of a `StructuralElementOrList`.

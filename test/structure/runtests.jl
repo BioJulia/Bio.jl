@@ -1470,6 +1470,13 @@ end
     @test_throws ArgumentError phiangle(struc_1AKE['A'][7], Residue("ALA", 6, ' ', false, Chain('A')))
     @test_throws ArgumentError psiangle(struc_1AKE['A'][8], Residue("ALA", 9, ' ', false, Chain('A')))
 
+    @test isapprox(omegaangle(struc_1AKE['A'], 19), omegaangle(struc_1AKE['A'][20], struc_1AKE['A'][19]), atol=1e-5)
+    @test isapprox(phiangle(struc_1AKE['A'], 6), phiangle(struc_1AKE['A'][6], struc_1AKE['A'][7]), atol=1e-5)
+    @test isapprox(psiangle(struc_1AKE['A'], 8), psiangle(struc_1AKE['A'][8], struc_1AKE['A'][9]), atol=1e-5)
+    @test_throws ArgumentError omegaangle(struc_1AKE['A'], -1 )
+    @test_throws ArgumentError phiangle(struc_1AKE['A'], -1 )
+    @test_throws ArgumentError psiangle(struc_1AKE['A'], -1 )
+
     phis, psis = ramachandranangles(struc_1AKE['A'])
     @test size(phis) == (456,)
     @test size(psis) == (456,)
