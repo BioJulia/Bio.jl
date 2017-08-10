@@ -18,7 +18,6 @@ export
     pdbline,
     writepdb
 
-using BufferedStreams
 using Libz 
 
 "Protein Data Bank (PDB) file formats."
@@ -49,11 +48,13 @@ end
 
 
 """
-Returns a list of all PDB entries from RCSB PDB server.
+    pdbentrylist()
+
+Fetch list of all PDB entries from RCSB server.
 """
 function pdbentrylist()
     pdbidlist = String[]
-    info("Fetching list of all PDB Entries from RCSB PDB Server...")
+    info("Fetching list of all PDB Entries from RCSB Server...")
     tempfilepath = tempname()
     try
         download("ftp://ftp.wwpdb.org/pub/pdb/derived_data/index/entries.idx",tempfilepath)
@@ -81,8 +82,9 @@ end
 
 
 """
-Returns a list of PDB codes in the weekly PDB status file from the given URL;
-Argument `url` must specify the URL of any weekly status file from RCSB Server.
+    pdbstatuslist(url::AbstractString)
+
+Fetch list of PDB entries from RCSB weekly status file by specifying its URL.
 """
 function pdbstatuslist(url::AbstractString)
     statuslist = String[]
@@ -110,8 +112,10 @@ end
 
 
 """
-Returns three lists of the newest weekly files (added,modified,obsolete)
-from RCSB PDB Server.
+    pdbrecentchanges()
+
+Fetch three lists consisting added, modified and obsolete PDB entries from the recent
+RCSB weekly status files.
 """
 function pdbrecentchanges()
     addedlist = pdbstatuslist("ftp://ftp.wwpdb.org/pub/pdb/data/status/latest/added.pdb")
@@ -122,11 +126,13 @@ end
 
 
 """
-Returns a list of all obsolete entries ever in the RCSB PDB server.
+    pdbobsoletelist()
+
+Fetch list of all obsolete PDB entries in the RCSB server.
 """
 function pdbobsoletelist()
     obsoletelist = String[]
-    info("Fetching list of all obsolete PDB Entries from RCSB PDB Server...")
+    info("Fetching list of all obsolete PDB Entries from RCSB Server...")
     tempfilepath = tempname()
     try
         download("ftp://ftp.wwpdb.org/pub/pdb/data/status/obsolete.dat", tempfilepath)
@@ -152,16 +158,22 @@ end
 
 
 """
-Download a PDB file or biological assembly from the RCSB PDB server. 
-By default downloads the PDB file to current working directory; 
-if the keyword argument `ba_number` is set the biological assembly with that
-number will be downloaded; 
-if the keyword argument `pdb_dir` is set the PDB file is downloaded to the
-specified directory; 
-if the keyword argument `obsolete` is set `true`, the PDB file is downloaded
-into the obsolete directory inside `pdb_dir`;
-if the keyword argument `overwrite` is set `true`, then it will overwrite the
-PDB file if it exists in the `pdb_dir`.
+    downloadpdb(pdbid::AbstractString; <keyword arguments>)
+
+Download PDB or biological assembly file from the RCSB server. 
+
+# Arguments
+- `pdbid::AbstractString`: the PDB to be downloaded.
+- `pdb_dir::AbstractString=pwd()`: the directory to which the PDB file is downloaded; 
+defaults to current working directory.
+- `file_format::Type=PDB`: the format of the PDB file. Options <PDB, PDBXML, mmCIF, MMTF>;
+defaults to PDB format.
+- `obsolete::Bool=false`: if set `true`, the PDB file is downloaded in the auto-generated 
+"obsolete" directory inside the specified `pdb_dir`.
+- `overwrite::Bool=false`: if set `true`, overwrites the PDB file if exists in `pdb_dir`;
+by default skips downloading PDB file if it exists in `pdb_dir`.
+- `ba_number::Integer=0`: if set > 0 downloads the respective biological assembly; 
+by default downloads the PDB file.
 """
 function downloadpdb(pdbid::AbstractString; pdb_dir::AbstractString=pwd(), file_format::Type=PDB, obsolete::Bool=false, overwrite::Bool=false, ba_number::Integer=0)
     pdbid = uppercase(pdbid)
@@ -235,14 +247,22 @@ end
 
 
 """
-Downloads a list of PDB files from the RCSB PDB server. 
-By default downloads the PDB files to current working directory; 
-if the keyword argument `pdb_dir` is set the PDB files are downloaded to the
-specified directory;
-if the keyword argument `obsolete` is set `true`, the PDB files are downloaded
-into the obsolete directory inside `pdb_dir`;
-if the keyword argument `overwrite` is set `true`, then it will overwrite the
-PDB file if it exists in the `pdb_dir`.
+    downloadpdb(pdbid::Array{String,1}; <keyword arguments>)
+
+Download PDB or biological assembly file from the RCSB server. 
+
+# Arguments
+- `pdbid::Array{String,1}`: the list of PDB files to be downloaded.
+- `pdb_dir::AbstractString=pwd()`: the directory to which the PDB file is downloaded; 
+defaults to current working directory.
+- `file_format::Type=PDB`: the format of the PDB file. Options <PDB, PDBXML, mmCIF, MMTF>;
+defaults to PDB format.
+- `obsolete::Bool=false`: if set `true`, the PDB file is downloaded in the auto-generated 
+"obsolete" directory inside the specified `pdb_dir`.
+- `overwrite::Bool=false`: if set `true`, overwrites the PDB file if exists in `pdb_dir`;
+by default skips downloading PDB file if it exists in `pdb_dir`.
+- `ba_number::Integer=0`: if set > 0 downloads the respective biological assembly; 
+by default downloads the PDB file.
 """
 function downloadpdb(pdbidlist::Array{String,1}; kwargs...)
     failedlist = String[]
@@ -261,15 +281,20 @@ end
 
 
 """
-Downloads the entire PDB files available in the RCSB PDB server. 
-By default downloads the PDB files to current working directory; 
-if the keyword argument `pdb_dir` is set the PDB files are downloaded to the
-specified directory;
-if the keyword argument `overwrite` is set `true`, then it will overwrite the
-PDB file if exists in the `pdb_dir`.
+    downloadentirepdb(; <keyword arguments>)
+
+Download the entire PDB files available in the RCSB server.
+
+# Arguments
+- `pdb_dir::AbstractString=pwd()`: the directory to which the PDB files are downloaded; 
+defaults to current working directory.
+- `file_format::Type=PDB`: the format of the PDB file. Options <PDB, PDBXML, mmCIF, MMTF>;
+defaults to PDB format.
+- `overwrite::Bool=false`: if set `true`, overwrites the PDB file if exists in `pdb_dir`;
+by default skips downloading PDB file if it exists in `pdb_dir`.
 """
 function downloadentirepdb(;pdb_dir::AbstractString=pwd(), file_format::Type=PDB, overwrite::Bool=false)
-    # Get the list of all pdb entries from RCSB PDB Server using getallpdbentries() and downloads them
+    # Get the list of all pdb entries from RCSB Server using getallpdbentries() and downloads them
     pdblist = pdbentrylist()
     info("About to download $(length(pdblist)) PDB files. Make sure to have enough disk space and time!")
     info("You can stop it anytime and call the function again to resume downloading")
@@ -278,11 +303,11 @@ end
 
 
 """
-Updates your local copy of the PDB files. It gets the weekly lists of new, 
-modified and obsolete PDB entries and automatically downloads those PDB files
-to the `pdb_dir`;
-if the keyword argument `pdb_dir` is set the PDB files in the specified
-directory are updated.
+    updatelocalpdb(;pdb_dir::AbstractString=pwd(), file_format::Type=PDB)
+
+Updates your local copy of the PDB files. It gets the recent weekly lists of new, modified
+and obsolete PDB entries and automatically updates the PDB files in the given `file_format` 
+inside the local `pdb_dir` directory.
 """
 function updatelocalpdb(;pdb_dir::AbstractString=pwd(), file_format::Type=PDB)
     addedlist, modifiedlist, obsoletelist = pdbrecentchanges()
@@ -311,36 +336,52 @@ end
 
 
 """
-Download all obsolete PDB files from RCSB PDB server not present in the local 
-obsolete PDB directory;
-if the keyword argument `obsolete_dir` is set the obsolete PDB files are 
-downloaded to the specified directory.
+    downloadallobsoletepdb(; <keyword arguments>)
+
+Download all obsolete PDB files from RCSB server.
+
+# Arguments
+- `obsolete_dir::AbstractString=pwd()`: the directory where the PDB files are downloaded; 
+defaults to current working directory.
+- `file_format::Type=PDB`: the format of the PDB file. Options <PDB, PDBXML, mmCIF, MMTF>;
+defaults to PDB format.
+- `overwrite::Bool=false`: if set `true`, overwrites the PDB file if exists in
+`obsolete_dir`; by default skips downloading PDB file if it exists in `obsolete_dir`.
 """
-function downloadallobsoletepdb(;obsolete_dir::AbstractString=pwd(), file_format::Type=PDB)
+function downloadallobsoletepdb(;obsolete_dir::AbstractString=pwd(), file_format::Type=PDB, overwrite::Bool=false)
     # Get all obsolete PDB files in RCSB PDB Server using getallobsolete() and download them
     obsoletelist = pdbobsoletelist()
-    downloadpdb(obsoletelist, pdb_dir=obsolete_dir, file_format=file_format)
+    downloadpdb(obsoletelist, pdb_dir=obsolete_dir, file_format=file_format, overwrite=overwrite)
 end
 
 
 """
-Download and read the PDB file or biological assembly from the RCSB PDB server.
-By default downloads the PDB file to current working directory; 
-if the keyword argument `ba_number` is set the biological assembly with that 
-number will be downloaded; 
-if the keyword argument `pdb_dir` is set the PDB file is downloaded to the 
-specified directory; 
-if the keyword argument `obsolete` is set `true`, the PDB file is downloaded 
-into the obsolete directory inside `pdb_dir`;
-if the keyword argument `overwrite` is set `true`, then it will overwrite the
-PDB file if it exists in the `pdb_dir`.
+    retrievepdb(pdbid::AbstractString; <keyword arguments>)
+
+Download and parse(read) the PDB file or biological assembly from the RCSB PDB server.
+
+# Arguments
+- `pdbid::AbstractString`: the PDB to be downloaded and read.
+- `pdb_dir::AbstractString=pwd()`: the directory to which the PDB file is downloaded; 
+defaults to current working directory.
+- `obsolete::Bool=false`: if set `true`, the PDB file is downloaded in the auto-generated 
+"obsolete" directory inside the specified `pdb_dir`.
+- `overwrite::Bool=false`: if set `true`, overwrites the PDB file if exists in `pdb_dir`;
+by default skips downloading PDB file if it exists in `pdb_dir`.
+- `ba_number::Integer=0`: if set > 0 downloads the respective biological assembly; 
+by default downloads the PDB file.
+- `structure_name::AbstractString="\$pdbid.pdb"`: used for representing the PDB structure
+when parsing the file; defaults to "<pdbid>.pdb".
+- `remove_disorder::Bool=false`: if set true, then disordered atoms wont be parsed.
+- `read_std_atoms::Bool=true`: if set false, then standard ATOM records wont be parsed.
+- `read_het_atoms::Bool=true`: if set false, then HETATOM records wont be parsed.
 """
 function retrievepdb(pdbid::AbstractString;
             pdb_dir::AbstractString=pwd(),
             obsolete::Bool=false, 
             overwrite::Bool=false, 
             ba_number::Integer=0,
-            structure_name::AbstractString="$pdbid.pdb",
+            structure_name::AbstractString="$(uppercase(pdbid)).pdb",
             kwargs...)
     downloadpdb(pdbid, pdb_dir=pdb_dir, obsolete=obsolete, overwrite=overwrite, ba_number=ba_number)
     info("Parsing the PDB file...")
@@ -352,17 +393,21 @@ function retrievepdb(pdbid::AbstractString;
 end
 
 """
-Read the PDB file based on PDB ID and PDB directory specified.
-if the keyword argument `pdb_dir` is set the PDB file is read from the 
-specified directory; 
-Keyword argument `structure_name` is used for representing the PDB structure
-when parsing the file. 
-if the keyword argument `remove_disorder` is set true, then disordered atoms 
-wont be parsed
-if the keyword argument `read_std_atoms` is set false, then standard 
-ATOM records wont be parsed
-if the keyword argument `read_het_atoms` is set false, then hetro 
-HETATOM records wont be parsed.
+    readpdb(pdbid::AbstractString; <keyword arguments>)
+
+Read a PDB file.
+
+# Arguments
+- `pdbid::AbstractString`: the PDB to be read.
+- `pdb_dir::AbstractString=pwd()`: the directory to which the PDB file is downloaded; 
+defaults to current working directory.
+- `ba_number::Integer=0`: if set > 0 downloads the respective biological assembly; 
+by default downloads the PDB file.
+- `structure_name::AbstractString="\$pdbid.pdb"`: used for representing the PDB structure
+when parsing the file; defaults to "<pdbid>.pdb".
+- `remove_disorder::Bool=false`: if set true, then disordered atoms wont be parsed.
+- `read_std_atoms::Bool=true`: if set false, then standard ATOM records wont be parsed.
+- `read_het_atoms::Bool=true`: if set false, then HETATOM records wont be parsed.
 """
 function readpdb(pdbid::AbstractString;
             pdb_dir::AbstractString=pwd(),
