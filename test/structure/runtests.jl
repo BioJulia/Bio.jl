@@ -30,6 +30,9 @@ function pdbfilepath(filename::AbstractString)
     return joinpath(dirname(@__FILE__), "..", "BioFmtSpecimens", "PDB", filename)
 end
 
+@testset "PDB Handling" begin
+    @test length(pdbentrylist()) > 100000
+end
 
 @testset "Model" begin
     # Test constructors and indexing
