@@ -227,6 +227,10 @@ Various functions are provided to calculate spatial quantities for proteins:
 | `rmsd`               | RMSD between two elements of the same size - assumes they are superimposed                      |
 | `displacements`      | `Vector` of displacements between two elements of the same size - assumes they are superimposed |
 
+The omega, phi and psi angle functions can take either a pair of residues or a chain and a position. Omega and phi will
+measure the angle between the residue at the given index and the one before. Psiangle measures between the given index
+and the one after.
+
 For example:
 
 ```julia
@@ -240,6 +244,9 @@ julia> rad2deg(dihedralangle(struc['A'][50]["N"], struc['A'][50]["CA"], struc['A
 -177.38288114072924
 
 julia> rad2deg(psiangle(struc['A'][50], struc['A'][51]))
+-177.38288114072924
+
+julia> rad2deg(psiangle(struc['A'], 50))
 -177.38288114072924
 ```
 
