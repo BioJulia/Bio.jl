@@ -1,7 +1,6 @@
 module TestVar
 
 using Base.Test
-
 using Bio: Seq, Var
 using TestFunctions
 using PairwiseListMatrices
@@ -102,7 +101,7 @@ end
         end
 
     end
-        
+
 
 
         @testset "Pairwise methods" begin
@@ -271,17 +270,17 @@ end
 
 @testset "VCF" begin
     metainfo = VCF.MetaInfo()
-    @test !isfilled(metainfo)
+    @test !Var.isfilled(metainfo)
     @test ismatch(r"^Bio.Var.VCF.MetaInfo: <not filled>", repr(metainfo))
     @test_throws ArgumentError metainfotag(metainfo)
 
     metainfo = VCF.MetaInfo(b"##source=foobar1234")
-    @test isfilled(metainfo)
+    @test Var.isfilled(metainfo)
     @test metainfotag(metainfo) == "source"
     @test metainfoval(metainfo) == "foobar1234"
 
     metainfo = VCF.MetaInfo("##source=foobar1234")
-    @test isfilled(metainfo)
+    @test Var.isfilled(metainfo)
     @test metainfotag(metainfo) == "source"
     @test metainfoval(metainfo) == "foobar1234"
 
@@ -300,18 +299,18 @@ end
     @test metainfoval(metainfo) == """<ID=DP,Number=1,Type=Integer,Description="Total Depth">"""
 
     record = VCF.Record()
-    @test !isfilled(record)
+    @test !Var.isfilled(record)
     @test ismatch(r"^Bio.Var.VCF.Record: <not filled>", repr(record))
     @test_throws ArgumentError VCF.chrom(record)
 
     record = VCF.Record("20\t302\t.\tT\tTA\t999\t.\t.\tGT")
-    @test isfilled(record)
+    @test Var.isfilled(record)
     @test VCF.haschrom(record)
     @test VCF.chrom(record) == "20"
     @test VCF.haspos(record)
     @test VCF.pos(record) == 302
     @test !VCF.hasid(record)
-    @test_throws MissingFieldException VCF.id(record)
+    @test_throws Var.MissingFieldException VCF.id(record)
     @test VCF.hasref(record)
     @test VCF.ref(record) == "T"
     @test VCF.hasalt(record)
@@ -319,10 +318,10 @@ end
     @test VCF.hasqual(record)
     @test VCF.qual(record) == 999
     @test !VCF.hasfilter(record)
-    @test_throws MissingFieldException VCF.filter(record)
+    @test_throws Var.MissingFieldException VCF.filter(record)
     @test VCF.infokeys(record) == String[]
     @test !VCF.hasinfo(record)
-    @test_throws MissingFieldException VCF.info(record)
+    @test_throws Var.MissingFieldException VCF.info(record)
     @test VCF.hasformat(record)
     @test VCF.format(record) == ["GT"]
 
@@ -331,7 +330,7 @@ end
     @test_throws ArgumentError VCF.Record(b"")
 
     record = VCF.Record(b".\t.\t.\t.\t.\t.\t.\t.\t")
-    @test isfilled(record)
+    @test Var.isfilled(record)
     @test !VCF.haschrom(record)
     @test !VCF.haspos(record)
     @test !VCF.hasid(record)
@@ -521,6 +520,7 @@ end
     @test_throws EOFError read!(reader, record)
 
     # round-trip test
+    get_bio_fmt_specimens()
     vcfdir = joinpath(dirname(@__FILE__), "..", "BioFmtSpecimens", "VCF")
     for specimen in YAML.load_file(joinpath(vcfdir, "index.yml"))
         filepath = joinpath(vcfdir, specimen["filename"])
@@ -549,7 +549,7 @@ end
 
 @testset "BCF" begin
     record = BCF.Record()
-    @test !isfilled(record)
+    @test !Var.isfilled(record)
     @test ismatch(r"^Bio.Var.BCF.Record: <not filled>", repr(record))
     @test_throws ArgumentError BCF.chrom(record)
 

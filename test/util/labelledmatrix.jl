@@ -2,6 +2,8 @@ module TestLSM
 
 using Base.Test
 
+using TestFunctions
+
 using Bio.Util
 
 @testset "LabelledSquareMatrices" begin
@@ -26,10 +28,10 @@ using Bio.Util
     # This matrix has heaps of extra spaces in the road, to try and trip up the
     # parser.
 
-       A  B  C 
+       A  B  C
     A 1 2          4
-    B  2  1  2   
-    C  4  2  1  
+    B  2  1  2
+    C  4  2  1
     """
 
     float_matrix = """\
@@ -101,6 +103,8 @@ using Bio.Util
         @test_throws Exception readlsm(IOBuffer(mat))
     end
 
+    get_bio_fmt_specimens()
+
     @testset "files" for (fname, expected) in file_matricies
         fname = joinpath(dirname(@__FILE__), "..", "BioFmtSpecimens", "LSM", fname)
         m, l = readlsm(fname)
@@ -118,7 +122,7 @@ using Bio.Util
 
     @testset "all_subst_matrices" for fname in all_subst_matrices
         # Check that we can parse all matrices under the alignm module
-        fname = joinpath(dirname(@__FILE__), "..", "..", "src", "align", "data", "submat", fname)
+        fname = joinpath(Pkg.dir("BioAlignments"), "src", "data", "submat", fname)
         m, l = readlsm(Int64, fname)
         @test eltype(m) === Int64
     end

@@ -1,18 +1,15 @@
-# Bio.Seq
-# =======
+# Bio.Align
+# =========
 #
-# Module for biological sequences.
+# Module for biological sequence alignment.
 #
 # This file is a part of BioJulia.
 # License is MIT: https://github.com/BioJulia/Bio.jl/blob/master/LICENSE.md
 
-
-
-
-module Seq
+module Align
 
 using Reexport
 
-@reexport using BioSequences
+@reexport using BioAlignments
 
-end  # module Bio.Seq
+end # module Bio.Align
