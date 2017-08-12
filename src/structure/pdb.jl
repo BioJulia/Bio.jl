@@ -181,7 +181,11 @@ function downloadpdb(pdbid::AbstractString; pdb_dir::AbstractString=pwd(), file_
     # Check PDB ID is 4 characters long and only consits of alphanumeric characters
     if !ismatch(r"^[a-zA-Z0-9]{4}$", pdbid)
         throw(ArgumentError("Not a valid PDB ID: \"$pdbid\""))
-    end 
+    end
+    # check if PDB file format is valid 
+    if !haskey(pdbextension, file_format)
+        throw(ArgumentError("Invalid PDB file format!"))
+    end
     # Check if the PDB file is marked as obsolete
     if obsolete
         # Set the download path to obsolete directory inside the "pdb_dir"
@@ -210,11 +214,9 @@ function downloadpdb(pdbid::AbstractString; pdb_dir::AbstractString=pwd(), file_
             if ba_number == 0            
                 if file_format == PDB || file_format == PDBXML || file_format == mmCIF
                     download("http://files.rcsb.org/download/$pdbid"*pdbextension[file_format]*".gz", archivefilepath)
-                elseif file_format == MMTF
+                else
                     # MMTF is downloaded in uncompressed form, thus directly stored in pdbpath
                     download("http://mmtf.rcsb.org/v1.0/full/$pdbid", pdbpath)
-                else
-                    throw(ArgumentError("Invalid PDB file format!"))
                 end
             else            
                 if file_format == PDB

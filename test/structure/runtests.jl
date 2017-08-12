@@ -42,8 +42,8 @@ end
     @test_throws ArgumentError downloadpdb("1a df")
     # Valid PDB ID format but PDB does not exist
     @test_throws ErrorException downloadpdb("no1e", pdb_dir=pdb_dir)
-    # Invalid PDB file_format
-    @test_throws ArgumentError downloadpdb("1alw", pdb_dir=pdb_dir, file_format=XYZ)
+    # Invalid PDB file_format.
+    @test_throws ArgumentError downloadpdb("1alw", pdb_dir=pdb_dir, file_format=String)
     # Biological assembly not available in PDBXML and MMTF
     @test_throws ArgumentError downloadpdb("1alw", pdb_dir=pdb_dir, file_format=PDBXML, ba_number=1)
     # Invalid ba_number for PDB "1alw"
@@ -51,37 +51,37 @@ end
     
     # PDB format
     downloadpdb("1alw", pdb_dir=pdb_dir, file_format=PDB)
-    pdbpath = joinpath(pdb_dir,"1alw$(pdbextension[PDB])")
+    pdbpath = joinpath(pdb_dir,"1ALW$(pdbextension[PDB])")
     @test isfile(pdbpath) && filesize(pdbpath) > 0
     # PDBXML format
     downloadpdb("1alw", pdb_dir=pdb_dir, file_format=PDBXML)
-    pdbpath = joinpath(pdb_dir,"1alw$(pdbextension[PDBXML])")
+    pdbpath = joinpath(pdb_dir,"1ALW$(pdbextension[PDBXML])")
     @test isfile(pdbpath) && filesize(pdbpath) > 0
     # mmCIF format
     downloadpdb("1alw", pdb_dir=pdb_dir, file_format=mmCIF)
-    pdbpath = joinpath(pdb_dir,"1alw$(pdbextension[mmCIF])")
+    pdbpath = joinpath(pdb_dir,"1ALW$(pdbextension[mmCIF])")
     @test isfile(pdbpath) && filesize(pdbpath) > 0
     # MMTF format
     downloadpdb("1alw", pdb_dir=pdb_dir, file_format=MMTF)
-    pdbpath = joinpath(pdb_dir,"1alw$(pdbextension[MMTF])")
+    pdbpath = joinpath(pdb_dir,"1ALW$(pdbextension[MMTF])")
     @test isfile(pdbpath) && filesize(pdbpath) > 0  
     # Obsolete PDB
     downloadpdb("116l", pdb_dir=pdb_dir, file_format=PDB)
-    pdbpath = joinpath(pdb_dir,"obsolete","116l$(pdbextension[PDB])")
+    pdbpath = joinpath(pdb_dir,"obsolete","116L$(pdbextension[PDB])")
     @test isfile(pdbpath) && filesize(pdbpath) > 0
     # Biological Assembly - PDB format
     downloadpdb("1alw", pdb_dir=pdb_dir, file_format=PDB, ba_number=1)
-    pdbpath = joinpath(pdb_dir,"1alw_ba1$(pdbextension[PDB])")
+    pdbpath = joinpath(pdb_dir,"1ALW_ba1$(pdbextension[PDB])")
     @test isfile(pdbpath) && filesize(pdbpath) > 0
     # Biological Assembly - mmCIF format
     downloadpdb("5a9z", pdb_dir=pdb_dir, file_format=mmCIF, ba_number=1)
-    pdbpath = joinpath(pdb_dir,"5a9z_ba1$(pdbextension[mmCIF])")
+    pdbpath = joinpath(pdb_dir,"5A9Z_ba1$(pdbextension[mmCIF])")
     @test isfile(pdbpath) && filesize(pdbpath) > 0
     # Download multiple PDB files
     pdbidlist = ["1ent","1en2"]
     downloadpdb(pdbidlist, pdb_dir=pdb_dir, file_format=PDB)
     for pdbid in pdbidlist
-        pdbpath = joinpath(pdb_dir,"$pdbid$(pdbextension[PDB])")
+        pdbpath = joinpath(pdb_dir,"$(uppercase(pdbid))$(pdbextension[PDB])")
         @test isfile(pdbpath) && filesize(pdbpath) > 0
     end
 
