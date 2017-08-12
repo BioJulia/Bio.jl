@@ -66,7 +66,7 @@ end
     pdbpath = joinpath(pdb_dir,"1ALW$(pdbextension[MMTF])")
     @test isfile(pdbpath) && filesize(pdbpath) > 0  
     # Obsolete PDB
-    downloadpdb("116l", pdb_dir=pdb_dir, file_format=PDB)
+    downloadpdb("116l", pdb_dir=pdb_dir, file_format=PDB, obsolete=true)
     pdbpath = joinpath(pdb_dir,"obsolete","116L$(pdbextension[PDB])")
     @test isfile(pdbpath) && filesize(pdbpath) > 0
     # Biological Assembly - PDB format
