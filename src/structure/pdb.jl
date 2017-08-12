@@ -4,6 +4,7 @@ export
     mmCIF,
     MMTF,
     PDBParseError,
+    pdbextension,
     pdbentrylist,
     pdbstatuslist,
     pdbrecentchanges,
@@ -389,7 +390,7 @@ function retrievepdb(pdbid::AbstractString;
         # if obsolete is set true, the PDB file is present in the obsolete directory inside "pdb_dir"
         pdb_dir = joinpath(pdb_dir,"obsolete")
     end
-    readpdb(pdbid, pdb_dir=pdb_dir, ba_number=ba_number, structure_name=structure_name, kwargs...)
+    readpdb(pdbid; pdb_dir=pdb_dir, ba_number=ba_number, structure_name=structure_name, kwargs...)
 end
 
 """
