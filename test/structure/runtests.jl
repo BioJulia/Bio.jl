@@ -49,7 +49,7 @@ end
     # Biological assembly not available in PDBXML and MMTF
     @test_throws ArgumentError downloadpdb("1alw", pdb_dir=pdb_dir, file_format=PDBXML, ba_number=1)
     # Invalid ba_number for PDB "1alw"
-    @test_throws ErrorException downloadpdb("1alw",pdb_dir=pdb_dir, file_format=mmCIF,ba_number=10)
+    @test_throws ErrorException downloadpdb("1alw",pdb_dir=pdb_dir, file_format=MMCIF,ba_number=10)
     
     # PDB format
     downloadpdb("1alw", pdb_dir=pdb_dir, file_format=PDB)
@@ -59,9 +59,9 @@ end
     downloadpdb("1alw", pdb_dir=pdb_dir, file_format=PDBXML)
     pdbpath = joinpath(pdb_dir,"1ALW$(pdbextension[PDBXML])")
     @test isfile(pdbpath) && filesize(pdbpath) > 0
-    # mmCIF format
-    downloadpdb("1alw", pdb_dir=pdb_dir, file_format=mmCIF)
-    pdbpath = joinpath(pdb_dir,"1ALW$(pdbextension[mmCIF])")
+    # MMCIF format
+    downloadpdb("1alw", pdb_dir=pdb_dir, file_format=MMCIF)
+    pdbpath = joinpath(pdb_dir,"1ALW$(pdbextension[MMCIF])")
     @test isfile(pdbpath) && filesize(pdbpath) > 0
     # MMTF format
     downloadpdb("1alw", pdb_dir=pdb_dir, file_format=MMTF)
@@ -75,9 +75,9 @@ end
     downloadpdb("1alw", pdb_dir=pdb_dir, file_format=PDB, ba_number=1)
     pdbpath = joinpath(pdb_dir,"1ALW_ba1$(pdbextension[PDB])")
     @test isfile(pdbpath) && filesize(pdbpath) > 0
-    # Biological Assembly - mmCIF format
-    downloadpdb("5a9z", pdb_dir=pdb_dir, file_format=mmCIF, ba_number=1)
-    pdbpath = joinpath(pdb_dir,"5A9Z_ba1$(pdbextension[mmCIF])")
+    # Biological Assembly - MMCIF format
+    downloadpdb("5a9z", pdb_dir=pdb_dir, file_format=MMCIF, ba_number=1)
+    pdbpath = joinpath(pdb_dir,"5A9Z_ba1$(pdbextension[MMCIF])")
     @test isfile(pdbpath) && filesize(pdbpath) > 0
     # Download multiple PDB files
     pdbidlist = ["1ent","1en2"]
