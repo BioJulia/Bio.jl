@@ -15,7 +15,7 @@ end
 The `Bio.Structure` module provides functionality to manipulate macromolecular structures, and in particular to read and write [Protein Data Bank](http://www.rcsb.org/pdb/home/home.do) (PDB) files. It is designed to be used for standard structural analysis tasks, as well as acting as a platform on which others can build to create more specific tools. It compares favourably in terms of performance to other PDB parsers - see some [benchmarks](https://github.com/jgreener64/pdb-benchmarks).
 
 
-## Parsing PDB files
+## Basics
 
 To download a PDB file:
 
@@ -41,7 +41,7 @@ Number of hydrogens         -  0
 Number of disordered atoms  -  27
 ```
 
-**Note** : Refer [Downloading PDB files](#downloading-pdb-files) and [Reading PDB files](#reading-pdb-files) sections for more options.
+**Note** : Refer to [Downloading PDB files](#downloading-pdb-files) and [Reading PDB files](#reading-pdb-files) sections for more options.
 
 The elements of `struc` can be accessed as follows:
 
@@ -274,22 +274,22 @@ Various options can be set through optional keyword arguments when downloading P
 
 - To parse a existing PDB file into a Structure-Model-Chain-Residue-Atom framework:
 
-    ```julia
-    julia> struc = read("/path/to/pdb/file.pdb", PDB)
-    Bio.Structure.ProteinStructure
-    Name                        -  1EN2.pdb
-    Number of models            -  1
-    Chain(s)                    -  A
-    Number of residues          -  85
-    Number of point mutations   -  5
-    Number of other molecules   -  5
-    Number of water molecules   -  76
-    Number of atoms             -  614
-    Number of hydrogens         -  0
-    Number of disordered atoms  -  27
-    ```
+```julia
+julia> struc = read("/path/to/pdb/file.pdb", PDB)
+Bio.Structure.ProteinStructure
+Name                        -  1EN2.pdb
+Number of models            -  1
+Chain(s)                    -  A
+Number of residues          -  85
+Number of point mutations   -  5
+Number of other molecules   -  5
+Number of water molecules   -  76
+Number of atoms             -  614
+Number of hydrogens         -  0
+Number of disordered atoms  -  27
+```
 
-    Various options can be set through optional keyword arguments when parsing a PDB file as follows:
+Various options can be set through optional keyword arguments when parsing a PDB file as follows:
 
 | Keyword Argument                             | Description                                                                     |
 | :------------------------------------------- | :------------------------------------------------------------------------------ |
@@ -298,64 +298,36 @@ Various options can be set through optional keyword arguments when downloading P
 | `read_std_atoms::Bool=true`                  | If set false, then standard ATOM records wont be parsed                         |
 | `read_het_atoms::Bool=true`                  | If set false, then HETATOM records wont be parsed                               |
 
-- To parse a PDB file by specifying the PDB ID and PDB directory into a Structure-Model-Chain-Residue-Atom framework:
+- To parse a PDB file by specifying the PDB ID and PDB directory into a Structure-Model-Chain-Residue-Atom framework (file name must be in upper case, e.g. "1EN2.pdb")
 
-    ```julia
-    struc = readpdb("1EN2", pdb_dir="/path/to/pdb/directory")
-    ```
+The function `readpdb` provides an uniform way to download and read PDB files. For example:
 
-    **Note:** This requires the PDB file name to be uppercase PDB ID. Example : "1EN2.pdb"
+```julia
+struc = readpdb("1EN2", pdb_dir="/path/to/pdb/directory")
+```
 
-    The function `readpdb` provides an uniform way to download and read PDB files. For example:
-
-    ```julia
-    julia> downloadpdb("1EN2",pdb_dir="/path/to/pdb/directory")
-    INFO: Downloading PDB : 1EN2
-    julia> struc = readpdb("1EN2",pdb_dir="/path/to/pdb/directory")
-    Bio.Structure.ProteinStructure
-    Name                        -  1EN2.pdb
-    Number of models            -  1
-    Chain(s)                    -  A
-    Number of residues          -  85
-    Number of point mutations   -  5
-    Number of other molecules   -  5
-    Number of water molecules   -  76
-    Number of atoms             -  614
-    Number of hydrogens         -  0
-    Number of disordered atoms  -  27
-    ```
-
-    Various options can be set for `readpdb()` through optional keyword arguments when parsing a PDB file as follows:
-
-| Keyword Argument                             | Description                                                                     |
-| :------------------------------------------- | :------------------------------------------------------------------------------ |
-| `pdb_dir::AbstractString=pwd()`              | The directory from which the PDB file is read                                   |
-| `ba_number::Integer=0`                       | If set > 0 reads the respective biological assembly; by default reads PDB file  |
-| `structure_name::AbstractString="$pdbid.pdb"`| The name of the PDB Structure read. Defaults to "< PDBID >.pdb"                 |
-| `remove_disorder::Bool=false`                | If set true, then disordered atoms wont be parsed                               |
-| `read_std_atoms::Bool=true`                  | If set false, then standard ATOM records wont be parsed                         |
-| `read_het_atoms::Bool=true`                  | If set false, then HETATOM records wont be parsed                               |
+The same keyword arguments are taken as `read` above, plus `pdb_dir` and `ba_number`.
 
 - To download and parse a PDB file into a Structure-Model-Chain-Residue-Atom framework in a single line:
 
-    ```julia
-    julia> struc = retrievepdb("1ALW", pdb_dir="path/to/pdb/directory")
-    INFO: Downloading PDB : 1ALW
-    INFO: Parsing the PDB file...
-    Bio.Structure.ProteinStructure
-    Name                        -  1ALW.pdb
-    Number of models            -  1
-    Chain(s)                    -  AB
-    Number of residues          -  346
-    Number of point mutations   -  0
-    Number of other molecules   -  10
-    Number of water molecules   -  104
-    Number of atoms             -  2790
-    Number of hydrogens         -  0
-    Number of disordered atoms  -  0
-    ```
+```julia
+julia> struc = retrievepdb("1ALW", pdb_dir="path/to/pdb/directory")
+INFO: Downloading PDB : 1ALW
+INFO: Parsing the PDB file...
+Bio.Structure.ProteinStructure
+Name                        -  1ALW.pdb
+Number of models            -  1
+Chain(s)                    -  AB
+Number of residues          -  346
+Number of point mutations   -  0
+Number of other molecules   -  10
+Number of water molecules   -  104
+Number of atoms             -  2790
+Number of hydrogens         -  0
+Number of disordered atoms  -  0
+```
 
-    Various options can be set through optional keyword arguments when downloading and parsing a PDB file as follows:
+Various options can be set through optional keyword arguments when downloading and parsing a PDB file as follows:
 
 | Keyword Argument                             | Description                                                                                                      |
 | :--------------------------------------------| :--------------------------------------------------------------------------------------------------------------- |
@@ -388,11 +360,11 @@ writepdb("1EN2_out.pdb", struc, backboneselector)
 
 - To download the entire RCSB PDB database in your preferred file format:
 
-    ```julia
-    downloadentirepdb(pdb_dir="path/to/pdb/directory/", file_format=MMTF, overwrite=false)
-    ```
+```julia
+downloadentirepdb(pdb_dir="path/to/pdb/directory/", file_format=MMTF, overwrite=false)
+```
 
-    The keyword arguments are described below:
+The keyword arguments are described below:
 
 | Keyword Argument                 | Description                                                                                              |
 | :------------------------------- | :------------------------------------------------------------------------------------------------------- |
@@ -402,21 +374,25 @@ writepdb("1EN2_out.pdb", struc, backboneselector)
 
 - To update your local PDB directory based on the weekly status list of new, modified and obsolete PDB files from RCSB Server:
 
-    ```julia
-    updatelocalpdb(pdb_dir="path/to/pdb/directory/", file_format=MMTF)
-    ```
+```julia
+updatelocalpdb(pdb_dir="path/to/pdb/directory/", file_format=MMTF)
+```
 
-    The `file_format` specifies the format of the PDB files present in the local PDB directory. Obsolete PDB files are stored in the autogenerated `obsolete` directory inside the specified local PDB directory.
+The `file_format` specifies the format of the PDB files present in the local PDB directory. Obsolete PDB files are stored in the autogenerated `obsolete` directory inside the specified local PDB directory.
 
 - To download all obsolete PDB files from RCSB Server:
 
-    ```julia
-    downloadallobsoletepdb(;obsolete_dir="/path/to/obsolete/directory/", file_format=MMCIF, overwrite=false)
-    ```
+```julia
+downloadallobsoletepdb(;obsolete_dir="/path/to/obsolete/directory/", file_format=MMCIF, overwrite=false)
+```
 
-    The `file_format` specfies the format in which the PDB files are downloaded; Options are PDB, PDBXML, MMCIF or MMTF.
+The `file_format` specfies the format in which the PDB files are downloaded; Options are PDB, PDBXML, MMCIF or MMTF.
 
-    If `overwrite=true`, the existing PDB files in obsolete directory will be overwritten by the newly downloaded ones.
+If `overwrite=true`, the existing PDB files in obsolete directory will be overwritten by the newly downloaded ones.
+
+- To maintain a local copy of the entire RCSB PDB Database
+
+Run the `downloadentirepdb` function once to download all PDB files and setup a CRON job or similar to run `updatelocalpdb` function once in every week to keep the local PDB directory up to date with the RCSB Server.
 
 There are a few more functions that may help.
 
@@ -427,14 +403,6 @@ There are a few more functions that may help.
 | `pdbrecentchanges` | Added, modified and obsolete PDB lists from the recent RCSB weekly status files | `Tuple{Array{String,1},Array{String,1},Array{String,1}}` |
 | `pdbobsoletelist`  | List of all obsolete PDB entries in the RCSB server                             | `Array{String,1}`                                        |
 
-
-## Maintaining a local copy of the entire RCSB PDB Database
-
-BioJulia provides the feature to download and update your local copy of the entire RCSB PDB Database in your preferred file format.
-
-Run the `downloadentirepdb` function once to download all PDB files and setup a CRON job or similar to run `updatelocalpdb` function once in every week to keep the local PDB directory up to date with the RCSB Server.
-
-**Note** : Refer the [RCSB PDB Utility Functions](#rcsb-pdb-utility-functions) section to know more about `downloadentirepdb` and `updatelocalpdb` functions.
 
 ## Examples
 
