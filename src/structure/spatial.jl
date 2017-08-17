@@ -9,6 +9,9 @@ export
     omegaangle,
     phiangle,
     psiangle,
+    omegaangles,
+    phiangles,
+    psiangles,
     ramachandranangles,
     contactmap
 
@@ -261,6 +264,91 @@ function psiangle(chain::Chain, res_id::Union{Integer, String})
         throw(ArgumentError("$res_id is an invalid residue ID"))
     end
     return psiangle(res_list[i], res_list[i + 1])
+end
+
+"""
+Calculate vector of omega, psi or phi angles for a `StructuralElementOrList`.
+"""
+function omegaangles(el::StructuralElementOrList)
+    res_list = collectresidues(el, standardselector)
+    if length(res_list) < 2
+        throw(ArgumentError("At least 2 residues required to calculate dihedral angles"))
+    end
+
+    omega_angles = Float64[]
+
+    for i in 2:length(res_list)
+        res = res_list[i]
+        res_prev = res_list[i-1]
+        if sequentialresidues(res_prev, res)
+            try
+                omega_angle = omegaangle(res, res_prev)
+                push!(omega_angles, omega_angle)
+            catch ex
+                isa(ex, ArgumentError) || rethrow()
+                push!(omega_angles, NaN)
+            end
+        else
+            push!(omega_angles, NaN)
+        end
+    end
+
+    return omega_angles
+end
+
+function phiangles(el::StructuralElementOrList)
+    res_list = collectresidues(el, standardselector)
+    if length(res_list) < 2
+        throw(ArgumentError("At least 2 residues required to calculate dihedral angles"))
+    end
+
+    phi_angles = Float64[]
+
+    for i in 2:length(res_list)
+        res = res_list[i]
+        res_prev = res_list[i-1]
+        if sequentialresidues(res_prev, res)
+            try
+                phi_angle = phiangle(res, res_prev)
+                push!(phi_angles, phi_angle)
+            catch ex
+                isa(ex, ArgumentError) || rethrow()
+                push!(phi_angles, NaN)
+            end
+        else
+            push!(phi_angles, NaN)
+        end
+    end
+
+    return phi_angles
+end
+
+function psiangles(el::StructuralElementOrList)
+    res_list = collectresidues(el, standardselector)
+
+    if length(res_list) < 2
+        throw(ArgumentError("At least 2 residues required to calculate dihedral angles"))
+    end
+
+    psi_angles = Float64[]
+
+    for i in 1:length(res_list)-1
+        res = res_list[i]
+        res_next = res_list[i+1]
+        if sequentialresidues(res, res_next)
+            try
+                psi_angle = psiangle(res, res_next)
+                push!(psi_angles, psi_angle)
+            catch ex
+                isa(ex, ArgumentError) || rethrow()
+                push!(psi_angles, NaN)
+            end
+        else
+            push!(psi_angles, NaN)
+        end
+    end
+
+    return psi_angles
 end
 
 """
