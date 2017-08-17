@@ -6,11 +6,13 @@ import BioSequences
 import GenomicFeatures
 import BioAlignments
 import Phylogenies
+import BioStructures
 
 const Seq = BioSequences
 const Intervals = GenomicFeatures
 const Align = BioAlignments
 const Phylo = Phylogenies
+const Structure = BioStructures
 
 include("declare.jl")
 include("Exceptions.jl")
@@ -26,7 +28,6 @@ include("util/tokenize.jl")
 include("util/indexing.jl")
 include("util/windows.jl")
 include("var/Var.jl")
-include("structure/Structure.jl")
 include("tools/Tools.jl")
 
 end  # module Bio

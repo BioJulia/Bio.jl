@@ -2,7 +2,6 @@
 available_targets = [
     "var",
     "services",
-    "structure",
     "tools",
     "util"
 ]
