@@ -186,14 +186,17 @@ function omegaangle(res::AbstractResidue, res_prev::AbstractResidue)
     return dihedralangle(res_prev["CA"], res_prev["C"], res["N"], res["CA"])
 end
 
-function omegaangle(chain::Chain, pos::Integer)
-    if !haskey(residues(chain), string(pos))
-        throw(ArgumentError("$pos is an invalid index"))
-    elseif !haskey(residues(chain), string(pos - 1))
-        throw(ArgumentError("$(pos - 1) is an invalid index"))
+function omegaangle(chain::Chain, res_id::Union{Integer, String})
+    inds = find(r -> resid(r)==string(res_id), chain)
+    if length(inds) != 1
+        throw(ArgumentError("$res_id is an invalid residue ID"))
     end
-
-    return omegaangle(chain[pos], chain[pos - 1])
+    res_list = collect(chain)
+    i = inds[1]
+    if i == 1 || !sequentialresidues(res_list[i - 1], res_list[i])
+        throw(ArgumentError("$res_id is an invalid residue ID"))
+    end
+    return omegaangle(res_list[i], res_list[i - 1])
 end
 
 """
@@ -215,14 +218,17 @@ function phiangle(res::AbstractResidue, res_prev::AbstractResidue)
     return dihedralangle(res_prev["C"], res["N"], res["CA"], res["C"])
 end
 
-function phiangle(chain::Chain, pos::Integer)
-    if !haskey(residues(chain), string(pos))
-        throw(ArgumentError("$pos is an invalid index"))
-    elseif !haskey(residues(chain), string(pos - 1))
-        throw(ArgumentError("$(pos - 1) is an invalid index"))
+function phiangle(chain::Chain, res_id::Union{Integer, String})
+    inds = find(r -> resid(r)==string(res_id), chain)
+    if length(inds) != 1
+        throw(ArgumentError("$res_id is an invalid residue ID"))
     end
-
-    return phiangle(chain[pos], chain[pos - 1])
+    res_list = collect(chain)
+    i = inds[1]
+    if i == 1 || !sequentialresidues(res_list[i - 1], res_list[i])
+        throw(ArgumentError("$res_id is an invalid residue ID"))
+    end
+    return phiangle(res_list[i], res_list[i - 1])
 end
 
 """
@@ -244,14 +250,17 @@ function psiangle(res::AbstractResidue, res_next::AbstractResidue)
     return dihedralangle(res["N"], res["CA"], res["C"], res_next["N"])
 end
 
-function psiangle(chain::Chain, pos::Integer)
-    if !haskey(residues(chain), string(pos))
-        throw(ArgumentError("$pos is an invalid index"))
-    elseif !haskey(residues(chain), string(pos + 1))
-        throw(ArgumentError("$(pos + 1) is an invalid index"))
+function psiangle(chain::Chain, res_id::Union{Integer, String})
+    inds = find(r -> resid(r)==string(res_id), chain)
+    if length(inds) != 1
+        throw(ArgumentError("$res_id is an invalid residue ID"))
     end
-
-    return psiangle(chain[pos], chain[pos + 1])
+    res_list = collect(chain)
+    i = inds[1]
+    if i == length(res_list) || !sequentialresidues(res_list[i], res_list[i + 1])
+        throw(ArgumentError("$res_id is an invalid residue ID"))
+    end
+    return psiangle(res_list[i], res_list[i + 1])
 end
 
 """
