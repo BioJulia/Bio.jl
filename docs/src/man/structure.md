@@ -219,17 +219,20 @@ Various functions are provided to calculate spatial quantities for proteins:
 | `sqdistance`         | Minimum square distance between two elements                                                    |
 | `bondangle`          | Angle between three atoms                                                                       |
 | `dihedralangle`      | Dihedral angle defined by four atoms                                                            |
-| `omegaangle`         | Omega angle between a residue and the previous residue                                          |
-| `phiangle`           | Phi angle between a residue and the previous residue                                            |
-| `psiangle`           | Psi angle between a residue and the next residue                                                |
+| `omegaangle`         | Omega dihedral angle between a residue and the previous residue                                 |
+| `phiangle`           | Phi dihedral angle between a residue and the previous residue                                   |
+| `psiangle`           | Psi dihedral angle between a residue and the next residue                                       |
+| `omegaangles`        | `Vector` of omega dihedral angles of an element                                                 |
+| `phiangles`          | `Vector` of phi dihedral angles of an element                                                   |
+| `psiangles`          | `Vector` of psi dihedral angles of an element                                                   |
 | `ramachandranangles` | `Vector`s of phi and psi angles of an element                                                   |
 | `contactmap`         | Contact map of two elements, or one element with itself                                         |
 | `rmsd`               | RMSD between two elements of the same size - assumes they are superimposed                      |
 | `displacements`      | `Vector` of displacements between two elements of the same size - assumes they are superimposed |
 
-The omega, phi and psi angle functions can take either a pair of residues or a chain and a position. Omega and phi will
-measure the angle between the residue at the given index and the one before. Psiangle measures between the given index
-and the one after.
+The `omegaangle`, `phiangle` and `psiangle` functions can take either a pair of residues or a chain and a position.
+The `omegaangle` and `phiangle` functions measure the angle between the residue at the given index and the one before.
+The `psiangle` function measures between the given index and the one after.
 
 For example:
 

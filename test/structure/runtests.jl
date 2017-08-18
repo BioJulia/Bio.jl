@@ -1488,15 +1488,15 @@ end
     @test sum(map(x -> Int(isnan(x)), psis)) == 243
     @test_throws ArgumentError ramachandranangles(struc_1AKE['A'][10]["CA"])
 
-    phis = phiangles(struc_1AKE['A'])
-    psis = psiangles(struc_1AKE['A'])
-    omegas = omegaangles(struc_1AKE['A'])
-    @test length(phis) == countresidues(struc_1AKE['A'], standardselector) - 1
+    phis = phiangles(struc_1AKE['A'], standardselector)
+    psis = psiangles(struc_1AKE['A'], standardselector)
+    omegas = omegaangles(struc_1AKE['A'], standardselector)
+    @test length(phis) == countresidues(struc_1AKE['A'], standardselector)
     @test length(phis) == length(psis)
     @test length(phis) == length(omegas)
     @test isapprox(psis[10], psiangle(struc_1AKE['A'], 10), atol=1e-5)
-    @test isapprox(phis[10], phiangle(struc_1AKE['A'], 11), atol=1e-5)
-    @test isapprox(omegas[10], omegaangle(struc_1AKE['A'], 11), atol=1e-5)
+    @test isapprox(phis[10], phiangle(struc_1AKE['A'], 10), atol=1e-5)
+    @test isapprox(omegas[10], omegaangle(struc_1AKE['A'], 10), atol=1e-5)
 
     # Test contactmap
     cas = collectatoms(struc_1AKE, calphaselector)[1:10]
