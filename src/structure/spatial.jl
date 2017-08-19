@@ -195,12 +195,10 @@ function omegaangle(chain::Chain, res_id::Union{Integer, AbstractString})
         throw(ArgumentError("$res_id is an invalid residue ID"))
     end
     i = inds[1]
-    res = chain[resids(chain)[i]]
-    res_prev = chain[resids(chain)[i-1]]
-    if i == 1 || !sequentialresidues(res_prev, res)
+    if i == 1 || !sequentialresidues(chain[resids(chain)[i-1]], chain[resids(chain)[i]])
         throw(ArgumentError("$res_id is an invalid residue ID"))
     end
-    return omegaangle(res, res_prev)
+    return omegaangle(chain[resids(chain)[i]], chain[resids(chain)[i-1]])
 end
 
 """
@@ -228,12 +226,10 @@ function phiangle(chain::Chain, res_id::Union{Integer, AbstractString})
         throw(ArgumentError("$res_id is an invalid residue ID"))
     end
     i = inds[1]
-    res = chain[resids(chain)[i]]
-    res_prev = chain[resids(chain)[i-1]]
-    if i == 1 || !sequentialresidues(res_prev, res)
+    if i == 1 || !sequentialresidues(chain[resids(chain)[i-1]], chain[resids(chain)[i]])
         throw(ArgumentError("$res_id is an invalid residue ID"))
     end
-    return phiangle(res, res_prev)
+    return phiangle(chain[resids(chain)[i]], chain[resids(chain)[i-1]])
 end
 
 """
@@ -261,12 +257,10 @@ function psiangle(chain::Chain, res_id::Union{Integer, AbstractString})
         throw(ArgumentError("$res_id is an invalid residue ID"))
     end
     i = inds[1]
-    res = chain[resids(chain)[i]]
-    res_next = chain[resids(chain)[i+1]]
-    if i == length(chain) || !sequentialresidues(res, res_next)
+    if i == 1 || !sequentialresidues(chain[resids(chain)[i]], chain[resids(chain)[i+1]])
         throw(ArgumentError("$res_id is an invalid residue ID"))
     end
-    return psiangle(res, res_next)
+    return psiangle(chain[resids(chain)[i]], chain[resids(chain)[i+1]])
 end
 
 """
