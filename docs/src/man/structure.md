@@ -207,13 +207,20 @@ Various functions are provided to calculate spatial quantities for proteins:
 | `sqdistance`         | Minimum square distance between two elements                                                    |
 | `bondangle`          | Angle between three atoms                                                                       |
 | `dihedralangle`      | Dihedral angle defined by four atoms                                                            |
-| `omegaangle`         | Omega angle between a residue and the previous residue                                          |
-| `phiangle`           | Phi angle between a residue and the previous residue                                            |
-| `psiangle`           | Psi angle between a residue and the next residue                                                |
+| `omegaangle`         | Omega dihedral angle between a residue and the previous residue                                 |
+| `phiangle`           | Phi dihedral angle between a residue and the previous residue                                   |
+| `psiangle`           | Psi dihedral angle between a residue and the next residue                                       |
+| `omegaangles`        | `Vector` of omega dihedral angles of an element                                                 |
+| `phiangles`          | `Vector` of phi dihedral angles of an element                                                   |
+| `psiangles`          | `Vector` of psi dihedral angles of an element                                                   |
 | `ramachandranangles` | `Vector`s of phi and psi angles of an element                                                   |
 | `contactmap`         | Contact map of two elements, or one element with itself                                         |
 | `rmsd`               | RMSD between two elements of the same size - assumes they are superimposed                      |
 | `displacements`      | `Vector` of displacements between two elements of the same size - assumes they are superimposed |
+
+The `omegaangle`, `phiangle` and `psiangle` functions can take either a pair of residues or a chain and a position.
+The `omegaangle` and `phiangle` functions measure the angle between the residue at the given index and the one before.
+The `psiangle` function measures between the given index and the one after.
 
 For example:
 
@@ -228,6 +235,9 @@ julia> rad2deg(dihedralangle(struc['A'][50]["N"], struc['A'][50]["CA"], struc['A
 -177.38288114072924
 
 julia> rad2deg(psiangle(struc['A'][50], struc['A'][51]))
+-177.38288114072924
+
+julia> rad2deg(psiangle(struc['A'], 50))
 -177.38288114072924
 ```
 

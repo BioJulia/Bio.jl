@@ -9,6 +9,9 @@ export
     omegaangle,
     phiangle,
     psiangle,
+    omegaangles,
+    phiangles,
+    psiangles,
     ramachandranangles,
     contactmap
 
@@ -167,11 +170,11 @@ function dihedralangle(vec_a::Vector{Float64},
         dot(cross(vec_a, vec_b), cross(vec_b, vec_c)))
 end
 
-
 """
-Calculate the omega angle in radians for an `AbstractResidue`. Arguments are the
-residue (atoms "N" and "CA" required) and the previous residue (atoms "CA" and
-"C" required).
+Calculate the omega angle in radians for an `AbstractResidue`. Arguments can
+either be a residue and the previous residue or a chain and the position as
+a residue ID. The first residue (or one at the given index) requires the
+atoms "N" and "CA" and the previous residue requires the atoms "CA" and "C".
 """
 function omegaangle(res::AbstractResidue, res_prev::AbstractResidue)
     if !("CA" in atomnames(res_prev))
@@ -186,10 +189,23 @@ function omegaangle(res::AbstractResidue, res_prev::AbstractResidue)
     return dihedralangle(res_prev["CA"], res_prev["C"], res["N"], res["CA"])
 end
 
+function omegaangle(chain::Chain, res_id::Union{Integer, AbstractString})
+    inds = find(r -> r == string(res_id), resids(chain))
+    if length(inds) != 1
+        throw(ArgumentError("$res_id is an invalid residue ID"))
+    end
+    i = inds[1]
+    if i == 1 || !sequentialresidues(chain[resids(chain)[i-1]], chain[resids(chain)[i]])
+        throw(ArgumentError("$res_id is an invalid residue ID"))
+    end
+    return omegaangle(chain[resids(chain)[i]], chain[resids(chain)[i-1]])
+end
+
 """
-Calculate the phi angle in radians for an `AbstractResidue`. Arguments are the
-residue (atoms "N", "CA" and "C" required) and the previous residue (atom "C"
-required).
+Calculate the phi angle in radians for an `AbstractResidue`. Arguments can
+either be a residue and the previous residue or a chain and the position as
+a residue ID. The first residue (or one at the given index) requires the
+atoms "N", "CA" and "C" and the previous residue requires the atom "C".
 """
 function phiangle(res::AbstractResidue, res_prev::AbstractResidue)
     if !("C"  in atomnames(res_prev))
@@ -204,10 +220,23 @@ function phiangle(res::AbstractResidue, res_prev::AbstractResidue)
     return dihedralangle(res_prev["C"], res["N"], res["CA"], res["C"])
 end
 
+function phiangle(chain::Chain, res_id::Union{Integer, AbstractString})
+    inds = find(r -> r == string(res_id), resids(chain))
+    if length(inds) != 1
+        throw(ArgumentError("$res_id is an invalid residue ID"))
+    end
+    i = inds[1]
+    if i == 1 || !sequentialresidues(chain[resids(chain)[i-1]], chain[resids(chain)[i]])
+        throw(ArgumentError("$res_id is an invalid residue ID"))
+    end
+    return phiangle(chain[resids(chain)[i]], chain[resids(chain)[i-1]])
+end
+
 """
-Calculate the psi angle in radians for an `AbstractResidue`. Arguments are the
-residue (atoms "N", "CA" and "C" required) and the next residue (atom "N"
-required).
+Calculate the psi angle in radians for an `AbstractResidue`. Arguments can
+either be a residue and the previous residue or a chain and the position as
+a residue ID. The first residue (or one at the given index) requires the
+atoms "N", "CA" and "C" and the next residue requires the atom "N".
 """
 function psiangle(res::AbstractResidue, res_next::AbstractResidue)
     if !("N"  in atomnames(res))
@@ -222,23 +251,69 @@ function psiangle(res::AbstractResidue, res_next::AbstractResidue)
     return dihedralangle(res["N"], res["CA"], res["C"], res_next["N"])
 end
 
+function psiangle(chain::Chain, res_id::Union{Integer, AbstractString})
+    inds = find(r -> r == string(res_id), resids(chain))
+    if length(inds) != 1
+        throw(ArgumentError("$res_id is an invalid residue ID"))
+    end
+    i = inds[1]
+    if i == 1 || !sequentialresidues(chain[resids(chain)[i]], chain[resids(chain)[i+1]])
+        throw(ArgumentError("$res_id is an invalid residue ID"))
+    end
+    return psiangle(chain[resids(chain)[i]], chain[resids(chain)[i+1]])
+end
 
 """
-Calculate the `Vector`s of phi and psi angles of a `StructuralElementOrList`.
+Calculate the `Vector` of omega angles of a `StructuralElementOrList`.
 The vectors have `NaN` for residues where an angle cannot be calculated,
 e.g. due to missing atoms or lack of an adjacent residue.
 Additional arguments are residue selector functions - only residues that return
 `true` from the functions are retained.
 """
-function ramachandranangles(el::StructuralElementOrList,
+function omegaangles(el::StructuralElementOrList,
                     residue_selectors::Function...)
     res_list = collectresidues(el, residue_selectors...)
     if length(res_list) < 2
-        throw(ArgumentError("Multiple residues required to calculate Ramachandran angles"))
+        throw(ArgumentError("At least 2 residues required to calculate dihedral angles"))
     end
-    phi_angles = Float64[NaN] # First res has no previous res
-    psi_angles = Float64[]
-    # Phi angles
+
+    omega_angles = Float64[NaN]
+
+    for i in 2:length(res_list)
+        res = res_list[i]
+        res_prev = res_list[i-1]
+        if sequentialresidues(res_prev, res)
+            try
+                omega_angle = omegaangle(res, res_prev)
+                push!(omega_angles, omega_angle)
+            catch ex
+                isa(ex, ArgumentError) || rethrow()
+                push!(omega_angles, NaN)
+            end
+        else
+            push!(omega_angles, NaN)
+        end
+    end
+
+    return omega_angles
+end
+
+"""
+Calculate the `Vector` of phi angles of a `StructuralElementOrList`.
+The vectors have `NaN` for residues where an angle cannot be calculated,
+e.g. due to missing atoms or lack of an adjacent residue.
+Additional arguments are residue selector functions - only residues that return
+`true` from the functions are retained.
+"""
+function phiangles(el::StructuralElementOrList,
+                    residue_selectors::Function...)
+    res_list = collectresidues(el, residue_selectors...)
+    if length(res_list) < 2
+        throw(ArgumentError("At least 2 residues required to calculate dihedral angles"))
+    end
+
+    phi_angles = Float64[NaN]
+
     for i in 2:length(res_list)
         res = res_list[i]
         res_prev = res_list[i-1]
@@ -254,7 +329,27 @@ function ramachandranangles(el::StructuralElementOrList,
             push!(phi_angles, NaN)
         end
     end
-    # Psi angles
+
+    return phi_angles
+end
+
+"""
+Calculate the `Vector` of psi angles of a `StructuralElementOrList`.
+The vectors have `NaN` for residues where an angle cannot be calculated,
+e.g. due to missing atoms or lack of an adjacent residue.
+Additional arguments are residue selector functions - only residues that return
+`true` from the functions are retained.
+"""
+function psiangles(el::StructuralElementOrList,
+                    residue_selectors::Function...)
+    res_list = collectresidues(el, residue_selectors...)
+
+    if length(res_list) < 2
+        throw(ArgumentError("At least 2 residues required to calculate dihedral angles"))
+    end
+
+    psi_angles = Float64[]
+
     for i in 1:length(res_list)-1
         res = res_list[i]
         res_next = res_list[i+1]
@@ -270,8 +365,22 @@ function ramachandranangles(el::StructuralElementOrList,
             push!(psi_angles, NaN)
         end
     end
-    push!(psi_angles, NaN) # Last res has no next res
-    return phi_angles, psi_angles
+
+    push!(psi_angles, NaN)
+
+    return psi_angles
+end
+
+"""
+Calculate the `Vector`s of phi and psi angles of a `StructuralElementOrList`.
+The vectors have `NaN` for residues where an angle cannot be calculated,
+e.g. due to missing atoms or lack of an adjacent residue.
+Additional arguments are residue selector functions - only residues that return
+`true` from the functions are retained.
+"""
+function ramachandranangles(el::StructuralElementOrList,
+                    residue_selectors::Function...)
+    return phiangles(el, residue_selectors...), psiangles(el, residue_selectors...)
 end
 
 
