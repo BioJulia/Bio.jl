@@ -94,15 +94,18 @@ function pdbstatuslist(url::AbstractString)
     tempfilepath = tempname()
     try
         download(url, tempfilepath)
-        open(tempfilepath) do input
-            for line in eachline(input)
-                # The first 4 characters in the line is the PDB ID
-                pdbid = uppercase(line[1:4])
-                # Check PDB ID is 4 characters long and only consits of alphanumeric characters
-                if !ismatch(r"^[a-zA-Z0-9]{4}$", pdbid)
-                    throw(ArgumentError("Not a valid PDB ID: \"$pdbid\""))
+        # Some operating systems don't create a file if the download is empty
+        if isfile(tempfilepath)
+            open(tempfilepath) do input
+                for line in eachline(input)
+                    # The first 4 characters in the line is the PDB ID
+                    pdbid = uppercase(line[1:4])
+                    # Check PDB ID is 4 characters long and only consits of alphanumeric characters
+                    if !ismatch(r"^[a-zA-Z0-9]{4}$", pdbid)
+                        throw(ArgumentError("Not a valid PDB ID: \"$pdbid\""))
+                    end
+                    push!(statuslist,pdbid)
                 end
-                push!(statuslist,pdbid)
             end
         end
     finally
