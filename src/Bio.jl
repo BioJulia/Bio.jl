@@ -6,11 +6,13 @@ import BioSequences
 import GenomicFeatures
 import BioAlignments
 import Phylogenies
+import GeneticVariation
 
 const Seq = BioSequences
 const Intervals = GenomicFeatures
 const Align = BioAlignments
 const Phylo = Phylogenies
+const Var = GeneticVariation
 
 include("declare.jl")
 include("Exceptions.jl")
@@ -25,7 +27,6 @@ include("services/Services.jl")
 include("util/tokenize.jl")
 include("util/indexing.jl")
 include("util/windows.jl")
-include("var/Var.jl")
 include("structure/Structure.jl")
 include("tools/Tools.jl")
 
