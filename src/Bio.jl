@@ -6,6 +6,7 @@ import BioSequences
 import GenomicFeatures
 import BioAlignments
 import Phylogenies
+import GeneticVariation
 
 const Seq = BioSequences
 const Intervals = GenomicFeatures
