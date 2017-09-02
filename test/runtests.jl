@@ -1,7 +1,6 @@
 # all test targets
 available_targets = [
     "services",
-    "structure",
     "tools",
     "util"
 ]
