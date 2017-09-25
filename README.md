@@ -2,6 +2,9 @@
 
 _The Bioinformatics and Computation Biology infrastructure for the Julia language._
 
+# Bio.jl is currently undergoing restructuring and is not recommended for julia v0.6 users at this time, ask us on [![][gitter-img]][gitter-url] for more info, or check out this [PR](https://github.com/BioJulia/Bio.jl/issues/425). 
+
+
 | **Chat** | **Documentation** | **Build Status** |
 |:--------:|:-----------------:|:----------------:|
 | [![][gitter-img]][gitter-url] | [![][docs-stable-img]][docs-stable-url] [![][docs-latest-img]][docs-latest-url] | [![][travis-img]][travis-url] [![][appveyor-img]][appveyor-url] [![][codecov-img]][codecov-url] |
