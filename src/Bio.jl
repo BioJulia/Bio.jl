@@ -16,14 +16,6 @@ const Phylo = Phylogenies
 const Structure = BioStructures
 const Var = GeneticVariation
 
-include("declare.jl")
-include("Exceptions.jl")
-include("IO.jl")
-include("Mem.jl")
-include("Ragel.jl")
-include("ReaderHelper.jl")
-include("RecordHelper.jl")
-include("StringFields.jl")
 include("util/Util.jl")
 include("services/Services.jl")
 include("util/tokenize.jl")
