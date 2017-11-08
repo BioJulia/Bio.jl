@@ -1,21 +1,8 @@
-julia 0.5
-Automa 0.1
-BGZFStreams 0.1
+julia 0.6
 BioAlignments
 BioSymbols 1.1
 BioSequences 0.6
 BioStructures
-BufferedStreams 0.3
-ColorTypes 0.2
-Combinatorics
-Distributions
-EzXML 0.2
 GenomicFeatures
 GeneticVariation
-IndexableBitVectors 0.1.1
-IntervalTrees 0.2
-JSON
-Libz 0.2
-Requests
-URIParser
 Phylogenies
