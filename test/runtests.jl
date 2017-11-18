@@ -1,8 +1,6 @@
 # all test targets
 available_targets = [
-    "services",
-    "tools",
-    "util"
+    "tools"
 ]
 
 if isempty(ARGS)
@@ -15,8 +13,6 @@ else
         error("there are invalid test targets: ", join(invalids, ", "))
     end
 end
-
-include("TestFunctions.jl")
 
 for target in targets
     include("$target/runtests.jl")

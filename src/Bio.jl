@@ -18,10 +18,6 @@ const Structure = BioStructures
 const Var = GeneticVariation
 const Services = BioServices
 
-include("util/Util.jl")
-include("util/tokenize.jl")
-include("util/indexing.jl")
-include("util/windows.jl")
 include("tools/Tools.jl")
 
 end  # module Bio
