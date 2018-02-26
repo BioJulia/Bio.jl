@@ -5,9 +5,9 @@ _The Bioinformatics and Computation Biology infrastructure for the Julia languag
 # Bio.jl is currently undergoing restructuring and is not recommended for julia v0.6 users at this time, ask us on [![][gitter-img]][gitter-url] for more info, or check out this [PR](https://github.com/BioJulia/Bio.jl/issues/425). 
 
 
-| **Chat** | **Documentation** | **Build Status** |
-|:--------:|:-----------------:|:----------------:|
-| [![][gitter-img]][gitter-url] | [![][docs-stable-img]][docs-stable-url] [![][docs-latest-img]][docs-latest-url] | [![][travis-img]][travis-url] [![][appveyor-img]][appveyor-url] [![][codecov-img]][codecov-url] |
+| **Chat** | **Documentation** | **Build Status** | **Support** |
+|:--------:|:-----------------:|:----------------:|:----------------:|
+| [![][gitter-img]][gitter-url] | [![][docs-stable-img]][docs-stable-url] [![][docs-latest-img]][docs-latest-url] | [![][travis-img]][travis-url] [![][appveyor-img]][appveyor-url] [![][codecov-img]][codecov-url] | [![Backers on Open Collective](oc-backers-img)](#backers)[![Sponsors on Open Collective](oc-sponsors-img)](#sponsors) |
 
 
 ## Description
@@ -54,6 +54,7 @@ developed as submodules:
 
 Bio.jl is a registered package in the official package management system and can
 be installed with a command:
+
 ```julia
 julia> Pkg.add("Bio")
 
@@ -85,6 +86,29 @@ site](https://discourse.julialang.org/c/domain/bio) for technical questions.
 
 Our roadmap is on the wiki: <https://github.com/BioJulia/Bio.jl/wiki/roadmap>.
 
+
+## Backers
+
+Thank you to all our backers! 🙏 [[Become a backer](https://opencollective.com/biojulia#backer)]
+
+<a href="https://opencollective.com/biojulia#backers" target="_blank"><img src="https://opencollective.com/biojulia/backers.svg?width=890"></a>
+
+
+## Sponsors
+
+Support this project by becoming a sponsor. Your logo will show up here with a link to your website. [[Become a sponsor](https://opencollective.com/biojulia#sponsor)]
+
+<a href="https://opencollective.com/biojulia/sponsor/0/website" target="_blank"><img src="https://opencollective.com/biojulia/sponsor/0/avatar.svg"></a>
+<a href="https://opencollective.com/biojulia/sponsor/1/website" target="_blank"><img src="https://opencollective.com/biojulia/sponsor/1/avatar.svg"></a>
+<a href="https://opencollective.com/biojulia/sponsor/2/website" target="_blank"><img src="https://opencollective.com/biojulia/sponsor/2/avatar.svg"></a>
+<a href="https://opencollective.com/biojulia/sponsor/3/website" target="_blank"><img src="https://opencollective.com/biojulia/sponsor/3/avatar.svg"></a>
+<a href="https://opencollective.com/biojulia/sponsor/4/website" target="_blank"><img src="https://opencollective.com/biojulia/sponsor/4/avatar.svg"></a>
+<a href="https://opencollective.com/biojulia/sponsor/5/website" target="_blank"><img src="https://opencollective.com/biojulia/sponsor/5/avatar.svg"></a>
+<a href="https://opencollective.com/biojulia/sponsor/6/website" target="_blank"><img src="https://opencollective.com/biojulia/sponsor/6/avatar.svg"></a>
+<a href="https://opencollective.com/biojulia/sponsor/7/website" target="_blank"><img src="https://opencollective.com/biojulia/sponsor/7/avatar.svg"></a>
+<a href="https://opencollective.com/biojulia/sponsor/8/website" target="_blank"><img src="https://opencollective.com/biojulia/sponsor/8/avatar.svg"></a>
+<a href="https://opencollective.com/biojulia/sponsor/9/website" target="_blank"><img src="https://opencollective.com/biojulia/sponsor/9/avatar.svg"></a>
+
 [docs-latest-img]: https://img.shields.io/badge/docs-latest-blue.svg
 [docs-latest-url]: https://biojulia.github.io/Bio.jl/latest
 [docs-stable-img]: https://img.shields.io/badge/docs-stable-blue.svg
@@ -106,3 +130,10 @@ Our roadmap is on the wiki: <https://github.com/BioJulia/Bio.jl/wiki/roadmap>.
 
 [gitter-img]: https://badges.gitter.im/BioJulia.png
 [gitter-url]: https://gitter.im/BioJulia/Bio.jl
+
+[oc-backers-img]: https://opencollective.com/biojulia/backers/badge.svg
+[oc-sponsors-img]:https://opencollective.com/biojulia/sponsors/badge.svg
+
+
+
+
