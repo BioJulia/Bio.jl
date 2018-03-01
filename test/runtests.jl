@@ -1,19 +1,17 @@
-# all test targets
-available_targets = [
-    "tools"
+
+const pkglist = [
+    "BioSequences",
+    "GenomicFeatures",
+    "BioAlignments",
+    "Phylogenies",
+    "BioStructures",
+    "GeneticVariation",
+    "BioServices"
 ]
 
-if isempty(ARGS)
-    # run all available test targets
-    targets = available_targets
+if VERSION >= v"0.7-"
+    using Pkg
+    test(pkglist..., coverage = false)
 else
-    targets = ARGS
-    invalids = setdiff(targets, available_targets)
-    if !isempty(invalids)
-        error("there are invalid test targets: ", join(invalids, ", "))
-    end
-end
-
-for target in targets
-    include("$target/runtests.jl")
+    Pkg.test(pkglist..., coverage = false)
 end
