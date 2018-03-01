@@ -1,26 +1,15 @@
 # Bio.jl
 
-**Latest release:**
-
-# The meta-package Bio.jl is currently undergoing restructuring and is not recommended for julia v0.6 users at this time, ask us on [![][gitter-img]][gitter-url] for more info, or check out this [PR](https://github.com/BioJulia/Bio.jl/issues/425). Individual BioJulia packages are stable on julia v0.6, see http://biojulia.net.
-[![Latest Release](https://img.shields.io/github/release/BioJulia/Bio.jl.svg)](https://github.com/BioJulia/Bio.jl/releases/latest)
-[![Bio](http://pkg.julialang.org/badges/Bio_0.6.svg)](http://pkg.julialang.org/?pkg=Bio)
-[![License](https://img.shields.io/badge/license-MIT-green.svg)](https://github.com/BioJulia/Bio.jl/blob/master/LICENSE)
-[![](https://img.shields.io/badge/docs-stable-blue.svg)](https://biojulia.github.io/Bio.jl/stable)
-![BioJulia maintainer: Ward9250](https://img.shields.io/badge/BioJulia%20Maintainer-Ward9250-orange.svg)
-
-**Development status:**
-
-[![Build status](https://travis-ci.org/BioJulia/Bio.jl.svg?branch=master)](https://travis-ci.org/BioJulia/Bio.jl)
-[![Build status](https://ci.appveyor.com/api/projects/status/nq4w264346py8esp/branch/master?svg=true)](https://ci.appveyor.com/project/Ward9250/bio-jl/branch/master)
-[![](https://codecov.io/gh/BioJulia/Bio.jl/branch/master/graph/badge.svg)](https://codecov.io/gh/BioJulia/Bio.jl)
-[![](https://img.shields.io/badge/docs-latest-blue.svg)](https://biojulia.github.io/Bio.jl/latest)
+| **Release**                                                     | **Documentation**                                                               | **Maintainers**                             |
+|:---------------------------------------------------------------:|:-------------------------------------------------------------------------------:|:-------------------------------------------:|
+| [![](https://img.shields.io/github/release/BioJulia/Bio.jl.svg)](https://github.com/BioJulia/Bio.jl/releases/latest) [![](https://img.shields.io/badge/license-MIT-green.svg)](https://github.com/BioJulia/Bio.jl/blob/master/LICENSE) | [![](https://img.shields.io/badge/docs-stable-blue.svg)](https://biojulia.github.io/Bio.jl/stable) [![](https://img.shields.io/badge/docs-latest-blue.svg)](https://biojulia.github.io/Bio.jl/latest) | ![](https://img.shields.io/badge/BioJulia%20Maintainer-Ward9250-orange.svg) |
 
 
 ## Description
 
 Bio.jl is the flagship meta-package of the BioJulia group.
-It re-exports and makes easy to install a set of BioJulia's most important
+
+Bio.jl re-exports and makes easy to install a set of BioJulia's most important
 core bioinformatics packages.
 
 The following modules are currently part of the meta-package:
@@ -55,18 +44,29 @@ The following modules are currently part of the meta-package:
 Install Bio.jl from the Julia REPL:
 
 ```julia
-julia> Pkg.add("Bio")
-
+using Pkg
+Pkg.add("Bio")
+# Pkg.add("Bio") on julia v0.6-
 ```
 
 If you are interested in the cutting edge of the development, please check out
 the master branch to try new features before release.
 
+
+## Testing
+
+Bio.jl is tested against Julia `0.6` and current `0.7-dev` on Linux, OS X, and Windows.
+
+| **PackageEvaluator**                                            | **Latest Build Status**                                                                                |
+|:---------------------------------------------------------------:|:------------------------------------------------------------------------------------------------------:|
+| [![](https://pkg.julialang.org/badges/Bio_0.6.svg)](https://pkg.julialang.org/detail/Bio) [![](https://pkg.julialang.org/badges/Bio_0.7.svg)](https://pkg.julialang.org/detail/Bio) | [![](https://img.shields.io/travis/BioJulia/Bio.jl/master.svg?label=Linux+/+macOS)](https://travis-ci.org/BioJulia/Bio.jl) [![](https://ci.appveyor.com/api/projects/status/nq4w264346py8esp?svg=true)](https://ci.appveyor.com/project/Ward9250/bio-jl/branch/master) [![](https://codecov.io/gh/BioJulia/Bio.jl/branch/master/graph/badge.svg)](https://codecov.io/gh/BioJulia/Bio.jl) |
+
+
 ## Contributing and Questions
 
 We appreciate contributions from users including reporting bugs, fixing issues,
 improving performance and adding new features.
-Please go to the [contributing section of the documentation](biojulia.github.io/BioSequences.jl/stable/contributing)
+Please go to the [contributing section of the documentation](https://biojulia.net/Contributing/latest)
 for more information.
 
 If you have a question about
