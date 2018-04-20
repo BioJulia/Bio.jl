@@ -2,7 +2,7 @@
 
 _The Bioinformatics and Computation Biology infrastructure for the Julia language._
 
-# Bio.jl is currently undergoing restructuring and is not recommended for julia v0.6 users at this time, ask us on [![][gitter-img]][gitter-url] for more info, or check out this [PR](https://github.com/BioJulia/Bio.jl/issues/425). 
+# The meta-package Bio.jl is currently undergoing restructuring and is not recommended for julia v0.6 users at this time, ask us on [![][gitter-img]][gitter-url] for more info, or check out this [PR](https://github.com/BioJulia/Bio.jl/issues/425). Individual BioJulia packages are stable on julia v0.6, see http://biojulia.net.
 
 
 | **Chat** | **Documentation** | **Build Status** |
@@ -12,10 +12,13 @@ _The Bioinformatics and Computation Biology infrastructure for the Julia languag
 
 ## Description
 
-As the flagship package of the BioJulia organisation, Bio.jl provides core
-modules containing efficient data types and algorithms, that most
+As the flagship package of the BioJulia organisation, Bio.jl collects core
+modules containing efficient data types and algorithms that most
 bioinformaticians and biologists would want to use for analyses or for building
-their own applications. Bio.jl is built on top of the [Julia programming
+their own applications.
+These modules are generally from individual packages in the BioJulia ecosystem,
+and Bio.jl is a convenient way to access them all in one place.
+Bio.jl is built on top of the [Julia programming
 language](http://julialang.org/), a high-level and high-performance programming
 language for technical computing. Bio.jl and Julia are open source and their
 source codes are immediately available to the public.
