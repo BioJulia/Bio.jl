@@ -1,9 +1,10 @@
 julia 0.6
-BioAlignments
-BioServices
-BioSymbols 1.1
-BioSequences 0.6
-BioStructures
-GenomicFeatures
-GeneticVariation
+BioAlignments 0.2 0.3-
+BioServices 0.1 0.2-
+BioSymbols 2.0 2.1-
+BioSequences 0.8 0.9-
+BioStructures 0.2 0.3-
+BioTools 0.1 0.2-
+GenomicFeatures 0.2 0.3-
+GeneticVariation 0.3 0.4-
 Phylogenies

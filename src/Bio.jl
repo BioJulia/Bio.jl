@@ -17,7 +17,6 @@ const Phylo = Phylogenies
 const Structure = BioStructures
 const Var = GeneticVariation
 const Services = BioServices
-
-include("tools/Tools.jl")
+const Tools = BioTools
 
 end  # module Bio

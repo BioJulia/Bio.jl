@@ -45,7 +45,7 @@ Install Bio.jl from the Julia REPL:
 
 ```julia
 using Pkg
-Pkg.add("Bio")
+add("Bio")
 # Pkg.add("Bio") on julia v0.6-
 ```
 
