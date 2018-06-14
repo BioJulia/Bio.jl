@@ -1,79 +1,76 @@
-<p align="center"><img src="https://raw.githubusercontent.com/BioJulia/assets/master/branding/bio/optimised/BioJl_Design_1.png" width="50%" alt="Bio.jl" /></p>
+# Bio.jl
 
-_The Bioinformatics and Computation Biology infrastructure for the Julia language._
-
-# Bio.jl is currently undergoing restructuring and is not recommended for julia v0.6 users at this time, ask us on [![][gitter-img]][gitter-url] for more info, or check out this [PR](https://github.com/BioJulia/Bio.jl/issues/425). 
-
-
-| **Chat** | **Documentation** | **Build Status** | **Support** |
-|:--------:|:-----------------:|:----------------:|:----------------:|
-| [![][gitter-img]][gitter-url] | [![][docs-stable-img]][docs-stable-url] [![][docs-latest-img]][docs-latest-url] | [![][travis-img]][travis-url] [![][appveyor-img]][appveyor-url] [![][codecov-img]][codecov-url] | [![Backers on Open Collective](oc-backers-img)](#backers)[![Sponsors on Open Collective](oc-sponsors-img)](#sponsors) |
+| **Release**                                                     | **Documentation**                                                               | **Maintainers**                             |
+|:---------------------------------------------------------------:|:-------------------------------------------------------------------------------:|:-------------------------------------------:|
+| [![](https://img.shields.io/github/release/BioJulia/Bio.jl.svg)](https://github.com/BioJulia/Bio.jl/releases/latest) [![](https://img.shields.io/badge/license-MIT-green.svg)](https://github.com/BioJulia/Bio.jl/blob/master/LICENSE) | [![](https://img.shields.io/badge/docs-stable-blue.svg)](https://biojulia.github.io/Bio.jl/stable) [![](https://img.shields.io/badge/docs-latest-blue.svg)](https://biojulia.github.io/Bio.jl/latest) | ![](https://img.shields.io/badge/BioJulia%20Maintainer-Ward9250-orange.svg) |
 
 
 ## Description
 
-As the flagship package of the BioJulia organisation, Bio.jl provides core
-modules containing efficient data types and algorithms, that most
-bioinformaticians and biologists would want to use for analyses or for building
-their own applications. Bio.jl is built on top of the [Julia programming
-language](http://julialang.org/), a high-level and high-performance programming
-language for technical computing. Bio.jl and Julia are open source and their
-source codes are immediately available to the public.
+| **Chat** | **Documentation** | **Build Status** | **Support** |
+|:--------:|:-----------------:|:----------------:|:----------------:|
+| [![][gitter-img]][gitter-url] | [![][docs-stable-img]][docs-stable-url] [![][docs-latest-img]][docs-latest-url] | [![][travis-img]][travis-url] [![][appveyor-img]][appveyor-url] [![][codecov-img]][codecov-url] | [![Backers on Open Collective](oc-backers-img)](#backers)[![Sponsors on Open Collective](oc-sponsors-img)](#sponsors) |
+Bio.jl is the flagship meta-package of the BioJulia group.
 
-Bio.jl provides programmable components for quick prototyping of new analyses
-and algorithms. These components are carefully tuned to achieve the best
-performance without sacrificing the usability of the dynamic programming
-language. The following modules are currently part of the package and actively
-developed as submodules:
-* `Bio.Seq`: Biological sequences
+Bio.jl re-exports and makes easy to install a set of BioJulia's most important
+core bioinformatics packages.
+
+The following modules are currently part of the meta-package:
+
+* `Bio.Seq`: Biological sequences (provided by _BioSequences.jl_)
     * Biological symbols (DNA, RNA and amino acid)
     * Biological sequences
     * Sequence search algorithms
     * Readers for FASTA, FASTQ and .2bit file formats
-* `Bio.Align`: Sequence alignment
+* `Bio.Align`: Sequence alignment (provided by _BioAlignments.jl_)
     * Alignment data structures
     * Pairwise alignment algorithms
     * Reader for SAM and BAM file formats
-* `Bio.Intervals`: Genomic intervals and annotations
+* `Bio.Intervals`: Genomic intervals and annotations (provided by _GenomicFeatures.jl_)
     * Genomic intervals with annotations
     * Readers for BED, bigWig, bigBed and GFF3 file formats
-* `Bio.Structure`: Molecular structures
+* `Bio.Structure`: Molecular structures (provided by _BioStructures.jl_)
     * Macromolecular structures (e.g. proteins)
     * Reader for PDB file format
-* `Bio.Var`: Biological variation
+* `Bio.Var`: Biological variation (provided by _GeneticVariation.jl_)
     * Mutation counting
     * Genetic and evolutionary distances
     * Readers for VCF and BCF file formats
-* `Bio.Phylo`: Phylogenetics
+* `Bio.Phylo`: Phylogenetics (provided by _Phylogenies.jl_)
     * Phylogenetic trees
-* `Bio.Services`: APIs to other services
+* `Bio.Services`: APIs to other services (provided by _BioServices.jl_)
     * Entrez utilities (E-utilities)
 
 
 ## Installation
 
-Bio.jl is a registered package in the official package management system and can
-be installed with a command:
+Install Bio.jl from the Julia REPL:
 
 ```julia
-julia> Pkg.add("Bio")
-
+using Pkg
+add("Bio")
+# Pkg.add("Bio") on julia v0.6-
 ```
 
 If you are interested in the cutting edge of the development, please check out
 the master branch to try new features before release.
 
 
-## Documentation
+## Testing
 
-- [**STABLE**][docs-stable-url] &mdash; **Documentation of the most recent stable release of Bio.jl.**
-- [**LATEST**][docs-latest-url] &mdash; *Documentation of the in-development state of Bio.jl.*
+Bio.jl is tested against Julia `0.6` and current `0.7-dev` on Linux, OS X, and Windows.
+
+| **PackageEvaluator**                                            | **Latest Build Status**                                                                                |
+|:---------------------------------------------------------------:|:------------------------------------------------------------------------------------------------------:|
+| [![](https://pkg.julialang.org/badges/Bio_0.6.svg)](https://pkg.julialang.org/detail/Bio) [![](https://pkg.julialang.org/badges/Bio_0.7.svg)](https://pkg.julialang.org/detail/Bio) | [![](https://img.shields.io/travis/BioJulia/Bio.jl/master.svg?label=Linux+/+macOS)](https://travis-ci.org/BioJulia/Bio.jl) [![](https://ci.appveyor.com/api/projects/status/nq4w264346py8esp?svg=true)](https://ci.appveyor.com/project/Ward9250/bio-jl/branch/master) [![](https://codecov.io/gh/BioJulia/Bio.jl/branch/master/graph/badge.svg)](https://codecov.io/gh/BioJulia/Bio.jl) |
 
 
 ## Contributing and Questions
 
 We appreciate contributions from users including reporting bugs, fixing issues,
 improving performance and adding new features.
+Please go to the [contributing section of the documentation](https://biojulia.net/Contributing/latest)
+for more information.
 
 If you have a question about
 contributing or using this package, our [Gitter chat room][gitter-url] would be
@@ -133,7 +130,3 @@ Support this project by becoming a sponsor. Your logo will show up here with a l
 
 [oc-backers-img]: https://opencollective.com/biojulia/backers/badge.svg
 [oc-sponsors-img]:https://opencollective.com/biojulia/sponsors/badge.svg
-
-
-
-
