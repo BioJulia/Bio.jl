@@ -4,19 +4,12 @@ os:
   - osx
 julia:
   - 0.6
+  - nightly
+matrix:
+  allow_failures:
+  - julia: nightly
 notifications:
   email: false
-before_install:
-  - if [ `uname` = "Linux" ]; then
-      sudo apt-get -qq update;
-      sudo apt-get install -y ncbi-blast+;
-    elif [ `uname` = "Darwin" ]; then
-      brew tap homebrew/science;
-      brew update;
-      brew install blast;
-    fi
-before_script:
-  - export PATH=$HOME/.local/bin:$PATH
 after_success:
-  - julia -e 'cd(Pkg.dir("Bio")); Pkg.add("Coverage"); using Coverage; Codecov.submit(process_folder())'
-  - julia -e 'cd(Pkg.dir("Bio")); Pkg.add("Documenter"); include(joinpath("docs", "make.jl"))'
+  - julia -e 'cd(joinpath(Pkg.dir("Bio"), "docs/src")); mkdir("assets"); cd("assets"); run(pipeline(`curl https://codeload.github.com/BioJulia/assets/tar.gz/master`, `tar -xz --strip=2 assets-master/doc_assets`))'
+#  - julia -e 'cd(Pkg.dir("Bio")); Pkg.add("Documenter"); include(joinpath("docs", "make.jl"))'
