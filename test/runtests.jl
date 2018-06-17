@@ -3,7 +3,7 @@ const pkglist = [
     "BioSequences",
     "GenomicFeatures",
     "BioAlignments",
-    "Phylogenies",
+#    "Phylogenies",
     "BioStructures",
     "GeneticVariation",
     "BioServices"
