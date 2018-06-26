@@ -5,8 +5,9 @@ const pkglist = [
     "BioAlignments",
 #    "Phylogenies",
     "BioStructures",
-    "GeneticVariation",
-    "BioServices"
+    "GeneticVariation"#,
+#    "BioServices",
+#    "BioTools"
 ]
 
 if VERSION >= v"0.7-"

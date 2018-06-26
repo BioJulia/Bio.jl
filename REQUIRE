@@ -1,9 +1,7 @@
 julia 0.6
 BioCore 1.4
 BioAlignments 0.3 0.4-
-BioServices 0.1 0.2-
 BioSequences 0.8 0.9-
 BioStructures 0.2 0.3-
-BioTools 0.1 0.2-
 GenomicFeatures 0.2 0.3-
 GeneticVariation 0.3 0.4-
