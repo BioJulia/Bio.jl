@@ -5,18 +5,23 @@ module Bio
 import BioSequences
 import GenomicFeatures
 import BioAlignments
-#import Phylogenies
 import BioStructures
 import GeneticVariation
 import BioServices
 
-#const Seq = BioSequences
-#const Intervals = GenomicFeatures
-#const Align = BioAlignments
-#const Phylo = Phylogenies
-#const Structure = BioStructures
-#const Var = GeneticVariation
-#const Services = BioServices
+# TODO
+#import BioTools
+#import Phylogenies
+
+const Seq = BioSequences
+const Intervals = GenomicFeatures
+const Align = BioAlignments
+const Structure = BioStructures
+const Var = GeneticVariation
+const Services = BioServices
+
+# TODO
 #const Tools = BioTools
+#const Phylo = Phylogenies
 
 end  # module Bio
