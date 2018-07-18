@@ -5,8 +5,8 @@ const pkglist = [
     "BioAlignments",
 #    "Phylogenies",
     "BioStructures",
-    "GeneticVariation"#,
-#    "BioServices",
+    "GeneticVariation",
+    "BioServices"
 #    "BioTools"
 ]
 
