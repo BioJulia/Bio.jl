@@ -5,14 +5,13 @@ const pkglist = [
     "BioAlignments",
 #    "Phylogenies",
     "BioStructures",
-    "GeneticVariation",
+    #"GeneticVariation",
     "BioServices"
 #    "BioTools"
 ]
 
-if VERSION >= v"0.7-"
-    using Pkg
-    test(pkglist..., coverage = false)
-else
-    Pkg.test(pkglist..., coverage = false)
+import Pkg
+for dep in pkglist
+    Pkg.test(dep, coverage = false)
 end
+
