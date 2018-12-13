@@ -5,9 +5,9 @@ const pkglist = [
     "BioAlignments",
 #    "Phylogenies",
     "BioStructures",
-    #"GeneticVariation",
-    "BioServices"
-#    "BioTools"
+    "GeneticVariation",
+#    "BioServices"
+    "BioTools"
 ]
 
 import Pkg

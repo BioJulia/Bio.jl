@@ -1,9 +1,14 @@
+name = "Bio"
+uuid = "3637df68-df41-5d16-b00c-95ac8c2142c5"
+version = "1.0.0"
+
 [deps]
 BioAlignments = "00701ae9-d1dc-5365-b64a-a3a3ebf5695e"
 BioCore = "37cfa864-2cd6-5c12-ad9e-b6597d696c81"
 BioSequences = "7e6ae17a-c86d-528c-b3b9-7f778a29fe59"
 BioServices = "a0d4ced5-b29c-5395-b614-ca030a679c4b"
 BioStructures = "de9282ab-8554-53be-b2d6-f6c222edabfc"
+BioTools = "fa51a905-6db9-5d43-b62f-5461347a870a"
 GeneticVariation = "9bc6ac9d-e6b2-5f70-b0a8-242a01662520"
 GenomicFeatures = "899a7d2d-5c61-547b-bef9-6698a8d05446"
 
@@ -13,5 +18,6 @@ BioCore = "2.0.5"
 BioSequences = "1.1.0"
 BioServices = "0.3.1"
 BioStructures = "0.4.0"
+BioTools = "1.0.0"
 GeneticVariation = "0.4.0"
 GenomicFeatures = "1.0.0"

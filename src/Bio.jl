@@ -8,9 +8,9 @@ import BioAlignments
 import BioStructures
 import GeneticVariation
 import BioServices
+import BioTools
 
 # TODO
-#import BioTools
 #import Phylogenies
 
 const Seq = BioSequences
@@ -19,9 +19,9 @@ const Align = BioAlignments
 const Structure = BioStructures
 const Var = GeneticVariation
 const Services = BioServices
+const Tools = BioTools
 
 # TODO
-#const Tools = BioTools
 #const Phylo = Phylogenies
 
 end  # module Bio
