@@ -64,12 +64,9 @@ the master branch to try new features before release.
 
 ## Testing
 
-Bio is tested against Julia `0.6` and current `0.7-dev` on Linux, OS X, and
-Windows.
-
-| **Latest release** | **Latest build status** |
-|:------------------:|:-----------------------:|
-| [![](https://pkg.julialang.org/badges/Bio_0.6.svg)](https://pkg.julialang.org/detail/Bio) [![](https://pkg.julialang.org/badges/Bio_0.7.svg)](https://pkg.julialang.org/detail/Bio) | [![](https://img.shields.io/travis/BioJulia/Bio.jl/master.svg?label=Linux+/+macOS)](https://travis-ci.org/BioJulia/Bio.jl) [![](https://ci.appveyor.com/api/projects/status/nq4w264346py8esp?svg=true)](https://ci.appveyor.com/project/Ward9250/bio-jl/branch/master) [![](https://codecov.io/gh/BioJulia/Bio.jl/branch/master/graph/badge.svg)](https://codecov.io/gh/BioJulia/Bio.jl) |
+Bio is a meta-package, and testing on CI infrastructure currently takes to long.
+Each Bio release is tested on desktop before release, but if you run into problems,
+please don't hesitate to contact a member of BioJulia.
 
 
 ## Contributing
