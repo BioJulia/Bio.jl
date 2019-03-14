@@ -1,3 +1,15 @@
+**NOTICE:**
+
+**Since julia version 1.0 and the new Pkg system, the purpose of this package
+has become moot. You can still download and use this package as a conveinience,
+but consider instead managing the BioJulia packages you're using with `Pkg`
+and its support for isolated projects instead.**
+
+**This package is inactive, meaning that updates to it will only be made as
+and when time allows. See the list below**
+
+---
+
 # <img src="./sticker.svg" width="30%" align="right" /> Bio
 
 [![Latest release](https://img.shields.io/github/release/BioJulia/Bio.jl.svg)](https://github.com/BioJulia/Bio.jl/releases/latest)
@@ -10,20 +22,10 @@
 
 Bio provides a framework for computational biology and bioinformatics.
 
-<aside class="warning">
 This version of `Bio` package is actually better described as a meta-package.
 It actually consolidates many other smaller packages in the BioJulia package
 ecosystem and makes them easier to install and use together, with less worry
 about version compatiblity and dependencies.
-
-Since julia version 1.0 and the new Pkg system, the need for such a package
-has gone. You can still download and use this package as a conveinience, but
-consider instead managing the BioJulia packages you're using with `Pkg`
-and its support for isolated projects instead.
-
-This package is inactive, meaning that updates to it will only be made as
-and when time allows. See the list below
-</aside>
 
 `Bio` has the current feature modules, go check out their documentation pages to
 see how they work and how to use them:
