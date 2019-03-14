@@ -1,25 +1,32 @@
-# Bio
+# <img src="./sticker.svg" width="30%" align="right" /> Bio
 
-[![Latest release](https://img.shields.io/github/release/BioJulia/Bio.jl.svg?style=flat-square)](https://github.com/BioJulia/Bio.jl/releases/latest)
-[![MIT license](https://img.shields.io/badge/license-MIT-green.svg?style=flat-square)](https://github.com/BioJulia/Bio.jl/blob/master/LICENSE) 
-[![Stable documentation](https://img.shields.io/badge/docs-stable-blue.svg?style=flat-square)](https://biojulia.github.io/Bio.jl/stable)
-[![Latest documentation](https://img.shields.io/badge/docs-latest-blue.svg?style=flat-square)](https://biojulia.github.io/Bio.jl/latest)
-![Lifecycle](https://img.shields.io/badge/lifecycle-maturing-blue.svg?style=flat-square)
-[![Chat on Discord](https://img.shields.io/badge/discord-chat-blue.svg?style=flat-square&logo=discord&colorB=%237289DA)](https://discord.gg/z73YNFz) 
+[![Latest release](https://img.shields.io/github/release/BioJulia/Bio.jl.svg)](https://github.com/BioJulia/Bio.jl/releases/latest)
+[![MIT license](https://img.shields.io/badge/license-MIT-green.svg)](https://github.com/BioJulia/Bio.jl/blob/master/LICENSE)
+[![Pkg Status](http://www.repostatus.org/badges/latest/inactive.svg)](http://www.repostatus.org/#inactive)
+[![Chat](https://img.shields.io/gitter/room/BioJulia/Bio.jl.svg)](https://gitter.im/BioJulia/Bio.jl)
 
 
 ## Description
 
-BioJulia is a bioinformatics and computational biology infrastructure project,
-built with and for the julia language for technical computing.
+Bio provides a framework for computational biology and bioinformatics.
 
-This package `Bio` is the flagship package of the project.
-`Bio` is actually better described as a meta-package. It actually
-consolidates many other smaller packages in the BioJulia package ecosystem
-and makes them easier to install and use together, with less worry about
-version compatiblity and dependencies.
+<aside class="warning">
+This version of `Bio` package is actually better described as a meta-package.
+It actually consolidates many other smaller packages in the BioJulia package
+ecosystem and makes them easier to install and use together, with less worry
+about version compatiblity and dependencies.
 
-`Bio` has the current feature modules:
+Since julia version 1.0 and the new Pkg system, the need for such a package
+has gone. You can still download and use this package as a conveinience, but
+consider instead managing the BioJulia packages you're using with `Pkg`
+and its support for isolated projects instead.
+
+This package is inactive, meaning that updates to it will only be made as
+and when time allows. See the list below
+</aside>
+
+`Bio` has the current feature modules, go check out their documentation pages to
+see how they work and how to use them:
 
 * `Bio.Seq`: A biological sequences module (provided by [_BioSequences.jl_](https://github.com/BioJulia/BioSequences.jl))
     * Biological symbols (DNA, RNA and amino acid)
@@ -55,7 +62,6 @@ Install Bio from the Julia REPL:
 ```julia
 using Pkg
 add("Bio")
-# Pkg.add("Bio") for julia prior to v0.7
 ```
 
 If you are interested in the cutting edge of the development, please check out
@@ -74,9 +80,8 @@ please don't hesitate to contact a member of BioJulia.
 We appreciate contributions from users including reporting bugs, fixing
 issues, improving performance and adding new features.
 
-Take a look at the [CONTRIBUTING](CONTRIBUTING.md) file provided with
-every BioJulia package package for detailed contributor and maintainer
-guidelines.
+Take a look at the [contributing files](https://github.com/BioJulia/Contributing)
+detailed contributor and maintainer guidelines, and code of conduct.
 
 
 ### Financial contributions
@@ -115,5 +120,5 @@ Your logo will show up here with a link to your website.
 ## Questions?
 
 If you have a question about contributing or using BioJulia software, come
-on over and chat to us on [Discord](https://discord.gg/z73YNFz), or you can try the
+on over and chat to us on [Gitter](https://gitter.im/BioJulia/General), or you can try the
 [Bio category of the Julia discourse site](https://discourse.julialang.org/c/domain/bio).

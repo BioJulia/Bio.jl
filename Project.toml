@@ -1,5 +1,9 @@
 name = "Bio"
 uuid = "3637df68-df41-5d16-b00c-95ac8c2142c5"
+authors = ["Ben J. Ward <benjward@protonmail.com>",
+           "D.C. Jones <dcjones@cs.washington.edu>",
+           "Kenta Sato <bicycle1885@gmail.com>",
+           "Kevin Bonham"]
 version = "1.0.0"
 
 [deps]
