@@ -3,10 +3,11 @@
 **Since julia version 1.0 and the new Pkg system, the purpose of this package
 has become moot. You can still download and use this package as a conveinience,
 but consider instead managing the BioJulia packages you're using with `Pkg`
-and its support for isolated projects instead.**
+and its support for isolated projects. See the list below to find the
+BioJulia packages that provide this package's modules now.**
 
 **This package is inactive, meaning that updates to it will only be made as
-and when time allows. See the list below**
+and when time allows.**
 
 ---
 
