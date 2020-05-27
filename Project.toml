@@ -4,7 +4,7 @@ authors = ["Ben J. Ward <benjward@protonmail.com>",
            "D.C. Jones <dcjones@cs.washington.edu>",
            "Kenta Sato <bicycle1885@gmail.com>",
            "Kevin Bonham"]
-version = "1.0.0"
+version = "1.0.1"
 
 [deps]
 BioAlignments = "00701ae9-d1dc-5365-b64a-a3a3ebf5695e"
