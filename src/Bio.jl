@@ -24,4 +24,8 @@ const Tools = BioTools
 # TODO
 #const Phylo = Phylogenies
 
+function __init__()
+    @warn "This package has been depreceated, and should not be used for new projects. Please see Bio.jl's repository README for more information."
+end
+
 end  # module Bio

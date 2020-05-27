@@ -2,7 +2,7 @@
 
 [![Latest release](https://img.shields.io/github/release/BioJulia/Bio.jl.svg)](https://github.com/BioJulia/Bio.jl/releases/latest)
 [![MIT license](https://img.shields.io/badge/license-MIT-green.svg)](https://github.com/BioJulia/Bio.jl/blob/master/LICENSE)
-[![Pkg Status](http://www.repostatus.org/badges/latest/inactive.svg)](http://www.repostatus.org/#inactive)
+[![Pkg Status](https://www.repostatus.org/badges/latest/inactive.svg)](https://www.repostatus.org/#inactive)
 [![Chat](https://img.shields.io/gitter/room/BioJulia/Bio.jl.svg)](https://gitter.im/BioJulia/Bio.jl)
 
 **This package has been depreceated. Full details are available [here](https://biojulia.net/post/biojl/).**
@@ -18,3 +18,4 @@
 - For a Bio.Services alternative, goto [BioServices.jl](https://biojulia.net/BioServices.jl/stable)
 - For a Bio.Tools alternative, goto [BioTools.jl](https://biojulia.net/BioTools.jl/stable)
 
+If you insist on using Bio.jl, docs can be found [here](https://biojulia.net/Bio.jl/v1.0.0)
